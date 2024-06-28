@@ -1,3 +1,8 @@
 .history
 venv
 api/__pycache__
+*/__pycache__/*
+.env
+api/.env
+*/.env
+*.pyc
