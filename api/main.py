@@ -1,15 +1,14 @@
-from pydantic import BaseModel
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
-from typing import Annotated
-
-# from models.spacy_ner import parse_calendar_info
-# from models.zero_shot_classification import classify_event_type
+from validators import MessageRequest, MessageResponse
+from models.named_entity_recognition import parse_calendar_info
+from models.zero_shot_classification import classify_event_type
 from models.llama import doPrompt
 from functionality.document import convert_pdf_to_text
+# from functionality.connect_gcal import get_events, authorize
 
 app = FastAPI()
 app.add_middleware(
@@ -21,14 +20,6 @@ app.add_middleware(
 )
 
 load_dotenv()
-
-
-class MessageRequest(BaseModel):
-    message: str
-
-
-class MessageResponse(BaseModel):
-    response: str
 
 
 @ app.post("/chat")
@@ -43,7 +34,6 @@ async def convert_pdf(file: UploadFile):
     return {
         "name": file.filename,
         "file_size_bytes": len(contents),
-        "file_type": file.content_type.split('/')[1] if '/' in file.content_type else None,
         "content_type": file.content_type,
         "text":  convert_pdf_to_text(contents),
     }

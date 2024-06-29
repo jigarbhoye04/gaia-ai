@@ -1,6 +1,6 @@
 
-from models.named_entity_recognition import parse_calendar_info
-from models.zero_shot_classification import classify_event_type
+from api.models.named_entity_recognition import parse_calendar_info
+from api.models.zero_shot_classification import classify_event_type
 
 
 def get_event_details(message):

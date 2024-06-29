@@ -28,6 +28,7 @@ client = OpenAI(
 #             }}]
 
 def doPrompt(prompt: str):
+    print("prompting...")
     response_stream = client.chat.completions.create(
         messages=[
             {"role": "system",
@@ -38,6 +39,8 @@ def doPrompt(prompt: str):
         model=prompt_model,
         stream=True
     )
+
+    print("fetched response...")
 
     for event in response_stream:
         yield "data: " + event.choices[0].delta.content + "\n\n"
