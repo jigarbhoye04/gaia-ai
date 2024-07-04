@@ -1,9 +1,9 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile, HTTPException,Request
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
-from api.input_validators import MessageRequest, MessageResponse, WaitlistItem
+from api.input_validators import MessageRequest, MessageResponse, WaitlistItem,FormData
 from api.models.named_entity_recognition import parse_calendar_info
 from api.models.zero_shot_classification import classify_event_type
 from api.models.llama import doPrompt
@@ -35,10 +35,10 @@ except Exception as e:
     sys.exit(1)
 
 
-@app.get("/test")
-def test():
-    return "Hey"
 
+@app.get("/")
+def main():
+    return "Pinged server successfullly!"
 
 @app.post("/waitlistSignup")
 async def waitlist_signup(item: WaitlistItem):
@@ -58,6 +58,25 @@ async def waitlist_signup(item: WaitlistItem):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/submitFeedbackForm")
+async def submitFeedbackForm(formData: FormData):
+    database = client["gaia-cluster"]
+    collection = database["feedback_form"]
+
+    try:
+        item_dict = formData.dict()
+        result = await collection.insert_one(item_dict)
+
+        if result.inserted_id:
+            return {"message": "Feedback Form Data inserted successfully"}
+        else:
+            raise HTTPException(
+                status_code=500, detail="Failed to insert feedback form data")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @ app.post("/chat")
