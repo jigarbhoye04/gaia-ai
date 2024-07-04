@@ -35,6 +35,11 @@ except Exception as e:
     sys.exit(1)
 
 
+@app.get("/test")
+def test():
+    return "Hey"
+
+
 @app.post("/waitlistSignup")
 async def waitlist_signup(item: WaitlistItem):
 
