@@ -39,7 +39,7 @@ except Exception as e:
 @app.get("/")
 def main():
     print("Pinged server successfully!")
-    return "Pinged server successfully!"
+    return True
 
 @app.post("/waitlistSignup")
 async def waitlist_signup(item: WaitlistItem):
