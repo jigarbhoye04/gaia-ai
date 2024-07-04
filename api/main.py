@@ -3,12 +3,12 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
-from validators import MessageRequest, MessageResponse, WaitlistItem
-from models.named_entity_recognition import parse_calendar_info
-from models.zero_shot_classification import classify_event_type
-from models.llama import doPrompt
-from functionality.document import convert_pdf_to_text
-# from functionality.connect_gcal import get_events, authorize
+from api.input_validators import MessageRequest, MessageResponse, WaitlistItem
+from api.models.named_entity_recognition import parse_calendar_info
+from api.models.zero_shot_classification import classify_event_type
+from api.models.llama import doPrompt
+from api.functionality.document import convert_pdf_to_text
+# from api.functionality.connect_gcal import get_events, authorize
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from pymongo.mongo_client import MongoClient

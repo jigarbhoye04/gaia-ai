@@ -9,3 +9,4 @@ api/.env
 .vercel
 
 venv/
+.venv/
