@@ -3,8 +3,6 @@ from typing import List
 
 class WaitlistItem(BaseModel):
     email: str
-    firstName: str
-    lastName: str
 
 class FormData(BaseModel):
     firstName:str
