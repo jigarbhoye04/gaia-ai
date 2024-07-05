@@ -7,6 +7,8 @@ class WaitlistItem(BaseModel):
     lastName: str
 
 class FormData(BaseModel):
+    firstName:str
+    lastName:str
     currentPage: int
     ageRange: str
     occupation: str
