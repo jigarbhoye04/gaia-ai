@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException,Request
+from fastapi import FastAPI, UploadFile, HTTPException,Request,Response
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -15,6 +15,8 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import os
 import sys
+from bson.json_util import dumps
+
 
 app = FastAPI()
 app.add_middleware(
@@ -40,6 +42,19 @@ except Exception as e:
 def main():
     print("Pinged server successfully!")
     return True
+
+@app.get("/getWaitlistMembers")
+async def getWaitlistMembers():
+    database = client["gaia-cluster"]
+    signups = database["waitlist_signups"]
+    emails = set()
+    cursor = signups.find()
+    members = await cursor.to_list(length=None)
+
+    for member in members:
+        emails.add(member['email'])
+  
+    return emails
 
 @app.post("/waitlistSignup")
 async def waitlist_signup(item: WaitlistItem):

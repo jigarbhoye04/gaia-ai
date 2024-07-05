@@ -11,7 +11,6 @@ class FormData(BaseModel):
     ageRange: str
     occupation: str
     email: EmailStr
-    phone: str
     devices: List[str]
     operatingSystems: List[str]
     openAIUsage: int
