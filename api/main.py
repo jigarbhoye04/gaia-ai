@@ -6,11 +6,11 @@ import uvicorn
 from api.input_validators import MessageRequest, MessageResponse, WaitlistItem,FormData
 from api.models.named_entity_recognition import parse_calendar_info
 from api.models.zero_shot_classification import classify_event_type
-from api.models.llama import doPrompt
+from api.models.text import doPrompt
+from api.models.image import generate_image
 from api.functionality.document import convert_pdf_to_text
 # from api.functionality.connect_gcal import get_events, authorize
 from motor.motor_asyncio import AsyncIOMotorClient
-from bson import ObjectId
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import os
@@ -94,11 +94,15 @@ async def submitFeedbackForm(formData: FormData):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
 @ app.post("/chat")
 def chat(request: MessageRequest):
     return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
 
+
+@ app.post("/image")
+def image(request:MessageRequest):
+    image_bytes: bytes = generate_image(request.message)
+    return Response(content=image_bytes, media_type="image/png")
 
 @app.post("/convert_pdf")
 async def convert_pdf(file: UploadFile):

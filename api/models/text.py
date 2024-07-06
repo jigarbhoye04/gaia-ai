@@ -6,7 +6,26 @@ system_prompt: str = """You are an Assistant who's name is GAIA - a general purp
 # If asked to add anything to their calendar or schedule, extract the information such as Title of the event, Date, Time, Duration, and start your response with: Here are the details for your event.
 
 prompt_model: str = "meta/meta-llama-3-8b-instruct"
-import requests
+
+# import os
+# import requests
+
+# ACCOUNT_ID = "your-account-id"
+# AUTH_TOKEN = os.environ.get("CLOUDFLARE_AUTH_TOKEN")
+
+# prompt = "Tell me all about PEP-8"
+# response = requests.post(
+#   f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct",
+#     headers={"Authorization": f"Bearer {AUTH_TOKEN}"},
+#     json={
+#       "messages": [
+#         {"role": "system", "content": "You are a friendly assistant"},
+#         {"role": "user", "content": prompt}
+#       ]
+#     }
+# )
+# result = response.json()
+# return result.response
 
 def doPrompt(prompt: str):
     url = "https://llm.aryanranderiya1478.workers.dev/"
