@@ -1,21 +1,23 @@
-from fastapi import FastAPI, UploadFile, HTTPException,Request,Response
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, UploadFile, HTTPException, Request,Response,File,Form
+from fastapi.responses import StreamingResponse,JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.server_api import ServerApi
+import os
 import uvicorn
-from api.input_validators import MessageRequest, MessageResponse, WaitlistItem,FormData
+import requests
+import sys
+import json
+from api.input_validators import MessageRequest, MessageResponse, WaitlistItem,FeedbackFormData,FileUploadRequest
 from api.models.named_entity_recognition import parse_calendar_info
 from api.models.zero_shot_classification import classify_event_type
-from api.models.text import doPrompt
+from api.models.text import doPrompt,doPromptNoStream
 from api.models.image import generate_image
 from api.functionality.document import convert_pdf_to_text
 # from api.functionality.connect_gcal import get_events, authorize
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
-import os
-import sys
-from bson.json_util import dumps
+
 
 
 app = FastAPI()
@@ -76,7 +78,7 @@ async def waitlist_signup(item: WaitlistItem):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/submitFeedbackForm")
-async def submitFeedbackForm(formData: FormData):
+async def submitFeedbackForm(formData: FeedbackFormData):
     database = client["gaia-cluster"]
     collection = database["feedback_form"]
 
@@ -104,16 +106,27 @@ def image(request:MessageRequest):
     image_bytes: bytes = generate_image(request.message)
     return Response(content=image_bytes, media_type="image/png")
 
-@app.post("/convert_pdf")
-async def convert_pdf(file: UploadFile):
-    print(file)
+
+@app.post("/document")
+async def upload_file(
+    message: str = Form(...),
+    file: UploadFile = File(...)
+):
     contents = await file.read()
-    return {
-        "name": file.filename,
-        "file_size_bytes": len(contents),
-        "content_type": file.content_type,
-        "text":  convert_pdf_to_text(contents),
-    }
+    converted_text = convert_pdf_to_text(contents)
+
+    response = doPromptNoStream(f"""
+        You can understand documents. 
+        Document name: {file.filename}, 
+        Content type: {file.content_type}, 
+        Size in bytes: {len(contents)}.
+        This is the document (converted to text for your convenience): {converted_text}
+        I want you to do this: {message}. 
+    """)
+
+    return JSONResponse(content=response)
+
+    
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

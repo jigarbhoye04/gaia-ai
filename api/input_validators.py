@@ -1,10 +1,11 @@
 from pydantic import BaseModel,EmailStr
 from typing import List
+from fastapi import UploadFile,File,Form
 
 class WaitlistItem(BaseModel):
     email: str
 
-class FormData(BaseModel):
+class FeedbackFormData(BaseModel):
     firstName:str
     lastName:str
     currentPage: int
@@ -40,3 +41,7 @@ class MessageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     response: str
+
+class FileUploadRequest(BaseModel):
+    message: str = Form(...),
+    file: UploadFile = File(...)
