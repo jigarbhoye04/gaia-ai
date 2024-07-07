@@ -13,7 +13,6 @@ def doPrompt(prompt: str):
     if response.status_code == 200:
         for line in response.iter_lines():
             if line:
-                print(line)
                 yield line.decode('utf-8') + "\n\n"
     else:
         yield "data: Error: Failed to fetch data\n\n"
@@ -21,12 +20,22 @@ def doPrompt(prompt: str):
     # for i in range(10):
     #     time.sleep(0)
     #     yield f"data: {i} prompt \n\n"
-    
 def doPromptNoStream(prompt: str):
     try:
         response = requests.post(url, json={"prompt": prompt, "stream": "false"})
-        response_dict = response.json()
-        return response_dict  
+        response.raise_for_status()
+        
+        if response.status_code == 200:
+            try:
+                response_dict = response.json()
+                return response_dict
+            except ValueError as ve:
+                print(f"Error parsing JSON: {ve}")
+                return {"error": "Invalid JSON response"}
+        else:
+            print(f"Unexpected status code: {response.status_code}")
+            return {"error": "Unexpected status code"}
+            
     except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
-        return None 
+        print(f"Request error: {e}")
+        return {"error": str(e)}

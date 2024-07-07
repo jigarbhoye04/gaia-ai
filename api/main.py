@@ -56,7 +56,7 @@ async def getWaitlistMembers():
     for member in members:
         emails.add(member['email'])
   
-    return emails
+    return {"count": len(emails),"emails":emails}
 
 @app.post("/waitlistSignup")
 async def waitlist_signup(item: WaitlistItem):
@@ -115,7 +115,7 @@ async def upload_file(
     contents = await file.read()
     converted_text = convert_pdf_to_text(contents)
 
-    response = doPromptNoStream(f"""
+    response = doPromptNoStream(prompt = f"""
         You can understand documents. 
         Document name: {file.filename}, 
         Content type: {file.content_type}, 
