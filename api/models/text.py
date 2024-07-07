@@ -8,11 +8,12 @@ system_prompt: str = """You are an Assistant who's name is GAIA - a general purp
 url = "https://llm.aryanranderiya1478.workers.dev/"
 
 def doPrompt(prompt: str):
-    response = requests.post(url, json={"prompt": prompt,"stream":True}, )
+    response = requests.post(url, json={"prompt": prompt, "stream": "true"})
     
     if response.status_code == 200:
         for line in response.iter_lines():
             if line:
+                print(line)
                 yield line.decode('utf-8') + "\n\n"
     else:
         yield "data: Error: Failed to fetch data\n\n"
@@ -23,7 +24,7 @@ def doPrompt(prompt: str):
     
 def doPromptNoStream(prompt: str):
     try:
-        response = requests.post(url, json={"prompt": prompt, "stream": False})
+        response = requests.post(url, json={"prompt": prompt, "stream": "false"})
         response_dict = response.json()
         return response_dict  
     except requests.exceptions.RequestException as e:
