@@ -41,7 +41,3 @@ class MessageRequest(BaseModel):
 
 class MessageResponse(BaseModel):
     response: str
-
-class FileUploadRequest(BaseModel):
-    message: str = Form(...),
-    file: UploadFile = File(...)

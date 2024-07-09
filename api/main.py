@@ -10,11 +10,11 @@ import uvicorn
 import requests
 import sys
 import json
-from api.input_validators import MessageRequest, MessageResponse, WaitlistItem,FeedbackFormData,FileUploadRequest
+from api.input_validators import MessageRequest, MessageResponse, WaitlistItem,FeedbackFormData
 from api.models.named_entity_recognition import parse_calendar_info
 from api.models.zero_shot_classification import classify_event_type
 from api.models.text import doPrompt,doPromptNoStream
-from api.models.image import generate_image
+from api.models.image import generate_image,convert_image_to_text
 from api.functionality.document import convert_pdf_to_text
 # from api.functionality.connect_gcal import get_events, authorize
 
@@ -96,16 +96,23 @@ async def submitFeedbackForm(formData: FeedbackFormData):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+import time
+
 @ app.post("/chat")
 def chat(request: MessageRequest):
     return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
 
 
-@ app.post("/image")
+@ app.post("/generate_image")
 def image(request:MessageRequest):
     image_bytes: bytes = generate_image(request.message)
     return Response(content=image_bytes, media_type="image/png")
 
+
+@app.post("/image")
+async def image(image: UploadFile = File(...)):
+    response = await convert_image_to_text(image)
+    return JSONResponse(content={"response": response})
 
 @app.post("/document")
 async def upload_file(
@@ -114,16 +121,16 @@ async def upload_file(
 ):
     contents = await file.read()
     converted_text = convert_pdf_to_text(contents)
-
-    response = doPromptNoStream(prompt = f"""
+    prompt = f"""
         You can understand documents. 
         Document name: {file.filename}, 
         Content type: {file.content_type}, 
         Size in bytes: {len(contents)}.
         This is the document (converted to text for your convenience): {converted_text}
         I want you to do this: {message}. 
-    """)
+    """
 
+    response = doPromptNoStream(prompt)
     return JSONResponse(content=response)
 
     
