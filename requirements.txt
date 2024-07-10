@@ -40,6 +40,7 @@ numpy==1.26.4
 oauthlib==3.2.2
 orjson==3.10.6
 packaging==24.1
+pillow==10.4.0
 pipdeptree==2.23.0
 preshed==3.0.9
 protobuf==4.25.3
@@ -60,6 +61,7 @@ requests==2.32.3
 requests-oauthlib==2.0.0
 rich==13.7.1
 rsa==4.9
+scipy==1.14.0
 setuptools==70.2.0
 shellingham==1.5.4
 smart-open==7.0.4
