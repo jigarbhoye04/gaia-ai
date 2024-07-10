@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from api.models.text import doPromptNoStream
+from api.validators.text import doPromptNoStream
 from fastapi.responses import JSONResponse
 from fastapi import UploadFile,File,Form
 from api.functionality.document import convert_pdf_to_text

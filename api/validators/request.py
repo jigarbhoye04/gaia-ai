@@ -2,7 +2,7 @@ from pydantic import BaseModel,EmailStr
 from typing import List
 
 class WaitlistItem(BaseModel):
-    email: str
+    email: EmailStr
 
 class FeedbackFormData(BaseModel):
     firstName:str
