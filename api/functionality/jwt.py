@@ -1,24 +1,29 @@
 import jwt
 from typing import Dict
-import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 import os
 from dotenv import load_dotenv
-
+from fastapi import HTTPException, status
 load_dotenv()
 
-"""Create access / refresh tokens token"""
-def create_access_token(
-        user_id: str,
-        is_refresh_token:bool = False
-    ) -> Dict[str, str]:
-    
-    minutes: int =  os.getenv('REFRESH_TOKEN_EXPIRE_MINUTES',15) if is_refresh_token else os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES',60 * 24 * 7)
-    
-    expiration = datetime.utcnow() + timedelta(minutes=minutes)
+"""Create access/refresh tokens"""
+def create_access_token(user_id: str) -> str:
+    try:
+        expiration_minutes = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 15))
+        expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
+        payload = {"user_id": user_id, "exp": expiration}
+        encoded_jwt = jwt.encode(payload, os.getenv('JWT_SECRET_KEY'), algorithm=os.getenv('JWT_ALGORITHM'))
+        return encoded_jwt
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error occurred: {str(e)}")
 
-    payload = {"user_id": user_id, "expires": expiration}
 
-    encoded_jwt = jwt.encode(payload, os.getenv('JWT_SECRET_KEY'), algorithm=os.getenv('JWT_ALGORITHM'))
-
-    return {"access_token": encoded_jwt}
+def decode_jwt(token: str) -> dict:
+    try:
+        return jwt.decode(token, os.getenv('JWT_SECRET_KEY'), algorithms=[os.getenv('JWT_ALGORITHM')])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error occurred: {str(e)}")

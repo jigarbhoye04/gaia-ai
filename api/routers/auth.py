@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from fastapi.responses import JSONResponse
-from api.validators.auth import SignupData, LoginData
-from api.functionality.authentication import get_password_hash, check_user_exists
+from api.validators.auth import SignupData, LoginData, Token
+from api.functionality.authentication import get_password_hash, authenticate_user
 from api.database.connect import users_collection
+from api.functionality.jwt import create_access_token, decode_jwt
 from pymongo.errors import DuplicateKeyError
+from datetime import datetime, timedelta, timezone
+import os
 
 router = APIRouter()
 
@@ -26,20 +29,56 @@ async def signup(user: SignupData):
 
 
 @router.post("/login")
-async def signup(user: LoginData):
+async def login(user: LoginData):
     """Endpoint for a user to login."""
-    user_dict = user.dict()
+
+    user = await authenticate_user(user)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     try:
-
-        if(not await check_user_exists(user_dict["email"])):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
-
-        #TODO: Implement logging in logic
-
-        return JSONResponse(content={"response":"Successfully logged in."})
+        access_token = create_access_token(user_id=str(user["_id"]))
+        response = JSONResponse(content={"response":"Successfully logged in."})
+        response.set_cookie(key="access_token", value=access_token, httponly=True,secure=True)
+        return response
     
     except HTTPException as httpexc:
         raise httpexc
     
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+@router.post("/refreshToken")
+def refresh_token(request: Request):
+    try:
+        access_token = request.cookies.get("access_token")
+
+        if not access_token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
+
+        jwt_payload = decode_jwt(access_token)
+
+        if not jwt_payload:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+        token_expiration = datetime.fromtimestamp(jwt_payload["exp"], timezone.utc)
+
+        if token_expiration < datetime.now(timezone.utc) + timedelta(minutes=5):
+            user_id = jwt_payload["user_id"]
+            new_access_token = create_access_token(user_id)
+
+            response = JSONResponse(content={"message": "Token refreshed."})
+            response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True)
+            return response
+
+        return JSONResponse(content={"message": "Access token still valid."})
+
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error occurred: {str(e)}")

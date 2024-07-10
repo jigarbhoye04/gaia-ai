@@ -25,3 +25,6 @@ class SignupData(BaseModel):
         if not any(char in set(string.punctuation) for char in v.get_secret_value()):
             raise ValueError('Password must contain at least one special character')
         return v
+
+class Token(BaseModel):
+    token:str
