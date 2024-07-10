@@ -1,6 +1,4 @@
 import bcrypt
-import base64
-import hashlib
 from api.database.connect import client
 from pydantic import EmailStr
 
@@ -14,16 +12,11 @@ def get_password_hash(password):
 
 async def check_user_exists(email: EmailStr):
     """Check if user with this email exists."""
-
     try:
-        db = client.get_database("auth")
-        users_collection = db.get_collection("users")
-
+        db = client.get_database("GAIA")
+        users_collection = db.get_collection("Users")
         found_user = await users_collection.find_one({"email":email})
-        print(found_user)
-
         return True if found_user else False
-    
-    except Exception as e:
+    except Exception:
         return True
     
