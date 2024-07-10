@@ -8,7 +8,8 @@ system_prompt: str = """You are an Assistant who's name is GAIA - a general purp
 url = "https://llm.aryanranderiya1478.workers.dev/"
 
 def doPrompt(prompt: str):
-    response = requests.post(url, json={"prompt": prompt, "stream": "true"})
+    print("prompted",prompt)
+    response = requests.post(url, json={"prompt": prompt, "stream": "true"}, stream=True)
     
     if response.status_code == 200:
         for line in response.iter_lines():
