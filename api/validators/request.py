@@ -1,6 +1,5 @@
 from pydantic import BaseModel,EmailStr
 from typing import List
-from fastapi import UploadFile,File,Form
 
 class WaitlistItem(BaseModel):
     email: str
@@ -34,10 +33,6 @@ class FeedbackFormData(BaseModel):
     learningBehaviourComfortable: str
 
 
-
 class MessageRequest(BaseModel):
     message: str
 
-
-class MessageResponse(BaseModel):
-    response: str
