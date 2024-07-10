@@ -6,8 +6,8 @@ from api.database.connect import users_collection
 from api.functionality.jwt import create_access_token, decode_jwt
 from pymongo.errors import DuplicateKeyError
 from datetime import datetime, timedelta, timezone
-import os
-
+from bson import json_util
+import json
 router = APIRouter()
 
 @router.post("/signup")
@@ -43,8 +43,9 @@ async def login(user: LoginData):
 
     try:
         access_token = create_access_token(user_id=str(user["_id"]))
-        response = JSONResponse(content={"response":"Successfully logged in."})
+        response = JSONResponse(content=json.loads(json_util.dumps(user)))
         response.set_cookie(key="access_token", value=access_token, httponly=True,secure=True)
+        print(access_token)
         return response
     
     except HTTPException as httpexc:
