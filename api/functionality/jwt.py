@@ -12,10 +12,17 @@ def create_access_token(user_id: str) -> str:
         expiration_minutes = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 15))
         expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
         payload = {"user_id": user_id, "exp": expiration}
-        encoded_jwt = jwt.encode(payload, os.getenv('JWT_SECRET_KEY'), algorithm=os.getenv('JWT_ALGORITHM'))
+        jwt_secret_key = os.getenv('JWT_SECRET_KEY')
+        jwt_algorithm = os.getenv('JWT_ALGORITHM')
+        
+        if not jwt_secret_key or not jwt_algorithm:
+            raise ValueError("JWT secret key or algorithm not configured")
+        
+        encoded_jwt = jwt.encode(payload, jwt_secret_key, algorithm=jwt_algorithm)
         return encoded_jwt
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Internal server error occurred: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Token creation error: {str(e)}")
+
 
 
 def decode_jwt(token: str) -> dict:

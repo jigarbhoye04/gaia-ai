@@ -8,9 +8,9 @@ from api.routers import ping, waitlist, feedback, chat, image,auth
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173","https://gaia.aryanranderiya.com","http://192.168.138.215:5173"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET","POST"],
     allow_headers=["*"],
 )
 load_dotenv()

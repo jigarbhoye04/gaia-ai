@@ -44,8 +44,20 @@ async def login(user: LoginData):
     try:
         access_token = create_access_token(user_id=str(user["_id"]))
         response = JSONResponse(content=json.loads(json_util.dumps(user)))
-        response.set_cookie(key="access_token", value=access_token, httponly=True,secure=True)
-        print(access_token)
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            samesite="Lax",
+            secure=True,
+            httponly=True,
+            expires=datetime.now(timezone.utc) + timedelta(days=60)
+        )
+        # response.set_cookie(key="access_token",
+        #                     value=access_token,
+        #                     samesite="None",
+        #                     secure=False,
+        #                     httponly=True,
+        #                     expires=datetime.now(timezone.utc) + timedelta(days=60))
         return response
     
     except HTTPException as httpexc:
@@ -54,11 +66,11 @@ async def login(user: LoginData):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@router.post("/refreshToken")
+@router.get("/refreshToken")
 def refresh_token(request: Request):
     try:
         access_token = request.cookies.get("access_token")
-
+        print(request.cookies)
         if not access_token:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
 
@@ -72,9 +84,21 @@ def refresh_token(request: Request):
         if token_expiration < datetime.now(timezone.utc) + timedelta(minutes=5):
             user_id = jwt_payload["user_id"]
             new_access_token = create_access_token(user_id)
-
             response = JSONResponse(content={"message": "Token refreshed."})
-            response.set_cookie(key="access_token", value=new_access_token, httponly=True, secure=True)
+            response.set_cookie(
+                key="access_token",
+                value=new_access_token,
+                samesite="Lax",
+                secure=True,
+                httponly=True,
+                expires=datetime.now(timezone.utc) + timedelta(days=60)
+            )
+            # response.set_cookie(key="access_token",
+            #                     value=new_access_token,
+            #                     samesite="None",
+            #                     secure=False,
+            #                     httponly=True,
+            #                     expires=datetime.now(timezone.utc) + timedelta(days=60))
             return response
 
         return JSONResponse(content={"message": "Access token still valid."})
