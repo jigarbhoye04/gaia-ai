@@ -1,7 +1,8 @@
 import requests
-from fastapi import UploadFile, File,HTTPException
+from fastapi import UploadFile, File, HTTPException, Form
 from PIL import Image
 from io import BytesIO
+from api.functionality.text.text import doPromptNoStream
 
 def generate_image(imageprompt: str) -> dict:
     url = "https://generateimage.aryanranderiya1478.workers.dev/"
@@ -13,7 +14,7 @@ def generate_image(imageprompt: str) -> dict:
         print(f"Request error: {e}")
         return {"error": str(e)}
 
-def compress_image(image_bytes,sizing=0.7,quality=85):
+def compress_image(image_bytes,sizing=0.4,quality=85):
     try:
         image = Image.open(BytesIO(image_bytes))
         output_io = BytesIO()
@@ -32,7 +33,11 @@ def compress_image(image_bytes,sizing=0.7,quality=85):
         raise HTTPException(status_code=500, detail=f"Failed to compress image: {str(e)}")
 
 
-async def convert_image_to_text(image: UploadFile = File(...)) -> dict:
+async def convert_image_to_text(
+        image: UploadFile = File(...),
+        message: str = Form(...),
+) -> dict:
+
     contents = await image.read()
     url = "https://imageunderstanding.aryanranderiya1478.workers.dev/"
     
@@ -47,7 +52,13 @@ async def convert_image_to_text(image: UploadFile = File(...)) -> dict:
         if(len(contents) > 1 * 1024 * 1024 ):
             return "File too large"
 
-        response = requests.post(url, files={"image": contents})
+        improved_prompt = doPromptNoStream(prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{message}'. Only give me the sentence without any additional headers or information. Be concise, but descriptive.""")
+
+        response = requests.post(
+            url, 
+            files={"image": contents}, 
+            data={"prompt": improved_prompt["response"]}
+        )
         response.raise_for_status()
         return response.json()
     
