@@ -9,9 +9,9 @@ load_dotenv()
 """Create access/refresh tokens"""
 def create_access_token(user_id: str) -> str:
     try:
-        expiration_minutes = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 15))
+        expiration_minutes = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 10))
         expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
-        payload = {"user_id": user_id, "exp": expiration}
+        payload = {"user_id": user_id, "type": "access_token","exp": expiration}
         jwt_secret_key = os.getenv('JWT_SECRET_KEY')
         jwt_algorithm = os.getenv('JWT_ALGORITHM')
         
@@ -25,9 +25,9 @@ def create_access_token(user_id: str) -> str:
 
 def create_refresh_token(user_id: str) -> str:
     try:
-        expiration_minutes = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 15))
-        expiration = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
-        payload = {"user_id": user_id, "refresj_exp": expiration}
+        expiration_days = int(os.getenv('REFRESH_TOKEN_EXPIRE_DAYS', 30))
+        expiration = datetime.now(timezone.utc) + timedelta(days=expiration_days)
+        payload = {"user_id": user_id, "type": "refresh_token", "exp": expiration}
         jwt_secret_key = os.getenv('JWT_SECRET_KEY')
         jwt_algorithm = os.getenv('JWT_ALGORITHM')
         

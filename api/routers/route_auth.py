@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Request, FastAPI
 from fastapi.responses import JSONResponse
 from api.validators.auth import SignupData, LoginData
-from api.functionality.authentication import get_password_hash, authenticate_user
+from api.functionality.authentication import get_password_hash, authenticate_user, authorise_user
 from api.database.connect import users_collection
-from api.functionality.jwt import create_access_token, decode_jwt
+from api.functionality.jwt import create_access_token, decode_jwt, create_refresh_token
 from pymongo.errors import DuplicateKeyError
 from datetime import datetime, timedelta, timezone
 from bson import json_util
@@ -39,11 +39,11 @@ async def login(user: LoginData):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
-
+    access_token = create_access_token(user_id=str(user["_id"]))
+    refresh_token = create_refresh_token(user_id=str(user["_id"]))
+    
     try:
-        access_token = create_access_token(user_id=str(user["_id"]))
         response = JSONResponse(content=json.loads(json_util.dumps(user)))
         response.set_cookie(
             key="access_token",
@@ -53,14 +53,14 @@ async def login(user: LoginData):
             httponly=True,
             expires=datetime.now(timezone.utc) + timedelta(days=60)
         )
-        # response.set_cookie(
-        #     key="access_token",
-        #     value=access_token,
-        #     samesite="none",
-        #     secure=False,
-        #     httponly=True,
-        #     expires=datetime.now(timezone.utc) + timedelta(days=60)
-        # )
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            samesite="Lax",
+            secure=True,
+            httponly=True,
+            expires=datetime.now(timezone.utc) + timedelta(days=60)
+        )
         return response
     
     except HTTPException as httpexc:
@@ -69,44 +69,12 @@ async def login(user: LoginData):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@router.get("/refreshToken")
-def refresh_token(request: Request):
+@router.post("/refreshToken")
+async def refresh_token(request: Request):
     try:
-        access_token = request.cookies.get("access_token")
-
-        if not access_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
-
-        jwt_payload = decode_jwt(access_token)
-
-        if not jwt_payload:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-        token_expiration = datetime.fromtimestamp(jwt_payload["exp"], timezone.utc)
-        
-        if token_expiration < datetime.now(timezone.utc):
-            user_id = jwt_payload["user_id"]
-            new_access_token = create_access_token(user_id)
-            response = JSONResponse(content={"message": "Token refreshed."})
-            response.set_cookie(
-                key="access_token",
-                value=new_access_token,
-                samesite="Lax",
-                secure=True,
-                httponly=True,
-                expires=datetime.now(timezone.utc) + timedelta(days=60)
-            )
-            # response.set_cookie(
-            #     key="access_token",
-            #     value=new_access_token,
-            #     samesite="none",
-            #     secure=False,
-            #     httponly=True,
-            #     expires=datetime.now(timezone.utc) + timedelta(days=60)
-            # )
-            return response
-
-        return JSONResponse(content={"message": "Access token still valid."})
+        access_token=request.cookies.get("access_token")
+        refresh_token=request.cookies.get("refresh_token")
+        return await authorise_user(access_token=access_token, refresh_token=refresh_token)
 
     except HTTPException as http_exc:
         raise http_exc

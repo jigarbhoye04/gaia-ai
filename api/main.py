@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
 from api.database.connect import connect
-from api.routers import ping, waitlist, feedback, chat, image, auth, document
+from api.routers import route_auth, route_chat, route_document, route_feedback, route_image, route_ping, route_waitlist
 
 app = FastAPI()
 app.add_middleware(
@@ -17,13 +17,13 @@ app.add_middleware(
 load_dotenv()
 connect()
 
-app.include_router(ping.router)
-app.include_router(waitlist.router)
-app.include_router(feedback.router)
-app.include_router(chat.router)
-app.include_router(image.router)
-app.include_router(document.router)
-app.include_router(auth.router)
+app.include_router(route_ping.router)
+app.include_router(route_waitlist.router)
+app.include_router(route_feedback.router)
+app.include_router(route_chat.router)
+app.include_router(route_image.router)
+app.include_router(route_document.router)
+app.include_router(route_auth.router)
     
 
 if __name__ == "__main__":
