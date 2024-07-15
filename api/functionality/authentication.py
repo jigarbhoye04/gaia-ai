@@ -1,7 +1,7 @@
 import bcrypt
-from api.database.connect import client
+from api.database.connect import database
 from pydantic import EmailStr
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status
 from api.functionality.jwt import create_access_token, decode_jwt, create_refresh_token
 from datetime import datetime, timedelta, timezone
 from fastapi.responses import JSONResponse
@@ -19,8 +19,7 @@ def get_password_hash(password):
 async def get_user(email: EmailStr):
     """Check if user with this email exists."""
     try:
-        db = client.get_database("GAIA")
-        users_collection = db.get_collection("Users")
+        users_collection = database.get_collection("users")
         found_user = await users_collection.find_one({"email":email})
         return found_user if found_user else False
     except Exception:
@@ -44,8 +43,9 @@ async def authenticate_user(user):
 
 async def authorise_user(access_token, refresh_token):
     try:
-        if not access_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
+        if not access_token or not refresh_token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access / refresh token")
+        
         jwt_payload = decode_jwt(access_token)
         if not jwt_payload:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
@@ -97,13 +97,15 @@ async def authorise_user(access_token, refresh_token):
             return response
         return JSONResponse(content={"message": "Access token still valid."})
         
+    except HTTPException as httpexc:
+        raise httpexc
+    
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 async def insert_delete_refresh_token_db(oldtoken, newtoken):
     try:
-        database = client["gaia-cluster"]
         collection = database["refresh_tokens"]
         delete_result = await collection.delete_one({"refresh_token":oldtoken})
         insert_result = await collection.insert_one({"refresh_token":newtoken})
@@ -125,7 +127,7 @@ async def check_refresh_valid(refresh_token):
         if not refresh_jwt_payload:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
-        database = client["gaia-cluster"]
+        database = client["GAIA"]
         collection = database["refresh_tokens"]
         found_token = await collection.find_one({"refresh_token":refresh_token})
 

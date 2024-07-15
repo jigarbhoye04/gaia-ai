@@ -8,8 +8,8 @@ import pymongo
 load_dotenv()
 client = AsyncIOMotorClient(os.getenv("MONGO_DB"), server_api=ServerApi('1'))
 
-db=client.get_database("GAIA")
-users_collection = db.get_collection("Users")
+database=client.get_database("GAIA")
+users_collection = database.get_collection("users")
 users_collection.create_index([('email', pymongo.ASCENDING)], unique=True)
 
 

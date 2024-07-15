@@ -3,10 +3,11 @@ from fastapi.responses import JSONResponse
 from api.validators.auth import SignupData, LoginData
 from api.functionality.authentication import get_password_hash, authenticate_user, authorise_user
 from api.database.connect import users_collection
-from api.functionality.jwt import create_access_token, decode_jwt, create_refresh_token
+from api.functionality.jwt import create_access_token, create_refresh_token
 from pymongo.errors import DuplicateKeyError
 from datetime import datetime, timedelta, timezone
 from bson import json_util
+from api.database.connect import client
 import json
 
 router = APIRouter()
@@ -40,10 +41,19 @@ async def login(user: LoginData):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
-    access_token = create_access_token(user_id=str(user["_id"]))
-    refresh_token = create_refresh_token(user_id=str(user["_id"]))
-    
     try:
+
+        access_token = create_access_token(user_id=str(user["_id"]))
+        refresh_token = create_refresh_token(user_id=str(user["_id"]))
+
+        database = client["gaia-cluster"]
+        collection = database["refresh_tokens"]
+        insert_result = await collection.insert_one({"refresh_token":refresh_token})
+
+        if not insert_result.inserted_id:
+            raise HTTPException(
+                status_code=500, detail="Failed to insert & delete refresh token")
+        
         response = JSONResponse(content=json.loads(json_util.dumps(user)))
         response.set_cookie(
             key="access_token",

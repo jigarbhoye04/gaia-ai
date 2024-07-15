@@ -1,11 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from api.database.connect import client
+from api.database.connect import database
 from api.validators.request import FeedbackFormData
 router = APIRouter()
 
 @router.post("/submitFeedbackForm")
 async def submitFeedbackForm(formData: FeedbackFormData):
-    database = client["gaia-cluster"]
     collection = database["feedback_form"]
 
     try:

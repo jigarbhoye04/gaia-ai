@@ -1,6 +1,6 @@
 
 from fastapi import APIRouter
-from api.database.connect import client
+from api.database.connect import database
 from api.validators.request import WaitlistItem
 from fastapi import HTTPException
 
@@ -8,8 +8,7 @@ router = APIRouter()
 
 @router.get("/getWaitlistMembers")
 async def getWaitlistMembers():
-    database = client["gaia-cluster"]
-    signups = database["waitlist_signups"]
+    signups = database["waitlist"]
     emails = set()
     cursor = signups.find()
     members = await cursor.to_list(length=None)
@@ -22,8 +21,7 @@ async def getWaitlistMembers():
 @router.post("/waitlistSignup")
 async def waitlist_signup(item: WaitlistItem):
 
-    database = client["gaia-cluster"]
-    collection = database["waitlist_signups"]
+    collection = database["waitlist"]
 
     try:
         item_dict = item.dict()
