@@ -1,10 +1,13 @@
 from pydantic import BaseModel, EmailStr, SecretStr,validator
+from dotenv import load_dotenv
+from fastapi import  Form
 import string
+import os
 
+load_dotenv()
 class LoginData(BaseModel):
-    email: EmailStr
-    password: SecretStr
-
+    email: EmailStr = Form(...)
+    password: SecretStr = Form(...)
 
 class SignupData(BaseModel):
     firstName:str
@@ -25,6 +28,21 @@ class SignupData(BaseModel):
         if not any(char in set(string.punctuation) for char in v.get_secret_value()):
             raise ValueError('Password must contain at least one special character')
         return v
+    
+    def get_signup_data(
+        firstName: str = Form(...),
+        lastName: str = Form(...),
+        email: EmailStr = Form(...),
+        password: SecretStr = Form(...),
+    ):
+        return SignupData(
+            firstName=firstName,
+            lastName=lastName,
+            email=email,
+            password=password
+        ).dict()
 
-class Token(BaseModel):
-    token:str
+class TokenSettings(BaseModel):
+    authjwt_secret_key: str =  os.getenv('JWT_SECRET_KEY')
+    authjwt_token_location: set = {"cookies"}
+    authjwt_cookie_csrf_protect: bool = os.getenv('authjwt_cookie_csrf_protect', True) #! CHANGE THIS IN PRODUCTION!

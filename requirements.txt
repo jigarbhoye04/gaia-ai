@@ -29,6 +29,7 @@ Jinja2==3.1.4
 joblib==1.4.2
 langcodes==3.4.0
 language_data==1.2.0
+logging==0.4.9.6
 lxml==5.2.2
 marisa-trie==1.2.0
 markdown-it-py==3.0.0
@@ -52,7 +53,7 @@ pycountry==24.6.1
 pydantic==2.7.4
 pydantic_core==2.18.4
 Pygments==2.18.0
-PyJWT==2.8.0
+PyJWT==1.7.1
 pymongo==4.8.0
 PyPDF2==3.0.1
 python-dotenv==1.0.1
