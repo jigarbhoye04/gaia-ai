@@ -1,7 +1,10 @@
 import bcrypt
 from api.database.connect import client
 from pydantic import EmailStr
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
+from api.functionality.jwt import create_access_token, decode_jwt
+from datetime import datetime, timedelta, timezone
+from fastapi.responses import JSONResponse
 
 def verify_password(plain_password, hashed_password):
     """Verify if the plain password matches the hashed password using bcrypt."""
@@ -36,3 +39,44 @@ async def authenticate_user(user):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+
+async def check_user_valid(request: Request):
+    try:
+        access_token = request.cookies.get("access_token")
+
+        if not access_token:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access token")
+
+        jwt_payload = decode_jwt(access_token)
+
+        if not jwt_payload:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+        
+        token_expiration = datetime.fromtimestamp(jwt_payload["exp"], timezone.utc)
+        if token_expiration < datetime.now(timezone.utc) + timedelta(minutes=5):
+            user_id = jwt_payload["user_id"]
+            new_access_token = create_access_token(user_id)
+            response = JSONResponse(content={"message": "Token refreshed."})
+            response.set_cookie(
+                key="access_token",
+                value=new_access_token,
+                samesite="Lax",
+                secure=True,
+                httponly=True,
+                expires=datetime.now(timezone.utc) + timedelta(days=60)
+            )
+            # response.set_cookie(
+            #     key="access_token",
+            #     value=new_access_token,
+            #     samesite="none",
+            #     secure=False,
+            #     httponly=True,
+            #     expires=datetime.now(timezone.utc) + timedelta(days=60)
+            # )
+            return response
+
+    except Exception as e:
+        ...
+
+async def refresh_token(jwt):
+    ...

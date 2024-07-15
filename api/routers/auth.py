@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status, Request, FastAPI
 from fastapi.responses import JSONResponse
 from api.validators.auth import SignupData, LoginData
 from api.functionality.authentication import get_password_hash, authenticate_user
@@ -83,8 +83,8 @@ def refresh_token(request: Request):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
         token_expiration = datetime.fromtimestamp(jwt_payload["exp"], timezone.utc)
-
-        if token_expiration < datetime.now(timezone.utc) + timedelta(minutes=5):
+        
+        if token_expiration < datetime.now(timezone.utc):
             user_id = jwt_payload["user_id"]
             new_access_token = create_access_token(user_id)
             response = JSONResponse(content={"message": "Token refreshed."})

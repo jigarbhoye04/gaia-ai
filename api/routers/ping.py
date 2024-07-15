@@ -5,4 +5,4 @@ router = APIRouter()
 @router.get("/")
 def main():
     print("Pinged server successfully!")
-    return True
+    return {"status":"GAIA API is running"}

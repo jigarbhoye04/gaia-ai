@@ -13,6 +13,7 @@ app.add_middleware(
     allow_methods=["GET","POST"],
     allow_headers=["*"],
 )
+
 load_dotenv()
 connect()
 
