@@ -1,7 +1,10 @@
 import bcrypt
 from api.database.connect import database
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request
 from api.functionality.jwt import create_access_token, decode_jwt
+from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
+from bson.objectid import ObjectId
 
 def verify_password(plain_password: str, hashed_password:str ) -> bool:
     """Verify if the plain password matches the hashed password using bcrypt."""
@@ -13,21 +16,49 @@ def get_password_hash(password: str):
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(12)).decode("utf-8")
 
 
-async def get_user(email: str) -> dict:
+async def get_user(query: str, type: str="email") -> dict:
     """Check if user with this id exists."""
     try:
         users_collection = database.get_collection("users")
-        found_user = await users_collection.find_one({"email": email})
+
+        if type == "_id":
+            query = ObjectId(query)
+
+        found_user = await users_collection.find_one({type: query})
+
         if found_user:
+            found_user["_id"] = str(found_user["_id"]) 
             return found_user
+        
         else:
             return False
-    except Exception:
+        
+    except Exception as e:
+        print(e)
         return False
+
+async def is_user_valid(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Missing access token")
+        
+    jwt_payload = decode_jwt(access_token)
+    if not jwt_payload:
+        raise HTTPException(status_code=401, detail="Invalid access token")
+
+    token_expiration = datetime.fromtimestamp(jwt_payload["exp"], timezone.utc)
+
+    if token_expiration and token_expiration < datetime.now(timezone.utc): 
+        raise HTTPException(status_code=401, detail="Token has expired")
+
+    user = await get_user(query=jwt_payload["sub"], type="_id")
+    del user["hashed_password"]
+    return user if user else False
 
 async def authenticate_user(email:str, password:str):
     try:
-        user = await get_user(email)
+        user = await get_user(query=email)
+        print(user)
         if not user or not verify_password(password, user["hashed_password"]):
             return None
         else:
@@ -36,7 +67,6 @@ async def authenticate_user(email:str, password:str):
 
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
 
 # async def authorise_user(access_token, refresh_token):
 #     try:

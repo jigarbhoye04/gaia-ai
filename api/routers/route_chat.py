@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from api.validators.request import MessageRequest
 from api.functionality.text.text import doPrompt, doPromptNoStream
 from api.functionality.text.zero_shot_classification import classify_event_type
+from api.functionality.authentication import is_user_valid
 router = APIRouter()
 
 def test(key:str):
@@ -11,12 +12,13 @@ def test(key:str):
 
 @router.post("/chat")
 async def chat(request: MessageRequest):
-    data = await classify_event_type(request.message)
+    # data = await classify_event_type(request.message)
 
-    if(data["generate image"] > 0.75):
-        return StreamingResponse(test("image"), media_type='text/event-stream')
-    else:
-        return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
+    # if(data["generate image"] > 0.75):
+    #     return StreamingResponse(test("image"), media_type='text/event-stream')
+    # else:
+    #     return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
+    return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
  
 @router.post("/chatNoStream")
 def chat(request: MessageRequest):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status,Depends, Form, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Form, Request
 from fastapi.responses import JSONResponse
 from pydantic import EmailStr, SecretStr
 from dotenv import load_dotenv
@@ -7,9 +7,10 @@ from pymongo.errors import DuplicateKeyError
 import json
 from datetime import datetime, timedelta, timezone
 from api.validators.auth import SignupData
-from api.functionality.authentication import get_password_hash, authenticate_user, decode_jwt
+from api.functionality.authentication import get_password_hash, authenticate_user
 from api.database.connect import users_collection
-from api.functionality.jwt import create_access_token, decode_jwt
+from api.functionality.jwt import create_access_token
+from api.functionality.authentication import is_user_valid
 
 load_dotenv()
 router = APIRouter()
@@ -64,24 +65,8 @@ async def login(
     
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
-
-
-@router.get("/isTokenValid") #! Temporary!
-def isTokenValid(request: Request):
-
-    access_token = request.cookies.get("access_token")
-    print(access_token)
-    if not access_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing access / refresh token")
+    
         
-    jwt_payload = decode_jwt(access_token)
-        
-    if not jwt_payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
-
-    token_expiration = datetime.fromtimestamp(jwt_payload["exp"], timezone.utc)
-
-    if token_expiration < datetime.now(timezone.utc): 
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is not valid")
-
-    return JSONResponse(content={"message": "Access token still valid."})
+@router.get("/getUserInfo")
+def is_token_valid(current_user: bool = Depends(is_user_valid)):
+    return {"response": "Token is valid", "user":current_user}
