@@ -6,9 +6,11 @@ from dotenv import load_dotenv
 import pymongo
 
 load_dotenv()
-client = AsyncIOMotorClient(os.getenv("MONGO_DB"), server_api=ServerApi('1'))
+URI = os.getenv("MONGO_DB")
 
-database=client.get_database("GAIA")
+client = AsyncIOMotorClient(URI, server_api=ServerApi('1'))
+
+database = client.get_database("GAIA")
 users_collection = database.get_collection("users")
 users_collection.create_index([('email', pymongo.ASCENDING)], unique=True)
 
@@ -20,4 +22,3 @@ def connect():
     except Exception as e:
         print("An Invalid URI host error was received. Is your Atlas host name correct in your connection string?")
         sys.exit(1)
-

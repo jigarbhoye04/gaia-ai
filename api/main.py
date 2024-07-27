@@ -9,15 +9,15 @@ import logging
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://gaia.aryanranderiya.com","http://192.168.138.215:5173","https://localhost:5173"],
+    allow_origins=["http://localhost:5173", "https://gaia.aryanranderiya.com",
+                   "http://192.168.138.215:5173", "https://localhost:5173", "https://192.168.13.215:5173"],
     allow_credentials=True,
-    allow_methods=["GET","POST"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
 load_dotenv()
 connect()
-
 
 # logging.basicConfig(level=logging.DEBUG, format='%(message)s')
 
@@ -28,7 +28,7 @@ app.include_router(route_chat.router)
 app.include_router(route_image.router)
 app.include_router(route_document.router)
 app.include_router(route_auth.router)
-    
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
