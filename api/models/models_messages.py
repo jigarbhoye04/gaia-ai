@@ -35,3 +35,8 @@ class ConversationModel(BaseModel):
 class ConversationHistoryModel(BaseModel):
     user_id: str
     conversation_history: List[ConversationModel]
+
+
+class UpdateMessagesRequest(BaseModel):
+    conversation_id: str
+    messages: List[MessageModel]

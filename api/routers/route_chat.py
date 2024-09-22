@@ -2,14 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse, JSONResponse
 from schemas.schema_request import MessageRequest
 from functionality.text.text import doPrompt, doPromptNoStream
-from functionality.text.zero_shot_classification import classify_event_type
-from models.models_messages import ConversationModel, ConversationHistoryModel, MessageModel
-from schemas.schema_request import UpdateDescriptionRequest
+# from functionality.text.zero_shot_classification import classify_event_type
+from models.models_messages import ConversationModel, UpdateMessagesRequest
 from typing import List
 from middleware.middleware_auth import get_current_user
 from database.connect import conversations_collection, users_collection
 from bson import ObjectId
-import datetime
 
 router = APIRouter()
 
@@ -53,11 +51,9 @@ async def create_conversation(conversation: ConversationModel, user_id: str = De
     new_conversation["messages"] = [message.model_dump()
                                     for message in conversation.messages]
 
-    # Remove "loading" from each message if it exists
     for message in new_conversation["messages"]:
         message.pop("loading", None)
 
-    # Check if the user has a document in the conversations collection
     existing_user_conversation = await conversations_collection.find_one({"user_id": user_id})
 
     if existing_user_conversation:
@@ -95,16 +91,40 @@ async def create_conversation(conversation: ConversationModel, user_id: str = De
 
 
 @router.put("/conversations/{conversation_id}/messages/")
-async def update_messages(conversation_id: str, new_messages: List[MessageModel]):
-    update_result = conversations_collection.update_one(
-        {"conversation_id": conversation_id},
-        {"$push": {"messages": {
-            "$each": [message.dict() for message in new_messages]}}}
+async def update_messages(request: UpdateMessagesRequest, user_id: str = Depends(get_current_user)):
+    conversation_id = request.conversation_id
+    messages = request.messages
+
+    existing_conversation = await conversations_collection.find_one({
+        "user_id": user_id,
+        "conversationHistory.conversation_id": conversation_id
+    })
+
+    if not existing_conversation:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found or does not belong to the user"
+        )
+
+    update_result = await conversations_collection.update_one(
+        {
+            "user_id": user_id,
+            "conversationHistory.conversation_id": conversation_id
+        },
+        {
+            "$push": {
+                "conversationHistory.$.messages": {
+                    "$each": [message.dict(exclude={"loading"}) for message in messages]
+                }
+            }
+        }
     )
 
     if update_result.modified_count == 0:
         raise HTTPException(
-            status_code=404, detail="Conversation not found or no new messages")
+            status_code=404,
+            detail="No new messages to update"
+        )
 
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
