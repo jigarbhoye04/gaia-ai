@@ -2,15 +2,12 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
-# DateType could be represented by Python's datetime in the backend
-DateType = datetime
-
 
 # Define the structure for each message
 class MessageModel(BaseModel):
     type: str  # "user" or "bot"
     response: str  # Content of the message
-    date: Optional[DateType] = None  # Date of the message or empty
+    date: str = None  # Date of the message or empty
     loading: Optional[bool] = False  # Whether the message is still loading
     isImage: Optional[bool] = False  # Whether it's an image message
     imageUrl: Optional[str] = None  # URL for the image
