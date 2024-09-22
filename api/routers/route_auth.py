@@ -1,18 +1,14 @@
-import os
-from utils.util_auth import encode_jwt, authenticate_user, hash_password, decode_jwt
-from fastapi.security import OAuth2PasswordBearer
-from fastapi import APIRouter, HTTPException, status, Depends, Form, Request, Cookie
+from utils.util_auth import encode_jwt, authenticate_user, hash_password
+from fastapi import APIRouter, HTTPException, status, Depends, Cookie
 from fastapi.responses import JSONResponse
-from pydantic import EmailStr, SecretStr
 from dotenv import load_dotenv
 from bson import json_util, ObjectId
 from pymongo.errors import DuplicateKeyError
 import json
 from datetime import timedelta, timezone, datetime
 from schemas.schema_auth import SignupData, LoginData
-
+from middleware.middleware_auth import get_current_user
 from database.connect import users_collection
-from utils.util_mongo import serialize_document
 
 load_dotenv()
 router = APIRouter()
@@ -20,6 +16,7 @@ router = APIRouter()
 
 @router.post("/users")
 async def signup(user: SignupData):
+    """ Create new Account for user """
 
     try:
         user_dict = user.model_dump()
@@ -93,56 +90,33 @@ async def login(user: LoginData) -> JSONResponse:
 
 
 @router.get("/auth/me")
-async def get_user_data(access_token: str = Cookie(None)):
-    if not access_token:
+async def get_user_data(user_id: str = Depends(get_current_user)):
+    if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authenticated"
         )
 
-    try:
-        payload = decode_jwt(access_token)
-        user_id = payload.get("sub")
+    user = await users_collection.find_one({"_id": ObjectId(user_id)})
 
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
-
-        user = await users_collection.find_one({"_id": ObjectId(user_id)})
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-
-        response_data = {
-            "first_name": user["first_name"],
-            "last_name": user["last_name"],
-            **({"profile_picture": user["profile_picture"]} if user.get("profile_picture") else {})
-        }
-
-        return JSONResponse(content=response_data)
-
-    except HTTPException as httpexc:
-        raise httpexc
-
-    except Exception as e:
+    if not user:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
         )
+
+    response_data = {
+        "first_name": user["first_name"],
+        "last_name": user["last_name"],
+        **({"profile_picture": user["profile_picture"]} if user.get("profile_picture") else {})
+    }
+
+    return JSONResponse(content=response_data)
+
 # @router.get("/getUserInfo")
     # def is_token_valid(current_user: bool = Depends(is_user_valid)):
     #     return {"response": "Token is valid", "user": current_user}
 
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-
-
-# def get_current_user(token: str = Depends(oauth2_scheme)):
-#     email = decode_token(token)
-#     return email
 
 # def refresh_token(refresh_token: str):
 #     try:

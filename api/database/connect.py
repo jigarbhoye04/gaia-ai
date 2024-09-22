@@ -19,9 +19,14 @@ client = AsyncIOMotorClient(URI, server_api=ServerApi('1'))
 # Select database and collection
 database = client.get_database("GAIA")
 users_collection = database.get_collection("users")
+conversations_collection = database.get_collection("conversations")
 
 # Create unique index on email field
 users_collection.create_index([('email', pymongo.ASCENDING)], unique=True)
+
+# Create unique index on user_id field for each vonersations
+conversations_collection.create_index(
+    [('user_id', pymongo.ASCENDING)], unique=True)
 
 
 def connect():

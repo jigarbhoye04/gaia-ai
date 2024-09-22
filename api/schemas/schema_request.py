@@ -1,12 +1,14 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel, EmailStr
 from typing import List
+
 
 class WaitlistItem(BaseModel):
     email: EmailStr
 
+
 class FeedbackFormData(BaseModel):
-    firstName:str
-    lastName:str
+    firstName: str
+    lastName: str
     currentPage: int
     ageRange: str
     occupation: str
@@ -36,3 +38,6 @@ class FeedbackFormData(BaseModel):
 class MessageRequest(BaseModel):
     message: str
 
+
+class UpdateDescriptionRequest(BaseModel):
+    description: str
