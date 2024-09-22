@@ -129,6 +129,49 @@ async def update_messages(request: UpdateMessagesRequest, user_id: str = Depends
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
 
+@router.get("/conversations/")
+async def get_conversations(user_id: str = Depends(get_current_user)):
+    user_conversations = await conversations_collection.find(
+        {"user_id": user_id},
+        {
+            "conversationHistory.conversation_id": 1,
+            "conversationHistory.description": 1
+        }
+    ).to_list(None)
+
+    conversations = []
+    for conv in user_conversations:
+        for history in conv.get("conversationHistory", []):
+            conversations.append({
+                "conversation_id": history["conversation_id"],
+                "description": history.get("description", "New Chat")
+            })
+
+    return {"conversations": conversations}
+
+
+@router.get("/conversations/{conversation_id}/")
+async def get_conversation(conversation_id: str, user_id: str = Depends(get_current_user)):
+    conversation = await conversations_collection.find_one({
+        "user_id": user_id,
+        "conversationHistory.conversation_id": conversation_id
+    })
+
+    if not conversation:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found or does not belong to the user"
+        )
+
+    for history in conversation.get("conversationHistory", []):
+        if history["conversation_id"] == conversation_id:
+            return history
+
+    raise HTTPException(
+        status_code=404,
+        detail="Conversation not found in history"
+    )
+
 # @router.put("/conversations/{conversation_id}/description/")
 # async def update_conversation_description(conversation_id: str, update_request: UpdateDescriptionRequest):
 #     if conversation_id not in conversations_db:
