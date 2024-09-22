@@ -1,16 +1,16 @@
 import os
-from utils.util_auth import encode_jwt, authenticate_user, hash_password
+from utils.util_auth import encode_jwt, authenticate_user, hash_password, decode_jwt
 from fastapi.security import OAuth2PasswordBearer
-from fastapi import Depends, HTTPException, status
-from fastapi import APIRouter, HTTPException, status, Depends, Form, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Form, Request, Cookie
 from fastapi.responses import JSONResponse
 from pydantic import EmailStr, SecretStr
 from dotenv import load_dotenv
-from bson import json_util
+from bson import json_util, ObjectId
 from pymongo.errors import DuplicateKeyError
 import json
 from datetime import timedelta, timezone, datetime
 from schemas.schema_auth import SignupData, LoginData
+
 from database.connect import users_collection
 from utils.util_mongo import serialize_document
 
@@ -29,7 +29,7 @@ async def signup(user: SignupData):
         del user_dict["password"]
 
         user_dict["created_at"] = datetime.now(timezone.utc)
-        user_dict["is_verified"] = False
+        # user_dict["is_verified"] = False
 
         await users_collection.insert_one(user_dict)
         return JSONResponse(content={"response": "Successfully created a new account."})
@@ -47,27 +47,30 @@ async def signup(user: SignupData):
 async def login(user: LoginData) -> JSONResponse:
 
     try:
-        authenticated_user = await authenticate_user(user.email, str((user.password).get_secret_value()))
+        auth_user = await authenticate_user(user.email, str((user.password).get_secret_value()))
 
-        if not authenticated_user:
+        if not auth_user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password",
             )
 
-        if not authenticated_user.get("is_verified", False):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="User account is not verified. Please verify your email.",
-            )
+        # if not authenticated_user.get("is_verified", False):
+        #     raise HTTPException(
+        #         status_code=status.HTTP_403_FORBIDDEN,
+        #         detail="User account is not verified. Please verify your email.",
+        #     )
 
         # expiration = timedelta(minutes=int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')))
         expiration = timedelta(days=30)
         access_token = encode_jwt(
-            data={"sub": str(authenticated_user["_id"])}, expires_delta=expiration)
+            data={"sub": str(auth_user["_id"])}, expires_delta=expiration)
 
-        serialized_user_data = serialize_document(authenticated_user)
-        json_user_data = json_util.dumps(serialized_user_data)
+        auth_user["created_at"] = str(auth_user["created_at"])
+        auth_user["id"] = str(auth_user["_id"])
+        del auth_user["_id"]
+
+        json_user_data = json_util.dumps(auth_user)
 
         response = JSONResponse(content=json.loads(json_user_data))
 
@@ -88,6 +91,48 @@ async def login(user: LoginData) -> JSONResponse:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+
+@router.get("/auth/me")
+async def get_user_data(access_token: str = Cookie(None)):
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authenticated"
+        )
+
+    try:
+        payload = decode_jwt(access_token)
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+
+        user = await users_collection.find_one({"_id": ObjectId(user_id)})
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        response_data = {
+            "first_name": user["first_name"],
+            "last_name": user["last_name"],
+            **({"profile_picture": user["profile_picture"]} if user.get("profile_picture") else {})
+        }
+
+        return JSONResponse(content=response_data)
+
+    except HTTPException as httpexc:
+        raise httpexc
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 # @router.get("/getUserInfo")
     # def is_token_valid(current_user: bool = Depends(is_user_valid)):
     #     return {"response": "Token is valid", "user": current_user}
