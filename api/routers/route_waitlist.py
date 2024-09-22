@@ -1,12 +1,13 @@
 
 from fastapi import APIRouter
-from api.database.connect import database
-from api.validators.request import WaitlistItem
+from database.connect import database
+from schemas.schema_request import WaitlistItem
 from fastapi import HTTPException
 
 router = APIRouter()
 
-@router.get("/getWaitlistMembers")
+
+@router.get("/waitlist-members")
 async def getWaitlistMembers():
     signups = database["waitlist"]
     emails = set()
@@ -15,10 +16,11 @@ async def getWaitlistMembers():
 
     for member in members:
         emails.add(member['email'])
-  
-    return {"count": len(emails),"emails":emails}
 
-@router.post("/waitlistSignup")
+    return {"count": len(emails), "emails": emails}
+
+
+@router.post("/waitlist-members")
 async def waitlist_signup(item: WaitlistItem):
 
     collection = database["waitlist"]

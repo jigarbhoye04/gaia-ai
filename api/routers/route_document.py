@@ -1,10 +1,11 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-from fastapi import UploadFile,File,Form
-from api.functionality.text.text import doPromptNoStream
-from api.functionality.document import convert_pdf_to_text
+from fastapi import UploadFile, File, Form
+from functionality.text.text import doPromptNoStream
+from functionality.document import convert_pdf_to_text
 
 router = APIRouter()
+
 
 @router.post("/document")
 async def upload_file(
@@ -14,12 +15,12 @@ async def upload_file(
     contents = await file.read()
     converted_text = convert_pdf_to_text(contents)
     prompt = f"""
-        You can understand documents. 
-        Document name: {file.filename}, 
-        Content type: {file.content_type}, 
+        You can understand documents.
+        Document name: {file.filename},
+        Content type: {file.content_type},
         Size in bytes: {len(contents)}.
         This is the document (converted to text for your convenience): {converted_text}
-        I want you to do this: {message}. 
+        I want you to do this: {message}.
     """
 
     response = doPromptNoStream(prompt)

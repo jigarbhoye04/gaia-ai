@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException
-from api.database.connect import database
-from api.validators.request import FeedbackFormData
+from database.connect import database
+from schemas.schema_request import FeedbackFormData
 router = APIRouter()
 
-@router.post("/submitFeedbackForm")
+
+@router.post("/feedback")
 async def submitFeedbackForm(formData: FeedbackFormData):
     collection = database["feedback_form"]
 
