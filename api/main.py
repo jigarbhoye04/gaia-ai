@@ -12,7 +12,7 @@ app.add_middleware(
     allow_origins=["http://localhost:5173", "https://gaia.aryanranderiya.com",
                    "http://192.168.138.215:5173", "https://localhost:5173", "https://192.168.13.215:5173"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 

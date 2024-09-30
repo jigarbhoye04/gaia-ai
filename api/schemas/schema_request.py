@@ -39,5 +39,10 @@ class MessageRequest(BaseModel):
     message: str
 
 
-class UpdateDescriptionRequest(BaseModel):
+class MessageRequestPrimary(BaseModel):
+    message: str
+    conversation_id: str
+
+
+class DescriptionUpdateRequest(BaseModel):
     description: str

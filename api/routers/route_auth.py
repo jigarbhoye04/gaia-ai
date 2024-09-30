@@ -1,5 +1,5 @@
 from utils.util_auth import encode_jwt, authenticate_user, hash_password
-from fastapi import APIRouter, HTTPException, status, Depends, Cookie
+from fastapi import APIRouter, HTTPException, status, Depends, Response
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from bson import json_util, ObjectId
@@ -112,6 +112,19 @@ async def get_user_data(user_id: str = Depends(get_current_user)):
     }
 
     return JSONResponse(content=response_data)
+
+
+@router.post("/auth/logout")
+async def logout(response: Response):
+    response.set_cookie(
+        key="access_token",
+        value=None,
+        samesite="none",
+        secure=True,
+        httponly=True,
+        expires=datetime.now(timezone.utc)
+    )
+    return {"message": "User logged out successfully."}
 
 # @router.get("/getUserInfo")
     # def is_token_valid(current_user: bool = Depends(is_user_valid)):
