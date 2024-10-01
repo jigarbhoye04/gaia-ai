@@ -3,8 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
 from database.connect import connect
-from routers import route_auth, route_chat, route_document, route_feedback, route_image, route_ping, route_waitlist
-import logging
+from routers import route_auth, route_chat, route_document, route_feedback, route_image, route_ping, route_waitlist, route_oauth
 
 app = FastAPI()
 app.add_middleware(
@@ -28,6 +27,7 @@ app.include_router(route_chat.router, prefix="/api/v1")
 app.include_router(route_image.router, prefix="/api/v1")
 app.include_router(route_document.router, prefix="/api/v1")
 app.include_router(route_auth.router, prefix="/api/v1")
+app.include_router(route_oauth.router, prefix="/api/v1")
 
 
 if __name__ == "__main__":

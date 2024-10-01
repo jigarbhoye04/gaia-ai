@@ -1,3 +1,8 @@
+from pymongo import MongoClient
+from google.auth.transport import requests
+from google.oauth2 import id_token
+from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
 from utils.util_auth import encode_jwt, authenticate_user, hash_password
 from fastapi import APIRouter, HTTPException, status, Depends, Response
 from fastapi.responses import JSONResponse
