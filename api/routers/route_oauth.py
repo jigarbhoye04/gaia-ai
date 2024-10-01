@@ -28,13 +28,28 @@ def get_bearer_token(authorization: str = Header(None)):
 @router.post('/oauth/callback')
 async def callback(response: Response, token: str = Depends(get_bearer_token)):
     try:
-        # Verify the access token with Google
-        user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
-        # Use the extracted token
-        headers = {"Authorization": f"Bearer {token}"}
+
+        token_response = requests.post("https://oauth2.googleapis.com/token", data={
+            "code": token,
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            # "redirect_uri": REDIRECT_URI,
+            "redirect_uri": 'postmessage',
+            "grant_type": "authorization_code"
+        })
+
+        print(token_response.json())
+        if token_response.status_code != 200:
+            raise HTTPException(
+                status_code=400, detail="Failed to obtain tokens")
+
+        tokens = token_response.json()
+        access_token = tokens.get("access_token")
+        refresh_token = tokens.get("refresh_token")
 
         # Fetch user info from Google
-        user_info_response = requests.get(user_info_url, headers=headers)
+        user_info_response = requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo", headers={"Authorization": f"Bearer {access_token}"})
 
         # Check if the request was successful
         if user_info_response.status_code != 200:
@@ -49,12 +64,20 @@ async def callback(response: Response, token: str = Depends(get_bearer_token)):
         # Here, you can create or update the user session in your database
         # Generate an access token (JWT or any token as per your design)
         # Replace with your token generation logic
-        generated_access_token = 'your_generated_access_token'
+        # generated_access_token = 'your_generated_access_token'
 
         # Set the access token in an HTTP-only cookie
         response.set_cookie(
             key='access_token',
-            value=generated_access_token,
+            value=access_token,
+            httponly=True,  # Makes cookie inaccessible to JavaScript
+            secure=False,  # Set to True in production for HTTPS
+            samesite='Lax'  # Adjust as necessary (Lax or Strict)
+        )
+
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
             httponly=True,  # Makes cookie inaccessible to JavaScript
             secure=False,  # Set to True in production for HTTPS
             samesite='Lax'  # Adjust as necessary (Lax or Strict)
@@ -69,6 +92,7 @@ async def callback(response: Response, token: str = Depends(get_bearer_token)):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 # @router.get("/oauth/google/callback")
 # async def callback(code: str, response: Response):
 #     # Exchange code for access token
