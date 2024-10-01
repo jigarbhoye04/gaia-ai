@@ -1,3 +1,5 @@
+import requests
+from fastapi import APIRouter, Depends, HTTPException, Cookie
 import requests  # Ensure this is the standard requests library
 from fastapi import FastAPI, HTTPException, Response, Depends, Header
 from dotenv import load_dotenv
@@ -22,7 +24,7 @@ class AccessToken(BaseModel):
 def get_bearer_token(authorization: str = Header(None)):
     if authorization is None or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=403, detail="Invalid or missing token")
-    return authorization.split(" ")[1]  # Extract token after 'Bearer '
+    return authorization.split(" ")[1]
 
 
 @router.post('/oauth/callback')
@@ -38,7 +40,6 @@ async def callback(response: Response, token: str = Depends(get_bearer_token)):
             "grant_type": "authorization_code"
         })
 
-        print(token_response.json())
         if token_response.status_code != 200:
             raise HTTPException(
                 status_code=400, detail="Failed to obtain tokens")
@@ -55,43 +56,107 @@ async def callback(response: Response, token: str = Depends(get_bearer_token)):
         if user_info_response.status_code != 200:
             raise HTTPException(status_code=400, detail="Invalid access token")
 
-        user_info = user_info_response.json()  # Parse the response JSON
+        # Set the access token in an HTTP-only cookie
 
+        user_info = user_info_response.json()  # Parse the response JSON
         user_email = user_info.get('email')  # Get the user email
         user_name = user_info.get('name')  # Get the user name
         user_picture = user_info.get('picture')  # Get the user picture
 
-        # Here, you can create or update the user session in your database
-        # Generate an access token (JWT or any token as per your design)
-        # Replace with your token generation logic
-        # generated_access_token = 'your_generated_access_token'
-
-        # Set the access token in an HTTP-only cookie
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,  # Makes cookie inaccessible to JavaScript
-            secure=False,  # Set to True in production for HTTPS
-            samesite='Lax'  # Adjust as necessary (Lax or Strict)
-        )
-
-        response.set_cookie(
-            key='refresh_token',
-            value=refresh_token,
-            httponly=True,  # Makes cookie inaccessible to JavaScript
-            secure=False,  # Set to True in production for HTTPS
-            samesite='Lax'  # Adjust as necessary (Lax or Strict)
-        )
-
-        # Return the user info in the response
-        return JSONResponse(content={
+        response = JSONResponse(content={
             "email": user_email,
             "name": user_name,
             "picture": user_picture
         })
 
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,  # Makes cookie inaccessible to JavaScript
+            samesite='Lax',
+            secure=True,
+            # secure=True,  # Set to True in production for HTTPS
+            # samesite='none'  # Adjust as necessary (Lax or Strict)
+        )
+
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            samesite='Lax',
+            secure=True,
+            # secure=True,
+            # samesite='none',
+        )
+        return response
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get('/oauth/me')
+async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
+    # Function to get user info from Google
+    def get_user_info(token):
+        user_info_response = requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        return user_info_response
+
+    # Check if access token is present
+    if access_token:
+        user_info_response = get_user_info(access_token)
+
+        if user_info_response.status_code == 200:
+            user_info = user_info_response.json()
+            return JSONResponse(content=user_info)
+        elif user_info_response.status_code == 401:  # Unauthorized
+            if refresh_token:
+                # Try to refresh the access token using the refresh token
+                refresh_response = requests.post("https://oauth2.googleapis.com/token", data={
+                    "client_id": GOOGLE_CLIENT_ID,
+                    "client_secret": GOOGLE_CLIENT_SECRET,
+                    "refresh_token": refresh_token,
+                    "grant_type": "refresh_token",
+                })
+
+                if refresh_response.status_code == 200:
+                    tokens = refresh_response.json()
+                    new_access_token = tokens.get("access_token")
+                    new_refresh_token = tokens.get("refresh_token")
+
+                    # Fetch user info with the new access token
+                    user_info_response = get_user_info(new_access_token)
+
+                    if user_info_response.status_code == 200:
+                        user_info = user_info_response.json()
+                        response = JSONResponse(content=user_info)
+
+                        # Optionally, update cookies with new tokens
+                        response.set_cookie(
+                            key='access_token',
+                            value=new_access_token,
+                            httponly=True,
+                            secure=True,
+                            samesite='Lax'
+                        )
+
+                        if new_refresh_token:
+                            response.set_cookie(
+                                key='refresh_token',
+                                value=new_refresh_token,
+                                httponly=True,
+                                secure=True,
+                                samesite='Lax'
+                            )
+                        return response
+
+                raise HTTPException(
+                    status_code=400, detail="Unable to refresh access token")
+
+    raise HTTPException(status_code=401, detail="Authentication required")
+
 
 # @router.get("/oauth/google/callback")
 # async def callback(code: str, response: Response):
