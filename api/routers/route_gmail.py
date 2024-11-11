@@ -9,6 +9,7 @@ router = APIRouter()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
+
 # Helper function to refresh the access token
 async def refresh_access_token(refresh_token: str):
     async with httpx.AsyncClient() as client:
@@ -23,6 +24,7 @@ async def refresh_access_token(refresh_token: str):
         )
     return response
 
+
 # Function to fetch emails using the access token
 async def fetch_emails(access_token: str):
     async with httpx.AsyncClient() as client:
@@ -33,10 +35,9 @@ async def fetch_emails(access_token: str):
     return response
 
 
-@router.get('/gmail/emails')
+@router.get("/gmail/emails")
 async def get_emails(
-    access_token: str = Cookie(None),
-    refresh_token: str = Cookie(None)
+    access_token: str = Cookie(None), refresh_token: str = Cookie(None)
 ):
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token required")
@@ -65,15 +66,23 @@ async def get_emails(
                 # Set new access and refresh tokens in the cookies
                 json_response = JSONResponse(content=emails)
                 json_response.set_cookie(
-                    key="access_token", value=new_access_token, httponly=True, secure=True, samesite="Lax"
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    secure=True,
+                    samesite="Lax",
                 )
                 json_response.set_cookie(
-                    key="refresh_token", value=new_refresh_token, httponly=True, secure=True, samesite="Lax"
+                    key="refresh_token",
+                    value=new_refresh_token,
+                    httponly=True,
+                    secure=True,
+                    samesite="Lax",
                 )
                 return json_response
 
-        raise HTTPException(
-            status_code=400, detail="Unable to refresh access token")
+        raise HTTPException(status_code=400, detail="Unable to refresh access token")
 
     raise HTTPException(
-        status_code=400, detail="Failed to fetch emails or token expired")
+        status_code=400, detail="Failed to fetch emails or token expired"
+    )

@@ -25,24 +25,22 @@ def compress_image(image_bytes, sizing=0.4, quality=85):
         new_height = int(image.height * sizing)
         resized_image = image.resize((new_width, new_height), Image.LANCZOS)
 
-        resized_image.save(output_io, format='JPEG',
-                           optimize=True, quality=quality)
+        resized_image.save(output_io, format="JPEG", optimize=True, quality=quality)
         compressed_image_bytes = output_io.getvalue()
 
-        print({"original": len(image_bytes),
-              "compressed": len(compressed_image_bytes)})
+        print({"original": len(image_bytes), "compressed": len(compressed_image_bytes)})
         return compressed_image_bytes
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to compress image: {str(e)}")
+            status_code=500, detail=f"Failed to compress image: {str(e)}"
+        )
 
 
 async def convert_image_to_text(
-        image: UploadFile = File(...),
-        message: str = Form(...),
+    image: UploadFile = File(...),
+    message: str = Form(...),
 ) -> dict:
-
     contents = await image.read()
     url = "https://imageunderstanding.aryanranderiya1478.workers.dev/"
 
@@ -54,16 +52,16 @@ async def convert_image_to_text(
             compressed_image = compress_image(contents)
             contents = compressed_image
 
-        if (len(contents) > 1 * 1024 * 1024):
+        if len(contents) > 1 * 1024 * 1024:
             return "File too large"
 
-        improved_prompt = doPromptNoStream(prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{
-                                           message}'. Only give me the sentence without any additional headers or information. Be concise, but descriptive.""")
+        improved_prompt = doPromptNoStream(
+            prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{
+                                           message}'. Only give me the sentence without any additional headers or information. Be concise, but descriptive."""
+        )
 
         response = requests.post(
-            url,
-            files={"image": contents},
-            data={"prompt": improved_prompt["response"]}
+            url, files={"image": contents}, data={"prompt": improved_prompt["response"]}
         )
         response.raise_for_status()
         return response.json()

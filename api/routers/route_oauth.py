@@ -23,61 +23,66 @@ class OAuthRequest(BaseModel):
     code: str
 
 
-@router.post('/callback')
+@router.post("/callback")
 async def callback(response: Response, oauth_request: OAuthRequest):
     code = oauth_request.code
     try:
-
         print(code)
-        token_response = requests.post("https://oauth2.googleapis.com/token", data={
-            "code": code,
-            "client_id": GOOGLE_CLIENT_ID,
-            "client_secret": GOOGLE_CLIENT_SECRET,
-            "redirect_uri": 'postmessage',
-            "grant_type": "authorization_code"
-        })
+        token_response = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "redirect_uri": "postmessage",
+                "grant_type": "authorization_code",
+            },
+        )
 
         if token_response.status_code != 200:
-            raise HTTPException(
-                status_code=400, detail="Failed to obtain tokens")
+            raise HTTPException(status_code=400, detail="Failed to obtain tokens")
 
         tokens = token_response.json()
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
 
         user_info_response = requests.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo", headers={"Authorization": f"Bearer {access_token}"})
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+        )
 
         if user_info_response.status_code != 200:
             raise HTTPException(status_code=400, detail="Invalid access token")
 
         user_info = user_info_response.json()
-        user_email = user_info.get('email')
-        user_name = user_info.get('name')
-        user_picture = user_info.get('picture')
+        user_email = user_info.get("email")
+        user_name = user_info.get("name")
+        user_picture = user_info.get("picture")
 
-        response = JSONResponse(content={
-            "email": user_email,
-            "name": user_name,
-            "picture": user_picture,
-            "access_token": access_token,
-            "refresh_token": refresh_token
-        })
-
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            samesite='Lax',
-            secure=True
+        response = JSONResponse(
+            content={
+                "email": user_email,
+                "name": user_name,
+                "picture": user_picture,
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }
         )
 
         response.set_cookie(
-            key='refresh_token',
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            samesite="Lax",
+            secure=True,
+        )
+
+        response.set_cookie(
+            key="refresh_token",
             value=refresh_token,
             httponly=True,
-            samesite='Lax',
-            secure=True
+            samesite="Lax",
+            secure=True,
         )
 
         return response
@@ -86,13 +91,13 @@ async def callback(response: Response, oauth_request: OAuthRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/me')
+@router.get("/me")
 async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
     # Function to get user info from Google
     def get_user_info(token):
         user_info_response = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
-            headers={"Authorization": f"Bearer {token}"}
+            headers={"Authorization": f"Bearer {token}"},
         )
         return user_info_response
 
@@ -106,12 +111,15 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
         elif user_info_response.status_code == 401:  # Unauthorized
             if refresh_token:
                 # Try to refresh the access token using the refresh token
-                refresh_response = requests.post("https://oauth2.googleapis.com/token", data={
-                    "client_id": GOOGLE_CLIENT_ID,
-                    "client_secret": GOOGLE_CLIENT_SECRET,
-                    "refresh_token": refresh_token,
-                    "grant_type": "refresh_token",
-                })
+                refresh_response = requests.post(
+                    "https://oauth2.googleapis.com/token",
+                    data={
+                        "client_id": GOOGLE_CLIENT_ID,
+                        "client_secret": GOOGLE_CLIENT_SECRET,
+                        "refresh_token": refresh_token,
+                        "grant_type": "refresh_token",
+                    },
+                )
 
                 if refresh_response.status_code == 200:
                     tokens = refresh_response.json()
@@ -127,30 +135,31 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
 
                         # Optionally, update cookies with new tokens
                         response.set_cookie(
-                            key='access_token',
+                            key="access_token",
                             value=new_access_token,
                             httponly=True,
                             secure=True,
-                            samesite='Lax'
+                            samesite="Lax",
                         )
 
                         if new_refresh_token:
                             response.set_cookie(
-                                key='refresh_token',
+                                key="refresh_token",
                                 value=new_refresh_token,
                                 httponly=True,
                                 secure=True,
-                                samesite='Lax'
+                                samesite="Lax",
                             )
                         return response
 
                 raise HTTPException(
-                    status_code=400, detail="Unable to refresh access token")
+                    status_code=400, detail="Unable to refresh access token"
+                )
 
     raise HTTPException(status_code=401, detail="Authentication required")
 
 
-@router.get('/gmail/emails')
+@router.get("/gmail/emails")
 async def fetch_gmail_messages(access_token: str = Cookie(None)):
     if not access_token:
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -166,30 +175,35 @@ async def fetch_gmail_messages(access_token: str = Cookie(None)):
             # Fetch details for each message (simplified example: just subject)
             message_details = []
             for message in messages:
-                message_id = message['id']
+                message_id = message["id"]
                 message_info_url = f"{gmail_url}/{message_id}"
-                message_info_response = requests.get(
-                    message_info_url, headers=headers)
+                message_info_response = requests.get(message_info_url, headers=headers)
                 if message_info_response.status_code == 200:
                     msg_data = message_info_response.json()
                     # Extracting only the subject for simplicity
                     subject = next(
-                        (header['value'] for header in msg_data['payload']
-                         ['headers'] if header['name'] == 'Subject'),
-                        "No Subject"
+                        (
+                            header["value"]
+                            for header in msg_data["payload"]["headers"]
+                            if header["name"] == "Subject"
+                        ),
+                        "No Subject",
                     )
-                    message_details.append(
-                        {"id": message_id, "subject": subject})
+                    message_details.append({"id": message_id, "subject": subject})
 
             return JSONResponse(content={"messages": message_details})
 
         else:
-            raise HTTPException(status_code=response.status_code,
-                                detail="Failed to fetch Gmail messages")
+            raise HTTPException(
+                status_code=response.status_code,
+                detail="Failed to fetch Gmail messages",
+            )
 
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error fetching Gmail messages: {str(e)}")
+            status_code=500, detail=f"Error fetching Gmail messages: {str(e)}"
+        )
+
 
 # @router.get("/oauth/google/callback")
 # async def callback(code: str, response: Response):

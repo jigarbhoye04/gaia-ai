@@ -3,7 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import uvicorn
 from database.connect import connect
-from routers import route_auth, route_chat, route_document, route_feedback, route_image, route_ping, route_waitlist, route_oauth
+from routers import (
+    route_auth,
+    route_chat,
+    route_document,
+    route_feedback,
+    route_image,
+    route_ping,
+    route_waitlist,
+    route_oauth,
+)
 
 app = FastAPI()
 origins = [
@@ -11,7 +20,7 @@ origins = [
     "https://gaia.aryanranderiya.com",
     "http://192.168.138.215:5173",
     "https://localhost:5173",
-    "https://192.168.13.215:5173"
+    "https://192.168.13.215:5173",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -38,6 +47,7 @@ app.include_router(route_oauth.router, prefix="/api/v1/oauth")
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the GAIA API!"}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

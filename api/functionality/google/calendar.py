@@ -1,4 +1,3 @@
-
 from functionality.text.named_entity_recognition import parse_calendar_info
 from functionality.text.zero_shot_classification import classify_event_type
 

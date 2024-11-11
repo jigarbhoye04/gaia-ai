@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from database.connect import database
 from schemas.schema_request import FeedbackFormData
+
 router = APIRouter()
 
 
@@ -16,7 +17,8 @@ async def submitFeedbackForm(formData: FeedbackFormData):
             return {"message": "Feedback Form Data inserted successfully"}
         else:
             raise HTTPException(
-                status_code=500, detail="Failed to insert feedback form data")
+                status_code=500, detail="Failed to insert feedback form data"
+            )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

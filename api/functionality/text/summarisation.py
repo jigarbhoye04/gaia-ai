@@ -5,7 +5,7 @@ import nltk
 
 
 def summarise_text(long_text):
-    nltk.download('punkt')
+    nltk.download("punkt")
     parser = PlaintextParser.from_string(long_text, Tokenizer("english"))
     summarizer = LsaSummarizer()
     summary = summarizer(parser.document, 4)

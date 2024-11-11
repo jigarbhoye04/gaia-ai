@@ -8,10 +8,7 @@ router = APIRouter()
 
 
 @router.post("/document")
-async def upload_file(
-    message: str = Form(...),
-    file: UploadFile = File(...)
-):
+async def upload_file(message: str = Form(...), file: UploadFile = File(...)):
     contents = await file.read()
     converted_text = convert_pdf_to_text(contents)
     prompt = f"""

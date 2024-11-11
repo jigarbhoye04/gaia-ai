@@ -1,4 +1,3 @@
-
 import cloudinary.uploader
 import cloudinary
 from fastapi import UploadFile, File, APIRouter, Form
@@ -15,7 +14,7 @@ router = APIRouter()
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET")
+    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
 )
 
 
@@ -28,7 +27,7 @@ def image(request: MessageRequest):
         io.BytesIO(image_bytes),  # Pass the image bytes as a file-like object
         resource_type="image",
         public_id=f"generated_image_{request.message[:20]}",
-        overwrite=True
+        overwrite=True,
     )
 
     # Get the URL of the uploaded image
@@ -39,9 +38,6 @@ def image(request: MessageRequest):
 
 
 @router.post("/image/text")
-async def imagetotext(
-    message: str = Form(...),
-    file: UploadFile = File(...)
-):
+async def imagetotext(message: str = Form(...), file: UploadFile = File(...)):
     response = await convert_image_to_text(file, message)
     return JSONResponse(content={"response": response})

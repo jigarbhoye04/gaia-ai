@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse, JSONResponse
 from schemas.schema_request import MessageRequest, DescriptionUpdateRequest
 from functionality.text.text import doPrompt, doPromptNoStream
+
 # from functionality.text.zero_shot_classification import classify_event_type
 from models.models_messages import ConversationModel, UpdateMessagesRequest
 from middleware.middleware_auth import get_current_user
@@ -21,9 +22,10 @@ router = APIRouter()
 # else:
 #     return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
 
+
 @router.post("/chat-stream")
 async def chat_stream(request: MessageRequest):
-    return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
+    return StreamingResponse(doPrompt(request.message), media_type="text/event-stream")
 
 
 @router.post("/chat")
@@ -32,28 +34,31 @@ def chat(request: MessageRequest):
 
 
 @router.post("/conversations/")
-async def create_conversation(conversation: ConversationModel, user_id: str = Depends(get_current_user)):
+async def create_conversation(
+    conversation: ConversationModel, user_id: str = Depends(get_current_user)
+):
     if user_id is None:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authenticated"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
         )
 
     user_exists = await users_collection.count_documents({"_id": ObjectId(user_id)}) > 0
     if not user_exists:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     new_conversation = conversation.model_dump()
-    new_conversation["messages"] = [message.model_dump()
-                                    for message in conversation.messages]
+    new_conversation["messages"] = [
+        message.model_dump() for message in conversation.messages
+    ]
 
     for message in new_conversation["messages"]:
         message.pop("loading", None)
 
-    existing_user_conversation = await conversations_collection.find_one({"user_id": user_id})
+    existing_user_conversation = await conversations_collection.find_one(
+        {"user_id": user_id}
+    )
 
     if existing_user_conversation:
         conversation_exists = any(
@@ -63,67 +68,55 @@ async def create_conversation(conversation: ConversationModel, user_id: str = De
 
         if conversation_exists:
             raise HTTPException(
-                status_code=400,
-                detail="Conversation with this ID already exists."
+                status_code=400, detail="Conversation with this ID already exists."
             )
 
         update_result = await conversations_collection.update_one(
-            {"user_id": user_id},
-            {"$push": {"conversationHistory": new_conversation}}
+            {"user_id": user_id}, {"$push": {"conversationHistory": new_conversation}}
         )
         if update_result.modified_count == 0:
             raise HTTPException(
                 status_code=500, detail="Failed to update conversation history"
             )
     else:
-        new_document = {
-            "user_id": user_id,
-            "conversationHistory": [new_conversation]
-        }
+        new_document = {"user_id": user_id, "conversationHistory": [new_conversation]}
         result = await conversations_collection.insert_one(new_document)
         if not result.acknowledged:
-            raise HTTPException(
-                status_code=500, detail="Failed to create conversation"
-            )
+            raise HTTPException(status_code=500, detail="Failed to create conversation")
 
     return {"conversation_id": new_conversation["conversation_id"], "user_id": user_id}
 
 
 @router.put("/conversations/{conversation_id}/messages/")
-async def update_messages(request: UpdateMessagesRequest, user_id: str = Depends(get_current_user)):
+async def update_messages(
+    request: UpdateMessagesRequest, user_id: str = Depends(get_current_user)
+):
     conversation_id = request.conversation_id
     messages = request.messages
 
-    existing_conversation = await conversations_collection.find_one({
-        "user_id": user_id,
-        "conversationHistory.conversation_id": conversation_id
-    })
+    existing_conversation = await conversations_collection.find_one(
+        {"user_id": user_id, "conversationHistory.conversation_id": conversation_id}
+    )
 
     if not existing_conversation:
         raise HTTPException(
             status_code=404,
-            detail="Conversation not found or does not belong to the user"
+            detail="Conversation not found or does not belong to the user",
         )
 
     update_result = await conversations_collection.update_one(
-        {
-            "user_id": user_id,
-            "conversationHistory.conversation_id": conversation_id
-        },
+        {"user_id": user_id, "conversationHistory.conversation_id": conversation_id},
         {
             "$push": {
                 "conversationHistory.$.messages": {
                     "$each": [message.dict(exclude={"loading"}) for message in messages]
                 }
             }
-        }
+        },
     )
 
     if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="No new messages to update"
-        )
+        raise HTTPException(status_code=404, detail="No new messages to update")
 
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
@@ -134,49 +127,49 @@ async def get_conversations(user_id: str = Depends(get_current_user)):
         {"user_id": user_id},
         {
             "conversationHistory.conversation_id": 1,
-            "conversationHistory.description": 1
-        }
+            "conversationHistory.description": 1,
+        },
     ).to_list(None)
 
     conversations = []
     for conv in user_conversations:
         for history in conv.get("conversationHistory", []):
-            conversations.append({
-                "conversation_id": history["conversation_id"],
-                "description": history.get("description", "New Chat")
-            })
+            conversations.append(
+                {
+                    "conversation_id": history["conversation_id"],
+                    "description": history.get("description", "New Chat"),
+                }
+            )
 
     return {"conversations": conversations}
 
 
 @router.get("/conversations/{conversation_id}/")
-async def get_conversation(conversation_id: str, user_id: str = Depends(get_current_user)):
-    conversation = await conversations_collection.find_one({
-        "user_id": user_id,
-        "conversationHistory.conversation_id": conversation_id
-    })
+async def get_conversation(
+    conversation_id: str, user_id: str = Depends(get_current_user)
+):
+    conversation = await conversations_collection.find_one(
+        {"user_id": user_id, "conversationHistory.conversation_id": conversation_id}
+    )
 
     if not conversation:
         raise HTTPException(
             status_code=404,
-            detail="Conversation not found or does not belong to the user"
+            detail="Conversation not found or does not belong to the user",
         )
 
     for history in conversation.get("conversationHistory", []):
         if history["conversation_id"] == conversation_id:
             return history
 
-    raise HTTPException(
-        status_code=404,
-        detail="Conversation not found in history"
-    )
+    raise HTTPException(status_code=404, detail="Conversation not found in history")
 
 
 @router.put("/conversations/{conversation_id}/description/")
 async def update_conversation_description(
     conversation_id: str,
     update_request: DescriptionUpdateRequest,
-    user_id: str = Depends(get_current_user)
+    user_id: str = Depends(get_current_user),
 ):
     # Verify that the user exists
     user_exists = await users_collection.count_documents({"_id": ObjectId(user_id)}) > 0
@@ -189,9 +182,9 @@ async def update_conversation_description(
     update_result = await conversations_collection.update_one(
         {
             "user_id": user_id,  # Use the user_id from the dependency
-            "conversationHistory.conversation_id": conversation_id
+            "conversationHistory.conversation_id": conversation_id,
         },
-        {"$set": {"conversationHistory.$.description": update_request.description}}
+        {"$set": {"conversationHistory.$.description": update_request.description}},
     )
 
     if update_result.modified_count == 0:
@@ -203,28 +196,26 @@ async def update_conversation_description(
 
 
 @router.delete("/conversations/{conversation_id}/")
-async def delete_conversation(conversation_id: str, user_id: str = Depends(get_current_user)):
+async def delete_conversation(
+    conversation_id: str, user_id: str = Depends(get_current_user)
+):
     if user_id is None:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authenticated"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
         )
 
     update_result = await conversations_collection.update_one(
-        {
-            "user_id": user_id
-        },
-        {
-            "$pull": {
-                "conversationHistory": {"conversation_id": conversation_id}
-            }
-        }
+        {"user_id": user_id},
+        {"$pull": {"conversationHistory": {"conversation_id": conversation_id}}},
     )
 
     if update_result.modified_count == 0:
         raise HTTPException(
             status_code=404,
-            detail="Conversation not found or does not belong to the user"
+            detail="Conversation not found or does not belong to the user",
         )
 
-    return {"message": "Conversation deleted successfully", "conversation_id": conversation_id}
+    return {
+        "message": "Conversation deleted successfully",
+        "conversation_id": conversation_id,
+    }
