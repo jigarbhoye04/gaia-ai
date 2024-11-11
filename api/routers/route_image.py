@@ -1,9 +1,8 @@
 
-from cloudinary.utils import cloudinary_url
 import cloudinary.uploader
 import cloudinary
-from fastapi import APIRouter, UploadFile, Response, File, APIRouter, Form
-from fastapi.responses import Response, JSONResponse
+from fastapi import APIRouter, UploadFile, File, APIRouter, Form
+from fastapi.responses import JSONResponse
 from schemas.schema_request import MessageRequest
 from functionality.image import generate_image, convert_image_to_text
 import io

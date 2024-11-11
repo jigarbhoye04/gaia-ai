@@ -1,8 +1,4 @@
-from pymongo import MongoClient
-from google.auth.transport import requests
-from google.oauth2 import id_token
-from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException
+from fastapi import HTTPException
 from utils.util_auth import encode_jwt, authenticate_user, hash_password
 from fastapi import APIRouter, HTTPException, status, Depends, Response
 from fastapi.responses import JSONResponse
@@ -36,7 +32,7 @@ async def signup(user: SignupData):
         await users_collection.insert_one(user_dict)
         return JSONResponse(content={"response": "Successfully created a new account."})
 
-    except DuplicateKeyError:
+    except DuplicateKeyError:   
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="User with this email already exist")
 

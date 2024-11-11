@@ -1,7 +1,7 @@
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Cookie
 import requests  # Ensure this is the standard requests library
-from fastapi import FastAPI, HTTPException, Response, Depends, Header
+from fastapi import HTTPException, Response, Depends, Header
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Response
@@ -21,21 +21,20 @@ class AccessToken(BaseModel):
     accessToken: str
 
 
-def get_bearer_token(authorization: str = Header(None)):
-    if authorization is None or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=403, detail="Invalid or missing token")
-    return authorization.split(" ")[1]
+class OAuthRequest(BaseModel):
+    code: str
 
 
 @router.post('/oauth/callback')
-async def callback(response: Response, token: str = Depends(get_bearer_token)):
+async def callback(response: Response, oauth_request: OAuthRequest):
+    code = oauth_request.code
     try:
 
+        print(code)
         token_response = requests.post("https://oauth2.googleapis.com/token", data={
-            "code": token,
+            "code": code,
             "client_id": GOOGLE_CLIENT_ID,
             "client_secret": GOOGLE_CLIENT_SECRET,
-            # "redirect_uri": REDIRECT_URI,
             "redirect_uri": 'postmessage',
             "grant_type": "authorization_code"
         })
@@ -48,35 +47,31 @@ async def callback(response: Response, token: str = Depends(get_bearer_token)):
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
 
-        # Fetch user info from Google
         user_info_response = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo", headers={"Authorization": f"Bearer {access_token}"})
 
-        # Check if the request was successful
         if user_info_response.status_code != 200:
             raise HTTPException(status_code=400, detail="Invalid access token")
 
-        # Set the access token in an HTTP-only cookie
-
-        user_info = user_info_response.json()  # Parse the response JSON
-        user_email = user_info.get('email')  # Get the user email
-        user_name = user_info.get('name')  # Get the user name
-        user_picture = user_info.get('picture')  # Get the user picture
+        user_info = user_info_response.json()
+        user_email = user_info.get('email')
+        user_name = user_info.get('name')
+        user_picture = user_info.get('picture')
 
         response = JSONResponse(content={
             "email": user_email,
             "name": user_name,
-            "picture": user_picture
+            "picture": user_picture,
+            "access_token": access_token,
+            "refresh_token": refresh_token
         })
 
         response.set_cookie(
             key='access_token',
             value=access_token,
-            httponly=True,  # Makes cookie inaccessible to JavaScript
+            httponly=True,
             samesite='Lax',
-            secure=True,
-            # secure=True,  # Set to True in production for HTTPS
-            # samesite='none'  # Adjust as necessary (Lax or Strict)
+            secure=True
         )
 
         response.set_cookie(
@@ -84,10 +79,9 @@ async def callback(response: Response, token: str = Depends(get_bearer_token)):
             value=refresh_token,
             httponly=True,
             samesite='Lax',
-            secure=True,
-            # secure=True,
-            # samesite='none',
+            secure=True
         )
+
         return response
 
     except Exception as e:

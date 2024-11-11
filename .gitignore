@@ -11,3 +11,5 @@ api/.env
 venv/
 .venv/
 .vscode/
+
+.VSCodeCounter/
