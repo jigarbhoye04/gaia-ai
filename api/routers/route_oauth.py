@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 import os
+import base64
 
 router = APIRouter()
 load_dotenv()
@@ -15,10 +16,6 @@ REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 
-class AccessToken(BaseModel):
-    accessToken: str
-
-
 class OAuthRequest(BaseModel):
     code: str
 
@@ -27,7 +24,6 @@ class OAuthRequest(BaseModel):
 async def callback(response: Response, oauth_request: OAuthRequest):
     code = oauth_request.code
     try:
-        print(code)
         token_response = requests.post(
             "https://oauth2.googleapis.com/token",
             data={
@@ -73,7 +69,7 @@ async def callback(response: Response, oauth_request: OAuthRequest):
             key="access_token",
             value=access_token,
             httponly=True,
-            samesite="Lax",
+            samesite="lax",
             secure=True,
         )
 
@@ -81,7 +77,7 @@ async def callback(response: Response, oauth_request: OAuthRequest):
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            samesite="Lax",
+            samesite="lax",
             secure=True,
         )
 
@@ -94,6 +90,7 @@ async def callback(response: Response, oauth_request: OAuthRequest):
 @router.get("/me")
 async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
     # Function to get user info from Google
+
     def get_user_info(token):
         user_info_response = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -139,7 +136,7 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
                             value=new_access_token,
                             httponly=True,
                             secure=True,
-                            samesite="Lax",
+                            samesite="lax",
                         )
 
                         if new_refresh_token:
@@ -148,7 +145,7 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
                                 value=new_refresh_token,
                                 httponly=True,
                                 secure=True,
-                                samesite="Lax",
+                                samesite="lax",
                             )
                         return response
 
@@ -159,117 +156,232 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
     raise HTTPException(status_code=401, detail="Authentication required")
 
 
+# async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
+
+
 @router.get("/gmail/emails")
-async def fetch_gmail_messages(access_token: str = Cookie(None)):
+async def fetch_gmail_messages(
+    access_token: str = Cookie(None), refresh_token: str = Cookie(None)
+):
     if not access_token:
         raise HTTPException(status_code=401, detail="Authentication required")
 
-    try:
-        # Fetch Gmail messages using the Gmail API
+    def fetch_messages(token):
         gmail_url = "https://www.googleapis.com/gmail/v1/users/me/messages"
-        headers = {"Authorization": f"Bearer {access_token}"}
+        headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(gmail_url, headers=headers)
+        return response
 
-        if response.status_code == 200:
-            messages = response.json().get("messages", [])
-            # Fetch details for each message (simplified example: just subject)
-            message_details = []
-            for message in messages:
-                message_id = message["id"]
-                message_info_url = f"{gmail_url}/{message_id}"
-                message_info_response = requests.get(message_info_url, headers=headers)
-                if message_info_response.status_code == 200:
-                    msg_data = message_info_response.json()
-                    # Extracting only the subject for simplicity
-                    subject = next(
-                        (
-                            header["value"]
-                            for header in msg_data["payload"]["headers"]
-                            if header["name"] == "Subject"
-                        ),
-                        "No Subject",
+    def fetch_message_details(token, message_id):
+        gmail_url = (
+            f"https://www.googleapis.com/gmail/v1/users/me/messages/{message_id}"
+        )
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(gmail_url, headers=headers)
+        return response
+
+    # First attempt to fetch messages
+    response = fetch_messages(access_token)
+
+    # If access token is expired, attempt refresh
+    if response.status_code == 401 and refresh_token:
+        # Request a new access token using the refresh token
+        refresh_response = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            },
+        )
+
+        if refresh_response.status_code == 200:
+            new_access_token = refresh_response.json().get("access_token")
+
+            # Retry Gmail API call with new access token
+            response = fetch_messages(new_access_token)
+
+            if response.status_code == 200:
+                # Fetch the details of the first 10 messages
+                messages = response.json().get("messages", [])[:10]
+                full_messages = []
+
+                for message in messages:
+                    message_id = message["id"]
+                    message_details_response = fetch_message_details(
+                        new_access_token, message_id
                     )
-                    message_details.append({"id": message_id, "subject": subject})
+                    if message_details_response.status_code == 200:
+                        full_messages.append(message_details_response.json())
 
-            return JSONResponse(content={"messages": message_details})
+                response_data = JSONResponse(content={"messages": full_messages})
+                response_data.set_cookie(
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    secure=True,
+                    samesite="lax",
+                )
+                return response_data
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Failed to fetch Gmail messages with refreshed token",
+                )
 
         else:
             raise HTTPException(
-                status_code=response.status_code,
-                detail="Failed to fetch Gmail messages",
+                status_code=400, detail="Failed to refresh access token"
             )
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error fetching Gmail messages: {str(e)}"
+    elif response.status_code == 200:
+        # Successfully fetched messages with the original access token
+        # Fetch the details of the first 10 messages
+        messages = response.json().get("messages", [])[:10]
+        full_messages = []
+
+        for message in messages:
+            message_id = message["id"]
+            message_details_response = fetch_message_details(access_token, message_id)
+            if message_details_response.status_code == 200:
+                full_messages.append(message_details_response.json())
+
+        return JSONResponse(content={"messages": full_messages})
+
+    raise HTTPException(
+        status_code=response.status_code,
+        detail="Failed to fetch Gmail messages",
+    )
+
+
+@router.get("/gmail/messages/search/{keyword}")
+async def search_gmail_messages(
+    keyword: str,  # The search keyword in the URL path
+    access_token: str = Cookie(None),  # Access token from the user's cookies
+    refresh_token: str = Cookie(None),  # Refresh token if access token has expired
+):
+    print(f"Searching for keyword: {keyword} in Gmail")
+
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    def search_messages(token, query):
+        gmail_url = "https://www.googleapis.com/gmail/v1/users/me/messages"
+        headers = {"Authorization": f"Bearer {token}"}
+        params = {"q": query, "maxResults": 50}  # Limit to first 50 results
+        response = requests.get(gmail_url, headers=headers, params=params)
+        return response
+
+    def fetch_message_details(token, message_id):
+        gmail_url = (
+            f"https://www.googleapis.com/gmail/v1/users/me/messages/{message_id}"
+        )
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(gmail_url, headers=headers)
+        return response
+
+    def extract_relevant_details(message_details):
+        headers = message_details.get("payload", {}).get("headers", [])
+        subject = None
+        sender = None
+        recipient = None
+        body = None
+
+        # Extract subject, from, to, and body
+        for header in headers:
+            if header["name"] == "Subject":
+                subject = header.get("value")
+            elif header["name"] == "From":
+                sender = header.get("value")
+            elif header["name"] == "To":
+                recipient = header.get("value")
+
+        # Extract body (if it's a simple text body)
+        if "payload" in message_details:
+            parts = message_details["payload"].get("parts", [])
+            for part in parts:
+                if part["mimeType"] == "text/plain":
+                    body = part.get("body", {}).get("data")
+                    if body:
+                        body = base64.urlsafe_b64decode(body).decode("utf-8")
+
+        return {"subject": subject, "from": sender, "to": recipient, "body": body}
+
+    # First attempt to search for messages with the provided keyword
+    response = search_messages(access_token, keyword)
+
+    # If access token is expired, attempt to refresh
+    if response.status_code == 401 and refresh_token:
+        # Request a new access token using the refresh token
+        refresh_response = requests.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            },
         )
 
+        if refresh_response.status_code == 200:
+            new_access_token = refresh_response.json().get("access_token")
 
-# @router.get("/oauth/google/callback")
-# async def callback(code: str, response: Response):
-#     # Exchange code for access token
-#     async with httpx.AsyncClient() as client:
-#         token_response = await client.post(
-#             "https://oauth2.googleapis.com/token",
-#             data={
-#                 "code": code,
-#                 "client_id": GOOGLE_CLIENT_ID,
-#                 "client_secret": GOOGLE_CLIENT_SECRET,
-#                 "redirect_uri": REDIRECT_URI,
-#                 "grant_type": "authorization_code",
-#             },
-#         )
+            # Retry Gmail search with new access token
+            response = search_messages(new_access_token, keyword)
 
-#         # Handle potential errors in the token response
-#         if token_response.status_code != 200:
-#             # Debugging line
-#             print(f"Error getting token: {token_response.text}")
-#             raise HTTPException(
-#                 status_code=token_response.status_code, detail="Failed to obtain access token"
-#             )
+            if response.status_code == 200:
+                # Fetch details of the first 50 matching messages
+                messages = response.json().get("messages", [])[:50]
+                full_messages = []
 
-#         token_data = token_response.json()
-#         access_token = token_data.get("access_token")
-#         if not access_token:
-#             raise HTTPException(
-#                 status_code=400, detail="No access token returned"
-#             )
+                for message in messages:
+                    message_id = message["id"]
+                    message_details_response = fetch_message_details(
+                        new_access_token, message_id
+                    )
+                    if message_details_response.status_code == 200:
+                        message_details = message_details_response.json()
+                        relevant_details = extract_relevant_details(message_details)
+                        full_messages.append(relevant_details)
 
-#     print(access_token)
-#     # Set the access token as an HTTP-only cookie
-#     response.set_cookie(
-#         key="access_token",
-#         value=access_token,
-#         # samesite="none",
-#         # secure=True,
-#         # httponly=True,
-#         expires=datetime.now(timezone.utc) + timedelta(days=60)
-#     )
+                response_data = JSONResponse(content={"messages": full_messages})
+                response_data.set_cookie(
+                    key="access_token",
+                    value=new_access_token,
+                    httponly=True,
+                    secure=True,
+                    samesite="lax",
+                )
+                return response_data
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Failed to search Gmail messages with refreshed token",
+                )
 
-#     # Redirect to the frontend
-#     return RedirectResponse(url=f"{FRONTEND_URL}/try/chat")
+        else:
+            raise HTTPException(
+                status_code=400, detail="Failed to refresh access token"
+            )
 
+    elif response.status_code == 200:
+        # Successfully fetched search results
+        # Fetch details of the first 50 matching messages
+        messages = response.json().get("messages", [])[:50]
+        full_messages = []
 
-# @router.get("/fetch_calendar_events")
-# async def fetch_calendar_events(response: Response):
-#     # Retrieve access token from cookie
-#     access_token = response.cookies.get("access_token")
-#     if not access_token:
-#         raise HTTPException(status_code=401, detail="Access token is missing")
+        for message in messages:
+            message_id = message["id"]
+            message_details_response = fetch_message_details(access_token, message_id)
+            if message_details_response.status_code == 200:
+                message_details = message_details_response.json()
+                relevant_details = extract_relevant_details(message_details)
+                full_messages.append(relevant_details)
 
-#     async with httpx.AsyncClient() as client:
-#         events_response = await client.get(
-#             "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-#             headers={"Authorization": f"Bearer {access_token}"},
-#         )
+        return JSONResponse(content={"messages": full_messages})
 
-#         # Handle potential errors in the events response
-#         if events_response.status_code != 200:
-#             print(f"Error fetching calendar events: {
-#                   events_response.text}")  # Debugging line
-#             raise HTTPException(
-#                 status_code=events_response.status_code, detail="Failed to fetch calendar events"
-#             )
-
-#         events = events_response.json()
-#     return events
+    raise HTTPException(
+        status_code=response.status_code,
+        detail="Failed to search Gmail messages",
+    )

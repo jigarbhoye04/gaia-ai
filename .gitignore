@@ -13,3 +13,6 @@ venv/
 .vscode/
 
 .VSCodeCounter/
+
+.ruff_cache
+.mypy_cache
