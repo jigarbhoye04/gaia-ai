@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from utils.util_auth import encode_jwt, authenticate_user, hash_password
-from fastapi import APIRouter, HTTPException, status, Depends, Response
+from fastapi import APIRouter, status, Depends, Response
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from bson import json_util, ObjectId

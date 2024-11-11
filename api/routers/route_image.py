@@ -1,7 +1,7 @@
 
 import cloudinary.uploader
 import cloudinary
-from fastapi import APIRouter, UploadFile, File, APIRouter, Form
+from fastapi import UploadFile, File, APIRouter, Form
 from fastapi.responses import JSONResponse
 from schemas.schema_request import MessageRequest
 from functionality.image import generate_image, convert_image_to_text
@@ -39,7 +39,7 @@ def image(request: MessageRequest):
 
 
 @router.post("/image/text")
-async def image(
+async def imagetotext(
     message: str = Form(...),
     file: UploadFile = File(...)
 ):

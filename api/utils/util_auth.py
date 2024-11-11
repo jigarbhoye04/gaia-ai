@@ -3,8 +3,6 @@ from dotenv import load_dotenv
 import os
 from datetime import timedelta, datetime, timezone
 from passlib.context import CryptContext
-from fastapi import HTTPException
-from datetime import datetime, timedelta
 import re
 import jwt
 from database.connect import users_collection
@@ -60,7 +58,7 @@ def decode_jwt(token: str) -> dict:
 
         return jwt.decode(token, jwt_secret_key, algorithms=[jwt_algorithm])
 
-    except jwt.InvalidTokenError as e:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except Exception as e:

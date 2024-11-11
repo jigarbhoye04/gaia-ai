@@ -1,10 +1,8 @@
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Cookie
-import requests  # Ensure this is the standard requests library
-from fastapi import HTTPException, Response, Depends, Header
+from fastapi import APIRouter, HTTPException, Cookie
+from fastapi import Response
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import JSONResponse
 import os
 
@@ -25,7 +23,7 @@ class OAuthRequest(BaseModel):
     code: str
 
 
-@router.post('/oauth/callback')
+@router.post('/callback')
 async def callback(response: Response, oauth_request: OAuthRequest):
     code = oauth_request.code
     try:
@@ -88,7 +86,7 @@ async def callback(response: Response, oauth_request: OAuthRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get('/oauth/me')
+@router.get('/me')
 async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
     # Function to get user info from Google
     def get_user_info(token):
@@ -151,6 +149,47 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
 
     raise HTTPException(status_code=401, detail="Authentication required")
 
+
+@router.get('/gmail/emails')
+async def fetch_gmail_messages(access_token: str = Cookie(None)):
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    try:
+        # Fetch Gmail messages using the Gmail API
+        gmail_url = "https://www.googleapis.com/gmail/v1/users/me/messages"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = requests.get(gmail_url, headers=headers)
+
+        if response.status_code == 200:
+            messages = response.json().get("messages", [])
+            # Fetch details for each message (simplified example: just subject)
+            message_details = []
+            for message in messages:
+                message_id = message['id']
+                message_info_url = f"{gmail_url}/{message_id}"
+                message_info_response = requests.get(
+                    message_info_url, headers=headers)
+                if message_info_response.status_code == 200:
+                    msg_data = message_info_response.json()
+                    # Extracting only the subject for simplicity
+                    subject = next(
+                        (header['value'] for header in msg_data['payload']
+                         ['headers'] if header['name'] == 'Subject'),
+                        "No Subject"
+                    )
+                    message_details.append(
+                        {"id": message_id, "subject": subject})
+
+            return JSONResponse(content={"messages": message_details})
+
+        else:
+            raise HTTPException(status_code=response.status_code,
+                                detail="Failed to fetch Gmail messages")
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error fetching Gmail messages: {str(e)}")
 
 # @router.get("/oauth/google/callback")
 # async def callback(code: str, response: Response):
