@@ -1,12 +1,15 @@
+import uvicorn
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import uvicorn
-from app.api.v1 import auth, chat, document, feedback, image, oauth, waitlist
+from api.v1 import auth, chat, document, feedback, image, oauth, waitlist
 from db.connect import connect
 
-app = FastAPI(title="GAIA API", version="1.0.0", description="The AI assistant backend")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+app = FastAPI(title="GAIA API", version="1.0.0", description="The AI assistant backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins= [
@@ -40,7 +43,7 @@ async def read_root():
 
 @app.get("/ping")
 def main():
-    print("Pinged server successfully!")
+    logger.info("Pinged server successfully!")
     return {"status": "GAIA API is running"}
 
 if __name__ == "__main__":
