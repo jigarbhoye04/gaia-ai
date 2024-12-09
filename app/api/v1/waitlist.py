@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from database.connect import database
-from schemas.schema_request import WaitlistItem
+from db.connect import database
+from app.schemas.common import WaitlistItem
 from fastapi import HTTPException
 
 router = APIRouter()

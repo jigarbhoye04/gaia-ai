@@ -1,12 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse, JSONResponse
-from schemas.schema_request import MessageRequest, DescriptionUpdateRequest
-from functionality.text.text import doPrompt, doPromptNoStream
+from app.schemas.common import MessageRequest, DescriptionUpdateRequest
+from app.services.llm import doPrompt, doPromptNoStream
 
-# from functionality.text.zero_shot_classification import classify_event_type
-from models.models_messages import ConversationModel, UpdateMessagesRequest
-from middleware.middleware_auth import get_current_user
-from database.connect import conversations_collection, users_collection
+from app.models.conversations import ConversationModel, UpdateMessagesRequest
+from app.middleware.auth import get_current_user
+from db.connect import conversations_collection, users_collection
 from bson import ObjectId
 
 router = APIRouter()

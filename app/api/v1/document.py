@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi import UploadFile, File, Form
-from functionality.text.text import doPromptNoStream
-from functionality.document import convert_pdf_to_text
+from services.llm import doPromptNoStream
+from services.document import convert_pdf_to_text
 
 router = APIRouter()
 

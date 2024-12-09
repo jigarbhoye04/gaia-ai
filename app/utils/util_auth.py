@@ -5,7 +5,7 @@ from datetime import timedelta, datetime, timezone
 from passlib.context import CryptContext
 import re
 import jwt
-from database.connect import users_collection
+from db.connect import users_collection
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 load_dotenv()

@@ -7,9 +7,9 @@ from bson import json_util, ObjectId
 from pymongo.errors import DuplicateKeyError
 import json
 from datetime import timedelta, timezone, datetime
-from schemas.schema_auth import SignupData, LoginData
-from middleware.middleware_auth import get_current_user
-from database.connect import users_collection
+from app.schemas.auth import SignupData, LoginData
+from app.middleware.auth import get_current_user
+from db.connect import users_collection
 
 load_dotenv()
 router = APIRouter()
