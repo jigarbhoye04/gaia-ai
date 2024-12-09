@@ -4,9 +4,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from api.v1 import auth, chat, document, feedback, image, oauth, waitlist
-from db.connect import connect
+import db.connect
+from contextlib import asynccontextmanager
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="GAIA API", version="1.0.0", description="The AI assistant backend")
@@ -25,7 +26,6 @@ app.add_middleware(
 )
 
 load_dotenv()
-connect()
 
 app.include_router(waitlist.router, prefix="/api/v1")
 app.include_router(feedback.router, prefix="/api/v1")
@@ -35,16 +35,14 @@ app.include_router(document.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(oauth.router, prefix="/api/v1/oauth")
 
-
 @app.get("/")
+@app.get("/ping")
 async def read_root():
+    logger.info("Pinged server successfully!")
     return {"message": "Welcome to the GAIA API!"}
 
-
-@app.get("/ping")
-def main():
-    logger.info("Pinged server successfully!")
-    return {"status": "GAIA API is running"}
-
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+
+import asyncio
+print(asyncio.get_event_loop())

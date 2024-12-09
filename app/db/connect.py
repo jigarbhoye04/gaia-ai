@@ -1,37 +1,47 @@
+import os
 import sys
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
-import os
-from dotenv import load_dotenv
 import pymongo
+from dotenv import load_dotenv
 
 load_dotenv()
 
-# Load and verify URI
-URI = os.getenv("MONGO_DB")
-if not URI:
-    print("MongoDB URI is not found in the environment variables.")
-    sys.exit(1)
+class MongoDB:
+    def __init__(self, uri: str, db_name: str):
+        if not uri:
+            print("MongoDB URI is not found in the environment variables.")
+            sys.exit(1)
 
-# Connect to MongoDB
-client = AsyncIOMotorClient(URI, server_api=ServerApi("1"))
+        try:
+            self.client = AsyncIOMotorClient(uri, server_api=ServerApi("1"))
+            self.database = self.client.get_database(db_name)
+            self._initialize_indexes()
+            self._ping()
+        except Exception as e:
+            print(f"An error occurred while connecting to MongoDB: {e}")
+            sys.exit(1)
 
-# Select database and collection
-database = client.get_database("GAIA")
+    def _ping(self):
+        """Ping the MongoDB server to confirm connection."""
+        self.client.admin.command("ping")
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+
+    def _initialize_indexes(self):
+        """Create necessary indexes on collections."""
+        users_collection = self.database.get_collection("users")
+        users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
+
+        conversations_collection = self.database.get_collection("conversations")
+        conversations_collection.create_index([("user_id", pymongo.ASCENDING)], unique=True)
+
+    def get_collection(self, collection_name: str):
+        """Get a specific collection."""
+        return self.database.get_collection(collection_name)
+
+# Initialize the MongoDB connection
+database = MongoDB(uri=os.getenv("MONGO_DB"), db_name="GAIA")
+
 users_collection = database.get_collection("users")
 conversations_collection = database.get_collection("conversations")
-
-# Create unique index on email field
-users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
-
-# Create unique index on user_id field for each vonersations
-conversations_collection.create_index([("user_id", pymongo.ASCENDING)], unique=True)
-
-
-def connect():
-    try:
-        client.admin.command("ping")
-        print("Pinged your deployment. You successfully connected to MongoDB!")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        sys.exit(1)
+document_vectors_collection = database.get_collection("document_vectors")
