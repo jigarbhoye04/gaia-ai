@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from db.connect import database
-from app.schemas.common import FeedbackFormData
+from schemas.common import FeedbackFormData
 
 router = APIRouter()
 

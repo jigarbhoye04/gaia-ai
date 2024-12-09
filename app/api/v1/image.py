@@ -2,7 +2,7 @@ import cloudinary.uploader
 import cloudinary
 from fastapi import UploadFile, File, APIRouter, Form
 from fastapi.responses import JSONResponse
-from app.schemas.common import MessageRequest
+from schemas.common import MessageRequest
 from services.image import generate_image, convert_image_to_text
 import io
 import os
