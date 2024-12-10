@@ -4,8 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from api.v1 import auth, chat, document, feedback, image, oauth, waitlist
-import db.connect
-from contextlib import asynccontextmanager
+import db.connect # Import will auto run the connect class creation
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
