@@ -187,7 +187,7 @@ async def query_and_prompt(query: QueryModel):
         ]
 
         response = doPromptNoStream(f"""
-            Context (from the user uploaded document):  {top_results},
+            Context (this is unformmated text extracted from the user uploaded document):  {top_results},
             Question: {query.query_text}
         """)
 
