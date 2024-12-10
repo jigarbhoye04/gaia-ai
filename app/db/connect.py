@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class MongoDB:
     def __init__(self, uri: str, db_name: str):
         if not uri:
@@ -33,15 +34,19 @@ class MongoDB:
         users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
 
         conversations_collection = self.database.get_collection("conversations")
-        conversations_collection.create_index([("user_id", pymongo.ASCENDING)], unique=True)
+        conversations_collection.create_index(
+            [("user_id", pymongo.ASCENDING)], unique=True
+        )
 
     def get_collection(self, collection_name: str):
         """Get a specific collection."""
         return self.database.get_collection(collection_name)
+
 
 # Initialize the MongoDB connection
 database = MongoDB(uri=os.getenv("MONGO_DB"), db_name="GAIA")
 
 users_collection = database.get_collection("users")
 conversations_collection = database.get_collection("conversations")
-document_vectors_collection = database.get_collection("document_vectors")
+documents_collection = database.get_collection("documents")
+document_chunks_collection = database.get_collection("document_chunks")
