@@ -43,3 +43,50 @@ def doPromptNoStream(prompt: str):
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
         return {"error": str(e)}
+
+
+# print(
+#     doPromptNoStream("""
+#  Generate a detailed roadmap for "learning cloud computing" in valid JSON format. The response must meet the following criteria:
+
+# 1. Do **not** include any introductions, explanations, or closing remarks.
+# 2. Output must be **strictly valid JSON** with no additional text outside the JSON block.
+# 3. Follow this structure exactly:
+
+# {
+#   "nodes": [
+#     {
+#       "id": "1",
+#       "title": "HTML & CSS",
+#       "group": "Beginner",
+#       "description": "Learn the basics of structuring web pages and styling them.",
+#       "tips": "Focus on semantic HTML and modern CSS features like Flexbox and Grid.",
+#       "resources": [
+#         "https://developer.mozilla.org/en-US/docs/Learn/HTML",
+#         "https://developer.mozilla.org/en-US/docs/Learn/CSS"
+#       ],
+#       "x": 100,
+#       "y": 100
+#     },
+#     ...
+#   ],
+#   "edges": [
+#     {
+#       "id": "e1-2",
+#       "source": "1",
+#       "target": "2",
+#       "label": "Build on HTML & CSS"
+#     },
+#     ...
+#   ]
+# }
+
+# ### Additional Details:
+# - Ensure all `id`s, `title`s, `description`s, `tips`, and `resources` are relevant and well-structured.
+# - Include meaningful relationships between nodes as `edges`.
+# - Ensure logical spacing for `x` and `y` coordinates to avoid overlaps.
+
+# Output **only** the JSON.
+
+# """)
+# )

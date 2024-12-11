@@ -47,4 +47,9 @@ def classify_text(input, candidate_labels):
     }
 
 
-print(classify_event_type("Can you find a time for my meeting and send me a reminder?"))
+if __name__ == "__main__":
+    print(
+        classify_event_type(
+            "Can you find a time for my meeting and send me a reminder?"
+        )
+    )
