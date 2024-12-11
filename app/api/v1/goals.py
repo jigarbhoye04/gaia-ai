@@ -9,15 +9,12 @@ router = APIRouter()
 
 STATIC_USER_ID = "user123"
 
-
 class GoalCreate(BaseModel):
     title: str
-
 
 class GoalUpdate(BaseModel):
     nodes: List[dict]
     edges: List[dict]
-
 
 class GoalResponse(BaseModel):
     id: str
@@ -55,7 +52,6 @@ async def create_goal(title: str):
 
 @router.put("/goals/{goal_id}", response_model=GoalResponse)
 async def update_goal(goal_id: str, goal_update: GoalUpdate):
-    # Find the goal by ID
     goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
 
     if not goal:
@@ -73,7 +69,6 @@ async def update_goal(goal_id: str, goal_update: GoalUpdate):
     return goal_helper(updated_goal)
 
 
-# 3. Route to fetch all goals for a user
 @router.get("/goals", response_model=List[GoalResponse])
 async def get_user_goals():
     # Fetch all goals for the static user ID
