@@ -1,4 +1,10 @@
-from fastapi import HTTPException, APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import (
+    HTTPException,
+    APIRouter,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from fastapi.websockets import WebSocketState
 from bson import ObjectId
 from db.connect import goals_collection
 from datetime import datetime
@@ -87,7 +93,6 @@ async def websocket_generate_roadmap(websocket: WebSocket):
                     if chunk.strip() != "[DONE]":
                         full_roadmap += json.loads(chunk).get("response", "")
                         await websocket.send_text(chunk)
-
                     else:
                         break
 
@@ -98,7 +103,7 @@ async def websocket_generate_roadmap(websocket: WebSocket):
                     {"$set": {"roadmap": generated_roadmap}},
                 )
 
-                print("updated one")
+                print("Roadmap updated successfully")
                 await websocket.send_json(
                     {
                         "status": "Roadmap generated successfully",
@@ -106,13 +111,37 @@ async def websocket_generate_roadmap(websocket: WebSocket):
                     }
                 )
 
-                print("sent json")
+                print("Roadmap has been sent")
+                if websocket.client_state == WebSocketState.CONNECTED:
+                    await websocket.close()
 
             except Exception as e:
                 await websocket.send_json({"error": str(e)})
 
     except WebSocketDisconnect:
         print("WebSocket disconnected")
+
+
+@router.delete("/goals/{goal_id}", response_model=GoalResponse)
+async def delete_goal(goal_id: str):
+    try:
+        # Find the goal by its ID
+        goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
+
+        if not goal:
+            raise HTTPException(status_code=404, detail="Goal not found")
+
+        # Delete the goal
+        result = await goals_collection.delete_one({"_id": ObjectId(goal_id)})
+
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=500, detail="Failed to delete the goal")
+
+        # Return the deleted goal's information as a response
+        return goal_helper(goal)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.patch("/goals/{goal_id}/roadmap/nodes/{node_id}", response_model=GoalResponse)

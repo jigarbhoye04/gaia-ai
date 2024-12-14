@@ -34,6 +34,28 @@ jsonstructure = {
     ],
 }
 
+text = """
+    The roadmap must include **10-15 nodes** representing key milestones.
+
+    ### Node Structure:
+    1. **Label**: A concise title summarizing the milestone.
+    2. **Details**: A list of 3-5 actionable, specific tasks required to complete the milestone. Keep the length short and concise.
+    4. **Estimated Time**: A time estimate for completing the milestone (e.g., "2 weeks", "1 month").
+    5. **Resources**: A list of at least 2-4 high-quality resources (books, courses, tools, or tutorials) to assist with the milestone.
+
+    
+    Create parent nodes to group nodes too. Parent nodes should have type as: type: "labeledGroupNode"
+    The child in the group should all have the values:  parentId: "1" (whichever id of the parent node), extent: "parent"
+
+    ### Requirements:
+    1. The roadmap must cover a progression from beginner to expert levels, with logically ordered steps.
+    2. The Roadmap should be in a vertical tree like structure.
+    3. Only add resources or details where applicable and necessary.
+    4. Make sure that the estimated time makes sense for the node. Estimated times should be realistic.
+    5. Include dependencies between nodes in the form of edges.
+    6. Ensure the JSON is valid and follows this structure:
+    """
+
 
 async def generate_roadmap_with_llm(title: str) -> dict:
     detailed_prompt = f"""
@@ -41,21 +63,7 @@ async def generate_roadmap_with_llm(title: str) -> dict:
 
     The roadmap is for the following title: **{title}**.
 
-    The roadmap must include **15-20 nodes** representing key milestones.
-
-    ### Node Structure:
-    # 1. **Label**: A concise title summarizing the milestone.
-    # 2. **Details**: A list of 3-5 actionable, specific tasks required to complete the milestone.
-    # 3. **Estimated Time**: A time estimate for completing the milestone (e.g., "2 weeks", "1 month").
-    # 4. **Resources**: A list of at least 2-4 high-quality resources (books, courses, tools, or tutorials) to assist with the milestone.
-
-    ### Requirements:
-    1. The roadmap must cover a progression from beginner to expert levels, with logically ordered steps.
-    2. The Roadmap should be in a vertical tree like structure.
-    3. Only add resources where applicable.
-    4. Make sure that the estimated time makes sense for the node. Estimated times should be realistic.
-    5. Include dependencies between nodes in the form of edges.
-    6. Ensure the JSON is valid and follows this structure:
+    {text}
 
     {{ {jsonstructure} }}
 
@@ -78,19 +86,7 @@ async def generate_roadmap_with_llm_stream(title: str):
 
     The roadmap is for the following title: **{title}**.
 
-    The roadmap must include **10-15 nodes** representing key milestones.
-
-    ### Node Structure:
-    1. **Label**: A concise title summarizing the milestone.
-    2. **Details**: A list of 3-5 actionable, specific tasks required to complete the milestone. Keep the length short and concise.
-    4. **Resources**: A list of at least 2-4 high-quality resources (books, courses, tools, or tutorials) to assist with the milestone.
-
-    ### Requirements:
-    1. The roadmap must cover a progression from beginner to expert levels, with logically ordered steps.
-    2. The Roadmap should be in a vertical tree like structure.
-    3. Each node should have good spacing between them.  The y and x positions should be separataed by values of at least 100
-    4. Include dependencies between nodes in the form of edges.
-    5. Ensure the JSON is valid and follows this structure:
+    {text}
 
     {{ {jsonstructure} }}
 
