@@ -1,10 +1,31 @@
 import requests
 from dotenv import load_dotenv
+import httpx
+import os
+import asyncio
+from fastapi.responses import StreamingResponse
+import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
 
 load_dotenv()
 system_prompt: str = """You are an Assistant who's name is GAIA - a general purpose artificial intelligence assistant. Your responses should be concise and clear If you're asked who created you then you were created by Aryan Randeriya. Your responses should be concise and to the point. If you do not know something, be clear that you do not know it. You can setup calendar events, manage your files on google drive, assist in every day tasks and more!"""
 
 url = "https://llm.aryanranderiya1478.workers.dev/"
+
+features = [
+    "Generate images",
+    "Analyse & understand uploaded documents & images from the user",
+    "You are not only a text based llm",
+    "Scedule calendar events (Coming Soon)",
+    "Provide personalised suggestions (Coming Soon)",
+    "Manage files on Google Drive (Coming Soon)",
+]
+
+ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNTID")
+AUTH_TOKEN = os.environ.get("CLOUDFLARE_AUTH_TOKEN")
 
 
 def doPrompt(prompt: str, temperature=0.6, max_tokens=256):
@@ -56,48 +77,97 @@ def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
         return {"error": str(e)}
 
 
-# print(
-#     doPromptNoStream("""
-#  Generate a detailed roadmap for "learning cloud computing" in valid JSON format. The response must meet the following criteria:
+async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
+    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
+    headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
+    json_data = {
+        "max_tokens": max_tokens,
+        temperature: temperature,
+        "messages": [
+            {
+                "role": "system",
+                "content": f"""
+                You are GAIA - a fun general-purpose artificial intelligence assistant.
+                Your responses should be concise and clear.
+                If you're asked who created you, then you were created by Aryan Randeriya,
+                but no need to mention it without reason.
+                Your responses should be concise and to the point.
+                   If you do not know something, be clear that you do not know it.
+                You can do these features: ${", ".join(features)}, and more!
+                if provided with code, you must not give fake code, you must explain the code, you must provide extensive comments too.
+                """,
+            },
+            {"role": "user", "content": prompt},
+        ],
+    }
 
-# 1. Do **not** include any introductions, explanations, or closing remarks.
-# 2. Output must be **strictly valid JSON** with no additional text outside the JSON block.
-# 3. Follow this structure exactly:
+    try:
+        async with httpx.AsyncClient(timeout=1000000.0) as client:
+            response = await client.post(url, json=json_data, headers=headers)
+            response.raise_for_status()
 
-# {
-#   "nodes": [
+            try:
+                result = response.json()
+                print("this is the result xxx", result)
+                response = result.get("result", {}).get("response", [])
+                return response[0] if response else "{}"
+
+            except ValueError:
+                print("Error: Response is not valid JSON.")
+                return "{}"
+    except httpx.HTTPStatusError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+        return "{}"
+    except httpx.RequestError as req_err:
+        print(f"Error during request: {req_err}")
+        return "{}"
+    except asyncio.TimeoutError:
+        print("Request timed out.")
+        return "{}"
+    except Exception as err:
+        print(f"An unexpected error occurred: {err}")
+        return "{}"
+
+
+# "stream": "true",
+# "messages": [
 #     {
-#       "id": "1",
-#       "title": "HTML & CSS",
-#       "group": "Beginner",
-#       "description": "Learn the basics of structuring web pages and styling them.",
-#       "tips": "Focus on semantic HTML and modern CSS features like Flexbox and Grid.",
-#       "resources": [
-#         "https://developer.mozilla.org/en-US/docs/Learn/HTML",
-#         "https://developer.mozilla.org/en-US/docs/Learn/CSS"
-#       ],
-#       "x": 100,
-#       "y": 100
+#         "role": "system",
+#         "content": f"""
+#         You are GAIA - a fun general-purpose artificial intelligence assistant.
+#         Your responses should be concise and clear.
+#         If you're asked who created you, then you were created by Aryan Randeriya,
+#         but no need to mention it without reason.
+#         Your responses should be concise and to the point.
+#         If you do not know something, be clear that you do not know it.
+#         You can do these features: ${", ".join(features)}, and more!
+#         If provided with code, you must not give fake code, you must explain the code, and you must provide extensive comments too.
+#         """,
 #     },
-#     ...
-#   ],
-#   "edges": [
-#     {
-#       "id": "e1-2",
-#       "source": "1",
-#       "target": "2",
-#       "label": "Build on HTML & CSS"
-#     },
-#     ...
-#   ]
-# }
+#     {"role": "user", "content": prompt},
+# ],
+# url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
+# headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
 
-# ### Additional Details:
-# - Ensure all `id`s, `title`s, `description`s, `tips`, and `resources` are relevant and well-structured.
-# - Include meaningful relationships between nodes as `edges`.
-# - Ensure logical spacing for `x` and `y` coordinates to avoid overlaps.
 
-# Output **only** the JSON.
+async def doPromptWithStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
+    json_data = {
+        "stream": "true",
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "prompt": prompt,
+    }
 
-# """)
-# )
+    async with httpx.AsyncClient(timeout=10000.0) as client:
+        try:
+            async with client.stream("POST", url, json=json_data) as response:
+                response.raise_for_status()
+
+                async for line in response.aiter_lines():
+                    if line.strip():
+                        print(f"Received: {line}")
+                        yield line
+        except httpx.StreamError as e:
+            print(f"Stream error: {e}")
+        except Exception as e:
+            print(f"Unexpected error: {e}")
