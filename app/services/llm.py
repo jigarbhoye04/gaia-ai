@@ -7,9 +7,16 @@ system_prompt: str = """You are an Assistant who's name is GAIA - a general purp
 url = "https://llm.aryanranderiya1478.workers.dev/"
 
 
-def doPrompt(prompt: str):
+def doPrompt(prompt: str, temperature=0.6, max_tokens=256):
     response = requests.post(
-        url, json={"prompt": prompt, "stream": "true"}, stream=True
+        url,
+        json={
+            "prompt": prompt,
+            "stream": "true",
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        },
+        #   stream=True
     )
 
     if response.status_code == 200:
@@ -19,14 +26,18 @@ def doPrompt(prompt: str):
     else:
         yield "data: Error: Failed to fetch data\n\n"
 
-    # for i in range(10):
-    #     time.sleep(0)
-    #     yield f"data: {i} prompt \n\n"
 
-
-def doPromptNoStream(prompt: str):
+def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
     try:
-        response = requests.post(url, json={"prompt": prompt, "stream": "false"})
+        response = requests.post(
+            url,
+            json={
+                "prompt": prompt,
+                "stream": "false",
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            },
+        )
         response.raise_for_status()
 
         if response.status_code == 200:
