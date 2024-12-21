@@ -1,5 +1,5 @@
 from fastapi import HTTPException, Request, status
-from utils.util_auth import decode_jwt
+from app.utils.util_auth import decode_jwt
 
 
 async def get_current_user(request: Request):
@@ -13,14 +13,12 @@ async def get_current_user(request: Request):
 
         if user_id is None:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
             )
 
         return user_id
 
     except Exception:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid token"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid token"
         )

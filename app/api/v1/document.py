@@ -1,17 +1,17 @@
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from services.llm import doPromptNoStream
-from services.document import convert_pdf_to_text
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import numpy as np
-from db.connect import documents_collection, document_chunks_collection
 from sklearn.metrics.pairwise import cosine_similarity
-from services.text import split_text_into_chunks
-from services.document import extract_text_from_pdf
 import datetime
 import time
 import logging
+from app.db.connect import documents_collection, document_chunks_collection
+from app.services.text import split_text_into_chunks
+from app.services.llm import doPromptNoStream
+from app.services.document import convert_pdf_to_text, extract_text_from_pdf
+
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 router = APIRouter()

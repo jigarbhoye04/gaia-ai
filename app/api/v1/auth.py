@@ -1,15 +1,14 @@
-from fastapi import HTTPException
-from utils.util_auth import encode_jwt, authenticate_user, hash_password
-from fastapi import APIRouter, status, Depends, Response
+from fastapi import HTTPException, APIRouter, status, Depends, Response
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from bson import json_util, ObjectId
 from pymongo.errors import DuplicateKeyError
 import json
 from datetime import timedelta, timezone, datetime
-from schemas.auth import SignupData, LoginData
-from middleware.auth import get_current_user
-from db.connect import users_collection
+from app.utils.util_auth import encode_jwt, authenticate_user, hash_password
+from app.schemas.auth import SignupData, LoginData
+from app.middleware.auth import get_current_user
+from app.db.connect import users_collection
 
 load_dotenv()
 router = APIRouter()

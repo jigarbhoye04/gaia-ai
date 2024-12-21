@@ -2,7 +2,7 @@ import requests
 from fastapi import UploadFile, File, HTTPException, Form
 from PIL import Image
 from io import BytesIO
-from services.llm import doPromptNoStream
+from app.services.llm import doPromptNoStream
 
 
 def generate_image(imageprompt: str) -> dict:

@@ -1,11 +1,11 @@
+import os
+import re
+from datetime import timedelta, datetime, timezone
 from fastapi import HTTPException, status
 from dotenv import load_dotenv
-import os
-from datetime import timedelta, datetime, timezone
 from passlib.context import CryptContext
-import re
 import jwt
-from db.connect import users_collection
+from app.db.connect import users_collection
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 load_dotenv()

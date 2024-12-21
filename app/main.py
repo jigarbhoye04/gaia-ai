@@ -3,7 +3,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from api.v1 import auth, chat, document, feedback, image, oauth, waitlist, goals
+from app.api.v1 import auth, chat, document, feedback, image, oauth, waitlist, goals
 import db.connect  # Import will auto run the connect class creation
 
 logging.basicConfig(

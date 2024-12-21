@@ -1,11 +1,11 @@
 import requests
+import os
+import base64
 from fastapi import APIRouter, HTTPException, Cookie
 from fastapi import Response
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-import os
-import base64
 
 router = APIRouter()
 load_dotenv()

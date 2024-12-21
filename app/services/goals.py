@@ -1,5 +1,5 @@
 import json
-from services.llm import doPromptNoStreamAsync, doPromptWithStreamAsync
+from app.services.llm import doPromptNoStreamAsync, doPromptWithStreamAsync
 
 
 jsonstructure = {

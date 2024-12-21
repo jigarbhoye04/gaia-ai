@@ -6,13 +6,13 @@ from fastapi import (
 )
 from fastapi.websockets import WebSocketState
 from bson import ObjectId
-from db.connect import goals_collection
 from datetime import datetime
 import json
 from typing import Union, List
-from services.goals import generate_roadmap_with_llm_stream
-from utils.goals import goal_helper, STATIC_USER_ID
-from schemas.goals import (
+from app.db.connect import goals_collection
+from app.services.goals import generate_roadmap_with_llm_stream
+from app.utils.goals import goal_helper, STATIC_USER_ID
+from app.schemas.goals import (
     GoalCreate,
     GoalResponse,
     RoadmapUnavailableResponse,
