@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse, JSONResponse
 from bson import ObjectId
 from app.schemas.common import MessageRequest, DescriptionUpdateRequest
-from app.services.llm import doPrompt, doPromptNoStream
+from app.services.llm import doPromptNoStream, doPromptWithStreamAsync
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
 from app.middleware.auth import get_current_user
 from app.db.connect import conversations_collection, users_collection
@@ -12,7 +12,10 @@ router = APIRouter()
 
 @router.post("/chat-stream")
 async def chat_stream(request: MessageRequest):
-    return StreamingResponse(doPrompt(request.message), media_type="text/event-stream")
+    # return StreamingResponse(doPrompt(request.message), media_type="text/event-stream")
+    return StreamingResponse(
+        doPromptWithStreamAsync(request.message), media_type="text/event-stream"
+    )
 
 
 @router.post("/chat")

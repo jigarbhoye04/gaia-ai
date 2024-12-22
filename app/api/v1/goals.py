@@ -1,9 +1,4 @@
-from fastapi import (
-    HTTPException,
-    APIRouter,
-    WebSocket,
-    WebSocketDisconnect,
-)
+from fastapi import HTTPException, APIRouter, WebSocket, WebSocketDisconnect, Depends
 from fastapi.websockets import WebSocketState
 from bson import ObjectId
 from datetime import datetime
@@ -11,7 +6,8 @@ import json
 from typing import Union, List
 from app.db.connect import goals_collection
 from app.services.goals import generate_roadmap_with_llm_stream
-from app.utils.goals import goal_helper, STATIC_USER_ID
+from app.utils.goals import goal_helper
+from app.middleware.auth import get_current_user
 from app.schemas.goals import (
     GoalCreate,
     GoalResponse,
@@ -23,12 +19,12 @@ router = APIRouter()
 
 
 @router.post("/goals", response_model=GoalResponse)
-async def create_goal(goal: GoalCreate):
+async def create_goal(goal: GoalCreate, user_id: str = Depends(get_current_user)):
     goal_data = {
         "title": goal.title,
         "description": goal.description,
         "created_at": str(datetime.now().isoformat()),
-        "user_id": STATIC_USER_ID,
+        "user_id": user_id,
         "roadmap": {"nodes": [], "edges": []},
     }
 
@@ -40,8 +36,11 @@ async def create_goal(goal: GoalCreate):
 @router.get(
     "/goals/{goal_id}", response_model=Union[GoalResponse, RoadmapUnavailableResponse]
 )
-async def get_goal(goal_id: str):
+async def get_goal(goal_id: str, user_id: str = Depends(get_current_user)):
     try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User not found")
+
         goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
 
         if not goal:
@@ -63,9 +62,9 @@ async def get_goal(goal_id: str):
 
 
 @router.get("/goals", response_model=List[GoalResponse])
-async def get_user_goals():
+async def get_user_goals(user_id: str = Depends(get_current_user)):
     # Fetch all goals for the static user ID
-    goals = await goals_collection.find({"user_id": STATIC_USER_ID}).to_list(None)
+    goals = await goals_collection.find({"user_id": user_id}).to_list(None)
     return [goal_helper(goal) for goal in goals]
 
 
@@ -75,6 +74,7 @@ async def websocket_generate_roadmap(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
+
             goal_id = data.get("goal_id")
             goal_title = data.get("goal_title")
 
@@ -88,7 +88,7 @@ async def websocket_generate_roadmap(websocket: WebSocket):
                 full_roadmap = ""
 
                 async for chunk in generate_roadmap_with_llm_stream(goal_title):
-                    chunk = chunk.replace("data: ", "")  # Remove the 'data: ' prefix
+                    chunk = chunk.replace("data: ", "")
 
                     if chunk.strip() != "[DONE]":
                         full_roadmap += json.loads(chunk).get("response", "")
@@ -123,10 +123,15 @@ async def websocket_generate_roadmap(websocket: WebSocket):
 
 
 @router.delete("/goals/{goal_id}", response_model=GoalResponse)
-async def delete_goal(goal_id: str):
+async def delete_goal(goal_id: str, user_id: str = Depends(get_current_user)):
     try:
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User not found")
+
         # Find the goal by its ID
-        goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
+        goal = await goals_collection.find_one(
+            {"_id": ObjectId(goal_id), "user_id": user_id}
+        )
 
         if not goal:
             raise HTTPException(status_code=404, detail="Goal not found")

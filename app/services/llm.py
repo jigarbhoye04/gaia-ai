@@ -4,9 +4,9 @@ import asyncio
 import logging
 from dotenv import load_dotenv
 import httpx
-from fastapi.responses import StreamingResponse
 
 logging.basicConfig(level=logging.INFO)
+http_async_client = httpx.AsyncClient(timeout=1000000.0)
 
 
 load_dotenv()
@@ -42,6 +42,7 @@ def doPrompt(prompt: str, temperature=0.6, max_tokens=256):
     if response.status_code == 200:
         for line in response.iter_lines():
             if line:
+                print(line)
                 yield line.decode("utf-8") + "\n\n"
     else:
         yield "data: Error: Failed to fetch data\n\n"
@@ -74,9 +75,6 @@ def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
         return {"error": str(e)}
-
-
-http_async_client = httpx.AsyncClient(timeout=1000000.0)
 
 
 async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
@@ -129,27 +127,6 @@ async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
         return "{}"
 
 
-# "stream": "true",
-# "messages": [
-#     {
-#         "role": "system",
-#         "content": f"""
-#         You are GAIA - a fun general-purpose artificial intelligence assistant.
-#         Your responses should be concise and clear.
-#         If you're asked who created you, then you were created by Aryan Randeriya,
-#         but no need to mention it without reason.
-#         Your responses should be concise and to the point.
-#         If you do not know something, be clear that you do not know it.
-#         You can do these features: ${", ".join(features)}, and more!
-#         If provided with code, you must not give fake code, you must explain the code, and you must provide extensive comments too.
-#         """,
-#     },
-#     {"role": "user", "content": prompt},
-# ],
-# url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
-# headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
-
-
 async def doPromptWithStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
     json_data = {
         "stream": "true",
@@ -158,16 +135,16 @@ async def doPromptWithStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
         "prompt": prompt,
     }
 
-    async with httpx.AsyncClient(timeout=10000.0) as client:
-        try:
-            async with client.stream("POST", url, json=json_data) as response:
-                response.raise_for_status()
+    try:
+        async with http_async_client.stream("POST", url, json=json_data) as response:
+            response.raise_for_status()
 
-                async for line in response.aiter_lines():
-                    if line.strip():
-                        print(f"Received: {line}")
-                        yield line
-        except httpx.StreamError as e:
-            print(f"Stream error: {e}")
-        except Exception as e:
-            print(f"Unexpected error: {e}")
+            async for line in response.aiter_lines():
+                if line.strip():
+                    print(f"Received: {line}")
+                    # yield line.decode("utf-8") + "\n\n"
+                    yield line + "\n\n"
+    except httpx.StreamError as e:
+        print(f"Stream error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
