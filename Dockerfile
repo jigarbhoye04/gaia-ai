@@ -27,6 +27,7 @@ RUN pip install --upgrade pip
 
 # Install dependencies
 RUN pip install -r requirements.txt
+RUN pip install python-multipart
 
 RUN pip freeze > requirements_installed.txt
 

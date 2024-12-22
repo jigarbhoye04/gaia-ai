@@ -1,6 +1,6 @@
 cloudinary==1.41.0
 fastapi==0.115.6
-fitz==0.0.1.dev2
+PyMuPDF
 httpx==0.28.1
 motor
 nltk==3.9.1

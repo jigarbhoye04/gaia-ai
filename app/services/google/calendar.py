@@ -1,5 +1,5 @@
-from services.text.named_entity_recognition import parse_calendar_info
-from services.text.zero_shot_classification import classify_event_type
+from app.services.text import parse_calendar_info
+from app.services.text import classify_event_type
 
 
 def get_event_details(message):
