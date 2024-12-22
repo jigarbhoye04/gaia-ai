@@ -11,6 +11,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 load_dotenv()
 
 
+GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 

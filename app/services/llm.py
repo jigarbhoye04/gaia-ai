@@ -76,6 +76,9 @@ def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
         return {"error": str(e)}
 
 
+http_async_client = httpx.AsyncClient(timeout=1000000.0)
+
+
 async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
     url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
     headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
@@ -101,19 +104,17 @@ async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
     }
 
     try:
-        async with httpx.AsyncClient(timeout=1000000.0) as client:
-            response = await client.post(url, json=json_data, headers=headers)
-            response.raise_for_status()
+        response = await http_async_client.post(url, json=json_data, headers=headers)
+        response.raise_for_status()
 
-            try:
-                result = response.json()
-                print("this is the result xxx", result)
-                response = result.get("result", {}).get("response", [])
-                return response[0] if response else "{}"
+        result = response.json()
+        print("this is the result xxx", result)
+        response = result.get("result", {}).get("response", [])
+        return response[0] if response else "{}"
 
-            except ValueError:
-                print("Error: Response is not valid JSON.")
-                return "{}"
+    except ValueError:
+        print("Error: Response is not valid JSON.")
+        return "{}"
     except httpx.HTTPStatusError as http_err:
         print(f"HTTP error occurred: {http_err}")
         return "{}"

@@ -10,17 +10,6 @@ from app.db.connect import conversations_collection, users_collection
 router = APIRouter()
 
 
-# def test(key: str):
-#     yield f"""data: {{"response": {{"type" : "{key}"}}}}\n\n"""
-#     yield """data: [DONE]\n\n"""
-# data = await classify_event_type(request.message)
-
-# if(data["generate image"] > 0.75):
-#     return StreamingResponse(test("image"), media_type='text/event-stream')
-# else:
-#     return StreamingResponse(doPrompt(request.message), media_type='text/event-stream')
-
-
 @router.post("/chat-stream")
 async def chat_stream(request: MessageRequest):
     return StreamingResponse(doPrompt(request.message), media_type="text/event-stream")

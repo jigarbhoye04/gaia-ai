@@ -5,7 +5,7 @@ from bson import json_util, ObjectId
 from pymongo.errors import DuplicateKeyError
 import json
 from datetime import timedelta, timezone, datetime
-from app.utils.util_auth import encode_jwt, authenticate_user, hash_password
+from app.utils.auth import encode_jwt, authenticate_user, hash_password
 from app.schemas.auth import SignupData, LoginData
 from app.middleware.auth import get_current_user
 from app.db.connect import users_collection
