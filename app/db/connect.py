@@ -11,6 +11,7 @@ load_dotenv()
 class MongoDB:
     def __init__(self, uri: str, db_name: str):
         if not uri:
+            print(uri)
             print("MongoDB URI is not found in the environment variables.")
             sys.exit(1)
 

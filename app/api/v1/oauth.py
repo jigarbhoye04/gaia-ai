@@ -12,8 +12,6 @@ load_dotenv()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
-FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 
 class OAuthRequest(BaseModel):
@@ -35,33 +33,39 @@ async def callback(response: Response, oauth_request: OAuthRequest):
             },
         )
 
-        if token_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to obtain tokens")
+        token_response.raise_for_status()
 
         tokens = token_response.json()
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
+
+        if not access_token or not refresh_token:
+            raise HTTPException(
+                status_code=400, detail="Missing access or refresh token"
+            )
 
         user_info_response = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
-        if user_info_response.status_code != 200:
-            raise HTTPException(status_code=400, detail="Invalid access token")
+        user_info_response.raise_for_status()
 
         user_info = user_info_response.json()
         user_email = user_info.get("email")
         user_name = user_info.get("name")
         user_picture = user_info.get("picture")
 
+        if not user_email:
+            raise HTTPException(status_code=400, detail="Email not found in user info")
+
         response = JSONResponse(
             content={
                 "email": user_email,
                 "name": user_name,
                 "picture": user_picture,
-                "access_token": access_token,
-                "refresh_token": refresh_token,
+                # "access_token": access_token,
+                # "refresh_token": refresh_token,
             }
         )
 
@@ -69,28 +73,38 @@ async def callback(response: Response, oauth_request: OAuthRequest):
             key="access_token",
             value=access_token,
             httponly=True,
+            # secure=True,
+            # samesite="none",
             samesite="lax",
-            secure=True,
+            secure=False,
         )
 
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
+            # secure=True,
+            # samesite="none",
             samesite="lax",
-            secure=True,
+            secure=False,
         )
+
+        print(access_token, refresh_token, "reached here")
 
         return response
 
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=400, detail=f"Request error: {str(e)}")
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Missing expected data: {str(e)}")
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(
+            status_code=400, detail=f"Error processing request: {str(e)}"
+        )
 
 
 @router.get("/me")
 async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
-    # Function to get user info from Google
-
     def get_user_info(token):
         user_info_response = requests.get(
             "https://www.googleapis.com/oauth2/v2/userinfo",
@@ -98,7 +112,6 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
         )
         return user_info_response
 
-    # Check if access token is present
     if access_token:
         user_info_response = get_user_info(access_token)
 
@@ -154,9 +167,6 @@ async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)
                 )
 
     raise HTTPException(status_code=401, detail="Authentication required")
-
-
-# async def me(access_token: str = Cookie(None), refresh_token: str = Cookie(None)):
 
 
 @router.get("/gmail/emails")

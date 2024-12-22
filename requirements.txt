@@ -20,3 +20,4 @@ sumy==0.11.0
 transformers==4.47.1
 uvicorn==0.34.0
 pydantic[email]
+python-multipart

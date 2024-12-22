@@ -28,14 +28,14 @@ app.add_middleware(
 
 load_dotenv()
 
-app.include_router(waitlist.router, prefix="/api/v1")
-app.include_router(feedback.router, prefix="/api/v1")
-app.include_router(chat.router, prefix="/api/v1")
-app.include_router(image.router, prefix="/api/v1")
-app.include_router(document.router, prefix="/api/v1")
-app.include_router(auth.router, prefix="/api/v1")
-app.include_router(goals.router, prefix="/api/v1")
-app.include_router(oauth.router, prefix="/api/v1/oauth")
+app.include_router(waitlist.router, prefix="/api/v1", tags=["Waitlist"])
+app.include_router(feedback.router, prefix="/api/v1", tags=["Feedback"])
+app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
+app.include_router(image.router, prefix="/api/v1", tags=["Image"])
+app.include_router(document.router, prefix="/api/v1", tags=["Document"])
+app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
+app.include_router(goals.router, prefix="/api/v1", tags=["Goals"])
+app.include_router(oauth.router, prefix="/api/v1/oauth", tags=["OAuth"])
 
 
 @app.get("/")
