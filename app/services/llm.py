@@ -48,12 +48,11 @@ def doPrompt(prompt: str, temperature=0.6, max_tokens=256):
         yield "data: Error: Failed to fetch data\n\n"
 
 
-def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
+async def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
     try:
-        response = requests.post(
+        response = await http_async_client.post(
             url,
             json={
-                # "prompt": prompt,
                 "stream": "false",
                 "temperature": temperature,
                 "max_tokens": max_tokens,

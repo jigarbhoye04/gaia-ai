@@ -3,12 +3,17 @@ from fastapi import UploadFile, File, HTTPException, Form
 from PIL import Image
 from io import BytesIO
 from app.services.llm import doPromptNoStream
+import httpx
+
+http_async_client = httpx.AsyncClient(timeout=10000)
 
 
-def generate_image(imageprompt: str) -> dict:
+async def generate_image(imageprompt: str) -> dict:
+    print(f"insdie generate image method {imageprompt}")
+
     url = "https://generateimage.aryanranderiya1478.workers.dev/"
     try:
-        response = requests.post(url, json={"imageprompt": imageprompt})
+        response = await http_async_client.post(url, json={"imageprompt": imageprompt})
         response.raise_for_status()
         return response.content
     except requests.exceptions.RequestException as e:
@@ -55,7 +60,7 @@ async def convert_image_to_text(
         if len(contents) > 1 * 1024 * 1024:
             return "File too large"
 
-        improved_prompt = doPromptNoStream(
+        improved_prompt = await doPromptNoStream(
             prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{
                                            message}'. Only give me the sentence without any additional headers or information. Be concise, but descriptive."""
         )

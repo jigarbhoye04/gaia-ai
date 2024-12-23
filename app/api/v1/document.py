@@ -186,7 +186,7 @@ async def query_and_prompt(query: QueryModel):
             for idx in top_indices
         ]
 
-        response = doPromptNoStream(f"""
+        response = await doPromptNoStream(f"""
             Context (this is unformmated text extracted from the user uploaded document):  {top_results},
             Question: {query.query_text}
         """)
@@ -215,5 +215,5 @@ async def upload_file(message: str = Form(...), file: UploadFile = File(...)):
         I want you to do this: {message}.
     """
 
-    response = doPromptNoStream(prompt)
+    response = await doPromptNoStream(prompt)
     return JSONResponse(content=response)

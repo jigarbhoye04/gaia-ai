@@ -26,11 +26,11 @@ async def chat_stream(request: MessageRequestWithHistory):
 
 
 @router.post("/chat")
-def chat(request: MessageRequest):
-    return JSONResponse(content=doPromptNoStream(request.message))
+async def chat(request: MessageRequest):
+    return JSONResponse(content=await doPromptNoStream(request.message))
 
 
-@router.post("/conversations/")
+@router.post("/conversations")
 async def create_conversation(
     conversation: ConversationModel, user_id: str = Depends(get_current_user)
 ):
@@ -84,7 +84,7 @@ async def create_conversation(
     return {"conversation_id": new_conversation["conversation_id"], "user_id": user_id}
 
 
-@router.put("/conversations/{conversation_id}/messages/")
+@router.put("/conversations/{conversation_id}/messages")
 async def update_messages(
     request: UpdateMessagesRequest, user_id: str = Depends(get_current_user)
 ):
@@ -118,7 +118,7 @@ async def update_messages(
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
 
-@router.get("/conversations/")
+@router.get("/conversations")
 async def get_conversations(user_id: str = Depends(get_current_user)):
     user_conversations = await conversations_collection.find(
         {"user_id": user_id},
