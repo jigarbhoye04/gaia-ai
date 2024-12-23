@@ -53,10 +53,13 @@ def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
         response = requests.post(
             url,
             json={
-                "prompt": prompt,
+                # "prompt": prompt,
                 "stream": "false",
                 "temperature": temperature,
                 "max_tokens": max_tokens,
+                "messages": [
+                    {"role": "user", "content": prompt},
+                ],
             },
         )
         response.raise_for_status()
@@ -127,21 +130,27 @@ async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
         return "{}"
 
 
-async def doPromptWithStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
+async def doPromptWithStreamAsync(
+    prompt: str, messages=[], temperature=0.6, max_tokens=256
+):
+    print(messages)
+
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
         "temperature": temperature,
-        "prompt": prompt,
+        # "prompt": prompt,
+        # "messages": [{"role": "user", "content": "my name is aryan"}],
+        "messages": messages,
+        # [{"role": "user", "content": "my name is aryan"},{"role": "user", "content": "what is my name?"}]}
     }
-
     try:
         async with http_async_client.stream("POST", url, json=json_data) as response:
             response.raise_for_status()
 
             async for line in response.aiter_lines():
                 if line.strip():
-                    print(f"Received: {line}")
+                    # print(f"Received: {line}")
                     # yield line.decode("utf-8") + "\n\n"
                     yield line + "\n\n"
     except httpx.StreamError as e:

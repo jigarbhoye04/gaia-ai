@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List
+from typing import List, Dict
 
 
 class WaitlistItem(BaseModel):
@@ -33,6 +33,11 @@ class FeedbackFormData(BaseModel):
     accountCreation: int
     calendarServiceUsage: str
     learningBehaviourComfortable: str
+
+
+class MessageRequestWithHistory(BaseModel):
+    message: str
+    messages: List[Dict[str, str]]
 
 
 class MessageRequest(BaseModel):
