@@ -129,18 +129,13 @@ async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
         return "{}"
 
 
-async def doPromptWithStreamAsync(
-    prompt: str, messages=[], temperature=0.6, max_tokens=256
-):
-    print(messages)
-
+async def doPromptWithStreamAsync(messages=[], temperature=0.6, max_tokens=256):
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
         "temperature": temperature,
-        # "prompt": prompt,
-        # "messages": [{"role": "user", "content": "my name is aryan"}],
         "messages": messages,
+        # "messages": [{"role": "user", "content": "my name is aryan"}],
         # [{"role": "user", "content": "my name is aryan"},{"role": "user", "content": "what is my name?"}]}
     }
     try:

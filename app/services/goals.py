@@ -44,9 +44,6 @@ text = """
     5. **Resources**: A list of at least 2-4 high-quality resources (books, courses, tools, or tutorials) to assist with the milestone.
 
     
-    Create parent nodes to group nodes too. Parent nodes should have type as: type: "labeledGroupNode"
-    The child in the group should all have the values:  parentId: "1" (whichever id of the parent node), extent: "parent"
-
     ### Requirements:
     1. The roadmap must cover a progression from beginner to expert levels, with logically ordered steps.
     2. The Roadmap should be in a vertical tree like structure.
@@ -95,7 +92,8 @@ async def generate_roadmap_with_llm_stream(title: str):
 
     try:
         async for chunk in doPromptWithStreamAsync(
-            prompt=detailed_prompt, max_tokens=2048
+            messages=[{"role": "user", "content": detailed_prompt}],
+            max_tokens=2048,
         ):
             yield chunk
 

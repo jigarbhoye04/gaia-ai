@@ -3,7 +3,7 @@ from datetime import datetime
 STATIC_USER_ID = "user123"
 
 
-def goal_helper(goal) -> dict:
+def goal_helper(goal, hasRoadmap=True) -> dict:
     created_at = goal["created_at"]
     if isinstance(created_at, datetime):
         created_at = created_at.isoformat()
@@ -14,17 +14,24 @@ def goal_helper(goal) -> dict:
     )
     total_nodes = len(nodes)
     progress = int((completed_nodes / total_nodes) * 100) if total_nodes > 0 else 0
-    return {
+
+    goal_data = {
         "id": str(goal["_id"]),
         "title": goal["title"],
         "description": goal.get("description", ""),
-        "created_at": goal["created_at"],
+        "created_at": created_at,
         "progress": progress,
-        "roadmap": {
+        "user_id": goal.get("user_id", STATIC_USER_ID),
+    }
+
+    if hasRoadmap:
+        goal_data["roadmap"] = {
             "title": goal.get("roadmap", {}).get("title", ""),
             "description": goal.get("roadmap", {}).get("description", ""),
             "nodes": goal.get("roadmap", {}).get("nodes", []),
             "edges": goal.get("roadmap", {}).get("edges", []),
-        },
-        "user_id": goal.get("user_id", STATIC_USER_ID),
-    }
+        }
+    else:
+        goal_data["roadmap"] = {}
+
+    return goal_data

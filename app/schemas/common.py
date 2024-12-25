@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Dict
+from typing import List, Dict, TypedDict
 
 
 class WaitlistItem(BaseModel):
@@ -35,9 +35,15 @@ class FeedbackFormData(BaseModel):
     learningBehaviourComfortable: str
 
 
+class MessageDict(TypedDict):
+    role: str
+    content: str
+    # mostRecent: bool
+
+
 class MessageRequestWithHistory(BaseModel):
     message: str
-    messages: List[Dict[str, str]]
+    messages: List[MessageDict]
 
 
 class MessageRequest(BaseModel):

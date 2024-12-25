@@ -12,7 +12,7 @@ class GoalResponse(BaseModel):
     title: str
     progress: int
     description: str
-    roadmap: dict
+    roadmap: Optional[dict]
     user_id: str
     created_at: str
 

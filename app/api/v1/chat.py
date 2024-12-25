@@ -29,8 +29,13 @@ async def chat_stream(request: MessageRequestWithHistory):
     Returns:
         StreamingResponse: Streamed response for real-time communication.
     """
+
+    print(request.messages)
+
     return StreamingResponse(
-        doPromptWithStreamAsync(request.message, jsonable_encoder(request.messages)),
+        doPromptWithStreamAsync(
+            messages=jsonable_encoder(request.messages), max_tokens=4096
+        ),
         media_type="text/event-stream",
     )
 
