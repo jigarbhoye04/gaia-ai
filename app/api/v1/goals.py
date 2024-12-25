@@ -117,12 +117,17 @@ async def get_user_goals(user: str = Depends(get_current_user)):
     if cached_goals:
         return json.loads(cached_goals)
 
-    goals = await goals_collection.find(
-        {"user_id": user_id},
-        {"id": 1, "title": 1, "description": 1, "created_at": 1, "progress": 1},
-    ).to_list(None)
+    goals = await goals_collection.find({"user_id": user_id}).to_list(None)
+    # {
+    #     "id": 1,
+    #     "title": 1,
+    #     "description": 1,
+    #     "created_at": 1,
+    #     "progress": 1,
+    #     "nodes": 1,
+    # },
 
-    goals_list = [goal_helper(goal, hasRoadmap=False) for goal in goals]
+    goals_list = [goal_helper(goal) for goal in goals]
 
     await set_cache(cache_key, json.dumps(goals_list))
 
@@ -229,7 +234,10 @@ async def delete_goal(goal_id: str, user: str = Depends(get_current_user)):
     description="Updates the completion status of a node in the roadmap.",
 )
 async def update_node_status(
-    goal_id: str, node_id: str, update_data: UpdateNodeRequest
+    goal_id: str,
+    node_id: str,
+    update_data: UpdateNodeRequest,
+    user: str = Depends(get_current_user),
 ):
     """
     Update the status of a node in the roadmap.
@@ -239,6 +247,10 @@ async def update_node_status(
     - **is_complete**: The new completion status of the node
     """
     try:
+        user_id = user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=403, detail="Not authenticated")
+
         goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
 
         if not goal:
@@ -258,6 +270,12 @@ async def update_node_status(
         )
 
         updated_goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
+
+        cache_key_goal = f"goal_cache:{goal_id}"
+        cache_key_goals = f"goals_cache:{user_id}"
+        await delete_cache(cache_key_goal)
+        await delete_cache(cache_key_goals)
+
         return goal_helper(updated_goal)
 
     except Exception as e:

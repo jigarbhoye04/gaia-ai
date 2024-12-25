@@ -336,3 +336,54 @@ async def delete_conversation(
         "message": "Conversation deleted successfully",
         "conversation_id": conversation_id,
     }
+
+
+async def migrate_conversations_to_documents(user_id: str):
+    """
+    Migrate conversations from a single user document to individual conversation documents.
+
+    Args:
+        user_id (str): The user ID for which the conversations will be migrated.
+
+    Returns:
+        dict: Migration summary.
+    """
+    # Fetch the user document
+    user_data = await conversations_collection.find_one({"user_id": user_id})
+
+    if not user_data or "conversationHistory" not in user_data:
+        raise HTTPException(
+            status_code=404, detail="User or conversation history not found."
+        )
+
+    # Extract the conversationHistory array
+    conversation_history = user_data["conversationHistory"]
+
+    # Prepare individual conversation documents
+    new_documents = [
+        {
+            "user_id": user_id,
+            "conversation_id": conversation["conversation_id"],
+            "description": conversation.get("description", "No Description"),
+            "messages": conversation.get("messages", []),
+        }
+        for conversation in conversation_history
+    ]
+
+    # Insert individual documents into the database
+    insert_result = await conversations_collection.insert_many(new_documents)
+
+    # Remove the old conversationHistory array
+    await conversations_collection.update_one(
+        {"user_id": user_id}, {"$unset": {"conversationHistory": ""}}
+    )
+
+    return {
+        "migrated_count": len(new_documents),
+        "inserted_ids": [
+            str(inserted_id) for inserted_id in insert_result.inserted_ids
+        ],
+    }
+
+
+# print(migrate_conversations_to_documents("67689b80006f6eec3f6f6df8"))
