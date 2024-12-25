@@ -56,3 +56,25 @@ class RedisCache:
 
 # Initialize the Redis cache
 redis_cache = RedisCache()
+
+
+# Wrappers for RedisCache instance methods
+async def get_cache(key: str):
+    """
+    Get a cached value by key.
+    """
+    return await redis_cache.get(key)
+
+
+async def set_cache(key: str, value: dict, ttl: int = 3600):
+    """
+    Set a cached value with an optional TTL.
+    """
+    await redis_cache.set(key, value, ttl)
+
+
+async def delete_cache(key: str):
+    """
+    Delete a cached key.
+    """
+    await redis_cache.delete(key)

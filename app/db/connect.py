@@ -52,3 +52,8 @@ conversations_collection = database.get_collection("conversations")
 documents_collection = database.get_collection("documents")
 document_chunks_collection = database.get_collection("document_chunks")
 goals_collection = database.get_collection("goals")
+notes_collection = database.get_collection("notes")
+
+
+def serialize_document(document):
+    return {**document, "id": str(document["_id"])}

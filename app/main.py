@@ -3,7 +3,17 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from app.api.v1 import auth, chat, document, feedback, image, oauth, waitlist, goals
+from app.api.v1 import (
+    auth,
+    chat,
+    document,
+    feedback,
+    image,
+    oauth,
+    waitlist,
+    goals,
+    notes,
+)
 import app.db.connect
 
 logging.basicConfig(
@@ -34,6 +44,7 @@ app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
 app.include_router(image.router, prefix="/api/v1", tags=["Image"])
 app.include_router(document.router, prefix="/api/v1", tags=["Document"])
 app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
+app.include_router(notes.router, prefix="/api/v1", tags=["Notes/Memories"])
 app.include_router(goals.router, prefix="/api/v1", tags=["Goals"])
 app.include_router(oauth.router, prefix="/api/v1/oauth", tags=["OAuth"])
 
