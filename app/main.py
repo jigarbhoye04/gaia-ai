@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from app.api.v1 import auth, chat, document, feedback, image, oauth, waitlist, goals
-import app.db.connect  # Import will auto run the connect class creation
+import app.db.connect
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
