@@ -58,9 +58,11 @@ async def image(request: MessageRequest):
         max_tokens=100,
     )
 
-    refined_text = (
-        request.message + improved_prompt.get("response", "")
-    ) or request.message
+    refined_text = ", ".join(
+        part.strip()
+        for part in [request.message or "", improved_prompt.get("response", "") or ""]
+        if part.strip()
+    )
 
     if not refined_text:
         raise ValueError(
@@ -73,7 +75,7 @@ async def image(request: MessageRequest):
     upload_result = cloudinary.uploader.upload(
         io.BytesIO(image_bytes),  # Pass the image bytes as a file-like object
         resource_type="image",
-        public_id=f"generated_image_{request.message[:20]}",
+        public_id=f"generated_image_{refined_text[:20]}".strip(),
         overwrite=True,
     )
 

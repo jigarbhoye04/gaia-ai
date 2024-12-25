@@ -50,4 +50,4 @@ class MessageRequestPrimary(BaseModel):
 
 
 class DescriptionUpdateRequest(BaseModel):
-    description: str
+    userFirstMessage: str

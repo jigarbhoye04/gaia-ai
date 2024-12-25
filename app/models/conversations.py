@@ -25,7 +25,6 @@ class MessageModel(BaseModel):
 class ConversationModel(BaseModel):
     conversation_id: str
     description: str = "New Chat"
-    messages: List[MessageModel]
 
 
 # Define the structure for all user conversations
