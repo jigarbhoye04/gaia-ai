@@ -34,10 +34,11 @@ class MongoDB:
         users_collection = self.database.get_collection("users")
         users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
 
-        conversations_collection = self.database.get_collection("conversations")
-        conversations_collection.create_index(
-            [("user_id", pymongo.ASCENDING)], unique=True
-        )
+        # conversations_collection = self.database.get_collection("conversations")
+        # conversations_collection.create_index(
+        #     [("user_id", pymongo.ASCENDING)], unique=True
+        # )
+        # conversations_collection.drop_index([("user_id", pymongo.ASCENDING)])
 
     def get_collection(self, collection_name: str):
         """Get a specific collection."""
@@ -49,6 +50,7 @@ database = MongoDB(uri=os.getenv("MONGO_DB"), db_name="GAIA")
 
 users_collection = database.get_collection("users")
 conversations_collection = database.get_collection("conversations")
+conversations_collection.drop_indexes()
 documents_collection = database.get_collection("documents")
 document_chunks_collection = database.get_collection("document_chunks")
 goals_collection = database.get_collection("goals")

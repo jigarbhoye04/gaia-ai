@@ -1,21 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse, JSONResponse
-from bson import ObjectId
-import logging
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse, StreamingResponse
+from app.db.connect import conversations_collection
 from app.db.redis import redis_cache
-from app.models.conversations import ConversationModel, UpdateMessagesRequest
+from app.services.llm import doPromptWithStreamAsync, doPromptNoStream
 from app.middleware.auth import get_current_user
-from app.db.connect import conversations_collection, users_collection
-from app.services.llm import doPromptNoStream, doPromptWithStreamAsync
+from app.models.conversations import ConversationModel, UpdateMessagesRequest
 from app.schemas.common import (
-    MessageRequest,
     DescriptionUpdateRequest,
+    DescriptionUpdateRequestLLM,
+    MessageRequest,
     MessageRequestWithHistory,
 )
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 @router.post("/chat-stream")
@@ -60,13 +58,6 @@ async def create_conversation(
 ):
     """
     Create a new conversation for the authenticated user.
-
-    Args:
-        conversation (ConversationModel): Conversation details to be added.
-        user (dict): Authenticated user information.
-
-    Returns:
-        dict: Created conversation ID and user ID.
     """
     user_id = user.get("user_id")
     if not user_id:
@@ -74,63 +65,91 @@ async def create_conversation(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
         )
 
-    # Check if user exists
-    if not await users_collection.find_one({"_id": ObjectId(user_id)}):
+    conversation_data = {
+        "user_id": user_id,
+        "conversation_id": conversation.conversation_id,
+        "description": conversation.description,
+        "messages": [],
+    }
+
+    try:
+        insert_result = await conversations_collection.insert_one(conversation_data)
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create conversation: {str(e)}",
+        )
+
+    if not insert_result.acknowledged:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create conversation",
         )
 
     # Invalidate Redis cache
-    cache_key = f"conversations_cache:{user_id}"
-    await redis_cache.delete(cache_key)
-
-    # Insert conversation into the database
-    conversation_data = conversation.model_dump(exclude={"messages"})
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id},
-        {"$push": {"conversationHistory": conversation_data}},
-        upsert=True,
-    )
-
-    if not (update_result.modified_count or update_result.upserted_id):
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create or update conversation",
-        )
-
-    return {"conversation_id": conversation_data["conversation_id"], "user_id": user_id}
-
-
-@router.delete("/conversations")
-async def delete_all_conversations(user: dict = Depends(get_current_user)):
-    """
-    Delete all conversations for the authenticated user.
-
-    Args:
-        user (dict): Authenticated user information.
-
-    Returns:
-        dict: Confirmation message.
-    """
-    user_id = user.get("user_id")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
-        )
-
-    # Verify user existence
-    if not await users_collection.find_one({"_id": ObjectId(user_id)}):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
-
-    # Delete all conversations and invalidate cache
-    await conversations_collection.update_one(
-        {"user_id": user_id}, {"$unset": {"conversationHistory": ""}}
-    )
     await redis_cache.delete(f"conversations_cache:{user_id}")
 
-    return {"detail": "All conversations deleted successfully"}
+    return {
+        "conversation_id": conversation.conversation_id,
+        "user_id": user_id,
+        "detail": "Conversation created successfully",
+    }
+
+
+@router.get("/conversations")
+async def get_conversations(user: dict = Depends(get_current_user)):
+    """
+    Fetch all conversations for the authenticated user.
+    """
+    user_id = user["user_id"]
+    cache_key = f"conversations_cache:{user_id}"
+
+    # Check cache for conversations
+    cached_conversations = await redis_cache.get(cache_key)
+    if cached_conversations:
+        return {"conversations": jsonable_encoder(cached_conversations)}
+
+    # Fetch all conversations for the user
+    conversations = await conversations_collection.find(
+        {"user_id": user_id}, {"_id": 1, "conversation_id": 1, "description": 1}
+    ).to_list(None)
+
+    if not conversations:
+        await redis_cache.set(cache_key, [])
+        return {"conversations": []}
+
+    # Convert ObjectId to string
+    for conversation in conversations:
+        conversation["_id"] = str(conversation["_id"])
+
+    # Cache the result
+    await redis_cache.set(cache_key, jsonable_encoder(conversations))
+
+    return {"conversations": conversations}
+
+
+@router.get("/conversations/{conversation_id}/")
+async def get_conversation(
+    conversation_id: str, user: dict = Depends(get_current_user)
+):
+    """
+    Fetch a specific conversation by ID.
+    """
+    user_id = user.get("user_id")
+
+    # Find the conversation document
+    conversation = await conversations_collection.find_one(
+        {"user_id": user_id, "conversation_id": conversation_id}
+    )
+
+    if not conversation:
+        raise HTTPException(
+            status_code=404,
+            detail="Conversation not found or does not belong to the user",
+        )
+
+    conversation["_id"] = str(conversation["_id"])
+    return conversation
 
 
 @router.put("/conversations/{conversation_id}/messages")
@@ -139,21 +158,14 @@ async def update_messages(
 ):
     """
     Add messages to an existing conversation.
-
-    Args:
-        request (UpdateMessagesRequest): Request containing conversation ID and new messages.
-        user (dict): Authenticated user information.
-
-    Returns:
-        dict: Confirmation message.
     """
     user_id = user.get("user_id")
     conversation_id = request.conversation_id
     messages = [message.dict(exclude={"loading"}) for message in request.messages]
 
     update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversationHistory.conversation_id": conversation_id},
-        {"$push": {"conversationHistory.$.messages": {"$each": messages}}},
+        {"user_id": user_id, "conversation_id": conversation_id},
+        {"$push": {"messages": {"$each": messages}}},
     )
 
     if update_result.modified_count == 0:
@@ -168,122 +180,28 @@ async def update_messages(
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
 
-@router.get("/conversations")
-async def get_conversations(user: dict = Depends(get_current_user)):
-    """
-    Fetch all conversations for the authenticated user.
-
-    Args:
-        user (dict): Authenticated user information.
-
-    Returns:
-        dict: List of conversations.
-    """
-    user_id = user["user_id"]
-    cache_key = f"conversations_cache:{user_id}"
-
-    # Check cache for conversations
-    cached_conversations = await redis_cache.get(cache_key)
-    if cached_conversations:
-        return {"conversations": cached_conversations}
-
-    # Fetch conversations from the database
-    user_conversations = await conversations_collection.find_one(
-        {"user_id": user_id},
-        {
-            "conversationHistory.conversation_id": 1,
-            "conversationHistory.description": 1,
-        },
-    )
-
-    if not user_conversations:
-        await redis_cache.set(cache_key, [])
-        return {"conversations": []}
-
-    conversations = [
-        {
-            "conversation_id": history["conversation_id"],
-            "description": history.get("description", "New Chat"),
-        }
-        for history in user_conversations.get("conversationHistory", [])
-    ]
-
-    # Cache the result
-    await redis_cache.set(cache_key, conversations)
-    return {"conversations": conversations}
-
-
-@router.get("/conversations/{conversation_id}/")
-async def get_conversation(
-    conversation_id: str, user: dict = Depends(get_current_user)
-):
-    """
-    Fetch a specific conversation by ID.
-
-    Args:
-        conversation_id (str): Conversation ID.
-        user (dict): Authenticated user information.
-
-    Returns:
-        dict: Conversation details.
-    """
-    user_id = user.get("user_id")
-    conversation = await conversations_collection.find_one(
-        {"user_id": user_id, "conversationHistory.conversation_id": conversation_id}
-    )
-
-    if not conversation:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    for history in conversation.get("conversationHistory", []):
-        if history["conversation_id"] == conversation_id:
-            return history
-
-    raise HTTPException(status_code=404, detail="Conversation not found in history")
-
-
-@router.put("/conversations/{conversation_id}/description/")
-async def update_conversation_description(
+@router.put("/conversations/{conversation_id}/description/llm")
+async def update_conversation_description_llm(
     conversation_id: str,
-    data: DescriptionUpdateRequest,
+    data: DescriptionUpdateRequestLLM,
     user: dict = Depends(get_current_user),
 ):
     """
     Update the description of a conversation.
-
-    Args:
-        conversation_id (str): Conversation ID.
-        data (DescriptionUpdateRequest): Request containing a new description.
-        user (dict): Authenticated user information.
-
-    Returns:
-        JSONResponse: Confirmation message and updated description.
     """
     user_id = user.get("user_id")
-
-    # Verify user existence
-    if not await users_collection.find_one({"_id": ObjectId(user_id)}):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
 
     # Generate a summary for the description
     response = await doPromptNoStream(
         prompt=f"Summarize: '{data.userFirstMessage}' in 3-4 words.",
         max_tokens=7,
     )
-    description = response.get("response", "New Chat")
+    description = (response.get("response", "New Chat")).replace('"', "")
 
     # Update the description in the database
     update_result = await conversations_collection.update_one(
-        {
-            "user_id": user_id,
-            "conversationHistory.conversation_id": conversation_id,
-        },
-        {"$set": {"conversationHistory.$.description": description}},
+        {"user_id": user_id, "conversation_id": conversation_id},
+        {"$set": {"description": description}},
     )
 
     if update_result.modified_count == 0:
@@ -302,28 +220,53 @@ async def update_conversation_description(
     )
 
 
+@router.put("/conversations/{conversation_id}/description/")
+async def update_conversation_description(
+    conversation_id: str,
+    data: DescriptionUpdateRequest,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Update the description of a conversation.
+    """
+    user_id = user.get("user_id")
+
+    # Update the description in the database
+    update_result = await conversations_collection.update_one(
+        {"user_id": user_id, "conversation_id": conversation_id},
+        {"$set": {"description": data.description}},
+    )
+
+    if update_result.modified_count == 0:
+        raise HTTPException(
+            status_code=404, detail="Conversation not found or update failed"
+        )
+
+    # Invalidate Redis cache
+    await redis_cache.delete(f"conversations_cache:{user_id}")
+
+    return JSONResponse(
+        content={
+            "message": "Conversation updated successfully",
+            "description": data.description,
+        }
+    )
+
+
 @router.delete("/conversations/{conversation_id}/")
 async def delete_conversation(
     conversation_id: str, user: dict = Depends(get_current_user)
 ):
     """
     Delete a specific conversation by ID.
-
-    Args:
-        conversation_id (str): Conversation ID to be deleted.
-        user (dict): Authenticated user information.
-
-    Returns:
-        dict: Confirmation message and deleted conversation ID.
     """
     user_id = user.get("user_id")
 
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id},
-        {"$pull": {"conversationHistory": {"conversation_id": conversation_id}}},
+    delete_result = await conversations_collection.delete_one(
+        {"user_id": user_id, "conversation_id": conversation_id}
     )
 
-    if update_result.modified_count == 0:
+    if delete_result.deleted_count == 0:
         raise HTTPException(
             status_code=404,
             detail="Conversation not found or does not belong to the user",
@@ -336,54 +279,3 @@ async def delete_conversation(
         "message": "Conversation deleted successfully",
         "conversation_id": conversation_id,
     }
-
-
-async def migrate_conversations_to_documents(user_id: str):
-    """
-    Migrate conversations from a single user document to individual conversation documents.
-
-    Args:
-        user_id (str): The user ID for which the conversations will be migrated.
-
-    Returns:
-        dict: Migration summary.
-    """
-    # Fetch the user document
-    user_data = await conversations_collection.find_one({"user_id": user_id})
-
-    if not user_data or "conversationHistory" not in user_data:
-        raise HTTPException(
-            status_code=404, detail="User or conversation history not found."
-        )
-
-    # Extract the conversationHistory array
-    conversation_history = user_data["conversationHistory"]
-
-    # Prepare individual conversation documents
-    new_documents = [
-        {
-            "user_id": user_id,
-            "conversation_id": conversation["conversation_id"],
-            "description": conversation.get("description", "No Description"),
-            "messages": conversation.get("messages", []),
-        }
-        for conversation in conversation_history
-    ]
-
-    # Insert individual documents into the database
-    insert_result = await conversations_collection.insert_many(new_documents)
-
-    # Remove the old conversationHistory array
-    await conversations_collection.update_one(
-        {"user_id": user_id}, {"$unset": {"conversationHistory": ""}}
-    )
-
-    return {
-        "migrated_count": len(new_documents),
-        "inserted_ids": [
-            str(inserted_id) for inserted_id in insert_result.inserted_ids
-        ],
-    }
-
-
-# print(migrate_conversations_to_documents("67689b80006f6eec3f6f6df8"))

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Dict, TypedDict
+from typing import List, Optional, TypedDict
 
 
 class WaitlistItem(BaseModel):
@@ -55,5 +55,9 @@ class MessageRequestPrimary(BaseModel):
     conversation_id: str
 
 
-class DescriptionUpdateRequest(BaseModel):
+class DescriptionUpdateRequestLLM(BaseModel):
     userFirstMessage: str
+
+
+class DescriptionUpdateRequest(BaseModel):
+    description: str
