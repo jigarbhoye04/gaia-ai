@@ -187,7 +187,7 @@ async def update_conversation_description_llm(
     user: dict = Depends(get_current_user),
 ):
     """
-    Update the description of a conversation.
+    Update the description of a conversation, but fetch description using the LLM.
     """
     user_id = user.get("user_id")
 
