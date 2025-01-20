@@ -42,7 +42,6 @@ def doPrompt(prompt: str, temperature=0.6, max_tokens=256):
     if response.status_code == 200:
         for line in response.iter_lines():
             if line:
-                print(line)
                 yield line.decode("utf-8") + "\n\n"
     else:
         yield "data: Error: Failed to fetch data\n\n"

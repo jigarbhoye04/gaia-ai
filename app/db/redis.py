@@ -11,16 +11,27 @@ logger = logging.getLogger(__name__)
 
 class RedisCache:
     def __init__(self, redis_url="redis://localhost:6379", default_ttl=3600):
-        self.redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-        if not self.redis_url:
-            raise ValueError("REDIS_URL must be set in the environment.")
+        self.redis_url = os.getenv("REDIS_URL", redis_url)
         self.default_ttl = default_ttl
-        self.redis = redis.from_url(self.redis_url, decode_responses=True)
+        self.redis = None
+
+        if self.redis_url:
+            try:
+                self.redis = redis.from_url(self.redis_url, decode_responses=True)
+                logger.info("Redis connection initialized.")
+            except Exception as e:
+                logger.error(f"Failed to connect to Redis: {e}")
+        else:
+            logger.warning("REDIS_URL is not set. Caching will be disabled.")
 
     async def get(self, key: str):
         """
         Get a cached value by key.
         """
+        if not self.redis:
+            logger.warning("Redis is not initialized. Skipping get operation.")
+            return None
+
         try:
             value = await self.redis.get(key)
             if value:
@@ -36,6 +47,10 @@ class RedisCache:
         """
         Set a cached value with an optional TTL.
         """
+        if not self.redis:
+            logger.warning("Redis is not initialized. Skipping set operation.")
+            return
+
         try:
             ttl = ttl or self.default_ttl
             await self.redis.setex(key, ttl, json.dumps(value))
@@ -47,6 +62,10 @@ class RedisCache:
         """
         Delete a cached key.
         """
+        if not self.redis:
+            logger.warning("Redis is not initialized. Skipping delete operation.")
+            return
+
         try:
             await self.redis.delete(key)
             logger.info(f"Cache deleted for key: {key}")

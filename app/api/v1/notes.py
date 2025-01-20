@@ -69,8 +69,12 @@ async def get_all_notes(user: dict = Depends(get_current_user)):
         return cached_notes
 
     # Fetch from database
+    # notes = await notes_collection.find(
+    #     {"user_id": user_id}, {"title": 1, "description": 1}
+    # ).to_list(length=None)\
+
     notes = await notes_collection.find(
-        {"user_id": user_id}, {"title": 1, "description": 1}
+        {"user_id": user_id},
     ).to_list(length=None)
 
     serialized_notes = [serialize_document(note) for note in notes]
@@ -105,7 +109,7 @@ async def update_note(
 
     # Fetch updated note
     updated_note = await notes_collection.find_one(
-        {"_id": ObjectId(note_id), "user_id": user_id}
+        {"_id": ObjectId(note_id), "user_id": user_id}, {"note": 1}
     )
     serialized_note = serialize_document(updated_note)
 
