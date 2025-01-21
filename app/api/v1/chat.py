@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.db.connect import conversations_collection
-from app.db.redis import redis_cache
+from app.db.redis import set_cache, get_cache, delete_cache
 from app.services.llm import doPromptWithStreamAsync, doPromptNoStream
 from app.middleware.auth import get_current_user
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
@@ -87,7 +87,7 @@ async def create_conversation(
         )
 
     # Invalidate Redis cache
-    await redis_cache.delete(f"conversations_cache:{user_id}")
+    await delete_cache(f"conversations_cache:{user_id}")
 
     return {
         "conversation_id": conversation.conversation_id,
@@ -105,7 +105,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     cache_key = f"conversations_cache:{user_id}"
 
     # Check cache for conversations
-    cached_conversations = await redis_cache.get(cache_key)
+    cached_conversations = await get_cache(cache_key)
     if cached_conversations:
         return {"conversations": jsonable_encoder(cached_conversations)}
 
@@ -115,7 +115,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     ).to_list(None)
 
     if not conversations:
-        await redis_cache.set(cache_key, [])
+        await set_cache(cache_key, [])
         return {"conversations": []}
 
     # Convert ObjectId to string
@@ -123,7 +123,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
         conversation["_id"] = str(conversation["_id"])
 
     # Cache the result
-    await redis_cache.set(cache_key, jsonable_encoder(conversations))
+    await set_cache(cache_key, jsonable_encoder(conversations))
 
     return {"conversations": conversations}
 
@@ -175,7 +175,7 @@ async def update_messages(
         )
 
     # Invalidate Redis cache
-    await redis_cache.delete(f"conversations_cache:{user_id}")
+    await delete_cache(f"conversations_cache:{user_id}")
 
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
@@ -210,7 +210,7 @@ async def update_conversation_description_llm(
         )
 
     # Invalidate Redis cache
-    await redis_cache.delete(f"conversations_cache:{user_id}")
+    await delete_cache(f"conversations_cache:{user_id}")
 
     return JSONResponse(
         content={
@@ -243,7 +243,7 @@ async def update_conversation_description(
         )
 
     # Invalidate Redis cache
-    await redis_cache.delete(f"conversations_cache:{user_id}")
+    await delete_cache(f"conversations_cache:{user_id}")
 
     return JSONResponse(
         content={
@@ -273,7 +273,7 @@ async def delete_conversation(
         )
 
     # Invalidate Redis cache
-    await redis_cache.delete(f"conversations_cache:{user_id}")
+    await delete_cache(f"conversations_cache:{user_id}")
 
     return {
         "message": "Conversation deleted successfully",

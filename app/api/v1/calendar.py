@@ -49,11 +49,10 @@ async def fetch_calendar_events(
     headers = {"Authorization": f"Bearer {access_token}"}
 
     if not time_min:
-        time_min = datetime.now(timezone.utc).isoformat()
+        time_min = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
-    print(f"{time_min=}")
     params = {
-        "maxResults": 10,
+        "maxResults": 50,
         "singleEvents": True,
         "orderBy": "startTime",
         "timeMin": time_min,
@@ -63,10 +62,6 @@ async def fetch_calendar_events(
         params["timeMax"] = time_max
     if page_token:
         params["pageToken"] = page_token
-
-    print(f"Fetching events from calendar {calendar_id}")
-    print(f"Request Params: {params}")
-    print(f"Headers: {headers}")
 
     try:
         response = await http_async_client.get(url, headers=headers, params=params)
@@ -129,7 +124,11 @@ async def get_calendar_events(
         raise HTTPException(status_code=401, detail="Access token required")
 
     try:
-        # First, fetch the list of calendars
+        # Set time_min to the current date and time if not provided
+        if not time_min:
+            time_min = datetime.now(timezone.utc).isoformat()
+
+        # Fetch the list of calendars
         calendar_list_response = await http_async_client.get(
             "https://www.googleapis.com/calendar/v3/users/me/calendarList",
             headers={"Authorization": f"Bearer {access_token}"},
@@ -180,16 +179,16 @@ async def get_calendar_events(
                     if events_data.get("nextPageToken"):
                         next_page_token = events_data["nextPageToken"]
 
-            # Sort all events by start time
-            sorted_events = sorted(
-                all_events,
-                key=lambda event: event.get("start", {}).get(
-                    "dateTime", event.get("start", {}).get("date", "")
-                ),
-            )
+            # Sort all events by start time (current to future)
+            # sorted_events = sorted(
+            #     all_events,
+            #     key=lambda event: event.get("start", {}).get(
+            #         "dateTime", event.get("start", {}).get("date", "")
+            #     ),
+            # )
 
             return {
-                "events": sorted_events,
+                "events": all_events,
                 "nextPageToken": next_page_token,
             }
 
@@ -235,6 +234,10 @@ async def get_calendar_events_by_id(
         raise HTTPException(status_code=401, detail="Access token required")
 
     try:
+        # Set time_min to the current date and time if not provided
+        if not time_min:
+            time_min = datetime.now(timezone.utc).isoformat()
+
         events_response = await fetch_calendar_events(
             calendar_id, access_token, page_token, time_min, time_max
         )
@@ -242,14 +245,14 @@ async def get_calendar_events_by_id(
         if events_response.status_code == 200:
             events_data = events_response.json()
             events = filter_events(events_data.get("items", []))
-            print(f"{events=}")
             return {
-                "events": sorted(
-                    events,
-                    key=lambda event: event.get("start", {}).get(
-                        "dateTime", event.get("start", {}).get("date", "")
-                    ),
-                ),
+                # "events": sorted(
+                #     events,
+                #     key=lambda event: event.get("start", {}).get(
+                #         "dateTime", event.get("start", {}).get("date", "")
+                #     ),
+                # ),
+                "events": events,
                 "nextPageToken": events_data.get("nextPageToken"),
             }
         elif events_response.status_code == 400:

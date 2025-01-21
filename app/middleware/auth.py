@@ -1,9 +1,10 @@
 import logging
 import httpx
 from fastapi import Cookie, HTTPException
-from fastapi.security import OAuth2PasswordBearer
 from app.db.connect import users_collection
-from app.db.redis import redis_cache
+from app.db.redis import set_cache, get_cache
+from typing import Optional
+
 from app.utils.auth import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
@@ -13,11 +14,7 @@ from app.utils.auth import (
 
 logger = logging.getLogger(__name__)
 
-# Reusable HTTP client
 http_async_client = httpx.AsyncClient()
-
-# OAuth2 Scheme (For Dependency Injection)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
 async def refresh_access_token(refresh_token: str) -> str:
@@ -47,6 +44,32 @@ async def refresh_access_token(refresh_token: str) -> str:
         raise HTTPException(status_code=401, detail="Failed to refresh access token")
 
 
+# async def get_user_info(access_token: str, etag: Optional[str] = None) -> dict:
+#     headers = {"Authorization": f"Bearer {access_token}"}
+#     if etag:
+#         headers["If-None-Match"] = etag
+
+#     try:
+#         response = await http_async_client.get(GOOGLE_USERINFO_URL, headers=headers)
+
+#         # If not modified, return cached data
+#         if response.status_code == 304:
+#             logger.info("User info not modified, using cached data")
+#             return None
+
+#         response.raise_for_status()
+#         return {
+#             "user_info": response.json(),
+#             "etag": response.headers.get("ETag"),
+#         }
+#     except httpx.RequestError as e:
+#         logger.error(f"HTTP error during user info retrieval: {e}")
+#         raise HTTPException(status_code=500, detail="Error contacting Google API")
+#     except httpx.HTTPStatusError as e:
+#         logger.warning(f"Token verification failed: {e.response.text}")
+#         raise HTTPException(status_code=401, detail="Invalid or expired access token")
+
+
 async def get_user_info(access_token: str) -> dict:
     """
     Retrieves user information from Google using the access token.
@@ -67,35 +90,42 @@ async def get_user_info(access_token: str) -> dict:
 
 
 async def get_current_user(
-    access_token: str = Cookie(None), refresh_token: str = Cookie(None)
+    access_token: Optional[str] = Cookie(None),
+    refresh_token: Optional[str] = Cookie(None),
 ):
     """
     Dependency to validate the user's authentication status and handle token refreshing.
     Uses Redis to cache user data for subsequent requests.
     """
-    if not access_token:
-        if not refresh_token:
-            raise HTTPException(status_code=401, detail="Authentication required")
-        # Refresh access token if expired
-        access_token = await refresh_access_token(refresh_token)
-
     try:
+        # Ensure at least one token is provided
+        if not access_token and not refresh_token:
+            logger.warning("No tokens provided in request")
+            raise HTTPException(status_code=401, detail="Authentication required")
+
+        # Refresh the access token if needed
+        if not access_token:
+            logger.info("Access token missing, attempting refresh")
+            access_token = await refresh_access_token(refresh_token)
+            if not access_token:
+                raise HTTPException(status_code=401, detail="Invalid refresh token")
+
         # Step 1: Verify the access token with Google's API
         user_info = await get_user_info(access_token)
         user_email = user_info.get("email")
-
         if not user_email:
-            logger.error(f"Email not found in Google response: {user_info}")
+            logger.error("Email not found in user info returned by Google")
             raise HTTPException(status_code=400, detail="Email not found in user info")
 
-            # Check if user info is already cached in Redis
-        cached_user_data = await redis_cache.get(f"user_cache:{user_email}")
+        # Step 2: Check for cached user data in Redis
+        cache_key = f"user_cache:{user_email}"
+        cached_user_data = await get_cache(cache_key)
         if cached_user_data:
+            logger.info(f"Cache hit for user: {user_email}")
             return cached_user_data
 
-        # Step 2: Retrieve the user from the database
+        # Step 3: Retrieve user data from the database
         user_data = await users_collection.find_one({"email": user_email})
-
         if not user_data:
             logger.warning(f"User with email {user_email} not found in the database")
             raise HTTPException(status_code=404, detail="User not found")
@@ -107,11 +137,17 @@ async def get_current_user(
             "access_token": access_token,
         }
 
-        # Cache the user information in Redis
-        await redis_cache.set(f"user_cache:{user_email}", user_info_to_cache)
+        # Step 4: Cache the user information in Redis
+        await set_cache(cache_key, user_info_to_cache)
+        logger.info(f"User data cached for {user_email}")
 
         return user_info_to_cache
 
+    except HTTPException as e:
+        # Log HTTP exceptions for better traceability
+        logger.warning(f"HTTPException: {e.detail}")
+        raise
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        # Catch unexpected errors
+        logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")

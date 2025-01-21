@@ -58,4 +58,5 @@ notes_collection = database.get_collection("notes")
 
 
 def serialize_document(document):
-    return {**document, "id": str(document["_id"])}
+    document["id"] = str(document.pop("_id"))
+    return document

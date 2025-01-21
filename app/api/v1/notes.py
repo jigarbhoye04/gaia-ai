@@ -49,7 +49,6 @@ async def get_note(note_id: str, user: dict = Depends(get_current_user)):
 
     serialized_note = serialize_document(note)
 
-    # Cache the note
     await set_cache(cache_key, serialized_note)
 
     return serialized_note
@@ -62,16 +61,10 @@ async def get_all_notes(user: dict = Depends(get_current_user)):
     """
     user_id = user["user_id"]
 
-    # Try cache first
     cache_key = f"notes:{user_id}"
     cached_notes = await get_cache(cache_key)
     if cached_notes:
         return cached_notes
-
-    # Fetch from database
-    # notes = await notes_collection.find(
-    #     {"user_id": user_id}, {"title": 1, "description": 1}
-    # ).to_list(length=None)\
 
     notes = await notes_collection.find(
         {"user_id": user_id},
@@ -79,7 +72,6 @@ async def get_all_notes(user: dict = Depends(get_current_user)):
 
     serialized_notes = [serialize_document(note) for note in notes]
 
-    # Cache the notes
     await set_cache(cache_key, serialized_notes)
 
     return serialized_notes

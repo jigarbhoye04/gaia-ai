@@ -16,6 +16,7 @@ class NoteUpdate(BaseModel):
 
 class NoteResponse(BaseModel):
     id: str
-    # title: str
-    # description: str
     note: str
+    user_id: str | None = None
+    title: str | None = None
+    description: str | None = None
