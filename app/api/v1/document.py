@@ -1,7 +1,8 @@
 from fastapi.responses import JSONResponse
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
+
+# from sentence_transformers import SentenceTransformer
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import datetime
@@ -13,7 +14,7 @@ from app.services.llm import doPromptNoStream
 from app.services.document import convert_pdf_to_text, extract_text_from_pdf
 
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# model = SentenceTransformer("all-MiniLM-L6-v2")
 router = APIRouter()
 
 
