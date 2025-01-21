@@ -5,6 +5,7 @@ from app.db.connect import conversations_collection
 from app.db.redis import set_cache, get_cache, delete_cache
 from app.services.llm import doPromptWithStreamAsync, doPromptNoStream
 from app.middleware.auth import get_current_user
+from datetime import datetime
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
 from app.schemas.common import (
     DescriptionUpdateRequest,
@@ -56,20 +57,20 @@ async def chat(request: MessageRequest):
 async def create_conversation(
     conversation: ConversationModel, user: dict = Depends(get_current_user)
 ):
-    """
-    Create a new conversation for the authenticated user.
-    """
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
         )
 
+    created_at = datetime.utcnow().isoformat()
+
     conversation_data = {
         "user_id": user_id,
         "conversation_id": conversation.conversation_id,
         "description": conversation.description,
         "messages": [],
+        "createdAt": created_at,
     }
 
     try:
@@ -86,12 +87,12 @@ async def create_conversation(
             detail="Failed to create conversation",
         )
 
-    # Invalidate Redis cache
     await delete_cache(f"conversations_cache:{user_id}")
 
     return {
         "conversation_id": conversation.conversation_id,
         "user_id": user_id,
+        "createdAt": created_at,
         "detail": "Conversation created successfully",
     }
 
@@ -111,7 +112,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
 
     # Fetch all conversations for the user
     conversations = await conversations_collection.find(
-        {"user_id": user_id}, {"_id": 1, "conversation_id": 1, "description": 1}
+        {"user_id": user_id},
     ).to_list(None)
 
     if not conversations:
@@ -251,6 +252,29 @@ async def update_conversation_description(
             "description": data.description,
         }
     )
+
+
+@router.delete("/conversations")
+async def delete_all_conversations(user: dict = Depends(get_current_user)):
+    """
+    Delete all conversations for the authenticated user.
+    """
+    user_id = user.get("user_id")
+
+    delete_result = await conversations_collection.delete_many({"user_id": user_id})
+
+    if delete_result.deleted_count == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="No conversations found for the user",
+        )
+
+    # Invalidate Redis cache
+    await delete_cache(f"conversations_cache:{user_id}")
+
+    return {
+        "message": "All conversations deleted successfully",
+    }
 
 
 @router.delete("/conversations/{conversation_id}/")
