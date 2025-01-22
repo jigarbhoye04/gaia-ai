@@ -139,7 +139,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     return {"conversations": conversations}
 
 
-@router.get("/conversations/{conversation_id}/")
+@router.get("/conversations/{conversation_id}")
 async def get_conversation(
     conversation_id: str, user: dict = Depends(get_current_user)
 ):
@@ -231,7 +231,7 @@ async def update_conversation_description_llm(
     )
 
 
-@router.put("/conversations/{conversation_id}/description/")
+@router.put("/conversations/{conversation_id}/description")
 async def update_conversation_description(
     conversation_id: str,
     data: DescriptionUpdateRequest,
@@ -287,7 +287,7 @@ async def delete_all_conversations(user: dict = Depends(get_current_user)):
     }
 
 
-@router.delete("/conversations/{conversation_id}/")
+@router.delete("/conversations/{conversation_id}")
 async def delete_conversation(
     conversation_id: str, user: dict = Depends(get_current_user)
 ):
