@@ -83,7 +83,10 @@ async def image(request: MessageRequest):
     image_url = upload_result.get("secure_url")
 
     # Return the Cloudinary image URL in the response
-    return {"url": image_url, "improved_prompt": improved_prompt}
+    return {
+        "url": image_url,
+        "improved_prompt": improved_prompt.get("response", improved_prompt),
+    }
 
 
 @router.post("/image/text")

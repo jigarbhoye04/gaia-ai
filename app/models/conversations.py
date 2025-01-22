@@ -8,6 +8,7 @@ class MessageModel(BaseModel):
     response: str  # Content of the message
     date: Optional[str] = None  # Date of the message or empty
     imagePrompt: Optional[str] = None  # The user prompt for the image
+    improvedImagePrompt: Optional[str] = None  # Improved user prompt for the image
     loading: Optional[bool] = False  # Whether the message is still loading
     isImage: Optional[bool] = False  # Whether it's an image message
     imageUrl: Optional[str] = None  # URL for the image
