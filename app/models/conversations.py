@@ -11,6 +11,7 @@ class MessageModel(BaseModel):
     improvedImagePrompt: Optional[str] = None  # Improved user prompt for the image
     loading: Optional[bool] = False  # Whether the message is still loading
     isImage: Optional[bool] = False  # Whether it's an image message
+    searchWeb: Optional[bool] = False  # Whether it's a web search request
     imageUrl: Optional[str] = None  # URL for the image
     # Any disclaimer associated with the message
     disclaimer: Optional[str] = None
