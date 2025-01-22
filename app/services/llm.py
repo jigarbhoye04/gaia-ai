@@ -4,7 +4,8 @@ import logging
 from dotenv import load_dotenv
 import httpx
 from groq import AsyncGroq
-import json
+from fastapi.encoders import jsonable_encoder
+
 
 logging.basicConfig(level=logging.INFO)
 http_async_client = httpx.AsyncClient(timeout=1000000.0)
@@ -133,6 +134,7 @@ async def doPrompWithStream(
     temperature=0.6,
     max_tokens=256,
     model="@cf/meta/llama-3.1-8b-instruct-fast",
+    intent=None,
 ):
     """
     Asynchronous function to send a prompt to the LLM API with streaming.

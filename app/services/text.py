@@ -1,3 +1,4 @@
+import asyncio
 from transformers import pipeline
 
 
@@ -18,38 +19,55 @@ zero_shot_classifier = pipeline(
     "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
 )
 
+candidate_labels = [
+    "add calendar event",
+    "send email",
+    "generate image",
+    "search internet",
+    "flowchart",
+    "weather",
+    "other",
+]
+
+candidate_labels_output = ["i don't know this", "i know this"]
+
 
 def classify_event_type(input):
-    candidate_labels = [
-        "add calendar event",
-        "send email",
-        "generate image",
-        "search internet",
-        "other",
-    ]
     return classify_text(input, candidate_labels)
 
 
 def classify_output(input):
-    candidate_labels = ["i don't know this", "i know this"]
-    return classify_text(input, candidate_labels)
+    return classify_text(input, candidate_labels_output)
 
 
-def classify_text(input, candidate_labels):
-    result = zero_shot_classifier(input, candidate_labels)
-    label_scores = dict(zip(result["labels"], result["scores"]))
-    highest_label = max(label_scores, key=label_scores.get)
+# Async wrapper for the blocking Hugging Face pipeline call
+async def classify_text(input, candidate_labels):
+    if not input or not candidate_labels:
+        return {"error": "Invalid input or candidate labels."}
 
-    return {
-        "label_scores": label_scores,
-        "highest_label": highest_label,
-        "highest_score": label_scores[highest_label],
-    }
+    try:
+        # Use asyncio.to_thread to run the blocking pipeline function in a separate thread
+        result = await asyncio.to_thread(zero_shot_classifier, input, candidate_labels)
+
+        label_scores = dict(zip(result["labels"], result["scores"]))
+        highest_label = max(label_scores, key=label_scores.get)
+
+        return {
+            "label_scores": label_scores,
+            "highest_label": highest_label,
+            "highest_score": label_scores[highest_label],
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# Example to run the function asynchronously
+async def main():
+    result = await classify_event_type(
+        "Can you find a time for my meeting and send me a reminder?"
+    )
+    print(result)
 
 
 if __name__ == "__main__":
-    print(
-        classify_event_type(
-            "Can you find a time for my meeting and send me a reminder?"
-        )
-    )
+    asyncio.run(main())

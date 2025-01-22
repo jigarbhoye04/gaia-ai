@@ -34,7 +34,8 @@ cloudinary.config(
 @router.post("/image/generate")
 async def image(request: MessageRequest):
     improved_prompt = await doPromptNoStream(
-        model="@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
+        # model="@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
+        # model="@cf/meta/llama-3.2-1b-instruct",
         prompt=f"""
             You are an AI assistant skilled at enhancing prompts for generating high-quality, detailed images. Your goal is to take a user's input and refine it by adding vivid descriptions, specific details, and any necessary context to make it more suitable for creating a visually striking and accurate image.
 
@@ -50,13 +51,13 @@ async def image(request: MessageRequest):
         
             Do not add headings or any descriptive information.
             
-            Provide the output in comma-separated keyword format like keyword1, keyword2 etc.
+            Provide the output in 20-30 comma-separated keyword format like keyword1, keyword2 etc.
 
             Now, refine the following user prompt: "{request.message}".
 
             """,
         temperature=1,
-        max_tokens=40,
+        max_tokens=100,
     )
 
     refined_text = ", ".join(

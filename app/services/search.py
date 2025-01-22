@@ -25,20 +25,27 @@ async def perform_search(query: str):
         list: Extracted useful information from the search results.
     """
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
-    params = {"q": query, "count": 10}
+    params = {
+        "q": query,
+        "count": 7,
+        # "freshness": "day",
+        # "responseFilter": "-images,-videos",
+        # "safeSearch":""
+    }
 
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(search_url, headers=headers, params=params)
             response.raise_for_status()  # Raise an exception for HTTP errors
             data = response.json()  # Parse the JSON response
-
+            print(data)
             # Extract useful information
             results = []
             for item in data.get("webPages", {}).get("value", []):
                 results.append(
                     {
                         "title": item.get("name"),
+                        "siteName": item.get("siteName"),
                         "url": item.get("url"),
                         "snippet": item.get("snippet"),
                         "dateLastCrawled": item.get("dateLastCrawled"),
@@ -59,7 +66,7 @@ if __name__ == "__main__":
     import asyncio
 
     async def main():
-        query = "mostRecent: true who is aryan randeriya?"
+        query = "what is the weather in surat?"
         result = await perform_search(query)
         for entry in result:
             print(entry)

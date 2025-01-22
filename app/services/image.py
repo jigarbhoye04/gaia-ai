@@ -9,7 +9,7 @@ http_async_client = httpx.AsyncClient(timeout=10000)
 
 
 async def generate_image(imageprompt: str) -> dict:
-    print(f"insdie generate image method {imageprompt}")
+    print(f"inside generate image method: {imageprompt}")
 
     url = "https://generateimage.aryanranderiya1478.workers.dev/"
     try:

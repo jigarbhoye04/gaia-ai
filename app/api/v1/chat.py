@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.db.connect import conversations_collection
@@ -17,12 +17,13 @@ from app.schemas.common import (
     MessageRequestWithHistory,
 )
 from app.services.search import perform_search
+from app.services.text import classify_event_type
 
 router = APIRouter()
 
 
 @router.post("/chat-stream")
-async def chat_stream(request: MessageRequestWithHistory):
+async def chat_stream(request: Request, body: MessageRequestWithHistory):
     """
     Stream chat messages in real-time.
 
@@ -33,18 +34,39 @@ async def chat_stream(request: MessageRequestWithHistory):
         StreamingResponse: Streamed response for real-time communication.
     """
 
-    last_message = request.messages[-1] if request.messages else None
-    if request.search_web and last_message:
-        search_result = await perform_search(
-            query=(last_message["content"]).replace("mostRecent: true ", "")
-        )
-
+    async def do_search(last_message, query_text):
+        search_result = await perform_search(query=query_text)
         last_message["content"] += (
             f"\nRelevant context using GAIA web search: {search_result}"
         )
 
+    last_message = body.messages[-1] if body.messages else None
+    query_text = (last_message["content"]).replace("mostRecent: true ", "")
+
+    type = await classify_event_type(query_text)
+
+    intent = None
+
+    if type.get("highest_label"):
+        match type["highest_label"]:
+            case "search web internet":
+                await do_search(last_message, query_text)
+            case "flowchart":
+                intent = "flowchart"
+            case "weather":
+                intent = "weather"
+
+    if body.search_web and last_message:
+        await do_search(last_message, query_text)
+
     return StreamingResponse(
-        doPrompWithStream(messages=jsonable_encoder(request.messages), max_tokens=4096),
+        doPrompWithStream(
+            messages=jsonable_encoder(body.messages),
+            max_tokens=4096,
+            intent=intent,
+            # model="@cf/meta/llama-3.1-70b-instruct"
+            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        ),
         media_type="text/event-stream",
     )
 
@@ -193,9 +215,6 @@ async def update_messages(
             status_code=404,
             detail="Conversation not found or does not belong to the user",
         )
-
-    # Invalidate Redis cache
-    await delete_cache(f"conversations_cache:{user_id}")
 
     return {"conversation_id": conversation_id, "message": "Messages updated"}
 
