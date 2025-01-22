@@ -18,6 +18,7 @@ from app.schemas.common import (
 )
 from app.services.search import perform_search
 from app.services.text import classify_event_type
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -104,7 +105,7 @@ async def create_conversation(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
         )
 
-    created_at = datetime.utcnow().isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
 
     conversation_data = {
         "user_id": user_id,
