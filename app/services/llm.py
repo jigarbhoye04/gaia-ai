@@ -30,7 +30,12 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 client = AsyncGroq(api_key=GROQ_API_KEY)
 
 
-async def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
+async def doPromptNoStream(
+    prompt: str,
+    temperature=0.6,
+    max_tokens=256,
+    model="@cf/meta/llama-3.1-8b-instruct-fast",
+):
     """
     Asynchronous function to send a prompt to the LLM API without streaming.
 
@@ -49,6 +54,7 @@ async def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
                 "stream": "false",
                 "temperature": temperature,
                 "max_tokens": max_tokens,
+                "model": model,
                 "messages": [
                     {"role": "user", "content": prompt},
                 ],
@@ -72,7 +78,7 @@ async def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
         return {"error": str(e)}
 
 
-async def doPromptNoStreamAsyncCloudflare(prompt: str, temperature=0.6, max_tokens=256):
+async def doPromptCloudflareSDK(prompt: str, temperature=0.6, max_tokens=256):
     url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
     headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
     json_data = {
@@ -122,7 +128,12 @@ async def doPromptNoStreamAsyncCloudflare(prompt: str, temperature=0.6, max_toke
         return "{}"
 
 
-async def doPromptWithStreamAsync(messages=[], temperature=0.6, max_tokens=256):
+async def doPrompWithStream(
+    messages=[],
+    temperature=0.6,
+    max_tokens=256,
+    model="@cf/meta/llama-3.1-8b-instruct-fast",
+):
     """
     Asynchronous function to send a prompt to the LLM API with streaming.
 
@@ -139,6 +150,7 @@ async def doPromptWithStreamAsync(messages=[], temperature=0.6, max_tokens=256):
         "max_tokens": max_tokens,
         "temperature": temperature,
         "messages": messages,
+        "model": model,
         # "messages": [{"role": "user", "content": "my name is aryan"}],
         # [{"role": "user", "content": "my name is aryan"},{"role": "user", "content": "what is my name?"}]}
     }

@@ -3,10 +3,11 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+import app.db.connect
 from app.api.v1 import (
     auth,
     chat,
-    document,
+    # document,
     feedback,
     gcalendar,
     image,
@@ -15,7 +16,6 @@ from app.api.v1 import (
     goals,
     notes,
 )
-import app.db.connect
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

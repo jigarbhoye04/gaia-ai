@@ -34,6 +34,7 @@ cloudinary.config(
 @router.post("/image/generate")
 async def image(request: MessageRequest):
     improved_prompt = await doPromptNoStream(
+        model="@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
         prompt=f"""
             You are an AI assistant skilled at enhancing prompts for generating high-quality, detailed images. Your goal is to take a user's input and refine it by adding vivid descriptions, specific details, and any necessary context to make it more suitable for creating a visually striking and accurate image.
 
@@ -55,7 +56,7 @@ async def image(request: MessageRequest):
 
             """,
         temperature=1,
-        max_tokens=100,
+        max_tokens=40,
     )
 
     refined_text = ", ".join(
