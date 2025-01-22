@@ -6,7 +6,6 @@ from app.db.redis import set_cache, get_cache, delete_cache
 from app.services.llm import (
     doPromptWithStreamAsync,
     doPromptNoStream,
-    doPromptGROQ,
 )
 from app.middleware.auth import get_current_user
 from datetime import datetime
@@ -17,6 +16,7 @@ from app.schemas.common import (
     MessageRequest,
     MessageRequestWithHistory,
 )
+from app.api.v1.search import perform_search
 
 router = APIRouter()
 
@@ -33,13 +33,19 @@ async def chat_stream(request: MessageRequestWithHistory):
         StreamingResponse: Streamed response for real-time communication.
     """
 
-    # return StreamingResponse(
-    #     # doPromptWithStreamAsync(
-    #     doPromptGROQ(
-    #         messages=jsonable_encoder(request.messages), max_tokens=2048, stream=True
-    #     ),
-    #     media_type="text/event-stream",
-    # )
+    last_message = request.messages[-1] if request.messages else None
+    if request.search_web and last_message:
+        search_result = await perform_search(
+            query=(last_message["content"]).replace("mostRecent: true ", "")
+        )
+        print(f"{last_message=}")
+        print(f"{search_result=}")
+
+        last_message["content"] += (
+            f"\nRelevant context using GAIA web search: {search_result}"
+        )
+
+    print(last_message)
 
     return StreamingResponse(
         doPromptWithStreamAsync(
@@ -47,6 +53,15 @@ async def chat_stream(request: MessageRequestWithHistory):
         ),
         media_type="text/event-stream",
     )
+
+
+# return StreamingResponse(
+#     # doPromptWithStreamAsync(
+#     doPromptGROQ(
+#         messages=jsonable_encoder(request.messages), max_tokens=2048, stream=True
+#     ),
+#     media_type="text/event-stream",
+# )
 
 
 @router.post("/chat")

@@ -44,6 +44,7 @@ class MessageDict(TypedDict):
 class MessageRequestWithHistory(BaseModel):
     message: str
     messages: List[MessageDict]
+    search_web: Optional[bool] = None
 
 
 class MessageRequest(BaseModel):
