@@ -1,5 +1,5 @@
 import json
-from app.services.llm import doPromptNoStreamAsync, doPromptWithStreamAsync
+from app.services.llm import doPromptNoStreamAsyncCloudflare, doPromptWithStreamAsync
 
 
 jsonstructure = {
@@ -68,7 +68,9 @@ async def generate_roadmap_with_llm(title: str) -> dict:
     """
 
     try:
-        response = await doPromptNoStreamAsync(prompt=detailed_prompt, max_tokens=2048)
+        response = await doPromptNoStreamAsyncCloudflare(
+            prompt=detailed_prompt, max_tokens=2048
+        )
         return json.loads(response)
         # return response.get("response", "{}")
     except Exception as e:
@@ -93,7 +95,7 @@ async def generate_roadmap_with_llm_stream(title: str):
     try:
         async for chunk in doPromptWithStreamAsync(
             messages=[{"role": "user", "content": detailed_prompt}],
-            max_tokens=2048,
+            max_tokens=4096,
         ):
             yield chunk
 

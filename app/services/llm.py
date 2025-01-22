@@ -1,53 +1,47 @@
-import requests
 import os
 import asyncio
 import logging
 from dotenv import load_dotenv
 import httpx
+from groq import AsyncGroq
+import json
 
 logging.basicConfig(level=logging.INFO)
 http_async_client = httpx.AsyncClient(timeout=1000000.0)
 
-
 load_dotenv()
-system_prompt: str = """You are an Assistant who's name is GAIA - a general purpose artificial intelligence assistant. Your responses should be concise and clear If you're asked who created you then you were created by Aryan Randeriya. Your responses should be concise and to the point. If you do not know something, be clear that you do not know it. You can setup calendar events, manage your files on google drive, assist in every day tasks and more!"""
+
+system_prompt: str = """You are an Assistant who's name is GAIA - a general-purpose artificial intelligence assistant. Your responses should be concise and clear. If you're asked who created you then you were created by Aryan Randeriya. Your responses should be concise and to the point. If you do not know something, be clear that you do not know it. You can setup calendar events, manage your files on Google Drive, assist in everyday tasks, and more!"""
 
 url = "https://llm.aryanranderiya1478.workers.dev/"
 
 features = [
     "Generate images",
-    "Analyse & understand uploaded documents & images from the user",
-    "You are not only a text based llm",
-    "Scedule calendar events (Coming Soon)",
-    "Provide personalised suggestions (Coming Soon)",
+    "Analyze & understand uploaded documents & images from the user",
+    "You are not only a text-based LLM",
+    "Schedule calendar events (Coming Soon)",
+    "Provide personalized suggestions (Coming Soon)",
     "Manage files on Google Drive (Coming Soon)",
 ]
 
 ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNTID")
 AUTH_TOKEN = os.environ.get("CLOUDFLARE_AUTH_TOKEN")
-
-
-def doPrompt(prompt: str, temperature=0.6, max_tokens=256):
-    response = requests.post(
-        url,
-        json={
-            "prompt": prompt,
-            "stream": "true",
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        },
-        #   stream=True
-    )
-
-    if response.status_code == 200:
-        for line in response.iter_lines():
-            if line:
-                yield line.decode("utf-8") + "\n\n"
-    else:
-        yield "data: Error: Failed to fetch data\n\n"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+client = AsyncGroq(api_key=GROQ_API_KEY)
 
 
 async def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
+    """
+    Asynchronous function to send a prompt to the LLM API without streaming.
+
+    Args:
+        prompt (str): The prompt to send.
+        temperature (float): Sampling temperature for the response.
+        max_tokens (int): Maximum tokens for the response.
+
+    Returns:
+        dict: Parsed JSON response or an error message.
+    """
     try:
         response = await http_async_client.post(
             url,
@@ -67,18 +61,18 @@ async def doPromptNoStream(prompt: str, temperature=0.6, max_tokens=256):
                 response_dict = response.json()
                 return response_dict
             except ValueError as ve:
-                print(f"Error parsing JSON: {ve}")
+                logging.error(f"Error parsing JSON: {ve}")
                 return {"error": "Invalid JSON response"}
         else:
-            print(f"Unexpected status code: {response.status_code}")
+            logging.error(f"Unexpected status code: {response.status_code}")
             return {"error": "Unexpected status code"}
 
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+    except httpx.RequestError as e:
+        logging.error(f"Request error: {e}")
         return {"error": str(e)}
 
 
-async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
+async def doPromptNoStreamAsyncCloudflare(prompt: str, temperature=0.6, max_tokens=256):
     url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
     headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
     json_data = {
@@ -129,6 +123,17 @@ async def doPromptNoStreamAsync(prompt: str, temperature=0.6, max_tokens=256):
 
 
 async def doPromptWithStreamAsync(messages=[], temperature=0.6, max_tokens=256):
+    """
+    Asynchronous function to send a prompt to the LLM API with streaming.
+
+    Args:
+        messages (list): List of message objects for the LLM.
+        temperature (float): Sampling temperature for the response.
+        max_tokens (int): Maximum tokens for the response.
+
+    Yields:
+        str: Lines of the response from the server.
+    """
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
@@ -143,10 +148,55 @@ async def doPromptWithStreamAsync(messages=[], temperature=0.6, max_tokens=256):
 
             async for line in response.aiter_lines():
                 if line.strip():
-                    # print(f"Received: {line}")
-                    # yield line.decode("utf-8") + "\n\n"
                     yield line + "\n\n"
     except httpx.StreamError as e:
-        print(f"Stream error: {e}")
+        logging.error(f"Stream error: {e}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logging.error(f"Unexpected error: {e}")
+
+
+async def doPromptGROQ(
+    messages,
+    model="llama-3.3-70b-versatile",
+    max_tokens=1024,
+    temperature=0.5,
+    stream=False,  # Added argument to control streaming
+):
+    """
+    Sends a chat completion request to the GROQ API with optional streaming enabled using the Groq client library.
+
+    Args:
+        messages (list[dict]): A list of messages with roles (e.g., user/system) and content.
+        model (str): The model to use for chat completion (default is "llama-3.3-70b-versatile").
+        max_tokens (int): The maximum number of tokens to generate in the response.
+        temperature (float): Sampling temperature, determines randomness of the response.
+        stream (bool): Whether to stream the response or return the full response once completed.
+
+    Yields:
+        str: Chunks of the streamed response from the GROQ API (if stream=True), or full response (if stream=False).
+    """
+    try:
+        response = await client.chat.completions.create(
+            messages=messages,
+            model=model,
+            temperature=temperature,
+            max_completion_tokens=max_tokens,
+            stream=stream,
+        )
+
+        # If streaming, yield chunks as they arrive
+        if stream:
+            async for chunk in response:
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield f"data: {content}\n\n"
+        else:
+            # For non-streaming, return the full response after completion
+            content = response.choices[0].message["content"]
+            yield f"data: {content}\n\n"
+
+    except Exception as e:
+        yield f"data: An unexpected error occurred: {e}\n"
+
+    finally:
+        yield "data: [DONE]\n\n"  # End of response

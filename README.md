@@ -2,4 +2,4 @@
 
 > uvicorn main:app --reload
 
-.venv/Scripts/activate; cd api; uvicorn app.main:app --reload
+.venv/Scripts/activate; uvicorn app.main:app --reload

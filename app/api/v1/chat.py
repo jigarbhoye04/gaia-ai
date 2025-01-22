@@ -3,7 +3,11 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.db.connect import conversations_collection
 from app.db.redis import set_cache, get_cache, delete_cache
-from app.services.llm import doPromptWithStreamAsync, doPromptNoStream
+from app.services.llm import (
+    doPromptWithStreamAsync,
+    doPromptNoStream,
+    doPromptGROQ,
+)
 from app.middleware.auth import get_current_user
 from datetime import datetime
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
@@ -29,7 +33,13 @@ async def chat_stream(request: MessageRequestWithHistory):
         StreamingResponse: Streamed response for real-time communication.
     """
 
-    print(request.messages)
+    # return StreamingResponse(
+    #     # doPromptWithStreamAsync(
+    #     doPromptGROQ(
+    #         messages=jsonable_encoder(request.messages), max_tokens=2048, stream=True
+    #     ),
+    #     media_type="text/event-stream",
+    # )
 
     return StreamingResponse(
         doPromptWithStreamAsync(
