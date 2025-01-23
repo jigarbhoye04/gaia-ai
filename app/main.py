@@ -8,7 +8,7 @@ from app.api.v1 import (
     auth,
     chat,
     # document,
-    audio,
+    # audio,
     feedback,
     gcalendar,
     image,
@@ -49,7 +49,7 @@ app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
 app.include_router(gcalendar.router, prefix="/api/v1", tags=["Calendar"])
 app.include_router(notes.router, prefix="/api/v1", tags=["Notes/Memories"])
 app.include_router(goals.router, prefix="/api/v1", tags=["Goals"])
-app.include_router(audio.router, prefix="/api/v1", tags=["Audio"])
+# app.include_router(audio.router, prefix="/api/v1", tags=["Audio"])
 app.include_router(oauth.router, prefix="/api/v1/oauth", tags=["OAuth"])
 
 

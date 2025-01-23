@@ -16,8 +16,8 @@ from app.schemas.common import (
     MessageRequest,
     MessageRequestWithHistory,
 )
-from app.services.search import perform_search
-from app.services.text import classify_event_type
+from app.services.search import perform_search, perform_fetch
+# from app.services.text import classify_event_type
 from datetime import timezone
 
 router = APIRouter()
@@ -33,7 +33,9 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
 
     Returns:
         StreamingResponse: Streamed response for real-time communication.
+
     """
+    intent = None
 
     async def do_search(last_message, query_text):
         search_result = await perform_search(query=query_text)
@@ -41,24 +43,30 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
             f"\nRelevant context using GAIA web search: {search_result}"
         )
 
+    async def fetch_webpage(last_message, url):
+        page_content = await perform_fetch(url)
+        last_message["content"] += (
+            f"\nRelevant context from the fetched URL: {page_content}"
+        )
+
     last_message = body.messages[-1] if body.messages else None
     query_text = (last_message["content"]).replace("mostRecent: true ", "")
 
-    type = await classify_event_type(query_text)
-
-    intent = None
-
-    if type.get("highest_label"):
-        match type["highest_label"]:
-            case "search web internet":
-                await do_search(last_message, query_text)
-            case "flowchart":
-                intent = "flowchart"
-            case "weather":
-                intent = "weather"
+    if body.pageFetchURL and last_message:
+        await fetch_webpage(last_message, body.pageFetchURL)
 
     if body.search_web and last_message:
         await do_search(last_message, query_text)
+
+    # type = await classify_event_type(query_text)
+    # if type.get("highest_label"):
+    #     match type["highest_label"]:
+    #         case "search web internet":
+    #             await do_search(last_message, query_text)
+    #         case "flowchart":
+    #             intent = "flowchart"
+    #         case "weather":
+    #             intent = "weather"
 
     return StreamingResponse(
         doPrompWithStream(
