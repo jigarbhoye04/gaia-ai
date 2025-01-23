@@ -18,7 +18,7 @@ from app.schemas.common import (
 )
 from app.services.search import perform_search
 from app.services.text import classify_event_type
-from datetime import datetime, timezone
+from datetime import timezone
 
 router = APIRouter()
 
@@ -66,7 +66,7 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
             max_tokens=4096,
             intent=intent,
             # model="@cf/meta/llama-3.1-70b-instruct"
-            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         ),
         media_type="text/event-stream",
     )
