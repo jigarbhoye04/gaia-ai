@@ -9,8 +9,11 @@ from pydantic import BaseModel
 import google.auth.transport.requests
 import base64
 from pathlib import Path
+from app.db.redis import get_cache, set_cache
+import uuid
 
 router = APIRouter()
+
 
 class VoskTranscriber:
     def __init__(self):
@@ -118,19 +121,31 @@ class TTSService:
                 if not audio_content:
                     raise HTTPException(status_code=400, detail="No audio content")
 
-                return base64.b64decode(audio_content)
+                return audio_content
 
         except Exception as e:
             print(f"Synthesis error: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
 
+tts_service = TTSService()
+
+
 @router.post("/synthesize", responses={200: {"content": {"audio/wav": {}}}})
 async def synthesize(request: TTSRequest):
-    tts_service = TTSService()
-    audio_bytes = await tts_service.synthesize_speech(
+    cache_key = f"tts:{(request.text[:100]).replace(' ', '_')}"
+
+    from_cache = await get_cache(cache_key)
+    if from_cache:
+        # bytes = from_cache.encode()
+        return Response(content=base64.b64decode(from_cache), media_type="audio/wav")
+
+    string = await tts_service.synthesize_speech(
         text=request.text,
         language_code=request.language_code,
         voice_name=request.voice_name,
     )
-    return Response(content=audio_bytes, media_type="audio/wav")
+
+    # string = audio_bytes.decode()
+    await set_cache(cache_key, string, ttl=2628000)
+    return Response(content=base64.b64decode(string), media_type="audio/wav")

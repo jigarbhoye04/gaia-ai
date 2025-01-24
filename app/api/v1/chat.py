@@ -17,6 +17,7 @@ from app.schemas.common import (
     MessageRequestWithHistory,
 )
 from app.services.search import perform_search, perform_fetch
+
 # from app.services.text import classify_event_type
 from datetime import timezone
 
@@ -58,6 +59,7 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
     if body.search_web and last_message:
         await do_search(last_message, query_text)
 
+    # classify_output()
     # type = await classify_event_type(query_text)
     # if type.get("highest_label"):
     #     match type["highest_label"]:
@@ -71,7 +73,7 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
     return StreamingResponse(
         doPrompWithStream(
             messages=jsonable_encoder(body.messages),
-            max_tokens=4096,
+            max_tokens=2048,
             intent=intent,
             # model="@cf/meta/llama-3.1-70b-instruct"
             model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
