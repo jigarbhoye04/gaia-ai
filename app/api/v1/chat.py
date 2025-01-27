@@ -11,6 +11,7 @@ import asyncio
 from app.utils.embeddings import search_notes_by_similarity, query_documents
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
 from pydantic import BaseModel
+from bson import ObjectId
 from app.schemas.common import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
@@ -21,6 +22,7 @@ from app.services.llm import (
     doPrompWithStream,
     doPromptNoStream,
 )
+
 # from app.services.text import classify_event_type
 
 router = APIRouter()
@@ -103,7 +105,6 @@ async def chat_stream(
     #             intent = "flowchart"
     #         case "weather":
     #             intent = "weather"
-
 
     print(body.messages)
     return StreamingResponse(
@@ -254,7 +255,19 @@ async def update_messages(
     """
     user_id = user.get("user_id")
     conversation_id = request.conversation_id
-    messages = [message.dict(exclude={"loading"}) for message in request.messages]
+    # messages = [message.dict(exclude={"loading"}) for message in request.messages]
+
+    messages = []
+    for message in request.messages:
+        message_dict = message.dict(exclude={"loading"})  # Convert to dictionary
+        # Remove keys with None values
+        message_dict = {
+            key: value for key, value in message_dict.items() if value is not None
+        }
+        # Add a unique message ID
+        message_dict["message_id"] = str(ObjectId())
+        print(message_dict)
+        messages.append(message_dict)
 
     update_result = await conversations_collection.update_one(
         {"user_id": user_id, "conversation_id": conversation_id},
@@ -432,3 +445,4 @@ async def delete_conversation(
         "message": "Conversation deleted successfully",
         "conversation_id": conversation_id,
     }
+

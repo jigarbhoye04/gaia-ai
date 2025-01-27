@@ -17,6 +17,7 @@ from app.api.v1 import (
     waitlist,
     goals,
     notes,
+    search,
 )
 
 load_dotenv()
@@ -59,27 +60,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(waitlist.router, tags=["Waitlist"])
-logger.info("Waitlist router added.")
 app.include_router(feedback.router, tags=["Feedback"])
-logger.info("Feedback router added.")
 app.include_router(chat.router, tags=["Chat"])
-logger.info("Chat router added.")
 app.include_router(image.router, tags=["Image"])
-logger.info("Image router added.")
 app.include_router(auth.router, tags=["Authentication"])
-logger.info("Authentication router added.")
 # app.include_router(audio.router, tags=["Audio"])
-logger.info("Audio router added.")
 app.include_router(document.router, tags=["Document"])
-logger.info("Document router added.")
+app.include_router(search.router, tags=["Document"])
 app.include_router(gcalendar.router, tags=["Calendar"])
-logger.info("Calendar router added.")
 app.include_router(notes.router, tags=["Notes/Memories"])
-logger.info("Notes/Memories router added.")
 app.include_router(goals.router, tags=["Goals"])
-logger.info("Goals router added.")
 app.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
-logger.info("OAuth router added.")
 
 
 @app.get("/")
