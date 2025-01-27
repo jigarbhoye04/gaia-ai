@@ -2,7 +2,7 @@ import asyncio
 from transformers import pipeline
 
 
-def split_text_into_chunks(text, chunk_size=300, overlap=30):
+def split_text_into_chunks(text, chunk_size=250, overlap=30):
     """
     Splits text into chunks of `chunk_size` with an `overlap` between chunks.
     """

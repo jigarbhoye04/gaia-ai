@@ -67,7 +67,7 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
             {
                 "$vectorSearch": {
                     "index": "document_vector",  # Name of your vector index
-                    "path": "embedding",  # Path where embeddings are stored
+                    "path": "embedding",  # Path where embeddingsFfiletype are stored
                     "queryVector": query_embedding,  # Embedding of the input query
                     "numCandidates": 100,
                     "limit": top_k,
@@ -86,8 +86,8 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
         ]
 
         results = await documents_collection.aggregate(pipeline).to_list(length=top_k)
-        print(query_embedding)
         print(query_text)
+        print(results)
 
         # documents = [document for document in results if document["score"] >= 0.6]
         return results

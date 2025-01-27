@@ -10,6 +10,7 @@ from datetime import datetime
 import asyncio
 from app.utils.embeddings import search_notes_by_similarity, query_documents
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
+from pydantic import BaseModel
 from app.schemas.common import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
@@ -52,7 +53,6 @@ async def chat_stream(
         )
 
     async def fetch_webpage(last_message, url):
-        
         page_content = await perform_fetch(url)
         last_message["content"] += (
             f"\nRelevant context from the fetched URL: {page_content}"
@@ -63,19 +63,19 @@ async def chat_stream(
             input_text=query_text, user_id=user.get("user_id")
         )
         last_message["content"] = f"""
-            User: {last_message["content"]} \n System: The user has the following notes: {"- ".join(notes)} (Fetched from the Database)
+            User: {last_message["content"]} \n System: The user has the following notes: {"- ".join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation
             """
 
     async def fetch_documents(last_message, query_text):
         documents = await query_documents(
             query_text, body.conversation_id, user.get("user_id")
         )
-        if not documents:
+        if not documents or len(documents) <= 0:
             return
         content = [document["content"] for document in documents]
         titles = [document["title"] for document in documents]
 
-        prompt = f"Question: {last_message['content']}\n\nContext from documents uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
+        prompt = f"Question: {last_message['content']}\n\n Context from document files uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
         last_message["content"] = prompt
 
     # Call Functions
@@ -104,10 +104,12 @@ async def chat_stream(
     #         case "weather":
     #             intent = "weather"
 
+
+    print(body.messages)
     return StreamingResponse(
         doPrompWithStream(
             messages=jsonable_encoder(body.messages),
-            max_tokens=2048,
+            max_tokens=4096,
             intent=intent,
             model="@cf/meta/llama-3.1-8b-instruct-fast",
             # model="@cf/meta/llama-3.1-70b-instruct"
@@ -200,11 +202,14 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     # Fetch all conversations for the user
     conversations = await conversations_collection.find(
         {"user_id": user_id},
+        {"_id": 1, "user_id": 1, "conversation_id": 1, "description": 1, "starred": 1},
     ).to_list(None)
 
     if not conversations:
         await set_cache(cache_key, [])
         return {"conversations": []}
+
+    print(conversations)
 
     # Convert ObjectId to string
     for conversation in conversations:
@@ -278,7 +283,7 @@ async def update_conversation_description_llm(
 
     # Generate a summary for the description
     response = await doPromptNoStream(
-        prompt=f"Summarize the question/prompt: '{data.userFirstMessage}' in 3-4 words from my perspective. Do not answer my question, just summarise what it is about.",
+        prompt=f"User has asked this to the AI assistant: '{data.userFirstMessage}'. Tell me about the user's question in 3-4 words. Do not answer the users' question, just summarise what it is about.",
         max_tokens=7,
     )
     description = (response.get("response", "New Chat")).replace('"', "")
@@ -334,6 +339,46 @@ async def update_conversation_description(
         content={
             "message": "Conversation updated successfully",
             "description": data.description,
+        }
+    )
+
+
+class StarredUpdate(BaseModel):
+    starred: bool
+
+
+@router.put("/conversations/{conversation_id}/star")
+async def star_conversation(
+    conversation_id: str,
+    body: StarredUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Update the description of a conversation.
+    """
+    user_id = user.get("user_id")
+
+    print(f"{conversation_id=}")
+    print(f"{body.starred=}")
+
+    # Update the description in the database
+    update_result = await conversations_collection.update_one(
+        {"user_id": user_id, "conversation_id": conversation_id},
+        {"$set": {"starred": body.starred}},
+    )
+
+    if update_result.modified_count == 0:
+        raise HTTPException(
+            status_code=404, detail="Conversation not found or update failed"
+        )
+
+    # Invalidate Redis cache
+    await delete_cache(f"conversations_cache:{user_id}")
+
+    return JSONResponse(
+        content={
+            "message": "Conversation updated successfully",
+            "starred": body.starred,
         }
     )
 
