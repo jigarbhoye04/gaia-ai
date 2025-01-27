@@ -9,7 +9,7 @@ from app.api.v1 import (
     auth,
     chat,
     document,
-    audio,
+    # audio,
     feedback,
     gcalendar,
     image,
@@ -68,7 +68,7 @@ app.include_router(image.router, tags=["Image"])
 logger.info("Image router added.")
 app.include_router(auth.router, tags=["Authentication"])
 logger.info("Authentication router added.")
-app.include_router(audio.router, tags=["Audio"])
+# app.include_router(audio.router, tags=["Audio"])
 logger.info("Audio router added.")
 app.include_router(document.router, tags=["Document"])
 logger.info("Document router added.")

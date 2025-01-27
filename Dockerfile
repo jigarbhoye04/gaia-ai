@@ -34,7 +34,7 @@ RUN pip freeze > requirements_installed.txt
 # Copy the rest of the application code into the container
 # The . (source) refers to your local directory.
 # The second . (destination) refers to the container's working directory /app.
-COPY . .e
+COPY . .
 
 # Expose the application port
 EXPOSE 8000
