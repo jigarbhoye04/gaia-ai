@@ -39,7 +39,6 @@ async def search_messages(query: str, user: dict = Depends(get_current_user)):
                     "$project": {
                         "_id": 0,
                         "conversation_id": 1,
-                        "message_id": "$messages.message_id",
                         "message": "$messages",
                         # "response": "$messages.response",
                         # "date": "$messages.createdAt",
@@ -60,4 +59,4 @@ async def search_messages(query: str, user: dict = Depends(get_current_user)):
     # Cache the results
     await set_cache(cache_key, results)
 
-    return {"messages": results}
+    return {"results": results}
