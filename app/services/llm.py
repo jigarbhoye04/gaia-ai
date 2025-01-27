@@ -4,11 +4,12 @@ import logging
 from dotenv import load_dotenv
 import httpx
 from groq import AsyncGroq
-from fastapi.encoders import jsonable_encoder
+from app.utils.logging import get_logger
 
+logger = get_logger(name="llm", log_file="llm.log")
 
-logging.basicConfig(level=logging.INFO)
 http_async_client = httpx.AsyncClient(timeout=1000000.0)
+http_async_client2 = httpx.AsyncClient(http2=2, timeout=1000000.0)
 
 load_dotenv()
 
@@ -163,6 +164,7 @@ async def doPrompWithStream(
             async for line in response.aiter_lines():
                 if line.strip():
                     yield line + "\n\n"
+
     except httpx.StreamError as e:
         logging.error(f"Stream error: {e}")
     except Exception as e:

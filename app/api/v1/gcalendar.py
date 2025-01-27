@@ -3,6 +3,7 @@ from typing import Optional, List
 import httpx
 from datetime import datetime, timezone
 from app.services.calendar import fetch_calendar_events, filter_events
+from app.db.connect import calendar_collection
 from app.utils.auth import (
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
@@ -65,14 +66,15 @@ async def get_calendar_list(
 async def get_calendar_events(
     access_token: str = Cookie(None),
     refresh_token: str = Cookie(None),
+    user_id: str = Cookie(None),
     page_token: Optional[str] = None,
     selected_calendars: Optional[List[str]] = Query(None),
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
 ):
-    """Get events from selected calendars with pagination"""
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Access token required")
+    """Get events from selected calendars with pagination and storage"""
+    if not access_token or not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
 
     try:
         # Set time_min to the current date and time if not provided
@@ -89,22 +91,41 @@ async def get_calendar_events(
             calendar_data = calendar_list_response.json()
             calendars = calendar_data.get("items", [])
 
-            # If no calendars are selected, default to primary calendar
-            if not selected_calendars:
-                primary_calendar = next(
-                    (cal for cal in calendars if cal.get("primary")), None
+            # Determine selected calendars
+            if selected_calendars:
+                # If calendars are explicitly provided, store them
+                await calendar_collection.update_one(
+                    {"user_id": user_id},
+                    {"$set": {"selected_calendars": selected_calendars}},
+                    upsert=True,
                 )
-                if primary_calendar:
-                    selected_calendars = [primary_calendar["id"]]
-                else:
-                    selected_calendars = []
             else:
-                # Filter to only include selected calendars
-                calendars = [
-                    calendar
-                    for calendar in calendars
-                    if calendar["id"] in selected_calendars
-                ]
+                # Try to fetch previously stored calendars
+                preferences = await calendar_collection.find_one({"user_id": user_id})
+
+                # If no stored calendars, default to primary
+                if preferences and preferences.get("selected_calendars"):
+                    selected_calendars = preferences["selected_calendars"]
+                else:
+                    primary_calendar = next(
+                        (cal for cal in calendars if cal.get("primary")), None
+                    )
+                    if primary_calendar:
+                        selected_calendars = [primary_calendar["id"]]
+                        # Store primary calendar
+                        await calendar_collection.update_one(
+                            {"user_id": user_id},
+                            {"$set": {"selected_calendars": selected_calendars}},
+                            upsert=True,
+                        )
+                    else:
+                        selected_calendars = []
+
+            calendars = [
+                calendar
+                for calendar in calendars
+                if calendar["id"] in selected_calendars
+            ]
 
             all_events = []
             next_page_token = None
@@ -130,17 +151,10 @@ async def get_calendar_events(
                     if events_data.get("nextPageToken"):
                         next_page_token = events_data["nextPageToken"]
 
-            # Sort all events by start time (current to future)
-            # sorted_events = sorted(
-            #     all_events,
-            #     key=lambda event: event.get("start", {}).get(
-            #         "dateTime", event.get("start", {}).get("date", "")
-            #     ),
-            # )
-
             return {
                 "events": all_events,
                 "nextPageToken": next_page_token,
+                "selectedCalendars": selected_calendars
             }
 
         elif calendar_list_response.status_code == 401 and refresh_token:
@@ -152,6 +166,7 @@ async def get_calendar_events(
                 return await get_calendar_events(
                     new_access_token,
                     refresh_token,
+                    user_id,
                     page_token,
                     selected_calendars,
                     time_min,

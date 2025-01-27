@@ -1,22 +1,41 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
-from app.models.notes import NoteCreate, NoteUpdate, NoteResponse
+from app.models.notes import NoteModel, NoteResponse
 from app.db.connect import notes_collection, serialize_document
 from app.db.redis import get_cache, set_cache, delete_cache
 from app.middleware.auth import get_current_user
+from transformers import AutoTokenizer, AutoModel
+from sentence_transformers import SentenceTransformer
+# import torch
 
 router = APIRouter()
 
+model = SentenceTransformer("all-MiniLM-L6-v2")
+# model_name = "sentence-transformers/all-MiniLM-L6-v2"
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+# model = AutoModel.from_pretrained(model_name)
+
+
+# inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+# outputs = model(**inputs)
+# return outputs.last_hidden_state.mean(dim=1)
+
+
+def generate_embedding(text):
+    return model.encode(text).tolist()
+
 
 @router.post("/notes", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
-async def create_note(note: NoteCreate, user: dict = Depends(get_current_user)):
+async def create_note(note: NoteModel, user: dict = Depends(get_current_user)):
     """
     Create a new note for the authenticated user.
     """
     user_id = user["user_id"]
-    new_note = {**note.model_dump(), "user_id": user_id}
 
-    # Ensure `await` for MongoDB operation
+    embedding = generate_embedding(note.content)
+
+    new_note = {**note.model_dump(), "vector": embedding, "user_id": user_id}
+
     result = await notes_collection.insert_one(new_note)
 
     # Invalidate cache for all notes
@@ -79,7 +98,7 @@ async def get_all_notes(user: dict = Depends(get_current_user)):
 
 @router.put("/notes/{note_id}", response_model=NoteResponse)
 async def update_note(
-    note_id: str, note: NoteUpdate, user: dict = Depends(get_current_user)
+    note_id: str, note: NoteModel, user: dict = Depends(get_current_user)
 ):
     """
     Update an existing note by its ID.

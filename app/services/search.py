@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-import re
 
 # Load environment variables from a .env file
 load_dotenv()

@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from app.services.auth import store_user_info
 import httpx
-import logging
 from app.db.connect import users_collection
+from app.utils.logging import get_logger
 from app.utils.auth import (
     GOOGLE_USERINFO_URL,
     GOOGLE_TOKEN_URL,
@@ -17,7 +17,8 @@ from app.utils.auth import (
 
 router = APIRouter()
 load_dotenv()
-logger = logging.getLogger(__name__)
+
+logger = get_logger(name="authentication", log_file="auth.log")
 
 
 class OAuthRequest(BaseModel):

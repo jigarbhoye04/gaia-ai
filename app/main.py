@@ -1,13 +1,14 @@
 import uvicorn
-import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from contextlib import asynccontextmanager
+from app.utils.logging import get_logger
 import app.db.connect
 from app.api.v1 import (
     auth,
     chat,
-    # document,
+    document,
     audio,
     feedback,
     gcalendar,
@@ -18,12 +19,32 @@ from app.api.v1 import (
     notes,
 )
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
+load_dotenv()
+logger = get_logger(name="main", log_file="app.log")
 
-app = FastAPI(title="GAIA API", version="1.0.0", description="The AI assistant backend")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up GAIA API...")
+    try:
+        logger.info("Initializing services and dependencies...")
+    except Exception as e:
+        logger.error(f"Error during startup: {e}")
+        raise RuntimeError("Startup failed")
+
+    yield
+
+    logger.info("Shutting down GAIA API...")
+
+
+app = FastAPI(
+    lifespan=lifespan,
+    title="GAIA API",
+    version="1.0.0",
+    description="The AI assistant backend",
+    openapi_prefix="/api/v1",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -37,28 +58,40 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
-
-load_dotenv()
-
-app.include_router(waitlist.router, prefix="/api/v1", tags=["Waitlist"])
-app.include_router(feedback.router, prefix="/api/v1", tags=["Feedback"])
-app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
-app.include_router(image.router, prefix="/api/v1", tags=["Image"])
-# app.include_router(document.router, prefix="/api/v1", tags=["Document"])
-app.include_router(auth.router, prefix="/api/v1", tags=["Authentication"])
-app.include_router(gcalendar.router, prefix="/api/v1", tags=["Calendar"])
-app.include_router(notes.router, prefix="/api/v1", tags=["Notes/Memories"])
-app.include_router(goals.router, prefix="/api/v1", tags=["Goals"])
-app.include_router(audio.router, prefix="/api/v1", tags=["Audio"])
-app.include_router(oauth.router, prefix="/api/v1/oauth", tags=["OAuth"])
+app.include_router(waitlist.router, tags=["Waitlist"])
+logger.info("Waitlist router added.")
+app.include_router(feedback.router, tags=["Feedback"])
+logger.info("Feedback router added.")
+app.include_router(chat.router, tags=["Chat"])
+logger.info("Chat router added.")
+app.include_router(image.router, tags=["Image"])
+logger.info("Image router added.")
+app.include_router(auth.router, tags=["Authentication"])
+logger.info("Authentication router added.")
+app.include_router(audio.router, tags=["Audio"])
+logger.info("Audio router added.")
+app.include_router(document.router, tags=["Document"])
+logger.info("Document router added.")
+app.include_router(gcalendar.router, tags=["Calendar"])
+logger.info("Calendar router added.")
+app.include_router(notes.router, tags=["Notes/Memories"])
+logger.info("Notes/Memories router added.")
+app.include_router(goals.router, tags=["Goals"])
+logger.info("Goals router added.")
+app.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
+logger.info("OAuth router added.")
 
 
 @app.get("/")
 @app.get("/ping")
 async def read_root():
-    logger.info("Pinged server successfully!")
+    logger.info("Root or ping endpoint accessed.")
     return {"message": "Welcome to the GAIA API!"}
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    logger.info("Launching the GAIA API server...")
+    try:
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    except Exception as e:
+        logger.error(f"Failed to start the server: {e}")

@@ -5,12 +5,10 @@ from io import BytesIO
 from app.services.llm import doPromptNoStream
 import httpx
 
-http_async_client = httpx.AsyncClient(timeout=10000)
+http_async_client = httpx.AsyncClient(timeout=100000)
 
 
 async def generate_image(imageprompt: str) -> dict:
-    print(f"inside generate image method: {imageprompt}")
-
     url = "https://generateimage.aryanranderiya1478.workers.dev/"
     try:
         response = await http_async_client.post(url, json={"imageprompt": imageprompt})
@@ -62,7 +60,8 @@ async def convert_image_to_text(
 
         improved_prompt = await doPromptNoStream(
             prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{
-                                           message}'. Only give me the sentence without any additional headers or information. Be concise, but descriptive."""
+                message
+            }'. Only give me the sentence without any additional headers or information. Be concise, but descriptive."""
         )
 
         response = requests.post(

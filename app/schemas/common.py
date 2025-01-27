@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from typing_extensions import TypedDict
 
+
 class WaitlistItem(BaseModel):
     email: EmailStr
 
@@ -43,6 +44,7 @@ class MessageDict(TypedDict):
 
 class MessageRequestWithHistory(BaseModel):
     message: str
+    conversation_id: str
     messages: List[MessageDict]
     search_web: Optional[bool] = None
     pageFetchURL: Optional[str] = None

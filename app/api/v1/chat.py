@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.db.connect import conversations_collection
 from app.db.redis import set_cache, get_cache, delete_cache
-from app.services.llm import (
-    doPrompWithStream,
-    doPromptNoStream,
-)
+from datetime import timezone
+from app.services.search import perform_search, perform_fetch
 from app.middleware.auth import get_current_user
 from datetime import datetime
+import asyncio
+from app.utils.embeddings import search_notes_by_similarity, query_documents
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
 from app.schemas.common import (
     DescriptionUpdateRequest,
@@ -16,15 +16,20 @@ from app.schemas.common import (
     MessageRequest,
     MessageRequestWithHistory,
 )
-from app.services.search import perform_search, perform_fetch
+from app.services.llm import (
+    doPrompWithStream,
+    doPromptNoStream,
+)
 # from app.services.text import classify_event_type
-from datetime import timezone
 
 router = APIRouter()
 
 
 @router.post("/chat-stream")
-async def chat_stream(request: Request, body: MessageRequestWithHistory):
+async def chat_stream(
+    body: MessageRequestWithHistory,
+    user: dict = Depends(get_current_user),
+):
     """
     Stream chat messages in real-time.
 
@@ -36,7 +41,10 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
 
     """
     intent = None
+    last_message = body.messages[-1] if body.messages else None
+    query_text = (last_message["content"]).replace("mostRecent: true ", "")
 
+    # Helper Functions
     async def do_search(last_message, query_text):
         search_result = await perform_search(query=query_text)
         last_message["content"] += (
@@ -44,13 +52,35 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
         )
 
     async def fetch_webpage(last_message, url):
+        
         page_content = await perform_fetch(url)
         last_message["content"] += (
             f"\nRelevant context from the fetched URL: {page_content}"
         )
 
-    last_message = body.messages[-1] if body.messages else None
-    query_text = (last_message["content"]).replace("mostRecent: true ", "")
+    async def fetch_notes(last_message, query_text):
+        notes = await search_notes_by_similarity(
+            input_text=query_text, user_id=user.get("user_id")
+        )
+        last_message["content"] = f"""
+            User: {last_message["content"]} \n System: The user has the following notes: {"- ".join(notes)} (Fetched from the Database)
+            """
+
+    async def fetch_documents(last_message, query_text):
+        documents = await query_documents(
+            query_text, body.conversation_id, user.get("user_id")
+        )
+        if not documents:
+            return
+        content = [document["content"] for document in documents]
+        titles = [document["title"] for document in documents]
+
+        prompt = f"Question: {last_message['content']}\n\nContext from documents uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
+        last_message["content"] = prompt
+
+    # Call Functions
+    await fetch_notes(last_message, query_text)
+    await fetch_documents(last_message, query_text)
 
     if body.pageFetchURL and last_message:
         await fetch_webpage(last_message, body.pageFetchURL)
@@ -58,7 +88,13 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
     if body.search_web and last_message:
         await do_search(last_message, query_text)
 
+    # search_start_time = time.time()
     # type = await classify_event_type(query_text)
+    # search_end_time = time.time()
+    # print(
+    #     f"classify_event_type took {search_end_time - search_start_time:.4f} seconds",
+    #     type,
+    # )
     # if type.get("highest_label"):
     #     match type["highest_label"]:
     #         case "search web internet":
@@ -71,22 +107,22 @@ async def chat_stream(request: Request, body: MessageRequestWithHistory):
     return StreamingResponse(
         doPrompWithStream(
             messages=jsonable_encoder(body.messages),
-            max_tokens=4096,
+            max_tokens=2048,
             intent=intent,
+            model="@cf/meta/llama-3.1-8b-instruct-fast",
             # model="@cf/meta/llama-3.1-70b-instruct"
-            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+            # model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
         ),
         media_type="text/event-stream",
     )
 
-
-# return StreamingResponse(
-#     # doPromptWithStreamAsync(
-#     doPromptGROQ(
-#         messages=jsonable_encoder(request.messages), max_tokens=2048, stream=True
-#     ),
-#     media_type="text/event-stream",
-# )
+    # return StreamingResponse(
+    #     # doPromptWithStreamAsync(
+    #     doPromptGROQ(
+    #         messages=jsonable_encoder(request.messages), max_tokens=2048, stream=True
+    #     ),
+    #     media_type="text/event-stream",
+    # )
 
 
 @router.post("/chat")
@@ -137,7 +173,8 @@ async def create_conversation(
             detail="Failed to create conversation",
         )
 
-    await delete_cache(f"conversations_cache:{user_id}")
+    # await delete_cache(f"conversations_cache:{user_id}")
+    asyncio.create_task(delete_cache(f"conversations_cache:{user_id}"))
 
     return {
         "conversation_id": conversation.conversation_id,
@@ -241,7 +278,7 @@ async def update_conversation_description_llm(
 
     # Generate a summary for the description
     response = await doPromptNoStream(
-        prompt=f"Summarize: '{data.userFirstMessage}' in 3-4 words.",
+        prompt=f"Summarize the question/prompt: '{data.userFirstMessage}' in 3-4 words from my perspective. Do not answer my question, just summarise what it is about.",
         max_tokens=7,
     )
     description = (response.get("response", "New Chat")).replace('"', "")

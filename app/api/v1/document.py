@@ -1,220 +1,140 @@
-from fastapi.responses import JSONResponse
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form
 from pydantic import BaseModel
-
-# from sentence_transformers import SentenceTransformer
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 import datetime
-import time
-import logging
-from app.db.connect import documents_collection, document_chunks_collection
-from app.services.text import split_text_into_chunks
+from app.db.connect import documents_collection
+from app.api.v1.notes import generate_embedding
+from fastapi import Depends
+from app.middleware.auth import get_current_user
 from app.services.llm import doPromptNoStream
-from app.services.document import convert_pdf_to_text, extract_text_from_pdf
+from app.utils.embeddings import query_documents
+from app.services.text import split_text_into_chunks
+import fitz
 
-
-# model = SentenceTransformer("all-MiniLM-L6-v2")
 router = APIRouter()
 
 
-class QueryModel(BaseModel):
-    query_text: str
-    top_k: int = 5
+class DocumentUploadResponse(BaseModel):
+    conversation_id: str
+    message: str
 
 
-@router.post("/document/upload")
-async def upload_document(file: UploadFile = File(...)):
-    start_time = time.time()
-    logging.info(f"Starting document upload: {file.filename}")
+class DocumentQueryRequest(BaseModel):
+    message: str
+    conversation_id: str
 
+
+class DocumentUploadRequest(BaseModel):
+    conversation_id: str
+
+
+@router.post(
+    "/document",
+    response_model=DocumentUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def upload_document(
+    conversation_id: str = Form(...),
+    user: dict = Depends(get_current_user),
+    file: UploadFile = File(...),
+):
+    """
+    Upload a document, generate embeddings for each chunk, and associate it with a unique conversation ID.
+    """
     try:
-        # Existing code...
         content = await file.read()
-        text = extract_text_from_pdf(content)
 
-        # Split the text into chunks
+        # Extract text from PDF or decode plain text file
+        if file.filename.endswith(".pdf"):
+            doc = fitz.open(stream=content, filetype="pdf")
+            text = ""
+            for page in doc:
+                text += page.get_text()
+        else:
+            text = content.decode("utf-8")
+
+        # Chunk the document
         chunks = split_text_into_chunks(text)
-        logging.info(f"Text extracted and split into {len(chunks)} chunks")
 
-        result = await documents_collection.insert_one(
-            {
-                "title": file.filename,
-                "upload_date": datetime.datetime.now().isoformat(),
-                "embedding_metadata": {
-                    "model": "all-MiniLM-L6-v2",
-                    "vector_size": 384,
-                },
-            }
-        )
+        # Process each chunk individually
+        for chunk_text in chunks:
+            embedding = generate_embedding(chunk_text)
 
-        logging.info("Encoding all chunks into embeddings")
-        embeddings_list = model.encode(chunks).tolist()
-
-        documents = [
-            {
-                "document_id": result.inserted_id,
-                "chunk_index": idx,
-                "text": chunk,
-                "embeddings": embeddings,
-            }
-            for idx, (chunk, embeddings) in enumerate(zip(chunks, embeddings_list))
-        ]
-
-        logging.info("Batch processing completed")
-        await document_chunks_collection.insert_many(documents)
-
-        end_time = time.time()
-        total_time = end_time - start_time
-        logging.info(f"Document processing completed in {total_time:.2f} seconds")
-
-        return {
-            "message": "Document uploaded, split into chunks, and embeddings stored successfully!",
-            "total_chunks": len(chunks),
-            "processing_time": total_time,
-        }
-    except Exception as e:
-        logging.error(f"Error processing document: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/document/query")
-async def query_similar_documents(query: QueryModel):
-    """
-    Search for the top_k most relevant chunks based on the input query text.
-    Doesn't pass chunks to LLM.
-    """
-    try:
-        # Generate embedding for the query text
-        query_embedding = model.encode([query.query_text])[0].tolist()
-
-        # Retrieve all chunks with embeddings from the database
-        cursor = document_chunks_collection.find(
-            {}, {"embeddings": 1, "text": 1, "chunk_index": 1}
-        )
-        chunks = await cursor.to_list(None)
-
-        if not chunks:
-            raise HTTPException(
-                status_code=404, detail="No document chunks found in the database."
-            )
-
-        # Prepare embeddings and metadata
-        embeddings = []
-        metadata = []
-        for chunk in chunks:
-            embeddings.append(chunk["embeddings"])
-            metadata.append(
+            # Insert each chunk as a separate document with embedding
+            await documents_collection.insert_one(
                 {
-                    "text": chunk["text"],
-                    "chunk_index": chunk["chunk_index"],
+                    "title": file.filename,
+                    "content": chunk_text,
+                    "user_id": user.get("user_id"),
+                    "conversation_id": conversation_id,
+                    "upload_date": datetime.datetime.utcnow(),
+                    "embedding": embedding,
                 }
             )
 
-        # Compute cosine similarity between query_embedding and all chunk embeddings
-        embeddings_array = np.array(embeddings)
-        query_array = np.array(query_embedding).reshape(1, -1)
-        similarities = cosine_similarity(query_array, embeddings_array).flatten()
-
-        # Get top_k results
-        top_indices = np.argsort(similarities)[::-1][: query.top_k]
-        top_results = [
-            {
-                "chunk_index": metadata[idx]["chunk_index"],
-                "text": metadata[idx]["text"],
-                "similarity": similarities[idx],
-            }
-            for idx in top_indices
-        ]
-
         return {
-            "query_text": query.query_text,
-            "top_k": query.top_k,
-            "results": top_results,
+            "message": "Document uploaded and chunked successfully.",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/document/query/prompt")
-async def query_and_prompt(query: QueryModel):
-    """
-    Search for the top_k most relevant chunks based on the input query text.
-    Passes chunks to LLM.
-    """
+@router.post(
+    "/document/query",
+    status_code=status.HTTP_201_CREATED,
+)
+async def query_with_document(
+    message: str = Form(...),
+    conversation_id: str = Form(...),
+    user: dict = Depends(get_current_user),
+    file: UploadFile = File(...),
+):
     try:
-        # Generate embedding for the query text
-        query_embedding = model.encode([query.query_text])[0].tolist()
+        # Step 1: Process the uploaded document (if any)
+        content = await file.read()
 
-        # Retrieve all chunks with embeddings from the database
-        cursor = document_chunks_collection.find(
-            {}, {"embeddings": 1, "text": 1, "chunk_index": 1}
-        )
-        chunks = await cursor.to_list(None)
+        # Extract text from PDF or decode plain text file
+        if file.filename.endswith(".pdf"):
+            doc = fitz.open(stream=content, filetype="pdf")
+            text = ""
+            for page in doc:
+                text += page.get_text()
+        else:
+            text = content.decode("utf-8")
 
-        if not chunks:
-            raise HTTPException(
-                status_code=404, detail="No document chunks found in the database."
-            )
+        # Step 2: Split the document into chunks
+        chunks = split_text_into_chunks(text)
 
-        # Prepare embeddings and metadata
-        embeddings = []
-        metadata = []
-        for chunk in chunks:
-            embeddings.append(chunk["embeddings"])
-            metadata.append(
+        # Step 3: Upload the chunks and generate embeddings for each chunk
+        for chunk_text in chunks:
+            embedding = generate_embedding(chunk_text)
+
+            # Insert each chunk as a separate document with embedding
+            await documents_collection.insert_one(
                 {
-                    "text": chunk["text"],
-                    # "filename": chunk["filename"],
-                    "chunk_index": chunk["chunk_index"],
+                    "title": file.filename,
+                    "content": chunk_text,
+                    "user_id": user.get("user_id"),
+                    "conversation_id": conversation_id,
+                    "upload_date": datetime.datetime.utcnow(),
+                    "embedding": embedding,
                 }
             )
 
-        # Compute cosine similarity between query_embedding and all chunk embeddings
-        embeddings_array = np.array(embeddings)
-        query_array = np.array(query_embedding).reshape(1, -1)
-        similarities = cosine_similarity(query_array, embeddings_array).flatten()
+        # Query for the most relevant chunks for the provided conversation ID
+        documents = await query_documents(message, conversation_id, user.get("user_id"))
 
-        # Get top_k results
-        top_indices = np.argsort(similarities)[::-1][: query.top_k]
-        top_results = [
-            {
-                # "filename": metadata[idx]["filename"],
-                # "chunk_index": metadata[idx]["chunk_index"],
-                "text": metadata[idx]["text"],
-                "similarity": similarities[idx],
-            }
-            for idx in top_indices
-        ]
+        content = [document["content"] for document in documents]
+        titles = [document["title"] for document in documents]
+        prompt = f"Question: {message}\n\nContext from documents uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
 
-        response = await doPromptNoStream(f"""
-            Context (this is unformmated text extracted from the user uploaded document):  {top_results},
-            Question: {query.query_text}
-        """)
+        print(content)
+
+        response = await doPromptNoStream(prompt)
 
         return {
-            "query_text": query.query_text,
             "response": response,
-            "top_k": query.top_k,
-            "results": top_results,
+            "message": "Document uploaded and query processed successfully.",
         }
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-#! DEPRECATED NEEDS TO BE MODIFIED
-@router.post("/document")
-async def upload_file(message: str = Form(...), file: UploadFile = File(...)):
-    contents = await file.read()
-    converted_text = convert_pdf_to_text(contents)
-    prompt = f"""
-        You can understand documents.
-        Document name: {file.filename},
-        Content type: {file.content_type},
-        Size in bytes: {len(contents)}.
-        This is the document (converted to text for your convenience): {converted_text}
-        I want you to do this: {message}.
-    """
-
-    response = await doPromptNoStream(prompt)
-    return JSONResponse(content=response)

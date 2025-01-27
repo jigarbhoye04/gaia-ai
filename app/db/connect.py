@@ -4,6 +4,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import pymongo
 from dotenv import load_dotenv
+from pymongo.operations import SearchIndexModel
 
 load_dotenv()
 
@@ -34,11 +35,40 @@ class MongoDB:
         users_collection = self.database.get_collection("users")
         users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
 
-        # conversations_collection = self.database.get_collection("conversations")
-        # conversations_collection.create_index(
-        #     [("user_id", pymongo.ASCENDING)], unique=True
+        # notes_collection = self.database.get_collection("notes")
+        # search_index_model = SearchIndexModel(
+        #     definition={
+        #         "fields": [
+        #             {
+        #                 "type": "vector",
+        #                 "numDimensions": 384,
+        #                 "path": "vector",
+        #                 "similarity": "cosine",
+        #             }
+        #         ]
+        #     },
+        #     name="notes_vector",
+        #     type="vectorSearch",
         # )
-        # conversations_collection.drop_index([("user_id", pymongo.ASCENDING)])
+
+        # notes_collection.create_search_index(model=search_index_model)
+        documents_collection = self.database.get_collection("documents")
+        search_index_model = SearchIndexModel(
+            definition={
+                "fields": [
+                    {
+                        "type": "vector",
+                        "numDimensions": 384,
+                        "path": "embedding",
+                        "similarity": "cosine",
+                    }
+                ]
+            },
+            name="document_vector",
+            type="vectorSearch",
+        )
+
+        documents_collection.create_search_index(model=search_index_model)
 
     def get_collection(self, collection_name: str):
         """Get a specific collection."""
@@ -52,9 +82,10 @@ users_collection = database.get_collection("users")
 conversations_collection = database.get_collection("conversations")
 conversations_collection.drop_indexes()
 documents_collection = database.get_collection("documents")
-document_chunks_collection = database.get_collection("document_chunks")
+# document_chunks_collection = database.get_collection("document_chunks")
 goals_collection = database.get_collection("goals")
 notes_collection = database.get_collection("notes")
+calendar_collection = database.get_collection("calendar")
 
 
 def serialize_document(document):

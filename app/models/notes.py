@@ -1,22 +1,25 @@
 from pydantic import BaseModel, Field
-from typing import Optional
 
 
-class NoteCreate(BaseModel):
+class NoteModel(BaseModel):
     # title: str = Field(..., max_length=100, example="Meeting Notes")
     # description: str = Field(..., max_length=1000, example="Discuss Q3 planning")
-    note: str = Field(..., max_length=10000, example="Discuss Q3 planning")
 
+    content: str = Field(
+        ...,
+        max_length=100000,
+    )  # This field will have content in the form of HTML
 
-class NoteUpdate(BaseModel):
-    # title: Optional[str] = Field(None, max_length=100)
-    # description: Optional[str] = Field(None, max_length=1000)
-    note: Optional[str] = Field(None, max_length=10000)
+    plaintext: str = Field(
+        ...,
+        max_length=100000,
+    )
 
 
 class NoteResponse(BaseModel):
     id: str
-    note: str
+    content: str
+    plaintext: str
     user_id: str | None = None
     title: str | None = None
     description: str | None = None

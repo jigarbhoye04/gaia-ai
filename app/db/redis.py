@@ -1,12 +1,12 @@
 import redis.asyncio as redis
 import json
-import logging
 import os
 from dotenv import load_dotenv
+from app.utils.logging import get_logger
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
+logger = get_logger(name="redis", log_file="redis.log")
 
 
 class RedisCache:

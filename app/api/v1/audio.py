@@ -9,45 +9,16 @@ from pydantic import BaseModel
 import google.auth.transport.requests
 import base64
 from pathlib import Path
+from app.db.redis import get_cache, set_cache
+import os
+from typing import List
+import asyncio
+from app.utils.logging import get_logger
+from concurrent.futures import ThreadPoolExecutor
 
 router = APIRouter()
-
-class VoskTranscriber:
-    def __init__(self):
-        self.model = Model(model_name="vosk-model-en-us-0.22")
-        self.recognizer = KaldiRecognizer(self.model, 16000)
-        self.recognizer.SetWords(True)
-        self.recognizer.SetPartialWords(True)
-
-    def process_chunk(self, audio_chunk):
-        if self.recognizer.AcceptWaveform(audio_chunk):
-            result = json.loads(self.recognizer.Result())
-            return result.get("text", "")
-        else:
-            # Get partial results
-            result = json.loads(self.recognizer.PartialResult())
-            return result.get("partial", "")
-
-
-transcriber = VoskTranscriber()
-
-
-@router.websocket("/transcribe")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-
-    try:
-        while True:
-            audio_chunk = await websocket.receive_bytes()
-
-            # Process audio chunk
-            text = transcriber.process_chunk(audio_chunk)
-
-            if text:
-                await websocket.send_text(text)
-
-    except Exception as e:
-        print(f"Error: {str(e)}")
+executor = ThreadPoolExecutor(max_workers=2)
+logger = get_logger(name="app", log_file="app.log")
 
 
 class TTSRequest(BaseModel):
@@ -58,7 +29,8 @@ class TTSRequest(BaseModel):
 
 class TTSService:
     def __init__(self):
-        # Dynamic service account path resolution
+        logger.info("Initializing TTSService.")
+
         def find_service_account_file(filename="gtts-secret.json"):
             current_dir = Path(__file__).resolve().parent
             for _ in range(3):
@@ -68,16 +40,15 @@ class TTSService:
                 current_dir = current_dir.parent
             raise FileNotFoundError(f"Could not find {filename}")
 
-        # Load service account credentials
         service_account_path = find_service_account_file()
         self.credentials = service_account.Credentials.from_service_account_file(
             service_account_path,
             scopes=["https://www.googleapis.com/auth/cloud-platform"],
         )
 
-        # Refresh token
         request = google.auth.transport.requests.Request()
         self.credentials.refresh(request)
+        logger.info("TTSService initialized successfully.")
 
     async def synthesize_speech(
         self,
@@ -86,7 +57,7 @@ class TTSService:
         voice_name: str = "en-GB-Journey-F",
     ):
         try:
-            # Get access token
+            logger.info(f"Starting speech synthesis for text: {text[:50]}...")
             access_token = self.credentials.token
 
             headers = {
@@ -108,6 +79,7 @@ class TTSService:
                 )
 
                 if response.status_code != 200:
+                    logger.error(f"TTS API error: {response.text}")
                     raise HTTPException(
                         status_code=response.status_code, detail=response.text
                     )
@@ -116,21 +88,110 @@ class TTSService:
                 audio_content = result.get("audioContent")
 
                 if not audio_content:
+                    logger.error("No audio content received from TTS API.")
                     raise HTTPException(status_code=400, detail="No audio content")
 
-                return base64.b64decode(audio_content)
+                logger.info("Speech synthesis completed successfully.")
+                return audio_content
 
         except Exception as e:
-            print(f"Synthesis error: {e}")
+            logger.error(f"Error during TTS synthesis: {e}")
             raise HTTPException(status_code=500, detail=str(e))
+
+
+class VoskTranscriber:
+    def __init__(self, model_path: str = "app/assets/models/vosk-model-en-us-0.22"):
+        self.model_path = os.path.abspath(model_path)
+        self.model = None
+        self.recognizer = None
+        logger.info(f"Initialized VoskTranscriber with model path: {self.model_path}")
+
+    async def load_model(self):
+        if self.model and self.recognizer:
+            logger.info("Model already loaded. Skipping initialization.")
+            return
+
+        if not os.path.exists(self.model_path):
+            logger.error(f"Model path does not exist: {self.model_path}")
+            raise FileNotFoundError(f"Model path does not exist: {self.model_path}")
+
+        loop = asyncio.get_event_loop()
+        self.model = await loop.run_in_executor(None, Model, self.model_path)
+        self.recognizer = KaldiRecognizer(self.model, 16000)
+        self.recognizer.SetWords(True)
+        self.recognizer.SetPartialWords(True)
+        logger.info("Model and recognizer loaded successfully.")
+
+    async def process_audio_stream(self, audio_stream: bytes) -> List[str]:
+        logger.info("Processing audio stream.")
+        loop = asyncio.get_event_loop()
+        text_results = []
+
+        for chunk in audio_stream:
+            result_available = await loop.run_in_executor(
+                executor, self.recognizer.AcceptWaveform, chunk
+            )
+
+            if result_available:
+                result = json.loads(self.recognizer.Result())
+                text_results.append(result.get("text", ""))
+                logger.debug(f"Final result: {result.get('text', '')}")
+            else:
+                partial_result = json.loads(self.recognizer.PartialResult())
+                logger.debug(f"Partial result: {partial_result.get('partial', '')}")
+
+        final_result = json.loads(self.recognizer.FinalResult())
+        text_results.append(final_result.get("text", ""))
+        logger.info("Completed audio stream processing.")
+        return text_results
+
+
+tts_service = TTSService()
+# transcriber = VoskTranscriber()
+
+
+# @router.websocket("/transcribe")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await websocket.accept()
+#     logger.info("WebSocket connection accepted.")
+
+#     try:
+#         await transcriber.load_model()
+#         full_transcription = []
+
+#         while True:
+#             audio_chunk = await websocket.receive_bytes()
+#             logger.debug("Received audio chunk from client.")
+
+#             transcribed_text = await transcriber.process_audio_stream([audio_chunk])
+
+#             for text in transcribed_text:
+#                 if text.strip():
+#                     await websocket.send_text(text)
+#                     full_transcription.append(text)
+#                     logger.debug(f"Transcribed text sent: {text}")
+
+#     except Exception as e:
+#         logger.error(f"WebSocket error: {e}")
+#         await websocket.close()
 
 
 @router.post("/synthesize", responses={200: {"content": {"audio/wav": {}}}})
 async def synthesize(request: TTSRequest):
-    tts_service = TTSService()
-    audio_bytes = await tts_service.synthesize_speech(
+    logger.info(f"Received TTS request for text: {request.text[:50]}...")
+    cache_key = f"tts:{(request.text[:100]).replace(' ', '_')}"
+
+    from_cache = await get_cache(cache_key)
+    if from_cache:
+        logger.info("Cache hit for TTS request.")
+        return Response(content=base64.b64decode(from_cache), media_type="audio/wav")
+
+    string = await tts_service.synthesize_speech(
         text=request.text,
         language_code=request.language_code,
         voice_name=request.voice_name,
     )
-    return Response(content=audio_bytes, media_type="audio/wav")
+
+    await set_cache(cache_key, string, ttl=2628000)
+    logger.info("Cache set for TTS result.")
+    return Response(content=base64.b64decode(string), media_type="audio/wav")
