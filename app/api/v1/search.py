@@ -19,29 +19,18 @@ async def search_messages(query: str, user: dict = Depends(get_current_user)):
         JSONResponse: Messages matching the query.
     """
     user_id = user["user_id"]
-    cache_key = f"search_cache:{user_id}:{query}"
 
-    # Check if search results are cached
-    cached_results = await get_cache(cache_key)
-    if cached_results:
-        return {"messages": jsonable_encoder(cached_results)}
-
-    # Search in MongoDB
     try:
         results = await conversations_collection.aggregate(
             [
-                {"$match": {"user_id": user_id}},  # Filter by authenticated user
-                {"$unwind": "$messages"},  # Unwind the messages array
-                {
-                    "$match": {"messages.response": {"$regex": query, "$options": "i"}}
-                },  # Search for query in content
+                {"$match": {"user_id": user_id}},
+                {"$unwind": "$messages"},
+                {"$match": {"messages.response": {"$regex": query, "$options": "i"}}},
                 {
                     "$project": {
                         "_id": 0,
                         "conversation_id": 1,
                         "message": "$messages",
-                        # "response": "$messages.response",
-                        # "date": "$messages.createdAt",
                     }
                 },
             ]
@@ -55,8 +44,5 @@ async def search_messages(query: str, user: dict = Depends(get_current_user)):
 
     if not results:
         results = []
-
-    # Cache the results
-    await set_cache(cache_key, results)
 
     return {"results": results}

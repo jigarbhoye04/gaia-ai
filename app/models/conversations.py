@@ -23,6 +23,7 @@ class MessageModel(BaseModel):
     file: Optional[bytes] = None  # Binary data for the file
     filename: Optional[str] = None  # Name of the file, if any
     filetype: Optional[str] = None  # Name of the file, if any
+    message_id: Optional[str] = None  # Name of the file, if any
 
 
 # Define the structure for a single conversation

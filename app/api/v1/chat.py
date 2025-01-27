@@ -106,7 +106,6 @@ async def chat_stream(
     #         case "weather":
     #             intent = "weather"
 
-    print(body.messages)
     return StreamingResponse(
         doPrompWithStream(
             messages=jsonable_encoder(body.messages),
@@ -203,14 +202,19 @@ async def get_conversations(user: dict = Depends(get_current_user)):
     # Fetch all conversations for the user
     conversations = await conversations_collection.find(
         {"user_id": user_id},
-        {"_id": 1, "user_id": 1, "conversation_id": 1, "description": 1, "starred": 1},
+        {
+            "_id": 1,
+            "user_id": 1,
+            "conversation_id": 1,
+            "description": 1,
+            "starred": 1,
+            "createdAt": 1,
+        },
     ).to_list(None)
 
     if not conversations:
         await set_cache(cache_key, [])
         return {"conversations": []}
-
-    print(conversations)
 
     # Convert ObjectId to string
     for conversation in conversations:
@@ -260,13 +264,11 @@ async def update_messages(
     messages = []
     for message in request.messages:
         message_dict = message.dict(exclude={"loading"})  # Convert to dictionary
-        # Remove keys with None values
         message_dict = {
             key: value for key, value in message_dict.items() if value is not None
         }
-        # Add a unique message ID
-        message_dict["message_id"] = str(ObjectId())
-        print(message_dict)
+        print(f"{message_dict=}")
+        message_dict.setdefault("message_id", str(ObjectId()))
         messages.append(message_dict)
 
     update_result = await conversations_collection.update_one(
@@ -360,6 +362,10 @@ class StarredUpdate(BaseModel):
     starred: bool
 
 
+class PinnedUpdate(BaseModel):
+    pinned: bool
+
+
 @router.put("/conversations/{conversation_id}/star")
 async def star_conversation(
     conversation_id: str,
@@ -370,9 +376,6 @@ async def star_conversation(
     Update the description of a conversation.
     """
     user_id = user.get("user_id")
-
-    print(f"{conversation_id=}")
-    print(f"{body.starred=}")
 
     # Update the description in the database
     update_result = await conversations_collection.update_one(
@@ -446,3 +449,207 @@ async def delete_conversation(
         "conversation_id": conversation_id,
     }
 
+
+# @router.put("/conversations/{conversation_id}/messages/{message_id}/pin")
+# async def pin_message(
+#     conversation_id: str,
+#     message_id: str,
+#     body: PinnedUpdate,
+#     user: dict = Depends(get_current_user),
+# ):
+#     """
+#     Pin a message within a conversation by its message ID.
+
+#     Args:
+#         conversation_id (str): The ID of the conversation containing the message.
+#         message_id (str): The ID of the message to pin.
+#         body (PinnedUpdate): A body containing the 'pinned' boolean.
+
+#     Returns:
+#         JSONResponse: The response containing a success message.
+#     """
+#     user_id = user.get("user_id")
+
+#     try:
+#         # Log the message ID for debugging
+#         print(f"{message_id=}")
+
+#         # Update the message's pinned status
+#         update_result = await conversations_collection.update_one(
+#             {
+#                 "user_id": user_id,
+#                 "conversation_id": conversation_id,
+#                 "messages.message_id": message_id,
+#             },
+#             {"$set": {"messages.$.pinned": body.pinned}},
+#         )
+
+#         # Check if any document was modified
+#         if update_result.modified_count == 0:
+#             raise HTTPException(
+#                 status_code=404, detail="Message not found or update failed"
+#             )
+
+#         # Clear cache for the user's conversations
+#         delete_cache(f"conversations_cache:{user_id}")
+
+#         return JSONResponse(
+#             content={
+#                 "message": f"Message with ID {message_id} pinned successfully"
+#                 if body.pinned
+#                 else f"Message with ID {message_id} unpinned successfully",
+#                 "pinned": body.pinned,
+#             }
+#         )
+#     except HTTPException as http_exc:
+#         # Re-raise HTTP exceptions for proper handling by FastAPI
+#         raise http_exc
+#     except Exception as e:
+#         # Log unexpected errors
+#         print(f"Unexpected error occurred: {e}")
+#         raise HTTPException(
+#             status_code=500,
+#             detail="An unexpected error occurred while pinning the message",
+#         )
+
+
+@router.put("/conversations/{conversation_id}/messages/{message_id}/pin")
+async def pin_message(
+    conversation_id: str,
+    message_id: str,
+    body: PinnedUpdate,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Pin a message within a conversation by its message ID.
+
+    Args:
+        conversation_id (str): The ID of the conversation containing the message.
+        message_id (str): The ID of the message to pin.
+        body (PinnedUpdate): A body containing the 'pinned' boolean.
+
+    Returns:
+        JSONResponse: The response containing a success message.
+    """
+    user_id = user.get("user_id")
+
+    try:
+        # Step 1: Fetch the conversation with the given ID
+        print(
+            f"Fetching conversation with ID: {conversation_id} for user ID: {user_id}"
+        )
+        conversation = await conversations_collection.find_one(
+            {"user_id": user_id, "conversation_id": conversation_id}
+        )
+
+        # Log the fetched conversation
+        if not conversation:
+            print(f"No conversation found for conversation_id={conversation_id}")
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
+        print(f"Fetched conversation: {conversation}")
+
+        # Step 2: Check if the message with the given ID exists in the conversation
+        messages = conversation.get("messages", [])
+        print(f"Messages in the conversation: {messages}")
+
+        target_message = next(
+            (msg for msg in messages if msg.get("message_id") == message_id), None
+        )
+        if not target_message:
+            print(f"No message found with ID: {message_id} in conversation")
+            raise HTTPException(
+                status_code=404, detail="Message not found in conversation"
+            )
+
+        print(f"Target message found: {target_message}")
+
+        # Step 3: Update the pinned status of the message
+        print(f"Updating pinned status for message ID: {message_id} to {body.pinned}")
+        update_result = await conversations_collection.update_one(
+            {
+                "user_id": user_id,
+                "conversation_id": conversation_id,
+                "messages.message_id": message_id,
+            },
+            {"$set": {"messages.$.pinned": body.pinned}},
+        )
+
+        # Step 4: Log the update result
+        print(f"Update result: {update_result.raw_result}")
+
+        if update_result.modified_count == 0:
+            print("Update failed: No matching message or already updated")
+            raise HTTPException(
+                status_code=404, detail="Message not found or update failed"
+            )
+
+        # Step 5: Clear cache for the user's conversations
+        print(f"Clearing cache for user ID: {user_id}")
+        delete_cache(f"conversations_cache:{user_id}")
+
+        # Step 6: Return the success response
+        response_message = (
+            f"Message with ID {message_id} pinned successfully"
+            if body.pinned
+            else f"Message with ID {message_id} unpinned successfully"
+        )
+        print(f"Operation successful: {response_message}")
+
+        return JSONResponse(
+            content={
+                "message": response_message,
+                "pinned": body.pinned,
+            }
+        )
+
+    except HTTPException as http_exc:
+        # Log HTTP exceptions
+        print(f"HTTP Exception: {http_exc.detail}")
+        raise http_exc
+    except Exception as e:
+        # Log unexpected errors
+        print(f"Unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred while pinning the message",
+        )
+
+
+@router.get("/messages/pinned")
+async def get_starred_messages(user: dict = Depends(get_current_user)):
+    """
+    Fetch all starred (pinned) messages across all conversations for the authenticated user.
+
+    Args:
+        user (dict): The current authenticated user.
+
+    Returns:
+        JSONResponse: The response containing the list of pinned messages from all conversations.
+    """
+    user_id = user.get("user_id")
+
+    results = await conversations_collection.aggregate(
+        [
+            {"$match": {"user_id": user_id}},
+            {"$unwind": "$messages"},
+            {"$match": {"messages.pinned": True}},
+            {
+                "$project": {
+                    "_id": 0,
+                    "conversation_id": 1,
+                    "message": "$messages",
+                }
+            },
+            # Optionally, sort the results (by conversation_id or other fields)
+            # {"$sort": {"conversation_id": 1}},
+        ]
+    ).to_list(None)
+
+    # Check if there are no starred messages
+    if not results:
+        raise HTTPException(
+            status_code=404, detail="No pinned messages found across any conversation"
+        )
+
+    return JSONResponse(content={"results": results})
