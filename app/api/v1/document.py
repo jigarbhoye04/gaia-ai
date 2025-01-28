@@ -120,12 +120,22 @@ async def query_with_document(
                 }
             )
 
-        # Query for the most relevant chunks for the provided conversation ID
-        documents = await query_documents(message, conversation_id, user.get("user_id"))
+        print(f"{len(text)=}")
+        if len(text) > 10000:
+            # Query for the most relevant chunks for the provided conversation ID
+            documents = await query_documents(
+                message, conversation_id, user.get("user_id")
+            )
 
-        content = [document["content"] for document in documents]
-        titles = [document["title"] for document in documents]
-        prompt = f"Question: {message}\n\nContext from documents uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
+            content = [document["content"] for document in documents]
+            titles = [document["title"] for document in documents]
+            prompt = f"Question: {message}\n\nContext from documents uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
+        else:
+            documents = await query_documents(
+                message, conversation_id, user.get("user_id")
+            )
+
+            prompt = f"Question: {message}\n\nContext from documents uploaded by the user:\n{ {'document_name': file.filename, 'content': text} }"
 
         print(content)
 
