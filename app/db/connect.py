@@ -52,23 +52,23 @@ class MongoDB:
         # )
 
         # notes_collection.create_search_index(model=search_index_model)
-        documents_collection = self.database.get_collection("documents")
-        search_index_model = SearchIndexModel(
-            definition={
-                "fields": [
-                    {
-                        "type": "vector",
-                        "numDimensions": 384,
-                        "path": "embedding",
-                        "similarity": "cosine",
-                    }
-                ]
-            },
-            name="document_vector",
-            type="vectorSearch",
-        )
+        # documents_collection = self.database.get_collection("documents")
+        # search_index_model = SearchIndexModel(
+        #     definition={
+        #         "fields": [
+        #             {
+        #                 "type": "vector",
+        #                 "numDimensions": 384,
+        #                 "path": "embedding",
+        #                 "similarity": "cosine",
+        #             }
+        #         ]
+        #     },
+        #     name="document_vector",
+        #     type="vectorSearch",
+        # )
 
-        documents_collection.create_search_index(model=search_index_model)
+        # documents_collection.create_search_index(model=search_index_model)
 
     def get_collection(self, collection_name: str):
         """Get a specific collection."""

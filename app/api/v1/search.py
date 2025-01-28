@@ -1,86 +1,122 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.encoders import jsonable_encoder
-from app.db.connect import conversations_collection
-from app.db.redis import set_cache, get_cache
+from app.utils.general import get_context_window
 from app.middleware.auth import get_current_user
+from app.db.connect import (
+    conversations_collection,
+    notes_collection,
+    serialize_document,
+)
+# from app.db.redis import set_cache, get_cache
 
 router = APIRouter()
 
 
-def get_context_window(
-    text: str, query: str, chars_before: int = 15, chars_after: int = 30
-) -> str:
-    """
-    Get text window around the search query with specified characters before and after.
-
-    Args:
-        text (str): Full text to search in
-        query (str): Search term to find
-        chars_around (int): Number of characters to include before and after match
-
-    Returns:
-        str: Context window containing the match with surrounding text
-    """
-    # Find the query in text (case insensitive)
-    query_lower = query.lower()
-    text_lower = text.lower()
-
-    # Find the start position of the query
-    start_pos = text_lower.find(query_lower)
-    if start_pos == -1:
-        return ""
-
-    # Calculate window boundaries
-    window_start = max(0, start_pos - chars_before)
-    window_end = min(len(text), start_pos + len(query) + chars_after)
-
-    # Get the context window
-    context = text[window_start:window_end]
-
-    # Add ellipsis if we're not at the start/end of the text
-    if window_start > 0:
-        context = "..." + context
-    if window_end < len(text):
-        context = context + "..."
-
-    return context
+#!TODO implement redis caching
 
 
-@router.get("/search/messages")
+@router.get("/search")
 async def search_messages(query: str, user: dict = Depends(get_current_user)):
     """
-    Search for messages and return both context snippets and full messages.
+    Search for messages, conversations, and notes by their description or content.
 
     Args:
-        query (str): The text to search for in messages.
+        query (str): The text to search for in messages, conversation descriptions, or notes.
 
     Returns:
-        JSONResponse: Message snippets and full messages containing the query.
+        JSONResponse: Results containing matched messages, conversations, and notes.
     """
     user_id = user["user_id"]
 
     try:
-        # First get matching messages from MongoDB
         results = await conversations_collection.aggregate(
             [
                 {"$match": {"user_id": user_id}},
-                {"$unwind": "$messages"},
-                {"$match": {"messages.response": {"$regex": query, "$options": "i"}}},
                 {
-                    "$project": {
-                        "_id": 0,
-                        "conversation_id": 1,
-                        "message": "$messages",
+                    "$facet": {
+                        "messages": [
+                            {"$unwind": "$messages"},
+                            {
+                                "$match": {
+                                    "$or": [
+                                        {
+                                            "messages.response": {
+                                                "$regex": query,
+                                                "$options": "i",
+                                            }
+                                        },
+                                        {
+                                            "messages.pageFetchURL": {
+                                                "$regex": query,
+                                                "$options": "i",
+                                            }
+                                        },
+                                    ]
+                                }
+                            },
+                            {
+                                "$project": {
+                                    "_id": 0,
+                                    "conversation_id": 1,
+                                    "message": "$messages",
+                                }
+                            },
+                        ],
+                        "conversations": [
+                            {
+                                "$match": {
+                                    "description": {"$regex": query, "$options": "i"}
+                                }
+                            },
+                            {
+                                "$project": {
+                                    "_id": 0,
+                                    "conversation_id": 1,
+                                    "description": 1,
+                                    "conversation": "$conversations",
+                                }
+                            },
+                        ],
                     }
                 },
             ]
         ).to_list(None)
 
-        # Process each result to add the context snippet
-        for result in results:
-            result["snippet"] = get_context_window(
-                result["message"]["response"], query, chars_before=30
+        notes_results = await notes_collection.aggregate(
+            [
+                {
+                    "$match": {
+                        "user_id": user_id,
+                        "plaintext": {"$regex": query, "$options": "i"},
+                    }
+                },
+                {
+                    "$project": {
+                        "id": {"$toString": "$_id"},
+                        "note_id": 1,
+                        "plaintext": 1,
+                    }
+                },
+            ]
+        ).to_list(None)
+
+        messages = results[0]["messages"] if results else []
+        conversations = results[0]["conversations"] if results else []
+        notes = notes_results if notes_results else []
+
+        for message in messages:
+            message["snippet"] = get_context_window(
+                message["message"]["response"], query, chars_before=30
             )
+
+        notes = [
+            {
+                **serialize_document(note),
+                "snippet": get_context_window(
+                    note["plaintext"], query, chars_before=30
+                ),
+            }
+            for note in notes_results
+        ]
 
     except Exception as e:
         raise HTTPException(
@@ -88,7 +124,4 @@ async def search_messages(query: str, user: dict = Depends(get_current_user)):
             detail=f"Failed to perform search: {str(e)}",
         )
 
-    if not results:
-        results = []
-
-    return {"results": results}
+    return {"messages": messages, "conversations": conversations, "notes": notes}
