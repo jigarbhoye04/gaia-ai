@@ -59,19 +59,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
-app.include_router(waitlist.router, tags=["Waitlist"])
-app.include_router(feedback.router, tags=["Feedback"])
-app.include_router(chat.router, tags=["Chat"])
-app.include_router(image.router, tags=["Image"])
-app.include_router(auth.router, tags=["Authentication"])
-# app.include_router(audio.router, tags=["Audio"])
-app.include_router(document.router, tags=["Document"])
-app.include_router(search.router, tags=["Document"])
-app.include_router(gcalendar.router, tags=["Calendar"])
-app.include_router(notes.router, tags=["Notes/Memories"])
-app.include_router(goals.router, tags=["Goals"])
-app.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
-
 
 @app.get("/")
 @app.get("/ping")
