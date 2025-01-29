@@ -1,5 +1,5 @@
 from app.db.connect import notes_collection
-from app.api.v1.notes import generate_embedding
+from app.api.v1.routes.notes import generate_embedding
 from fastapi import HTTPException
 from app.db.connect import documents_collection
 

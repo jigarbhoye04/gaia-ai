@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from .routes import (
+from app.api.v1.routes import (
     chat,
     auth,
     search,

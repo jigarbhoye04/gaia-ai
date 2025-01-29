@@ -5,20 +5,7 @@ from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from app.utils.logging import get_logger
 import app.db.connect
-from app.api.v1 import (
-    auth,
-    chat,
-    document,
-    # audio,
-    feedback,
-    gcalendar,
-    image,
-    oauth,
-    waitlist,
-    goals,
-    notes,
-    search,
-)
+from app.api.v1 import api_router
 
 load_dotenv()
 logger = get_logger(name="main", log_file="app.log")
@@ -30,7 +17,7 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Initializing services and dependencies...")
     except Exception as e:
-        logger.error(f"Error during startup: {e}")
+        logger.error(f"Erro    r during startup: {e}")
         raise RuntimeError("Startup failed")
 
     yield
@@ -43,8 +30,9 @@ app = FastAPI(
     title="GAIA API",
     version="1.0.0",
     description="The AI assistant backend",
-    openapi_prefix="/api/v1",
 )
+app.include_router(api_router, prefix="/api/v1")
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,6 +47,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],
 )
+
 
 @app.get("/")
 @app.get("/ping")
