@@ -56,11 +56,11 @@ async def chat_stream(
 
     # Helper Functions
     async def do_search(last_message, query_text):
-        search_result = await perform_search(query=query_text, count=10)
+        search_result = await perform_search(query=query_text, count=5)
 
         print(search_result)
         last_message["content"] += (
-            f"""\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: ["1" or the number of citation](https://example.com) )."""
+            f"""\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1] or the number of citation but within '[] square brackets'](and the link goes here) ). A good example is [[1]](https://example.com)"""
         )
 
     async def fetch_webpage(last_message, url):
@@ -318,8 +318,10 @@ async def update_conversation_description_llm(
 
     # Generate a summary for the description
     response = await doPromptNoStream(
-        prompt=f"User has asked this to the AI assistant: '{data.userFirstMessage}'. Tell me about the user's question in 3-4 words. Do not answer the users' question, just summarise what it is about.",
-        max_tokens=7,
+        # prompt=f"'{data.userFirstMessage}'. Use paraphrasing to convert this message into a more concise or general form, condensing and simplifying it. Do not answer it, just summarise what the topic is about. i want to give a description about what the sentence is for. Make sure this description is under 4 words. ",
+        prompt=f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). Do not answer the message—simply summarize its subject.",
+        max_tokens=5,
+        # model="@cf/meta/llama-3.1-70b-instruct",
     )
     description = (response.get("response", "New Chat")).replace('"', "")
 

@@ -142,6 +142,7 @@ class URLRequest(BaseModel):
 class URLResponse(BaseModel):
     title: str
     description: str
+    website_name: Optional[str] = None
     favicon: Optional[str] = None
 
 
@@ -159,15 +160,22 @@ async def fetch_url_data(url: str) -> URLResponse:
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        title = soup.title.string if soup.title else "No title found"
+        title = soup.title.string if soup.title else None
         description_tag = soup.find("meta", attrs={"name": "description"})
-        description = (
-            description_tag["content"] if description_tag else "No description found"
-        )
+        description = description_tag["content"] if description_tag else None
         favicon_tag = soup.find("link", rel="icon")
         favicon = favicon_tag["href"] if favicon_tag else None
 
-        metadata = {"title": title, "description": description, "favicon": favicon}
+        # Extract website name from Open Graph metadata
+        site_name_tag = soup.find("meta", property="og:site_name")
+        website_name = site_name_tag["content"] if site_name_tag else None
+
+        metadata = {
+            "title": title,
+            "description": description,
+            "favicon": favicon,
+            "website_name": website_name,
+        }
         await set_cache(cache_key, metadata, ttl=3600)
 
         return URLResponse(**metadata)
