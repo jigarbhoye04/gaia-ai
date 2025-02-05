@@ -2,69 +2,63 @@ import os
 import httpx
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-
-# import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
-# Load environment variables from a .env file
 load_dotenv()
 
-# Get the Bing API subscription key from the environment variable
 subscription_key = os.getenv("BING_API_KEY_1")
 if not subscription_key:
     raise EnvironmentError("Missing BING_SUBSCRIPTION_KEY environment variable.")
 
-# Bing Search API endpoint
 search_url = "https://api.bing.microsoft.com/v7.0/search"
-
-# nltk.download("punkt")
-# nltk.download("stopwords")
-# nltk.download("punkt_tab")
 
 http_async_client = httpx.AsyncClient()
 
 
-async def perform_search(query: str):
-    """
-    Perform a search request using Bing Search API and extract useful information.
-
-    Args:
-        query (str): The search query.
-
-    Returns:
-        list: Extracted useful information from the search results.
-    """
+async def perform_search(query: str, count=7):
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
     params = {
         "q": query,
-        "count": 7,
-        # "freshness": "day",
-        # "responseFilter": "-images,-videos",
-        # "safeSearch":""
+        "count": count,
+        # "responseFilter": "webPages,images",
     }
 
     try:
         response = await http_async_client.get(
             search_url, headers=headers, params=params
         )
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        data = response.json()  # Parse the JSON response
-        print(data)
+        response.raise_for_status()
+        data = response.json()
+
         # Extract useful information
         results = []
         for item in data.get("webPages", {}).get("value", []):
             results.append(
                 {
                     "title": item.get("name"),
-                    "siteName": item.get("siteName"),
                     "url": item.get("url"),
                     "snippet": item.get("snippet"),
-                    "dateLastCrawled": item.get("dateLastCrawled"),
+                    "source": item.get("siteName"),
+                    "date": item.get("dateLastCrawled"),
                 }
             )
 
-        return results
+        # Extract images
+        images = []
+        # for img in data.get("images", {}).get("value", []):
+        #     images.append(
+        #         {
+        #             "image_url": img.get("contentUrl"),
+        #             "thumbnail": img.get("thumbnailUrl"),
+        #             "title": img.get("name"),
+        #             "source": img.get("hostPageUrl"),
+        #         }
+        #     )
+
+        print(f'"results": {results}, "images": {images}')
+
+        return {"results": results, "images": images}
 
     except httpx.HTTPStatusError as http_err:
         return {"error": f"HTTP error occurred: {http_err}"}
@@ -120,15 +114,12 @@ async def perform_fetch(url: str):
 
     except httpx.HTTPStatusError as http_err:
         error = f"HTTP error occurred: {http_err}"
-        print(error)
         return error
     except httpx.RequestError as req_err:
         error = f"HTTP Request error occurred: {req_err}"
-        print(error)
         return error
     except Exception as e:
         error = f"An unexpected error occurred: {e}"
-        print(error)
         return error
 
 
@@ -142,3 +133,6 @@ if __name__ == "__main__":
             print(entry)
 
     asyncio.run(main())
+
+
+

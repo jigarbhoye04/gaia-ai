@@ -49,19 +49,18 @@ async def chat_stream(
     """
     user_id = user.get("user_id")
     intent = None
-    llm_model = "@cf/meta/llama-3.1-70b-instruct"
+    llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
     last_message = body.messages[-1] if body.messages else None
     query_text = (last_message["content"]).replace("mostRecent: true ", "")
 
     # Helper Functions
     async def do_search(last_message, query_text):
-        global llm_model
-        llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        search_result = await perform_search(query=query_text, count=10)
 
-        search_result = await perform_search(query=query_text)
+        print(search_result)
         last_message["content"] += (
-            f"\nRelevant context using GAIA web search: {search_result}"
+            f"""\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: ["1" or the number of citation](https://example.com) )."""
         )
 
     async def fetch_webpage(last_message, url):
@@ -72,11 +71,6 @@ async def chat_stream(
 
     async def store_note(query_text):
         is_memory, plaintext, content = await should_create_memory(query_text)
-
-        print(f"{is_memory=}")
-        print(f"{plaintext=}")
-        print(f"{content=}")
-
         if is_memory and content and plaintext:
             await insert_note(
                 note=NoteModel(plaintext=plaintext, content=content),
@@ -88,27 +82,26 @@ async def chat_stream(
         notes = await search_notes_by_similarity(
             input_text=query_text, user_id=user.get("user_id")
         )
-        last_message["content"] = f"""
-            User: {last_message["content"]} \n System: The user has the following notes: {"- ".join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation
-            """
+
+        if notes:
+            last_message["content"] = f"""
+                User: {last_message["content"]} \n System: The user has the following notes: {"- ".join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation.
+                """
 
     async def fetch_documents(last_message, query_text):
-        global llm_model
-        llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-
         documents = await query_documents(query_text, body.conversation_id, user_id)
+
         if not documents or len(documents) <= 0:
             return
+
         content = [document["content"] for document in documents]
         titles = [document["title"] for document in documents]
 
         prompt = f"Question: {last_message['content']}\n\n Context from document files uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
         last_message["content"] = prompt
 
-    # Call Functions
     await fetch_notes(last_message, query_text)
     await fetch_documents(last_message, query_text)
-    # await store_note(query_text)
     background_tasks.add_task(store_note, query_text)
 
     if body.pageFetchURL and last_message:

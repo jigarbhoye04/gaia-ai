@@ -1,14 +1,22 @@
+import logging
+from typing import Optional
+import httpx
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.utils.general import get_context_window
+from pydantic import BaseModel, HttpUrl
+from app.db.redis import get_cache, set_cache
 from app.middleware.auth import get_current_user
+from app.utils.general import get_context_window
 from app.db.connect import (
     conversations_collection,
     notes_collection,
     serialize_document,
 )
-# from app.db.redis import set_cache, get_cache
 
 router = APIRouter()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 #!TODO implement redis caching
@@ -125,3 +133,65 @@ async def search_messages(query: str, user: dict = Depends(get_current_user)):
         )
 
     return {"messages": messages, "conversations": conversations, "notes": notes}
+
+
+class URLRequest(BaseModel):
+    url: HttpUrl
+
+
+class URLResponse(BaseModel):
+    title: str
+    description: str
+    favicon: Optional[str] = None
+
+
+async def fetch_url_data(url: str) -> URLResponse:
+    cache_key = f"url_metadata:{str(url)}"
+    cached_data = await get_cache(cache_key)
+
+    if cached_data:
+        return URLResponse(**cached_data)
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(str(url))
+            response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        title = soup.title.string if soup.title else "No title found"
+        description_tag = soup.find("meta", attrs={"name": "description"})
+        description = (
+            description_tag["content"] if description_tag else "No description found"
+        )
+        favicon_tag = soup.find("link", rel="icon")
+        favicon = favicon_tag["href"] if favicon_tag else None
+
+        metadata = {"title": title, "description": description, "favicon": favicon}
+        await set_cache(cache_key, metadata, ttl=3600)
+
+        return URLResponse(**metadata)
+
+    except httpx.RequestError as exc:
+        logger.error(f"Request error: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch the URL."
+        )
+    except httpx.HTTPStatusError as exc:
+        logger.error(f"HTTP error: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Page not found."
+        )
+    except Exception as exc:
+        logger.error(f"General error: {exc}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while processing the request.",
+        )
+
+
+@router.post(
+    "/fetch-url-metadata", response_model=URLResponse, status_code=status.HTTP_200_OK
+)
+async def fetch_url(data: URLRequest):
+    return await fetch_url_data(data.url)
