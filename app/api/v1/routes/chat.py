@@ -81,6 +81,7 @@ async def chat_stream(
             await insert_note(
                 note=NoteModel(plaintext=plaintext, content=content),
                 user_id=user_id,
+                auto_created=True,
             )
 
     async def fetch_notes(last_message, query_text):

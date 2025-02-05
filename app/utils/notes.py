@@ -10,7 +10,7 @@ def generate_embedding(text):
     return EmbeddingModel.get_model().encode(text).tolist()
 
 
-async def insert_note(note: NoteModel, user_id: str) -> Dict:
+async def insert_note(note: NoteModel, user_id: str, auto_created=False) -> Dict:
     """
     Insert a new note into the database and handle related actions like embedding and cache invalidation.
     """
@@ -18,7 +18,12 @@ async def insert_note(note: NoteModel, user_id: str) -> Dict:
     embedding = generate_embedding(note.content)
 
     # Prepare the note data to insert into the database
-    new_note = {**note.model_dump(), "vector": embedding, "user_id": user_id}
+    new_note = {
+        **note.model_dump(),
+        "vector": embedding,
+        "user_id": user_id,
+        "auto_created": auto_created,
+    }
 
     # Insert the note into the collection
     try:
