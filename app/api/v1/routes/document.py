@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form
 from pydantic import BaseModel
 import datetime
 from app.db.connect import documents_collection
-from app.api.v1.routes.notes import generate_embedding
+from app.utils.notes import generate_embedding
 from fastapi import Depends
 from app.middleware.auth import get_current_user
 from app.services.llm import doPromptNoStream

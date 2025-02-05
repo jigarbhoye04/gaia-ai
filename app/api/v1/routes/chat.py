@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.db.connect import conversations_collection
@@ -12,6 +12,9 @@ from app.utils.embeddings import search_notes_by_similarity, query_documents
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
 from pydantic import BaseModel
 from bson import ObjectId
+from app.services.notes import should_create_memory
+from app.models.notes import NoteModel
+from app.utils.notes import insert_note
 from app.schemas.common import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
@@ -31,6 +34,7 @@ router = APIRouter()
 @router.post("/chat-stream")
 async def chat_stream(
     body: MessageRequestWithHistory,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ):
     """
@@ -43,12 +47,18 @@ async def chat_stream(
         StreamingResponse: Streamed response for real-time communication.
 
     """
+    user_id = user.get("user_id")
     intent = None
+    llm_model = "@cf/meta/llama-3.1-70b-instruct"
+
     last_message = body.messages[-1] if body.messages else None
     query_text = (last_message["content"]).replace("mostRecent: true ", "")
 
     # Helper Functions
     async def do_search(last_message, query_text):
+        global llm_model
+        llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+
         search_result = await perform_search(query=query_text)
         last_message["content"] += (
             f"\nRelevant context using GAIA web search: {search_result}"
@@ -60,6 +70,19 @@ async def chat_stream(
             f"\nRelevant context from the fetched URL: {page_content}"
         )
 
+    async def store_note(query_text):
+        is_memory, plaintext, content = await should_create_memory(query_text)
+
+        print(f"{is_memory=}")
+        print(f"{plaintext=}")
+        print(f"{content=}")
+
+        if is_memory and content and plaintext:
+            await insert_note(
+                note=NoteModel(plaintext=plaintext, content=content),
+                user_id=user_id,
+            )
+
     async def fetch_notes(last_message, query_text):
         notes = await search_notes_by_similarity(
             input_text=query_text, user_id=user.get("user_id")
@@ -69,9 +92,10 @@ async def chat_stream(
             """
 
     async def fetch_documents(last_message, query_text):
-        documents = await query_documents(
-            query_text, body.conversation_id, user.get("user_id")
-        )
+        global llm_model
+        llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+
+        documents = await query_documents(query_text, body.conversation_id, user_id)
         if not documents or len(documents) <= 0:
             return
         content = [document["content"] for document in documents]
@@ -83,6 +107,8 @@ async def chat_stream(
     # Call Functions
     await fetch_notes(last_message, query_text)
     await fetch_documents(last_message, query_text)
+    # await store_note(query_text)
+    background_tasks.add_task(store_note, query_text)
 
     if body.pageFetchURL and last_message:
         await fetch_webpage(last_message, body.pageFetchURL)
@@ -111,9 +137,10 @@ async def chat_stream(
             messages=jsonable_encoder(body.messages),
             max_tokens=4096,
             intent=intent,
-            model="@cf/meta/llama-3.1-8b-instruct-fast",
+            # model="@cf/meta/llama-3.1-8b-instruct-fast",
             # model="@cf/meta/llama-3.1-70b-instruct"
-            # model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+            # model="@cf/meta/llama-3.1-70b-instruct"
+            model=llm_model,
         ),
         media_type="text/event-stream",
     )
@@ -267,7 +294,6 @@ async def update_messages(
         message_dict = {
             key: value for key, value in message_dict.items() if value is not None
         }
-        print(f"{message_dict=}")
         message_dict.setdefault("message_id", str(ObjectId()))
         messages.append(message_dict)
 

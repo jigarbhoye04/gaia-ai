@@ -13,8 +13,6 @@ http_async_client2 = httpx.AsyncClient(http2=2, timeout=1000000.0)
 
 load_dotenv()
 
-system_prompt: str = """You are an Assistant who's name is GAIA - a general-purpose artificial intelligence assistant. Your responses should be concise and clear. If you're asked who created you then you were created by Aryan Randeriya. Your responses should be concise and to the point. If you do not know something, be clear that you do not know it. You can setup calendar events, manage your files on Google Drive, assist in everyday tasks, and more!"""
-
 url = "https://llm.aryanranderiya1478.workers.dev/"
 
 features = [
@@ -80,8 +78,23 @@ async def doPromptNoStream(
         return {"error": str(e)}
 
 
-async def doPromptCloudflareSDK(prompt: str, temperature=0.6, max_tokens=256):
-    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/meta/llama-3-8b-instruct"
+async def doPromptCloudflareSDK(
+    prompt: str,
+    temperature=0.6,
+    max_tokens=256,
+    system_prompt=f"""
+    You are GAIA - a fun general-purpose artificial intelligence assistant.
+    Your responses should be concise and clear.
+    If you're asked who created you, then you were created by Aryan Randeriya,
+    but no need to mention it without reason.
+    Your responses should be concise and to the point.
+    If you do not know something, be clear that you do not know it.
+    You can do these features: ${", ".join(features)}, and more!
+    if provided with code, you must not give fake code, you must explain the code, you must provide extensive comments too.
+    """,
+    model="@cf/meta/llama-3-8b-instruct",
+) -> str:
+    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/{model}"
     headers = {"Authorization": f"Bearer {AUTH_TOKEN}"}
     json_data = {
         "max_tokens": max_tokens,
@@ -89,16 +102,7 @@ async def doPromptCloudflareSDK(prompt: str, temperature=0.6, max_tokens=256):
         "messages": [
             {
                 "role": "system",
-                "content": f"""
-                You are GAIA - a fun general-purpose artificial intelligence assistant.
-                Your responses should be concise and clear.
-                If you're asked who created you, then you were created by Aryan Randeriya,
-                but no need to mention it without reason.
-                Your responses should be concise and to the point.
-                   If you do not know something, be clear that you do not know it.
-                You can do these features: ${", ".join(features)}, and more!
-                if provided with code, you must not give fake code, you must explain the code, you must provide extensive comments too.
-                """,
+                "content": system_prompt,
             },
             {"role": "user", "content": prompt},
         ],
@@ -109,9 +113,8 @@ async def doPromptCloudflareSDK(prompt: str, temperature=0.6, max_tokens=256):
         response.raise_for_status()
 
         result = response.json()
-        print("this is the result xxx", result)
         response = result.get("result", {}).get("response", [])
-        return response[0] if response else "{}"
+        return response if response else "{}"
 
     except ValueError:
         print("Error: Response is not valid JSON.")

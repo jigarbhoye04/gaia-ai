@@ -1,11 +1,11 @@
+import app.db.connect
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from app.utils.logging import get_logger
-import app.db.connect
-from app.api.v1 import api_router
+from app.api.v1 import api_router, download_nltk_resources
 
 load_dotenv()
 logger = get_logger(name="main", log_file="app.log")
@@ -16,8 +16,11 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up GAIA API...")
     try:
         logger.info("Initializing services and dependencies...")
+        logger.info("Downloading nltk resources...")
+        download_nltk_resources()
+
     except Exception as e:
-        logger.error(f"Erro    r during startup: {e}")
+        logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed")
 
     yield
@@ -49,8 +52,10 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-@app.get("/ping")
+@app.get("api/v1/")
+@app.get("api/")
+@app.get("api/v1/ping")
+@app.get("api/ping")
 async def read_root():
     logger.info("Root or ping endpoint accessed.")
     return {"message": "Welcome to the GAIA API!"}

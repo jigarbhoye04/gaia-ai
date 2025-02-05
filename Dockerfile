@@ -31,6 +31,8 @@ RUN pip install python-multipart
 
 RUN pip freeze > requirements_installed.txt
 
+RUN python -m nltk.downloader punkt stopwords punkt_tab
+
 # Copy the rest of the application code into the container
 # The . (source) refers to your local directory.
 # The second . (destination) refers to the container's working directory /app.

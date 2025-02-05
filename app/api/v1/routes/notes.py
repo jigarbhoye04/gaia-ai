@@ -4,25 +4,12 @@ from app.models.notes import NoteModel, NoteResponse
 from app.db.connect import notes_collection, serialize_document
 from app.db.redis import get_cache, set_cache, delete_cache
 from app.middleware.auth import get_current_user
-from transformers import AutoTokenizer, AutoModel
-from sentence_transformers import SentenceTransformer
-# import torch
+from app.utils.notes import insert_note
+from app.utils.logging import get_logger
+
+logger = get_logger(name="notes", log_file="notes.log")
 
 router = APIRouter()
-
-model = SentenceTransformer("all-MiniLM-L6-v2")
-# model_name = "sentence-transformers/all-MiniLM-L6-v2"
-# tokenizer = AutoTokenizer.from_pretrained(model_name)
-# model = AutoModel.from_pretrained(model_name)
-
-
-# inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
-# outputs = model(**inputs)
-# return outputs.last_hidden_state.mean(dim=1)
-
-
-def generate_embedding(text):
-    return model.encode(text).tolist()
 
 
 @router.post("/notes", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
@@ -30,18 +17,8 @@ async def create_note(note: NoteModel, user: dict = Depends(get_current_user)):
     """
     Create a new note for the authenticated user.
     """
-    user_id = user["user_id"]
-
-    embedding = generate_embedding(note.content)
-
-    new_note = {**note.model_dump(), "vector": embedding, "user_id": user_id}
-
-    result = await notes_collection.insert_one(new_note)
-
-    # Invalidate cache for all notes
-    await delete_cache(f"notes:{user_id}")
-
-    return {"id": str(result.inserted_id), **note.model_dump()}
+    response = await insert_note(note, user["user_id"])
+    return response
 
 
 @router.get("/notes/{note_id}", response_model=NoteResponse)
@@ -51,13 +28,11 @@ async def get_note(note_id: str, user: dict = Depends(get_current_user)):
     """
     user_id = user["user_id"]
 
-    # Try cache first
     cache_key = f"note:{user_id}:{note_id}"
     cached_note = await get_cache(cache_key)
     if cached_note:
         return cached_note
 
-    # Fetch from database
     note = await notes_collection.find_one(
         {"_id": ObjectId(note_id), "user_id": user_id}
     )
@@ -152,3 +127,20 @@ async def delete_note(note_id: str, user: dict = Depends(get_current_user)):
     await delete_cache(f"notes:{user_id}")
 
     return
+
+
+# class UserMessage(BaseModel):
+#     message: str
+
+
+# @router.post("/process")
+# async def process_message(user_msg: UserMessage):
+#     is_memory = await should_create_memory(user_msg.message)
+
+#     return {"message": "test.", "is_memory": is_memory}
+#     # if is_memory.get("is_memory", None):
+#     # else:
+#     #     return {
+#     #         "message": "Message does not qualify as a memory.",
+#     #         "is_memory": is_memory,
+#     #     }

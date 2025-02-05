@@ -2,7 +2,8 @@ import os
 import httpx
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-import nltk
+
+# import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
@@ -17,9 +18,9 @@ if not subscription_key:
 # Bing Search API endpoint
 search_url = "https://api.bing.microsoft.com/v7.0/search"
 
-nltk.download("punkt")
-nltk.download("stopwords")
-nltk.download("punkt_tab")
+# nltk.download("punkt")
+# nltk.download("stopwords")
+# nltk.download("punkt_tab")
 
 http_async_client = httpx.AsyncClient()
 
