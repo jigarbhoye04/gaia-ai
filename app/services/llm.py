@@ -1,6 +1,5 @@
 import os
 import asyncio
-import logging
 from dotenv import load_dotenv
 import httpx
 from groq import AsyncGroq

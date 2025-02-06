@@ -15,3 +15,8 @@ docker run -p 8000:8000 gaia
 > full command:
 
 docker build -t gaia .;docker tag gaia:latest aryanranderiya/gaia;docker push aryanranderiya/gaia;
+
+uv venv
+uv pip sync requirements.txt
+
+uvx ruff check

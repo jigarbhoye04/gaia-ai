@@ -57,8 +57,6 @@ async def chat_stream(
     # Helper Functions
     async def do_search(last_message, query_text):
         search_result = await perform_search(query=query_text, count=5)
-
-        print(search_result)
         last_message["content"] += (
             f"""\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1] or the number of citation but within '[] square brackets'](and the link goes here) ). A good example is [[1]](https://example.com)"""
         )
@@ -113,10 +111,6 @@ async def chat_stream(
     # search_start_time = time.time()
     # type = await classify_event_type(query_text)
     # search_end_time = time.time()
-    # print(
-    #     f"classify_event_type took {search_end_time - search_start_time:.4f} seconds",
-    #     type,
-    # )
     # if type.get("highest_label"):
     #     match type["highest_label"]:
     #         case "search web internet":

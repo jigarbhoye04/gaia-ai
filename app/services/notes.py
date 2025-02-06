@@ -47,7 +47,6 @@ async def should_create_memory(message: str) -> bool:
                     None,
                 )
 
-        print(f"{result=}")
         is_memory = result.get("is_memory")
 
         if isinstance(is_memory, bool):

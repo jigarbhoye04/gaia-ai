@@ -109,7 +109,6 @@ async def perform_fetch(url: str):
         # Join the tokens back into a string
         preprocessed_text = " ".join(tokens)
 
-        print(preprocessed_text)
         return preprocessed_text
 
     except httpx.HTTPStatusError as http_err:

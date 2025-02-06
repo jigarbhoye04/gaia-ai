@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 import httpx
 from bs4 import BeautifulSoup
@@ -7,6 +6,7 @@ from pydantic import BaseModel, HttpUrl
 from app.db.redis import get_cache, set_cache
 from app.middleware.auth import get_current_user
 from app.utils.general import get_context_window
+from app.utils.logging import get_logger
 from app.db.connect import (
     conversations_collection,
     notes_collection,
@@ -15,9 +15,7 @@ from app.db.connect import (
 
 router = APIRouter()
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+logger = get_logger(name="authentication", log_file="auth.log")
 
 #!TODO implement redis caching
 

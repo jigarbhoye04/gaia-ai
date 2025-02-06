@@ -46,7 +46,6 @@ async def search_notes_by_similarity(input_text: str, user_id: str):
     notes_result = await notes_collection.aggregate(pipeline).to_list(length=10)
     notes = [note["content"] for note in notes_result if note["score"] >= 0.6]
 
-    print(notes)
     # Step 4: Cache the result if needed (optional)
     # cache_key = f"similar_notes:{user_id}:{input_text[:20]}"  # Use a shortened version of the text for caching
     # await set_cache(cache_key, result)
@@ -86,8 +85,6 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
         ]
 
         results = await documents_collection.aggregate(pipeline).to_list(length=top_k)
-        print(query_text)
-        print(results)
 
         # documents = [document for document in results if document["score"] >= 0.6]
         return results
