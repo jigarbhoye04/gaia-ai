@@ -1,22 +1,81 @@
-### Start app using
+# Gaia FastAPI Backend
 
-> uvicorn main:app --reload
+### 🚀 **Running the App Locally**
 
-.venv/Scripts/activate; uvicorn app.main:app --reload
-.venv311/Scripts/activate; uvicorn app.main:app --reload
+```sh
+uvicorn app.main:app --reload
+```
 
-python 3.11.9
+<br/>
 
+## 🐳 **Docker Usage**
+
+### **1. Build and Push Docker Image**
+
+```sh
 docker build -t gaia .
 docker tag gaia:latest aryanranderiya/gaia
 docker push aryanranderiya/gaia
+```
+
+### **2. Run Docker Container**
+
+```sh
 docker run -p 8000:8000 gaia
+```
 
-> full command:
+## OR
 
-docker build -t gaia .;docker tag gaia:latest aryanranderiya/gaia;docker push aryanranderiya/gaia;
+### **1. Full Command (Chained Execution)**
 
-uv venv
+```sh
+docker build -t gaia .; docker tag gaia:latest aryanranderiya/gaia; docker push aryanranderiya/gaia;
+```
+
+<br/>
+<br/>
+
+---
+
+## ⚡ **Production Deployment Workflow**
+
+### **1. Switch to Production Branch**
+
+```sh
+git checkout -b prod
+git pull origin prod
+```
+
+### **2. Merge Latest Changes from `main`**
+
+```sh
+git merge main
+```
+
+### **3. Push Changes to Production**
+
+```sh
+git push origin prod
+```
+
+<br/>
+<br/>
+
+---
+
+## 📦 **UV Installation Commands**
+
+> [!NOTE]
+> Use `uv venv` **only outside Docker** when running locally.
+
+### **Install Dependencies**
+
+```sh
 uv pip sync requirements.txt
+```
 
+### **Run Ruff Linter**
+
+```sh
 uvx ruff check
+```
