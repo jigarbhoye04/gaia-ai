@@ -1,75 +1,140 @@
-import requests
-from fastapi import UploadFile, File, HTTPException, Form
-from PIL import Image
-from io import BytesIO
+# app/services/image_service_handler.py
+"""
+Service module for handling image generation and image-to-text conversion.
+"""
+
+import io
+import os
+import cloudinary
+import cloudinary.uploader
+from fastapi import HTTPException
 from app.services.llm_service import doPromptNoStream
-import httpx
-
-http_async_client = httpx.AsyncClient(timeout=100000)
-
-
-async def generate_image(imageprompt: str) -> dict:
-    url = "https://generateimage.aryanranderiya1478.workers.dev/"
-    try:
-        response = await http_async_client.post(url, json={"imageprompt": imageprompt})
-        response.raise_for_status()
-        return response.content
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        return {"error": str(e)}
+from app.services.image_service import generate_image, convert_image_to_text
+from app.utils.logging import get_logger
 
 
-def compress_image(image_bytes, sizing=0.4, quality=85):
-    try:
-        image = Image.open(BytesIO(image_bytes))
-        output_io = BytesIO()
+class ImageService:
+    """
+    Service class for handling image generation and image-to-text conversion.
+    """
 
-        new_width = int(image.width * sizing)
-        new_height = int(image.height * sizing)
-        resized_image = image.resize((new_width, new_height), Image.LANCZOS)
+    def __init__(self):
+        """
+        Initialize the ImageService, including Cloudinary configuration.
 
-        resized_image.save(output_io, format="JPEG", optimize=True, quality=quality)
-        compressed_image_bytes = output_io.getvalue()
+        Raises:
+            HTTPException: If any required Cloudinary configuration environment variables are missing.
+        """
+        self.logger = get_logger(name="image", log_file="image.log")
+        cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
+        api_key = os.getenv("CLOUDINARY_API_KEY")
+        api_secret = os.getenv("CLOUDINARY_API_SECRET")
 
-        print({"original": len(image_bytes), "compressed": len(compressed_image_bytes)})
-        return compressed_image_bytes
+        if not cloud_name or not api_key or not api_secret:
+            self.logger.error("Missing required Cloudinary configuration values.")
+            raise HTTPException(
+                status_code=500,
+                detail="Missing required Cloudinary configuration values. Ensure that CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are set.",
+            )
 
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Failed to compress image: {str(e)}"
+        cloudinary.config(
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret,
         )
 
+    async def generate_image_endpoint(self, message: str) -> dict:
+        """
+        Generate an image based on the provided message prompt and upload it to Cloudinary.
 
-async def convert_image_to_text(
-    image: UploadFile = File(...),
-    message: str = Form(...),
-) -> dict:
-    contents = await image.read()
-    url = "https://imageunderstanding.aryanranderiya1478.workers.dev/"
+        Args:
+            message (str): The user's input prompt for image generation.
 
-    try:
-        if len(contents) >= 1 * 1024 * 1024 and len(contents) <= 2 * 1024 * 1024:
-            compressed_image = compress_image(contents, sizing=0.9, quality=95)
-            contents = compressed_image
-        elif len(contents) >= 2 * 1024 * 1024 and len(contents) <= 6 * 1024 * 1024:
-            compressed_image = compress_image(contents)
-            contents = compressed_image
+        Returns:
+            dict: A dictionary containing the URL of the uploaded image and the improved prompt.
 
-        if len(contents) > 1 * 1024 * 1024:
-            return "File too large"
+        Raises:
+            HTTPException: If an error occurs during image generation or upload.
+        """
+        try:
+            self.logger.info(f"Received image generation request: {message}")
 
-        improved_prompt = await doPromptNoStream(
-            prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{
-                message
-            }'. Only give me the sentence without any additional headers or information. Be concise, but descriptive."""
-        )
+            improved_prompt = await doPromptNoStream(
+                prompt=f"""
+                    You are an AI assistant skilled at enhancing prompts for generating high-quality, detailed images. Your goal is to take a user's input and refine it by adding vivid descriptions, specific details, and any necessary context to make it more suitable for creating a visually striking and accurate image.
+                    Now, refine the following user prompt: "{message}".
+                """,
+                temperature=1,
+                max_tokens=100,
+            )
 
-        response = requests.post(
-            url, files={"image": contents}, data={"prompt": improved_prompt["response"]}
-        )
-        response.raise_for_status()
-        return response.json()
+            refined_text = ", ".join(
+                part.strip()
+                for part in [
+                    message or "",
+                    improved_prompt.get("response", "") or "",
+                ]
+                if part.strip()
+            )
 
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        return {"error": str(e)}
+            if not refined_text:
+                self.logger.error("Failed to generate an improved prompt.")
+                raise ValueError(
+                    "Failed to generate an improved prompt or fallback to the original prompt."
+                )
+
+            self.logger.info(f"Generated refined prompt: {refined_text}")
+
+            image_bytes: bytes = await generate_image(refined_text)
+
+            self.logger.info("Image generated successfully. Uploading to Cloudinary...")
+
+            # Upload the image bytes to Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                io.BytesIO(image_bytes),
+                resource_type="image",
+                public_id=f"generated_image_{refined_text[:20]}".strip(),
+                overwrite=True,
+            )
+
+            image_url = upload_result.get("secure_url")
+            self.logger.info(f"Image uploaded successfully. URL: {image_url}")
+
+            return {
+                "url": image_url,
+                "improved_prompt": improved_prompt.get("response", improved_prompt),
+            }
+
+        except Exception as e:
+            self.logger.error(
+                f"Error occurred while processing image generation: {str(e)}"
+            )
+            raise HTTPException(status_code=500, detail="Internal Server Error")
+
+    async def image_to_text_endpoint(self, message: str, file) -> dict:
+        """
+        Convert an uploaded image to text.
+
+        Args:
+            message (str): A message accompanying the image.
+            file (UploadFile): The uploaded image file.
+
+        Returns:
+            dict: A dictionary containing the extracted text from the image.
+
+        Raises:
+            HTTPException: If an error occurs during the image-to-text conversion process.
+        """
+        try:
+            self.logger.info(f"Received image-to-text request with message: {message}")
+
+            response = await convert_image_to_text(file, message)
+
+            self.logger.info("Image-to-text conversion successful.")
+            return {"response": response}
+
+        except Exception as e:
+            self.logger.error(
+                f"Error occurred while processing image-to-text: {str(e)}"
+            )
+            raise HTTPException(status_code=500, detail="Internal Server Error")

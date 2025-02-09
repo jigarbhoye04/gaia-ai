@@ -4,7 +4,7 @@ import httpx
 from datetime import datetime, timezone
 from app.services.calendar_service import fetch_calendar_events, filter_events
 from app.db.connect import calendar_collection
-from pydantic import BaseModel, Field
+from app.models.calendar_models import EventCreateRequest
 from app.utils.auth_utils import (
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
@@ -249,13 +249,6 @@ async def get_calendar_events_by_id(
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {e}")
-
-
-class EventCreateRequest(BaseModel):
-    summary: str = Field(..., title="Event Summary")
-    description: str = Field("", title="Event Description")
-    start: datetime = Field(..., title="Start Time")
-    end: datetime = Field(..., title="End Time")
 
 
 @router.post("/calendar/event")

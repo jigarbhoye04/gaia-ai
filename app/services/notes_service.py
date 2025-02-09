@@ -1,71 +1,162 @@
-from app.services.llm_service import doPromptCloudflareSDK
-import json
+"""
+Service module for handling note operations.
+"""
+
+from fastapi import HTTPException, status
+from bson import ObjectId
+from app.models.notes_models import NoteModel, NoteResponse
+from app.db.connect import notes_collection, serialize_document
+from app.db.redis import get_cache, set_cache, delete_cache
+from app.utils.notes import insert_note
+from app.utils.logging import get_logger
 
 
-async def should_create_memory(message: str) -> bool:
+class NotesService:
     """
-    Use a Hugging Face model to classify if a message should be stored as a memory.
+    Service class for managing note operations.
     """
-    try:
-        result = await doPromptCloudflareSDK(
-            prompt=f""" This is the message: {message}""",
-            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-            system_prompt=f"""
-            You are an intelligent AI model designed to determine whether a message should be remembered by an AI assistant.
 
-            Consider **any** message that might be useful for future interactions. Focus on statements made by the user, not on questions. This may include, but is not limited to:
-            - Personal details, preferences, or facts about the user.
-            - Important events, reminders, or to-do tasks.
-            - Information about relationships, conversations, or interactions.
-            - Any other context that might improve the assistant’s ability to personalize responses.
+    def __init__(self) -> None:
+        """
+        Initialize the NotesService with a logger instance.
+        """
+        self.logger = get_logger(name="notes", log_file="notes.log")
 
-            Instead of following a strict list, use your reasoning ability to determine if this message contains information **that would be valuable for future conversations**.
+    async def create_note(self, note: NoteModel, user_id: str) -> NoteResponse:
+        """
+        Create a new note for the specified user.
 
-            Return **ONLY** a JSON response in this exact format:
-            ```json
-            {{
-            "is_memory": true  // or false,
-            "content":"A description of the main content of the note of the user in HTML format with proper formatting (only use the html tags where necessary for specific elements). In first person perspective of the user.",
-            "plaintext":"A description of the main content of the user's note of the user in plaintext. In first person perspective of the user. This will be the same as the content but with the html tags parsed and converted to a noral string",
-            }} 
-            ```
-            STRICT RULES:
-            - Do NOT include any text other than the JSON object.
-            - Ensure valid JSON syntax.
-            - Provide the JSON in a single line with no new lines or pretty printing.
-            - Only include the content and the plaintext if the is_memory is True, otherwise just do them as None
-            """,
+        Args:
+            note (NoteModel): The note data.
+            user_id (str): The ID of the authenticated user.
+
+        Returns:
+            NoteResponse: The created note.
+        """
+        self.logger.info("Creating a new note.")
+        response = await insert_note(note, user_id)
+        return response
+
+    async def get_note(self, note_id: str, user_id: str) -> NoteResponse:
+        """
+        Retrieve a single note by its ID for the specified user.
+
+        Args:
+            note_id (str): The note's ID.
+            user_id (str): The ID of the authenticated user.
+
+        Returns:
+            NoteResponse: The retrieved note.
+
+        Raises:
+            HTTPException: If the note is not found.
+        """
+        self.logger.info(f"Retrieving note with id: {note_id} for user: {user_id}")
+        cache_key = f"note:{user_id}:{note_id}"
+        cached_note = await get_cache(cache_key)
+        if cached_note:
+            self.logger.info("Note found in cache.")
+            return cached_note
+
+        note = await notes_collection.find_one(
+            {"_id": ObjectId(note_id), "user_id": user_id}
         )
-
-        if isinstance(result, str):
-            try:
-                result = json.loads(result.replace("\n", ""))
-            except json.JSONDecodeError:
-                return (
-                    False,
-                    None,
-                    None,
-                )
-
-        is_memory = result.get("is_memory")
-
-        if isinstance(is_memory, bool):
-            return (
-                is_memory,
-                result.get("plaintext"),
-                result.get("content"),
+        if not note:
+            self.logger.error("Note not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
             )
 
-        else:
-            return (
-                False,
-                None,
-                None,
+        serialized_note = serialize_document(note)
+        await set_cache(cache_key, serialized_note)
+        self.logger.info("Note retrieved from DB and cached.")
+        return serialized_note
+
+    async def get_all_notes(self, user_id: str) -> list[NoteResponse]:
+        """
+        Retrieve all notes for the specified user.
+
+        Args:
+            user_id (str): The ID of the authenticated user.
+
+        Returns:
+            list[NoteResponse]: A list of the user's notes.
+        """
+        self.logger.info(f"Retrieving all notes for user: {user_id}")
+        cache_key = f"notes:{user_id}"
+        cached_notes = await get_cache(cache_key)
+        if cached_notes:
+            self.logger.info("All notes found in cache.")
+            return cached_notes
+
+        notes = await notes_collection.find({"user_id": user_id}).to_list(length=None)
+        serialized_notes = [serialize_document(note) for note in notes]
+        await set_cache(cache_key, serialized_notes)
+        self.logger.info("Notes retrieved from DB and cached.")
+        return serialized_notes
+
+    async def update_note(
+        self, note_id: str, note: NoteModel, user_id: str
+    ) -> NoteResponse:
+        """
+        Update an existing note by its ID for the specified user.
+
+        Args:
+            note_id (str): The ID of the note to update.
+            note (NoteModel): The updated note data.
+            user_id (str): The ID of the authenticated user.
+
+        Returns:
+            NoteResponse: The updated note.
+
+        Raises:
+            HTTPException: If the note is not found.
+        """
+        self.logger.info(f"Updating note with id: {note_id} for user: {user_id}")
+        update_data = {k: v for k, v in note.model_dump().items() if v is not None}
+
+        result = await notes_collection.update_one(
+            {"_id": ObjectId(note_id), "user_id": user_id}, {"$set": update_data}
+        )
+        if result.matched_count == 0:
+            self.logger.error("Note not found for update.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
             )
 
-    except Exception:
-        return (
-            False,
-            None,
-            None,
+        updated_note = await notes_collection.find_one(
+            {"_id": ObjectId(note_id), "user_id": user_id}, {"note": 1}
         )
+        serialized_note = serialize_document(updated_note)
+
+        # Invalidate caches for this note and for all notes of the user
+        await delete_cache(f"note:{user_id}:{note_id}")
+        await delete_cache(f"notes:{user_id}")
+        self.logger.info("Note updated and cache invalidated.")
+        return serialized_note
+
+    async def delete_note(self, note_id: str, user_id: str) -> None:
+        """
+        Delete a note by its ID for the specified user.
+
+        Args:
+            note_id (str): The ID of the note to delete.
+            user_id (str): The ID of the authenticated user.
+
+        Raises:
+            HTTPException: If the note is not found.
+        """
+        self.logger.info(f"Deleting note with id: {note_id} for user: {user_id}")
+        result = await notes_collection.delete_one(
+            {"_id": ObjectId(note_id), "user_id": user_id}
+        )
+        if result.deleted_count == 0:
+            self.logger.error("Note not found for deletion.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Note not found"
+            )
+
+        # Invalidate caches for this note and for all notes of the user
+        await delete_cache(f"note:{user_id}:{note_id}")
+        await delete_cache(f"notes:{user_id}")
+        self.logger.info("Note deleted and cache invalidated.")

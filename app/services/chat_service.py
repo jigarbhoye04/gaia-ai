@@ -11,7 +11,7 @@ from app.db.redis import set_cache, get_cache, delete_cache
 from app.services.search_service import perform_search, perform_fetch
 from app.services.llm_service import doPrompWithStream, doPromptNoStream
 from app.utils.embedding_utils import search_notes_by_similarity, query_documents
-from app.services.notes_service import should_create_memory
+from app.utils.notes_utils import should_create_memory
 from app.utils.notes import insert_note
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.models.notes_models import NoteModel

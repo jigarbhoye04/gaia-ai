@@ -1,5 +1,4 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form
-from pydantic import BaseModel
 import datetime
 from app.db.connect import documents_collection
 from app.utils.notes import generate_embedding
@@ -8,23 +7,10 @@ from app.api.v1.dependencies.auth import get_current_user
 from app.services.llm_service import doPromptNoStream
 from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
+from app.models.document_modles import DocumentUploadResponse
 import fitz
 
 router = APIRouter()
-
-
-class DocumentUploadResponse(BaseModel):
-    conversation_id: str
-    message: str
-
-
-class DocumentQueryRequest(BaseModel):
-    message: str
-    conversation_id: str
-
-
-class DocumentUploadRequest(BaseModel):
-    conversation_id: str
 
 
 @router.post(

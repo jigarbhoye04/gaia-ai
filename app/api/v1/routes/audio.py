@@ -1,19 +1,13 @@
 from fastapi.responses import Response
-from pydantic import BaseModel
 import base64
 from app.db.redis import get_cache, set_cache
 from app.utils.logging import get_logger
 from fastapi import APIRouter, WebSocket
 from app.services.audio_service import TTSService, VoskTranscriber
+from app.models.audio_models import TTSRequest
 
 router = APIRouter()
 logger = get_logger(name="app", log_file="app.log")
-
-
-class TTSRequest(BaseModel):
-    text: str
-    language_code: str = "en-GB"
-    voice_name: str = "en-GB-Journey-F"
 
 
 tts_service = TTSService()
