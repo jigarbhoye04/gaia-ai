@@ -2,8 +2,8 @@ import logging
 import time
 import httpx
 from fastapi import Cookie, HTTPException
-from app.db.connect import users_collection
-from app.db.redis import set_cache, get_cache, delete_cache
+from app.db.collections import users_collection
+from app.db.redis import set_cache, get_cache
 from typing import Optional
 from app.utils.auth_utils import (
     GOOGLE_CLIENT_ID,

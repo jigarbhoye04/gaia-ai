@@ -1,13 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form
 import datetime
-from app.db.connect import documents_collection
+from app.db.collections import documents_collection
 from app.utils.notes import generate_embedding
 from fastapi import Depends
 from app.api.v1.dependencies.auth import get_current_user
 from app.services.llm_service import doPromptNoStream
 from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
-from app.models.document_modles import DocumentUploadResponse
+from app.models.document_moels import DocumentUploadResponse
 import fitz
 
 router = APIRouter()

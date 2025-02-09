@@ -1,7 +1,6 @@
-from app.db.connect import notes_collection
 from app.utils.notes import generate_embedding
 from fastapi import HTTPException
-from app.db.connect import documents_collection
+from app.db.collections import documents_collection, notes_collection
 from sentence_transformers import SentenceTransformer
 
 

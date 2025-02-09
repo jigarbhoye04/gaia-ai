@@ -5,7 +5,8 @@ Service module for handling note operations.
 from fastapi import HTTPException, status
 from bson import ObjectId
 from app.models.notes_models import NoteModel, NoteResponse
-from app.db.connect import notes_collection, serialize_document
+from app.db.collections import notes_collection
+from app.db.utils import serialize_document
 from app.db.redis import get_cache, set_cache, delete_cache
 from app.utils.notes import insert_note
 from app.utils.logging import get_logger

@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.db.connect import users_collection
+from app.db.collections import users_collection
 
 
 async def store_user_info(name: str, email: str, picture: str):

@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from dotenv import load_dotenv
 from passlib.context import CryptContext
 import jwt
-from app.db.connect import users_collection
+from app.db.collections import users_collection
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 load_dotenv()

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.db.connect import database
+from app.db.collections import feedback_collection
 from app.schemas.common_schema import FeedbackFormData
 
 router = APIRouter()
@@ -7,11 +7,9 @@ router = APIRouter()
 
 @router.post("/feedback")
 async def submitFeedbackForm(formData: FeedbackFormData):
-    collection = database["feedback_form"]
-
     try:
         item_dict = formData.dict()
-        result = await collection.insert_one(item_dict)
+        result = await feedback_collection.insert_one(item_dict)
 
         if result.inserted_id:
             return {"message": "Feedback Form Data inserted successfully"}

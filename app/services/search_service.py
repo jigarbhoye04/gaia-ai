@@ -1,137 +1,211 @@
-import os
+"""
+Service module for search operations and URL metadata fetching.
+"""
+
 import httpx
-from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-
-load_dotenv()
-
-subscription_key = os.getenv("BING_API_KEY_1")
-if not subscription_key:
-    raise EnvironmentError("Missing BING_SUBSCRIPTION_KEY environment variable.")
-
-search_url = "https://api.bing.microsoft.com/v7.0/search"
-
-http_async_client = httpx.AsyncClient()
+from fastapi import HTTPException, status
+from app.db.redis import get_cache, set_cache
+from app.db.utils import serialize_document
+from app.models.search_models import URLResponse
+from app.utils.general_utils import get_context_window
+from app.utils.logging import get_logger
+from app.db.collections import (
+    conversations_collection,
+    notes_collection,
+)
 
 
-async def perform_search(query: str, count=7):
-    headers = {"Ocp-Apim-Subscription-Key": subscription_key}
-    params = {
-        "q": query,
-        "count": count,
-        # "responseFilter": "webPages,images",
-    }
+class Search:
+    """
+    A utility class to handle search operations and fetching URL metadata.
+    """
 
-    try:
-        response = await http_async_client.get(
-            search_url, headers=headers, params=params
-        )
-        response.raise_for_status()
-        data = response.json()
+    def __init__(self) -> None:
+        """
+        Initialize the Search class and configure its logger.
+        """
+        self.logger = get_logger(name="search", log_file="search.log")
 
-        # Extract useful information
-        results = []
-        for item in data.get("webPages", {}).get("value", []):
-            results.append(
+    async def search_messages(self, query: str, user_id: str) -> dict:
+        """
+        Search for messages, conversations, and notes for a given user that match the query.
+
+        Args:
+            query (str): The search text.
+            user_id (str): The ID of the authenticated user.
+
+        Returns:
+            dict: A dictionary containing lists of matched messages, conversations, and notes.
+
+        Raises:
+            HTTPException: If an error occurs during the search process.
+        """
+        try:
+            results = await conversations_collection.aggregate(
+                [
+                    {"$match": {"user_id": user_id}},
+                    {
+                        "$facet": {
+                            "messages": [
+                                {"$unwind": "$messages"},
+                                {
+                                    "$match": {
+                                        "$or": [
+                                            {
+                                                "messages.response": {
+                                                    "$regex": query,
+                                                    "$options": "i",
+                                                }
+                                            },
+                                            {
+                                                "messages.pageFetchURL": {
+                                                    "$regex": query,
+                                                    "$options": "i",
+                                                }
+                                            },
+                                        ]
+                                    }
+                                },
+                                {
+                                    "$project": {
+                                        "_id": 0,
+                                        "conversation_id": 1,
+                                        "message": "$messages",
+                                    }
+                                },
+                            ],
+                            "conversations": [
+                                {
+                                    "$match": {
+                                        "description": {
+                                            "$regex": query,
+                                            "$options": "i",
+                                        }
+                                    }
+                                },
+                                {
+                                    "$project": {
+                                        "_id": 0,
+                                        "conversation_id": 1,
+                                        "description": 1,
+                                        "conversation": "$conversations",
+                                    }
+                                },
+                            ],
+                        }
+                    },
+                ]
+            ).to_list(None)
+
+            notes_results = await notes_collection.aggregate(
+                [
+                    {
+                        "$match": {
+                            "user_id": user_id,
+                            "plaintext": {"$regex": query, "$options": "i"},
+                        }
+                    },
+                    {
+                        "$project": {
+                            "id": {"$toString": "$_id"},
+                            "note_id": 1,
+                            "plaintext": 1,
+                        }
+                    },
+                ]
+            ).to_list(None)
+
+            messages = results[0]["messages"] if results else []
+            conversations = results[0]["conversations"] if results else []
+            notes = notes_results if notes_results else []
+
+            for message in messages:
+                message["snippet"] = get_context_window(
+                    message["message"]["response"], query, chars_before=30
+                )
+
+            notes_with_snippets = [
                 {
-                    "title": item.get("name"),
-                    "url": item.get("url"),
-                    "snippet": item.get("snippet"),
-                    "source": item.get("siteName"),
-                    "date": item.get("dateLastCrawled"),
+                    **serialize_document(note),
+                    "snippet": get_context_window(
+                        note["plaintext"], query, chars_before=30
+                    ),
                 }
+                for note in notes_results
+            ]
+
+            return {
+                "messages": messages,
+                "conversations": conversations,
+                "notes": notes_with_snippets,
+            }
+        except Exception as e:
+            self.logger.error(f"Error in search_messages: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to perform search: {str(e)}",
             )
 
-        # Extract images
-        images = []
-        # for img in data.get("images", {}).get("value", []):
-        #     images.append(
-        #         {
-        #             "image_url": img.get("contentUrl"),
-        #             "thumbnail": img.get("thumbnailUrl"),
-        #             "title": img.get("name"),
-        #             "source": img.get("hostPageUrl"),
-        #         }
-        #     )
+    async def fetch_url_metadata(self, url: str) -> URLResponse:
+        """
+        Fetch metadata from the provided URL, including title, description, favicon, and website name.
 
-        print(f'"results": {results}, "images": {images}')
+        Args:
+            url (str): The URL to fetch metadata from.
 
-        return {"results": results, "images": images}
+        Returns:
+            URLResponse: An object containing the URL metadata.
 
-    except httpx.HTTPStatusError as http_err:
-        return {"error": f"HTTP error occurred: {http_err}"}
-    except httpx.RequestError as req_err:
-        return {"error": f"Request error occurred: {req_err}"}
-    except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        Raises:
+            HTTPException: If the URL data cannot be fetched or processed.
+        """
+        cache_key = f"url_metadata:{str(url)}"
+        cached_data = await get_cache(cache_key)
 
+        if cached_data:
+            return URLResponse(**cached_data)
 
-async def perform_fetch(url: str):
-    try:
-        # Send HTTP request and get the response
-        response = await http_async_client.get(url)
-        response.raise_for_status()  # Raise an exception for bad status codes
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(str(url))
+                response.raise_for_status()
 
-        # Parse the HTML content using BeautifulSoup
-        soup = BeautifulSoup(response.text, "html.parser")
+            soup = BeautifulSoup(response.text, "html.parser")
 
-        # Remove all script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
+            title = soup.title.string if soup.title else None
+            description_tag = soup.find("meta", attrs={"name": "description"})
+            description = description_tag["content"] if description_tag else None
+            favicon_tag = soup.find("link", rel="icon")
+            favicon = favicon_tag["href"] if favicon_tag else None
 
-        # Get the text from the HTML content
-        text = soup.get_text()
+            # Extract website name from Open Graph metadata
+            site_name_tag = soup.find("meta", property="og:site_name")
+            website_name = site_name_tag["content"] if site_name_tag else None
 
-        # Break the text into lines and remove leading and trailing whitespace
-        lines = (line.strip() for line in text.splitlines())
+            metadata = {
+                "title": title,
+                "description": description,
+                "favicon": favicon,
+                "website_name": website_name,
+            }
+            await set_cache(cache_key, metadata, ttl=3600)
 
-        # Break multi-headlines into a line each
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-
-        # Drop blank lines
-        text = "\n".join(chunk for chunk in chunks if chunk)
-
-        # Convert to lowercase
-        text = text.lower()
-
-        # Remove special characters and numbers
-        # text = re.sub(r"[^a-zA-Z\s]", "", text)
-
-        # Tokenize the text
-        tokens = word_tokenize(text)
-
-        # Remove stopwords
-        stop_words = set(stopwords.words("english"))
-        tokens = [word for word in tokens if word not in stop_words]
-
-        # Join the tokens back into a string
-        preprocessed_text = " ".join(tokens)
-
-        return preprocessed_text
-
-    except httpx.HTTPStatusError as http_err:
-        error = f"HTTP error occurred: {http_err}"
-        return error
-    except httpx.RequestError as req_err:
-        error = f"HTTP Request error occurred: {req_err}"
-        return error
-    except Exception as e:
-        error = f"An unexpected error occurred: {e}"
-        return error
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        query = "what is the weather in surat?"
-        result = await perform_search(query)
-        for entry in result:
-            print(entry)
-
-    asyncio.run(main())
-
-
-
+            return URLResponse(**metadata)
+        except httpx.RequestError as exc:
+            self.logger.error(f"Request error: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to fetch the URL.",
+            )
+        except httpx.HTTPStatusError as exc:
+            self.logger.error(f"HTTP error: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Page not found."
+            )
+        except Exception as exc:
+            self.logger.error(f"General error: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred while processing the request.",
+            )

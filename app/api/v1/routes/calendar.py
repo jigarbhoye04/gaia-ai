@@ -3,7 +3,7 @@ from typing import Optional, List
 import httpx
 from datetime import datetime, timezone
 from app.services.calendar_service import fetch_calendar_events, filter_events
-from app.db.connect import calendar_collection
+from app.db.collections import calendar_collection
 from app.models.calendar_models import EventCreateRequest
 from app.utils.auth_utils import (
     GOOGLE_TOKEN_URL,

@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 
 http_async_client = httpx.AsyncClient()
 
+
 def filter_events(events):
     """Helper function to filter out unwanted events"""
     return [

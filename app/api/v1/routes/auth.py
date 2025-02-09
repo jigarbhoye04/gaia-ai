@@ -8,7 +8,7 @@ from datetime import timedelta, timezone, datetime
 from app.utils.auth_utils import encode_jwt, authenticate_user, hash_password
 from app.schemas.auth_schema import SignupData, LoginData
 from app.api.v1.dependencies.auth import get_current_user
-from app.db.connect import users_collection
+from app.db.collections import users_collection
 
 load_dotenv()
 router = APIRouter()

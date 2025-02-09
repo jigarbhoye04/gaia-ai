@@ -2,6 +2,7 @@ import PyPDF2
 import io
 import fitz
 
+
 def convert_pdf_to_text(pdf_file, max_chars=5500):
     text = ""
     pdf_reader = PyPDF2.PdfReader(io.BytesIO(pdf_file))
@@ -15,7 +16,6 @@ def convert_pdf_to_text(pdf_file, max_chars=5500):
             break
 
     return text
-
 
 
 def extract_text_from_pdf(content):

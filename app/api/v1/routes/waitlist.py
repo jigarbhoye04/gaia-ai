@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.db.connect import database
+from app.db.mongodb import database
 from app.schemas.common_schema import WaitlistItem
 
 router = APIRouter()

@@ -2,7 +2,7 @@ from typing import Dict
 from fastapi import HTTPException
 from app.models.notes_models import NoteModel
 from app.utils.embedding_utils import EmbeddingModel
-from app.db.connect import notes_collection
+from app.db.collections import notes_collection
 from app.db.redis import delete_cache
 
 
