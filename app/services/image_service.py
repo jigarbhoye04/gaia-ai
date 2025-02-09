@@ -8,9 +8,9 @@ import os
 import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException
-from app.services.llm_service import doPromptNoStream
 from app.services.image_service import generate_image, convert_image_to_text
 from app.utils.logging import get_logger
+from app.services.llm_service import LLMService
 
 
 class ImageService:
@@ -26,6 +26,8 @@ class ImageService:
             HTTPException: If any required Cloudinary configuration environment variables are missing.
         """
         self.logger = get_logger(name="image", log_file="image.log")
+        self.llm_service = LLMService()
+
         cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
         api_key = os.getenv("CLOUDINARY_API_KEY")
         api_secret = os.getenv("CLOUDINARY_API_SECRET")
@@ -59,7 +61,7 @@ class ImageService:
         try:
             self.logger.info(f"Received image generation request: {message}")
 
-            improved_prompt = await doPromptNoStream(
+            improved_prompt = await self.llm_service.do_prompt_no_stream(
                 prompt=f"""
                     You are an AI assistant skilled at enhancing prompts for generating high-quality, detailed images. Your goal is to take a user's input and refine it by adding vivid descriptions, specific details, and any necessary context to make it more suitable for creating a visually striking and accurate image.
                     Now, refine the following user prompt: "{message}".

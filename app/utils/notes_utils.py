@@ -1,5 +1,8 @@
-from app.services.llm_service import doPromptCloudflareSDK
 import json
+
+from app.services.llm_service import LLMService
+
+llm_service = LLMService()
 
 
 async def should_create_memory(message: str) -> bool:
@@ -7,7 +10,7 @@ async def should_create_memory(message: str) -> bool:
     Use a Hugging Face model to classify if a message should be stored as a memory.
     """
     try:
-        result = await doPromptCloudflareSDK(
+        result = await llm_service.do_prompt_cloudflare_sdk(
             prompt=f""" This is the message: {message}""",
             model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
             system_prompt="""

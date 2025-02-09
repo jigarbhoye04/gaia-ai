@@ -1,16 +1,52 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form
+from datetime import timezone
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form, Depends
 import datetime
+import fitz
 from app.db.collections import documents_collection
 from app.utils.notes import generate_embedding
-from fastapi import Depends
-from app.api.v1.dependencies.auth import get_current_user
-from app.services.llm_service import doPromptNoStream
+from app.services.llm_service import LLMService
 from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
 from app.models.document_moels import DocumentUploadResponse
-import fitz
+from app.api.v1.dependencies.auth import get_current_user
 
 router = APIRouter()
+llm_service = LLMService()
+
+
+def extract_text(file: UploadFile, content: bytes) -> str:
+    """Extract text from the uploaded file. Supports PDF and plain text files."""
+    if file.filename.endswith(".pdf"):
+        doc = fitz.open(stream=content, filetype="pdf")
+        return "".join(page.get_text() for page in doc)
+    else:
+        return content.decode("utf-8")
+
+
+async def process_document_upload(
+    file: UploadFile, user: dict, conversation_id: str, upload_date: datetime.datetime
+) -> str:
+    """
+    Read file content, extract text, split into chunks, generate embeddings,
+    and insert each chunk into the documents collection.
+    Returns the full extracted text.
+    """
+    content_bytes = await file.read()
+    text = extract_text(file, content_bytes)
+    chunks = split_text_into_chunks(text)
+    for chunk in chunks:
+        embedding = generate_embedding(chunk)
+        await documents_collection.insert_one(
+            {
+                "title": file.filename,
+                "content": chunk,
+                "user_id": user.get("user_id"),
+                "conversation_id": conversation_id,
+                "upload_date": upload_date,
+                "embedding": embedding,
+            }
+        )
+    return text
 
 
 @router.post(
@@ -24,39 +60,11 @@ async def upload_document(
     file: UploadFile = File(...),
 ):
     """
-    Upload a document, generate embeddings for each chunk, and associate it with a unique conversation ID.
+    Upload a document, generate embeddings for each chunk, and associate it with a conversation ID.
     """
     try:
-        content = await file.read()
-
-        # Extract text from PDF or decode plain text file
-        if file.filename.endswith(".pdf"):
-            doc = fitz.open(stream=content, filetype="pdf")
-            text = ""
-            for page in doc:
-                text += page.get_text()
-        else:
-            text = content.decode("utf-8")
-
-        # Chunk the document
-        chunks = split_text_into_chunks(text)
-
-        # Process each chunk individually
-        for chunk_text in chunks:
-            embedding = generate_embedding(chunk_text)
-
-            # Insert each chunk as a separate document with embedding
-            await documents_collection.insert_one(
-                {
-                    "title": file.filename,
-                    "content": chunk_text,
-                    "user_id": user.get("user_id"),
-                    "conversation_id": conversation_id,
-                    "upload_date": datetime.datetime.utcnow(),
-                    "embedding": embedding,
-                }
-            )
-
+        upload_date = datetime.datetime.now(timezone.utc)
+        _ = await process_document_upload(file, user, conversation_id, upload_date)
         return {
             "message": "Document uploaded and chunked successfully.",
         }
@@ -75,62 +83,28 @@ async def query_with_document(
     file: UploadFile = File(...),
 ):
     try:
-        # Step 1: Process the uploaded document (if any)
-        content = await file.read()
+        upload_date = datetime.datetime.now(timezone.utc)
+        text = await process_document_upload(file, user, conversation_id, upload_date)
 
-        # Extract text from PDF or decode plain text file
-        if file.filename.endswith(".pdf"):
-            doc = fitz.open(stream=content, filetype="pdf")
-            text = ""
-            for page in doc:
-                text += page.get_text()
-        else:
-            text = content.decode("utf-8")
-
-        # Step 2: Split the document into chunks
-        chunks = split_text_into_chunks(text)
-
-        # Step 3: Upload the chunks and generate embeddings for each chunk
-        for chunk_text in chunks:
-            embedding = generate_embedding(chunk_text)
-
-            # Insert each chunk as a separate document with embedding
-            await documents_collection.insert_one(
-                {
-                    "title": file.filename,
-                    "content": chunk_text,
-                    "user_id": user.get("user_id"),
-                    "conversation_id": conversation_id,
-                    "upload_date": datetime.datetime.utcnow(),
-                    "embedding": embedding,
-                }
-            )
-
-        print(f"{len(text)=}")
         if len(text) > 10000:
-            # Query for the most relevant chunks for the provided conversation ID
             documents = await query_documents(
                 message, conversation_id, user.get("user_id")
             )
-
-            content = [document["content"] for document in documents]
-            titles = [document["title"] for document in documents]
-            prompt = f"Question: {message}\n\nContext from documents uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
+            content_list = [doc["content"] for doc in documents]
+            titles = [doc["title"] for doc in documents]
+            prompt = (
+                f"Question: {message}\n\nContext from documents uploaded by the user:\n"
+                f"{ {'document_names': titles, 'content': content_list} }"
+            )
         else:
-            documents = await query_documents(
-                message, conversation_id, user.get("user_id")
+            prompt = (
+                f"Question: {message}\n\nContext from documents uploaded by the user:\n"
+                f"{ {'document_name': file.filename, 'content': text} }"
             )
-
-            prompt = f"Question: {message}\n\nContext from documents uploaded by the user:\n{ {'document_name': file.filename, 'content': text} }"
-
-        print(content)
-
-        response = await doPromptNoStream(prompt)
-
+        response = await llm_service.do_prompt_no_stream(prompt)
         return {
             "response": response,
             "message": "Document uploaded and query processed successfully.",
         }
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

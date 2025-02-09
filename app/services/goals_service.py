@@ -1,6 +1,7 @@
 import json
-from app.services.llm_service import doPromptCloudflareSDK, doPrompWithStream
+from app.services.llm_service import LLMService
 
+llm_service = LLMService()
 
 jsonstructure = {
     "title": "Title of the goal",
@@ -68,7 +69,9 @@ async def generate_roadmap_with_llm(title: str) -> dict:
     """
 
     try:
-        response = await doPromptCloudflareSDK(prompt=detailed_prompt, max_tokens=2048)
+        response = await llm_service.do_prompt_cloudflare_sdk(
+            prompt=detailed_prompt, max_tokens=2048
+        )
         return json.loads(response)
         # return response.get("response", "{}")
     except Exception as e:
@@ -91,7 +94,7 @@ async def generate_roadmap_with_llm_stream(title: str):
     """
 
     try:
-        async for chunk in doPrompWithStream(
+        async for chunk in LLMService.do_promp_with_stream(
             messages=[{"role": "user", "content": detailed_prompt}],
             max_tokens=4096,
         ):

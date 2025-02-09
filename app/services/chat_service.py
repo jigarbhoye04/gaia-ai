@@ -233,7 +233,7 @@ class ChatService:
 
         messages = []
         for message in request.messages:
-            message_dict = message.dict(exclude={"loading"})
+            message_dict = message.model_dump(exclude={"loading"})
             message_dict = {
                 key: value for key, value in message_dict.items() if value is not None
             }

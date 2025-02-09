@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from app.db.collections import users_collection
 
 
@@ -13,7 +13,7 @@ async def store_user_info(name: str, email: str, picture: str):
                 "$set": {
                     "name": name,
                     "picture": picture,
-                    "updated_at": datetime.utcnow(),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )
@@ -24,7 +24,7 @@ async def store_user_info(name: str, email: str, picture: str):
             "name": name,
             "email": email,
             "picture": picture,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(timezone.utc),
         }
         result = await users_collection.insert_one(user_data)
         return result.inserted_id
