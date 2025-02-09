@@ -3,14 +3,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 from app.utils.nltk_utils import download_nltk_resources
 from app.api.v1 import api_router
+from app.api.v1.routes import (
+    general,
+)
 
-# Load environment variables
 load_dotenv()
 
-# Get logger instance
 logger = get_logger(name="main", log_file="app.log")
 
 
@@ -48,8 +49,10 @@ def create_app() -> FastAPI:
         description="The AI assistant backend",
     )
 
-    # Include the API router (all endpoints) with a prefix.
     app.include_router(api_router, prefix="/api/v1")
+    api_router.include_router(
+        general.router,
+    )
 
     # Add CORS middleware.
     app.add_middleware(
@@ -70,6 +73,15 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
+
+@app.get("/")
+@app.get("/ping")
+@app.get("/api/v1/")
+@app.get("/api/v1/ping")
+def main_route():
+    return {"hello": "world"}
+
 
 if __name__ == "__main__":
     logger.info("Launching the GAIA API server...")

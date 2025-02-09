@@ -6,7 +6,7 @@ router = APIRouter()
 
 
 @router.get("/waitlist-members")
-async def getWaitlistMembers():
+async def get_waitlist_members():
     emails = set()
     cursor = waitlist_collection.find()
     members = await cursor.to_list(length=None)

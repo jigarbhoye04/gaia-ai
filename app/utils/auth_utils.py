@@ -1,6 +1,8 @@
 import os
 import re
 from datetime import timedelta, datetime, timezone
+from re import Match
+
 from fastapi import HTTPException, status
 from dotenv import load_dotenv
 from passlib.context import CryptContext
@@ -25,7 +27,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def validate_password(password: str) -> bool:
+def validate_password(password: str) -> Match[str] | None:
     # Strong password regex: minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character
     return re.match(
         r"^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$", password

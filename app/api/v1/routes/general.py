@@ -1,10 +1,12 @@
 from fastapi import APIRouter
 
-
 router = APIRouter()
 
 
-@router.get("/ping", tags=["Health"])
-@router.get("/", tags=["Health"])
-async def ping():
+async def helper_function():
     return {"message": "Welcome to the GAIA API!"}
+
+
+@router.get("/ping")
+async def ping():
+    return helper_function

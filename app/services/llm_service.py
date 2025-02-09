@@ -1,10 +1,11 @@
+# app/services/llm_service.py
 import os
 import asyncio
 import httpx
 import json
 from dotenv import load_dotenv
 from groq import AsyncGroq
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 
 # Load environment variables
 load_dotenv()
@@ -47,15 +48,6 @@ class LLMService:
     ) -> dict:
         """
         Send a prompt to the LLM API without streaming.
-
-        Args:
-            prompt (str): The prompt to send.
-            temperature (float): Sampling temperature for the response.
-            max_tokens (int): Maximum tokens for the response.
-            model (str): Model identifier.
-
-        Returns:
-            dict: Parsed JSON response or an error message.
         """
         try:
             response = await self.http_async_client.post(
@@ -95,16 +87,6 @@ class LLMService:
     ) -> str:
         """
         Send a prompt using the Cloudflare SDK.
-
-        Args:
-            prompt (str): The prompt to send.
-            temperature (float): Sampling temperature for the response.
-            max_tokens (int): Maximum tokens for the response.
-            system_prompt (str): System prompt to include.
-            model (str): Model identifier.
-
-        Returns:
-            str: The response content, or "{}" if an error occurs.
         """
         if system_prompt is None:
             system_prompt = f"""
@@ -121,7 +103,7 @@ class LLMService:
         headers = {"Authorization": f"Bearer {self.AUTH_TOKEN}"}
         json_data = {
             "max_tokens": max_tokens,
-            temperature: temperature,  # Note: This parameter format is retained for compatibility.
+            "temperature": temperature,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt},
@@ -151,7 +133,7 @@ class LLMService:
             logger.error(f"An unexpected error occurred: {err}")
             return "{}"
 
-    async def do_promp_with_stream(
+    async def do_prompt_with_stream(
         self,
         messages: list,
         temperature: float = 0.6,
@@ -161,16 +143,6 @@ class LLMService:
     ):
         """
         Send a prompt to the LLM API with streaming enabled.
-
-        Args:
-            messages (list): List of message objects.
-            temperature (float): Sampling temperature.
-            max_tokens (int): Maximum tokens.
-            model (str): Model identifier.
-            intent: Optional intent parameter.
-
-        Yields:
-            str: Chunks of the response from the server.
         """
         json_data = {
             "stream": "true",
@@ -188,7 +160,7 @@ class LLMService:
                     if line.strip():
                         logger.debug(f"Stream line: {line}")
                         if line == "data: [DONE]":
-                            # Here you can yield additional data if needed (as in your original function).
+                            # Yield any additional required data, then mark the stream as done.
                             yield f"""data: {
                                 json.dumps(
                                     {
@@ -219,16 +191,6 @@ class LLMService:
     ):
         """
         Send a chat completion request to the GROQ API with optional streaming.
-
-        Args:
-            messages (list): List of messages with roles and content.
-            model (str): Model identifier.
-            max_tokens (int): Maximum tokens for completion.
-            temperature (float): Sampling temperature.
-            stream (bool): Whether to stream the response.
-
-        Yields:
-            str: Chunks of the streamed response if stream=True, or the full response if stream=False.
         """
         try:
             response = await self.groq_client.chat.completions.create(
@@ -250,3 +212,7 @@ class LLMService:
             yield f"data: An unexpected error occurred: {e}\n"
         finally:
             yield "data: [DONE]\n\n"
+
+
+# Instantiate the service once and export it as a singleton
+llm_service = LLMService()

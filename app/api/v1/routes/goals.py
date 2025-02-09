@@ -1,25 +1,29 @@
 import json
-from fastapi import HTTPException, APIRouter, WebSocket, WebSocketDisconnect, Depends
-from fastapi.websockets import WebSocketState
+from typing import List, Union
+
 from bson import ObjectId
-from datetime import datetime
-from typing import Union, List
-from app.db.collections import goals_collection
-from app.db.redis import set_cache, delete_cache, get_cache
-from app.services.goals_service import generate_roadmap_with_llm_stream
-from app.utils.goals_utils import goal_helper
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi.websockets import WebSocketState
+
 from app.api.v1.dependencies.auth import get_current_user
-from app.utils.logging import get_logger
+from app.db.collections import goals_collection
 from app.models.goals_models import (
     GoalCreate,
     GoalResponse,
     RoadmapUnavailableResponse,
     UpdateNodeRequest,
 )
+from app.services.goals_service import (
+    create_goal_service,
+    delete_goal_service,
+    generate_roadmap_with_llm_stream,
+    get_goal_service,
+    get_user_goals_service,
+    update_node_status_service,
+)
+from app.utils.logging_util import get_logger
 
 logger = get_logger(name="goals", log_file="goals.log")
-
-
 router = APIRouter()
 
 
@@ -29,31 +33,11 @@ router = APIRouter()
     summary="Create a goal",
     description="Creates a new goal for the authenticated user.",
 )
-async def create_goal(goal: GoalCreate, user: str = Depends(get_current_user)):
+async def create_goal(goal: GoalCreate, user: dict = Depends(get_current_user)):
     """
     Create a new goal.
     """
-    user_id = user.get("user_id")
-    if not user_id:
-        logger.warning("Unauthorized attempt to create a goal.")
-        raise HTTPException(status_code=403, detail="Not authenticated")
-
-    goal_data = {
-        "title": goal.title,
-        "description": goal.description,
-        "created_at": str(datetime.now().isoformat()),
-        "user_id": user_id,
-        "roadmap": {"nodes": [], "edges": []},
-    }
-
-    result = await goals_collection.insert_one(goal_data)
-    new_goal = await goals_collection.find_one({"_id": result.inserted_id})
-
-    cache_key = f"goals_cache:{user_id}"
-    await delete_cache(cache_key)
-
-    logger.info(f"Goal created successfully: {new_goal['_id']} by user {user_id}")
-    return goal_helper(new_goal)
+    return await create_goal_service(goal, user)
 
 
 @router.get(
@@ -62,39 +46,11 @@ async def create_goal(goal: GoalCreate, user: str = Depends(get_current_user)):
     summary="Get goal details",
     description="Fetch the details of a specific goal using its ID.",
 )
-async def get_goal(goal_id: str, user: str = Depends(get_current_user)):
+async def get_goal(goal_id: str, user: dict = Depends(get_current_user)):
     """
     Retrieve a goal by its ID.
     """
-    user_id = user.get("user_id")
-    if not user_id:
-        logger.warning("Unauthorized attempt to access goal details.")
-        raise HTTPException(status_code=403, detail="Not authenticated")
-
-    cache_key = f"goal_cache:{goal_id}"
-    cached_goal = await get_cache(cache_key)
-
-    if cached_goal:
-        logger.info(f"Goal {goal_id} fetched from cache.")
-        return json.loads(cached_goal)
-
-    goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
-    if not goal:
-        logger.error(f"Goal with ID {goal_id} not found.")
-        raise HTTPException(status_code=404, detail="Goal not found")
-
-    roadmap = goal.get("roadmap", {})
-    if not roadmap.get("nodes") or not roadmap.get("edges"):
-        logger.info(f"Goal {goal_id} has no roadmap. Prompting user to generate one.")
-        return {
-            "message": "Roadmap not available. Please generate it using the WebSocket.",
-            "id": goal_id,
-            "title": goal["title"],
-        }
-
-    await set_cache(cache_key, json.dumps(goal_helper(goal)))
-    logger.info(f"Goal {goal_id} details fetched successfully.")
-    return goal_helper(goal)
+    return await get_goal_service(goal_id, user)
 
 
 @router.get(
@@ -103,40 +59,56 @@ async def get_goal(goal_id: str, user: str = Depends(get_current_user)):
     summary="List all goals",
     description="Fetch all goals for the authenticated user.",
 )
-async def get_user_goals(user: str = Depends(get_current_user)):
+async def get_user_goals(user: dict = Depends(get_current_user)):
     """
     List all goals for the current user.
     """
-    user_id = user.get("user_id")
-    if not user_id:
-        logger.warning("Unauthorized attempt to list user goals.")
-        raise HTTPException(status_code=403, detail="Not authenticated")
+    return await get_user_goals_service(user)
 
-    cache_key = f"goals_cache:{user_id}"
-    cached_goals = await get_cache(cache_key)
 
-    if cached_goals:
-        logger.info(f"Fetched user goals from cache for user {user_id}.")
-        return json.loads(cached_goals)
+@router.delete(
+    "/goals/{goal_id}",
+    response_model=GoalResponse,
+    summary="Delete a goal",
+    description="Deletes a specific goal using its ID.",
+)
+async def delete_goal(goal_id: str, user: dict = Depends(get_current_user)):
+    """
+    Delete a goal by its ID.
+    """
+    return await delete_goal_service(goal_id, user)
 
-    goals = await goals_collection.find({"user_id": user_id}).to_list(None)
-    goals_list = [goal_helper(goal) for goal in goals]
 
-    await set_cache(cache_key, json.dumps(goals_list))
-    logger.info(f"Listed all goals for user {user_id}.")
-    return goals_list
+@router.patch(
+    "/goals/{goal_id}/roadmap/nodes/{node_id}",
+    response_model=GoalResponse,
+    summary="Update node status",
+    description="Updates the completion status of a node in the roadmap.",
+)
+async def update_node_status(
+    goal_id: str,
+    node_id: str,
+    update_data: UpdateNodeRequest,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Update the status of a node in the roadmap.
+    """
+    return await update_node_status_service(goal_id, node_id, update_data, user)
 
 
 @router.websocket("/ws/roadmap")
 async def websocket_generate_roadmap(websocket: WebSocket):
     """
     WebSocket for generating roadmaps.
+
+    Expects a JSON message containing 'goal_id' and 'goal_title' and streams
+    the generated roadmap back to the client.
     """
     await websocket.accept()
     try:
         while True:
             data = await websocket.receive_json()
-
             goal_id = data.get("goal_id")
             goal_title = data.get("goal_title")
 
@@ -154,10 +126,8 @@ async def websocket_generate_roadmap(websocket: WebSocket):
 
             try:
                 full_roadmap = ""
-
                 async for chunk in generate_roadmap_with_llm_stream(goal_title):
                     chunk = chunk.replace("data: ", "")
-
                     if chunk.strip() != "[DONE]":
                         full_roadmap += json.loads(chunk).get("response", "")
                         await websocket.send_text(chunk)
@@ -191,95 +161,3 @@ async def websocket_generate_roadmap(websocket: WebSocket):
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected.")
-
-
-@router.delete(
-    "/goals/{goal_id}",
-    response_model=GoalResponse,
-    summary="Delete a goal",
-    description="Deletes a specific goal using its ID.",
-)
-async def delete_goal(goal_id: str, user: str = Depends(get_current_user)):
-    """
-    Delete a goal by its ID.
-    """
-    user_id = user.get("user_id")
-    if not user_id:
-        logger.warning("Unauthorized attempt to delete goal.")
-        raise HTTPException(status_code=403, detail="Not authenticated")
-
-    goal = await goals_collection.find_one(
-        {"_id": ObjectId(goal_id), "user_id": user_id}
-    )
-    if not goal:
-        logger.error(f"Goal {goal_id} not found for user {user_id}.")
-        raise HTTPException(status_code=404, detail="Goal not found")
-
-    result = await goals_collection.delete_one({"_id": ObjectId(goal_id)})
-    if result.deleted_count == 0:
-        logger.error(f"Failed to delete goal {goal_id}.")
-        raise HTTPException(status_code=500, detail="Failed to delete the goal")
-
-    cache_key_goal = f"goal_cache:{goal_id}"
-    cache_key_goals = f"goals_cache:{user_id}"
-    await delete_cache(cache_key_goal)
-    await delete_cache(cache_key_goals)
-
-    logger.info(f"Goal {goal_id} deleted successfully by user {user_id}.")
-    return goal_helper(goal)
-
-
-@router.patch(
-    "/goals/{goal_id}/roadmap/nodes/{node_id}",
-    response_model=GoalResponse,
-    summary="Update node status",
-    description="Updates the completion status of a node in the roadmap.",
-)
-async def update_node_status(
-    goal_id: str,
-    node_id: str,
-    update_data: UpdateNodeRequest,
-    user: str = Depends(get_current_user),
-):
-    """
-    Update the status of a node in the roadmap.
-    """
-    try:
-        user_id = user.get("user_id")
-        if not user_id:
-            logger.warning("Unauthorized attempt to update node status.")
-            raise HTTPException(status_code=403, detail="Not authenticated")
-
-        goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
-
-        if not goal:
-            logger.error(f"Goal {goal_id} not found.")
-            raise HTTPException(status_code=404, detail="Goal not found")
-
-        roadmap = goal.get("roadmap", {})
-        nodes = roadmap.get("nodes", [])
-
-        node = next((n for n in nodes if n["id"] == node_id), None)
-        if not node:
-            logger.error(f"Node {node_id} not found in goal {goal_id}.")
-            raise HTTPException(status_code=404, detail="Node not found in roadmap")
-
-        node["data"]["isComplete"] = update_data.is_complete
-
-        await goals_collection.update_one(
-            {"_id": ObjectId(goal_id)}, {"$set": {"roadmap.nodes": nodes}}
-        )
-
-        updated_goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
-
-        cache_key_goal = f"goal_cache:{goal_id}"
-        cache_key_goals = f"goals_cache:{user_id}"
-        await delete_cache(cache_key_goal)
-        await delete_cache(cache_key_goals)
-
-        logger.info(f"Node status updated for node {node_id} in goal {goal_id}.")
-        return goal_helper(updated_goal)
-
-    except Exception as e:
-        logger.error(f"Error occurred while updating node status: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))

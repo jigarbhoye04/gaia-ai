@@ -3,12 +3,12 @@ import json
 from google.oauth2 import service_account
 import httpx
 from fastapi import HTTPException
-import google.auth.transport.requests
+import google.auth.transport.requests as requests
 from pathlib import Path
 import os
 from typing import List
 import asyncio
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 from concurrent.futures import ThreadPoolExecutor
 
 executor = ThreadPoolExecutor(max_workers=2)
@@ -35,7 +35,7 @@ class TTSService:
             scopes=["https://www.googleapis.com/auth/cloud-platform"],
         )
 
-        request = google.auth.transport.requests.Request()
+        request = requests.Request()
         self.credentials.refresh(request)
         logger.info("TTSService initialized successfully.")
 
@@ -95,7 +95,8 @@ class VoskTranscriber:
         self.recognizer = None
         logger.info(f"Initialized VoskTranscriber with model path: {self.model_path}")
 
-    async def load_model(self):
+    async def load_model(self) -> None:
+
         if self.model and self.recognizer:
             logger.info("Model already loaded. Skipping initialization.")
             return

@@ -6,10 +6,9 @@ Router module for image generation and image-to-text endpoints.
 from fastapi import UploadFile, File, APIRouter, Form
 from fastapi.responses import JSONResponse
 from app.models.general_models import MessageRequest
-from app.services.image_service import ImageService
+from app.services.image_service import image_service
 
 router = APIRouter()
-image_service = ImageService()
 
 
 @router.post("/image/generate")
@@ -23,7 +22,7 @@ async def image(request: MessageRequest):
     Returns:
         dict: A dictionary containing the URL of the generated image and the improved prompt.
     """
-    return await image_service.generate_image_endpoint(request.message)
+    return await image_service.generate_image(request.message)
 
 
 @router.post("/image/text")

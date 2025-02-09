@@ -1,11 +1,10 @@
 import json
+from typing import Any, Coroutine
 
-from app.services.llm_service import LLMService
-
-llm_service = LLMService()
+from app.services.llm_service import llm_service
 
 
-async def should_create_memory(message: str) -> bool:
+async def should_create_memory(message: str) -> tuple[bool, None, None] | tuple[bool, Any, Any]:
     """
     Use a Hugging Face model to classify if a message should be stored as a memory.
     """

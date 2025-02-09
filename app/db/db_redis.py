@@ -2,7 +2,7 @@ import redis.asyncio as redis
 import json
 import os
 from dotenv import load_dotenv
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 
 load_dotenv()
 

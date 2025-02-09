@@ -40,22 +40,24 @@ candidate_labels = [
 candidate_labels_output = ["i don't know this", "i know this"]
 
 
-def classify_event_type(input):
-    return classify_text(input, candidate_labels)
+def classify_event_type(user_input):
+    return classify_text(user_input, candidate_labels)
 
 
-def classify_output(input):
-    return classify_text(input, candidate_labels_output)
+def classify_output(user_input):
+    return classify_text(user_input, candidate_labels_output)
 
 
 # Async wrapper for the blocking Hugging Face pipeline call
-async def classify_text(input, candidate_labels):
-    if not input or not candidate_labels:
+async def classify_text(user_input, candidate_labels):
+    if not user_input or not candidate_labels:
         return {"error": "Invalid input or candidate labels."}
 
     try:
         # Use asyncio.to_thread to run the blocking pipeline function in a separate thread
-        result = await asyncio.to_thread(zero_shot_classifier, input, candidate_labels)
+        result = await asyncio.to_thread(
+            zero_shot_classifier, user_input, candidate_labels
+        )
 
         label_scores = dict(zip(result["labels"], result["scores"]))
         highest_label = max(label_scores, key=label_scores.get)
@@ -73,22 +75,22 @@ async def classify_text(input, candidate_labels):
 
 # Load the spaCy model
 # python - m spacy download en_core_web_sm
-nlp = spacy.load("en_core_web_sm")
+# nlp = spacy.load("en_core_web_sm")
 
 
-def parse_calendar_info(input_text):
-    doc = nlp(input_text)
+# def parse_calendar_info(input_text):
+#     doc = nlp(input_text)
 
-    time = "all day"
-    date = "today"
+#     time = "all day"
+#     date = "today"
 
-    for ent in doc.ents:
-        if ent.label_ == "TIME":
-            time = ent.text
-        elif ent.label_ == "DATE":
-            date = ent.text
+#     for ent in doc.ents:
+#         if ent.label_ == "TIME":
+#             time = ent.text
+#         elif ent.label_ == "DATE":
+#             date = ent.text
 
-    return {"time": time, "date": date}
+#     return {"time": time, "date": date}
 
 
 def summarise_text(long_text):

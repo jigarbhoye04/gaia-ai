@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.auth import get_current_user
-from app.services.chat_service import ChatService
+from app.services.chat_service import chat_service
 from app.models.chat_models import (
     ConversationModel,
     UpdateMessagesRequest,
@@ -17,9 +17,7 @@ from app.models.general_models import (
 )
 
 
-# Create the APIRouter and instantiate the ChatService.
 router = APIRouter()
-chat_service = ChatService()
 
 
 @router.post("/chat-stream")

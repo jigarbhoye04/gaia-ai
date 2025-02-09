@@ -1,4 +1,3 @@
-from app.utils.notes import generate_embedding
 from fastapi import HTTPException
 from app.db.collections import documents_collection, notes_collection
 from sentence_transformers import SentenceTransformer
@@ -66,7 +65,7 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
             {
                 "$vectorSearch": {
                     "index": "document_vector",  # Name of your vector index
-                    "path": "embedding",  # Path where embeddingsFfiletype are stored
+                    "path": "embedding",  # Path where embeddings are stored
                     "queryVector": query_embedding,  # Embedding of the input query
                     "numCandidates": 100,
                     "limit": top_k,
@@ -92,23 +91,6 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# import asyncio
-# from sentence_transformers import SentenceTransformer
-
-
-# class EmbeddingModel:
-#     _model = None
-
-#     @classmethod
-#     async def get_model(cls):
-#         if cls._model is None:
-#             loop = asyncio.get_event_loop()
-#             cls._model = await loop.run_in_executor(
-#                 None, SentenceTransformer, "all-MiniLM-L6-v2"
-#             )
-#         return cls._model
-
-
 class EmbeddingModel:
     _model = None
 
@@ -117,3 +99,10 @@ class EmbeddingModel:
         if cls._model is None:
             cls._model = SentenceTransformer("all-MiniLM-L6-v2")
         return cls._model
+
+
+def generate_embedding(text):
+    return embedding_model.encode(text).tolist()
+
+
+embedding_model = EmbeddingModel().get_model()

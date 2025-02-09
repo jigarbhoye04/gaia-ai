@@ -4,14 +4,13 @@ import datetime
 import fitz
 from app.db.collections import documents_collection
 from app.utils.notes import generate_embedding
-from app.services.llm_service import LLMService
+from app.services.llm_service import llm_service
 from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
 from app.models.document_moels import DocumentUploadResponse
 from app.api.v1.dependencies.auth import get_current_user
 
 router = APIRouter()
-llm_service = LLMService()
 
 
 def extract_text(file: UploadFile, content: bytes) -> str:

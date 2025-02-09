@@ -1,7 +1,7 @@
 from fastapi.responses import Response
 import base64
-from app.db.redis import get_cache, set_cache
-from app.utils.logging import get_logger
+from app.db.db_redis import get_cache, set_cache
+from app.utils.logging_util import get_logger
 from fastapi import APIRouter, WebSocket
 from app.services.audio_service import TTSService, VoskTranscriber
 from app.models.audio_models import TTSRequest

@@ -3,7 +3,7 @@ from datetime import datetime
 STATIC_USER_ID = "user123"
 
 
-def goal_helper(goal, hasRoadmap=True) -> dict:
+def goal_helper(goal, has_roadmap=True) -> dict:
     created_at = goal["created_at"]
     if isinstance(created_at, datetime):
         created_at = created_at.isoformat()
@@ -24,7 +24,7 @@ def goal_helper(goal, hasRoadmap=True) -> dict:
         "user_id": goal.get("user_id", STATIC_USER_ID),
     }
 
-    if hasRoadmap:
+    if has_roadmap:
         goal_data["roadmap"] = {
             "title": goal.get("roadmap", {}).get("title", ""),
             "description": goal.get("roadmap", {}).get("description", ""),
@@ -35,3 +35,5 @@ def goal_helper(goal, hasRoadmap=True) -> dict:
         goal_data["roadmap"] = {}
 
     return goal_data
+
+

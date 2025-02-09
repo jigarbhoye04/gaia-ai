@@ -8,9 +8,10 @@ import os
 import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException
-from app.services.image_service import generate_image, convert_image_to_text
-from app.utils.logging import get_logger
-from app.services.llm_service import LLMService
+from app.config.config_cloudinary import get_cloudinary_config
+from app.utils.image_utils import convert_image_to_text
+from app.utils.logging_util import get_logger
+from app.services.llm_service import llm_service
 
 
 class ImageService:
@@ -26,7 +27,8 @@ class ImageService:
             HTTPException: If any required Cloudinary configuration environment variables are missing.
         """
         self.logger = get_logger(name="image", log_file="image.log")
-        self.llm_service = LLMService()
+        self.llm_service = llm_service
+        self.cloudinary_config = get_cloudinary_config()
 
         cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
         api_key = os.getenv("CLOUDINARY_API_KEY")
@@ -45,7 +47,7 @@ class ImageService:
             api_secret=api_secret,
         )
 
-    async def generate_image_endpoint(self, message: str) -> dict:
+    async def generate_image(self, message: str) -> dict:
         """
         Generate an image based on the provided message prompt and upload it to Cloudinary.
 
@@ -87,7 +89,7 @@ class ImageService:
 
             self.logger.info(f"Generated refined prompt: {refined_text}")
 
-            image_bytes: bytes = await generate_image(refined_text)
+            image_bytes: bytes = await self.generate_image(refined_text)
 
             self.logger.info("Image generated successfully. Uploading to Cloudinary...")
 
@@ -140,3 +142,6 @@ class ImageService:
                 f"Error occurred while processing image-to-text: {str(e)}"
             )
             raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+image_service = ImageService()

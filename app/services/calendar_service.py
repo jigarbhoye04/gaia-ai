@@ -11,7 +11,7 @@ from app.utils.auth_utils import (
     GOOGLE_CLIENT_SECRET,
     GOOGLE_TOKEN_URL,
 )
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 
 http_async_client = httpx.AsyncClient()
 

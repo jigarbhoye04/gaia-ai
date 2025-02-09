@@ -5,14 +5,19 @@ Router module for note-related endpoints.
 from fastapi import APIRouter, Depends, status
 from app.models.notes_models import NoteModel, NoteResponse
 from app.api.v1.dependencies.auth import get_current_user
-from app.services.notes_service import NotesService
+from app.services.notes_service import (
+    create_note,
+    get_note,
+    get_all_notes,
+    update_note,
+    delete_note,
+)
 
 router = APIRouter()
-notes_service = NotesService()
 
 
 @router.post("/notes", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
-async def create_note(note: NoteModel, user: dict = Depends(get_current_user)):
+async def create_note_endpoint(note: NoteModel, user: dict = Depends(get_current_user)):
     """
     Create a new note for the authenticated user.
 
@@ -23,11 +28,11 @@ async def create_note(note: NoteModel, user: dict = Depends(get_current_user)):
     Returns:
         NoteResponse: The created note.
     """
-    return await notes_service.create_note(note, user["user_id"])
+    return await create_note(note, user["user_id"])
 
 
 @router.get("/notes/{note_id}", response_model=NoteResponse)
-async def get_note(note_id: str, user: dict = Depends(get_current_user)):
+async def get_note_endpoint(note_id: str, user: dict = Depends(get_current_user)):
     """
     Retrieve a single note by its ID.
 
@@ -38,11 +43,11 @@ async def get_note(note_id: str, user: dict = Depends(get_current_user)):
     Returns:
         NoteResponse: The retrieved note.
     """
-    return await notes_service.get_note(note_id, user["user_id"])
+    return await get_note(note_id, user["user_id"])
 
 
 @router.get("/notes", response_model=list[NoteResponse])
-async def get_all_notes(user: dict = Depends(get_current_user)):
+async def get_all_notes_endpoint(user: dict = Depends(get_current_user)):
     """
     Retrieve all notes for the authenticated user.
 
@@ -52,11 +57,11 @@ async def get_all_notes(user: dict = Depends(get_current_user)):
     Returns:
         list[NoteResponse]: A list of the user's notes.
     """
-    return await notes_service.get_all_notes(user["user_id"])
+    return await get_all_notes(user["user_id"])
 
 
 @router.put("/notes/{note_id}", response_model=NoteResponse)
-async def update_note(
+async def update_note_endpoint(
     note_id: str, note: NoteModel, user: dict = Depends(get_current_user)
 ):
     """
@@ -70,11 +75,11 @@ async def update_note(
     Returns:
         NoteResponse: The updated note.
     """
-    return await notes_service.update_note(note_id, note, user["user_id"])
+    return await update_note(note_id, note, user["user_id"])
 
 
 @router.delete("/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_note(note_id: str, user: dict = Depends(get_current_user)):
+async def delete_note_endpoint(note_id: str, user: dict = Depends(get_current_user)):
     """
     Delete a note by its ID.
 
@@ -82,4 +87,4 @@ async def delete_note(note_id: str, user: dict = Depends(get_current_user)):
         note_id (str): The ID of the note to delete.
         user (dict): The authenticated user information.
     """
-    await notes_service.delete_note(note_id, user["user_id"])
+    await delete_note(note_id, user["user_id"])

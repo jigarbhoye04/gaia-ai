@@ -12,7 +12,7 @@ def get_context_window(
     Returns:
         str: Context window containing the match with surrounding text
     """
-    # Find the query in text (case insensitive)
+    # Find the query in text (case-insensitive)
     query_lower = query.lower()
     text_lower = text.lower()
 

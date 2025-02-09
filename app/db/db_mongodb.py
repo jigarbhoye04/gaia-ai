@@ -1,6 +1,6 @@
 import os
 import sys
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import pymongo

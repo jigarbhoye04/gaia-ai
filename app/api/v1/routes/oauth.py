@@ -1,13 +1,12 @@
 import requests
 from fastapi import APIRouter, HTTPException, Cookie
-from fastapi import Response
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from app.services.auth_service import store_user_info
 import httpx
 from app.db.collections import users_collection
-from app.utils.logging import get_logger
+from app.utils.logging_util import get_logger
 from app.utils.auth_utils import (
     GOOGLE_USERINFO_URL,
     GOOGLE_TOKEN_URL,
@@ -79,7 +78,7 @@ async def fetch_or_refresh_user_info(access_token: str, user_email: str):
 
 # Routes
 @router.post("/callback")
-async def callback(response: Response, oauth_request: OAuthRequest):
+async def callback( oauth_request: OAuthRequest):
     try:
         tokens = await get_tokens_from_code(oauth_request.code)
         access_token = tokens.get("access_token")

@@ -1,13 +1,9 @@
 from typing import Dict
 from fastapi import HTTPException
 from app.models.notes_models import NoteModel
-from app.utils.embedding_utils import EmbeddingModel
+from app.utils.embedding_utils import generate_embedding
 from app.db.collections import notes_collection
-from app.db.redis import delete_cache
-
-
-def generate_embedding(text):
-    return EmbeddingModel.get_model().encode(text).tolist()
+from app.db.db_redis import delete_cache
 
 
 async def insert_note(note: NoteModel, user_id: str, auto_created=False) -> Dict:

@@ -1,17 +1,16 @@
 from io import BytesIO
+from typing import Any, Coroutine
 
 import httpx
 import requests
 from fastapi import File, Form, HTTPException, UploadFile
 from PIL import Image
+from app.services.llm_service import llm_service
 
-from app.services.llm_service import LLMService
-
-llm_service = LLMService()
 http_async_client = httpx.AsyncClient(timeout=100000)
 
 
-async def generate_image(imageprompt: str) -> dict:
+async def generate_image(imageprompt: str) -> dict[str, str] | bytes:
     url = "https://generateimage.aryanranderiya1478.workers.dev/"
     try:
         response = await http_async_client.post(url, json={"imageprompt": imageprompt})
@@ -46,15 +45,15 @@ def compress_image(image_bytes, sizing=0.4, quality=85):
 async def convert_image_to_text(
     image: UploadFile = File(...),
     message: str = Form(...),
-) -> dict:
+) -> dict[str, str] | str | Any:
     contents = await image.read()
     url = "https://imageunderstanding.aryanranderiya1478.workers.dev/"
 
     try:
-        if len(contents) >= 1 * 1024 * 1024 and len(contents) <= 2 * 1024 * 1024:
+        if 1 * 1024 * 1024 <= len(contents) <= 2 * 1024 * 1024:
             compressed_image = compress_image(contents, sizing=0.9, quality=95)
             contents = compressed_image
-        elif len(contents) >= 2 * 1024 * 1024 and len(contents) <= 6 * 1024 * 1024:
+        elif 2 * 1024 * 1024 <= len(contents) <= 6 * 1024 * 1024:
             compressed_image = compress_image(contents)
             contents = compressed_image
 

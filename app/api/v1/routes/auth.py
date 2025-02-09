@@ -48,7 +48,7 @@ async def signup(user: SignupData):
 async def login(user: LoginData) -> JSONResponse:
     try:
         auth_user = await authenticate_user(
-            user.email, str((user.password).get_secret_value())
+            user.email, str(user.password.get_secret_value())
         )
 
         if not auth_user:

@@ -6,9 +6,9 @@ router = APIRouter()
 
 
 @router.post("/feedback")
-async def submitFeedbackForm(formData: FeedbackFormData):
+async def submit_feedback_form(form_data: FeedbackFormData):
     try:
-        item_dict = formData.dict()
+        item_dict = form_data.dict()
         result = await feedback_collection.insert_one(item_dict)
 
         if result.inserted_id:
