@@ -4,7 +4,7 @@ import datetime
 from app.db.connect import documents_collection
 from app.utils.notes import generate_embedding
 from fastapi import Depends
-from app.middleware.auth import get_current_user
+from app.api.v1.dependencies.auth import get_current_user
 from app.services.llm import doPromptNoStream
 from app.utils.embeddings import query_documents
 from app.services.text import split_text_into_chunks

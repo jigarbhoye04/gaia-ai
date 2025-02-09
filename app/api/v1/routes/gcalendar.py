@@ -4,6 +4,7 @@ import httpx
 from datetime import datetime, timezone
 from app.services.calendar import fetch_calendar_events, filter_events
 from app.db.connect import calendar_collection
+from pydantic import BaseModel, Field
 from app.utils.auth import (
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
@@ -154,7 +155,7 @@ async def get_calendar_events(
             return {
                 "events": all_events,
                 "nextPageToken": next_page_token,
-                "selectedCalendars": selected_calendars
+                "selectedCalendars": selected_calendars,
             }
 
         elif calendar_list_response.status_code == 401 and refresh_token:
@@ -248,3 +249,68 @@ async def get_calendar_events_by_id(
             )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Server error: {e}")
+
+
+class EventCreateRequest(BaseModel):
+    summary: str = Field(..., title="Event Summary")
+    description: str = Field("", title="Event Description")
+    start: datetime = Field(..., title="Start Time")
+    end: datetime = Field(..., title="End Time")
+
+
+@router.post("/calendar/event")
+async def create_calendar_event(
+    event: EventCreateRequest,
+    access_token: str = Cookie(None),
+    refresh_token: str = Cookie(None),
+):
+    """
+    Create a new calendar event
+
+    Args:
+        event: Event details
+        access_token: OAuth2 access token
+        refresh_token: OAuth2 refresh token
+    """
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Access token required")
+
+    url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        event_payload = {
+            "summary": event.summary,
+            "description": event.description,
+            "start": event.start.dict(),
+            "end": event.end.dict(),
+        }
+
+        response = await http_async_client.post(
+            url, headers=headers, json=event_payload
+        )
+
+        match response.status_code:
+            case 200:
+                return response.json()
+            case 401:
+                if refresh_token:
+                    # Handle token refresh similar to get_calendar_events_by_id
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Token expired. Please refresh and try again.",
+                    )
+                raise HTTPException(status_code=401, detail="Invalid access token")
+            case _:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=response.json()
+                    .get("error", {})
+                    .get("message", "Unknown error"),
+                )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

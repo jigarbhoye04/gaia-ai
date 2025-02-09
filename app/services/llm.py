@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import httpx
 from groq import AsyncGroq
 from app.utils.logging import get_logger
+import json
 
 logger = get_logger(name="llm", log_file="llm.log")
 
@@ -66,14 +67,14 @@ async def doPromptNoStream(
                 response_dict = response.json()
                 return response_dict
             except ValueError as ve:
-                logging.error(f"Error parsing JSON: {ve}")
+                logger.error(f"Error parsing JSON: {ve}")
                 return {"error": "Invalid JSON response"}
         else:
-            logging.error(f"Unexpected status code: {response.status_code}")
+            logger.error(f"Unexpected status code: {response.status_code}")
             return {"error": "Unexpected status code"}
 
     except httpx.RequestError as e:
-        logging.error(f"Request error: {e}")
+        logger.error(f"Request error: {e}")
         return {"error": str(e)}
 
 
@@ -165,12 +166,27 @@ async def doPrompWithStream(
 
             async for line in response.aiter_lines():
                 if line.strip():
+                    print(line)
+                    if line == "data: [DONE]":
+                        yield f"""data: {
+                            json.dumps(
+                                {
+                                    "intent": "calendar",
+                                    "calendar_options": {
+                                        "title": "test_title",
+                                        "description": "test_description",
+                                        "date": "2025-02-08T19:34:52.906Z",
+                                    },
+                                }
+                            )
+                        }\n\n"""
+                        yield "data: [DONE]\n\n"
                     yield line + "\n\n"
 
     except httpx.StreamError as e:
-        logging.error(f"Stream error: {e}")
+        logger.error(f"Stream error: {e}")
     except Exception as e:
-        logging.error(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
 
 
 async def doPromptGROQ(

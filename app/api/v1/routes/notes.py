@@ -3,7 +3,7 @@ from bson import ObjectId
 from app.models.notes import NoteModel, NoteResponse
 from app.db.connect import notes_collection, serialize_document
 from app.db.redis import get_cache, set_cache, delete_cache
-from app.middleware.auth import get_current_user
+from app.api.v1.dependencies.auth import get_current_user
 from app.utils.notes import insert_note
 from app.utils.logging import get_logger
 

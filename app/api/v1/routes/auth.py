@@ -7,7 +7,7 @@ import json
 from datetime import timedelta, timezone, datetime
 from app.utils.auth import encode_jwt, authenticate_user, hash_password
 from app.schemas.auth import SignupData, LoginData
-from app.middleware.auth import get_current_user
+from app.api.v1.dependencies.auth import get_current_user
 from app.db.connect import users_collection
 
 load_dotenv()

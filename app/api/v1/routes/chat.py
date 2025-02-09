@@ -1,579 +1,203 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
-from fastapi.encoders import jsonable_encoder
+# app/api/routers/chat_routes.py
+from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
-from app.db.connect import conversations_collection
-from app.db.redis import set_cache, get_cache, delete_cache
-from datetime import timezone
-from app.services.search import perform_search, perform_fetch
-from app.middleware.auth import get_current_user
-from datetime import datetime
-import asyncio
-from app.utils.embeddings import search_notes_by_similarity, query_documents
+from app.api.v1.dependencies.auth import get_current_user
+from app.models import StarredUpdate, PinnedUpdate
 from app.models.conversations import ConversationModel, UpdateMessagesRequest
-from pydantic import BaseModel
-from bson import ObjectId
-from app.services.notes import should_create_memory
-from app.models.notes import NoteModel
-from app.utils.notes import insert_note
+from app.services.chat_service import ChatService
 from app.schemas.common import (
-    DescriptionUpdateRequest,
-    DescriptionUpdateRequestLLM,
     MessageRequest,
     MessageRequestWithHistory,
-)
-from app.services.llm import (
-    doPrompWithStream,
-    doPromptNoStream,
+    DescriptionUpdateRequestLLM,
+    DescriptionUpdateRequest,
 )
 
-# from app.services.text import classify_event_type
 
+# Create the APIRouter and instantiate the ChatService.
 router = APIRouter()
+chat_service = ChatService()
 
 
 @router.post("/chat-stream")
-async def chat_stream(
+async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
-):
+) -> StreamingResponse:
     """
-    Stream chat messages in real-time.
+    Stream chat messages in real time.
 
-    Args:
-        request (MessageRequestWithHistory): Request containing a message and conversation history.
-
-    Returns:
-        StreamingResponse: Streamed response for real-time communication.
-
+    This endpoint streams chat responses based on the conversation history,
+    enriching the context with document notes, search results, or fetched webpage
+    content as needed.
     """
-    user_id = user.get("user_id")
-    intent = None
-    llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-
-    last_message = body.messages[-1] if body.messages else None
-    query_text = (last_message["content"]).replace("mostRecent: true ", "")
-
-    # Helper Functions
-    async def do_search(last_message, query_text):
-        search_result = await perform_search(query=query_text, count=5)
-        last_message["content"] += (
-            f"""\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1] or the number of citation but within '[] square brackets'](and the link goes here) ). A good example is [[1]](https://example.com)"""
-        )
-
-    async def fetch_webpage(last_message, url):
-        page_content = await perform_fetch(url)
-        last_message["content"] += (
-            f"\nRelevant context from the fetched URL: {page_content}"
-        )
-
-    async def store_note(query_text):
-        is_memory, plaintext, content = await should_create_memory(query_text)
-        if is_memory and content and plaintext:
-            await insert_note(
-                note=NoteModel(plaintext=plaintext, content=content),
-                user_id=user_id,
-                auto_created=True,
-            )
-
-    async def fetch_notes(last_message, query_text):
-        notes = await search_notes_by_similarity(
-            input_text=query_text, user_id=user.get("user_id")
-        )
-
-        if notes:
-            last_message["content"] = f"""
-                User: {last_message["content"]} \n System: The user has the following notes: {"- ".join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation.
-                """
-
-    async def fetch_documents(last_message, query_text):
-        documents = await query_documents(query_text, body.conversation_id, user_id)
-
-        if not documents or len(documents) <= 0:
-            return
-
-        content = [document["content"] for document in documents]
-        titles = [document["title"] for document in documents]
-
-        prompt = f"Question: {last_message['content']}\n\n Context from document files uploaded by the user:\n{ {'document_names': titles, 'content': content} }"
-        last_message["content"] = prompt
-
-    await fetch_notes(last_message, query_text)
-    await fetch_documents(last_message, query_text)
-    background_tasks.add_task(store_note, query_text)
-
-    if body.pageFetchURL and last_message:
-        await fetch_webpage(last_message, body.pageFetchURL)
-
-    if body.search_web and last_message:
-        await do_search(last_message, query_text)
-
-    # search_start_time = time.time()
-    # type = await classify_event_type(query_text)
-    # search_end_time = time.time()
-    # if type.get("highest_label"):
-    #     match type["highest_label"]:
-    #         case "search web internet":
-    #             await do_search(last_message, query_text)
-    #         case "flowchart":
-    #             intent = "flowchart"
-    #         case "weather":
-    #             intent = "weather"
-
-    return StreamingResponse(
-        doPrompWithStream(
-            messages=jsonable_encoder(body.messages),
-            max_tokens=4096,
-            intent=intent,
-            # model="@cf/meta/llama-3.1-8b-instruct-fast",
-            # model="@cf/meta/llama-3.1-70b-instruct"
-            # model="@cf/meta/llama-3.1-70b-instruct"
-            model=llm_model,
-        ),
-        media_type="text/event-stream",
-    )
-
-    # return StreamingResponse(
-    #     # doPromptWithStreamAsync(
-    #     doPromptGROQ(
-    #         messages=jsonable_encoder(request.messages), max_tokens=2048, stream=True
-    #     ),
-    #     media_type="text/event-stream",
-    # )
+    return await chat_service.chat_stream(body, background_tasks, user)
 
 
 @router.post("/chat")
-async def chat(request: MessageRequest):
+async def chat_endpoint(request: MessageRequest) -> JSONResponse:
     """
-    Get a chat response.
+    Return a chat response for the provided message.
 
-    Args:
-        request (MessageRequest): Request containing the user message.
-
-    Returns:
-        JSONResponse: Response with the chat output.
+    This endpoint obtains a response from the LLM (without streaming).
     """
-    return JSONResponse(content=await doPromptNoStream(request.message))
+    response = await chat_service.chat(request)
+    return JSONResponse(content=response)
 
 
 @router.post("/conversations")
-async def create_conversation(
+async def create_conversation_endpoint(
     conversation: ConversationModel, user: dict = Depends(get_current_user)
-):
-    user_id = user.get("user_id")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
-        )
+) -> JSONResponse:
+    """
+    Create a new conversation.
 
-    created_at = datetime.now(timezone.utc).isoformat()
-
-    conversation_data = {
-        "user_id": user_id,
-        "conversation_id": conversation.conversation_id,
-        "description": conversation.description,
-        "messages": [],
-        "createdAt": created_at,
-    }
-
-    try:
-        insert_result = await conversations_collection.insert_one(conversation_data)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create conversation: {str(e)}",
-        )
-
-    if not insert_result.acknowledged:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create conversation",
-        )
-
-    # await delete_cache(f"conversations_cache:{user_id}")
-    asyncio.create_task(delete_cache(f"conversations_cache:{user_id}"))
-
-    return {
-        "conversation_id": conversation.conversation_id,
-        "user_id": user_id,
-        "createdAt": created_at,
-        "detail": "Conversation created successfully",
-    }
+    This endpoint creates a new conversation record for the authenticated user.
+    """
+    response = await chat_service.create_conversation(conversation, user)
+    return JSONResponse(content=response)
 
 
 @router.get("/conversations")
-async def get_conversations(user: dict = Depends(get_current_user)):
+async def get_conversations_endpoint(
+    user: dict = Depends(get_current_user),
+) -> JSONResponse:
     """
-    Fetch all conversations for the authenticated user.
+    Retrieve all conversations for the authenticated user.
+
+    This endpoint fetches a list of conversations (using caching when possible).
     """
-    user_id = user["user_id"]
-    cache_key = f"conversations_cache:{user_id}"
-
-    # Check cache for conversations
-    cached_conversations = await get_cache(cache_key)
-    if cached_conversations:
-        return {"conversations": jsonable_encoder(cached_conversations)}
-
-    # Fetch all conversations for the user
-    conversations = await conversations_collection.find(
-        {"user_id": user_id},
-        {
-            "_id": 1,
-            "user_id": 1,
-            "conversation_id": 1,
-            "description": 1,
-            "starred": 1,
-            "createdAt": 1,
-        },
-    ).to_list(None)
-
-    if not conversations:
-        await set_cache(cache_key, [])
-        return {"conversations": []}
-
-    # Convert ObjectId to string
-    for conversation in conversations:
-        conversation["_id"] = str(conversation["_id"])
-
-    # Cache the result
-    await set_cache(cache_key, jsonable_encoder(conversations))
-
-    return {"conversations": conversations}
+    response = await chat_service.get_conversations(user)
+    return JSONResponse(content=response)
 
 
 @router.get("/conversations/{conversation_id}")
-async def get_conversation(
+async def get_conversation_endpoint(
     conversation_id: str, user: dict = Depends(get_current_user)
-):
+) -> JSONResponse:
     """
-    Fetch a specific conversation by ID.
+    Retrieve a specific conversation by its ID.
+
+    This endpoint returns a conversation document if it exists and belongs to the user.
     """
-    user_id = user.get("user_id")
-
-    # Find the conversation document
-    conversation = await conversations_collection.find_one(
-        {"user_id": user_id, "conversation_id": conversation_id}
-    )
-
-    if not conversation:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    conversation["_id"] = str(conversation["_id"])
-    return conversation
+    response = await chat_service.get_conversation(conversation_id, user)
+    return JSONResponse(content=response)
 
 
 @router.put("/conversations/{conversation_id}/messages")
-async def update_messages(
+async def update_messages_endpoint(
     request: UpdateMessagesRequest, user: dict = Depends(get_current_user)
-):
+) -> JSONResponse:
     """
-    Add messages to an existing conversation.
+    Update the messages of a conversation.
+
+    This endpoint appends new messages to an existing conversation.
     """
-    user_id = user.get("user_id")
-    conversation_id = request.conversation_id
-    # messages = [message.dict(exclude={"loading"}) for message in request.messages]
-
-    messages = []
-    for message in request.messages:
-        message_dict = message.dict(exclude={"loading"})  # Convert to dictionary
-        message_dict = {
-            key: value for key, value in message_dict.items() if value is not None
-        }
-        message_dict.setdefault("message_id", str(ObjectId()))
-        messages.append(message_dict)
-
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$push": {"messages": {"$each": messages}}},
-    )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    return {"conversation_id": conversation_id, "message": "Messages updated"}
+    response = await chat_service.update_messages(request, user)
+    return JSONResponse(content=response)
 
 
 @router.put("/conversations/{conversation_id}/description/llm")
-async def update_conversation_description_llm(
+async def update_conversation_description_llm_endpoint(
     conversation_id: str,
     data: DescriptionUpdateRequestLLM,
     user: dict = Depends(get_current_user),
-):
+) -> JSONResponse:
     """
-    Update the description of a conversation, but fetch description using the LLM.
+    Update the conversation description using an LLM.
+
+    This endpoint uses an LLM prompt to generate a succinct summary for the conversation.
     """
-    user_id = user.get("user_id")
-
-    # Generate a summary for the description
-    response = await doPromptNoStream(
-        # prompt=f"'{data.userFirstMessage}'. Use paraphrasing to convert this message into a more concise or general form, condensing and simplifying it. Do not answer it, just summarise what the topic is about. i want to give a description about what the sentence is for. Make sure this description is under 4 words. ",
-        prompt=f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). Do not answer the message—simply summarize its subject.",
-        max_tokens=5,
-        # model="@cf/meta/llama-3.1-70b-instruct",
+    response = await chat_service.update_conversation_description_llm(
+        conversation_id, data, user
     )
-    description = (response.get("response", "New Chat")).replace('"', "")
-
-    # Update the description in the database
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$set": {"description": description}},
-    )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Conversation not found or update failed"
-        )
-
-    # Invalidate Redis cache
-    await delete_cache(f"conversations_cache:{user_id}")
-
-    return JSONResponse(
-        content={
-            "message": "Conversation updated successfully",
-            "description": description,
-        }
-    )
+    return JSONResponse(content=response)
 
 
 @router.put("/conversations/{conversation_id}/description")
-async def update_conversation_description(
+async def update_conversation_description_endpoint(
     conversation_id: str,
     data: DescriptionUpdateRequest,
     user: dict = Depends(get_current_user),
-):
+) -> JSONResponse:
     """
-    Update the description of a conversation.
+    Update the conversation description.
+
+    This endpoint directly updates the conversation's description based on the provided text.
     """
-    user_id = user.get("user_id")
-
-    # Update the description in the database
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$set": {"description": data.description}},
+    response = await chat_service.update_conversation_description(
+        conversation_id, data, user
     )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Conversation not found or update failed"
-        )
-
-    # Invalidate Redis cache
-    await delete_cache(f"conversations_cache:{user_id}")
-
-    return JSONResponse(
-        content={
-            "message": "Conversation updated successfully",
-            "description": data.description,
-        }
-    )
-
-
-class StarredUpdate(BaseModel):
-    starred: bool
-
-
-class PinnedUpdate(BaseModel):
-    pinned: bool
+    return JSONResponse(content=response)
 
 
 @router.put("/conversations/{conversation_id}/star")
-async def star_conversation(
+async def star_conversation_endpoint(
     conversation_id: str,
     body: StarredUpdate,
     user: dict = Depends(get_current_user),
-):
+) -> JSONResponse:
     """
-    Update the description of a conversation.
+    Star or unstar a conversation.
+
+    This endpoint updates the 'starred' status of the specified conversation.
     """
-    user_id = user.get("user_id")
-
-    # Update the description in the database
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$set": {"starred": body.starred}},
-    )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Conversation not found or update failed"
-        )
-
-    # Invalidate Redis cache
-    await delete_cache(f"conversations_cache:{user_id}")
-
-    return JSONResponse(
-        content={
-            "message": "Conversation updated successfully",
-            "starred": body.starred,
-        }
-    )
+    response = await chat_service.star_conversation(conversation_id, body.starred, user)
+    return JSONResponse(content=response)
 
 
 @router.delete("/conversations")
-async def delete_all_conversations(user: dict = Depends(get_current_user)):
+async def delete_all_conversations_endpoint(
+    user: dict = Depends(get_current_user),
+) -> JSONResponse:
     """
     Delete all conversations for the authenticated user.
+
+    This endpoint removes every conversation associated with the current user.
     """
-    user_id = user.get("user_id")
-
-    delete_result = await conversations_collection.delete_many({"user_id": user_id})
-
-    if delete_result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="No conversations found for the user",
-        )
-
-    # Invalidate Redis cache
-    await delete_cache(f"conversations_cache:{user_id}")
-
-    return {
-        "message": "All conversations deleted successfully",
-    }
+    response = await chat_service.delete_all_conversations(user)
+    return JSONResponse(content=response)
 
 
 @router.delete("/conversations/{conversation_id}")
-async def delete_conversation(
+async def delete_conversation_endpoint(
     conversation_id: str, user: dict = Depends(get_current_user)
-):
+) -> JSONResponse:
     """
-    Delete a specific conversation by ID.
+    Delete a specific conversation by its ID.
+
+    This endpoint deletes the conversation if it exists and belongs to the user.
     """
-    user_id = user.get("user_id")
-
-    delete_result = await conversations_collection.delete_one(
-        {"user_id": user_id, "conversation_id": conversation_id}
-    )
-
-    if delete_result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    # Invalidate Redis cache
-    await delete_cache(f"conversations_cache:{user_id}")
-
-    return {
-        "message": "Conversation deleted successfully",
-        "conversation_id": conversation_id,
-    }
+    response = await chat_service.delete_conversation(conversation_id, user)
+    return JSONResponse(content=response)
 
 
 @router.put("/conversations/{conversation_id}/messages/{message_id}/pin")
-async def pin_message(
+async def pin_message_endpoint(
     conversation_id: str,
     message_id: str,
     body: PinnedUpdate,
     user: dict = Depends(get_current_user),
-):
+) -> JSONResponse:
     """
-    Pin a message within a conversation by its message ID.
+    Pin or unpin a message within a conversation.
 
-    Args:
-        conversation_id (str): The ID of the conversation containing the message.
-        message_id (str): The ID of the message to pin.
-        body (PinnedUpdate): A body containing the 'pinned' boolean.
-
-    Returns:
-        JSONResponse: The response containing a success message.
+    This endpoint updates the 'pinned' status of a specified message in a conversation.
     """
-    user_id = user.get("user_id")
-
-    try:
-        conversation = await conversations_collection.find_one(
-            {"user_id": user_id, "conversation_id": conversation_id}
-        )
-
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-
-        messages = conversation.get("messages", [])
-        target_message = next(
-            (msg for msg in messages if msg.get("message_id") == message_id), None
-        )
-
-        if not target_message:
-            raise HTTPException(
-                status_code=404, detail="Message not found in conversation"
-            )
-
-        update_result = await conversations_collection.update_one(
-            {
-                "user_id": user_id,
-                "conversation_id": conversation_id,
-                "messages.message_id": message_id,
-            },
-            {"$set": {"messages.$.pinned": body.pinned}},
-        )
-
-        if update_result.modified_count == 0:
-            raise HTTPException(
-                status_code=404, detail="Message not found or update failed"
-            )
-
-        response_message = (
-            f"Message with ID {message_id} pinned successfully"
-            if body.pinned
-            else f"Message with ID {message_id} unpinned successfully"
-        )
-
-        return JSONResponse(
-            content={
-                "message": response_message,
-                "pinned": body.pinned,
-            }
-        )
-
-    except HTTPException as http_exc:
-        raise http_exc
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail="An unexpected error occurred while pinning the message",
-        )
+    response = await chat_service.pin_message(
+        conversation_id, message_id, body.pinned, user
+    )
+    return JSONResponse(content=response)
 
 
 @router.get("/messages/pinned")
-async def get_starred_messages(user: dict = Depends(get_current_user)):
+async def get_starred_messages_endpoint(
+    user: dict = Depends(get_current_user),
+) -> JSONResponse:
     """
-    Fetch all starred (pinned) messages across all conversations for the authenticated user.
+    Retrieve all pinned messages across all conversations.
 
-    Args:
-        user (dict): The current authenticated user.
-
-    Returns:
-        JSONResponse: The response containing the list of pinned messages from all conversations.
+    This endpoint fetches all messages marked as pinned for the authenticated user.
     """
-    user_id = user.get("user_id")
-
-    results = await conversations_collection.aggregate(
-        [
-            {"$match": {"user_id": user_id}},
-            {"$unwind": "$messages"},
-            {"$match": {"messages.pinned": True}},
-            {
-                "$project": {
-                    "_id": 0,
-                    "conversation_id": 1,
-                    "message": "$messages",
-                }
-            },
-            # Optionally, sort the results (by conversation_id or other fields)
-            # {"$sort": {"conversation_id": 1}},
-        ]
-    ).to_list(None)
-
-    # Check if there are no starred messages
-    if not results:
-        raise HTTPException(
-            status_code=404, detail="No pinned messages found across any conversation"
-        )
-
-    return JSONResponse(content={"results": results})
+    response = await chat_service.get_starred_messages(user)
+    return JSONResponse(content=response)

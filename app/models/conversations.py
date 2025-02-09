@@ -1,5 +1,11 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
+
+
+class CalIntentOptions(BaseModel):
+    title: str
+    description: str
+    date: str
 
 
 # Define the structure for each message
@@ -25,6 +31,9 @@ class MessageModel(BaseModel):
     filetype: Optional[str] = None  # Name of the file, if any
     message_id: Optional[str] = None  # Name of the file, if any
 
+    intent: Optional[Literal["calendar"]] = None
+    calendar_options: Optional[CalIntentOptions] = None
+
 
 # Define the structure for a single conversation
 class ConversationModel(BaseModel):
@@ -41,3 +50,11 @@ class ConversationHistoryModel(BaseModel):
 class UpdateMessagesRequest(BaseModel):
     conversation_id: str
     messages: List[MessageModel]
+
+
+class StarredUpdate(BaseModel):
+    starred: bool
+
+
+class PinnedUpdate(BaseModel):
+    pinned: bool
