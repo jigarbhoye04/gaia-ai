@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from app.db.collections import feedback_collection
-from app.schemas.common_schema import FeedbackFormData
+from app.models.general_models import FeedbackFormData
 
 router = APIRouter()
 

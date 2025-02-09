@@ -2,10 +2,14 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.auth import get_current_user
-from app.models import StarredUpdate, PinnedUpdate
-from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.services.chat_service import ChatService
-from app.schemas.common_schema import (
+from app.models.chat_models import (
+    ConversationModel,
+    UpdateMessagesRequest,
+    StarredUpdate,
+    PinnedUpdate,
+)
+from app.models.general_models import (
     MessageRequest,
     MessageRequestWithHistory,
     DescriptionUpdateRequestLLM,

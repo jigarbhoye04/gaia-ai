@@ -1,15 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from app.db.mongodb import database
-from app.schemas.common_schema import WaitlistItem
+from app.db.collections import waitlist_collection
+from app.models.general_models import WaitlistItem
 
 router = APIRouter()
 
 
 @router.get("/waitlist-members")
 async def getWaitlistMembers():
-    signups = database["waitlist"]
     emails = set()
-    cursor = signups.find()
+    cursor = waitlist_collection.find()
     members = await cursor.to_list(length=None)
 
     for member in members:
@@ -20,11 +19,10 @@ async def getWaitlistMembers():
 
 @router.post("/waitlist-members")
 async def waitlist_signup(item: WaitlistItem):
-    collection = database["waitlist"]
 
     try:
         item_dict = item.dict()
-        result = await collection.insert_one(item_dict)
+        result = await waitlist_collection.insert_one(item_dict)
 
         if result.inserted_id:
             return {"message": "Data inserted successfully"}

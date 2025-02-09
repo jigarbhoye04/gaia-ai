@@ -13,7 +13,7 @@ from app.utils.notes_utils import should_create_memory
 from app.utils.notes import insert_note
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.models.notes_models import NoteModel
-from app.schemas.common_schema import (
+from app.models.general_models import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
     MessageRequest,

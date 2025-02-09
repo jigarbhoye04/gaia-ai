@@ -118,7 +118,7 @@ class Search:
 
             messages = results[0]["messages"] if results else []
             conversations = results[0]["conversations"] if results else []
-            notes = notes_results if notes_results else []
+            # notes = notes_results if notes_results else []
 
             for message in messages:
                 message["snippet"] = get_context_window(

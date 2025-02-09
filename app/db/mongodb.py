@@ -16,7 +16,7 @@ class MongoDB:
     A class to manage the MongoDB connection using Motor.
     """
 
-    def __init__(self, uri: str, db_name: str):
+    def __init__(self, uri: str | None, db_name: str):
         """
         Initialize the MongoDB connection.
 
