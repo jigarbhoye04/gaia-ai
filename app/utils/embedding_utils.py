@@ -2,6 +2,7 @@ from app.db.connect import notes_collection
 from app.utils.notes import generate_embedding
 from fastapi import HTTPException
 from app.db.connect import documents_collection
+from sentence_transformers import SentenceTransformer
 
 
 async def search_notes_by_similarity(input_text: str, user_id: str):
@@ -90,3 +91,30 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# import asyncio
+# from sentence_transformers import SentenceTransformer
+
+
+# class EmbeddingModel:
+#     _model = None
+
+#     @classmethod
+#     async def get_model(cls):
+#         if cls._model is None:
+#             loop = asyncio.get_event_loop()
+#             cls._model = await loop.run_in_executor(
+#                 None, SentenceTransformer, "all-MiniLM-L6-v2"
+#             )
+#         return cls._model
+
+
+class EmbeddingModel:
+    _model = None
+
+    @classmethod
+    def get_model(cls):
+        if cls._model is None:
+            cls._model = SentenceTransformer("all-MiniLM-L6-v2")
+        return cls._model

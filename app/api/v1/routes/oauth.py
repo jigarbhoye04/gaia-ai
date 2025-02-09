@@ -4,11 +4,11 @@ from fastapi import Response
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
-from app.services.auth import store_user_info
+from app.services.auth_service import store_user_info
 import httpx
 from app.db.connect import users_collection
 from app.utils.logging import get_logger
-from app.utils.auth import (
+from app.utils.auth_utils import (
     GOOGLE_USERINFO_URL,
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,

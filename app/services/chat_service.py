@@ -8,14 +8,14 @@ from bson import ObjectId
 
 from app.db.connect import conversations_collection
 from app.db.redis import set_cache, get_cache, delete_cache
-from app.services.search import perform_search, perform_fetch
-from app.services.llm import doPrompWithStream, doPromptNoStream
-from app.utils.embeddings import search_notes_by_similarity, query_documents
-from app.services.notes import should_create_memory
+from app.services.search_service import perform_search, perform_fetch
+from app.services.llm_service import doPrompWithStream, doPromptNoStream
+from app.utils.embedding_utils import search_notes_by_similarity, query_documents
+from app.services.notes_service import should_create_memory
 from app.utils.notes import insert_note
-from app.models.conversations import ConversationModel, UpdateMessagesRequest
-from app.models.notes import NoteModel
-from app.schemas.common import (
+from app.models.chat_models import ConversationModel, UpdateMessagesRequest
+from app.models.notes_models import NoteModel
+from app.schemas.common_schema import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
     MessageRequest,

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, HttpUrl
 from app.db.redis import get_cache, set_cache
 from app.api.v1.dependencies.auth import get_current_user
-from app.utils.general import get_context_window
+from app.utils.general_utils import get_context_window
 from app.utils.logging import get_logger
 from app.db.connect import (
     conversations_collection,

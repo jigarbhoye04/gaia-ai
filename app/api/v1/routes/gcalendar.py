@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, Cookie, Query
 from typing import Optional, List
 import httpx
 from datetime import datetime, timezone
-from app.services.calendar import fetch_calendar_events, filter_events
+from app.services.calendar_service import fetch_calendar_events, filter_events
 from app.db.connect import calendar_collection
 from pydantic import BaseModel, Field
-from app.utils.auth import (
+from app.utils.auth_utils import (
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,

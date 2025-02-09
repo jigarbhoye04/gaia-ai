@@ -4,7 +4,7 @@ import base64
 from app.db.redis import get_cache, set_cache
 from app.utils.logging import get_logger
 from fastapi import APIRouter, WebSocket
-from app.classes.Audio import TTSService, VoskTranscriber
+from app.services.audio_service import TTSService, VoskTranscriber
 
 router = APIRouter()
 logger = get_logger(name="app", log_file="app.log")

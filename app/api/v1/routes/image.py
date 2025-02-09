@@ -4,9 +4,9 @@ import cloudinary.uploader
 import cloudinary
 from fastapi import UploadFile, File, APIRouter, Form, HTTPException
 from fastapi.responses import JSONResponse
-from app.schemas.common import MessageRequest
-from app.services.image import generate_image, convert_image_to_text
-from app.services.llm import doPromptNoStream
+from app.schemas.common_schema import MessageRequest
+from app.services.image_service import generate_image, convert_image_to_text
+from app.services.llm_service import doPromptNoStream
 from app.utils.logging import get_logger
 
 logger = get_logger(name="image", log_file="image.log")

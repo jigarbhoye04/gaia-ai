@@ -6,11 +6,11 @@ from datetime import datetime
 from typing import Union, List
 from app.db.connect import goals_collection
 from app.db.redis import set_cache, delete_cache, get_cache
-from app.services.goals import generate_roadmap_with_llm_stream
-from app.utils.goals import goal_helper
+from app.services.goals_service import generate_roadmap_with_llm_stream
+from app.utils.goals_utils import goal_helper
 from app.api.v1.dependencies.auth import get_current_user
 from app.utils.logging import get_logger
-from app.schemas.goals import (
+from app.schemas.goals_schema import (
     GoalCreate,
     GoalResponse,
     RoadmapUnavailableResponse,

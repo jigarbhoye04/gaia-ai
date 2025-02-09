@@ -1,5 +1,5 @@
-from app.services.text import parse_calendar_info
-from app.services.text import classify_event_type
+from app.services.text_service import parse_calendar_info
+from app.services.text_service import classify_event_type
 
 
 def get_event_details(message):

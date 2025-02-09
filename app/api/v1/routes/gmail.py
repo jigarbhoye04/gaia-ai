@@ -1,7 +1,7 @@
 import httpx
 from fastapi import APIRouter, HTTPException, Cookie
 from fastapi.responses import JSONResponse
-from app.utils.auth import (
+from app.utils.auth_utils import (
     GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,

@@ -1,5 +1,5 @@
 import json
-from app.services.llm import doPromptCloudflareSDK, doPrompWithStream
+from app.services.llm_service import doPromptCloudflareSDK, doPrompWithStream
 
 
 jsonstructure = {

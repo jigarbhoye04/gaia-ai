@@ -5,7 +5,7 @@ from fastapi import Cookie, HTTPException
 from app.db.connect import users_collection
 from app.db.redis import set_cache, get_cache, delete_cache
 from typing import Optional
-from app.utils.auth import (
+from app.utils.auth_utils import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_TOKEN_URL,

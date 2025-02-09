@@ -2,7 +2,7 @@ import requests
 from fastapi import UploadFile, File, HTTPException, Form
 from PIL import Image
 from io import BytesIO
-from app.services.llm import doPromptNoStream
+from app.services.llm_service import doPromptNoStream
 import httpx
 
 http_async_client = httpx.AsyncClient(timeout=100000)

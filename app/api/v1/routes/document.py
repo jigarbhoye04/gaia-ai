@@ -5,9 +5,9 @@ from app.db.connect import documents_collection
 from app.utils.notes import generate_embedding
 from fastapi import Depends
 from app.api.v1.dependencies.auth import get_current_user
-from app.services.llm import doPromptNoStream
-from app.utils.embeddings import query_documents
-from app.services.text import split_text_into_chunks
+from app.services.llm_service import doPromptNoStream
+from app.utils.embedding_utils import query_documents
+from app.services.text_service import split_text_into_chunks
 import fitz
 
 router = APIRouter()
