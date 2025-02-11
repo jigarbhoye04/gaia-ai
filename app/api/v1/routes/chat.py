@@ -1,5 +1,5 @@
 # app/api/routers/chat_routes.py
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.auth import get_current_user
 from app.services.chat_service import chat_service
@@ -63,13 +63,24 @@ async def create_conversation_endpoint(
 @router.get("/conversations")
 async def get_conversations_endpoint(
     user: dict = Depends(get_current_user),
+    page: int = Query(
+        1, alias="page", ge=1, description="Page number (starting from 1)"
+    ),
+    limit: int = Query(
+        10,
+        alias="limit",
+        ge=1,
+        le=100,
+        description="Number of conversations per page (1-100)",
+    ),
 ) -> JSONResponse:
     """
-    Retrieve all conversations for the authenticated user.
+    Retrieve paginated conversations for the authenticated user.
 
-    This endpoint fetches a list of conversations (using caching when possible).
+    This endpoint fetches a list of conversations with caching when possible.
+    Supports pagination with `page` and `limit` query parameters.
     """
-    response = await chat_service.get_conversations(user)
+    response = await chat_service.get_conversations(user, page=page, limit=limit)
     return JSONResponse(content=response)
 
 

@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 import asyncio
 from bson import ObjectId
 from app.db.collections import conversations_collection
-from app.db.db_redis import set_cache, get_cache, delete_cache
 from app.utils.search_utils import perform_search, perform_fetch
 from app.services.llm_service import LLMService
 from app.utils.embedding_utils import search_notes_by_similarity, query_documents
@@ -99,9 +98,7 @@ class ChatService:
         return response
 
     @staticmethod
-    async def create_conversation(
-            conversation: ConversationModel, user: dict
-    ) -> dict:
+    async def create_conversation(conversation: ConversationModel, user: dict) -> dict:
         """
         Create a new conversation.
 
@@ -142,7 +139,7 @@ class ChatService:
             )
 
         # Invalidate the Redis cache for the user asynchronously.
-        asyncio.create_task(delete_cache(f"conversations_cache:{user_id}"))
+        # asyncio.create_task(delete_cache(f"conversations_cache:{user_id}"))
 
         return {
             "conversation_id": conversation.conversation_id,
@@ -152,47 +149,100 @@ class ChatService:
         }
 
     @staticmethod
-    async def get_conversations(user: dict) -> dict:
+    async def get_conversations(user: dict, page: int = 1, limit: int = 10) -> dict:
         """
-        Fetch all conversations for the authenticated user.
+        Fetch paginated conversations for the authenticated user, always including starred conversations.
 
-        Args:
-            user (dict): The authenticated user.
+        Starred conversations (where "starred": True) are fetched in full (without pagination)
+        so that every starred conversation is always included in the result. The non-starred
+        conversations are fetched using the provided page and limit.
 
         Returns:
-            dict: A list of conversations.
+            dict: A dictionary containing:
+                - "conversations": Combined list of starred and paginated non-starred conversation documents.
+                - "total": Total number of conversations (starred + non-starred).
+                - "page": The current page number for non-starred conversations.
+                - "limit": Number of non-starred conversations per page.
+                - "total_pages": Total number of pages available for non-starred conversations.
         """
         user_id = user["user_id"]
-        cache_key = f"conversations_cache:{user_id}"
 
-        # Check cache first.
-        cached_conversations = await get_cache(cache_key)
-        if cached_conversations:
-            return {"conversations": jsonable_encoder(cached_conversations)}
+        # Shared projection to fetch only needed fields.
+        projection = {
+            "_id": 1,
+            "user_id": 1,
+            "conversation_id": 1,
+            "description": 1,
+            "starred": 1,
+            "createdAt": 1,
+        }
 
-        conversations = await conversations_collection.find(
-            {"user_id": user_id},
-            {
-                "_id": 1,
-                "user_id": 1,
-                "conversation_id": 1,
-                "description": 1,
-                "starred": 1,
-                "createdAt": 1,
-            },
-        ).to_list(None)
+        # Filter for starred conversations.
+        starred_filter = {"user_id": user_id, "starred": True}
 
-        if not conversations:
-            await set_cache(cache_key, [])
-            return {"conversations": []}
+        # Filter for non-starred conversations: either the "starred" field does not exist or is False.
+        non_starred_filter = {
+            "user_id": user_id,
+            "$or": [{"starred": {"$exists": False}}, {"starred": False}],
+        }
 
-        # Convert ObjectId to string.
-        for conversation in conversations:
-            conversation["_id"] = str(conversation["_id"])
+        # Calculate the number of documents to skip for pagination (applied to non-starred conversations only).
+        skip = (page - 1) * limit
 
-        # Cache the result.
-        await set_cache(cache_key, jsonable_encoder(conversations))
-        return {"conversations": conversations}
+        # Run the three database operations concurrently.
+        starred_future = (
+            conversations_collection.find(starred_filter, projection)
+            .sort("createdAt", -1)
+            .to_list(None)
+        )
+        non_starred_count_future = conversations_collection.count_documents(
+            non_starred_filter
+        )
+        non_starred_future = (
+            conversations_collection.find(non_starred_filter, projection)
+            .sort("createdAt", -1)
+            .skip(skip)
+            .limit(limit)
+            .to_list(limit)
+        )
+
+        (
+            starred_conversations,
+            non_starred_count,
+            non_starred_conversations,
+        ) = await asyncio.gather(
+            starred_future, non_starred_count_future, non_starred_future
+        )
+
+        # Helper function to convert ObjectId to string.
+        def convert_ids(conversations):
+            for conv in conversations:
+                conv["_id"] = str(conv["_id"])
+            return conversations
+
+        starred_conversations = convert_ids(starred_conversations)
+        non_starred_conversations = convert_ids(non_starred_conversations)
+
+        # Combine starred and non-starred results.
+        combined_conversations = starred_conversations + non_starred_conversations
+
+        # Total count: starred count + non-starred count.
+        total = len(starred_conversations) + non_starred_count
+
+        # Total pages based on non-starred conversations only.
+        total_pages = (
+            (non_starred_count + limit - 1) // limit if non_starred_count > 0 else 1
+        )
+
+        result = {
+            "conversations": combined_conversations,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "total_pages": total_pages,
+        }
+
+        return result
 
     @staticmethod
     async def get_conversation(conversation_id: str, user: dict) -> dict:
@@ -288,7 +338,7 @@ class ChatService:
                 status_code=404, detail="Conversation not found or update failed"
             )
 
-        await delete_cache(f"conversations_cache:{user_id}")
+        # await delete_cache(f"conversations_cache:{user_id}")
 
         return {
             "message": "Conversation updated successfully",
@@ -297,7 +347,7 @@ class ChatService:
 
     @staticmethod
     async def update_conversation_description(
-            conversation_id: str, data: DescriptionUpdateRequest, user: dict
+        conversation_id: str, data: DescriptionUpdateRequest, user: dict
     ) -> dict:
         """
         Update the conversation description.
@@ -322,7 +372,7 @@ class ChatService:
                 status_code=404, detail="Conversation not found or update failed"
             )
 
-        await delete_cache(f"conversations_cache:{user_id}")
+        # await delete_cache(f"conversations_cache:{user_id}")
 
         return {
             "message": "Conversation updated successfully",
@@ -331,7 +381,7 @@ class ChatService:
 
     @staticmethod
     async def star_conversation(
-            conversation_id: str, starred: bool, user: dict
+        conversation_id: str, starred: bool, user: dict
     ) -> dict:
         """
         Star or unstar a conversation.
@@ -355,7 +405,7 @@ class ChatService:
                 status_code=404, detail="Conversation not found or update failed"
             )
 
-        await delete_cache(f"conversations_cache:{user_id}")
+        # await delete_cache(f"conversations_cache:{user_id}")
 
         return {"message": "Conversation updated successfully", "starred": starred}
 
@@ -379,7 +429,7 @@ class ChatService:
                 detail="No conversations found for the user",
             )
 
-        await delete_cache(f"conversations_cache:{user_id}")
+        # await delete_cache(f"conversations_cache:{user_id}")
 
         return {"message": "All conversations deleted successfully"}
 
@@ -406,7 +456,7 @@ class ChatService:
                 detail="Conversation not found or does not belong to the user",
             )
 
-        await delete_cache(f"conversations_cache:{user_id}")
+        # await delete_cache(f"conversations_cache:{user_id}")
 
         return {
             "message": "Conversation deleted successfully",
@@ -415,7 +465,7 @@ class ChatService:
 
     @staticmethod
     async def pin_message(
-            conversation_id: str, message_id: str, pinned: bool, user: dict
+        conversation_id: str, message_id: str, pinned: bool, user: dict
     ) -> dict:
         """
         Pin or unpin a message within a conversation.
@@ -550,9 +600,7 @@ class ChatService:
             )
 
     @staticmethod
-    async def _fetch_notes(
-            last_message: dict, query_text: str, user: dict
-    ) -> None:
+    async def _fetch_notes(last_message: dict, query_text: str, user: dict) -> None:
         """
         Fetch similar notes and append their content to the last message.
 
@@ -572,7 +620,7 @@ class ChatService:
 
     @staticmethod
     async def _fetch_documents(
-            last_message: dict, query_text: str, conversation_id: str, user_id: str
+        last_message: dict, query_text: str, conversation_id: str, user_id: str
     ) -> None:
         """
         Fetch documents related to the query and append their content to the last message.

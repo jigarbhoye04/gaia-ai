@@ -22,3 +22,6 @@ venv/
 */logs/
 
 *.log
+
+.idea
+
