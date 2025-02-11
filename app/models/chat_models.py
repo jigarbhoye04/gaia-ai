@@ -3,9 +3,10 @@ from typing import List, Optional, Literal
 
 
 class CalIntentOptions(BaseModel):
-    title: str
+    summary: str
     description: str
-    date: str
+    start: str
+    end: str
 
 
 # Define the structure for each message

@@ -169,20 +169,13 @@ class LLMService:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line.strip():
-                        print(f"Intent: {intent}")
-                        # Check if this is the termination marker and we need to produce a calendar event.
                         if line == "data: [DONE]" and intent == "calendar":
-                            print(
-                                "I AM INSIDE THE IF CONDITION for calendar event creation"
-                            )
-                            # Extract the last user message.
                             user_message = ""
                             for msg in reversed(messages):
                                 if msg.get("role") == "user" and msg.get("content"):
                                     user_message = msg.get("content")
                                     break
 
-                            # Await calendar event creation before yielding.
                             (
                                 success,
                                 start,
@@ -190,8 +183,9 @@ class LLMService:
                                 summary,
                                 description,
                             ) = await llm_create_calendar_event(message=user_message)
-                            print("After await llm_create_calendar_event")
+
                             print(start, end, summary, description)
+
                             if success:
                                 event_json = {
                                     "intent": "calendar",
@@ -254,13 +248,14 @@ async def llm_create_calendar_event(message: str):
       (success_flag, start, end, summary, description)
     """
     try:
-        print("Inside llm_create_calendar_event")
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
+        now_iso = now.isoformat()
+        current_day = now.strftime("%A")
 
         # Call the non-streaming prompt and wait for the result.
         result = await asyncio.wait_for(
             llm_service.do_prompt_no_stream(
-                prompt=f"This is the user message: {message}. The current date and time is: {now}.",
+                prompt=f"This is the user message: {message}. The current date and time is: {now_iso}. Today's day is {current_day}",
                 model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
                 system_prompt="""
                 You are an intelligent assistant specialized in creating calendar events. You are provided with a user message and the current date and time. Your task is to analyze both and produce a JSON object that describes a calendar event accordingly. The JSON must follow the exact format below and include no additional text or markdown formatting:

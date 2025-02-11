@@ -69,9 +69,9 @@ class ChatService:
         type = await classify_event_type(query_text)
 
         print("this is the type", type)
-        if type.get("highest_label") and (type.get("highest_score") >= 0.65):
+        if type.get("highest_label") and (type.get("highest_score") >= 0.5):
             match type["highest_label"]:
-                case "add calendar event":
+                case "add to calendar" | "set a reminder":
                     intent = "calendar"
             # case "search web internet":
             #     await do_search(last_message, query_text)
