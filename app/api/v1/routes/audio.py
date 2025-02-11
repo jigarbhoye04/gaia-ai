@@ -3,7 +3,9 @@ import base64
 from app.db.db_redis import get_cache, set_cache
 from app.utils.logging_util import get_logger
 from fastapi import APIRouter, WebSocket
-from app.services.audio_service import TTSService, VoskTranscriber
+from app.services.audio_service import TTSService
+
+# , VoskTranscriber
 from app.models.audio_models import TTSRequest
 
 router = APIRouter()
@@ -11,33 +13,33 @@ logger = get_logger(name="app", log_file="app.log")
 
 
 tts_service = TTSService()
-transcriber = VoskTranscriber()
+# transcriber = VoskTranscriber()
 
 
-@router.websocket("/transcribe")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    logger.info("WebSocket connection accepted.")
+# @router.websocket("/transcribe")
+# async def websocket_endpoint(websocket: WebSocket):
+#     await websocket.accept()
+#     logger.info("WebSocket connection accepted.")
 
-    try:
-        await transcriber.load_model()
-        full_transcription = []
+#     try:
+#         await transcriber.load_model()
+#         full_transcription = []
 
-        while True:
-            audio_chunk = await websocket.receive_bytes()
-            logger.debug("Received audio chunk from client.")
+#         while True:
+#             audio_chunk = await websocket.receive_bytes()
+#             logger.debug("Received audio chunk from client.")
 
-            transcribed_text = await transcriber.process_audio_stream([audio_chunk])
+#             transcribed_text = await transcriber.process_audio_stream([audio_chunk])
 
-            for text in transcribed_text:
-                if text.strip():
-                    await websocket.send_text(text)
-                    full_transcription.append(text)
-                    logger.debug(f"Transcribed text sent: {text}")
+#             for text in transcribed_text:
+#                 if text.strip():
+#                     await websocket.send_text(text)
+#                     full_transcription.append(text)
+#                     logger.debug(f"Transcribed text sent: {text}")
 
-    except Exception as e:
-        logger.error(f"WebSocket error: {e}")
-        await websocket.close()
+#     except Exception as e:
+#         logger.error(f"WebSocket error: {e}")
+#         await websocket.close()
 
 
 @router.post("/synthesize", responses={200: {"content": {"audio/wav": {}}}})

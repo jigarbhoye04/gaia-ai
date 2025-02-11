@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.logging_util import get_logger
-from fastapi import APIRouter,FastAPI
+from fastapi import APIRouter, FastAPI
 from app.api.v1.routes import (
     chat,
     auth,
@@ -14,9 +14,8 @@ from app.api.v1.routes import (
     notes,
     goals,
     oauth,
-    general,
+    audio,
     # gmail,
-    # audio
 )
 
 logger = get_logger(name="main", log_file="app.log")
@@ -34,8 +33,9 @@ api_router.include_router(calendar.router, tags=["Calendar"])
 api_router.include_router(notes.router, tags=["Notes/Memories"])
 api_router.include_router(goals.router, tags=["Goals"])
 api_router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
-# api_router.include_router(audio.router, tags=["Audio"])
+api_router.include_router(audio.router, tags=["Audio"])
 # api_router.include_router(gmail.router, tags=["GMail"])
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

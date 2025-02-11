@@ -29,7 +29,7 @@ zero_shot_classifier = pipeline(
 
 candidate_labels = [
     "add to calendar",
-    "set a reminder",
+    # "set a reminder",
     "send email",
     "generate image",
     "search internet",

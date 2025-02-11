@@ -23,7 +23,7 @@ class TTSService:
         def find_service_account_file(filename="gtts-secret.json"):
             current_dir = Path(__file__).resolve().parent
             for _ in range(3):
-                potential_path = current_dir / "utils" / filename
+                potential_path = current_dir / "config" / filename
                 if potential_path.exists():
                     return str(potential_path)
                 current_dir = current_dir.parent
@@ -96,7 +96,6 @@ class VoskTranscriber:
         logger.info(f"Initialized VoskTranscriber with model path: {self.model_path}")
 
     async def load_model(self) -> None:
-
         if self.model and self.recognizer:
             logger.info("Model already loaded. Skipping initialization.")
             return
