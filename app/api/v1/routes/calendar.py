@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Cookie, Query
+from fastapi.responses import JSONResponse
 from typing import Optional, List
 import httpx
 from datetime import datetime, timezone
@@ -261,9 +262,12 @@ async def create_calendar_event(
     Create a new calendar event
 
     Args:
-        event: Event details
-        access_token: OAuth2 access token
+        event: Event details (including summary, description, start, and end times)
+        access_token: OAuth2 access token (must include required calendar scopes)
         refresh_token: OAuth2 refresh token
+
+    Returns:
+        JSONResponse: The response from the Google Calendar API.
     """
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token required")
@@ -275,35 +279,53 @@ async def create_calendar_event(
     }
 
     try:
+        # Build the event payload using ISO-formatted datetimes.
         event_payload = {
             "summary": event.summary,
             "description": event.description,
-            "start": event.start.dict(),
-            "end": event.end.dict(),
+            "start": {
+                "dateTime": event.start.isoformat(),
+                "timeZone": "UTC",  # Adjust if needed.
+            },
+            "end": {
+                "dateTime": event.end.isoformat(),
+                "timeZone": "UTC",
+            },
         }
 
         response = await http_async_client.post(
             url, headers=headers, json=event_payload
         )
 
-        match response.status_code:
-            case 200:
-                return response.json()
-            case 401:
-                if refresh_token:
-                    # Handle token refresh similar to get_calendar_events_by_id
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Token expired. Please refresh and try again.",
-                    )
-                raise HTTPException(status_code=401, detail="Invalid access token")
-            case _:
+        # Handle successful creation.
+        if response.status_code in (200, 201):
+            return JSONResponse(content=response.json())
+
+        # Handle insufficient scopes explicitly.
+        elif response.status_code == 403:
+            raise HTTPException(
+                status_code=403,
+                detail="Insufficient authentication scopes. Please ensure that your access token includes the required scopes to create calendar events.",
+            )
+
+        # Handle token expiration or invalid token.
+        elif response.status_code == 401:
+            if refresh_token:
                 raise HTTPException(
-                    status_code=response.status_code,
-                    detail=response.json()
-                    .get("error", {})
-                    .get("message", "Unknown error"),
+                    status_code=401,
+                    detail="Token expired. Please refresh and try again.",
                 )
+            raise HTTPException(status_code=401, detail="Invalid access token")
+
+        # Handle other errors.
+        else:
+            error_detail = (
+                response.json().get("error", {}).get("message", "Unknown error")
+            )
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=error_detail,
+            )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

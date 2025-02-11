@@ -10,6 +10,7 @@ from app.services.llm_service import LLMService
 from app.utils.embedding_utils import search_notes_by_similarity, query_documents
 from app.utils.notes_utils import should_create_memory
 from app.utils.notes import insert_note
+from app.services.text_service import classify_event_type
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.models.notes_models import NoteModel
 from app.models.general_models import (
@@ -64,6 +65,20 @@ class ChatService:
             await self._fetch_documents(
                 last_message, query_text, body.conversation_id, user_id
             )
+
+        type = await classify_event_type(query_text)
+
+        print("this is the type", type)
+        if type.get("highest_label") and (type.get("highest_score") >= 0.65):
+            match type["highest_label"]:
+                case "add calendar event":
+                    intent = "calendar"
+            # case "search web internet":
+            #     await do_search(last_message, query_text)
+            # case "flowchart":
+            #     intent = "flowchart"
+            # case "weather":
+            #     intent = "weather"
 
         # Run this in the background (do not await)
         background_tasks.add_task(self._store_note, query_text, user_id)

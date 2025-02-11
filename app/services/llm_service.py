@@ -1,10 +1,13 @@
 # app/services/llm_service.py
-import os
 import asyncio
-import httpx
 import json
+import os
+from datetime import datetime, timezone
+
+import httpx
 from dotenv import load_dotenv
 from groq import AsyncGroq
+
 from app.utils.logging_util import get_logger
 
 # Load environment variables
@@ -44,11 +47,13 @@ class LLMService:
         prompt: str,
         temperature: float = 0.6,
         max_tokens: int = 256,
+        system_prompt: str = None,
         model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
     ) -> dict:
         """
         Send a prompt to the LLM API without streaming.
         """
+
         try:
             response = await self.http_async_client.post(
                 self.llm_url,
@@ -57,7 +62,12 @@ class LLMService:
                     "temperature": temperature,
                     "max_tokens": max_tokens,
                     "model": model,
-                    "messages": [{"role": "user", "content": prompt}],
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": f"System: {system_prompt} User Prompt: {prompt}",
+                        },
+                    ],
                 },
             )
             response.raise_for_status()
@@ -158,24 +168,46 @@ class LLMService:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
                     if line.strip():
-                        logger.debug(f"Stream line: {line}")
-                        if line == "data: [DONE]":
-                            # Yield any additional required data, then mark the stream as done.
-                            yield f"""data: {
-                                json.dumps(
-                                    {
-                                        "intent": "calendar",
-                                        "calendar_options": {
-                                            "title": "test_title",
-                                            "description": "test_description",
-                                            "date": "2025-02-08T19:34:52.906Z",
-                                        },
-                                    }
-                                )
-                            }\n\n"""
+                        print(f"Intent: {intent}")
+                        # Check if this is the termination marker and we need to produce a calendar event.
+                        if line == "data: [DONE]" and intent == "calendar":
+                            print(
+                                "I AM INSIDE THE IF CONDITION for calendar event creation"
+                            )
+                            # Extract the last user message.
+                            user_message = ""
+                            for msg in reversed(messages):
+                                if msg.get("role") == "user" and msg.get("content"):
+                                    user_message = msg.get("content")
+                                    break
+
+                            # Await calendar event creation before yielding.
+                            (
+                                success,
+                                start,
+                                end,
+                                summary,
+                                description,
+                            ) = await llm_create_calendar_event(message=user_message)
+                            print("After await llm_create_calendar_event")
+                            print(start, end, summary, description)
+                            if success:
+                                event_json = {
+                                    "intent": "calendar",
+                                    "calendar_options": {
+                                        "summary": summary,
+                                        "description": description,
+                                        "start": start,
+                                        "end": end,
+                                    },
+                                }
+                                yield f"data: {json.dumps(event_json)}\n\n"
+                            else:
+                                yield 'data: {"error": "Could not create calendar event."}\n\n'
                             yield "data: [DONE]\n\n"
                         else:
                             yield line + "\n\n"
+
         except httpx.StreamError as e:
             logger.error(f"Stream error: {e}")
         except Exception as e:
@@ -214,5 +246,83 @@ class LLMService:
             yield "data: [DONE]\n\n"
 
 
-# Instantiate the service once and export it as a singleton
+async def llm_create_calendar_event(message: str):
+    """
+    Create a calendar event using the LLM.
+    Returns a tuple:
+      (success_flag, start, end, summary, description)
+    """
+    try:
+        print("Inside llm_create_calendar_event")
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Call the non-streaming prompt and wait for the result.
+        result = await asyncio.wait_for(
+            llm_service.do_prompt_no_stream(
+                prompt=f"This is the user message: {message}. The current date and time is: {now}.",
+                model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+                system_prompt="""
+                You are an intelligent assistant specialized in creating calendar events. You are provided with a user message and the current date and time. Your task is to analyze both and produce a JSON object that describes a calendar event accordingly. The JSON must follow the exact format below and include no additional text or markdown formatting:
+                {"intent": "calendar", "calendar_options": {"summary": "<event summary>", "description": "<event description>", "start": "<ISO 8601 start datetime>", "end": "<ISO 8601 end datetime>"}}
+                Strict rules:
+                1. Output only the JSON object in a single line with no line breaks.
+                2. The "intent" field must be exactly "calendar".
+                3. The "calendar_options" object must include exactly four keys: "summary", "description", "start", and "end".
+                4. The "start" and "end" values must be valid ISO 8601 formatted datetime strings.
+                5. Use both the provided user message and the current date and time to determine appropriate event details.
+                6. Do not include any additional text, commentary, or formatting.
+                """,
+            ),
+            timeout=30,  # Timeout after 30 seconds if no response.
+        )
+
+        print("Raw result from LLM:", repr(result))
+
+        # Normalize the result to a dictionary.
+        if isinstance(result, dict):
+            parsed_result = result
+        elif isinstance(result, str) and result.strip():
+            try:
+                parsed_result = json.loads(result.strip())
+            except json.JSONDecodeError as e:
+                print("JSON decode error:", e)
+                return (False, None, None, None, None)
+        else:
+            print("Result is empty or not a valid string.")
+            return (False, None, None, None, None)
+
+        print("Parsed result:", parsed_result)
+
+        # Check if the result contains a "response" key.
+        if "response" in parsed_result and isinstance(parsed_result["response"], str):
+            try:
+                # Parse the nested JSON string from the "response" key.
+                parsed_inner = json.loads(parsed_result["response"])
+                parsed_result = parsed_inner
+            except json.JSONDecodeError as e:
+                print("Nested JSON decode error:", e)
+                return (False, None, None, None, None)
+
+        # Check that the intent is as expected.
+        if parsed_result.get("intent") == "calendar":
+            options = parsed_result.get("calendar_options", {})
+            return (
+                True,
+                options.get("start"),
+                options.get("end"),
+                options.get("summary"),
+                options.get("description"),
+            )
+        else:
+            print("Intent mismatch or missing.")
+            return (False, None, None, None, None)
+    except asyncio.TimeoutError:
+        print("LLM call timed out")
+        return (False, None, None, None, None)
+    except Exception as e:
+        print("Exception in llm_create_calendar_event:", e)
+        return (False, None, None, None, None)
+
+
+# Instantiate the service once and export it as a singleton.
 llm_service = LLMService()

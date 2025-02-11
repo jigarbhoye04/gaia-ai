@@ -5,9 +5,6 @@ from app.services.llm_service import llm_service
 
 
 async def should_create_memory(message: str) -> tuple[bool, None, None] | tuple[bool, Any, Any]:
-    """
-    Use a Hugging Face model to classify if a message should be stored as a memory.
-    """
     try:
         result = await llm_service.do_prompt_cloudflare_sdk(
             prompt=f""" This is the message: {message}""",
