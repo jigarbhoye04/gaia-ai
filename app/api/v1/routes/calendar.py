@@ -1,8 +1,10 @@
+from app.utils.calendar_utils import resolve_timezone
 from fastapi import APIRouter, HTTPException, Cookie, Query
 from fastapi.responses import JSONResponse
 from typing import Optional, List
 import httpx
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from app.services.calendar_service import fetch_calendar_events, filter_events
 from app.db.collections import calendar_collection
 from app.models.calendar_models import EventCreateRequest
@@ -259,15 +261,8 @@ async def create_calendar_event(
     refresh_token: str = Cookie(None),
 ):
     """
-    Create a new calendar event
-
-    Args:
-        event: Event details (including summary, description, start, and end times)
-        access_token: OAuth2 access token (must include required calendar scopes)
-        refresh_token: OAuth2 refresh token
-
-    Returns:
-        JSONResponse: The response from the Google Calendar API.
+    Create a new calendar event using the Google Calendar API.
+    This endpoint accepts non-canonical timezone names and normalizes them.
     """
     if not access_token:
         raise HTTPException(status_code=401, detail="Access token required")
@@ -279,36 +274,50 @@ async def create_calendar_event(
     }
 
     try:
-        # Build the event payload using ISO-formatted datetimes.
-        event_payload = {
-            "summary": event.summary,
-            "description": event.description,
-            "start": {
-                "dateTime": event.start.isoformat(),
-                "timeZone": "UTC",  # Adjust if needed.
-            },
-            "end": {
-                "dateTime": event.end.isoformat(),
-                "timeZone": "UTC",
-            },
-        }
+        # Use pendulum to resolve the canonical timezone name.
+        canonical_timezone = resolve_timezone(event.timezone)
 
-        response = await http_async_client.post(
-            url, headers=headers, json=event_payload
-        )
+        # Use the canonical timezone with ZoneInfo.
+        user_tz = ZoneInfo(canonical_timezone)
 
-        # Handle successful creation.
+        # Ensure event.start and event.end are timezone-aware.
+        # If they are naive, assume they are in UTC.
+        start_dt = event.start.replace(tzinfo=user_tz)
+        end_dt = event.end.replace(tzinfo=user_tz)
+
+        # Convert the datetimes to the user’s (canonical) timezone.
+        start_dt = start_dt.astimezone(user_tz)
+        end_dt = end_dt.astimezone(user_tz)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid timezone: {str(e)}")
+
+    # Build the event payload.
+    event_payload = {
+        "summary": event.summary,
+        "description": event.description,
+        "start": {
+            "dateTime": start_dt.isoformat(),
+            "timeZone": canonical_timezone,  # Use the resolved canonical timezone
+        },
+        "end": {
+            "dateTime": end_dt.isoformat(),
+            "timeZone": canonical_timezone,
+        },
+    }
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, json=event_payload)
+
         if response.status_code in (200, 201):
             return JSONResponse(content=response.json())
 
-        # Handle insufficient scopes explicitly.
         elif response.status_code == 403:
             raise HTTPException(
                 status_code=403,
                 detail="Insufficient authentication scopes. Please ensure that your access token includes the required scopes to create calendar events.",
             )
 
-        # Handle token expiration or invalid token.
         elif response.status_code == 401:
             if refresh_token:
                 raise HTTPException(
@@ -317,15 +326,14 @@ async def create_calendar_event(
                 )
             raise HTTPException(status_code=401, detail="Invalid access token")
 
-        # Handle other errors.
         else:
             error_detail = (
                 response.json().get("error", {}).get("message", "Unknown error")
             )
-            raise HTTPException(
-                status_code=response.status_code,
-                detail=error_detail,
-            )
+            raise HTTPException(status_code=response.status_code, detail=error_detail)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+
+# FILE ENDS HERE

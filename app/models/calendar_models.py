@@ -7,3 +7,4 @@ class EventCreateRequest(BaseModel):
     description: str = Field("", title="Event Description")
     start: datetime = Field(..., title="Start Time")
     end: datetime = Field(..., title="End Time")
+    timezone: str = "UTC"
