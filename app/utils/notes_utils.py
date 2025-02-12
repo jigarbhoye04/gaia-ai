@@ -1,10 +1,12 @@
 import json
-from typing import Any, Coroutine
+from typing import Any
 
 from app.services.llm_service import llm_service
 
 
-async def should_create_memory(message: str) -> tuple[bool, None, None] | tuple[bool, Any, Any]:
+async def should_create_memory(
+    message: str,
+) -> tuple[bool, None, None] | tuple[bool, Any, Any]:
     try:
         result = await llm_service.do_prompt_cloudflare_sdk(
             prompt=f""" This is the message: {message}""",
@@ -39,6 +41,8 @@ async def should_create_memory(message: str) -> tuple[bool, None, None] | tuple[
         if isinstance(result, str):
             try:
                 result = json.loads(result.replace("\n", ""))
+                print(f"{result=}")
+
             except json.JSONDecodeError:
                 return (
                     False,
@@ -47,6 +51,7 @@ async def should_create_memory(message: str) -> tuple[bool, None, None] | tuple[
                 )
 
         is_memory = result.get("is_memory")
+        print(f"{is_memory=}")
 
         if isinstance(is_memory, bool):
             return (

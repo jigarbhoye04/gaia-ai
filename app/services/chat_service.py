@@ -606,7 +606,12 @@ class ChatService:
             query_text (str): The query text.
             user_id (str): The ID of the user.
         """
+        print("should create a memory?")
+
         is_memory, plaintext, content = await should_create_memory(query_text)
+        
+        print(is_memory, plaintext, content)
+
         if is_memory and content and plaintext:
             await insert_note(
                 note=NoteModel(plaintext=plaintext, content=content),
