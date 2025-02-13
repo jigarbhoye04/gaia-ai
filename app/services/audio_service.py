@@ -1,15 +1,17 @@
-from vosk import Model, KaldiRecognizer
-import json
-from google.oauth2 import service_account
+# from vosk import Model, KaldiRecognizer
+# import json
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import google.auth.transport.requests as requests
 import httpx
 from fastapi import HTTPException
-import google.auth.transport.requests as requests
-from pathlib import Path
-import os
-from typing import List
-import asyncio
+from google.oauth2 import service_account
+
+# import os
+# from typing import List
+# import asyncio
 from app.utils.logging_util import get_logger
-from concurrent.futures import ThreadPoolExecutor
 
 executor = ThreadPoolExecutor(max_workers=2)
 
@@ -88,48 +90,48 @@ class TTSService:
             raise HTTPException(status_code=500, detail=str(e))
 
 
-class VoskTranscriber:
-    def __init__(self, model_path: str = "app/assets/models/vosk-model-en-us-0.22"):
-        self.model_path = os.path.abspath(model_path)
-        self.model = None
-        self.recognizer = None
-        logger.info(f"Initialized VoskTranscriber with model path: {self.model_path}")
+# class VoskTranscriber:
+#     def __init__(self, model_path: str = "app/assets/models/vosk-model-en-us-0.22"):
+#         self.model_path = os.path.abspath(model_path)
+#         self.model = None
+#         self.recognizer = None
+#         logger.info(f"Initialized VoskTranscriber with model path: {self.model_path}")
 
-    async def load_model(self) -> None:
-        if self.model and self.recognizer:
-            logger.info("Model already loaded. Skipping initialization.")
-            return
+#     async def load_model(self) -> None:
+#         if self.model and self.recognizer:
+#             logger.info("Model already loaded. Skipping initialization.")
+#             return
 
-        if not os.path.exists(self.model_path):
-            logger.error(f"Model path does not exist: {self.model_path}")
-            raise FileNotFoundError(f"Model path does not exist: {self.model_path}")
+#         if not os.path.exists(self.model_path):
+#             logger.error(f"Model path does not exist: {self.model_path}")
+#             raise FileNotFoundError(f"Model path does not exist: {self.model_path}")
 
-        loop = asyncio.get_event_loop()
-        self.model = await loop.run_in_executor(None, Model, self.model_path)
-        self.recognizer = KaldiRecognizer(self.model, 16000)
-        self.recognizer.SetWords(True)
-        self.recognizer.SetPartialWords(True)
-        logger.info("Model and recognizer loaded successfully.")
+#         loop = asyncio.get_event_loop()
+#         self.model = await loop.run_in_executor(None, Model, self.model_path)
+#         self.recognizer = KaldiRecognizer(self.model, 16000)
+#         self.recognizer.SetWords(True)
+#         self.recognizer.SetPartialWords(True)
+#         logger.info("Model and recognizer loaded successfully.")
 
-    async def process_audio_stream(self, audio_stream: bytes) -> List[str]:
-        logger.info("Processing audio stream.")
-        loop = asyncio.get_event_loop()
-        text_results = []
+#     async def process_audio_stream(self, audio_stream: bytes) -> List[str]:
+#         logger.info("Processing audio stream.")
+#         loop = asyncio.get_event_loop()
+#         text_results = []
 
-        for chunk in audio_stream:
-            result_available = await loop.run_in_executor(
-                executor, self.recognizer.AcceptWaveform, chunk
-            )
+#         for chunk in audio_stream:
+#             result_available = await loop.run_in_executor(
+#                 executor, self.recognizer.AcceptWaveform, chunk
+#             )
 
-            if result_available:
-                result = json.loads(self.recognizer.Result())
-                text_results.append(result.get("text", ""))
-                logger.debug(f"Final result: {result.get('text', '')}")
-            else:
-                partial_result = json.loads(self.recognizer.PartialResult())
-                logger.debug(f"Partial result: {partial_result.get('partial', '')}")
+#             if result_available:
+#                 result = json.loads(self.recognizer.Result())
+#                 text_results.append(result.get("text", ""))
+#                 logger.debug(f"Final result: {result.get('text', '')}")
+#             else:
+#                 partial_result = json.loads(self.recognizer.PartialResult())
+#                 logger.debug(f"Partial result: {partial_result.get('partial', '')}")
 
-        final_result = json.loads(self.recognizer.FinalResult())
-        text_results.append(final_result.get("text", ""))
-        logger.info("Completed audio stream processing.")
-        return text_results
+#         final_result = json.loads(self.recognizer.FinalResult())
+#         text_results.append(final_result.get("text", ""))
+#         logger.info("Completed audio stream processing.")
+#         return text_results

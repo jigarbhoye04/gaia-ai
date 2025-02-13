@@ -101,8 +101,8 @@ class EmbeddingModel:
         return cls._model
 
 
+embedding_model = EmbeddingModel.get_model()
+
+
 def generate_embedding(text):
     return embedding_model.encode(text).tolist()
-
-
-embedding_model = EmbeddingModel().get_model()
