@@ -78,7 +78,7 @@ async def fetch_or_refresh_user_info(access_token: str, user_email: str):
 
 # Routes
 @router.post("/callback")
-async def callback( oauth_request: OAuthRequest):
+async def callback(oauth_request: OAuthRequest):
     try:
         tokens = await get_tokens_from_code(oauth_request.code)
         access_token = tokens.get("access_token")
@@ -127,7 +127,7 @@ async def callback( oauth_request: OAuthRequest):
         raise e
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 
 @router.get("/me")
@@ -175,4 +175,4 @@ async def me(access_token: str = Cookie(None)):
         raise HTTPException(status_code=500, detail="Error contacting Google API")
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
