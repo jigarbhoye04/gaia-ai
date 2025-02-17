@@ -51,7 +51,7 @@ class ChatService:
         """
         user_id = user.get("user_id")
         intent = None
-        llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        llm_model = "@cf/meta/llama-3.1-8b-instruct-fast"
 
         last_message = body.messages[-1] if body.messages else None
         query_text = (
@@ -61,33 +61,30 @@ class ChatService:
         )
 
         if last_message:
-            await self._fetch_notes(last_message, query_text, user)
-            await self._fetch_documents(
+            notes_added = await self._fetch_notes(last_message, query_text, user)
+            docs_added = await self._fetch_documents(
                 last_message, query_text, body.conversation_id, user_id
             )
 
         type = await classify_event_type(query_text)
 
-        print("this is the type", type)
         if type.get("highest_label") and (type.get("highest_score") >= 0.5):
             match type["highest_label"]:
                 case "add to calendar" | "set a reminder":
                     intent = "calendar"
-            # case "search web internet":
-            #     await do_search(last_message, query_text)
-            # case "flowchart":
-            #     intent = "flowchart"
-            # case "weather":
-            #     intent = "weather"
 
-        # Run this in the background (do not await)
-        background_tasks.add_task(self._store_note, query_text, user_id)
+        if notes_added or docs_added:
+            llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
         if body.pageFetchURL and last_message:
+            llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
             await self._fetch_webpage(last_message, body.pageFetchURL)
 
         if body.search_web and last_message:
+            llm_model = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
             await self._do_search(last_message, query_text)
+
+        background_tasks.add_task(self._store_note, query_text, user_id)
 
         return StreamingResponse(
             self.llm_service.do_prompt_with_stream(
@@ -603,11 +600,7 @@ class ChatService:
             query_text (str): The query text.
             user_id (str): The ID of the user.
         """
-        print("should create a memory?")
-
         is_memory, plaintext, content = await should_create_memory(query_text)
-
-        print(is_memory, plaintext, content)
 
         if is_memory and content and plaintext:
             await insert_note(
@@ -634,6 +627,8 @@ class ChatService:
                 f"User: {last_message['content']} \n System: The user has the following notes: "
                 f"{'- '.join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation."
             )
+            return True
+        return False
 
     @staticmethod
     async def _fetch_documents(
@@ -649,18 +644,17 @@ class ChatService:
             user_id (str): The ID of the user.
         """
         documents = await query_documents(query_text, conversation_id, user_id)
-        if not documents or len(documents) <= 0:
-            return
-
-        content = [document["content"] for document in documents]
-        titles = [document["title"] for document in documents]
-
-        prompt = (
-            f"Question: {last_message['content']}\n\n"
-            f"Context from document files uploaded by the user:\n"
-            f"{{'document_names': {titles}, 'content': {content}}}"
-        )
-        last_message["content"] = prompt
+        if documents and len(documents) > 0:
+            content = [document["content"] for document in documents]
+            titles = [document["title"] for document in documents]
+            prompt = (
+                f"Question: {last_message['content']}\n\n"
+                f"Context from document files uploaded by the user:\n"
+                f"{{'document_names': {titles}, 'content': {content}}}"
+            )
+            last_message["content"] = prompt
+            return True
+        return False
 
 
 chat_service = ChatService()

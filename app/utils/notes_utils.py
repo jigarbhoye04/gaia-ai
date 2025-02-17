@@ -41,7 +41,6 @@ async def should_create_memory(
         if isinstance(result, str):
             try:
                 result = json.loads(result.replace("\n", ""))
-                print(f"{result=}")
 
             except json.JSONDecodeError:
                 return (
@@ -51,7 +50,6 @@ async def should_create_memory(
                 )
 
         is_memory = result.get("is_memory")
-        print(f"{is_memory=}")
 
         if isinstance(is_memory, bool):
             return (

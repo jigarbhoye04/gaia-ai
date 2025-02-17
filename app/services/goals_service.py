@@ -1,12 +1,12 @@
 import json
 from datetime import datetime
-from typing import Any, Coroutine
+from typing import Any
 
 from bson import ObjectId
 from fastapi import HTTPException
 
 from app.db.collections import goals_collection
-from app.db.db_redis import delete_cache, get_cache, set_cache
+from app.db.db_redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
 from app.models.goals_models import GoalCreate, UpdateNodeRequest
 from app.services.llm_service import llm_service
 from app.utils.goals_utils import goal_helper
@@ -186,7 +186,7 @@ async def get_goal_service(goal_id: str, user: dict) -> dict:
             "title": goal["title"],
         }
 
-    await set_cache(cache_key, json.dumps(goal_helper(goal)))
+    await set_cache(cache_key, json.dumps(goal_helper(goal)), ONE_YEAR_TTL)
     logger.info(f"Goal {goal_id} details fetched successfully.")
     return goal_helper(goal)
 

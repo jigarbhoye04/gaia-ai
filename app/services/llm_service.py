@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timezone
 
 import httpx
+
 # import pytz
 from dotenv import load_dotenv
 from groq import AsyncGroq
@@ -155,6 +156,14 @@ class LLMService:
         """
         Send a prompt to the LLM API with streaming enabled.
         """
+        # Extract user message for calendar processing upfront if needed
+        user_message = ""
+        if intent == "calendar":
+            for msg in reversed(messages):
+                if msg.get("role") == "user" and msg.get("content"):
+                    user_message = msg.get("content")
+                    break
+
         json_data = {
             "stream": "true",
             "max_tokens": max_tokens,
@@ -162,51 +171,53 @@ class LLMService:
             "messages": messages,
             "model": model,
         }
+
         try:
             async with self.http_async_client.stream(
                 "POST", self.llm_url, json=json_data
             ) as response:
                 response.raise_for_status()
+
                 async for line in response.aiter_lines():
-                    if line.strip():
-                        if line == "data: [DONE]" and intent == "calendar":
-                            user_message = ""
-                            for msg in reversed(messages):
-                                if msg.get("role") == "user" and msg.get("content"):
-                                    user_message = msg.get("content")
-                                    break
+                    if not line.strip():
+                        continue
 
-                            (
-                                success,
-                                start,
-                                end,
-                                summary,
-                                description,
-                            ) = await llm_create_calendar_event(message=user_message)
+                    if line == "data: [DONE]":
+                        if intent == "calendar":
+                            await self._handle_calendar_intent(user_message)
+                        yield "data: [DONE]\n\n"
+                    else:
+                        yield line + "\n\n"
 
-                            print(start, end, summary, description)
-
-                            if success:
-                                event_json = {
-                                    "intent": "calendar",
-                                    "calendar_options": {
-                                        "summary": summary,
-                                        "description": description,
-                                        "start": start,
-                                        "end": end,
-                                    },
-                                }
-                                yield f"data: {json.dumps(event_json)}\n\n"
-                            else:
-                                yield 'data: {"error": "Could not create calendar event."}\n\n'
-                            yield "data: [DONE]\n\n"
-                        else:
-                            yield line + "\n\n"
-
+        except httpx.HTTPStatusError as e:
+            logger.error(f"HTTP error {e.response.status_code}: {e}")
+            yield f'data: {{"error": "HTTP error: {e.response.status_code}"}}\n\n'
         except httpx.StreamError as e:
             logger.error(f"Stream error: {e}")
+            yield f'data: {{"error": "Stream error occurred : {e}"}}\n\n'
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
+            yield f'data: {{"error": "An unexpected error occurred: {e}"}}\n\n'
+
+    async def _handle_calendar_intent(self, user_message: str):
+        """Handle calendar event creation separately to improve readability."""
+        success, start, end, summary, description = await llm_create_calendar_event(
+            message=user_message
+        )
+
+        if success:
+            event_json = {
+                "intent": "calendar",
+                "calendar_options": {
+                    "summary": summary,
+                    "description": description,
+                    "start": start,
+                    "end": end,
+                },
+            }
+            yield f"data: {json.dumps(event_json)}\n\n"
+        else:
+            yield 'data: {"error": "Could not create calendar event."}\n\n'
 
     async def do_prompt_groq(
         self,
@@ -271,8 +282,6 @@ async def llm_create_calendar_event(message: str):
             ),
             timeout=30,  # Timeout after 30 seconds if no response.
         )
-
-        print("Raw result from LLM:", repr(result))
 
         # Normalize the result to a dictionary.
         if isinstance(result, dict):

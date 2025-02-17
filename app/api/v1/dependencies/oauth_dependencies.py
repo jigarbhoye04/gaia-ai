@@ -97,7 +97,6 @@ async def get_current_user(
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
 
-    print(token_payload, user_data)
     user_info = {
         "user_id": str(user_data.get("_id")),
         "email": user_email,

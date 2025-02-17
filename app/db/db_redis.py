@@ -8,6 +8,9 @@ load_dotenv()
 
 logger = get_logger(name="redis", log_file="redis.log")
 
+ONE_YEAR_TTL = 31_536_000
+ONE_HOUR_TTL = 3600
+
 
 class RedisCache:
     def __init__(self, redis_url="redis://localhost:6379", default_ttl=3600):
@@ -85,7 +88,7 @@ async def get_cache(key: str):
     return await redis_cache.get(key)
 
 
-async def set_cache(key: str, value: dict, ttl: int = 3600):
+async def set_cache(key: str, value: dict, ttl: int = ONE_YEAR_TTL):
     """
     Set a cached value with an optional TTL.
     """

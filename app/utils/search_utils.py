@@ -56,8 +56,6 @@ async def perform_search(query: str, count=7):
         #         }
         #     )
 
-        print(f'"results": {results}, "images": {images}')
-
         return {"results": results, "images": images}
 
     except httpx.HTTPStatusError as http_err:

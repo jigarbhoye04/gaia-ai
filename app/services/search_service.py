@@ -136,15 +136,13 @@ async def search_messages(query: str, user_id: str) -> dict:
 async def fetch_url_metadata(url: str) -> URLResponse:
     """
     Fetch metadata from the provided URL, including title, description, favicon, and website name.
+    If fetching fails, store fallback (empty) metadata in the cache to prevent redundant API calls.
 
     Args:
         url (str): The URL to fetch metadata from.
 
     Returns:
         URLResponse: An object containing the URL metadata.
-
-    Raises:
-        HTTPException: If the URL data cannot be fetched or processed.
     """
     cache_key = f"url_metadata:{str(url)}"
     cached_data = await get_cache(cache_key)
@@ -175,23 +173,25 @@ async def fetch_url_metadata(url: str) -> URLResponse:
             "favicon": favicon,
             "website_name": website_name,
         }
-        await set_cache(cache_key, metadata, ttl=3600)
-
-        return URLResponse(**metadata)
-    except httpx.RequestError as exc:
-        logger.error(f"Request error: {exc}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to fetch the URL.",
-        )
-    except httpx.HTTPStatusError as exc:
-        logger.error(f"HTTP error: {exc}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Page not found."
-        )
+    except (httpx.RequestError, httpx.HTTPStatusError) as exc:
+        logger.error(f"Error fetching URL metadata: {exc}")
+        metadata = {
+            "title": None,
+            "description": None,
+            "favicon": None,
+            "website_name": None,
+        }
     except Exception as exc:
-        logger.error(f"General error: {exc}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing the request.",
-        )
+        logger.error(f"Unexpected error: {exc}")
+        metadata = {
+            "title": None,
+            "description": None,
+            "favicon": None,
+            "website_name": None,
+        }
+
+    await set_cache(
+        cache_key,
+        metadata,
+    )
+    return URLResponse(**metadata)
