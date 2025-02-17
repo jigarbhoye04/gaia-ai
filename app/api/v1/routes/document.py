@@ -8,7 +8,7 @@ from app.services.llm_service import llm_service
 from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
 from app.models.document_moels import DocumentUploadResponse
-from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 
 router = APIRouter()
 

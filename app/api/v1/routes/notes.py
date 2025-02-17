@@ -4,7 +4,7 @@ Router module for note-related endpoints.
 
 from fastapi import APIRouter, Depends, status
 from app.models.notes_models import NoteModel, NoteResponse
-from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.notes_service import (
     create_note,
     get_note,

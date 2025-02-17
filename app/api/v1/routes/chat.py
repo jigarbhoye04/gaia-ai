@@ -1,7 +1,7 @@
 # app/api/routers/chat_routes.py
 from fastapi import APIRouter, Depends, BackgroundTasks, Query
 from fastapi.responses import JSONResponse, StreamingResponse
-from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.chat_service import chat_service
 from app.models.chat_models import (
     ConversationModel,

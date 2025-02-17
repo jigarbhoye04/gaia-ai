@@ -5,7 +5,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 
-from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.db.collections import goals_collection
 from app.models.goals_models import (
     GoalCreate,

@@ -1,22 +1,23 @@
 from contextlib import asynccontextmanager
-from app.utils.nltk_utils import download_nltk_resources
-from app.utils.logging_util import get_logger
+
 from fastapi import APIRouter, FastAPI
+
 from app.api.v1.routes import (
-    chat,
-    auth,
-    search,
-    feedback,
-    waitlist,
-    calendar,
-    image,
-    document,
-    notes,
-    goals,
-    oauth,
     audio,
     # gmail,
+    calendar,
+    chat,
+    document,
+    feedback,
+    goals,
+    image,
+    notes,
+    oauth,
+    search,
+    waitlist,
 )
+from app.utils.logging_util import get_logger
+from app.utils.nltk_utils import download_nltk_resources
 
 logger = get_logger(name="main", log_file="app.log")
 
@@ -26,7 +27,6 @@ api_router.include_router(waitlist.router, tags=["Waitlist"])
 api_router.include_router(feedback.router, tags=["Feedback"])
 api_router.include_router(chat.router, tags=["Chat"])
 api_router.include_router(image.router, tags=["Image"])
-api_router.include_router(auth.router, tags=["Authentication"])
 api_router.include_router(document.router, tags=["Document"])
 api_router.include_router(search.router, tags=["Search"])
 api_router.include_router(calendar.router, tags=["Calendar"])

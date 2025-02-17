@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timezone
 
 import httpx
-import pytz
+# import pytz
 from dotenv import load_dotenv
 from groq import AsyncGroq
 

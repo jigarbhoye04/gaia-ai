@@ -3,7 +3,7 @@ Router module for search and URL metadata endpoints.
 """
 
 from fastapi import APIRouter, Depends, status
-from app.api.v1.dependencies.auth import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.search_models import URLRequest, URLResponse
 from app.services.search_service import search_messages, fetch_url_metadata
 
