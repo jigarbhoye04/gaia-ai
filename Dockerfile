@@ -14,5 +14,11 @@ RUN uv sync --frozen
 
 RUN /app/.venv/bin/python -m nltk.downloader punkt stopwords punkt_tab
 
-# Run the application.
-CMD ["/app/.venv/bin/fastapi", "run", "app/main.py", "--port", "80", "--host", "0.0.0.0"]
+# # Run the application.
+# CMD ["/app/.venv/bin/fastapi", "run", "app/main.py", "--port", "80", "--host", "0.0.0.0"]
+
+#  Expose the port
+EXPOSE 80
+
+# Run the application using Uvicorn
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

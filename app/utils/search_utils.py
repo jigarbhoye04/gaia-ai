@@ -120,15 +120,3 @@ async def perform_fetch(url: str):
     except Exception as e:
         error = f"An unexpected error occurred: {e}"
         return error
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def main():
-        query = "what is the weather in surat?"
-        result = await perform_search(query)
-        for entry in result:
-            print(entry)
-
-    asyncio.run(main())

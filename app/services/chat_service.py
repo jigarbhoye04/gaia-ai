@@ -153,9 +153,6 @@ class ChatService:
                 detail="Failed to create conversation",
             )
 
-        # Invalidate the Redis cache for the user asynchronously.
-        # asyncio.create_task(delete_cache(f"conversations_cache:{user_id}"))
-
         return {
             "conversation_id": conversation.conversation_id,
             "user_id": user_id,
@@ -609,7 +606,7 @@ class ChatService:
         print("should create a memory?")
 
         is_memory, plaintext, content = await should_create_memory(query_text)
-        
+
         print(is_memory, plaintext, content)
 
         if is_memory and content and plaintext:
