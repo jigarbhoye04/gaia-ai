@@ -184,7 +184,37 @@ class LLMService:
 
                     if line == "data: [DONE]":
                         if intent == "calendar":
-                            await self._handle_calendar_intent(user_message)
+                            # await self._handle_calendar_intent(user_message)
+                            user_message = ""
+                            for msg in reversed(messages):
+                                if msg.get("role") == "user" and msg.get("content"):
+                                    user_message = msg.get("content")
+                                    break
+
+                            (
+                                success,
+                                start,
+                                end,
+                                summary,
+                                description,
+                            ) = await llm_create_calendar_event(message=user_message)
+
+                            print(start, end, summary, description)
+
+                        if success:
+                            event_json = {
+                                "intent": "calendar",
+                                "calendar_options": {
+                                    "summary": summary,
+                                    "description": description,
+                                    "start": start,
+                                    "end": end,
+                                },
+                            }
+                            yield f"data: {json.dumps(event_json)}\n\n"
+                        else:
+                            yield 'data: {"error": "Could not create calendar event."}\n\n'
+
                         yield "data: [DONE]\n\n"
                     else:
                         yield line + "\n\n"
@@ -198,26 +228,6 @@ class LLMService:
         except Exception as e:
             logger.error(f"Unexpected error: {e}")
             yield f'data: {{"error": "An unexpected error occurred: {e}"}}\n\n'
-
-    async def _handle_calendar_intent(self, user_message: str):
-        """Handle calendar event creation separately to improve readability."""
-        success, start, end, summary, description = await llm_create_calendar_event(
-            message=user_message
-        )
-
-        if success:
-            event_json = {
-                "intent": "calendar",
-                "calendar_options": {
-                    "summary": summary,
-                    "description": description,
-                    "start": start,
-                    "end": end,
-                },
-            }
-            yield f"data: {json.dumps(event_json)}\n\n"
-        else:
-            yield 'data: {"error": "Could not create calendar event."}\n\n'
 
     async def do_prompt_groq(
         self,

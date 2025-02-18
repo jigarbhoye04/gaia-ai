@@ -176,3 +176,11 @@ async def me(access_token: str = Cookie(None)):
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.post("/logout")
+async def logout():
+    response = JSONResponse(content={"detail": "Logged out successfully"})
+    response.delete_cookie(key="access_token", samesite="none")
+    response.delete_cookie(key="refresh_token", samesite="none")
+    return response
