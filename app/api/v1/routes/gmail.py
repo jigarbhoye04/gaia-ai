@@ -1,10 +1,11 @@
 import httpx
-from fastapi import APIRouter, HTTPException, Cookie
+from fastapi import APIRouter, Cookie, HTTPException
 from fastapi.responses import JSONResponse
+
 from app.utils.auth_utils import (
-    GOOGLE_TOKEN_URL,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
+    GOOGLE_TOKEN_URL,
 )
 
 # Initialize router and load environment variables
