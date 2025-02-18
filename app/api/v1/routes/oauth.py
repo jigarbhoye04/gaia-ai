@@ -1,166 +1,88 @@
-import logging
+# app/routes/auth.py
+from fastapi import APIRouter, Request, HTTPException, status
+from fastapi.responses import RedirectResponse, JSONResponse
+from authlib.integrations.starlette_client import OAuthError
+from app.utils.auth_utils import oauth
+from app.services.oauth_service import get_or_create_user, create_access_token
+from datetime import timedelta
 import os
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
-from pydantic import BaseModel
-from pymongo.collection import Collection
-
-from app.api.v1.dependencies.oauth_dependencies import (
-    get_current_user,
-    get_users_collection,
-)
-from app.services.oauth_service import (
-    create_access_token,
-    create_tokens,
-    google_authenticate,
-    verify_refresh_token,
-)
-
-logger = logging.getLogger("oauth_routes")
-
 router = APIRouter()
-ENVIRONMENT = os.environ.get("ENVIRONMENT", "PROD")
 
 
-class GoogleLoginPayload(BaseModel):
+@router.get("/google")
+async def login_via_google(request: Request):
     """
-    Payload for Google OAuth login.
-    """
+    Redirect the user to Google's OAuth 2.0 authorization page.
 
-    credential: str
-    clientId: str
-    select_by: str
-
-
-@router.post("/google")
-async def google_login(
-    payload: GoogleLoginPayload,
-    response: Response,
-    users_collection: Collection = Depends(get_users_collection),
-):
-    """
-    Verify the Google token, create (or find) a user in MongoDB,
-    issue access and refresh tokens, and set them as HttpOnly cookies.
-
-    Args:
-        payload (GoogleLoginPayload): The Google login payload.
-        response (Response): FastAPI response object.
-        users_collection (Collection): MongoDB users collection injected via dependency.
-
-    Returns:
-        dict: A message and user data.
-
-    Raises:
-        HTTPException: If Google authentication fails.
+    :param request: FastAPI Request object.
+    :return: RedirectResponse to Google's OAuth consent page.
     """
     try:
-        user_data = google_authenticate(payload.credential)
+        redirect_uri = request.url_for("auth_callback")
+        # Authlib automatically handles state parameter creation and validation.
+        return await oauth.google.authorize_redirect(request, redirect_uri)
     except Exception as e:
-        logger.error(f"Google authentication failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid Google token: {e}",
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Failed to initiate Google OAuth: {str(e)}"},
         )
 
-    # Check if the user exists in the database; if not, insert the new user.
-    user = await users_collection.find_one({"email": user_data["email"]})
-    if not user:
-        await users_collection.insert_one(user_data)
-        user = user_data  # Assign user_data since it's the inserted document
-    else:
-        # Merge the existing user data with the newly authenticated data
-        user_data = {**user, **user_data}
 
-    # Convert ObjectId to string
-    user_data["_id"] = str(user["_id"]) if "_id" in user else None
-
-    tokens = create_tokens(user_data)
-
-    # Set HttpOnly cookies for tokens with proper security flags.
-    response.set_cookie(
-        key="access_token",
-        value=tokens["access_token"],
-        httponly=True,
-        secure=True if ENVIRONMENT == "PROD" else False,
-        samesite="lax",
-        max_age=15 * 60,  # 15 minutes
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens["refresh_token"],
-        httponly=True,
-        secure=True if ENVIRONMENT == "PROD" else False,
-        samesite="lax",
-        max_age=30 * 24 * 60 * 60,  # 30 days
-    )
-
-    return {"msg": "Login successful", "user": user_data}
-
-
-@router.post("/refresh")
-async def refresh_token(response: Response, refresh_token: str = Cookie(None)):
+@router.get("/google/callback", name="auth_callback")
+async def auth_callback(request: Request):
     """
-    Generate a new access token using the refresh token stored in cookies.
+    Handle the callback from Google OAuth 2.0.
+    Exchange the authorization code for an access token and retrieve user information.
+    Sets the JWT in a secure HTTP-only cookie.
 
-    Args:
-        response (Response): FastAPI response object.
-        refresh_token (str): The refresh token from cookies.
-
-    Returns:
-        dict: A message indicating that the access token was refreshed.
-
-    Raises:
-        HTTPException: If the refresh token is missing or invalid.
+    :param request: FastAPI Request object.
+    :return: RedirectResponse to the frontend.
     """
-    if not refresh_token:
+    try:
+        token = await oauth.google.authorize_access_token(request)
+    except OAuthError as error:
+        raise HTTPException(status_code=400, detail=f"OAuth error: {error.error}")
+    except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing"
+            status_code=500, detail=f"Unexpected error during token exchange: {str(e)}"
         )
 
     try:
-        user_data = verify_refresh_token(refresh_token)
-        new_payload = {"email": user_data.get("email"), "sub": user_data.get("sub")}
-        new_access_token = create_access_token(new_payload)
+        # Parse the ID token to get user information.
+        user_info = await oauth.google.parse_id_token(request, token)
     except Exception as e:
-        logger.error(f"Refresh token error: {e}")
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid refresh token: {e}",
+            status_code=400, detail=f"Failed to parse user information: {str(e)}"
         )
 
+    # Get (or create) the user in MongoDB.
+    try:
+        user = await get_or_create_user(user_info)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+    # Create a JWT token for the authenticated user.
+    access_token_expires = timedelta(
+        minutes=int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
+    )
+    access_token = create_access_token(
+        data={"sub": str(user["_id"])}, expires_delta=access_token_expires
+    )
+
+    # Prepare a redirect response to the frontend.
+    frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+    response = RedirectResponse(url=frontend_url)
+
+    # Set the access token in an HTTP-only cookie.
+    # The `secure` flag ensures the cookie is only sent over HTTPS.
     response.set_cookie(
         key="access_token",
-        value=new_access_token,
+        value=access_token,
         httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=15 * 60,  # 15 minutes
+        secure=True,  # Ensure to use HTTPS in production.
+        samesite="lax",  # Adjust SameSite attribute as needed.
+        max_age=access_token_expires.total_seconds(),
     )
-    return {"msg": "Access token refreshed"}
 
-
-@router.get("/me")
-async def get_me(current_user: dict = Depends(get_current_user)):
-    """
-    Retrieve the authenticated user's information.
-
-    Returns:
-        dict: User details including user_id, email, access_token, and cached_at.
-    """
-    return current_user
-
-
-@router.post("/logout")
-async def logout(response: Response):
-    """
-    Log out the current user by clearing the authentication cookies.
-
-    Args:
-        response (Response): FastAPI response object.
-
-    Returns:
-        dict: A message indicating successful logout.
-    """
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
-    return {"msg": "Logout successful"}
+    return response
