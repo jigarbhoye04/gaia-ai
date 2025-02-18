@@ -1,8 +1,10 @@
 # app/services/auth.py
-from app.db.collections import users_collection
-from datetime import datetime, timedelta
-from jose import jwt
 import os
+from datetime import datetime, timedelta, timezone
+
+from jose import jwt
+
+from app.db.collections import users_collection
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "supersecretkey")
 ALGORITHM = "HS256"
@@ -50,3 +52,31 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+async def store_user_info(name: str, email: str, picture: str):
+    existing_user = await users_collection.find_one({"email": email})
+
+    if existing_user:
+        # Update user info if user already exists
+        await users_collection.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "name": name,
+                    "picture": picture,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+        return existing_user["_id"]
+    else:
+        # Insert new user if they don't exist
+        user_data = {
+            "name": name,
+            "email": email,
+            "picture": picture,
+            "created_at": datetime.now(timezone.utc),
+        }
+        result = await users_collection.insert_one(user_data)
+        return result.inserted_id
