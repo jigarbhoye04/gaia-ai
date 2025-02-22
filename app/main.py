@@ -9,6 +9,7 @@ from app.api.v1.routes import general
 
 load_dotenv()
 
+
 def create_app() -> FastAPI:
     """
     Create and configure the FastAPI application.
@@ -37,7 +38,8 @@ def create_app() -> FastAPI:
             "https://localhost:5173",
             "http://192.168.138.215:5173",
             "https://192.168.13.215:5173",
-            "https://gaia.aryanranderiya.com",
+            "https://heygaia.so",
+            "https://heygaia.app",
         ],
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
