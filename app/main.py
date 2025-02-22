@@ -38,7 +38,7 @@ def create_app() -> FastAPI:
             "https://localhost:5173",
             "http://192.168.138.215:5173",
             "https://192.168.13.215:5173",
-            "https://heygaia.so",
+            "https://heygaia.io",
             "https://heygaia.app",
         ],
         allow_credentials=True,
