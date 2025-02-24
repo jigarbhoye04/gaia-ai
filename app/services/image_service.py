@@ -65,11 +65,19 @@ class ImageService:
 
             improved_prompt = await self.llm_service.do_prompt_no_stream(
                 prompt=f"""
-                    You are an AI assistant skilled at enhancing prompts for generating high-quality, detailed images. Your goal is to take a user's input and refine it by adding vivid descriptions, specific details, and any necessary context to make it more suitable for creating a visually striking and accurate image.
-                    Now, refine the following user prompt: "{message}".
-                """,
+                You are an AI assistant specialized in refining prompts for generating high-quality images. Your task is to take the given prompt and enhance it by adding relevant keywords that improve detail, clarity, and visual accuracy.  
+                
+                **Instructions:**  
+                - Output should be a comma-separated list of keywords.  
+                - Focus on improving descriptions by adding details about colors, lighting, mood, perspective, environment, and relevant objects.  
+                - Do not generate a full sentence or a story.  
+                
+                Original user prompt: "{message}"  
+
+                Now, refine this prompt into a comma-separated list of descriptive keywords.
+            """,
                 temperature=1,
-                max_tokens=100,
+                max_tokens=50,
             )
 
             refined_text = ", ".join(
