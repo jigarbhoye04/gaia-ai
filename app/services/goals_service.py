@@ -67,7 +67,7 @@ text = """
     """
 
 
-async def generate_roadmap_with_llm(title: str) -> str | Any:
+async def generate_roadmap_with_llm(title: str) -> dict:
     detailed_prompt = f"""
     You are an expert roadmap planner. Your task is to generate a highly detailed roadmap in the form of a JSON object. 
 
@@ -77,18 +77,17 @@ async def generate_roadmap_with_llm(title: str) -> str | Any:
 
     {{ {jsonstructure} }}
 
-        Respond **only** with the JSON object, with no extra text or explanations.
+    Respond **only** with the JSON object, with no extra text or explanations.
     """
 
     try:
-        response = await llm_service.do_prompt_cloudflare_sdk(
+        response = await llm_service.do_prompt_no_stream(
             prompt=detailed_prompt, max_tokens=2048
         )
-        return json.loads(response)
-        # return response.get("response", "{}")
+        return response
     except Exception as e:
         print(f"LLM Generation Error: {e}")
-        return "{}"
+        return {}
 
 
 async def generate_roadmap_with_llm_stream(title: str):

@@ -1,21 +1,22 @@
-# from vosk import Model, KaldiRecognizer
-# import json
+import os
+import queue
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import assemblyai as aai
 import google.auth.transport.requests as requests
 import httpx
 from fastapi import HTTPException
 from google.oauth2 import service_account
 
-# import os
-# from typing import List
-# import asyncio
 from app.utils.logging_util import get_logger
+
+aai.settings.api_key = os.environ.get("ASSEMBLYAI_API_KEY")
 
 executor = ThreadPoolExecutor(max_workers=2)
 
-logger = get_logger(name="app", log_file="app.log")
+logger = get_logger(name="audio", log_file="audio.log")
 
 
 class TTSService:
@@ -90,48 +91,136 @@ class TTSService:
             raise HTTPException(status_code=500, detail=str(e))
 
 
-# class VoskTranscriber:
-#     def __init__(self, model_path: str = "app/assets/models/vosk-model-en-us-0.22"):
-#         self.model_path = os.path.abspath(model_path)
-#         self.model = None
-#         self.recognizer = None
-#         logger.info(f"Initialized VoskTranscriber with model path: {self.model_path}")
+class AudioStream:
+    """
+    A thread-safe iterator that yields audio bytes for AssemblyAI.
+    """
 
-#     async def load_model(self) -> None:
-#         if self.model and self.recognizer:
-#             logger.info("Model already loaded. Skipping initialization.")
-#             return
+    def __init__(self):
+        self._queue = queue.Queue()
+        self._finished = False
 
-#         if not os.path.exists(self.model_path):
-#             logger.error(f"Model path does not exist: {self.model_path}")
-#             raise FileNotFoundError(f"Model path does not exist: {self.model_path}")
+    def add_audio(self, data: bytes):
+        """
+        Adds audio data to the stream.
 
-#         loop = asyncio.get_event_loop()
-#         self.model = await loop.run_in_executor(None, Model, self.model_path)
-#         self.recognizer = KaldiRecognizer(self.model, 16000)
-#         self.recognizer.SetWords(True)
-#         self.recognizer.SetPartialWords(True)
-#         logger.info("Model and recognizer loaded successfully.")
+        Args:
+            data (bytes): Audio data bytes.
+        """
+        self._queue.put(data)
 
-#     async def process_audio_stream(self, audio_stream: bytes) -> List[str]:
-#         logger.info("Processing audio stream.")
-#         loop = asyncio.get_event_loop()
-#         text_results = []
+    def finish(self):
+        """
+        Marks the stream as finished, signaling no more audio will be added.
+        """
+        self._finished = True
+        self._queue.put(None)
 
-#         for chunk in audio_stream:
-#             result_available = await loop.run_in_executor(
-#                 executor, self.recognizer.AcceptWaveform, chunk
-#             )
+    def __iter__(self):
+        return self
 
-#             if result_available:
-#                 result = json.loads(self.recognizer.Result())
-#                 text_results.append(result.get("text", ""))
-#                 logger.debug(f"Final result: {result.get('text', '')}")
-#             else:
-#                 partial_result = json.loads(self.recognizer.PartialResult())
-#                 logger.debug(f"Partial result: {partial_result.get('partial', '')}")
+    def __next__(self):
+        if self._finished and self._queue.empty():
+            raise StopIteration
+        data = self._queue.get()
+        if data is None:
+            raise StopIteration
+        return data
 
-#         final_result = json.loads(self.recognizer.FinalResult())
-#         text_results.append(final_result.get("text", ""))
-#         logger.info("Completed audio stream processing.")
-#         return text_results
+
+class AssemblyAITranscriber:
+    """
+    Handles real-time transcription using AssemblyAI's API.
+    """
+
+    def __init__(self, result_callback, sample_rate: int = 16000):
+        """
+        Initializes the transcriber.
+
+        Args:
+            result_callback (Callable[[str], None]): Function to call with transcription results.
+            sample_rate (int): Audio sample rate.
+        """
+        self.result_callback = result_callback
+        self.sample_rate = sample_rate
+        self.audio_stream = None
+        self.transcriber = None
+        self.thread = None
+
+    def on_open(self, session_opened: aai.RealtimeSessionOpened):
+        """
+        Callback when the transcription session is opened.
+        """
+        self.result_callback("Session ID: " + session_opened.session_id + "\r\n")
+
+    def on_data(self, transcript: aai.RealtimeTranscript):
+        """
+        Callback for receiving transcript data.
+
+        Args:
+            transcript (aai.RealtimeTranscript): The transcript object.
+        """
+        if not transcript.text:
+            return
+        if isinstance(transcript, aai.RealtimeFinalTranscript):
+            self.result_callback(transcript.text + "\r\n")
+        else:
+            self.result_callback(transcript.text)
+
+    def on_error(self, error: aai.RealtimeError):
+        """
+        Callback for handling errors.
+
+        Args:
+            error (aai.RealtimeError): The error that occurred.
+        """
+        self.result_callback("An error occurred: " + str(error) + "\r\n")
+
+    def on_close(self):
+        """
+        Callback for when the transcription session closes.
+        """
+        self.result_callback("Closing Session\r\n")
+
+    def _run_stream(self):
+        """
+        Runs the transcription stream in a separate thread.
+        """
+        self.transcriber.stream(self.audio_stream)
+
+    def start(self):
+        """
+        Starts the transcription session and the background thread.
+        """
+        self.audio_stream = AudioStream()
+        self.transcriber = aai.RealtimeTranscriber(
+            sample_rate=self.sample_rate,
+            on_data=self.on_data,
+            on_error=self.on_error,
+            on_open=self.on_open,
+            on_close=self.on_close,
+        )
+        self.transcriber.connect()
+        self.thread = threading.Thread(target=self._run_stream, daemon=True)
+        self.thread.start()
+
+    def send_audio(self, data: bytes):
+        """
+        Sends audio data to the transcription stream.
+
+        Args:
+            data (bytes): Audio data bytes.
+        """
+        if self.audio_stream:
+            self.audio_stream.add_audio(data)
+
+    def stop(self):
+        """
+        Stops the transcription session, closing the stream and waiting for the background thread.
+        """
+        if self.audio_stream:
+            self.audio_stream.finish()
+        if self.transcriber:
+            self.transcriber.close()
+        if self.thread:
+            self.thread.join()

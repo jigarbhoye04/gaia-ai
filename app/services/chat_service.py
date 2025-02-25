@@ -1,24 +1,29 @@
-from fastapi import HTTPException, status, BackgroundTasks
-from fastapi.responses import StreamingResponse
-from fastapi.encoders import jsonable_encoder
-from datetime import datetime, timezone
 import asyncio
+from datetime import datetime, timezone
+
 from bson import ObjectId
+from fastapi import BackgroundTasks, HTTPException, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import StreamingResponse
+
 from app.db.collections import conversations_collection
-from app.utils.search_utils import perform_search, perform_fetch
-from app.services.llm_service import LLMService
-from app.utils.embedding_utils import search_notes_by_similarity, query_documents
-from app.utils.notes_utils import should_create_memory
-from app.utils.notes import insert_note
-from app.services.text_service import classify_event_type
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
-from app.models.notes_models import NoteModel
 from app.models.general_models import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
     MessageRequest,
     MessageRequestWithHistory,
 )
+from app.models.notes_models import NoteModel
+from app.services.llm_service import LLMService
+from app.services.text_service import classify_event_type
+from app.utils.embedding_utils import query_documents, search_notes_by_similarity
+from app.utils.logging_util import get_logger
+from app.utils.notes import insert_note
+from app.utils.notes_utils import should_create_memory
+from app.utils.search_utils import perform_fetch, perform_search
+
+logger = get_logger(name="chat", log_file="chat.log")
 
 
 class ChatService:
@@ -321,32 +326,35 @@ class ChatService:
     ) -> dict:
         """
         Update the conversation description using an LLM-generated summary.
-
-        Args:
-            conversation_id (str): The conversation ID.
-            data (DescriptionUpdateRequestLLM): Data containing the first user message.
-            user (dict): The authenticated user.
-
-        Returns:
-            dict: Confirmation of the update with the new description.
+        If the LLM API call fails, use a default description ("New Chat") and continue.
         """
         user_id = user.get("user_id")
-        response = await self.llm_service.do_prompt_no_stream(
-            prompt=f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). Do not answer the message—simply summarize its subject.",
-            max_tokens=5,
-        )
-        description = (response.get("response", "New Chat")).replace('"', "")
+        description = "New Chat"
 
-        update_result = await conversations_collection.update_one(
-            {"user_id": user_id, "conversation_id": conversation_id},
-            {"$set": {"description": description}},
-        )
+        try:
+            response = await self.llm_service.do_prompt_no_stream(
+                prompt=f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). Do not answer the message—simply summarize its subject.",
+                max_tokens=5,
+            )
+            description = (response.get("response", "New Chat")).replace('"', "")
+        except Exception as e:
+            logger.error(f"LLM call failed: {e}")
 
-        if update_result.modified_count == 0:
-            raise HTTPException(
-                status_code=404, detail="Conversation not found or update failed"
+        try:
+            update_result = await conversations_collection.update_one(
+                {"user_id": user_id, "conversation_id": conversation_id},
+                {"$set": {"description": description}},
             )
 
+            if update_result.modified_count == 0:
+                raise HTTPException(
+                    status_code=404, detail="Conversation not found or update failed"
+                )
+        except Exception as e:
+            logger.error(f"Update conversation failed: {e}")
+            raise HTTPException(status_code=500, detail="Update failed")
+
+        # Optionally clear any cache related to the conversation here.
         # await delete_cache(f"conversations_cache:{user_id}")
 
         return {

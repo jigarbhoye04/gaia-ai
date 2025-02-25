@@ -6,7 +6,7 @@ from zoneinfo import ZoneInfo
 import httpx
 from fastapi import HTTPException
 
-from app.db.collections import calendar_collection
+from app.db.collections import calendars_collection
 from app.models.calendar_models import EventCreateRequest
 from app.utils.auth_utils import (
     GOOGLE_CLIENT_ID,
@@ -71,15 +71,9 @@ async def fetch_calendar_list(access_token: str) -> Dict[str, Any]:
     headers = {"Authorization": f"Bearer {access_token}"}
     try:
         response = await http_async_client.get(url, headers=headers)
-        # Automatically raise an error for non-2xx status codes
-        print("response", response)
-        print("raising for status")
         response.raise_for_status()
-        print("response.json()", response.json())
-
         return response.json()
     except httpx.HTTPStatusError as exc:
-        # Extract error details from the response, if available
         try:
             error_detail = (
                 exc.response.json().get("error", {}).get("message", "Unknown error")
@@ -91,7 +85,6 @@ async def fetch_calendar_list(access_token: str) -> Dict[str, Any]:
             detail=f"Error fetching list of calendars: {error_detail}",
         )
     except httpx.RequestError as exc:
-        # Handle other network-related errors
         raise HTTPException(
             status_code=500,
             detail=f"An error occurred while requesting the calendar list: {exc}",
@@ -188,7 +181,6 @@ async def list_calendars(
             return await fetch_calendar_list(new_access_token)
         raise e
 
-
 async def get_calendar_events(
     user_id: str,
     access_token: str,
@@ -216,7 +208,7 @@ async def get_calendar_events(
     if not time_min:
         time_min = datetime.now(timezone.utc).isoformat()
 
-    # Fetch the calendar list
+    # Fetch the calendar list and handle token refresh once if needed.
     try:
         calendar_data = await fetch_calendar_list(access_token)
     except HTTPException as e:
@@ -230,15 +222,16 @@ async def get_calendar_events(
 
     calendars = calendar_data.get("items", [])
 
-    # Determine selected calendars: use provided or load from user preferences
+    # Determine selected calendars: update preferences if provided,
+    # otherwise load from the database or default to the primary calendar.
     if selected_calendars:
-        await calendar_collection.update_one(
+        await calendars_collection.update_one(
             {"user_id": user_id},
             {"$set": {"selected_calendars": selected_calendars}},
             upsert=True,
         )
     else:
-        preferences = await calendar_collection.find_one({"user_id": user_id})
+        preferences = await calendars_collection.find_one({"user_id": user_id})
         if preferences and preferences.get("selected_calendars"):
             selected_calendars = preferences["selected_calendars"]
         else:
@@ -246,32 +239,47 @@ async def get_calendar_events(
                 (cal for cal in calendars if cal.get("primary")), None
             )
             selected_calendars = [primary_calendar["id"]] if primary_calendar else []
-            await calendar_collection.update_one(
+            await calendars_collection.update_one(
                 {"user_id": user_id},
                 {"$set": {"selected_calendars": selected_calendars}},
                 upsert=True,
             )
 
-    # Limit calendars to only those selected
-    calendars = [cal for cal in calendars if cal["id"] in selected_calendars]
+    # Filter the calendars to only those that are selected.
+    selected_cal_objs = [cal for cal in calendars if cal["id"] in selected_calendars]
+
+    # Create tasks for fetching events concurrently.
+    tasks = [
+        fetch_calendar_events(cal["id"], access_token, page_token, time_min, time_max)
+        for cal in selected_cal_objs
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
 
     all_events = []
     next_page_token = None
 
-    # Fetch events from each selected calendar
-    for cal in calendars:
-        cal_id = cal["id"]
-        events_data = await fetch_calendar_events(
-            cal_id, access_token, page_token, time_min, time_max
-        )
-        events = events_data.get("items", [])
-        # Add calendar info to each event
+    # Process results from all tasks.
+    for cal, result in zip(selected_cal_objs, results):
+        if isinstance(result, Exception):
+            # Optionally log the error for this calendar
+            logger.error(f"Error fetching events for calendar {cal['id']}: {result}")
+            continue
+        events = result.get("items", [])
         for event in events:
-            event["calendarId"] = cal_id
+            event["calendarId"] = cal["id"]
             event["calendarTitle"] = cal.get("summary", "")
         all_events.extend(filter_events(events))
-        if events_data.get("nextPageToken"):
-            next_page_token = events_data["nextPageToken"]
+        # Use the first encountered nextPageToken (or handle it as needed)
+        if result.get("nextPageToken") and not next_page_token:
+            next_page_token = result["nextPageToken"]
+
+    # Optionally sort events here if needed.
+    all_events.sort(
+        key=lambda e: datetime.fromisoformat(
+            e["start"].get("dateTime", e["start"].get("date", ""))
+            or "1970-01-01T00:00:00"
+        )
+    )
 
     return {
         "events": all_events,
@@ -352,7 +360,6 @@ async def create_calendar_event(
         "Content-Type": "application/json",
     }
     try:
-        # Resolve the canonical timezone and convert event times.
         canonical_timezone = resolve_timezone(event.timezone)
         user_tz = ZoneInfo(canonical_timezone)
         start_dt = event.start.replace(tzinfo=user_tz).astimezone(user_tz)
@@ -411,10 +418,8 @@ async def get_all_calendar_events(
     Returns:
         dict: A mapping of calendar IDs to their respective events.
     """
-    # Ensure a valid access token by fetching the calendar list.
     try:
         calendar_list_data = await fetch_calendar_list(access_token)
-        print("calendar list", calendar_list_data)
         valid_token = access_token
     except HTTPException as e:
         if e.status_code == 401 and refresh_token:
@@ -425,14 +430,11 @@ async def get_all_calendar_events(
             raise e
 
     calendars = calendar_list_data.get("items", [])
-    print("calendars", calendars)
-
     if not calendars:
         return {"calendars": {}}
     if not time_min:
         time_min = datetime.now(timezone.utc).isoformat()
 
-    # Create tasks to concurrently fetch events for each calendar.
     tasks = {
         cal["id"]: get_calendar_events_by_id(
             calendar_id=cal["id"],

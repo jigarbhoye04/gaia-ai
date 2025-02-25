@@ -36,6 +36,21 @@ wheels = [
 ]
 
 [[package]]
+name = "assemblyai"
+version = "0.37.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "typing-extensions" },
+    { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/8f/4a/9dd5d3fc1df248677aa7c7d03dd56806301d55580dbad90d2d3043c80e69/assemblyai-0.37.0.tar.gz", hash = "sha256:4f1e57e906564baf50424a7779bbcd0b8d838c90cceb19f70ce47f294a1700f6", size = 49286 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/1a/57f377c81a0801c2282328c4f9a4d0071407564f41200b22a8bbd3b76c93/assemblyai-0.37.0-py3-none-any.whl", hash = "sha256:52b111ba75eb6175b617c7ccec05cfef086fe30c24d5d998071eb2c99fc59f39", size = 44157 },
+]
+
+[[package]]
 name = "async-timeout"
 version = "5.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -509,6 +524,7 @@ dependencies = [
     { name = "annotated-types" },
     { name = "antlr4-python3-runtime" },
     { name = "anyio" },
+    { name = "assemblyai" },
     { name = "authlib" },
     { name = "beautifulsoup4" },
     { name = "blis" },
@@ -642,6 +658,7 @@ requires-dist = [
     { name = "annotated-types", specifier = "==0.7.0" },
     { name = "antlr4-python3-runtime", specifier = "==4.9.3" },
     { name = "anyio", specifier = "==4.7.0" },
+    { name = "assemblyai", specifier = ">=0.37.0" },
     { name = "authlib", specifier = ">=1.4.1" },
     { name = "beautifulsoup4", specifier = "==4.12.3" },
     { name = "blis", specifier = "==1.1.0" },

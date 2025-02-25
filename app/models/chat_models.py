@@ -33,7 +33,7 @@ class MessageModel(BaseModel):
     message_id: Optional[str] = None  # Name of the file, if any
 
     intent: Optional[Literal["calendar"]] = None
-    calendar_options: Optional[CalIntentOptions] = None
+    calendar_options: Optional[List[CalIntentOptions]] = None
 
 
 # Define the structure for a single conversation
