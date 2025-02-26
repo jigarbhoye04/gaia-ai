@@ -159,8 +159,8 @@ class LLMService:
                                 "calendar_options": calendar_options,
                             }
                             yield f"data: {json.dumps(event_json)}\n\n"
-                        else:
-                            yield 'data: {"error": "Could not create calendar event."}\n\n'
+                        # else:
+                        #     yield 'data: {"error": "Could not create calendar event."}\n\n'
                         yield "data: [DONE]\n\n"
                         break  # Exit the loop to avoid reading from a closed stream
 

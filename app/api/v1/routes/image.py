@@ -22,7 +22,7 @@ async def image(request: MessageRequest):
     Returns:
         dict: A dictionary containing the URL of the generated image and the improved prompt.
     """
-    return await image_service.generate_image(request.message)
+    return await image_service.api_generate_image(request.message)
 
 
 @router.post("/image/text")

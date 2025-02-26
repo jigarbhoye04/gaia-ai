@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Coroutine
+from typing import Any
 
 import httpx
 import requests

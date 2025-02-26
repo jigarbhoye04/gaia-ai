@@ -5,13 +5,25 @@ Service module for handling image generation and image-to-text conversion.
 
 import io
 import os
+import re
+import uuid
+
 import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException
+
 from app.config.config_cloudinary import get_cloudinary_config
-from app.utils.image_utils import convert_image_to_text
-from app.utils.logging_util import get_logger
 from app.services.llm_service import llm_service
+from app.utils.image_utils import convert_image_to_text, generate_image
+from app.utils.logging_util import get_logger
+
+
+def generate_public_id(refined_text: str, max_length: int = 50) -> str:
+    slug = re.sub(r"\s+", "-", refined_text.lower())
+    slug = re.sub(r"[^a-z0-9\-]", "", slug)
+    slug = slug[:max_length]
+    unique_suffix = uuid.uuid4().hex[:8]
+    return f"generated_image_{slug}_{unique_suffix}"
 
 
 class ImageService:
@@ -47,7 +59,7 @@ class ImageService:
             api_secret=api_secret,
         )
 
-    async def generate_image(self, message: str) -> dict:
+    async def api_generate_image(self, message: str) -> dict:
         """
         Generate an image based on the provided message prompt and upload it to Cloudinary.
 
@@ -99,7 +111,7 @@ class ImageService:
 
             self.logger.info(f"Generated refined prompt: {refined_text}")
 
-            image_bytes: bytes = await self.generate_image(refined_text)
+            image_bytes: bytes = await generate_image(refined_text)
 
             print(refined_text, "refined_text this is a test")
 
@@ -109,7 +121,7 @@ class ImageService:
             upload_result = cloudinary.uploader.upload(
                 io.BytesIO(image_bytes),
                 resource_type="image",
-                public_id=f"generated_image_{refined_text[:20]}".strip(),
+                public_id=generate_public_id(refined_text),
                 overwrite=True,
             )
 

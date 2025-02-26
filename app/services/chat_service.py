@@ -333,7 +333,7 @@ class ChatService:
 
         try:
             response = await self.llm_service.do_prompt_no_stream(
-                prompt=f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). Do not answer the message—simply summarize its subject.",
+                prompt=f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). Do not answer the message—simply summarize its subject. Do not add any sort of formatting or markdown, just respond in plaintext.",
                 max_tokens=5,
             )
             description = (response.get("response", "New Chat")).replace('"', "")
