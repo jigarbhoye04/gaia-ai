@@ -1,27 +1,26 @@
-import requests
-from fastapi import APIRouter, HTTPException, Cookie
-from dotenv import load_dotenv
-from pydantic import BaseModel
-from fastapi.responses import JSONResponse
-from app.services.oauth_service import store_user_info
+from typing import Annotated
+
 import httpx
+import requests
 from app.db.collections import users_collection
-from app.utils.logging_util import get_logger
+from app.services.oauth_service import store_user_info
 from app.utils.auth_utils import (
-    GOOGLE_USERINFO_URL,
-    GOOGLE_TOKEN_URL,
+    GOOGLE_CALLBACK_URL,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI,
+    GOOGLE_TOKEN_URL,
+    GOOGLE_USERINFO_URL,
 )
+from app.utils.logging_util import get_logger
+from dotenv import load_dotenv
+from fastapi import APIRouter, Cookie, HTTPException
+from fastapi.responses import JSONResponse, RedirectResponse
 
 router = APIRouter()
 load_dotenv()
 
 logger = get_logger(name="authentication", log_file="auth.log")
-
-
-class OAuthRequest(BaseModel):
-    code: str
 
 
 http_async_client = httpx.AsyncClient()
@@ -50,7 +49,7 @@ async def get_tokens_from_code(code: str):
                 "code": code,
                 "client_id": GOOGLE_CLIENT_ID,
                 "client_secret": GOOGLE_CLIENT_SECRET,
-                "redirect_uri": "postmessage",
+                "redirect_uri": GOOGLE_CALLBACK_URL,
                 "grant_type": "authorization_code",
             },
         )
@@ -77,10 +76,19 @@ async def fetch_or_refresh_user_info(access_token: str, user_email: str):
 
 
 # Routes
-@router.post("/callback")
-async def callback(oauth_request: OAuthRequest):
+@router.get("/login/google")
+async def login_google():
+    # Redirect to Google login page
+    return RedirectResponse(
+        url=f"https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_CALLBACK_URL}&scope=openid+profile+email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events&access_type=offline"
+    )
+
+
+@router.get("/google/callback")
+async def callback(code: Annotated[str, "code"]):
     try:
-        tokens = await get_tokens_from_code(oauth_request.code)
+        tokens = await get_tokens_from_code(code)
+
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
 
@@ -99,27 +107,8 @@ async def callback(oauth_request: OAuthRequest):
 
         await store_user_info(name=user_name, email=user_email, picture=user_picture)
 
-        response = JSONResponse(
-            content={
-                "email": user_email,
-                "name": user_name,
-                "picture": user_picture,
-            }
-        )
-
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=True,
-            samesite="none",
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=True,
-            samesite="none",
+        response = RedirectResponse(
+            url=f"{GOOGLE_REDIRECT_URI}?access_token={access_token}&refresh_token={refresh_token}"
         )
 
         return response
