@@ -16,6 +16,7 @@ from app.utils.logging_util import get_logger
 from dotenv import load_dotenv
 from fastapi import APIRouter, Cookie, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
+from urllib.parse import urlencode
 
 router = APIRouter()
 load_dotenv()
@@ -75,13 +76,27 @@ async def fetch_or_refresh_user_info(access_token: str, user_email: str):
     return await fetch_user_info_from_google(access_token)
 
 
-# Routes
 @router.get("/login/google")
 async def login_google():
-    # Redirect to Google login page
-    return RedirectResponse(
-        url=f"https://accounts.google.com/o/oauth2/auth?response_type=code&client_id={GOOGLE_CLIENT_ID}&redirect_uri={GOOGLE_CALLBACK_URL}&scope=openid+profile+email+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar.events&access_type=offline"
-    )
+    scopes = [
+        "openid",
+        "profile",
+        "email",
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/calendar.readonly",
+    ]
+
+    params = {
+        "response_type": "code",
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": GOOGLE_CALLBACK_URL,
+        "scope": " ".join(scopes),
+        "access_type": "offline",
+    }
+
+    auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
+
+    return RedirectResponse(url=auth_url)
 
 
 @router.get("/google/callback")
@@ -92,7 +107,7 @@ async def callback(code: Annotated[str, "code"]):
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
 
-        if not access_token or not refresh_token:
+        if not access_token and not refresh_token:
             raise HTTPException(
                 status_code=400, detail="Missing access or refresh token"
             )
