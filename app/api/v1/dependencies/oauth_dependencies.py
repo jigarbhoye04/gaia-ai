@@ -46,6 +46,10 @@ async def refresh_access_token(refresh_token: str) -> dict:
     Refreshes the Google OAuth2.0 access token with comprehensive error handling.
     """
     try:
+        print(f"{refresh_token=}")
+        print(f"{GOOGLE_CLIENT_ID=}")
+        print(f"{GOOGLE_CLIENT_SECRET=}")
+
         response = await http_async_client.post(
             GOOGLE_TOKEN_URL,
             data={

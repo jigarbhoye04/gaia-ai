@@ -1,7 +1,13 @@
+import os
 from typing import Annotated
+from urllib.parse import urlencode
 
 import httpx
 import requests
+from dotenv import load_dotenv
+from fastapi import APIRouter, Cookie, HTTPException
+from fastapi.responses import JSONResponse, RedirectResponse
+
 from app.db.collections import users_collection
 from app.services.oauth_service import store_user_info
 from app.utils.auth_utils import (
@@ -13,10 +19,6 @@ from app.utils.auth_utils import (
     GOOGLE_USERINFO_URL,
 )
 from app.utils.logging_util import get_logger
-from dotenv import load_dotenv
-from fastapi import APIRouter, Cookie, HTTPException
-from fastapi.responses import JSONResponse, RedirectResponse
-from urllib.parse import urlencode
 
 router = APIRouter()
 load_dotenv()
@@ -99,11 +101,10 @@ async def login_google():
     return RedirectResponse(url=auth_url)
 
 
-@router.get("/google/callback")
-async def callback(code: Annotated[str, "code"]):
+@router.get("/google/callback", response_class=RedirectResponse)
+async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
     try:
         tokens = await get_tokens_from_code(code)
-
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
 
@@ -122,11 +123,45 @@ async def callback(code: Annotated[str, "code"]):
 
         await store_user_info(name=user_name, email=user_email, picture=user_picture)
 
-        response = RedirectResponse(
-            url=f"{GOOGLE_REDIRECT_URI}?access_token={access_token}&refresh_token={refresh_token}"
-        )
+        # Redirect URL can include tokens if needed
+        redirect_url = f"{GOOGLE_REDIRECT_URI}?access_token={access_token}&refresh_token={refresh_token}"
+        response = RedirectResponse(url=redirect_url)
+
+        # Determine environment (default to development if ENV not set)
+        env = os.getenv("ENV", "production")
+
+        if env == "production":
+            # Production: secure cookies with HOST, SameSite=None, and optional domain
+            production_domain = os.getenv("HOST", "localhost:8000")
+            response.set_cookie(
+                key="access_token",
+                value=access_token,
+                path="/",
+                secure=True,  # Send only over HTTPS
+                httponly=True,  # Not accessible via JavaScript
+                samesite="none",  # Required for cross-site cookies when Secure is True
+                domain=production_domain,
+            )
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                path="/",
+                secure=True,
+                httponly=True,
+                samesite="none",
+                domain=production_domain,
+            )
+        else:
+            # Development: simpler cookies (no Secure, no HttpOnly, lax SameSite)
+            response.set_cookie(
+                key="access_token", value=access_token, path="/", samesite="lax"
+            )
+            response.set_cookie(
+                key="refresh_token", value=refresh_token, path="/", samesite="lax"
+            )
 
         return response
+
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -185,6 +220,20 @@ async def me(access_token: str = Cookie(None)):
 @router.post("/logout")
 async def logout():
     response = JSONResponse(content={"detail": "Logged out successfully"})
-    response.delete_cookie(key="access_token", samesite="none")
-    response.delete_cookie(key="refresh_token", samesite="none")
+    env = os.getenv("ENV", "production")
+
+    if env == "production":
+        # Production cookies were set with a specific domain and SameSite=None
+        production_domain = os.getenv("HOST", "localhost:8000")
+        response.delete_cookie(
+            key="access_token", path="/", domain=production_domain, samesite="none"
+        )
+        response.delete_cookie(
+            key="refresh_token", path="/", domain=production_domain, samesite="none"
+        )
+    else:
+        # Development cookies were set with relaxed attributes (e.g., SameSite=lax)
+        response.delete_cookie(key="access_token", path="/", samesite="lax")
+        response.delete_cookie(key="refresh_token", path="/", samesite="lax")
+
     return response
