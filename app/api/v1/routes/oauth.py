@@ -132,7 +132,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
 
         if env == "production":
             # Production: secure cookies with HOST, SameSite=None, and optional domain
-            production_domain = os.getenv("HOST", "localhost:8000")
+            production_domain = os.getenv("FRONTEND_URL", "heygaia.io")
             response.set_cookie(
                 key="access_token",
                 value=access_token,
@@ -224,7 +224,8 @@ async def logout():
 
     if env == "production":
         # Production cookies were set with a specific domain and SameSite=None
-        production_domain = os.getenv("HOST", "localhost:8000")
+        # Frontend URL
+        production_domain = os.getenv("FRONTEND_URL", "heygaia.io")
         response.delete_cookie(
             key="access_token", path="/", domain=production_domain, samesite="none"
         )
