@@ -139,7 +139,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
                 path="/",
                 secure=True,  # Send only over HTTPS
                 httponly=True,  # Not accessible via JavaScript
-                samesite="none",  # Required for cross-site cookies when Secure is True
+                samesite="None",  # Required for cross-site cookies when Secure is True
                 domain=production_domain,
             )
             response.set_cookie(
@@ -148,7 +148,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
                 path="/",
                 secure=True,
                 httponly=True,
-                samesite="none",
+                samesite="None",
                 domain=production_domain,
             )
         else:
@@ -223,18 +223,34 @@ async def logout():
     env = os.getenv("ENV", "production")
 
     if env == "production":
-        # Production cookies were set with a specific domain and SameSite=None
-        # Frontend URL
+        # Use the same attributes as when the cookies were set
         production_domain = os.getenv("FRONTEND_URL", "heygaia.io")
-        response.delete_cookie(
-            key="access_token", path="/", domain=production_domain, samesite="none"
+        response.set_cookie(
+            key="access_token",
+            value="",
+            expires=0,  # Expire immediately
+            path="/",
+            domain=production_domain,
+            samesite="None",
+            secure=True,
+            httponly=True,
         )
-        response.delete_cookie(
-            key="refresh_token", path="/", domain=production_domain, samesite="none"
+        response.set_cookie(
+            key="refresh_token",
+            value="",
+            expires=0,
+            path="/",
+            domain=production_domain,
+            samesite="None",
+            secure=True,
+            httponly=True,
         )
     else:
-        # Development cookies were set with relaxed attributes (e.g., SameSite=lax)
-        response.delete_cookie(key="access_token", path="/", samesite="lax")
-        response.delete_cookie(key="refresh_token", path="/", samesite="lax")
+        response.set_cookie(
+            key="access_token", value="", expires=0, path="/", samesite="lax"
+        )
+        response.set_cookie(
+            key="refresh_token", value="", expires=0, path="/", samesite="lax"
+        )
 
     return response
