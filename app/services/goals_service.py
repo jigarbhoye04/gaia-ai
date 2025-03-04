@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from typing import Any
 
 from bson import ObjectId
 from fastapi import HTTPException

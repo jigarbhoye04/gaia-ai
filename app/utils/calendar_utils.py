@@ -1,6 +1,4 @@
 from http.client import HTTPException
-from zoneinfo import ZoneInfo
-import pytz
 import pendulum
 
 

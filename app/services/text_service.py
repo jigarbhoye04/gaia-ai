@@ -1,6 +1,5 @@
 import asyncio
 from transformers import pipeline
-import spacy
 from dotenv import load_dotenv
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer

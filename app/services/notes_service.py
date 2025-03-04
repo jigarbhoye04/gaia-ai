@@ -1,11 +1,11 @@
 """
 Service module for handling note operations.
 """
-from typing import Any, Coroutine
+from typing import Any
 
 from fastapi import HTTPException, status
 from bson import ObjectId
-from app.models.notes_models import NoteModel, NoteResponse
+from app.models.notes_models import NoteModel
 from app.db.collections import notes_collection
 from app.db.utils import serialize_document
 from app.db.db_redis import get_cache, set_cache, delete_cache
