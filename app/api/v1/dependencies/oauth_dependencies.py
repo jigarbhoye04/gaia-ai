@@ -139,6 +139,7 @@ async def get_current_user(
             "user_id": str(user_data.get("_id")),
             "email": user_email,
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "cached_at": int(time.time()),
         }
         await set_cache(cache_key, user_info_to_cache, USER_CACHE_EXPIRY)

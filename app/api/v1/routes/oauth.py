@@ -36,6 +36,7 @@ async def login_google():
         "email",
         "https://www.googleapis.com/auth/calendar.events",
         "https://www.googleapis.com/auth/calendar.readonly",
+        "https://www.googleapis.com/auth/gmail.modify",
     ]
     params = {
         "response_type": "code",
@@ -43,6 +44,7 @@ async def login_google():
         "redirect_uri": GOOGLE_CALLBACK_URL,
         "scope": " ".join(scopes),
         "access_type": "offline",
+        # "prompt": "consent",
     }
     auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
     return RedirectResponse(url=auth_url)

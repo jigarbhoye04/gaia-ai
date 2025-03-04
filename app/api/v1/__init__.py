@@ -4,13 +4,13 @@ from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routes import (
     audio,
-    # gmail,
     calendar,
     chat,
     document,
     feedback,
     goals,
     image,
+    mail,
     notes,
     oauth,
     search,
@@ -34,7 +34,7 @@ api_router.include_router(notes.router, tags=["Notes/Memories"])
 api_router.include_router(goals.router, tags=["Goals"])
 api_router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
 api_router.include_router(audio.router, tags=["Audio"])
-# api_router.include_router(gmail.router, tags=["GMail"])
+api_router.include_router(mail.router, tags=["Mail"])
 
 
 @asynccontextmanager
