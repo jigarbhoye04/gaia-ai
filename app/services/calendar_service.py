@@ -181,6 +181,7 @@ async def list_calendars(
             return await fetch_calendar_list(new_access_token)
         raise e
 
+
 async def get_calendar_events(
     user_id: str,
     access_token: str,

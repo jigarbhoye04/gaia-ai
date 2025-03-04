@@ -1,7 +1,5 @@
 import base64
-import email
 from datetime import datetime
-from email.header import decode_header
 from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -81,20 +79,21 @@ def decode_message_body(msg):
 
 
 def transform_gmail_message(msg) -> Dict:
-    """Transform Gmail API message to frontend-friendly format."""
+    """Transform Gmail API message to frontend-friendly format while keeping all raw data for debugging."""
     headers = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
 
-    # Parse time (use internal date or headers)
     timestamp = int(msg.get("internalDate", 0)) / 1000
     time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
 
     return {
+        **msg,
         "id": msg.get("id", ""),
         "from": headers.get("From", ""),
         "subject": headers.get("Subject", ""),
         "time": time,
         "snippet": msg.get("snippet", ""),
         "body": decode_message_body(msg),
+        # "raw": msg,
     }
 
 
@@ -116,16 +115,8 @@ def list_messages(
         results = service.users().messages().list(**params).execute()
         messages = results.get("messages", [])
 
-        # Fetch full details for each message
-        detailed_messages = []
-        for msg in messages:
-            full_message = (
-                service.users()
-                .messages()
-                .get(userId="me", id=msg["id"], format="full")
-                .execute()
-            )
-            detailed_messages.append(full_message)
+        # Use batching to fetch full details for each message
+        detailed_messages = fetch_detailed_messages(service, messages)
 
         return {
             "messages": [transform_gmail_message(msg) for msg in detailed_messages],
