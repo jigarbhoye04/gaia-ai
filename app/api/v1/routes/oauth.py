@@ -16,7 +16,7 @@ from app.utils.auth_utils import (
 )
 from app.utils.logging_util import get_logger
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
-from config.settings import settings
+from app.config.settings import settings
 
 router = APIRouter()
 

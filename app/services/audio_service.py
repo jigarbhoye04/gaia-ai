@@ -10,7 +10,7 @@ from fastapi import HTTPException
 from google.oauth2 import service_account
 
 from app.utils.logging_util import get_logger
-from config.settings import settings
+from app.config.settings import settings
 
 aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
 

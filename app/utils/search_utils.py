@@ -1,6 +1,6 @@
 import httpx
 from bs4 import BeautifulSoup
-from config.settings import settings
+from app.config.settings import settings
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 

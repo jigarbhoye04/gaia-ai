@@ -1,5 +1,5 @@
 import cloudinary
-from config.settings import settings
+from app.config.settings import settings
 from fastapi import HTTPException
 
 from app.utils.logging_util import get_logger

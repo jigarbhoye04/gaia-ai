@@ -1,7 +1,7 @@
 import asyncio
 import base64
 
-from config.settings import settings
+from app.config.settings import settings
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 
