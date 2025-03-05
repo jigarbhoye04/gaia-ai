@@ -16,7 +16,8 @@ import {
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { ChevronDown, Star, Trash } from "lucide-react";
 import { ReactNode, SetStateAction, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+
 import { apiauth } from "@/utils/apiaxios";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { useConversationList } from "@/contexts/ConversationList";

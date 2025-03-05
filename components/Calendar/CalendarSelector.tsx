@@ -1,15 +1,10 @@
-import { GoogleCalendar } from "@/types/calendarTypes";
+import useMediaQuery from "@/hooks/mediaQuery";
+import { CalendarChipProps, CalendarSelectorProps } from "@/types/calendarTypes";
 import { isTooDark } from "@/utils/calendarUtils";
-
 import { Chip, useCheckbox, VisuallyHidden } from "@heroui/react";
-import { Eye, EyeOffIcon, X, XIcon } from "lucide-react";
+import { Eye, EyeOffIcon, Filter, X, XIcon } from "lucide-react";
 import { useState } from "react";
-
-interface CalendarChipProps {
-  calendar: GoogleCalendar;
-  selected: boolean;
-  onSelect: (id: string) => void;
-}
+import { Button } from "../ui/button";
 
 function CalendarChip({ calendar, selected, onSelect }: CalendarChipProps) {
   const baseColor = calendar.backgroundColor;
@@ -56,17 +51,6 @@ function CalendarChip({ calendar, selected, onSelect }: CalendarChipProps) {
     </div>
   );
 }
-
-interface CalendarSelectorProps {
-  calendars: GoogleCalendar[];
-  selectedCalendars: string[];
-  onCalendarSelect: (calendarId: string) => void;
-}
-
-import { Filter } from "lucide-react";
-
-import { Button } from "../ui/button";
-import useMediaQuery from "@/hooks/mediaQuery";
 
 export default function CalendarSelector({
   calendars,

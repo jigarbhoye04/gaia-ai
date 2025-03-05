@@ -1,21 +1,18 @@
-// import { NoteDialog } from "@/components/Notes/NoteCardDialog";
 import { Chip } from "@heroui/chip";
-// import { useState } from "react";
 import Link from "next/link";
-
-import { Note } from "@/components/Notes/Notes";
+import { NoteType } from "@/types/allTypes";
 
 export default function NoteCard({
   note,
 }: // onDelete,
 {
-  note: Note;
+  note: NoteType;
   onDelete?: (id: string) => void;
 }) {
   // const [openDialog, setOpenDialog] = useState(false);
 
   return (
-    <Link className="w-full px-1" href={`/${note.id}`}>
+    <Link className="w-full px-1" href={`./${note.id}`}>
       <div
         className="w-full bg-zinc-800 hover:bg-zinc-700 transition-all max-h-[250px] rounded-xl text-foreground flex p-[1em] flex-col justify-start overflow-hidden gap-1 cursor-pointer h-full relative "
         // onClick={() => setOpenDialog(true)} // Open dialog on click

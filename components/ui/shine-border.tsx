@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 
 import { cn } from "@/lib/utils";
@@ -35,7 +37,7 @@ export function ShineBorder({
     <div
       className={cn(
         "relative min-h-[60px] w-fit min-w-[300px] place-items-center rounded-[--border-radius] bg-white text-black dark:bg-black dark:text-white",
-        className
+        className,
       )}
       style={
         {

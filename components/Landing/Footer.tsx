@@ -1,5 +1,4 @@
 import Link from "next/link";
-
 // import MadeBy from "@/components/Landing/MadeBy";
 
 export default function Footer() {
@@ -15,11 +14,11 @@ export default function Footer() {
 
           <div className="flex flex-col w-fit h-full text-foreground-500">
             <div className="text-xl font-medium text-white">Sitemap</div>
-            {/* <div>
-              <Link className="hover:underline hover:text-white" to="/blog">
+            <div>
+              <Link className="hover:underline hover:text-white" href="/blog">
                 Blog
               </Link>
-            </div> */}
+            </div>
             <div>
               <Link
                 className="hover:underline hover:text-white"
@@ -28,11 +27,14 @@ export default function Footer() {
                 Contact
               </Link>
             </div>
-            {/* <div>
-              <Link className="hover:underline hover:text-white" to="/faq">
-                FAQ
+            <div>
+              <Link
+                className="hover:underline hover:text-white"
+                href="/pricing"
+              >
+                Pricing
               </Link>
-            </div> */}
+            </div>
           </div>
 
           <div className="flex flex-col w-fit h-full text-foreground-500">
@@ -55,17 +57,17 @@ export default function Footer() {
           <div className="flex flex-col w-fit h-full text-foreground-500">
             <div className="text-xl font-medium text-white">Pages</div>
             <div>
-              <Link className="hover:underline hover:text-white" to="/page1">
+              <Link className="hover:underline hover:text-white" href="/page1">
                 Page 1
               </Link>
             </div>
             <div>
-              <Link className="hover:underline hover:text-white" to="/page2">
+              <Link className="hover:underline hover:text-white" href="/page2">
                 Page 2
               </Link>
             </div>
             <div>
-              <Link className="hover:underline hover:text-white" to="/page3">
+              <Link className="hover:underline hover:text-white" href="/page3">
                 Page 3
               </Link>
             </div>

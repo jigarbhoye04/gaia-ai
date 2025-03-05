@@ -1,3 +1,6 @@
+import { CalendarSimpleIcon, Target04Icon } from "@/components/Misc/icons";
+import { GoalData } from "@/types/goalTypes";
+import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import {
@@ -15,11 +18,7 @@ import {
 } from "@heroui/modal";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
-
-import { CalendarSimpleIcon, Target04Icon } from "@/components/Misc/icons";
-import { GoalData } from "@/app/goals/page";
-import { apiauth } from "@/utils/apiaxios";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export function GoalCard({
@@ -167,7 +166,7 @@ export function GoalCard({
             color="primary"
             // size="sm"
             variant="flat"
-            onPress={() => router.push(`/${goal.id}`)}
+            onPress={() => router.push(`./${goal.id}`)}
           >
             View Goal
           </Button>

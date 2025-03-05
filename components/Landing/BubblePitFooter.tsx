@@ -1,10 +1,12 @@
+"use client";
+
 import { motion } from "framer-motion";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 
 import {
   SimpleChatBubbleBot,
   SimpleChatBubbleUser,
-} from "@/components/Chat/ChatBubbles/SimpleChatBubbles";
+} from "@/components/Landing/Dummy/SimpleChatBubbles";
 
 // import { Calendaradd } from "@/pages/LoginSignup";
 

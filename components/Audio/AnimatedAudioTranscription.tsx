@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { Textarea } from "@heroui/input";
 import { Tooltip } from "@heroui/tooltip";
@@ -68,13 +70,13 @@ export default function AnimatedAudioTranscription({
 
       audioContextRef.current = new AudioContext({ sampleRate: 16000 });
       sourceNodeRef.current = audioContextRef.current.createMediaStreamSource(
-        streamRef.current
+        streamRef.current,
       );
 
       processorRef.current = audioContextRef.current.createScriptProcessor(
         4096,
         1,
-        1
+        1,
       );
       processorRef.current.onaudioprocess = (e) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {

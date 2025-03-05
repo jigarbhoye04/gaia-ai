@@ -1,12 +1,9 @@
-import { FC, useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { Star } from "lucide-react";
-
+import { FC, useEffect, useState } from "react";
 import { Button } from "../ui/button";
-
 import ChatOptionsDropdown from "./ChatOptionsDropdown";
-
 import { BubbleConversationChatIcon } from "@/components/Misc/icons";
+import { usePathname, useRouter } from "next/navigation";
 
 interface ChatTabProps {
   name: string;
@@ -17,13 +14,14 @@ interface ChatTabProps {
 export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
   const router = useRouter();
   const [currentConvoId, setCurrentConvoId] = useState<string | null>(null);
+  const pathname = usePathname();
   const [buttonHovered, setButtonHovered] = useState(false);
 
   useEffect(() => {
-    const pathParts = router.pathname.split("/");
+    const pathParts = location.pathname.split("/");
 
     setCurrentConvoId(pathParts[pathParts.length - 1]);
-  }, [router.pathname]);
+  }, [pathname]);
 
   return (
     <div

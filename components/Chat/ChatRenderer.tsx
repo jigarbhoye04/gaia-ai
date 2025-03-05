@@ -1,17 +1,15 @@
 // ChatRenderer.tsx
-import { useRouter } from "next/router";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-
 import { ScrollArea } from "../ui/scroll-area";
-
-import { ChatBubble_Actions_Image } from "./ChatBubbles/ChatBubble_Actions";
-import ChatBubbleBot from "./ChatBubbles/ChatBubbleBot";
+import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
+import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
-
 import StarterText from "@/components/Chat/StarterText";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { useSearchParams } from "next/navigation";
 
 // const ChatBubbleBot = React.lazy(
 //   () => import("@/components/Chat/ChatBubbles/ChatBubbleBot")
@@ -24,10 +22,9 @@ export default function ChatRenderer() {
   const { convoMessages } = useConvo();
   const { conversations } = useConversationList();
   const [openImage, setOpenImage] = useState<boolean>(false);
-
-  const router = useRouter();
-
-  const { messageId, convoIdParam } = router.query;
+  const searchParams = useSearchParams();
+  const messageId = searchParams.get("messageId");
+  const { convoIdParam } = useParams<{ convoIdParam: string }>();
 
   const [imageData, setImageData] = useState({
     src: "",
@@ -36,8 +33,7 @@ export default function ChatRenderer() {
   });
 
   useEffect(() => {
-    if (messageId && convoMessages.length > 0)
-      scrollToMessage((messageId || "") as string);
+    if (messageId && convoMessages.length > 0) scrollToMessage(messageId);
   }, [messageId, convoMessages]);
 
   const scrollToMessage = (messageId: string) => {

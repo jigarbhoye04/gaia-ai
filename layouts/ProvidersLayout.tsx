@@ -4,18 +4,19 @@ import { UserProvider } from "@/contexts/UserContext";
 import UIProviderLayout from "@/layouts/UIProviderLayout";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-interface ProvidersLayoutProps {
-  children: ReactNode;
-}
+const queryClient = new QueryClient();
 
-export default function ProvidersLayout({ children }: ProvidersLayoutProps) {
+export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (
-    <GoogleOAuthProvider clientId={process.env.GOOGLE_CLIENT_ID}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <UserProvider>
         <UIProviderLayout>
           <ConvoProvider>
-            <ConversationListProvider>{children}</ConversationListProvider>
+            <QueryClientProvider client={queryClient}>
+              <ConversationListProvider>{children}</ConversationListProvider>
+            </QueryClientProvider>
           </ConvoProvider>
         </UIProviderLayout>
       </UserProvider>

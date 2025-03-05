@@ -1,3 +1,4 @@
+"use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { CircleCheck } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -35,7 +36,7 @@ const LoaderCore = ({
                 <CircleCheck
                   className={cn(
                     "text-gray-600",
-                    value === index && "text-green-500 opacity-100"
+                    value === index && "text-green-500 opacity-100",
                   )}
                 />
               )}
@@ -43,7 +44,7 @@ const LoaderCore = ({
             <span
               className={cn(
                 "text-gray-600",
-                value === index && "text-green-500 opacity-100"
+                value === index && "text-green-500 opacity-100",
               )}
             >
               {loadingState.text}
@@ -80,7 +81,7 @@ export const MultiStepLoader = ({
           ? prevState === loadingStates.length - 1
             ? 0
             : prevState + 1
-          : Math.min(prevState + 1, loadingStates.length - 1)
+          : Math.min(prevState + 1, loadingStates.length - 1),
       );
     }, duration);
 

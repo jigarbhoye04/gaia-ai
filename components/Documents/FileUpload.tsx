@@ -2,11 +2,12 @@ import { Button } from "@heroui/button";
 import { Textarea } from "@heroui/input";
 import imageCompression from "browser-image-compression";
 import { FileIcon } from "lucide-react";
+import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useRouter } from "next/navigation";
+import ObjectID from "bson-objectid";
 import { toast } from "sonner";
 import { v1 as uuidv1 } from "uuid";
-import ObjectID from "bson-objectid";
 
 import {
   Dialog,
@@ -16,12 +17,12 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 
-import fetchDate from "@/utils/fetchDate";
-import { ApiService } from "@/utils/chatUtils";
-import { apiauth } from "@/utils/apiaxios";
-import { MessageType } from "@/types/convoTypes";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { useConversationList } from "@/contexts/ConversationList";
+import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { MessageType } from "@/types/convoTypes";
+import { apiauth } from "@/utils/apiaxios";
+import { ApiService } from "@/utils/chatUtils";
+import fetchDate from "@/utils/fetchDate";
 
 interface FileUploadProps {
   isImage: boolean;
@@ -35,7 +36,7 @@ export default function FileUpload({
   const { setConvoMessages } = useConvo();
   const { convoIdParam } = useParams<{ convoIdParam: string }>();
   const { fetchConversations } = useConversationList();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
   // const [fileLoading, setFileLoading] = useState<boolean>(false);
@@ -56,7 +57,7 @@ export default function FileUpload({
   };
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     // setFileLoading(true);
     const selectedFile = event.target.files?.[0];
@@ -129,11 +130,11 @@ export default function FileUpload({
         ApiService.updateConversationDescription(
           conversationId,
           JSON.stringify(currentMessages[0]?.response || currentMessages[0]),
-          fetchConversations,
+          fetchConversations
         );
       }, 3000);
 
-      navigate(`/c/${conversationId}`);
+      router.push(`/c/${conversationId}`);
 
       return conversationId;
     } catch (err) {
@@ -160,7 +161,7 @@ export default function FileUpload({
   //       return [...baseMessages, ...newMessages];
   //     });
 
-  //     navigate(`/try/c/${convoID}`);
+  //     router.push(`/try/c/${convoID}`);
   //     return convoID;
   //   } catch (error) {
   //     console.error("Failed to create conversation:", error);
@@ -180,7 +181,7 @@ export default function FileUpload({
       const response = await apiauth.post(
         isImage ? "/image" : "/document/query",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       console.log(response);

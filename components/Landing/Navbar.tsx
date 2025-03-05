@@ -2,10 +2,8 @@ import { useUser } from "@/contexts/UserContext";
 import useMediaQuery from "@/hooks/mediaQuery";
 import { Button } from "@heroui/button";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/router";
-
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BubbleConversationChatIcon,
   Home01Icon,
@@ -53,7 +51,7 @@ function MobileMenu({
               }
               color="default"
               onPress={() => {
-                navigate("/");
+                router.push("/");
                 setSheetOpen(false);
               }}
             >
@@ -71,7 +69,7 @@ function MobileMenu({
                 size="md"
                 variant="shadow"
                 onPress={() => {
-                  navigate("/c");
+                  router.push("/c");
                   setSheetOpen(false);
                 }}
               >
@@ -85,7 +83,7 @@ function MobileMenu({
                   color="primary"
                   size="md"
                   variant="shadow"
-                  to={"/login"}
+                  href={"/login"}
                 >
                   Login
                 </Button>
@@ -94,7 +92,7 @@ function MobileMenu({
                   className="p-0 px-4 font-semibold"
                   color="primary"
                   size="md"
-                  to={"/get-started"}
+                  href={"/get-started"}
                   variant="shadow"
                 >
                   Get Started
@@ -167,18 +165,18 @@ export default function Navbar() {
   const router = useRouter();
   const isMobileScreen = useMediaQuery("(max-width: 600px)");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [scrolled, setScrolled] = useState(true);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 30) {
-        setScrolled(true);
-        window.removeEventListener("scroll", handleScroll);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     if (window.scrollY > 30) {
+  //       setScrolled(true);
+  //       window.removeEventListener("scroll", handleScroll);
+  //     }
+  //   };
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, []);
 
   return (
     <div className="navbar">
@@ -204,7 +202,7 @@ export default function Navbar() {
         {isMobileScreen ? (
           <MobileMenu
             user={user}
-            navigate={router.push}
+            navigate={navigate}
             sheetOpen={sheetOpen}
             setSheetOpen={setSheetOpen}
           />

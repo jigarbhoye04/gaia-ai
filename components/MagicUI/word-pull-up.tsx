@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, Variants, useAnimation } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
@@ -44,7 +46,7 @@ export default function WordPullUp({
       animate={controls}
       className={cn(
         "font-display text-center text-4xl font-bold leading-[5rem] tracking-[-0.02em] drop-shadow-lg",
-        className
+        className,
       )}
       initial="hidden"
       variants={wrapperFramerProps}

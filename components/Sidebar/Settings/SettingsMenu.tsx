@@ -6,17 +6,17 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
-import { Eraser } from "lucide-react";
 import React, { useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+
 import { Logout02Icon, Settings01Icon, ThreeDotsMenu } from "../../Misc/icons";
 
 import SettingsModal from "./SettingsModal";
 
-import { ApiService } from "@/utils/chatUtils";
-import { useUser } from "@/contexts/UserContext";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { useConversationList } from "@/contexts/ConversationList";
+import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { useUser } from "@/contexts/UserContext";
+import { ApiService } from "@/utils/chatUtils";
 
 // Only allow these values in our modal state.
 export type ModalAction = "clear_chats" | "logout";
@@ -54,16 +54,6 @@ export default function SettingsMenu() {
   };
 
   const items: MenuItem[] = [
-    {
-      key: "clear",
-      label: (
-        <div className="flex items-center gap-4">
-          <Eraser width={20} />
-          Delete all Chats
-        </div>
-      ),
-      action: () => setModalAction("clear_chats"),
-    },
     {
       key: "settings",
       label: (

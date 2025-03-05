@@ -1,4 +1,4 @@
-import { Home, ArrowLeft } from "lucide-react";
+import { Home } from "lucide-react";
 import React from "react";
 
 interface ErrorBoundaryProps {
@@ -53,7 +53,7 @@ class ErrorBoundary extends React.Component<
               className=" bg-white text-black px-3 p-2 rounded-lg flex gap-2 font-medium hover:bg-[#ffffff86] transition-background"
               onClick={() => window.history.back()}
             >
-              <ArrowLeft width={20} /> Back
+              <ChevronLeft width={20} /> Back
             </button>
           </div>
         </div>

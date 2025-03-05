@@ -5,7 +5,6 @@ import { Spinner } from "@heroui/spinner";
 import { ArrowUpRight, SearchIcon } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
-
 import { parseDate } from "@/utils/fetchDate";
 import { apiauth } from "@/utils/apiaxios";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -71,9 +70,7 @@ export default function Search() {
                         className="bg-black p-3 rounded-xl h-full overflow-hidden max-h-[190px] min-h-[190px] flex flex-col gap-2 outline outline-zinc-800 outline-2 hover:bg-zinc-800 transition-colors"
                         href={{
                           pathname: `/c/${result.conversation_id}`,
-                          query: {
-                            messageId: result.message.message_id,
-                          },
+                          query: { messageId: result.message.message_id },
                         }}
                       >
                         <Chip

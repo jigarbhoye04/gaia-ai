@@ -1,3 +1,6 @@
+"use client";
+
+import { Chip } from "@heroui/chip";
 import { ArrowTopRightIcon } from "@radix-ui/react-icons";
 import { Lightbulb } from "lucide-react";
 import {
@@ -7,24 +10,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { useRouter } from "next/router";
-import { Chip } from "@heroui/chip";
 
-import {
-  BubbleChatIcon,
-  Calendar01Icon,
-  BubbleConversationChatIcon,
-  DiscoverCircleIcon,
-  PencilEdit02Icon,
-  PinIcon,
-  Route02Icon,
-  StickyNote01Icon,
-  Tick02Icon,
-} from "../Misc/icons";
-
-import { SearchCard } from "./SearchCard";
-
-import { apiauth } from "@/utils/apiaxios";
 import {
   CommandDialog,
   CommandGroup,
@@ -33,6 +19,20 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { apiauth } from "@/utils/apiaxios";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  BubbleChatIcon,
+  BubbleConversationChatIcon,
+  Calendar01Icon,
+  DiscoverCircleIcon,
+  PencilEdit02Icon,
+  PinIcon,
+  Route02Icon,
+  StickyNote01Icon,
+  Tick02Icon,
+} from "../Misc/icons";
+import { SearchCard } from "./SearchCard";
 
 const pages = [
   {
@@ -93,6 +93,7 @@ export default function SearchCommand({
   const [filteredPages, setFilteredPages] = useState(pages);
   const [filteredCommands, setFilteredCommands] = useState(commands);
   const router = useRouter();
+  const pathname = usePathname();
   const [results, setResults] = useState({
     conversations: [],
     messages: [],
@@ -119,7 +120,7 @@ export default function SearchCommand({
 
   useEffect(() => {
     setOpenSearchDialog(false);
-  }, [router.pathname]);
+  }, [pathname]);
 
   const handleChipClick = (type: "conversations" | "messages" | "notes") => {
     setChipsVisibility((prevVisibilities) => ({

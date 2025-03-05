@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Suspense, useState } from "react";
-import { Toaster } from "sonner";
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 import LoginModal from "@/components/Login/LoginModal";
+import Providers from "@/redux/providers";
+import type { Metadata } from "next";
+import { Toaster } from "sonner";
+import "./globals.css";
+// import SuspenseLoader from "@/components/Misc/SuspenseLoader";
+// import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,16 +16,16 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
-
   return (
     <html lang="en">
       <body>
-        <LoginModal open={loginModalOpen} setOpen={setLoginModalOpen} />
-        <Toaster closeButton richColors position="top-right" theme="dark" />
-        <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}>
+        <Providers>
+          <LoginModal />
+          <Toaster closeButton richColors position="top-right" theme="dark" />
           {children}
-        </Suspense>
+          {/* <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}> */}
+          {/* </Suspense> */}
+        </Providers>
       </body>
     </html>
   );

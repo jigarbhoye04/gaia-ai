@@ -1,19 +1,12 @@
 import { Clock } from "lucide-react";
 import Twemoji from "react-twemoji";
-
-import { GoogleCalendar, GoogleCalendarEvent } from "@/types/calendarTypes";
+import { CalendarCardProps } from "@/types/calendarTypes";
 import {
   formatEventDate,
   getEventColor,
   getEventIcon,
   isTooDark,
 } from "@/utils/calendarUtils";
-
-interface CalendarCardProps {
-  event: GoogleCalendarEvent;
-  onClick: () => void;
-  calendars: GoogleCalendar[];
-}
 
 const CalendarCard = ({ event, onClick, calendars }: CalendarCardProps) => {
   const calendar = calendars?.find((cal) => cal.id === event.organizer.email);

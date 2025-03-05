@@ -1,12 +1,14 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 import { SearchIcon } from "lucide-react";
 import React, { useState } from "react";
-import { useRouter } from "next/router";
+import { usePathname, useRouter } from "next/navigation";
 
 import {
   CalendarIcon,
-  DiscoverCircleIcon,
+  Mail01Icon,
   PinIcon,
   Route02Icon,
   StickyNote01Icon,
@@ -15,33 +17,13 @@ import SearchCommand from "../Search/SearchCommand";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
+  const pathname = usePathname();
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
 
   const buttonData = [
-    // {
-    //   route: "/try/explore",
-    //   icon: <DiscoverCircleIcon width={27} height={27} />,
-    //   label: "Explore",
-    // },
     {
-      // route: "/try/search",
       icon: <SearchIcon height={26} width={26} />,
       label: "Search",
-    },
-    // {
-    //   route: "/email",
-    //   icon: <Mail01Icon height={27} width={27} />,
-    //   label: "Email",
-    // },
-    {
-      route: "/explore",
-      icon: <DiscoverCircleIcon height={27} width={27} />,
-      label: "Explore",
-    },
-    {
-      route: "/pins",
-      icon: <PinIcon height={27} width={27} />,
-      label: "Pins",
     },
     {
       route: "/calendar",
@@ -49,14 +31,24 @@ export default function SidebarTopButtons() {
       label: "Calendar",
     },
     {
+      route: "/goals",
+      icon: <Route02Icon height={27} width={27} />,
+      label: "Goals",
+    },
+    {
+      route: "/mail",
+      icon: <Mail01Icon height={27} width={27} />,
+      label: "Mail",
+    },
+    {
       route: "/notes",
       icon: <StickyNote01Icon height={27} width={27} />,
       label: "Notes",
     },
     {
-      route: "/goals",
-      icon: <Route02Icon height={27} width={27} />,
-      label: "Goals",
+      route: "/pins",
+      icon: <PinIcon height={27} width={27} />,
+      label: "Pins",
     },
   ];
 
@@ -73,12 +65,10 @@ export default function SidebarTopButtons() {
             <Button
               className="w-full"
               isIconOnly
-              // size="lg"
-              // variant="flat"
-              color={router.pathname === route ? "primary" : "default"}
-              variant={router.pathname === route ? "solid" : "flat"}
+              color={pathname === route ? "primary" : "default"}
+              variant={pathname === route ? "solid" : "flat"}
               onPress={() =>
-                label == "Search"
+                label === "Search"
                   ? setOpenSearchDialog(true)
                   : route
                   ? router.push(route)
@@ -86,7 +76,7 @@ export default function SidebarTopButtons() {
               }
             >
               {React.cloneElement(icon, {
-                color: router.pathname === route ? "#000000AA" : "#FFFFFFAA",
+                color: pathname === route ? "#000000AA" : "#FFFFFFAA",
               })}
             </Button>
           </Tooltip>

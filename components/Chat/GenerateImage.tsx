@@ -8,8 +8,10 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import ObjectID from "bson-objectid";
+import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
+
 import { toast } from "sonner";
 
 import fetchDate from "../../utils/fetchDate";
@@ -31,13 +33,12 @@ export default function GenerateImage({
   setOpenImageDialog,
 }: GenerateImageProps) {
   const { setConvoMessages } = useConvo();
-  const router = useRouter();
-
+  const { convoIdParam } = useParams<{ convoIdParam: string }>();
   const [imagePrompt, setImagePrompt] = useState<string>("");
   const [isValid, setIsValid] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
   const { fetchConversations } = useConversationList();
-  const { convoIdParam } = router.query;
 
   useEffect(() => {
     setIsValid(imagePrompt.trim() !== "");
@@ -176,7 +177,7 @@ export default function GenerateImage({
       if (isNewConversation) {
         // For new conversations, store only [userMessage, finalBotMessage]
         await updateConversationState(
-          conversationId as string,
+          conversationId,
           [userMessage, finalBotMessage],
           `Generate Image: ${imagePrompt}`,
           false
@@ -184,7 +185,7 @@ export default function GenerateImage({
       } else {
         // For existing conversations, replace the temporary loading message with the final bot message.
         await updateConversationState(
-          conversationId as string,
+          conversationId,
           [finalBotMessage],
           undefined,
           true

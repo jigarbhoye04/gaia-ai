@@ -12,22 +12,17 @@ import {
 import React, { useState } from "react";
 import Twemoji from "react-twemoji";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { GoogleCalendarEvent } from "@/types/calendarTypes";
+import {
+  CalendarEventDialogProps
+} from "@/types/calendarTypes";
 import { formatEventDate, getEventIcon } from "@/utils/calendarUtils";
-
-interface CalendarEventDialogProps {
-  event?: GoogleCalendarEvent | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  mode?: "view" | "create";
-}
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 export default function CalendarEventDialog({
   event,
