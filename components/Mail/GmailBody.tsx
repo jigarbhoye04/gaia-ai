@@ -1,14 +1,7 @@
+import { EmailPayload } from "@/types/mailTypes";
 import { Spinner } from "@heroui/spinner";
 import DOMPurify from "dompurify";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-export interface Email {
-  payload: {
-    headers: { name: string; value: string }[];
-    parts?: { mimeType: string; body: { data: string } }[];
-    body?: { data: string };
-  };
-}
 
 export const decodeBase64 = (str: string): string => {
   try {
@@ -20,7 +13,7 @@ export const decodeBase64 = (str: string): string => {
   }
 };
 
-export default function GmailBody({ email }: { email: Email }) {
+export default function GmailBody({ email }: { email: EmailPayload }) {
   if (!email) return null;
   const [loading, setLoading] = useState(true);
   const shadowHostRef = useRef<HTMLDivElement | null>(null);

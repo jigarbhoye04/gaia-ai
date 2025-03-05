@@ -1,6 +1,9 @@
-import { BookIcon1 } from "@/components/Misc/icons";
-import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+"use client";
 
+import { BookIcon1 } from "@/components/Misc/icons";
+import { Button } from "@/components/ui/button";
+import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { apiauth } from "@/utils/apiaxios";
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
 import {
@@ -16,14 +19,10 @@ import {
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
-import { apiauth } from "@/utils/apiaxios";
 import { toast } from "sonner";
-
 export interface GoalData {
   id: string;
   created_at: Date;

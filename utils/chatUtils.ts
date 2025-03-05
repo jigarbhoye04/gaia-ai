@@ -9,7 +9,7 @@ import { apiauth } from "@/utils/apiaxios";
 import { MessageType } from "@/types/convoTypes";
 
 export const fetchConversationDescription = async (
-  searchbarText: string
+  searchbarText: string,
 ): Promise<string> => {
   const response = await apiauth.post(
     "/chat",
@@ -20,7 +20,7 @@ export const fetchConversationDescription = async (
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   return response?.data?.response?.toString().replace('"', "") || "New Chat";
@@ -45,7 +45,7 @@ export const ApiService = {
 
   updateConversation: async (
     conversationId: string,
-    messages: MessageType[]
+    messages: MessageType[],
   ) => {
     if (messages.length > 1) {
       await apiauth.put(`/conversations/${conversationId}/messages`, {
@@ -63,7 +63,7 @@ export const ApiService = {
     conversationId: string,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
-    onError: (err: any) => void
+    onError: (err: any) => void,
   ) => {
     convoMessages.push({
       type: "user",
@@ -121,13 +121,13 @@ export const ApiService = {
     conversationId: string,
     userFirstMessage: string,
     fetchConversations: () => void,
-    llm: boolean = true
+    llm: boolean = true,
   ) => {
     const response = await apiauth.put(
       `/conversations/${conversationId}/description${llm ? "/llm" : ""}`,
       {
         userFirstMessage,
-      }
+      },
     );
 
     fetchConversations();

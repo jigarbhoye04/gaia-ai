@@ -9,17 +9,17 @@ import useMediaQuery from "@/hooks/mediaQuery";
 import { useRouter } from "next/navigation";
 
 export default function SidebarLayout({
-  children,
   sidebarref,
   toggleSidebar,
   className = "",
   isSidebarVisible,
+  children,
 }: {
-  children: ReactNode;
   sidebarref: LegacyRef<HTMLDivElement>;
   toggleSidebar: () => void;
   className?: string;
   isSidebarVisible: boolean;
+  children: ReactNode;
 }) {
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const { resetMessages } = useConvo();
@@ -28,13 +28,16 @@ export default function SidebarLayout({
   return (
     <div
       ref={sidebarref}
-      className={`sidebar flex ${className} ${
-        isSidebarVisible
-          ? "sm:min-w-[250px] sm:max-w-[250px] sm:translate-x-0 translate-x-[-350px]"
-          : "sm:min-w-0 sm:max-w-0 sm:w-0 translate-x-0"
-      } transition-all duration-100`}
+      className={`sidebar flex ${className}`}
+      style={{
+        transform: isSidebarVisible ? "translateX(0)" : "translateX(-350px)",
+        minWidth: isSidebarVisible ? "250px" : "0",
+        maxWidth: isSidebarVisible ? "fit-content" : "0",
+        transition:
+          "transform 200ms ease-in-out, min-width 200ms ease-in-out, max-width 200ms ease-in-out",
+      }}
     >
-      <div className="min-w-[250px] flex flex-col h-full">
+      <div className="flex flex-col h-full">
         <div className="p-2 pb-2 flex-none">
           <div className="flex items-center justify-between mb-1">
             <span className="font-medium text-2xl">gaia</span>
@@ -57,10 +60,7 @@ export default function SidebarLayout({
           <SidebarTopButtons />
         </div>
 
-        <div
-          className="flex-1 px-2 flex flex-col gap-1 relative overflow-y-auto pb-[50px]"
-          // style={{ scrollbarGutter: "stable both-edges" }}
-        >
+        <div className="flex-1 px-2 flex flex-col gap-1 relative overflow-y-auto pb-[50px]">
           {children}
         </div>
       </div>

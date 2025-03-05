@@ -1,10 +1,11 @@
+"use client";
+
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Spinner } from "@heroui/spinner";
 import { ArrowUpRight, DeleteIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
 import Link from "next/link";
-
+import React, { useEffect, useState } from "react";
 import { InternetIcon } from "@/components/Misc/icons";
 import { apiauth } from "@/utils/apiaxios";
 import { parseDate } from "@/utils/fetchDate";

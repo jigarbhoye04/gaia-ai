@@ -4,12 +4,10 @@ import {
   BubbleConversationChatIcon,
   PencilSquareIcon,
 } from "@/components/Misc/icons";
-import NotLoggedIn from "@/components/Misc/NotLoggedInDialog";
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 import ChatOptionsDropdown from "@/components/Sidebar/ChatOptionsDropdown";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
 import EmailSidebar from "@/components/Sidebar/MailSidebar";
-import Sidebar from "@/components/Sidebar/Sidebar";
+import Sidebar from "@/components/Sidebar/MainSidebar";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useConversationList } from "@/contexts/ConversationList";
@@ -18,10 +16,9 @@ import { LoadingProvider } from "@/contexts/LoadingContext";
 import useMediaQuery from "@/hooks/mediaQuery";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { Suspense, useRef, useState } from "react";
+import { ReactNode, useRef, useState } from "react";
 
-export default function MainInterface({ children }) {
-  // const location = useLocation();
+export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const sidebarRef = useRef<HTMLDivElement | null>(null);
@@ -41,19 +38,14 @@ export default function MainInterface({ children }) {
     <LoadingProvider>
       <TooltipProvider>
         <div className="main_container dark">
-          <Suspense fallback={<SuspenseLoader />}>
-            <NotLoggedIn />
-          </Suspense>
-
-          <Suspense fallback={<SuspenseLoader />}>
-            <SidebarLayout
-              isSidebarVisible={isSidebarVisible}
-              sidebarref={sidebarRef}
-              toggleSidebar={toggleSidebar}
-            >
-              {pathname == "/mail" ? <EmailSidebar /> : <Sidebar />}
-            </SidebarLayout>
-          </Suspense>
+          <SidebarLayout
+            isSidebarVisible={isSidebarVisible}
+            sidebarref={sidebarRef}
+            toggleSidebar={toggleSidebar}
+            children={
+              pathname.startsWith("/mail") ? <EmailSidebar /> : <Sidebar />
+            }
+          />
 
           <div
             ref={contentContainerRef}
