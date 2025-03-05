@@ -1,6 +1,8 @@
+"use client";
+
 import debounce from "lodash.debounce";
+import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import ChatRenderer from "@/components/Chat/ChatRenderer";
 import MainSearchbar from "@/components/Chat/SearchBar/MainSearchbar";
@@ -8,7 +10,7 @@ import MainSearchbar from "@/components/Chat/SearchBar/MainSearchbar";
 const MainChat = React.memo(function MainChat() {
   const convoRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
-  const router = useRouter();
+  const { id } = useParams(); // This will be undefined for `/c` and set for `/c/:id`
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const handleScroll = debounce((event: React.UIEvent) => {
@@ -33,11 +35,10 @@ const MainChat = React.memo(function MainChat() {
   useEffect(() => {
     scrollToBottom();
     if (inputRef?.current) inputRef?.current?.focus();
-  }, [router.pathname]);
+  }, [id]); // Re-run effect when `id` changes
 
   return (
-    <>
-      {/* <ScrollArea onScrollCapture={handleScroll}> */}
+    <React.Fragment>
       <div className="w-full flex justify-center overflow-y-scroll">
         <div
           ref={convoRef}
@@ -46,14 +47,13 @@ const MainChat = React.memo(function MainChat() {
           <ChatRenderer />
         </div>
       </div>
-      {/* </ScrollArea> */}
       <MainSearchbar
         inputRef={inputRef}
         isAtBottom={isAtBottom}
         isOverflowing={false}
         scrollToBottom={scrollToBottom}
       />
-    </>
+    </React.Fragment>
   );
 });
 

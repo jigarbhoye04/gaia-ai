@@ -1,3 +1,5 @@
+"use client";
+
 import {
   BubbleConversationChatIcon,
   PencilSquareIcon,
@@ -18,7 +20,7 @@ import SidebarLayout from "@/layouts/SidebarLayout";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { Suspense, useRef, useState } from "react";
 
-export default function MainInterface() {
+export default function MainInterface({ children }) {
   // const location = useLocation();
   const pathname = usePathname();
   const router = useRouter();
@@ -109,7 +111,7 @@ export default function MainInterface() {
                 <PencilSquareIcon className="group-hover:text-white transition-all" />
               </Button>
             </div>
-
+            {children}
             {/* <Outlet /> */}
           </div>
         </div>
