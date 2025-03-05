@@ -1,0 +1,154 @@
+import { motion } from "framer-motion";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
+
+import {
+  SimpleChatBubbleBot,
+  SimpleChatBubbleUser,
+} from "@/components/Chat/ChatBubbles/SimpleChatBubbles";
+
+// import { Calendaradd } from "@/pages/LoginSignup";
+
+//
+// 1. Define an interface that includes position, size, color and the custom component.
+//
+export interface BubbleConfig {
+  x: number;
+  y: number;
+  size: number;
+  // color: string;
+  component: ReactNode;
+}
+
+//
+// 2. Create a ChatBubble component that “wraps” the provided content with motion/drag behavior.
+//
+export const ChatBubble: React.FC<BubbleConfig> = ({
+  x,
+  y,
+  size,
+  // color,
+  component,
+}) => {
+  return (
+    <motion.div
+      drag
+      className="absolute cursor-grab active:cursor-grabbing"
+      dragElastic={0.2}
+      dragMomentum={false}
+      style={{
+        x,
+        y,
+        width: size,
+        height: size,
+
+        // (Optional) Use the color for a border or background if you wish:
+        // border: `2px solid ${color}`,
+      }}
+      whileHover={{ scale: 1.1, rotate: 1.5 }}
+      whileTap={{ scale: 0.9 }}
+    >
+      {component}
+    </motion.div>
+  );
+};
+
+//
+// 3. Create the container that holds all bubbles.
+//    Here we generate bubble configurations with random positions (and sizes/colors) but you also supply the inner component.
+//    You can adjust the logic here to suit your needs.
+//
+const BubblePitFooter: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [bubbles, setBubbles] = useState<BubbleConfig[]>([]);
+
+  // An array of custom bubble components.
+  // You can add as many variations as needed.
+  const providedComponents: ReactNode[] = [
+    <SimpleChatBubbleBot key="bot" className="text-nowrap">
+      hey there!
+    </SimpleChatBubbleBot>,
+    <SimpleChatBubbleUser key="user" className="text-nowrap">
+      Hey GAIA!
+    </SimpleChatBubbleUser>,
+    // <Calendaradd />,
+    // Add more custom bubbles here…
+  ];
+
+  // A palette for bubble colors (you can also use these colors inside your custom components if desired)
+  const COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"];
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const { width, height } = containerRef.current.getBoundingClientRect();
+
+      // Create one bubble per provided component.
+      // You can also add more bubbles (e.g. by repeating components or using a default one).
+      const newBubbles: BubbleConfig[] = providedComponents.map(
+        (component) => ({
+          x: Math.random() * (width - 100),
+          y: Math.random() * (height - 100),
+          size: 20 + Math.random() * 20,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          component,
+        })
+      );
+
+      setBubbles(newBubbles);
+    }
+  }, [containerRef.current]); // Run once when the container is available
+
+  // Optional: Update bubble positions on mouse move.
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+
+    const { left, top, width, height } =
+      containerRef.current.getBoundingClientRect();
+    const mouseX = event.clientX - left;
+    const mouseY = event.clientY - top;
+
+    setBubbles((prevBubbles) =>
+      prevBubbles.map((bubble) => {
+        const dx = mouseX - bubble.x;
+        const dy = mouseY - bubble.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDistance = 1000;
+
+        let newX = bubble.x;
+        let newY = bubble.y;
+
+        if (distance < maxDistance && distance !== 0) {
+          const force = (maxDistance - distance) / maxDistance;
+          const moveX = (dx / distance) * force * 10;
+          const moveY = (dy / distance) * force * 10;
+
+          newX = bubble.x - moveX;
+          newY = bubble.y - moveY;
+        }
+
+        // Keep the bubbles within container bounds.
+        if (newX < 0 || newX + bubble.size > width) {
+          newX = Math.max(0, Math.min(newX, width - bubble.size - 100));
+        }
+        if (newY < 0 || newY + bubble.size > height) {
+          newY = Math.max(0, Math.min(newY, height - bubble.size - 100));
+        }
+
+        return { ...bubble, x: newX, y: newY };
+      })
+    );
+  };
+
+  return (
+    <motion.div
+      ref={containerRef}
+      className="fixed bottom-0 left-0 w-full h-screen overflow-hidden z-0"
+      onMouseMove={handleMouseMove}
+    >
+      {bubbles.map((bubble, index) => (
+        <ChatBubble key={index} {...bubble} />
+      ))}
+    </motion.div>
+  );
+};
+
+export default BubblePitFooter;
