@@ -183,7 +183,7 @@ export default function GoalPage() {
   };
 
   const initiateWebSocket = (goalId: string, goalTitle: string) => {
-    const ws = new WebSocket(`${process.env.BACKEND_URL}ws/roadmap`);
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`);
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ goal_id: goalId, goal_title: goalTitle }));

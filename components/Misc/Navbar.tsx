@@ -4,11 +4,7 @@ import { Button } from "@heroui/button";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  BubbleConversationChatIcon,
-  Home01Icon,
-  Menu01Icon,
-} from "../Misc/icons";
+import { BubbleConversationChatIcon, Home01Icon, Menu01Icon } from "./icons";
 import {
   Sheet,
   SheetContent,
@@ -17,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
+import Link from "next/link";
 
 type MobileMenuProps = {
   user: any;
@@ -25,12 +22,9 @@ type MobileMenuProps = {
   setSheetOpen: (open: boolean) => void;
 };
 
-function MobileMenu({
-  user,
-  navigate,
-  sheetOpen,
-  setSheetOpen,
-}: MobileMenuProps) {
+function MobileMenu({ user, sheetOpen, setSheetOpen }: MobileMenuProps) {
+  const router = useRouter();
+
   return (
     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
       <SheetTrigger>
@@ -179,7 +173,7 @@ export default function Navbar() {
   // }, []);
 
   return (
-    <div className="navbar">
+    <div className="fixed top-0 w-screen">
       <div
         className={`navbar_content bg-zinc-950 outline-[1px] outline outline-zinc-900 !transition-all w-full min-w-fit duration-1000 ${
           (!isMobileScreen && scrolled) || location.pathname != "/"
@@ -202,7 +196,7 @@ export default function Navbar() {
         {isMobileScreen ? (
           <MobileMenu
             user={user}
-            navigate={navigate}
+            // navigate={navigate}
             sheetOpen={sheetOpen}
             setSheetOpen={setSheetOpen}
           />

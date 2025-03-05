@@ -73,45 +73,48 @@ export const ApiService = {
 
     const controller = new AbortController();
 
-    await fetchEventSource(`${process.env.BACKEND_URL}chat-stream`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "text/event-stream",
-      },
-      credentials: "include",
-      signal: controller.signal,
-      body: JSON.stringify({
-        conversation_id: conversationId,
-        message: inputText,
-        search_web: enableSearch || false,
-        pageFetchURL,
-        messages: convoMessages
-          .slice(-10)
-          .filter(({ response }) => response.trim().length > 0)
-          // .filter(({ type }) => type == "user")
-          .map(({ type, response }, _index, _array) => ({
-            role: type === "bot" ? "assistant" : type,
-            // role: type,
-            // content: `mostRecent: ${index === array.length - 1}. ${response}`,
-            content: response,
-          })),
-      }),
-      onmessage(event) {
-        console.log(event.data);
+    await fetchEventSource(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/event-stream",
+        },
+        credentials: "include",
+        signal: controller.signal,
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          message: inputText,
+          search_web: enableSearch || false,
+          pageFetchURL,
+          messages: convoMessages
+            .slice(-10)
+            .filter(({ response }) => response.trim().length > 0)
+            // .filter(({ type }) => type == "user")
+            .map(({ type, response }, _index, _array) => ({
+              role: type === "bot" ? "assistant" : type,
+              // role: type,
+              // content: `mostRecent: ${index === array.length - 1}. ${response}`,
+              content: response,
+            })),
+        }),
+        onmessage(event) {
+          console.log(event.data);
 
-        if (event.data === "[DONE]") {
-          onClose();
-          controller.abort();
+          if (event.data === "[DONE]") {
+            onClose();
+            controller.abort();
 
-          return;
-        }
+            return;
+          }
 
-        onMessage(event);
-      },
-      onclose: onClose,
-      onerror: onError,
-    });
+          onMessage(event);
+        },
+        onclose: onClose,
+        onerror: onError,
+      }
+    );
   },
 
   updateConversationDescription: async (

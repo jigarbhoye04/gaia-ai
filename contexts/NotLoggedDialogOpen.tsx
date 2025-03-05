@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
 interface NotLoggedDialogOpenContextType {
@@ -33,7 +35,7 @@ export const useNotLoggedDialogOpen = (): NotLoggedDialogOpenContextType => {
 
   if (!context) {
     throw new Error(
-      "useNotLoggedDialogOpen must be used within a NotLoggedDialogOpenProvider",
+      "useNotLoggedDialogOpen must be used within a NotLoggedDialogOpenProvider"
     );
   }
 

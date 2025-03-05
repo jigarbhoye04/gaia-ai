@@ -24,7 +24,7 @@ const sections = {
   FinalSection: lazy(
     () => import("@/components/Landing/Sections/FinalSection")
   ),
-  Footer: lazy(() => import("@/components/Landing/Footer")),
+  Footer: lazy(() => import("@/components/Misc/Footer")),
 };
 
 export default function LazyLoadedSections() {

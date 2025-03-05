@@ -4,11 +4,11 @@ import { setupCache } from "axios-cache-interceptor";
 axios.defaults.timeout = 300_000;
 
 const instance = axios.create({
-  baseURL: process.env.BACKEND_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
 });
 
 export const apiauth = axios.create({
-  baseURL: process.env.BACKEND_URL,
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   withCredentials: true,
 });
 

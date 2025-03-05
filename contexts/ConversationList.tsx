@@ -1,9 +1,6 @@
-import React, {
-  createContext,
-  ReactNode,
-  useContext,
-  useState
-} from "react";
+"use client";
+
+import React, { createContext, ReactNode, useContext, useState } from "react";
 
 import { apiauth } from "@/utils/apiaxios";
 

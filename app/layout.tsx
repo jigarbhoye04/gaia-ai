@@ -1,10 +1,11 @@
 import LoginModal from "@/components/Login/LoginModal";
+import ProvidersLayout from "@/layouts/ProvidersLayout";
 import Providers from "@/redux/providers";
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
-import Script from "next/script";
-import localFont from "next/font/local";
 
 export const metadata: Metadata = {
   title: "GAIA - Your Personal Assistant",
@@ -89,9 +90,12 @@ export default function RootLayout({
     <html lang="en" className={`${creato.variable} dark`}>
       <body>
         <Providers>
-          <LoginModal />
-          <Toaster closeButton richColors position="top-right" theme="dark" />
-          {children}
+          <ProvidersLayout>
+            <LoginModal />
+            <Toaster closeButton richColors position="top-right" theme="dark" />
+
+            {children}
+          </ProvidersLayout>
         </Providers>
 
         {/* Google OAuth */}
