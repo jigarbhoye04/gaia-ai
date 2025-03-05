@@ -3,13 +3,22 @@ import Providers from "@/redux/providers";
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
-import Head from "next/head";
 import Script from "next/script";
+import localFont from "next/font/local";
 
 export const metadata: Metadata = {
   title: "GAIA - Your Personal Assistant",
   description:
     "GAIA is your personal AI assistant designed to help increase your productivity.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
   keywords: [
     "GAIA",
     "Personal AI Assistant",
@@ -47,75 +56,37 @@ export const metadata: Metadata = {
   },
 };
 
-// ✅ Move themeColor to viewport
 export const viewport: Viewport = {
   themeColor: "#00bbff",
 };
+
+const creato = localFont({
+  src: [
+    {
+      path: "./fonts/CreatoDisplay-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/CreatoDisplay-Bold.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/CreatoDisplay-ExtraBold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  preload: true,
+  variable: "--font-creato",
+});
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="dark">
-      <Head>
-        {/* Favicon */}
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon-16x16.png"
-        />
-        <link rel="manifest" href="/site.webmanifest" />
-
-        {/* Preload Fonts */}
-        <link
-          rel="preload"
-          href="/fonts/CreatoDisplay-Regular.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/CreatoDisplay-Bold.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preload"
-          href="/fonts/CreatoDisplay-ExtraBold.woff2"
-          as="font"
-          type="font/woff2"
-          crossOrigin="anonymous"
-        />
-
-        {/* Preconnect & Prefetch */}
-        <link
-          rel="preconnect"
-          href="https://www.googletagmanager.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link
-          rel="preconnect"
-          href="https://accounts.google.com"
-          crossOrigin="anonymous"
-        />
-        <link rel="dns-prefetch" href="https://accounts.google.com" />
-      </Head>
+    <html lang="en" className={`${creato.variable} dark`}>
       <body>
         <Providers>
           <LoginModal />

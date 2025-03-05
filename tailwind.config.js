@@ -15,6 +15,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        creato: "var(--font-creato), sans-serif",
+      },
       command: {
         bg: "#1E293B",
         text: "#F8FAFC",
