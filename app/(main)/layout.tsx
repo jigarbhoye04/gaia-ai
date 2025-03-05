@@ -44,7 +44,7 @@ export default function MainInterface({ children }) {
           <Suspense fallback={<SuspenseLoader />}>
             <NotLoggedIn />
           </Suspense>
-          {/* Sidebar Layout */}
+
           <Suspense fallback={<SuspenseLoader />}>
             <SidebarLayout
               isSidebarVisible={isSidebarVisible}
