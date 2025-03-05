@@ -4,55 +4,30 @@ import { EmailFrom } from "@/components/Mail/MailFrom";
 import ViewEmail from "@/components/Mail/ViewMail";
 import { InboxIcon } from "@/components/Misc/icons";
 import { EmailData, EmailsResponse } from "@/types/mailTypes";
-import { apiauth } from "@/utils/apiaxios";
-import { formatTime } from "@/utils/mailUtils";
+import { fetchEmails, formatTime } from "@/utils/mailUtils";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
-import { QueryFunctionContext, useInfiniteQuery } from "@tanstack/react-query";
-import DOMPurify from "dompurify";
+import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
-const fetchEmails = async ({
-  pageParam = undefined,
-}: QueryFunctionContext<string[]>): Promise<EmailsResponse> => {
-  const maxResults = 20;
-  const url = `/gmail/messages?maxResults=${maxResults}${
-    pageParam ? `&pageToken=${pageParam}` : ""
-  }`;
-  const response = await apiauth.get(url);
-  const data = response.data;
-  return { emails: data.messages, nextPageToken: data.nextPageToken };
-};
-
-export const renderEmailBody = (body?: string) => {
-  if (!body) return "No content available.";
-
-  console.log(body);
-
-  // Check if the body is HTML or plain text
-  const isHtml = /<\/?[a-z][\s\S]*>/i.test(body);
-
-  if (isHtml) {
-    const sanitizedHtml = DOMPurify.sanitize(body); // Sanitize HTML
-    return <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
-  }
-
-  return <p className="whitespace-pre-wrap">{body}</p>;
-};
-
 export default function Email() {
   const { data, isLoading, fetchNextPage, hasNextPage } = useInfiniteQuery<
     EmailsResponse,
-    Error
+    Error,
+    InfiniteData<EmailsResponse>,
+    string[]
   >({
     queryKey: ["emails"],
     queryFn: fetchEmails,
     getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
+    initialPageParam: undefined,
   });
 
-  const emails = data ? data.pages.flatMap((page) => page.emails) : [];
+  const emails = data
+    ? data.pages.flatMap((page: EmailsResponse) => page.emails)
+    : [];
 
   const [selectedEmail, setSelectedEmail] = useState<EmailData | null>(null);
 
@@ -116,7 +91,7 @@ export default function Email() {
       >
         <div
           className={`flex p-3 gap-5 items-center px-6 hover:bg-primary/20 hover:text-primary bg-black bg-opacity-45 transition-all duration-200 cursor-pointer ${
-            email?.labelIds.includes("UNREAD")
+            email?.labelIds?.includes("UNREAD")
               ? "font-medium"
               : "font-normal text-foreground-400"
           }`}

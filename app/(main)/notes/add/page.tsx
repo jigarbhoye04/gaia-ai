@@ -1,3 +1,5 @@
+"use client";
+
 import { Spinner } from "@heroui/spinner";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import CharacterCount from "@tiptap/extension-character-count";

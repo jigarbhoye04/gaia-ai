@@ -33,7 +33,7 @@ export default function GenerateImage({
   setOpenImageDialog,
 }: GenerateImageProps) {
   const { setConvoMessages } = useConvo();
-  const { id: convoIdParam } = useParams();
+  const { id: convoIdParam } = useParams<{ id: string }>();
   const [imagePrompt, setImagePrompt] = useState<string>("");
   const [isValid, setIsValid] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);

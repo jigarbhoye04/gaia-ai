@@ -1,4 +1,7 @@
-import { EmailData } from "@/types/mailTypes";
+"use client";
+import { EmailsResponse } from "@/types/mailTypes";
+import { apiauth } from "@/utils/apiaxios";
+import { QueryFunctionContext } from "@tanstack/react-query";
 
 export function parseEmail(from: string): { name: string; email: string } {
   // Improved email parsing
@@ -14,16 +17,6 @@ export function parseEmail(from: string): { name: string; email: string } {
   return {
     name: "",
     email: from,
-  };
-}
-
-export function transformEmail(message: any): EmailData {
-  return {
-    id: message.id,
-    from: message.from,
-    subject: message.subject,
-    time: message.time,
-    snippet: message.snippet || message.body?.slice(0, 100),
   };
 }
 
@@ -56,3 +49,15 @@ export function formatTime(timestamp: string): string {
     day: "numeric",
   });
 }
+
+export const fetchEmails = async ({
+  pageParam = undefined,
+}: QueryFunctionContext<string[]>): Promise<EmailsResponse> => {
+  const maxResults = 20;
+  const url = `/gmail/messages?maxResults=${maxResults}${
+    pageParam ? `&pageToken=${pageParam}` : ""
+  }`;
+  const response = await apiauth.get(url);
+  const data = response.data;
+  return { emails: data.messages, nextPageToken: data.nextPageToken };
+};

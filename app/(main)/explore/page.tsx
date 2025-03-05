@@ -1,40 +1,13 @@
-import { Tabs, Tab } from "@heroui/tabs";
-import React from "react";
+import { Tab, Tabs } from "@heroui/tabs";
 
 import StarterEmoji from "@/components/Chat/StarterEmoji";
 import {
+  Calendar01Icon,
   GoogleDriveIcon,
   Target02Icon,
   Timer02Icon,
   WorkflowSquare03Icon,
-  Calendar01Icon,
 } from "@/components/Misc/icons";
-
-export function OptionsTab({
-  key,
-  icon,
-  title,
-  content,
-}: {
-  key: string;
-  icon: React.ReactNode;
-  title: React.ReactNode;
-  content: React.ReactNode;
-}) {
-  return (
-    <Tab
-      key={key}
-      title={
-        <div className="flex items-center gap-1">
-          {icon}
-          {title}
-        </div>
-      }
-    >
-      {content}
-    </Tab>
-  );
-}
 
 export default function Explore() {
   const color = "group-data-[selected=true]:black";

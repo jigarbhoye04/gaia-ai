@@ -22,7 +22,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   isOverflowing,
   inputRef,
 }) => {
-  const { id: convoIdParam } = useParams();
+  const { id: convoIdParam } = useParams<{ id: string }>();
   const [currentHeight, setCurrentHeight] = useState<number>(24);
   const [searchbarText, setSearchbarText] = useState<string>("");
   const [enableSearch, setEnableSearch] = useState<boolean>(false);

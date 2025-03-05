@@ -17,7 +17,7 @@ export default function ChatRenderer() {
   const [openImage, setOpenImage] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
-  const { id: convoIdParam } = useParams();
+  const { id: convoIdParam } = useParams<{ id: string }>();
 
   const [imageData, setImageData] = useState({
     src: "",

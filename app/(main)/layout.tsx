@@ -25,7 +25,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const contentContainerRef = useRef<HTMLDivElement | null>(null);
   const [isSidebarVisible, setSidebarVisible] = useState(true);
   const { conversations } = useConversationList();
-  const { id: convoIdParam } = useParams();
+  const { id: convoIdParam } = useParams<{ id: string }>();
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const { resetMessages } = useConvo();
 

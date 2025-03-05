@@ -1,3 +1,5 @@
+"use client";
+
 import { Spinner } from "@heroui/spinner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
