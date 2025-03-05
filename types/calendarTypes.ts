@@ -1,9 +1,32 @@
-// src/types/calendar.ts
+export interface CalendarCardProps {
+  event: GoogleCalendarEvent;
+  onClick: () => void;
+  calendars: GoogleCalendar[];
+}
 
 export interface GoogleCalendarDateTime {
   date?: string;
   dateTime?: string;
   timeZone?: string;
+}
+
+export interface CalendarChipProps {
+  calendar: GoogleCalendar;
+  selected: boolean;
+  onSelect: (id: string) => void;
+}
+
+export interface CalendarSelectorProps {
+  calendars: GoogleCalendar[];
+  selectedCalendars: string[];
+  onCalendarSelect: (calendarId: string) => void;
+}
+
+export interface CalendarEventDialogProps {
+  event?: GoogleCalendarEvent | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  mode?: "view" | "create";
 }
 
 export interface GoogleCalendarPerson {

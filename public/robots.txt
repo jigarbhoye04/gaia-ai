@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /login/
+Disallow: /signup/
+Allow: /
+
+Sitemap: https://heygaia.io/sitemap.xml
