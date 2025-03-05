@@ -18,7 +18,7 @@ import dagre from "dagre";
 import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { apiauth } from "@/utils/apiaxios";
@@ -105,8 +105,7 @@ const CustomNode = React.memo(
 export default function GoalPage() {
   const [goalData, setGoalData] = useState<GoalData | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
-  const { goalId } = router.query;
+  const { id: goalId } = useParams();
 
   const [nodes, setNodes] = useState<Node<NodeData>[]>([]);
   const [edges, setEdges] = useState<Edge<EdgeType>[]>([]);
@@ -183,7 +182,9 @@ export default function GoalPage() {
   };
 
   const initiateWebSocket = (goalId: string, goalTitle: string) => {
-    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`);
+    const ws = new WebSocket(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`
+    );
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ goal_id: goalId, goal_title: goalTitle }));

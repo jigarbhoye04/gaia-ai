@@ -16,7 +16,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
@@ -184,7 +184,9 @@ export default function GoalPage() {
   };
 
   const initiateWebSocket = (goalId: string, goalTitle: string) => {
-    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`);
+    const ws = new WebSocket(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`
+    );
 
     ws.onopen = () => {
       ws.send(JSON.stringify({ goal_id: goalId, goal_title: goalTitle }));

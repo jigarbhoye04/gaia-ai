@@ -10,7 +10,7 @@ import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
 import useMediaQuery from "@/hooks/mediaQuery";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { PencilSquareIcon } from "@/components/Misc/icons";
 
 export default function Sidebar({

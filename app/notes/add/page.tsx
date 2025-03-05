@@ -10,7 +10,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { convert } from "html-to-text";
 import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 

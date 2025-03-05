@@ -34,7 +34,7 @@ export default function FileUpload({
   fileInputRef,
 }: FileUploadProps): JSX.Element {
   const { setConvoMessages } = useConvo();
-  const { convoIdParam } = useParams<{ convoIdParam: string }>();
+  const { id: convoIdParam } = useParams();
   const { fetchConversations } = useConversationList();
   const router = useRouter();
 

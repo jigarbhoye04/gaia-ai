@@ -11,20 +11,13 @@ import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { useSearchParams } from "next/navigation";
 
-// const ChatBubbleBot = React.lazy(
-//   () => import("@/components/Chat/ChatBubbles/ChatBubbleBot")
-// );
-// const ChatBubbleUser = React.lazy(
-//   () => import("@/components/Chat/ChatBubbles/ChatBubbleUser")
-// );
-
 export default function ChatRenderer() {
   const { convoMessages } = useConvo();
   const { conversations } = useConversationList();
   const [openImage, setOpenImage] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
-  const { convoIdParam } = useParams<{ convoIdParam: string }>();
+  const { id: convoIdParam } = useParams();
 
   const [imageData, setImageData] = useState({
     src: "",

@@ -1,6 +1,6 @@
 import debounce from "lodash.debounce";
 import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import ChatRenderer from "@/components/Chat/ChatRenderer";
 import MainSearchbar from "@/components/Chat/MainSearchbar";

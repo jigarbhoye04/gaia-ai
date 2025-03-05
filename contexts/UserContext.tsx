@@ -1,5 +1,6 @@
 "use client";
 
+import { apiauth } from "@/utils/apiaxios";
 import React, {
   createContext,
   ReactNode,
@@ -7,16 +8,15 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { useRouter } from "next/router";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 
-// Define the shape of the user object
 interface User {
   name: string;
   email: string;
   profile_picture: string;
 }
 
-// Define the shape of the context
 interface UserContextType {
   user: User | null;
   setUserData: (
@@ -24,17 +24,16 @@ interface UserContextType {
     email: string | null,
     profile_picture: string | null
   ) => void;
-  logout: () => Promise<void>; // Update to return a Promise
+  logout: () => Promise<void>;
 }
 
-// Create the context with default values
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Create a provider component
 export const UserProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
+  const searchParams = useSearchParams();
   const router = useRouter();
 
   const setUserData = (
@@ -49,49 +48,27 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
 
   const logout = async () => {
     try {
-      // const response = await apiauth.post(
-      //   "/oauth/logout",
-      //   {},
-      //   {
-      //     withCredentials: true,
-      //   }
-      // );
-
-      // if (response.status !== 200) throw new Error("Logout failed");
-      document.cookie =
-        "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie =
-        "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      await apiauth.post("/oauth/logout", {}, { withCredentials: true });
       setUser(null);
+      toast.success("Successfully logged out!");
     } catch (error) {
+      toast.error("Could not logout");
       console.error("Error during logout:", error);
     } finally {
       router.push("/login");
     }
   };
 
-  // Handle redirect from backend after oauth login
   useEffect(() => {
-    const { search } = router.query;
+    const accessToken = searchParams.get("access_token");
+    const refreshToken = searchParams.get("refresh_token");
 
-    if (search) {
-      const params = new URLSearchParams(search as string);
-
-      const accessToken = params.get("access_token");
-      const refreshToken = params.get("refresh_token");
-
-      if (accessToken && refreshToken && !user) {
-        // set cookies
-        document.cookie = `access_token=${accessToken};`;
-        document.cookie = `refresh_token=${refreshToken};`;
-      }
-
-      params.delete("access_token");
-      params.delete("refresh_token");
-
-      router.push("/c");
+    if (accessToken && refreshToken) {
+      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("refresh_token", refreshToken);
+      router.replace("/c");
     }
-  }, [router.query.search, user]);
+  }, [searchParams, user, router]);
 
   return (
     <UserContext.Provider value={{ user, setUserData, logout }}>
@@ -100,13 +77,10 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
-// Custom hook to use the UserContext
 export const useUser = (): UserContextType => {
   const context = useContext(UserContext);
-
   if (!context) {
     throw new Error("useUser must be used within a UserProvider");
   }
-
   return context;
 };

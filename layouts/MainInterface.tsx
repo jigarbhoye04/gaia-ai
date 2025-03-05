@@ -26,7 +26,7 @@ export default function MainInterface() {
   const contentContainerRef = useRef<HTMLDivElement | null>(null);
   const [isSidebarVisible, setSidebarVisible] = useState(true);
   const { conversations } = useConversationList();
-  const { convoIdParam } = useParams() as { convoIdParam: string };
+  const { id: convoIdParam } = useParams();
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const { resetMessages } = useConvo();
 

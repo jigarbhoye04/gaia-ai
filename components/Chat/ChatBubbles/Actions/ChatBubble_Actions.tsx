@@ -22,7 +22,7 @@ export default function ChatBubble_Actions({
   text,
   pinned = false,
 }: ChatBubbleActionsProps): JSX.Element {
-  const { convoIdParam } = useParams<{ convoIdParam: string }>();
+  const { id: convoIdParam } = useParams<{ convoIdParam: string }>();
   const { setConvoMessages } = useConvo();
 
   const copyToClipboard = () => {

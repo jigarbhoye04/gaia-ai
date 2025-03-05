@@ -1,6 +1,6 @@
 import { apiauth } from "@/utils/apiaxios";
 import { Dispatch, SetStateAction, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { publicPages } from "./useFetchUser";
 
 export default function useAxiosInterceptor(

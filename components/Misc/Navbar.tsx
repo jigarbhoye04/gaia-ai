@@ -156,7 +156,7 @@ function DesktopMenu({ user, scrolled }: DesktopMenuProps) {
 
 export default function Navbar() {
   const { user } = useUser();
-  const router = useRouter();
+  // const router = useRouter();
   const isMobileScreen = useMediaQuery("(max-width: 600px)");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [scrolled, setScrolled] = useState(true);
@@ -173,7 +173,7 @@ export default function Navbar() {
   // }, []);
 
   return (
-    <div className="fixed top-0 w-screen">
+    <div className="navbar">
       <div
         className={`navbar_content bg-zinc-950 outline-[1px] outline outline-zinc-900 !transition-all w-full min-w-fit duration-1000 ${
           (!isMobileScreen && scrolled) || location.pathname != "/"

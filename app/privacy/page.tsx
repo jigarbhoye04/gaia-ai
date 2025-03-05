@@ -1,4 +1,3 @@
-import Footer from "@/components/Misc/Footer";
 
 const PrivacyPolicy = () => {
   return (
@@ -102,7 +101,6 @@ const PrivacyPolicy = () => {
         </p>
         <p className="mb-4">Email: support@heygaia.so</p>
       </div>
-      <Footer />
     </div>
   );
 };

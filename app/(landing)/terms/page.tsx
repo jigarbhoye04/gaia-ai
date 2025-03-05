@@ -1,4 +1,3 @@
-import Footer from "@/components/Misc/Footer";
 
 const TermsOfService = () => {
   return (
@@ -157,7 +156,6 @@ const TermsOfService = () => {
           </a>
         </p>
       </div>
-      <Footer />
     </div>
   );
 };

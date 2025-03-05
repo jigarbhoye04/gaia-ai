@@ -1,3 +1,5 @@
+"use client";
+
 import { ConversationListProvider } from "@/contexts/ConversationList";
 import { ConvoProvider } from "@/contexts/CurrentConvoMessages";
 import { UserProvider } from "@/contexts/UserContext";

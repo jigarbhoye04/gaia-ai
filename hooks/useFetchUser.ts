@@ -1,7 +1,7 @@
 import { useUser } from "@/contexts/UserContext";
 import { apiauth } from "@/utils/apiaxios";
 import { useEffect } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export const authPages = ["/login", "/signup", "/get-started"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];

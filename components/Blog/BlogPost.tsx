@@ -102,7 +102,7 @@ const blogs = [
 ];
 
 export default function BlogPost() {
-  const { blogPost } = useParams();
+  const { id: blogPost } = useParams();
   const blog = blogs.find((blog) => blog.slug === blogPost);
 
   if (!blog) {

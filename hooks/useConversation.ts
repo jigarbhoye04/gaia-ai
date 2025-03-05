@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { v1 as uuidv1 } from "uuid";
 import ObjectID from "bson-objectid";
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
