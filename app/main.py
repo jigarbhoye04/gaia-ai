@@ -1,13 +1,10 @@
 import uvicorn
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1 import api_router, lifespan, logger
 from app.api.v1.routes import general
-
-load_dotenv()
 
 
 def create_app() -> FastAPI:

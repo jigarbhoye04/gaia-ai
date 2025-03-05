@@ -1,19 +1,15 @@
-import os
-
-# from authlib.integrations.starlette_client import OAuth
-from dotenv import load_dotenv
 from passlib.context import CryptContext
+from config.settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-load_dotenv()
 
 
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
-GOOGLE_CALLBACK_URL = os.getenv("HOST") + "/api/v1/oauth/google/callback"
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET = settings.GOOGLE_CLIENT_SECRET
+GOOGLE_REDIRECT_URI = settings.GOOGLE_REDIRECT_URI
+GOOGLE_CALLBACK_URL = settings.HOST + "/api/v1/oauth/google/callback"
 
 
 # oauth = OAuth()

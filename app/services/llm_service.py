@@ -1,19 +1,13 @@
 # app/services/llm_service.py
 import asyncio
 import json
-import os
 from datetime import datetime, timezone
 
 import httpx
-
-# import pytz
-from dotenv import load_dotenv
 from groq import AsyncGroq
 
 from app.utils.logging_util import get_logger
-
-# Load environment variables
-load_dotenv()
+from app.config.settings import settings
 
 logger = get_logger(name="llm", log_file="llm.log")
 
@@ -27,12 +21,12 @@ class LLMService:
         """
         Initialize the LLMService with necessary configurations and HTTP clients.
         """
-        self.llm_url = "https://llm.aryanranderiya1478.workers.dev/"
+        self.llm_url = settings.LLM_URL
         self.http_async_client = httpx.AsyncClient(timeout=1000000.0)
         # Retaining the original parameter for compatibility.
         self.http_async_client2 = httpx.AsyncClient(http2=2, timeout=1000000.0)
-        self.ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNTID")
-        self.AUTH_TOKEN = os.environ.get("CLOUDFLARE_AUTH_TOKEN")
+        self.ACCOUNT_ID = settings.CLOUDFLARE_ACCOUNTID
+        self.AUTH_TOKEN = settings.CLOUDFLARE_AUTH_TOKEN
         self.features = [
             "Generate images",
             "Analyze & understand uploaded documents & images from the user",
@@ -41,7 +35,7 @@ class LLMService:
             "Provide personalized suggestions (Coming Soon)",
             "Manage files on Google Drive (Coming Soon)",
         ]
-        self.groq_api_key = os.getenv("GROQ_API_KEY")
+        self.groq_api_key = settings.GROQ_API_KEY
         self.groq_client = AsyncGroq(api_key=self.groq_api_key)
 
     async def do_prompt_no_stream(

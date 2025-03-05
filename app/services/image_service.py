@@ -1,10 +1,4 @@
-# app/services/image_service_handler.py
-"""
-Service module for handling image generation and image-to-text conversion.
-"""
-
 import io
-import os
 import re
 import uuid
 
@@ -12,7 +6,12 @@ import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException
 
-from app.config.config_cloudinary import get_cloudinary_config
+from app.config.config_cloudinary import (
+    api_key,
+    api_secret,
+    cloud_name,
+    get_cloudinary_config,
+)
 from app.services.llm_service import llm_service
 from app.utils.image_utils import convert_image_to_text, generate_image
 from app.utils.logging_util import get_logger
@@ -41,10 +40,6 @@ class ImageService:
         self.logger = get_logger(name="image", log_file="image.log")
         self.llm_service = llm_service
         self.cloudinary_config = get_cloudinary_config()
-
-        cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
-        api_key = os.getenv("CLOUDINARY_API_KEY")
-        api_secret = os.getenv("CLOUDINARY_API_SECRET")
 
         if not cloud_name or not api_key or not api_secret:
             self.logger.error("Missing required Cloudinary configuration values.")

@@ -1,10 +1,7 @@
 import redis.asyncio as redis
 import json
-import os
-from dotenv import load_dotenv
 from app.utils.logging_util import get_logger
-
-load_dotenv()
+from config.settings import settings
 
 logger = get_logger(name="redis", log_file="redis.log")
 
@@ -14,7 +11,7 @@ ONE_HOUR_TTL = 3600
 
 class RedisCache:
     def __init__(self, redis_url="redis://localhost:6379", default_ttl=3600):
-        self.redis_url = os.getenv("REDIS_URL", redis_url)
+        self.redis_url = settings.REDIS_URL | redis_url
         self.default_ttl = default_ttl
         self.redis = None
 

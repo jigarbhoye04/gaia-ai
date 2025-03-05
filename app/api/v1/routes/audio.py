@@ -1,8 +1,7 @@
 import asyncio
 import base64
-import os
 
-from dotenv import load_dotenv
+from config.settings import settings
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 
@@ -12,12 +11,10 @@ from app.services.audio_service import TTSService
 from app.utils.audio_utils import generate_cache_key, sanitize_text
 from app.utils.logging_util import get_logger
 
-load_dotenv()
-
 router = APIRouter()
 logger = get_logger(name="audio", log_file="audio.log")
 
-DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+DEEPGRAM_API_KEY = settings.DEEPGRAM_API_KEY
 
 tts_service = TTSService()
 
@@ -55,7 +52,7 @@ class DeepgramTranscriber:
         logger.info("Deepgram connection started successfully.")
 
     def handle_transcript(self, *args, **kwargs):
-    # Extract the result from either args or kwargs
+        # Extract the result from either args or kwargs
         result = args[0] if args else kwargs.get("result")
         try:
             if (
@@ -74,7 +71,6 @@ class DeepgramTranscriber:
         except Exception as e:
             logger.error("Error processing transcript: %s", str(e))
             logger.error("Result data: %s", str(result))
-
 
     def send_audio(self, data: bytes):
         if self.dg_connection:

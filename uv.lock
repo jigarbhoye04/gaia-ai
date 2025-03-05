@@ -403,6 +403,12 @@ wheels = [
 ]
 
 [[package]]
+name = "chroma"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/f0/e747fa78cd8ff7d23a598ab21b79988b759c2248500e0d31f21620cb75f3/Chroma-0.2.0.tar.gz", hash = "sha256:e265bcd503e2b35c4448b83257467166c252ecf3ab610492432780691cdfb286", size = 5790 }
+
+[[package]]
 name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
@@ -764,6 +770,7 @@ dependencies = [
     { name = "cffi" },
     { name = "chardet" },
     { name = "charset-normalizer" },
+    { name = "chroma" },
     { name = "click" },
     { name = "cloudinary" },
     { name = "cloudpathlib" },
@@ -903,6 +910,7 @@ requires-dist = [
     { name = "cffi", specifier = "==1.17.1" },
     { name = "chardet", specifier = "==5.2.0" },
     { name = "charset-normalizer", specifier = "==3.4.0" },
+    { name = "chroma", specifier = ">=0.2.0" },
     { name = "click", specifier = "==8.1.8" },
     { name = "cloudinary", specifier = "==1.41.0" },
     { name = "cloudpathlib", specifier = "==0.20.0" },

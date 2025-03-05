@@ -1,10 +1,8 @@
-import os
 from typing import Annotated
 from urllib.parse import urlencode
 
 import httpx
 import requests
-from dotenv import load_dotenv
 from fastapi import APIRouter, Cookie, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 
@@ -18,12 +16,11 @@ from app.utils.auth_utils import (
 )
 from app.utils.logging_util import get_logger
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
+from config.settings import settings
 
 router = APIRouter()
-load_dotenv()
 
 logger = get_logger(name="authentication", log_file="auth.log")
-
 
 http_async_client = httpx.AsyncClient()
 
@@ -80,9 +77,9 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
         access_token_max_age = 3600  # seconds
         refresh_token_max_age = 30 * 24 * 3600  # 30 days in seconds
 
-        env = os.getenv("ENV", "production")
+        env = settings.ENV
         if env == "production":
-            production_domain = os.getenv("FRONTEND_URL", "heygaia.io")
+            production_domain = settings.FRONTEND_URL
             response.set_cookie(
                 key="access_token",
                 value=access_token,
@@ -171,10 +168,10 @@ async def me(access_token: str = Cookie(None)):
 @router.post("/logout")
 async def logout():
     response = JSONResponse(content={"detail": "Logged out successfully"})
-    env = os.getenv("ENV", "production")
+    env = settings.ENV
 
     if env == "production":
-        production_domain = os.getenv("FRONTEND_URL", "heygaia.io")
+        production_domain = settings.FRONTEND_URL
         response.set_cookie(
             key="access_token",
             value="",

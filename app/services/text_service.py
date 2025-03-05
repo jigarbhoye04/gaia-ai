@@ -1,12 +1,9 @@
 import asyncio
 from transformers import pipeline
-from dotenv import load_dotenv
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
 import nltk
-
-load_dotenv()
 
 
 def split_text_into_chunks(text, chunk_size=250, overlap=30):

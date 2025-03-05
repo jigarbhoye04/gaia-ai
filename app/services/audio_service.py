@@ -1,4 +1,3 @@
-import os
 import queue
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -11,8 +10,9 @@ from fastapi import HTTPException
 from google.oauth2 import service_account
 
 from app.utils.logging_util import get_logger
+from config.settings import settings
 
-aai.settings.api_key = os.environ.get("ASSEMBLYAI_API_KEY")
+aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
 
 executor = ThreadPoolExecutor(max_workers=2)
 
