@@ -1,17 +1,13 @@
 import cloudinary
-from app.config.settings import settings
 from fastapi import HTTPException
 
-from app.utils.logging_util import get_logger
+from app.config.loggers import cloudinary_logger as logger
+from app.config.settings import settings
 
-logger = get_logger(name="cloudinary", log_file="cloudinary.log")
-
-# Load Cloudinary credentials from environment variables
 cloud_name = settings.CLOUDINARY_CLOUD_NAME
 api_key = settings.CLOUDINARY_API_KEY
 api_secret = settings.CLOUDINARY_API_SECRET
 
-# Ensure all required variables are set
 if not all([cloud_name, api_key, api_secret]):
     logger.error("Missing required Cloudinary configuration values.")
     raise HTTPException(
@@ -20,7 +16,6 @@ if not all([cloud_name, api_key, api_secret]):
         "CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are set.",
     )
 
-# Configure Cloudinary globally
 cloudinary.config(
     cloud_name=cloud_name,
     api_key=api_key,

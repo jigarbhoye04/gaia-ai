@@ -12,9 +12,9 @@ from app.config.config_cloudinary import (
     cloud_name,
     get_cloudinary_config,
 )
-from app.services.llm_service import llm_service
+from app.config.loggers import image_logger as logger
+from app.services.llm_service import do_prompt_no_stream
 from app.utils.image_utils import convert_image_to_text, generate_image
-from app.utils.logging_util import get_logger
 
 
 def generate_public_id(refined_text: str, max_length: int = 50) -> str:
@@ -37,8 +37,7 @@ class ImageService:
         Raises:
             HTTPException: If any required Cloudinary configuration environment variables are missing.
         """
-        self.logger = get_logger(name="image", log_file="image.log")
-        self.llm_service = llm_service
+        self.logger = logger
         self.cloudinary_config = get_cloudinary_config()
 
         if not cloud_name or not api_key or not api_secret:
@@ -70,7 +69,7 @@ class ImageService:
         try:
             self.logger.info(f"Received image generation request: {message}")
 
-            improved_prompt = await self.llm_service.do_prompt_no_stream(
+            improved_prompt = await do_prompt_no_stream(
                 prompt=f"""
                 You are an AI assistant specialized in refining prompts for generating high-quality images. Your task is to take the given prompt and enhance it by adding relevant keywords that improve detail, clarity, and visual accuracy.  
                 

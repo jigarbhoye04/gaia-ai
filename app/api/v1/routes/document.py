@@ -4,7 +4,7 @@ import datetime
 import fitz
 from app.db.collections import documents_collection
 from app.utils.notes import generate_embedding
-from app.services.llm_service import llm_service
+from app.services.llm_service import do_prompt_no_stream
 from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
 from app.models.document_moels import DocumentUploadResponse
@@ -100,7 +100,7 @@ async def query_with_document(
                 f"Question: {message}\n\nContext from documents uploaded by the user:\n"
                 f"{ {'document_name': file.filename, 'content': text} }"
             )
-        response = await llm_service.do_prompt_no_stream(prompt)
+        response = await do_prompt_no_stream(prompt)
         return {
             "response": response,
             "message": "Document uploaded and query processed successfully.",

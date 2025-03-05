@@ -5,15 +5,13 @@ Service module for handling search operations and URL metadata fetching.
 import httpx
 from bs4 import BeautifulSoup
 from fastapi import HTTPException, status
+
+from app.config.loggers import search_logger as logger
+from app.db.collections import conversations_collection, notes_collection
 from app.db.db_redis import get_cache, set_cache
 from app.db.utils import serialize_document
 from app.models.search_models import URLResponse
 from app.utils.general_utils import get_context_window
-from app.utils.logging_util import get_logger
-from app.db.collections import conversations_collection, notes_collection
-
-# Global logger instance for this module.
-logger = get_logger(name="search", log_file="search.log")
 
 
 async def search_messages(query: str, user_id: str) -> dict:

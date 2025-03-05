@@ -1,18 +1,17 @@
 import asyncio
 import base64
 
-from app.config.settings import settings
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from fastapi.responses import Response
 
+from app.config.loggers import audio_logger as logger
+from app.config.settings import settings
 from app.db.db_redis import get_cache, set_cache
 from app.models.audio_models import TTSRequest
 from app.services.audio_service import TTSService
 from app.utils.audio_utils import generate_cache_key, sanitize_text
-from app.utils.logging_util import get_logger
 
 router = APIRouter()
-logger = get_logger(name="audio", log_file="audio.log")
 
 DEEPGRAM_API_KEY = settings.DEEPGRAM_API_KEY
 

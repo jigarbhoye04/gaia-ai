@@ -1,12 +1,10 @@
 import sys
-from app.utils.logging_util import get_logger
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import pymongo
 from app.config.settings import settings
-
-
-logger = get_logger(name="database", log_file="database.log")
+from app.config.loggers import mongo_logger as logger
 
 
 class MongoDB:

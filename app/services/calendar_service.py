@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 import httpx
 from fastapi import HTTPException
 
+from app.config.loggers import calendar_logger as logger
 from app.db.collections import calendars_collection
 from app.models.calendar_models import EventCreateRequest
 from app.utils.auth_utils import (
@@ -14,9 +15,7 @@ from app.utils.auth_utils import (
     GOOGLE_TOKEN_URL,
 )
 from app.utils.calendar_utils import resolve_timezone
-from app.utils.logging_util import get_logger
 
-logger = get_logger("calendar_service", "app.log")
 http_async_client = httpx.AsyncClient()
 
 

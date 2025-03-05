@@ -14,13 +14,13 @@ from app.utils.auth_utils import (
     GOOGLE_REDIRECT_URI,
     GOOGLE_USERINFO_URL,
 )
-from app.utils.logging_util import get_logger
+
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 from app.config.settings import settings
+from app.config.loggers import auth_logger as logger
 
 router = APIRouter()
 
-logger = get_logger(name="authentication", log_file="auth.log")
 
 http_async_client = httpx.AsyncClient()
 

@@ -1,9 +1,9 @@
 import redis.asyncio as redis
 import json
-from app.utils.logging_util import get_logger
-from app.config.settings import settings
 
-logger = get_logger(name="redis", log_file="redis.log")
+from app.config.settings import settings
+from app.config.loggers import redis_logger as logger
+
 
 ONE_YEAR_TTL = 31_536_000
 ONE_HOUR_TTL = 3600

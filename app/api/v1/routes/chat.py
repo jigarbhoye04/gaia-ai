@@ -2,7 +2,21 @@
 from fastapi import APIRouter, Depends, BackgroundTasks, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.services.chat_service import chat_service
+from app.services.chat_service import (
+    chat_stream,
+    chat,
+    create_conversation,
+    get_conversations,
+    get_conversation,
+    update_messages,
+    update_conversation_description_llm,
+    update_conversation_description,
+    star_conversation,
+    delete_all_conversations,
+    delete_conversation,
+    pin_message,
+    get_starred_messages,
+)
 from app.models.chat_models import (
     ConversationModel,
     UpdateMessagesRequest,
@@ -16,7 +30,6 @@ from app.models.general_models import (
     DescriptionUpdateRequest,
 )
 
-
 router = APIRouter()
 
 
@@ -28,22 +41,16 @@ async def chat_stream_endpoint(
 ) -> StreamingResponse:
     """
     Stream chat messages in real time.
-
-    This endpoint streams chat responses based on the conversation history,
-    enriching the context with document notes, search results, or fetched webpage
-    content as needed.
     """
-    return await chat_service.chat_stream(body, background_tasks, user)
+    return await chat_stream(body, background_tasks, user)
 
 
 @router.post("/chat")
 async def chat_endpoint(request: MessageRequest) -> JSONResponse:
     """
     Return a chat response for the provided message.
-
-    This endpoint obtains a response from the LLM (without streaming).
     """
-    response = await chat_service.chat(request)
+    response = await chat(request)
     return JSONResponse(content=response)
 
 
@@ -53,10 +60,8 @@ async def create_conversation_endpoint(
 ) -> JSONResponse:
     """
     Create a new conversation.
-
-    This endpoint creates a new conversation record for the authenticated user.
     """
-    response = await chat_service.create_conversation(conversation, user)
+    response = await create_conversation(conversation, user)
     return JSONResponse(content=response)
 
 
@@ -76,11 +81,8 @@ async def get_conversations_endpoint(
 ) -> JSONResponse:
     """
     Retrieve paginated conversations for the authenticated user.
-
-    This endpoint fetches a list of conversations with caching when possible.
-    Supports pagination with `page` and `limit` query parameters.
     """
-    response = await chat_service.get_conversations(user, page=page, limit=limit)
+    response = await get_conversations(user, page=page, limit=limit)
     return JSONResponse(content=response)
 
 
@@ -90,10 +92,8 @@ async def get_conversation_endpoint(
 ) -> JSONResponse:
     """
     Retrieve a specific conversation by its ID.
-
-    This endpoint returns a conversation document if it exists and belongs to the user.
     """
-    response = await chat_service.get_conversation(conversation_id, user)
+    response = await get_conversation(conversation_id, user)
     return JSONResponse(content=response)
 
 
@@ -103,10 +103,8 @@ async def update_messages_endpoint(
 ) -> JSONResponse:
     """
     Update the messages of a conversation.
-
-    This endpoint appends new messages to an existing conversation.
     """
-    response = await chat_service.update_messages(request, user)
+    response = await update_messages(request, user)
     return JSONResponse(content=response)
 
 
@@ -118,12 +116,8 @@ async def update_conversation_description_llm_endpoint(
 ) -> JSONResponse:
     """
     Update the conversation description using an LLM.
-
-    This endpoint uses an LLM prompt to generate a succinct summary for the conversation.
     """
-    response = await chat_service.update_conversation_description_llm(
-        conversation_id, data, user
-    )
+    response = await update_conversation_description_llm(conversation_id, data, user)
     return JSONResponse(content=response)
 
 
@@ -135,12 +129,8 @@ async def update_conversation_description_endpoint(
 ) -> JSONResponse:
     """
     Update the conversation description.
-
-    This endpoint directly updates the conversation's description based on the provided text.
     """
-    response = await chat_service.update_conversation_description(
-        conversation_id, data, user
-    )
+    response = await update_conversation_description(conversation_id, data, user)
     return JSONResponse(content=response)
 
 
@@ -152,10 +142,8 @@ async def star_conversation_endpoint(
 ) -> JSONResponse:
     """
     Star or unstar a conversation.
-
-    This endpoint updates the 'starred' status of the specified conversation.
     """
-    response = await chat_service.star_conversation(conversation_id, body.starred, user)
+    response = await star_conversation(conversation_id, body.starred, user)
     return JSONResponse(content=response)
 
 
@@ -165,10 +153,8 @@ async def delete_all_conversations_endpoint(
 ) -> JSONResponse:
     """
     Delete all conversations for the authenticated user.
-
-    This endpoint removes every conversation associated with the current user.
     """
-    response = await chat_service.delete_all_conversations(user)
+    response = await delete_all_conversations(user)
     return JSONResponse(content=response)
 
 
@@ -178,10 +164,8 @@ async def delete_conversation_endpoint(
 ) -> JSONResponse:
     """
     Delete a specific conversation by its ID.
-
-    This endpoint deletes the conversation if it exists and belongs to the user.
     """
-    response = await chat_service.delete_conversation(conversation_id, user)
+    response = await delete_conversation(conversation_id, user)
     return JSONResponse(content=response)
 
 
@@ -194,12 +178,8 @@ async def pin_message_endpoint(
 ) -> JSONResponse:
     """
     Pin or unpin a message within a conversation.
-
-    This endpoint updates the 'pinned' status of a specified message in a conversation.
     """
-    response = await chat_service.pin_message(
-        conversation_id, message_id, body.pinned, user
-    )
+    response = await pin_message(conversation_id, message_id, body.pinned, user)
     return JSONResponse(content=response)
 
 
@@ -209,8 +189,6 @@ async def get_starred_messages_endpoint(
 ) -> JSONResponse:
     """
     Retrieve all pinned messages across all conversations.
-
-    This endpoint fetches all messages marked as pinned for the authenticated user.
     """
-    response = await chat_service.get_starred_messages(user)
+    response = await get_starred_messages(user)
     return JSONResponse(content=response)

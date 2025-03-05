@@ -22,5 +22,4 @@ def get_logger(
     return logger
 
 
-# Default logger
 logger = get_logger()

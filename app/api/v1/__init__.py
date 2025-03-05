@@ -16,10 +16,9 @@ from app.api.v1.routes import (
     search,
     waitlist,
 )
-from app.utils.logging_util import get_logger
 from app.utils.nltk_utils import download_nltk_resources
+from app.config.loggers import app_logger as logger
 
-logger = get_logger(name="main", log_file="app.log")
 
 api_router = APIRouter()
 

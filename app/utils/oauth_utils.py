@@ -1,6 +1,7 @@
 import httpx
 from fastapi import HTTPException
 
+from app.config.loggers import auth_logger as logger
 from app.db.collections import users_collection
 from app.utils.auth_utils import (
     GOOGLE_CALLBACK_URL,
@@ -9,11 +10,8 @@ from app.utils.auth_utils import (
     GOOGLE_TOKEN_URL,
     GOOGLE_USERINFO_URL,
 )
-from app.utils.logging_util import get_logger
 
 http_async_client = httpx.AsyncClient()
-
-logger = get_logger(name="authentication", log_file="auth.log")
 
 
 async def fetch_user_info_from_google(access_token: str):
