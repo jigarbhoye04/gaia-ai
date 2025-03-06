@@ -7,7 +7,12 @@ import { EmailData, EmailsResponse } from "@/types/mailTypes";
 import { fetchEmails, formatTime } from "@/utils/mailUtils";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
-import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  InfiniteData,
+  QueryClient,
+  QueryClientProvider,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
@@ -118,7 +123,7 @@ export default function Email() {
   const itemCount = hasNextPage ? emails.length + 1 : emails.length;
 
   return (
-    <div className="pl-2 w-full">
+    <div className="pl-2 w-full h-full">
       <h1 className="flex items-center gap-2 w-full justify-start pb-5">
         <InboxIcon color={undefined} width={25} height={25} />
         Inbox
@@ -130,7 +135,7 @@ export default function Email() {
       >
         {({ onItemsRendered, ref }) => (
           <List
-            height={900}
+            height={window.innerHeight - 100}
             itemCount={itemCount}
             itemSize={55}
             onItemsRendered={onItemsRendered}

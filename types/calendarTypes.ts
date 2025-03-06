@@ -89,3 +89,35 @@ export interface GoogleCalendar {
   backgroundColor: string;
   primary: boolean;
 }
+
+export interface BaseEvent {
+  summary: string;
+  description: string;
+  index?: string | number;
+  organizer?: {
+    email?: string;
+  };
+}
+
+export interface TimedEvent extends BaseEvent {
+  start: string;
+  end: string;
+}
+
+export interface SingleTimeEvent extends BaseEvent {
+  time: string;
+}
+
+export type CalendarEvent = TimedEvent | SingleTimeEvent;
+
+export interface EventCardProps {
+  event: CalendarEvent;
+  isDummy?: boolean;
+  onDummyAddEvent?: () => void;
+}
+
+export interface UnifiedCalendarEventsListProps {
+  events: CalendarEvent[];
+  isDummy?: boolean;
+  onDummyAddEvent?: (index: number) => void;
+}

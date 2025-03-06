@@ -1,6 +1,6 @@
 import {
   CalendarEvent,
-  UnifiedCalendarEventsList,
+  CalendarEventsList,
 } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 import {
   SimpleChatBubbleBot,
@@ -91,7 +91,7 @@ export default function CalendarMessages({
 Your client calls are at 4 PM and 7 PM, with a gym session in between (5:15 PM - 6:30 PM), then dinner (6:30 PM - 7 PM). End the day with exam prep (8 PM - 10 PM), and if you have time, wrap up any work. Sound good?`}
           </ReadMoreText>
         </SimpleChatBubbleBot>
-        <UnifiedCalendarEventsList
+        <CalendarEventsList
           events={events}
           isDummy={true}
           onDummyAddEvent={addToCalendar}

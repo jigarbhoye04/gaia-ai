@@ -44,8 +44,8 @@ export default function MailCompose({
     <Drawer.Root open={open} onOpenChange={onOpenChange} direction="right">
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
-        <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[40vw] h-[60vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
-          <Drawer.Title>New Message</Drawer.Title>
+        <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] h-[60vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
+          <Drawer.Title className="text-xl">New Message</Drawer.Title>
 
           <Input
             variant="underlined"

@@ -1,41 +1,21 @@
 import { CalendarAdd01Icon, Tick02Icon } from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
+import {
+  CalendarEvent,
+  EventCardProps,
+  TimedEvent,
+  UnifiedCalendarEventsListProps,
+} from "@/types/calendarTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { parsingDate } from "@/utils/fetchDate";
 import { Button } from "@heroui/button";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-export interface BaseEvent {
-  summary: string;
-  description: string;
-  index?: string | number;
-  organizer?: {
-    email?: string;
-  };
-}
-
-export interface TimedEvent extends BaseEvent {
-  start: string;
-  end: string;
-}
-
-export interface SingleTimeEvent extends BaseEvent {
-  time: string;
-}
-
-export type CalendarEvent = TimedEvent | SingleTimeEvent;
-
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
 
-interface EventCardProps {
-  event: CalendarEvent;
-  isDummy?: boolean;
-  onDummyAddEvent?: () => void;
-}
-
-export function UnifiedCalendarEventCard({
+export function CalendarEventCard({
   event,
   isDummy,
   onDummyAddEvent,
@@ -108,26 +88,23 @@ export function UnifiedCalendarEventCard({
   );
 }
 
-interface UnifiedCalendarEventsListProps {
-  events: CalendarEvent[];
-  isDummy?: boolean;
-  onDummyAddEvent?: (index: number) => void;
-}
-
-export function UnifiedCalendarEventsList({
+export function CalendarEventsList({
   events,
   isDummy = false,
   onDummyAddEvent,
 }: UnifiedCalendarEventsListProps) {
   return (
     <AnimatedSection className="p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit">
-      <div>Want to add these events to your Calendar?</div>
+      <div>
+        Would you like to add{" "}
+        {events.length === 1 ? "this event" : "these events"} to your Calendar?
+      </div>{" "}
       {events.map((event, index) => (
-        <UnifiedCalendarEventCard
+        <CalendarEventCard
           key={index}
           event={event}
           isDummy={isDummy}
-          onDummyAddEvent={() => onDummyAddEvent && onDummyAddEvent(index)}
+          onDummyAddEvent={() => onDummyAddEvent?.(index)}
         />
       ))}
     </AnimatedSection>

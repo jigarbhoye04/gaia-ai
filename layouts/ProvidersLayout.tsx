@@ -5,10 +5,7 @@ import { ConversationListProvider } from "@/contexts/ConversationList";
 import { ConvoProvider } from "@/contexts/CurrentConvoMessages";
 import { UserProvider } from "@/contexts/UserContext";
 import UIProviderLayout from "@/layouts/UIProviderLayout";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, Suspense } from "react";
-
-const queryClient = new QueryClient();
 
 export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (
@@ -16,9 +13,7 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
       <UserProvider>
         <UIProviderLayout>
           <ConvoProvider>
-            <QueryClientProvider client={queryClient}>
-              <ConversationListProvider>{children}</ConversationListProvider>
-            </QueryClientProvider>
+            <ConversationListProvider>{children}</ConversationListProvider>
           </ConvoProvider>
         </UIProviderLayout>
       </UserProvider>

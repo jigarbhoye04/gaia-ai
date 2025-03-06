@@ -33,19 +33,23 @@ const CalendarCard = ({ event, onClick, calendars }: CalendarCardProps) => {
 
         <div className="font-bold text-lg">{event.summary}</div>
       </div>
-      <div
-        className="text-sm mt-2 relative z-[1] flex items-center gap-1"
-        style={{ color: backgroundColor }}
-      >
-        {formatEventDate(event as GoogleCalendarEvent) ? (
-          <>
-            <Clock height={17} width={17} />
-            {formatEventDate(event as GoogleCalendarEvent)}
-          </>
-        ) : (
-          event?.time
-        )}
-      </div>
+
+      {(formatEventDate(event as GoogleCalendarEvent) || event?.time) && (
+        <div
+          className="text-sm mt-2 relative z-[1] flex items-center gap-1"
+          style={{ color: backgroundColor }}
+        >
+          {formatEventDate(event as GoogleCalendarEvent) ? (
+            <>
+              <Clock height={17} width={17} />
+              {formatEventDate(event as GoogleCalendarEvent)}
+            </>
+          ) : (
+            event?.time
+          )}
+        </div>
+      )}
+
       <div
         className="absolute inset-0 z-[0] opacity-20 rounded-lg w-full"
         style={{ backgroundColor }}

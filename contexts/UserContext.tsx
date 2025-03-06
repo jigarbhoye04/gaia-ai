@@ -64,8 +64,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({
     const refreshToken = searchParams.get("refresh_token");
 
     if (accessToken && refreshToken) {
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", refreshToken);
+      // localStorage.setItem("access_token", accessToken);
+      // localStorage.setItem("refresh_token", refreshToken);
       router.replace("/c");
     }
   }, [searchParams, user, router]);

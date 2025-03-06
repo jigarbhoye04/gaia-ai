@@ -1,13 +1,10 @@
-// CalendarEventSection.tsx
-import CalendarEventCard from "./CalendarEventCard";
-
-interface CalendarEventSectionProps {
-  calendar_options: any; // adjust type as needed
-}
+import { CalendarEventsList } from "./CalendarEventCard";
 
 export default function CalendarEventSection({
   calendar_options,
-}: CalendarEventSectionProps) {
+}: {
+  calendar_options: any;
+}) {
   const eventsArray = Array.isArray(calendar_options)
     ? calendar_options
     : [calendar_options];
@@ -22,16 +19,5 @@ export default function CalendarEventSection({
     );
   }
 
-  return (
-    <div className="p-3 bg-zinc-800 rounded-2xl mt-2 flex gap-1 flex-col w-full">
-      <div>
-        Would you like to add{" "}
-        {eventsArray.length === 1 ? "this event" : "these events"} to your
-        Calendar?
-      </div>
-      {eventsArray.map((option, index) => (
-        <CalendarEventCard key={index} option={option} />
-      ))}
-    </div>
-  );
+  return <CalendarEventsList events={eventsArray} />;
 }
