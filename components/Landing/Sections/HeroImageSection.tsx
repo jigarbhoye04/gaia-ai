@@ -5,11 +5,7 @@ import { GeneratedImageChatBubble } from "./ImageGenerationSection";
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
 
-export default function HeroImage({
-  setLoginModalOpen,
-}: {
-  setLoginModalOpen: Dispatch<SetStateAction<boolean>>;
-}) {
+export default function HeroImage() {
   return (
     <div className="w-screen flex items-center justify-center">
       <AnimatedSection className="flex items-center justify-center h-fit w-screen max-w-screen-lg lg:max-w-screen-xl  mt-14 sm:mb-0 mb-[20vh]">
@@ -38,7 +34,7 @@ export default function HeroImage({
               url="heygaia.io"
             />
             <div className="absolute text-white flex w-full sm:bottom-4 bottom-[-15px] justify-center left-0 items-center sm:scale-100 scale-50">
-              <DummySearchbar setLoginModalOpen={setLoginModalOpen} />
+              <DummySearchbar />
             </div>
           </ShineBorder>
 

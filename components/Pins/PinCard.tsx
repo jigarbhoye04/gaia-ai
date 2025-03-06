@@ -1,10 +1,21 @@
-import { Chip } from "@heroui/chip";
-import { ArrowUpRight } from "lucide-react";
-import React from "react";
-import Link from "next/link";
 import { InternetIcon } from "@/components/Misc/icons";
 import { parseDate } from "@/utils/fetchDate";
-import { PinCardProps } from "@/types/pinTypes";
+import { Chip } from "@heroui/chip";
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+
+interface PinCardProps {
+  message: {
+    message_id: string;
+    response: string;
+    searchWeb?: boolean;
+    pageFetchURL?: string;
+    date: string | Date;
+    type: string;
+  };
+  conversation_id: string;
+}
 
 export const PinCard: React.FC<PinCardProps> = ({
   message,

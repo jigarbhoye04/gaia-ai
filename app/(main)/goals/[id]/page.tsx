@@ -20,7 +20,7 @@ import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 export interface GoalData {
@@ -110,10 +110,9 @@ export default function GoalPage() {
   const [currentlySelectedNodeId, setCurrentlySelectedNodeId] = useState<
     string | null
   >(null);
+  const { id: goalId } = useParams();
 
-  const router = useRouter();
 
-  const { id: goalId } = router.query;
 
   const nodeTypes = useMemo(
     () => ({

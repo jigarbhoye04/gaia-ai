@@ -8,11 +8,7 @@ const LazyLoadedSections = lazy(
   () => import("@/components/Landing/Sections/LazyLoadedSections")
 );
 
-export default function LandingPage({
-  setLoginModalOpen,
-}: {
-  setLoginModalOpen: Dispatch<SetStateAction<boolean>>;
-}) {
+export default function LandingPage() {
   useEffect(() => {
     document.documentElement.style.overflowY = "scroll";
 
@@ -26,7 +22,7 @@ export default function LandingPage({
       <div className="relative min-h-screen overflow-hidden">
         <div className="fixed inset-0 bg-gradient-to-b bg-[#000000] z-[-1] top-0 h-screen" />
         <HeroSection />
-        <HeroImage setLoginModalOpen={setLoginModalOpen} />
+        <HeroImage />
         <LazyLoadedSections />
       </div>
     </LandingLayout>

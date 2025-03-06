@@ -11,11 +11,12 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { convert } from "html-to-text";
 import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { SaveIcon } from "@/components/Misc/icons";
 import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
 import { MenuBar } from "@/components/Notes/NotesMenuBar";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { apiauth } from "@/utils/apiaxios";
-import { SaveIcon } from "@/components/Misc/icons";
 
 interface Note {
   id: string;
@@ -36,8 +36,9 @@ interface Note {
 }
 
 export default function NotesAdd() {
+  const { id } = useParams();
+  const pathname = usePathname();
   const router = useRouter();
-  const { id } = router.query;
   const [note, setNote] = useState<Note>({
     id: "",
     title: "",
@@ -141,12 +142,12 @@ export default function NotesAdd() {
   }, [id, editor]);
 
   useEffect(() => {
-    if (router.pathname === "/notes/add") {
+    if (pathname === "/notes/add") {
       setIsLoading(false);
     } else {
       fetchNote();
     }
-  }, [router.pathname, fetchNote]);
+  }, [pathname, fetchNote]);
 
   const saveNote = async () => {
     try {

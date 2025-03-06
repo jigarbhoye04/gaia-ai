@@ -1,15 +1,15 @@
 "use client";
 
-import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux";
 import { setOpen } from "@/redux/slices/loginModalSlice";
 import { Modal, ModalBody, ModalContent } from "@heroui/modal";
+import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
 import { GoogleColouredIcon } from "../Misc/icons";
 import { Button } from "../ui/button";
-import Link from "next/link";
 
 export default function LoginModal() {
-  const open = useSelector((state: RootState) => state.modal.open);
+  const open = useSelector((state: RootState) => state.loginModal.open);
   const dispatch = useDispatch();
 
   return (

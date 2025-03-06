@@ -12,7 +12,7 @@ export default function NoteCard({
   // const [openDialog, setOpenDialog] = useState(false);
 
   return (
-    <Link className="w-full px-1" href={`./${note.id}`}>
+    <Link className="w-full px-1" href={`/notes/${note.id}`}>
       <div
         className="w-full bg-zinc-800 hover:bg-zinc-700 transition-all max-h-[250px] rounded-xl text-foreground flex p-[1em] flex-col justify-start overflow-hidden gap-1 cursor-pointer h-full relative "
         // onClick={() => setOpenDialog(true)} // Open dialog on click

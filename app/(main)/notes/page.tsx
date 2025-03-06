@@ -81,7 +81,7 @@ export default function Notes() {
         </ScrollArea>
 
         <div className="absolute left-0 bottom-4 flex justify-center items-center w-full z-10">
-          <Link href={"./add"}>
+          <Link href={"/notes/add"}>
             <Button
               className="font-semibold gap-1"
               color="primary"
