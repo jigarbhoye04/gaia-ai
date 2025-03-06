@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://heygaia.io"),
   title: "GAIA - Your Personal Assistant",
   description:
     "GAIA is your personal AI assistant designed to help increase your productivity.",
