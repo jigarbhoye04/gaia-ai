@@ -1,4 +1,4 @@
-import { EmailPayload } from "@/types/mailTypes";
+import { EmailData } from "@/types/mailTypes";
 import { Spinner } from "@heroui/spinner";
 import DOMPurify from "dompurify";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -13,21 +13,21 @@ export const decodeBase64 = (str: string): string => {
   }
 };
 
-export default function GmailBody({ email }: { email: EmailPayload }) {
+export default function GmailBody({ email }: { email: EmailData }) {
   if (!email) return null;
   const [loading, setLoading] = useState(true);
   const shadowHostRef = useRef<HTMLDivElement | null>(null);
 
-  // Decode and sanitize email content
   const decodedHtml = useMemo(() => {
     const htmlPart = email.payload.parts?.find(
-      (p) => p.mimeType === "text/html"
+      (p: { mimeType: string; body: { data: string } }) =>
+        p.mimeType === "text/html"
     )?.body?.data;
+
     if (htmlPart) return decodeBase64(htmlPart);
     if (email.payload.body?.data) return decodeBase64(email.payload.body.data);
     return null;
   }, [email]);
-
   const sanitizedHtml = useMemo(() => {
     return decodedHtml
       ? DOMPurify.sanitize(decodedHtml, {

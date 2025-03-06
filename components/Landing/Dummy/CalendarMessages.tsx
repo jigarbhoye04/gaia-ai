@@ -2,7 +2,14 @@ import {
   SimpleChatBubbleBot,
   SimpleChatBubbleUser,
 } from "@/components/Landing/Dummy/SimpleChatBubbles";
-import { Dispatch, SetStateAction, useState, useRef, useEffect } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useState,
+  useRef,
+  useEffect,
+  ReactNode,
+} from "react";
 import { toast } from "sonner";
 import { CalendarBotMessage } from "../Dummy/CalendarBotMessage";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
@@ -19,7 +26,13 @@ interface CalendarMessagesProps {
   setAddedEvents: Dispatch<SetStateAction<number[]>>;
 }
 
-const ReadMoreText = ({ children, maxHeight = 60 }) => {
+const ReadMoreText = ({
+  children,
+  maxHeight = 60,
+}: {
+  children: ReactNode;
+  maxHeight: number;
+}) => {
   const [expanded, setExpanded] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [needsTruncation, setNeedsTruncation] = useState(false);

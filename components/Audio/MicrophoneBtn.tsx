@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import {
   Modal,
-  ModalContent,
-  ModalHeader,
   ModalBody,
+  ModalContent,
   ModalFooter,
+  ModalHeader,
 } from "@heroui/modal";
+import { useRef, useState } from "react";
 
 // import Lottie from "react-lottie";
 // import recordingAnimation from "../lotties/recording.json";
 import { Button } from "@heroui/button";
 
-import { Cancel01Icon, Tick02Icon, Mic02Icon } from "../Misc/icons";
+import { Cancel01Icon, Mic02Icon, Tick02Icon } from "../Misc/icons";
 
 // Define props type for the MicrophoneBtn component
 interface MicrophoneBtnProps {
@@ -30,53 +30,53 @@ MicrophoneBtnProps) {
   const [transcript, setTranscript] = useState<string>("");
   const recognitionRef = useRef<any | null>(null);
 
-  useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
-    ) {
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
+  // useEffect(() => {
+  //   if (
+  //     typeof window !== "undefined" &&
+  //     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window)
+  //   ) {
+  //     const SpeechRecognition =
+  //       window.SpeechRecognition || window.webkitSpeechRecognition;
 
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = "en-US";
+  //     recognitionRef.current = new SpeechRecognition();
+  //     recognitionRef.current.continuous = true;
+  //     recognitionRef.current.interimResults = true;
+  //     recognitionRef.current.lang = "en-US";
 
-      recognitionRef.current.onresult = (event: any) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
+  //     recognitionRef.current.onresult = (event: any) => {
+  //       let interimTranscript = "";
+  //       let finalTranscript = "";
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          const transcript = result[0].transcript;
+  //       for (let i = event.resultIndex; i < event.results.length; i++) {
+  //         const result = event.results[i];
+  //         const transcript = result[0].transcript;
 
-          if (result.isFinal) {
-            finalTranscript += transcript + " ";
-          } else {
-            interimTranscript += transcript;
-          }
-        }
+  //         if (result.isFinal) {
+  //           finalTranscript += transcript + " ";
+  //         } else {
+  //           interimTranscript += transcript;
+  //         }
+  //       }
 
-        setTranscript(finalTranscript + interimTranscript);
-      };
+  //       setTranscript(finalTranscript + interimTranscript);
+  //     };
 
-      recognitionRef.current.onerror = (event: any) => {
-        console.error("Recognition error:", event.error);
-        stopRecording(); // Stop recording on error
-      };
+  //     recognitionRef.current.onerror = (event: any) => {
+  //       console.error("Recognition error:", event.error);
+  //       stopRecording(); // Stop recording on error
+  //     };
 
-      recognitionRef.current.onend = () => {
-        setIsRecording(false);
-      };
-    } else {
-      console.log("Speech recognition not supported");
-    }
+  //     recognitionRef.current.onend = () => {
+  //       setIsRecording(false);
+  //     };
+  //   } else {
+  //     console.log("Speech recognition not supported");
+  //   }
 
-    return () => {
-      stopRecording(); // Ensure to stop on cleanup
-    };
-  }, []);
+  //   return () => {
+  //     stopRecording(); // Ensure to stop on cleanup
+  //   };
+  // }, []);
 
   const startRecording = () => {
     setTranscript("");

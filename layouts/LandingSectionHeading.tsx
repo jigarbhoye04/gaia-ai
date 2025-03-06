@@ -8,7 +8,7 @@ export function SectionHeading({
   smallHeading = false,
 }: {
   heading: string;
-  subheading: string | ReactNode;
+  subheading?: string | ReactNode;
   icon: any;
   smallHeading?: boolean;
   className?: string;

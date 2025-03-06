@@ -68,7 +68,7 @@ export default function StarterEmoji() {
       <img
         alt="Smiley"
         className="starter_emoji"
-        src={smileys[currentSmiley]}
+        src={smileys[currentSmiley].toString()}
         onClick={changeSmiley}
       />
     </Tooltip>

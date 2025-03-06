@@ -1,13 +1,12 @@
 import { apiauth } from "@/utils/apiaxios";
+import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { publicPages } from "./useFetchUser";
 
 export default function useAxiosInterceptor(
   setModalOpen: Dispatch<SetStateAction<boolean>>
 ) {
-  const router = useRouter();
-
+  const pathname = usePathname();
   useEffect(() => {
     const interceptor = apiauth.interceptors.response.use(
       (response) => response,
@@ -15,7 +14,7 @@ export default function useAxiosInterceptor(
         if (
           error.response &&
           error.response.status === 401 &&
-          !publicPages.includes(router.pathname)
+          !publicPages.includes(pathname)
         ) {
           // toast.error("Session expired. Please log in again.");
           setModalOpen(true);
@@ -27,5 +26,5 @@ export default function useAxiosInterceptor(
     return () => {
       apiauth.interceptors.response.eject(interceptor);
     };
-  }, [router.pathname]);
+  }, [pathname]);
 }

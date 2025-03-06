@@ -1,11 +1,11 @@
 import GmailBody from "@/components/Mail/GmailBody";
-import { EmailData } from "@/pages/Mail";
 import { parseEmail } from "@/utils/mailUtils";
 import he from "he";
 import { User } from "@heroui/user";
 import { Drawer } from "vaul";
 import { StarsIcon } from "../Misc/icons";
 import { Chip } from "@heroui/chip";
+import { EmailData } from "@/types/mailTypes";
 
 interface ViewEmailProps {
   mail: EmailData | null;

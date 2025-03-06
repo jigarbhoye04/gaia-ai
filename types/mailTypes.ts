@@ -16,6 +16,9 @@ export interface EmailsResponse {
 }
 
 export interface EmailPayload {
+  [x: string]: any;
+  parts: any;
+  body: any;
   payload: {
     headers: { name: string; value: string }[];
     parts?: { mimeType: string; body: { data: string } }[];

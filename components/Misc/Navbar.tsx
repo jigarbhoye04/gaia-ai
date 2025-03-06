@@ -17,7 +17,6 @@ import Link from "next/link";
 
 type MobileMenuProps = {
   user: any;
-  navigate: any;
   sheetOpen: boolean;
   setSheetOpen: (open: boolean) => void;
 };

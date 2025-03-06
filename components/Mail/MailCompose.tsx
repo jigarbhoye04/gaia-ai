@@ -7,7 +7,7 @@ import {
 } from "@heroui/dropdown";
 import { Input, Textarea } from "@heroui/input";
 import { ButtonGroup } from "@heroui/react";
-import { TagInput } from "emblor";
+import { Tag, TagInput } from "emblor";
 import { ChevronDown, ChevronDownIcon, PaletteIcon } from "lucide-react";
 import { useState } from "react";
 import { Drawer } from "vaul";
@@ -28,7 +28,7 @@ export default function MailCompose({
   open,
   onOpenChange,
 }: MailComposeProps): JSX.Element {
-  const [toEmails, setToEmails] = useState([]);
+  const [toEmails, setToEmails] = useState<Tag[]>([]);
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
 
   const [writingStyle, setWritingStyle] = useState("formal");
@@ -69,7 +69,7 @@ export default function MailCompose({
               placeholder="To"
               tags={toEmails}
               setTags={(newTags) => {
-                setToEmails(newTags);
+                () => setToEmails(newTags);
               }}
               activeTagIndex={activeTagIndex}
               setActiveTagIndex={setActiveTagIndex}
@@ -170,7 +170,8 @@ export default function MailCompose({
                   Send
                   <Sent02Icon width={23} height={23} />
                 </Button>
-                <Dropdown placement="bottom-end" color="primary">
+                {/* color="primary" */}
+                <Dropdown placement="bottom-end">
                   <DropdownTrigger>
                     <Button isIconOnly>
                       <ChevronDownIcon />

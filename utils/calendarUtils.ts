@@ -54,9 +54,6 @@ export function formatEventDate(event: GoogleCalendarEvent): string | null {
   return null;
 }
 
-
-
-
 export function getEventIcon(event: GoogleCalendarEvent): string {
   switch (event.eventType) {
     case "birthday":
@@ -96,7 +93,6 @@ export function getEventIcon(event: GoogleCalendarEvent): string {
       return "📅"; // Default Calendar Event
   }
 }
-
 
 // Determine which color to use for the event (as a Tailwind class).
 export function getEventColor(event: GoogleCalendarEvent): string {

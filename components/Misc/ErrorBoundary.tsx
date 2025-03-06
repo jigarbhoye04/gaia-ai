@@ -1,4 +1,4 @@
-import { Home } from "lucide-react";
+import { ChevronLeft, Home } from "lucide-react";
 import React from "react";
 
 interface ErrorBoundaryProps {

@@ -1,4 +1,4 @@
-import { PricingCard } from "@/pages/Pricing";
+import { PricingCard } from "@/components/Pricing/PricingCard";
 
 export default function FreePricing() {
   return (
