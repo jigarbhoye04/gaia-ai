@@ -1,82 +1,135 @@
-// CalendarEventCard.tsx
-import React, { useState } from "react";
-import { Button } from "@heroui/button";
-import {
-  CalendarAdd01Icon,
-  GoogleCalendar,
-  Tick02Icon,
-} from "../../../Misc/icons"; // adjust the import path if needed
-import { parsingDate } from "../../../../utils/fetchDate"; // adjust the import path if needed
-import { toast } from "sonner";
+import { CalendarAdd01Icon, Tick02Icon } from "@/components/Misc/icons";
+import { AnimatedSection } from "@/layouts/AnimatedSection";
 import { apiauth } from "@/utils/apiaxios";
+import { parsingDate } from "@/utils/fetchDate";
+import { Button } from "@heroui/button";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
-interface CalendarEventCardProps {
-  option: any; // ideally replace with your CalIntentOptions type
+export interface BaseEvent {
+  summary: string;
+  description: string;
+  index?: string | number;
+  organizer?: {
+    email?: string;
+  };
 }
 
-const CalendarEventCard: React.FC<CalendarEventCardProps> = ({ option }) => {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [added, setAdded] = useState<boolean>(false);
+export interface TimedEvent extends BaseEvent {
+  start: string;
+  end: string;
+}
 
-  const handleAddEvent = async () => {
-    setLoading(true);
+export interface SingleTimeEvent extends BaseEvent {
+  time: string;
+}
+
+export type CalendarEvent = TimedEvent | SingleTimeEvent;
+
+const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
+  "start" in event && "end" in event;
+
+interface EventCardProps {
+  event: CalendarEvent;
+  isDummy?: boolean;
+  onDummyAddEvent?: () => void;
+}
+
+export function UnifiedCalendarEventCard({
+  event,
+  isDummy,
+  onDummyAddEvent,
+}: EventCardProps) {
+  const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
+
+  const handleAddEvent = useCallback(async () => {
+    if (isDummy) {
+      setStatus("loading");
+      setTimeout(() => {
+        toast.success("Event added!", { description: event.description });
+        setStatus("added");
+        onDummyAddEvent?.();
+      }, 500);
+      return;
+    }
+
+    if (!isTimedEvent(event)) {
+      toast.error("Real events require start and end times.");
+      return;
+    }
+
+    setStatus("loading");
     try {
       const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const response = await apiauth.post(`/calendar/event`, {
-        summary: option.summary,
-        description: option.description,
-        start: option.start,
-        end: option.end,
+      await apiauth.post("/calendar/event", {
+        ...event,
         timezone: userTimeZone,
       });
       toast.success("Added event to calendar!", {
-        description: option.description,
+        description: event.description,
       });
-      console.log(response.data);
-      setAdded(true);
+      setStatus("added");
     } catch (error) {
+      toast.error("Failed to add event!");
       console.error(error);
-      toast.error("Failed to add event to calendar!");
     } finally {
-      setLoading(false);
+      setStatus("idle");
     }
-  };
+  }, [event, isDummy, onDummyAddEvent]);
 
   return (
-    <div className="bg-zinc-900 p-3 flex flex-col rounded-xl items-start gap-3">
-      <div className="flex flex-row items-start gap-4">
-        <GoogleCalendar height={35} width={25} />
-        <div className="flex flex-col gap-1 flex-1">
-          <div className="font-medium">{option.summary}</div>
-          <div className="text-sm max-w-[300px]">{option.description}</div>
-          <div className="text-xs text-foreground-500">
-            <span className="font-medium">From: </span>
-            {option.start ? parsingDate(option.start) : ""}
-          </div>
-          <div className="text-xs text-foreground-500">
-            <span className="font-medium">To: </span>
-            {option.end ? parsingDate(option.end) : ""}
+    <div className="bg-zinc-900 p-2 rounded-xl flex flex-col gap-2">
+      <div className="relative flex flex-row gap-3 p-3 bg-primary/20 rounded-lg overflow-hidden w-full">
+        <div className="absolute inset-0 w-1 bg-primary"></div>
+        <div className="flex flex-col flex-1 pl-1 gap-1">
+          <div className="font-medium">{event.summary}</div>
+          <div className="text-xs text-primary">
+            {isTimedEvent(event)
+              ? `${parsingDate(event.start)} - ${parsingDate(event.end)}`
+              : event.time}
           </div>
         </div>
       </div>
       <Button
         className="w-full"
-        color="primary"
-        isDisabled={added}
-        isLoading={loading}
+        variant="faded"
+        isDisabled={status === "added"}
+        isLoading={status === "loading"}
         onPress={handleAddEvent}
       >
-        {!loading &&
-          (added ? (
-            <Tick02Icon color={undefined} width={22} />
-          ) : (
-            <CalendarAdd01Icon color={undefined} width={22} />
-          ))}
-
-        {added ? "Added Event" : "Add Event"}
+        {status === "added" ? (
+          <Tick02Icon width={22} />
+        ) : (
+          <CalendarAdd01Icon width={22} />
+        )}
+        {status === "added" ? "Added" : "Add to calendar"}
       </Button>
     </div>
   );
-};
+}
 
-export default CalendarEventCard;
+interface UnifiedCalendarEventsListProps {
+  events: CalendarEvent[];
+  isDummy?: boolean;
+  onDummyAddEvent?: (index: number) => void;
+}
+
+export function UnifiedCalendarEventsList({
+  events,
+  isDummy = false,
+  onDummyAddEvent,
+}: UnifiedCalendarEventsListProps) {
+  return (
+    <AnimatedSection className="p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit">
+      <div>Want to add these events to your Calendar?</div>
+      {events.map((event, index) => (
+        <UnifiedCalendarEventCard
+          key={index}
+          event={event}
+          isDummy={isDummy}
+          onDummyAddEvent={() => onDummyAddEvent && onDummyAddEvent(index)}
+        />
+      ))}
+    </AnimatedSection>
+  );
+}

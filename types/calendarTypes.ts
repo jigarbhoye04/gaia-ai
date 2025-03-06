@@ -1,5 +1,7 @@
+import { CalendarEvent } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
+
 export interface CalendarCardProps {
-  event: GoogleCalendarEvent;
+  event: GoogleCalendarEvent | CalendarEvent;
   onClick: () => void;
   calendars: GoogleCalendar[];
 }

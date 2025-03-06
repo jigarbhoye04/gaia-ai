@@ -12,7 +12,11 @@ import GetStartedButton from "../GetStartedButton";
 
 export default function HeroSection() {
   return (
-    <div className="flex flex-col w-screen justify-center items-center gap-8 sm:pt-32 pt-16 min-h-[75vh] h-fit">
+    <div
+      className="flex flex-col w-screen justify-center items-center gap-8 sm:pt-28 pt-16 h-fit
+    min-h-[55vh] 
+    "
+    >
       <div className="fixed top-0 left-0 w-screen">
         <Spotlight duration={15} />
       </div>

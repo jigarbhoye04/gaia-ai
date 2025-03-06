@@ -3,6 +3,7 @@
 import tinycolor from "tinycolor2";
 
 import { GoogleCalendarEvent } from "@/types/calendarTypes";
+import { CalendarEvent } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 
 // Group events by a date string like "day dayOfWeek"
 export function groupEventsByDate(
@@ -36,7 +37,7 @@ export function formatDateDay(event: GoogleCalendarEvent): [string, string] {
 
 // Format event time range if dateTime is available.
 export function formatEventDate(event: GoogleCalendarEvent): string | null {
-  if (event.start.dateTime && event.end?.dateTime) {
+  if (event?.start?.dateTime && event?.end?.dateTime) {
     const startDateTime = new Date(event.start.dateTime);
     const endDateTime = new Date(event.end.dateTime);
 

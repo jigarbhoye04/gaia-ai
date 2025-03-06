@@ -12,52 +12,55 @@ import { Clock } from "lucide-react";
 import { useState } from "react";
 import CalendarMessages from "../Dummy/CalendarMessages";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-
-interface Task {
-  title: string;
-  description: string;
-  time: string;
-}
+import { CalendarEvent } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
+import { parsingDate } from "@/utils/fetchDate";
+import CalendarCard from "@/components/Calendar/CalendarCard";
 
 export default function Section_Calendar() {
-  // Instead of a boolean, store an array of indices of added events
   const [addedEvents, setAddedEvents] = useState<number[]>([]);
   const [openedCalendar, setOpenedCalendar] = useState(false);
 
-  const tasks: Task[] = [
+  const events: CalendarEvent[] = [
     {
-      title: "Finish Landing Page",
+      summary: "Finish Landing Page",
       description: "Work on SaaS landing page design",
       time: "Today, 9:00 AM - 11:00 AM",
+      organizer: { email: "organizer@heygaia.io" },
     },
     {
-      title: "Write Marketing Blog Post",
+      summary: "Write Marketing Blog Post",
       description: "Work on content for marketing",
+      organizer: { email: "organizer@heygaia.io" },
       time: "Today, 11:30 AM - 1:00 PM",
     },
     {
-      title: "Gym Session",
+      summary: "Gym Session",
       description: "Workout and exercise",
+      organizer: { email: "organizer@heygaia.io" },
       time: "Today, 1:30 PM - 2:30 PM",
     },
     {
-      title: "Exam Preparation",
+      summary: "Exam Preparation",
       description: "Study for the upcoming exam",
+      organizer: { email: "organizer@heygaia.io" },
       time: "Today, 2:30 PM - 3:45 PM",
     },
     {
-      title: "Client Call",
+      summary: "Client Call",
       description: "Meeting with client",
+      organizer: { email: "organizer@heygaia.io" },
       time: "Today, 4:00 PM - 5:00 PM",
     },
     {
-      title: "Solve 3 DSA Problems",
+      summary: "Solve 3 DSA Problems",
       description: "Practice DSA for coding prep",
+      organizer: { email: "organizer@heygaia.io" },
       time: "Today, 5:30 PM - 6:30 PM",
     },
     {
-      title: "Client Call",
+      summary: "Client Call",
       description: "Evening meeting with client",
+      organizer: { email: "organizer@heygaia.io" },
       time: "Today, 7:00 PM - 8:00 PM",
     },
   ];
@@ -119,9 +122,9 @@ export default function Section_Calendar() {
               }
             >
               <ScrollShadow className="h-[500px]">
-                <div className="w-full overflow-hidden bg-gradient-to-bl sm:px-10 rounded-3xl z-[1]">
+                <div className="w-full overflow-hidden bg-gradient-to-bl sm:px-5 rounded-3xl z-[1]">
                   <CalendarMessages
-                    tasks={tasks}
+                    events={events}
                     addedEvents={addedEvents}
                     setAddedEvents={setAddedEvents}
                   />
@@ -138,7 +141,7 @@ export default function Section_Calendar() {
                     if (addedEvents.length > 0) setOpenedCalendar(true);
                   }}
                 >
-                  <Calendar01Icon className="mr-2" color={undefined} />
+                  <Calendar01Icon className="mr-2" />
                   <div className="relative">
                     Your Calendar
                     {addedEvents.length > 0 && !openedCalendar && (
@@ -150,25 +153,25 @@ export default function Section_Calendar() {
             >
               {addedEvents.length > 0 ? (
                 <ScrollShadow className="h-[500px] space-y-2">
-                  {tasks
-                    .map((task, index) => ({ ...task, index }))
-                    .filter(({ index }) => addedEvents.includes(index))
-                    .map(({ title, time, index }) => (
-                      <div
-                        key={index}
-                        className="text-white bg-opacity-65 p-4 rounded-lg bg-blue-500/30 shadow-md cursor-pointer w-full transition-colors duration-200 relative z-[1] overflow-hidden flex items-start gap-3 pl-6"
-                      >
-                        <div className="min-h-[90%] min-w-1 bg-blue-500 rounded-full absolute top-[5px] left-[8px]" />
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2 relative z-[1]">
-                            <div className="font-bold text-lg">{title}</div>
-                          </div>
-                          <div className="text-sm mt-2 relative z-[1] flex items-center gap-1 text-blue-500">
-                            <Clock height={18} width={18} />
-                            {time}
-                          </div>
-                        </div>
-                      </div>
+                  {events
+                    .map((task, index) => ({ ...task, index })) // add index to each event
+                    .filter(({ index }) => addedEvents.includes(index)) // filter only added events
+                    .map((event) => (
+                      <CalendarCard
+                        key={event.index}
+                        event={event}
+                        calendars={[
+                          {
+                            id: "organizer@heygaia.io",
+                            backgroundColor: "#00bbff",
+                            primary: true,
+                            summary: "lorem ipsum",
+                          },
+                        ]}
+                        onClick={() => {
+                          // Handle the calendar card click if needed
+                        }}
+                      />
                     ))}
                 </ScrollShadow>
               ) : (

@@ -199,7 +199,7 @@ export default function Internet() {
 
   return (
     <AnimatedSection className="w-screen justify-center items-center flex">
-      <div className="max-w-screen-xl w-screen flex flex-col sm:space-y-10 space-y-5 ">
+      <div className="max-w-screen-xl w-screen flex flex-col space-y-5">
         {/* 
       <div className="max-w-screen-xl w-screen flex flex-row justify-evenly items-start sm:space-x-10 space-x-5 ">
         
@@ -221,13 +221,15 @@ export default function Internet() {
               color="#9b9b9b"
             />
           }
+          className="flex text-center items-center justify-center"
+          headingClassName="text-5xl"
           // subheading={
           //   "GAIA doesn’t just rely on preloaded knowledge—it actively searches the web for the latest and most relevant information."
           // }
         />
         <div className="sm:justify-around justify-start items-center flex gap-11 w-screen-md sm:flex-row flex-col">
           <AnimatedSection
-            className={`sm:w-[35vw] w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm:w-[40vw] min-h-fit flex justify-center flex-col relative z-[1] ${
+            className={`sm:w-1/2 w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm:w-[60%] min-h-fit flex justify-center flex-col relative z-[1] ${
               hover2 ? "opacity-40" : "opacity-100"
             }`}
             onMouseOut={() => setHover1(false)}
@@ -267,7 +269,7 @@ export default function Internet() {
           </AnimatedSection>
 
           <AnimatedSection
-            className={`sm:w-[35vw] w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm:w-[40vw] min-h-fit flex justify-center flex-col relative z-[1] ${
+            className={`sm:w-1/2 w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm::w-[60%] min-h-fit flex justify-center flex-col relative z-[1] ${
               hover1 ? "opacity-40" : "opacity-100"
             }`}
             onMouseOut={() => setHover2(false)}

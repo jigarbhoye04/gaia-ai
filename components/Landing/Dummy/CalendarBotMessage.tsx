@@ -31,20 +31,20 @@ export function CalendarBotMessage({
         {tasks.map((task, index) => (
           <div
             key={index}
-            className="bg-zinc-900 p-3 flex rounded-xl items-start gap-3 flex-col"
+            className="bg-zinc-900 p-3 flex rounded-xl items-start gap-2 flex-col"
           >
-            <div className="flex flex-row rounded-xl items-start gap-3">
-              <GoogleCalendar height={35} width={25} />
-              <div className="flex flex-col flex-1 gap-1">
+            <div className="flex flex-row rounded-lg items-start gap-3 bg-primary/20 w-full p-3 relative overflow-hidden">
+              <div className="bg-primary h-full w-1 absolute inset-0"></div>
+              <div className="flex flex-col flex-1 gap-1 pl-1">
                 <div className="font-medium leading-none">{task.title}</div>
-                {/* <div className="text-sm">{task.description}</div> */}
-                <div className="text-xs text-foreground-500">{task.time}</div>
+                <div className="text-xs text-primary">{task.time}</div>
               </div>
             </div>
 
             <Button
               className="w-full"
-              color="primary"
+              // color="primary"
+              variant="faded"
               isDisabled={addedEvents.includes(index)}
               onPress={() => dummyAddToCalendar(index)}
             >
@@ -53,7 +53,7 @@ export function CalendarBotMessage({
               ) : (
                 <CalendarAdd01Icon color={undefined} width={22} />
               )}
-              {addedEvents.includes(index) ? "Added Event" : "Add Event"}
+              {addedEvents.includes(index) ? "Added event" : "Add to calendar"}
             </Button>
           </div>
         ))}

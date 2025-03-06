@@ -1,6 +1,6 @@
 import { Clock } from "lucide-react";
 import Twemoji from "react-twemoji";
-import { CalendarCardProps } from "@/types/calendarTypes";
+import { CalendarCardProps, GoogleCalendarEvent } from "@/types/calendarTypes";
 import {
   formatEventDate,
   getEventColor,
@@ -9,10 +9,13 @@ import {
 } from "@/utils/calendarUtils";
 
 const CalendarCard = ({ event, onClick, calendars }: CalendarCardProps) => {
-  const calendar = calendars?.find((cal) => cal.id === event.organizer.email);
-  const color = calendar?.backgroundColor || getEventColor(event);
+  const calendar = calendars?.find((cal) => cal.id === event?.organizer?.email);
+  const color =
+    calendar?.backgroundColor ||
+    getEventColor(event as GoogleCalendarEvent) ||
+    "#00bbff";
   const backgroundColor = isTooDark(color) ? "#ffffff" : color;
-  const icon = getEventIcon(event);
+  const icon = getEventIcon(event as GoogleCalendarEvent);
 
   return (
     <div
@@ -30,15 +33,19 @@ const CalendarCard = ({ event, onClick, calendars }: CalendarCardProps) => {
 
         <div className="font-bold text-lg">{event.summary}</div>
       </div>
-      {formatEventDate(event) && (
-        <div
-          className="text-sm mt-2 relative z-[1] opacity-70 flex items-center gap-1"
-          style={{ color: backgroundColor }}
-        >
-          <Clock height={17} width={17} />
-          {formatEventDate(event)}
-        </div>
-      )}
+      <div
+        className="text-sm mt-2 relative z-[1] flex items-center gap-1"
+        style={{ color: backgroundColor }}
+      >
+        {formatEventDate(event as GoogleCalendarEvent) ? (
+          <>
+            <Clock height={17} width={17} />
+            {formatEventDate(event as GoogleCalendarEvent)}
+          </>
+        ) : (
+          event?.time
+        )}
+      </div>
       <div
         className="absolute inset-0 z-[0] opacity-20 rounded-lg w-full"
         style={{ backgroundColor }}

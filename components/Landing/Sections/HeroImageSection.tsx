@@ -1,14 +1,12 @@
-import { Dispatch, SetStateAction } from "react";
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
-import DummySearchbar from "../Dummy/DummySearchbar";
-import { GeneratedImageChatBubble } from "./ImageGenerationSection";
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
+import { AnimatedSection } from "../../../layouts/AnimatedSection";
+import DummySearchbar from "../Dummy/DummySearchbar";
 
 export default function HeroImage() {
   return (
     <div className="w-screen flex items-center justify-center">
-      <AnimatedSection className="flex items-center justify-center h-fit w-screen max-w-screen-lg lg:max-w-screen-xl  mt-14 sm:mb-0 mb-[20vh]">
+      <AnimatedSection className="flex items-center justify-center h-fit w-screen max-w-screen-lg lg:max-w-screen-xl mt-14 sm:mb-0 mb-[20vh]">
         {/* <GridPattern
           width={20}
           height={20}
@@ -59,7 +57,7 @@ export default function HeroImage() {
             </div>
           </div> */}
 
-          <div className="sm:flex hidden absolute -left-28 top-0 h-full items-start animate-bounce3 ">
+          {/* <div className="sm:flex hidden absolute -left-28 top-0 h-full items-start animate-bounce3 ">
             <div className="bg-zinc-800 w-[250px] h-fit px-2 pb-2 rounded-3xl top-24 relative outline outline-2 outline-zinc-700 -rotate-2">
               <GeneratedImageChatBubble
                 selectedOption={{
@@ -74,9 +72,8 @@ export default function HeroImage() {
           <div className="sm:flex hidden absolute -right-28 top-0 h-full items-end">
             <div className="bg-zinc-800 w-[250px] h-[250px] rounded-xl bottom-24 relative outline outline-2 outline-zinc-700 flex items-center justify-center">
               <div className="pingspinner !min-h-[100px] !min-w-[100px]" />
-              {/* update this */}
             </div>
-          </div>
+          </div> */}
         </div>
       </AnimatedSection>
     </div>
