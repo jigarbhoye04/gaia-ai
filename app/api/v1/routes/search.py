@@ -2,10 +2,14 @@
 Router module for search and URL metadata endpoints.
 """
 
-from fastapi import APIRouter, Depends, status
+import re
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.search_models import URLRequest, URLResponse
-from app.services.search_service import search_messages, fetch_url_metadata
+from app.services.search_service import fetch_url_metadata, search_messages
+from app.utils.search_utils import perform_search
 
 router = APIRouter()
 
@@ -24,6 +28,39 @@ async def search_messages_endpoint(query: str, user: dict = Depends(get_current_
     """
     user_id = user["user_id"]
     return await search_messages(query, user_id)
+
+
+def extract_emails(text: str) -> list:
+    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+    return re.findall(email_pattern, text)
+
+
+# user: dict = Depends(get_current_user)
+@router.get("/search/email")
+async def search_email_endpoint(
+    query: str,
+):
+    search_data = await perform_search(
+        query=f"Official contact e-mail address of {query}", count=50
+    )
+
+    if not search_data or "results" not in search_data:
+        raise HTTPException(
+            status_code=500, detail="Search failed or returned no results"
+        )
+
+    combined_text = " ".join(
+        f"{item.get('title', '')} {item.get('snippet', '')}"
+        for item in search_data["results"]
+    )
+
+    emails = list(set(extract_emails(combined_text)))
+
+    return {
+        "emails": emails,
+        "combined_text": combined_text,
+        "search_data": search_data,
+    }
 
 
 @router.post(

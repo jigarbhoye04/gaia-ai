@@ -21,6 +21,7 @@ async def perform_search(query: str, count=7):
         "count": count,
         # "responseFilter": "webPages,images",
     }
+    
 
     try:
         response = await http_async_client.get(

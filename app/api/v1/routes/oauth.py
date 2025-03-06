@@ -41,7 +41,7 @@ async def login_google():
         "redirect_uri": GOOGLE_CALLBACK_URL,
         "scope": " ".join(scopes),
         "access_type": "offline",
-        # "prompt": "consent",
+        "prompt": "consent",
     }
     auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
     return RedirectResponse(url=auth_url)

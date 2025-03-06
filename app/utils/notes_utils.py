@@ -31,21 +31,28 @@ async def should_create_memory(
             """,
         )
 
-        # If the result is a string, try parsing it.
+        print(result, "result")
+
         if isinstance(result, str):
             try:
-                result = json.loads(result.replace("\n", ""))
+                result = json.loads(result.strip())
             except json.JSONDecodeError:
-                return (False, None, None)
+                return False, None, None
+
+        elif isinstance(result, dict) and "response" in result:
+            try:
+                result = json.loads(result["response"].strip())
+            except json.JSONDecodeError:
+                return False, None, None
+        else:
+            return False, None, None
 
         is_memory = result.get("is_memory")
+
         if isinstance(is_memory, bool):
-            return (
-                is_memory,
-                result.get("plaintext"),
-                result.get("content"),
-            )
-        else:
-            return (False, None, None)
+            return is_memory, result.get("plaintext"), result.get("content")
+
+        return False, None, None
+
     except Exception:
         return (False, None, None)

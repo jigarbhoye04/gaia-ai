@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     BING_API_KEY_2: str
     BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
     ASSEMBLYAI_API_KEY: str
-    GOOGLE_REDIRECT_URI: str = "http://localhost:3000"
-    HOST: str = "http://localhost:8000"
+    GOOGLE_REDIRECT_URI: str = "https://heygaia.io"
+    HOST: str = "https://api.heygaia.io"
     DEEPGRAM_API_KEY: str
     FRONTEND_URL: str = "heygaia.io"  # Production Domain
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
