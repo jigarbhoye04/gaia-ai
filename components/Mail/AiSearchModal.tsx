@@ -11,6 +11,7 @@ import { Spinner } from "@heroui/spinner";
 import React, { useState } from "react";
 import { AiSearch02Icon } from "../Misc/icons";
 import { EmailChip, EmailSuggestion } from "./EmailChip";
+import { apiauth } from "@/utils/apiaxios";
 
 export interface AiSearchModalProps {
   open: boolean;
@@ -28,32 +29,51 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
   const [results, setResults] = useState<EmailSuggestion[]>([]);
   const [selected, setSelected] = useState<EmailSuggestion[]>([]);
 
-  const simulateApiRequest = (
-    searchQuery: string
-  ): Promise<EmailSuggestion[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          { id: "1", email: "john@example.com", name: "John Doe" },
-          { id: "2", email: "jane@example.com", name: "Jane Smith" },
-          { id: "3", email: "bob@example.com", name: "Bob Johnson" },
-        ]);
-      }, 1500);
-    });
-  };
+  const handleSearch = async (event?: React.FormEvent) => {
+    event?.preventDefault();
+    if (!query) return;
 
-  const handleSearch = async () => {
     setLoading(true);
-    const res = await simulateApiRequest(query);
-    setResults(res);
-    setLoading(false);
+    setResults([]);
+
+    try {
+      const response = await apiauth.get("/search/email", {
+        params: { query },
+      });
+
+      if (response.data?.emails?.length) {
+        setResults(
+          response.data.emails.map((email: string, index: number) => ({
+            id: `${index + 1}`,
+            email,
+            name: email.split("@")[0], // Extract name from email
+          }))
+        );
+      } else {
+        setResults([]); // No emails found
+      }
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+      setResults([]); // Handle API failure gracefully
+    } finally {
+      setLoading(false);
+    }
   };
 
   const toggleSelection = (suggestion: EmailSuggestion) => {
-    if (selected.find((s) => s.id === suggestion.id)) {
-      setSelected(selected.filter((s) => s.id !== suggestion.id));
+    setSelected((prevSelected) =>
+      prevSelected.find((s) => s.id === suggestion.id)
+        ? prevSelected.filter((s) => s.id !== suggestion.id)
+        : [...prevSelected, suggestion]
+    );
+  };
+
+  // Toggles selection of all chips
+  const handleSelectAll = () => {
+    if (selected.length === results.length) {
+      setSelected([]);
     } else {
-      setSelected([...selected, suggestion]);
+      setSelected(results);
     }
   };
 
@@ -74,18 +94,22 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
             Enter a search term to find email suggestions.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex gap-2">
+
+        {/* Form for search input */}
+        <form onSubmit={handleSearch} className="flex gap-2">
           <Input
-            placeholder="Enter search term"
+            placeholder="Company/Person/Organization"
             value={query}
             variant="faded"
-            onChange={(e) => setQuery(e.target.value)}
+            isClearable
+            startContent={
+              <div className="text-sm text-nowrap text-foreground-500 font-medium">
+                Find email of
+              </div>
+            }
+            onValueChange={setQuery}
           />
-          <Button
-            onPress={handleSearch}
-            disabled={loading || !query}
-            color="primary"
-          >
+          <Button type="submit" disabled={loading || !query} color="primary">
             {loading ? (
               <Spinner size="sm" color="default" />
             ) : (
@@ -95,19 +119,54 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
               </div>
             )}
           </Button>
-        </div>
-        {results && results.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {results.map((suggestion) => (
-              <EmailChip
-                key={suggestion.id}
-                suggestion={suggestion}
-                selected={!!selected.find((s) => s.id === suggestion.id)}
-                onToggle={toggleSelection}
-              />
-            ))}
+        </form>
+
+        {/* Display email results with Select All support */}
+        {results.length > 0 ? (
+          <div className="mt-3">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-foreground-500">
+                {results.length} suggestion
+                {results.length > 1 ? "s" : ""}
+              </span>
+              <Button
+                onPress={handleSelectAll}
+                // color="secondary"
+                variant="flat"
+                size="sm"
+              >
+                {selected.length === results.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {results.map((suggestion) => (
+                <EmailChip
+                  key={suggestion.id}
+                  suggestion={suggestion}
+                  selected={!!selected.find((s) => s.id === suggestion.id)}
+                  onToggle={toggleSelection}
+                />
+              ))}
+            </div>
           </div>
+        ) : (
+          !loading &&
+          query && (
+            <div className="mt-3 text-sm text-foreground-500">
+              No email suggestions found.
+            </div>
+          )
         )}
+
+        {/* Disclaimer */}
+        <div className="mt-3 text-xs text-gray-400">
+          Disclaimer: Email suggestions are sourced from publicly available
+          internet data and may not be 100% accurate.
+        </div>
+
+        {/* Action Buttons */}
         <div className="flex justify-end gap-2 mt-4">
           <Button
             color="danger"

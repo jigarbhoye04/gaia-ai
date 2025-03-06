@@ -30,15 +30,20 @@ export default function MailCompose({
   open,
   onOpenChange,
 }: MailComposeProps): JSX.Element {
-  // const [toEmails, setToEmails] = useState<Tag[]>([]);
-  const [toEmails, setToEmails] = useState<string[]>([]);
+  // Store email tags as Tag[] to match TagInput's expected type.
+  const [toEmails, setToEmails] = useState<Tag[]>([]);
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [writingStyle, setWritingStyle] = useState("formal");
 
+  // When the AI modal returns suggestions, convert them into Tag objects.
   const handleAiSelect = (selectedSuggestions: EmailSuggestion[]) => {
-    const emails = selectedSuggestions.map((s) => s.email);
-    setToEmails((prev) => [...prev, ...emails]);
+    const newTags: Tag[] = selectedSuggestions.map((s) => ({
+      id: s.email,
+      label: s.email,
+      text: s.email,
+    }));
+    setToEmails((prev) => [...prev, ...newTags]);
   };
 
   const writingStyles = [
@@ -68,7 +73,7 @@ export default function MailCompose({
                   From
                 </div>
               }
-              className="bg-zinc-800 "
+              className="bg-zinc-800"
             />
 
             <div className="relative">
@@ -76,34 +81,25 @@ export default function MailCompose({
                 styleClasses={{
                   inlineTagsContainer:
                     "bg-zinc-800 border border-t-0 border-x-0 !border-b-zinc-600 border-b-2 p-2 rounded-none",
-                  tag: { body: "bg-white/20 pl-3 border-none" },
+                  tag: { body: "p-0 bg-white/20 pl-3 text-sm border-none" },
                 }}
-                shape={"pill"}
-                animation={"fadeIn"}
+                shape="pill"
+                animation="fadeIn"
                 placeholder="To"
-                // tags={toEmails}
-                // setTags={(newTags) => {
-                //   () => setToEmails(newTags);
-                // }}
-                tags={toEmails.map((email) => ({
-                  id: email,
-                  label: email,
-                  text: email,
-                }))}
+                tags={toEmails}
                 setTags={setToEmails}
                 activeTagIndex={activeTagIndex}
                 setActiveTagIndex={setActiveTagIndex}
-                // variant={"bordered"}
               />
 
               <Button
                 isIconOnly
-                className="absolute right-[2px] top-[2px]"
+                className="absolute right-[3px] top-[3px]"
                 size="sm"
                 color="primary"
                 onPress={() => setIsAiModalOpen(true)}
               >
-                <AiSearch02Icon className="" color={undefined} />
+                <AiSearch02Icon width={19} />
               </Button>
             </div>
 
@@ -130,7 +126,7 @@ export default function MailCompose({
                       color="primary"
                       className="font-medium text-[#00bbff] bg-[#00bbff40]"
                     >
-                      <BrushIcon width={20} height={20} color={undefined} />
+                      <BrushIcon width={20} height={20} />
                       Writing Style:{" "}
                       {
                         writingStyles.find((ws) => ws.id === writingStyle)
@@ -182,8 +178,8 @@ export default function MailCompose({
                 size="lg"
                 startContent={<div className="pingspinner"></div>}
                 endContent={
-                  <Button isIconOnly color="primary" radius={"full"}>
-                    <SentIcon color={undefined} />
+                  <Button isIconOnly color="primary" radius="full">
+                    <SentIcon />
                   </Button>
                 }
               />
@@ -194,7 +190,6 @@ export default function MailCompose({
                     Send
                     <Sent02Icon width={23} height={23} />
                   </Button>
-                  {/* color="primary" */}
                   <Dropdown placement="bottom-end">
                     <DropdownTrigger>
                       <Button isIconOnly>
