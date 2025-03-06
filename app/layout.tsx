@@ -89,7 +89,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${creato.variable} dark`}>
-      <body>
+      <body className="dark">
         <Providers>
           <ProvidersLayout>
             <LoginModal />
