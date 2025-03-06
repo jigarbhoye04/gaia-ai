@@ -103,8 +103,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                 <PencilSquareIcon className="group-hover:text-white transition-all" />
               </Button>
             </div>
-            {children}
-            {/* <Outlet /> */}
+
+            {/* <Suspense fallback={<SuspenseLoader />}> */}
+              {children}
+            {/* </Suspense> */}
+            
           </div>
         </div>
       </TooltipProvider>
