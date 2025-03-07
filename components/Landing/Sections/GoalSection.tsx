@@ -87,8 +87,9 @@ function GoalHeader(): JSX.Element {
 interface GoalStepsProps {
   steps: Step[];
   selectedStep: number;
-  setSelectedStep: (index: number) => void;
+  setSelectedStep: React.Dispatch<React.SetStateAction<number>>;
   setSelectedImage: (image: string) => void;
+  image: string;
 }
 
 function GoalSteps({
@@ -171,8 +172,7 @@ function GoalSteps({
         newProgresses[selectedStep] = 100;
         return newProgresses;
       });
-      // Automatically advance to the next step.
-      setSelectedStep((prevStep) => (prevStep + 1) % steps.length);
+      setSelectedStep((prevStep: number) => (prevStep + 1) % steps.length);
     }, progressDuration);
 
     return () => {

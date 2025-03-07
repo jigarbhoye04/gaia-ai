@@ -29,7 +29,7 @@ export function CalendarEventCard({
         toast.success("Event added!", { description: event.description });
         setStatus("added");
         onDummyAddEvent?.();
-      }, 500);
+      }, 300);
       return;
     }
 
@@ -58,9 +58,9 @@ export function CalendarEventCard({
   }, [event, isDummy, onDummyAddEvent]);
 
   return (
-    <div className="bg-zinc-900 p-2 rounded-xl flex flex-col gap-2">
+    <div className="bg-zinc-900 p-3 rounded-xl flex flex-col gap-2">
       <div className="relative flex flex-row gap-3 p-3 bg-primary/20 rounded-lg overflow-hidden w-full">
-        <div className="absolute inset-0 w-1 bg-primary"></div>
+        <div className="absolute inset-0 w-1 bg-primary" />
         <div className="flex flex-col flex-1 pl-1 gap-1">
           <div className="font-medium">{event.summary}</div>
           <div className="text-xs text-primary">

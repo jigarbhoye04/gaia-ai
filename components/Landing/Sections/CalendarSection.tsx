@@ -1,3 +1,4 @@
+import CalendarCard from "@/components/Calendar/CalendarCard";
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
@@ -7,14 +8,11 @@ import {
 import { AnimatedSection } from "@/layouts/AnimatedSection";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
 import { Button } from "@heroui/button";
+import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tab, Tabs } from "@heroui/tabs";
-import { Clock } from "lucide-react";
 import { useState } from "react";
 import CalendarMessages from "../Dummy/CalendarMessages";
-import { ScrollShadow } from "@heroui/scroll-shadow";
-import { CalendarEvent } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
-import { parsingDate } from "@/utils/fetchDate";
-import CalendarCard from "@/components/Calendar/CalendarCard";
+import { CalendarEvent } from "@/types/calendarTypes";
 
 export default function Section_Calendar() {
   const [addedEvents, setAddedEvents] = useState<number[]>([]);

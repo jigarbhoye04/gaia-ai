@@ -1,12 +1,10 @@
-import {
-  CalendarEvent,
-  CalendarEventsList,
-} from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
+import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 import {
   SimpleChatBubbleBot,
   SimpleChatBubbleUser,
 } from "@/components/Landing/Dummy/SimpleChatBubbles";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
+import { CalendarEvent } from "@/types/calendarTypes";
 import {
   Dispatch,
   ReactNode,
@@ -48,10 +46,10 @@ const ReadMoreText = ({
       >
         {children}
       </div>
-
+      {/* 
       {!expanded && needsTruncation && (
         <div className="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-black/70 to-transparent pointer-events-none rounded-r-3xl"></div>
-      )}
+      )} */}
 
       {needsTruncation && (
         <button

@@ -1,9 +1,5 @@
-// src/utils/calendarUtils.ts
-
 import tinycolor from "tinycolor2";
-
 import { GoogleCalendarEvent } from "@/types/calendarTypes";
-import { CalendarEvent } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 
 // Group events by a date string like "day dayOfWeek"
 export function groupEventsByDate(
