@@ -3,9 +3,12 @@ import { parseEmail } from "@/utils/mailUtils";
 import he from "he";
 import { User } from "@heroui/user";
 import { Drawer } from "vaul";
-import { StarsIcon } from "../Misc/icons";
+import { MagicWand05Icon, StarsIcon } from "../Misc/icons";
 import { Chip } from "@heroui/chip";
 import { EmailData } from "@/types/mailTypes";
+import { XIcon } from "lucide-react";
+import { Tooltip } from "@heroui/tooltip";
+import { Button } from "@heroui/button";
 
 interface ViewEmailProps {
   mail: EmailData | null;
@@ -15,7 +18,7 @@ interface ViewEmailProps {
 function AISummary() {
   return (
     <>
-      <div className="bg-zinc-700 p-2 w-fit rounded-xl shadow-md flex flex-col mb-3">
+      <div className="bg-zinc-800 outline outline-2 outline-zinc-700 p-2 w-fit rounded-xl shadow-md flex flex-col mb-3">
         <div className="text-sm font-medium text-white flex items-center gap-3 relative">
           <Chip
             classNames={{
@@ -31,7 +34,7 @@ function AISummary() {
               color={undefined}
               fill={"#00bbff"}
             />
-            <span>GAIA Summary</span>
+            <span>GAIA Email Summary</span>
           </Chip>
         </div>
         <p className="text-sm text-white p-2">
@@ -54,13 +57,7 @@ function AISummary() {
 }
 
 export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
-  if (!mail) return null;
-  console.log(mail);
-
-  const { name: nameFrom, email: emailFrom } = parseEmail(mail.from);
-  // const { name: nameTo, email: emailTo } = parseEmail(
-  //   mail.payload.headers.find((header) => header.name == "To").value
-  // );
+  const { name: nameFrom, email: emailFrom } = parseEmail(mail?.from);
 
   return (
     <Drawer.Root direction="right" open={!!mail} onOpenChange={onOpenChange}>
@@ -72,8 +69,37 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
             { "--initial-transform": "calc(100% + 8px)" } as React.CSSProperties
           }
         >
-          <div className="bg-zinc-900 h-full w-full grow p-7 flex flex-col rounded-l-2xl overflow-y-auto">
-            {/* <AISummary /> */}
+          <div className="bg-zinc-900 h-full w-full grow p-6 pt-4 flex flex-col rounded-l-2xl overflow-y-auto relative">
+            <div className="w-full relative">
+              <Tooltip content="Close" color="foreground">
+                <div className="cursor-pointer absolute right-0 top-0">
+                  <XIcon width={18} onClick={onOpenChange} />
+                </div>
+              </Tooltip>
+            </div>
+
+            <header className="flex items-center gap-2 mb-2">
+              <Button
+                // variant="faded"
+                color="primary"
+                className="font-medium"
+                startContent={<MagicWand05Icon color={undefined} />}
+              >
+                Summarise
+              </Button>
+              <Button
+                variant="faded"
+                color="primary"
+                className="font-medium"
+                isDisabled
+                startContent={<MagicWand05Icon color={undefined} />}
+              >
+                Categorise
+              </Button>
+            </header>
+
+            <AISummary />
+
             {/* <div className="flex items-center gap-4"> */}
             {/* <Chip
                 className="flex w-fit py-6 mb-2 overflow-hidden"
@@ -99,33 +125,43 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
                   <span className="text-gray-400">{emailTo}</span>
                 </div>
                 <div className="font-medium">{nameTo}</div>
-              </Chip> */}
-            {/* </div> */}
-            <Drawer.Title className="font-medium text-foreground mb-2">
-              {mail.subject}
-            </Drawer.Title>
-            <Drawer.Description className="text-foreground-600">
-              <div className="space-y-4">
-                {mail.snippet && (
+              </Chip>
+            /* </div>
+               */}
+
+            {mail?.subject && (
+              <Drawer.Title className="font-medium text-foreground">
+                {mail?.subject}
+              </Drawer.Title>
+            )}
+
+            <Drawer.Description className="text-foreground-600 space-y-4">
+              {mail?.snippet && (
+                <>
                   <p className="text-md text-muted-foreground">
                     {he.decode(mail.snippet)}
                   </p>
-                )}
-                <User
-                  avatarProps={{
-                    src: "/profile_photo/profile_photo.webp",
-                    size: "sm",
-                  }}
-                  description={emailFrom}
-                  name={nameFrom}
-                  classNames={{
-                    name: "font-medium",
-                    description: "text-gray-400",
-                  }}
-                />
-                <hr className="my-4 border-gray-700" />
-                <GmailBody email={mail} />
-              </div>
+                  <User
+                    avatarProps={{
+                      src: "/profile_photo/profile_photo.webp",
+                      size: "sm",
+                    }}
+                    description={emailFrom}
+                    name={nameFrom}
+                    classNames={{
+                      name: "font-medium",
+                      description: "text-gray-400",
+                    }}
+                  />
+                </>
+              )}
+
+              {mail && (
+                <div>
+                  <hr className="my-4 border-gray-700" />
+                  <GmailBody email={mail} />
+                </div>
+              )}
             </Drawer.Description>
           </div>
         </Drawer.Content>

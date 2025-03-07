@@ -13,7 +13,7 @@ export const decodeBase64 = (str: string): string => {
   }
 };
 
-export default function GmailBody({ email }: { email: EmailData }) {
+export default function GmailBody({ email }: { email: EmailData | null }) {
   if (!email) return null;
   const [loading, setLoading] = useState(true);
   const shadowHostRef = useRef<HTMLDivElement | null>(null);

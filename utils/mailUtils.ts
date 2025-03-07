@@ -3,8 +3,16 @@ import { EmailsResponse } from "@/types/mailTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { QueryFunctionContext } from "@tanstack/react-query";
 
-export function parseEmail(from: string): { name: string; email: string } {
-  // Improved email parsing
+export function parseEmail(from: string | undefined): {
+  name: string;
+  email: string;
+} {
+  if (!from)
+    return {
+      name: "",
+      email: "",
+    };
+
   const match = from.match(/^(.*?)\s*<(.+?)>$/) || from.match(/(.+)/);
 
   if (match) {
