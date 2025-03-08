@@ -3,6 +3,7 @@
 import {
   BubbleConversationChatIcon,
   PencilSquareIcon,
+  NotificationIcon,
 } from "@/components/Misc/icons";
 import ChatOptionsDropdown from "@/components/Sidebar/ChatOptionsDropdown";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
@@ -16,6 +17,7 @@ import { LoadingProvider } from "@/contexts/LoadingContext";
 import useMediaQuery from "@/hooks/mediaQuery";
 import useAxiosInterceptor from "@/hooks/useAxiosInterceptor";
 import { useLoginModalActions } from "@/hooks/useLoginModal";
+import useFetchUser from "@/hooks/useFetchUser";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { ReactNode, useRef, useState } from "react";
@@ -30,6 +32,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const { resetMessages } = useConvo();
+  useFetchUser();
 
   function toggleSidebar(): void {
     if (sidebarRef.current && contentContainerRef.current)
@@ -91,21 +94,33 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                   <></>
                 )}
               </div>
-
-              <Button
-                aria-label="Create new chat"
-                className={`rounded-lg hover:bg-[#00bbff] group`}
-                size="icon"
-                variant={isMobileScreen ? "default" : "ghost"}
-                onClick={() => {
-                  router.push("/c");
-                  resetMessages();
-                }}
-              >
-                <PencilSquareIcon className="group-hover:text-white transition-all" />
-              </Button>
+              <div className="flex gap-5">
+                <Button
+                  aria-label="Create new chat"
+                  className={`rounded-lg hover:bg-[#00bbff] group`}
+                  size="icon"
+                  variant={isMobileScreen ? "default" : "ghost"}
+                  onClick={() => {
+                    router.push("/c");
+                    resetMessages();
+                  }}
+                >
+                  <PencilSquareIcon className="group-hover:text-white transition-all" />
+                </Button>
+                <Button
+                  aria-label="Create new chat"
+                  className={`rounded-lg hover:bg-[#00bbff]/20 group`}
+                  size="icon"
+                  variant={isMobileScreen ? "default" : "ghost"}
+                  onClick={() => {
+                    router.push("/notifications");
+                    resetMessages();
+                  }}
+                >
+                  <NotificationIcon className="group-hover:text-white transition-all" />
+                </Button>
+              </div>
             </div>
-
             {/* <Suspense fallback={<SuspenseLoader />}> */}
             {children}
             {/* </Suspense> */}
