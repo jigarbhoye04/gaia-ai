@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-
+from pydantic import computed_field
 
 class Settings(BaseSettings):
     """Configuration settings for the application."""
@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     ENV: str = "production"
     GROQ_API_KEY: str
 
+    GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
+    GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
+
+    @computed_field
+    def GOOGLE_CALLBACK_URL(self) -> str:
+        return f"{self.HOST}/api/v1/oauth/google/callback"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
@@ -32,3 +39,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+print(settings.GOOGLE_REDIRECT_URI)
+print(settings.GOOGLE_CALLBACK_URL)

@@ -2,14 +2,8 @@ import httpx
 from fastapi import HTTPException
 
 from app.config.loggers import auth_logger as logger
+from app.config.settings import settings
 from app.db.collections import users_collection
-from app.utils.auth_utils import (
-    GOOGLE_CALLBACK_URL,
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_TOKEN_URL,
-    GOOGLE_USERINFO_URL,
-)
 
 http_async_client = httpx.AsyncClient()
 
@@ -17,7 +11,7 @@ http_async_client = httpx.AsyncClient()
 async def fetch_user_info_from_google(access_token: str):
     try:
         response = await http_async_client.get(
-            GOOGLE_USERINFO_URL,
+            settings.GOOGLE_USERINFO_URL,
             headers={"Authorization": f"Bearer {access_token}"},
         )
 
@@ -31,12 +25,12 @@ async def fetch_user_info_from_google(access_token: str):
 async def get_tokens_from_code(code: str):
     try:
         response = await http_async_client.post(
-            GOOGLE_TOKEN_URL,
+            settings.GOOGLE_TOKEN_URL,
             data={
                 "code": code,
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "redirect_uri": GOOGLE_CALLBACK_URL,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": settings.GOOGLE_CALLBACK_URL,
                 "grant_type": "authorization_code",
             },
         )

@@ -9,11 +9,7 @@ from fastapi import HTTPException
 from app.config.loggers import calendar_logger as logger
 from app.db.collections import calendars_collection
 from app.models.calendar_models import EventCreateRequest
-from app.utils.auth_utils import (
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_TOKEN_URL,
-)
+from app.config.settings import settings
 from app.utils.calendar_utils import resolve_timezone
 
 http_async_client = httpx.AsyncClient()
@@ -34,10 +30,10 @@ async def refresh_access_token(refresh_token: str) -> Dict[str, Any]:
     """
     try:
         response = await http_async_client.post(
-            GOOGLE_TOKEN_URL,
+            settings.GOOGLE_TOKEN_URL,
             data={
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
                 "refresh_token": refresh_token,
                 "grant_type": "refresh_token",
             },

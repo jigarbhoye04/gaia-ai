@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import BatchHttpRequest
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.utils.auth_utils import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+from app.config.settings import settings
 
 router = APIRouter()
 
@@ -18,8 +18,8 @@ def get_gmail_service(current_user: dict):
         token=current_user["access_token"],
         refresh_token=current_user.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=GOOGLE_CLIENT_ID,
-        client_secret=GOOGLE_CLIENT_SECRET,
+        client_id=settings.GOOGLE_CLIENT_ID,
+        client_secret=settings.GOOGLE_CLIENT_SECRET,
     )
     return build("gmail", "v1", credentials=creds)
 

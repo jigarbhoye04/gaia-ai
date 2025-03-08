@@ -5,12 +5,7 @@ from fastapi import Cookie, HTTPException
 from app.db.collections import users_collection
 from app.db.db_redis import set_cache, get_cache
 from typing import Optional
-from app.utils.auth_utils import (
-    GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET,
-    GOOGLE_TOKEN_URL,
-    GOOGLE_USERINFO_URL,
-)
+from app.config.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +21,7 @@ TOKEN_CACHE_EXPIRY = 3600  # 1 hour
 async def get_user_info(access_token: str) -> dict:
     try:
         response = await http_async_client.get(
-            GOOGLE_USERINFO_URL,
+            settings.GOOGLE_USERINFO_URL,
             headers={"Authorization": f"Bearer {access_token}"},
         )
         response.raise_for_status()
@@ -43,10 +38,10 @@ async def refresh_access_token(refresh_token: str) -> dict:
     try:
         logger.info(f"Refreshing token using refresh_token: {refresh_token}")
         response = await http_async_client.post(
-            GOOGLE_TOKEN_URL,
+            settings.GOOGLE_TOKEN_URL,
             data={
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
                 "refresh_token": refresh_token,
                 "grant_type": "refresh_token",
             },

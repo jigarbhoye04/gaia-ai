@@ -6,18 +6,11 @@ import requests
 from fastapi import APIRouter, Cookie, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from app.config.loggers import auth_logger as logger
+from app.config.settings import settings
 from app.db.collections import users_collection
 from app.services.oauth_service import store_user_info
-from app.utils.auth_utils import (
-    GOOGLE_CALLBACK_URL,
-    GOOGLE_CLIENT_ID,
-    GOOGLE_REDIRECT_URI,
-    GOOGLE_USERINFO_URL,
-)
-
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
-from app.config.settings import settings
-from app.config.loggers import auth_logger as logger
 
 router = APIRouter()
 
@@ -37,8 +30,8 @@ async def login_google():
     ]
     params = {
         "response_type": "code",
-        "client_id": GOOGLE_CLIENT_ID,
-        "redirect_uri": GOOGLE_CALLBACK_URL,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": settings.GOOGLE_CALLBACK_URL,
         "scope": " ".join(scopes),
         "access_type": "offline",
         "prompt": "consent",
@@ -67,10 +60,10 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
         if not user_email:
             raise HTTPException(status_code=400, detail="Email not found in user info")
 
-        await store_user_info(name=user_name, email=user_email, picture=user_picture)
+        await store_user_info(user_name, user_email, user_picture)
 
         # Redirect URL can include tokens if needed
-        redirect_url = f"{GOOGLE_REDIRECT_URI}?access_token={access_token}&refresh_token={refresh_token}"
+        redirect_url = f"{settings.GOOGLE_REDIRECT_URI}?access_token={access_token}&refresh_token={refresh_token}"
         response = RedirectResponse(url=redirect_url)
 
         # Set cookie expiration: access token (1 hour), refresh token (30 days)
@@ -132,7 +125,7 @@ async def me(access_token: str = Cookie(None)):
     try:
         # Validate the access token with Google's API
         user_info_response = requests.get(
-            GOOGLE_USERINFO_URL,
+            settings.GOOGLE_USERINFO_URL,
             headers={"Authorization": f"Bearer {access_token}"},
         )
         if user_info_response.status_code != 200:
