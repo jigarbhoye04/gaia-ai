@@ -15,12 +15,12 @@ const sections = {
   GridSection: lazy(
     () => import("@/components/Landing/Sections/FeatureGridSection")
   ),
-  CapabilitiesSection: lazy(
-    () => import("@/components/Landing/Sections/CapabilitiesSection")
-  ),
-  ComingSoonSection: lazy(
-    () => import("@/components/Landing/Sections/ComingSoonSection")
-  ),
+  // CapabilitiesSection: lazy(
+  //   () => import("@/components/Landing/Sections/CapabilitiesSection")
+  // ),
+  // ComingSoonSection: lazy(
+  //   () => import("@/components/Landing/Sections/ComingSoonSection")
+  // ),
   FinalSection: lazy(
     () => import("@/components/Landing/Sections/FinalSection")
   ),

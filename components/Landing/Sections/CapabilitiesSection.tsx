@@ -18,7 +18,7 @@ function FeatureCard({
 }) {
   return (
     <MagicCard
-      className="p-5 !rounded-none bg-transparent !w-full "
+      className="p-5 !rounded-none !bg-transparent !w-full "
       gradientColor="#00bbff30"
       gradientFrom="#00bbff"
       gradientTo="#00bbff"

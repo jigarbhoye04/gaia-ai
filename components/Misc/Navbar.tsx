@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import MobileMenu from "./Navbar/MobileMenu";
 import DesktopMenu from "./Navbar/DesktopMenu";
+import { siteConfig } from "@/config/siteConfig";
 
 export default function Navbar() {
   const isMobileScreen = useMediaQuery("(max-width: 600px)");
@@ -39,7 +40,7 @@ export default function Navbar() {
           variant="light"
           onPress={() => setScrolled(true)}
         >
-          gaia
+          {siteConfig.name}
         </Button>
 
         {isMobileScreen ? <MobileMenu /> : <DesktopMenu scrolled={scrolled} />}

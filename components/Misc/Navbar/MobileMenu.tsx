@@ -1,15 +1,15 @@
 import {
-    BubbleConversationChatIcon,
-    Home01Icon,
-    Menu01Icon,
+  BubbleConversationChatIcon,
+  Home01Icon,
+  Menu01Icon,
 } from "@/components/Misc/icons";
 import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@heroui/button";
@@ -17,11 +17,6 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-type MobileMenuProps = {
-  sheetOpen: boolean;
-  setSheetOpen: (open: boolean) => void;
-};
 
 export default function MobileMenu() {
   const [sheetOpen, setSheetOpen] = useState(false);

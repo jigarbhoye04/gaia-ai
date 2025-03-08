@@ -110,7 +110,7 @@ export function Feature({
   );
 }
 
-export default function Section_ComingSoon() {
+export default function ComingSoonSection() {
   return (
     <div className="flex justify-center items-center min-h-fit h-fit z-[1] relative">
       <div className="flex justify-center items-center sm:p-5 p-2 flex-col gap-1">

@@ -1,80 +1,48 @@
+import { siteConfig } from "@/config/siteConfig";
+import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-// import MadeBy from "@/components/Landing/MadeBy";
 
 export default function Footer() {
   return (
     <div className="!m-0">
       <div className="w-screen flex h-fit justify-center items-center sm:p-20 p-5">
-        <div className="w-full max-w-screen-lg grid grid-cols-2 sm:grid-cols-3 gap-8 ">
+        <div className="w-full max-w-screen-lg grid grid-cols-2 sm:grid-cols-4 gap-8 ">
           <div className="flex flex-col w-fit h-full text-foreground-600">
-            <div className="text-3xl font-medium text-white">G.A.I.A</div>
-            <div>© 2024 GAIA</div>
-            <div className="text-foreground-500">heygaia.io</div>
+            <div className="text-3xl font-medium text-white">
+              {siteConfig.name}
+            </div>
+            <div>{siteConfig.copyright}</div>
+            <div className="text-foreground-500">{siteConfig.domain}</div>
           </div>
 
-          <div className="flex flex-col w-fit h-full text-foreground-500">
-            <div className="text-xl font-medium text-white">Sitemap</div>
-            <div>
-              <Link className="hover:underline hover:text-white" href="/blog">
-                Blog
-              </Link>
-            </div>
-            <div>
-              <Link
-                className="hover:underline hover:text-white"
-                href="/contact"
-              >
-                Contact
-              </Link>
-            </div>
-            <div>
-              <Link
-                className="hover:underline hover:text-white"
-                href="/pricing"
-              >
-                Pricing
-              </Link>
-            </div>
-          </div>
+          {siteConfig.pageSections.map((section) => (
+            <div
+              key={section.title}
+              className="flex flex-col w-fit h-full text-foreground-500"
+            >
+              <div className="uppercase font-normal mb-2 text-foreground-400">
+                {section.title}
+              </div>
+              {section.links.map((link) => (
+                <div key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="group relative flex items-center text-white "
+                  >
+                    <span className="group-hover:text-primary transition-colors">
+                      {link.label}
+                    </span>
 
-          <div className="flex flex-col w-fit h-full text-foreground-500">
-            <div className="text-xl font-medium text-white">Legal</div>
-            <div>
-              <Link className="hover:underline hover:text-white" href="/terms">
-                Terms
-              </Link>
+                    <span className="opacity-0 group-hover:opacity-100 transition-all ml-3 -translate-x-20  group-hover:translate-x-0 duration-150">
+                      <ArrowUpRight width={17} />
+                    </span>
+                  </Link>
+                </div>
+              ))}
             </div>
-            <div>
-              <Link
-                className="hover:underline hover:text-white"
-                href="/privacy"
-              >
-                Privacy
-              </Link>
-            </div>
-          </div>
-          {/* 
-          <div className="flex flex-col w-fit h-full text-foreground-500">
-            <div className="text-xl font-medium text-white">Pages</div>
-            <div>
-              <Link className="hover:underline hover:text-white" href="/page1">
-                Page 1
-              </Link>
-            </div>
-            <div>
-              <Link className="hover:underline hover:text-white" href="/page2">
-                Page 2
-              </Link>
-            </div>
-            <div>
-              <Link className="hover:underline hover:text-white" href="/page3">
-                Page 3
-              </Link>
-            </div>
-          </div> */}
+          ))}
         </div>
       </div>
-      {/* <MadeBy /> */}
     </div>
   );
 }
