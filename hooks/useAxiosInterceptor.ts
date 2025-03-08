@@ -14,6 +14,16 @@ export default function useAxiosInterceptor() {
     const interceptor = apiauth.interceptors.response.use(
       (response) => response,
       (error) => {
+        console.log(error);
+
+        if (
+          error.code === "ERR_CONNECTION_REFUSED" ||
+          error.code == "ERR_NETWORK"
+        )
+          toast.error(
+            "Unable to connect to the server. Please try again later."
+          );
+
         if (error.response && error.response.status === 401) {
           if (
             ![
@@ -29,9 +39,8 @@ export default function useAxiosInterceptor() {
             toast.error("Session expired. Please log in again.");
             setLoginModalOpen(true);
           }
-        } else {
-          console.log("test interceptpr");
         }
+
         return Promise.reject(error);
       }
     );

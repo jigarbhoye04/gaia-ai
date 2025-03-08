@@ -7,15 +7,18 @@ import { ConversationListProvider } from "@/contexts/ConversationList";
 import { ConvoProvider } from "@/contexts/CurrentConvoMessages";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
-import UIProviderLayout from "@/layouts/UIProviderLayout";
 import ReduxProviders from "@/redux/providers";
+import { HeroUIProvider } from "@heroui/system";
+import { useRouter } from "next/navigation";
 import { ReactNode, Suspense } from "react";
 
 export default function ProvidersLayout({ children }: { children: ReactNode }) {
+  const router = useRouter();
+
   return (
     <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}>
       <ReduxProviders>
-        <UIProviderLayout>
+        <HeroUIProvider navigate={router.push}>
           <ConvoProvider>
             <ConversationListProvider>
               {/* Global Providers for Hooks  */}
@@ -32,7 +35,7 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
               {children}
             </ConversationListProvider>
           </ConvoProvider>
-        </UIProviderLayout>
+        </HeroUIProvider>
       </ReduxProviders>
     </Suspense>
   );
