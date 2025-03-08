@@ -8,6 +8,7 @@ import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -92,18 +93,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${creato.variable} dark`}>
       <body className="dark">
-        {/* Redux Provider */}
-        <Providers>
-          <GlobalInterceptor />
-          <GlobalAuth />
-          {/* Context Providers */}
-          <ProvidersLayout>
-            <LoginModal />
-            <Toaster closeButton richColors position="top-right" theme="dark" />
+        <ProvidersLayout>{children}</ProvidersLayout>
 
-            {children}
-          </ProvidersLayout>
-        </Providers>
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />
 
@@ -112,9 +103,11 @@ export default function RootLayout({
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-R6EGV9FG2Q"
         />
+
         <Script id="google-analytics">
           {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "G-R6EGV9FG2Q");`}
         </Script>
+
         {/* JSON-LD Schema */}
         <Script id="json-ld" type="application/ld+json">
           {JSON.stringify({
