@@ -269,7 +269,7 @@ export default function Internet() {
           </AnimatedSection>
 
           <AnimatedSection
-            className={`sm:w-1/2 w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm::w-[60%] min-h-fit flex justify-center flex-col relative z-[1] ${
+            className={`sm:w-1/2 w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm:w-[60%] min-h-fit flex justify-center flex-col relative z-[1] ${
               hover1 ? "opacity-40" : "opacity-100"
             }`}
             onMouseOut={() => setHover2(false)}

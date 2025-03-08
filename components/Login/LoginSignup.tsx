@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@heroui/spinner";
-import { useState } from "react";
 import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
+import { useUser } from "@/hooks/useUser";
+import { Spinner } from "@heroui/spinner";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function LoginSignup({
   isLogin = false,
@@ -14,7 +15,12 @@ export default function LoginSignup({
   isLogin?: boolean;
 }) {
   const [loading, setLoading] = useState(false);
-  //   const router = useRouter();
+  const router = useRouter();
+  const user = useUser();
+
+  useEffect(() => {
+    if (user?.email && user.email) router.push("/c");
+  }, [user]);
 
   return (
     <form className="w-screen h-screen flex justify-center items-center flex-col overflow-auto select-none">

@@ -1,14 +1,15 @@
+// src/redux/slices/loginModalSlice.ts
 import { createSlice } from "@reduxjs/toolkit";
 
-const modalSlice = createSlice({
-  name: "modal",
+const loginModalSlice = createSlice({
+  name: "loginModal",
   initialState: { open: false },
   reducers: {
-    setOpen: (state, action) => {
+    setLoginModalOpen: (state, action) => {
       state.open = action.payload;
     },
   },
 });
 
-export const { setOpen } = modalSlice.actions;
-export default modalSlice.reducer;
+export const { setLoginModalOpen } = loginModalSlice.actions;
+export default loginModalSlice.reducer;

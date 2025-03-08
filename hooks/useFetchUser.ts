@@ -1,44 +1,41 @@
-import { useUser } from "@/contexts/UserContext";
+import { useUserActions } from "@/hooks/useUser";
 import { apiauth } from "@/utils/apiaxios";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 
 export const authPages = ["/login", "/signup", "/get-started"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];
 
 const useFetchUser = () => {
-  const { setUserData } = useUser();
+  const { updateUser, clearUser } = useUserActions();
+  const searchParams = useSearchParams();
+
   const router = useRouter();
 
   const fetchUserInfo = async () => {
     try {
+      const accessToken = searchParams.get("access_token");
+      const refreshToken = searchParams.get("refresh_token");
+
       const response = await apiauth.get("/oauth/me", {
         withCredentials: true,
       });
 
-      setUserData(
-        response?.data?.name,
-        response?.data?.email,
-        response?.data?.picture
-      );
+      updateUser({
+        name: response?.data?.name,
+        email: response?.data?.email,
+        profilePicture: response?.data?.picture,
+      });
 
-      // If the user is on one of these pages after login, navigate to chat
-      if (authPages.includes(location.pathname)) {
-        router.push("/c");
-        // if (setModalOpen) setModalOpen(false);
-      }
+      if (accessToken && refreshToken) router.push("/c");
     } catch (err) {
-      // If the user is not logged in, display modal if not on one of these pages
-      // if (!publicPages.includes(location.pathname) && !!setModalOpen)
-      //   setModalOpen(true);
-
-      setUserData(null, null, null);
+      clearUser();
     }
   };
 
   useEffect(() => {
     fetchUserInfo();
-  }, []);
+  }, [searchParams]);
 };
 
 export default useFetchUser;

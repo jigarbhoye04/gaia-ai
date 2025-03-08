@@ -1,4 +1,5 @@
 import LoginModal from "@/components/Login/LoginModal";
+import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 import Providers from "@/redux/providers";
 import type { Metadata, Viewport } from "next";
@@ -6,6 +7,8 @@ import localFont from "next/font/local";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
+import GlobalAuth from "@/hooks/providers/GlobalAuth";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -90,14 +93,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${creato.variable} dark`}>
       <body className="dark">
-        <Providers>
-          <ProvidersLayout>
-            <LoginModal />
-            <Toaster closeButton richColors position="top-right" theme="dark" />
-
-            {children}
-          </ProvidersLayout>
-        </Providers>
+        <ProvidersLayout>{children}</ProvidersLayout>
 
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />
@@ -107,6 +103,7 @@ export default function RootLayout({
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-R6EGV9FG2Q"
         />
+
         <Script id="google-analytics">
           {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "G-R6EGV9FG2Q");`}
         </Script>

@@ -19,7 +19,7 @@ export default function PageNotFound() {
         startContent={
           <LinkBackwardIcon color="transparent" fill="foreground" />
         }
-        onClick={() => router.back()}
+        onPress={() => router.back()}
       >
         Go Back
       </Button>
