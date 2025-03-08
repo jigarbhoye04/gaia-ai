@@ -10,7 +10,7 @@ import {
   FlowchartIcon1,
   Target02Icon,
 } from "@/components/Misc/icons";
-import StaticSidebar from "@/components/Landing/Dummy/StaticSidebar";
+import StaticSidebar from "@/components/Landing/Dummy/DummySidebar";
 
 interface Step {
   icon: React.ReactNode;

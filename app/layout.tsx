@@ -1,4 +1,5 @@
 import LoginModal from "@/components/Login/LoginModal";
+import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 import Providers from "@/redux/providers";
 import type { Metadata, Viewport } from "next";
@@ -6,6 +7,7 @@ import localFont from "next/font/local";
 import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
+import GlobalAuth from "@/hooks/providers/GlobalAuth";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -90,7 +92,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${creato.variable} dark`}>
       <body className="dark">
+        {/* Redux Provider */}
         <Providers>
+          <GlobalInterceptor />
+          <GlobalAuth />
+          {/* Context Providers */}
           <ProvidersLayout>
             <LoginModal />
             <Toaster closeButton richColors position="top-right" theme="dark" />
@@ -98,7 +104,6 @@ export default function RootLayout({
             {children}
           </ProvidersLayout>
         </Providers>
-
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />
 
@@ -110,7 +115,6 @@ export default function RootLayout({
         <Script id="google-analytics">
           {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "G-R6EGV9FG2Q");`}
         </Script>
-
         {/* JSON-LD Schema */}
         <Script id="json-ld" type="application/ld+json">
           {JSON.stringify({

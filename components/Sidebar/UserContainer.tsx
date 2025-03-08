@@ -1,10 +1,13 @@
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/hooks/useUser";
 import { User } from "@heroui/user";
 import SettingsMenu from "./Settings/SettingsMenu";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 // import { Spinner } from "@heroui/spinner";
 
 export default function UserContainer() {
-  const { user } = useUser();
+  const user = useUser();
+
+  console.log(user?.profilePicture);
 
   return (
     <div className="justify-center flex w-full px-2 py-2 bg-black flex-col gap-3 z-[2] relative">
@@ -15,24 +18,38 @@ export default function UserContainer() {
     </div> */}
 
       <div className="user_container_inner">
-        <User
+        <div className="flex items-center gap-2">
+          {/* <User
           avatarProps={{
-            src: user?.profile_picture,
-            showFallback: true,
+            src: user?.profilePicture,
+
+            // showFallback: !user?.profilePicture,
             isBordered: true,
-            fallback: (
-              <img
-                alt={"User Profile photo"}
-                className="min-h-[35px] min-w-[35px]"
-                src="https://links.aryanranderiya.com/l/default_user"
-              />
-            ),
+            // fallback: (
+            //   <img
+            //     alt={"User Profile photo"}
+            //     className="min-h-[35px] min-w-[35px]"
+            //     src="https://links.aryanranderiya.com/l/default_user"
+            //   />
+            // ),
             size: "sm",
             className: "min-w-[30px]",
           }}
           className="text-nowrap"
-          name={`${user?.name}`}
-        />
+          name={``} */}
+          {/* /> */}
+          <Avatar className="size-9 rounded-full border-2 border-black outline-zinc-700 outline">
+            <AvatarImage
+              src={
+                user?.profilePicture ||
+                "https://links.aryanranderiya.com/l/default_user"
+              }
+              alt="Avatar"
+            />
+            <AvatarFallback>CN</AvatarFallback>
+          </Avatar>
+          <span>{user?.name}</span>
+        </div>
 
         <SettingsMenu />
       </div>

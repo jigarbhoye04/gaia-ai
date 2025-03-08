@@ -14,6 +14,8 @@ import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import useMediaQuery from "@/hooks/mediaQuery";
+import useAxiosInterceptor from "@/hooks/useAxiosInterceptor";
+import { useLoginModalActions } from "@/hooks/useLoginModal";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { ReactNode, useRef, useState } from "react";
@@ -105,9 +107,8 @@ export default function MainLayout({ children }: { children: ReactNode }) {
             </div>
 
             {/* <Suspense fallback={<SuspenseLoader />}> */}
-              {children}
+            {children}
             {/* </Suspense> */}
-            
           </div>
         </div>
       </TooltipProvider>

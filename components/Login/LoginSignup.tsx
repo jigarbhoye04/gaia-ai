@@ -1,12 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@heroui/spinner";
-import { useState } from "react";
 import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
+import { Spinner } from "@heroui/spinner";
+import Link from "next/link";
+import { useState } from "react";
 
 export default function LoginSignup({
   isLogin = false,

@@ -1,19 +1,29 @@
 "use client";
 
-import { RootState } from "@/redux";
-import { setOpen } from "@/redux/slices/loginModalSlice";
+import { useLoginModal, useLoginModalActions } from "@/hooks/useLoginModal";
 import { Modal, ModalBody, ModalContent } from "@heroui/modal";
 import Link from "next/link";
-import { useDispatch, useSelector } from "react-redux";
 import { GoogleColouredIcon } from "../Misc/icons";
 import { Button } from "../ui/button";
+import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
+import { usePathname } from "next/navigation";
 
 export default function LoginModal() {
-  const open = useSelector((state: RootState) => state.loginModal.open);
-  const dispatch = useDispatch();
+  const isOpen = useLoginModal();
+  const { setLoginModalOpen } = useLoginModalActions();
+  const pathname = usePathname();
+
+  // Prevent rendering on /login or /signup pages
+  if (pathname === "/login" || pathname === "/signup") return null;
 
   return (
-    <Modal isOpen={open} onOpenChange={(v) => dispatch(setOpen(v))}>
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={(v) => setLoginModalOpen(v)}
+      isDismissable={false}
+      isKeyboardDismissDisabled
+      hideCloseButton
+    >
       <ModalContent className="p-7">
         <ModalBody>
           <div className="mb-3 text-center space-y-2">
@@ -26,7 +36,7 @@ export default function LoginModal() {
             className="rounded-full text-md gap-2 px-4"
             size="lg"
             variant="secondary"
-            onClick={() => console.log("Handle Google Login")}
+            onClick={handleGoogleLogin}
           >
             <GoogleColouredIcon />
             Sign in with Google
@@ -34,7 +44,7 @@ export default function LoginModal() {
           <Link
             href="/get-started"
             className="rounded-full text-md gap-2 px-4 text-primary font-normal text-center w-full"
-            onClick={() => dispatch(setOpen(false))}
+            onClick={() => setLoginModalOpen(false)}
           >
             New to GAIA? Create an Account
           </Link>

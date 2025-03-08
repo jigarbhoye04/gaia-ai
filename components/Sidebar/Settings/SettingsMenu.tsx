@@ -6,8 +6,8 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
-import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 
 import { Logout02Icon, Settings01Icon, ThreeDotsMenu } from "../../Misc/icons";
 
@@ -15,8 +15,10 @@ import SettingsModal from "./SettingsModal";
 
 import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useUser } from "@/contexts/UserContext";
+import { useUserActions } from "@/hooks/useUser";
 import { ApiService } from "@/utils/chatUtils";
+import { apiauth } from "@/utils/apiaxios";
+import { toast } from "sonner";
 
 // Only allow these values in our modal state.
 export type ModalAction = "clear_chats" | "logout";
@@ -29,28 +31,45 @@ interface MenuItem {
 }
 
 export default function SettingsMenu() {
-  const { logout } = useUser();
+  const { clearUser } = useUserActions();
   const router = useRouter();
   const { fetchConversations } = useConversationList();
   const { setConvoMessages } = useConvo();
   const [openSettings, setOpenSettings] = useState(false);
-
-  // modalAction is either "clear_chats", "logout", or null (closed)
   const [modalAction, setModalAction] = useState<ModalAction | null>(null);
+  // either "clear_chats", "logout", or null (closed)
 
   // Confirm logout action.
-  const handleConfirmLogout = () => {
-    logout();
-    setModalAction(null);
+  const handleConfirmLogout = async () => {
+    try {
+      await apiauth.post("/oauth/logout", {}, { withCredentials: true });
+      clearUser();
+      toast.success("Successfully logged out!");
+    } catch (error) {
+      toast.error("Could not log out. Please try again.");
+      console.error("Error during logout:", error);
+    } finally {
+      setModalAction(null);
+      router.push("/login");
+    }
   };
 
   // Confirm clear chats action.
   const handleConfirmClearChats = async () => {
-    router.push("/c");
-    await ApiService.deleteAllConversations();
-    await fetchConversations();
-    setConvoMessages([]);
-    setModalAction(null);
+    try {
+      router.push("/c");
+
+      await ApiService.deleteAllConversations();
+      await fetchConversations();
+
+      setConvoMessages([]);
+      toast.success("All chats cleared successfully!");
+    } catch (error) {
+      toast.error("Failed to clear chats. Please try again.");
+      console.error("Error clearing chats:", error);
+    } finally {
+      setModalAction(null);
+    }
   };
 
   const items: MenuItem[] = [

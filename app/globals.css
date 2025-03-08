@@ -218,11 +218,11 @@ main {
   padding: 0.5em;
   height: fit-content;
 }
-.user_container span {
+/* .user_container span {
   max-width: 115px;
   overflow: hidden;
   text-overflow: ellipsis;
-}
+} */
 .main_chat {
   width: 100%;
   display: flex;

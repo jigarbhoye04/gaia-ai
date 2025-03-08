@@ -26,9 +26,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RootState } from "@/redux";
-import { setOpen } from "@/redux/slices/loginModalSlice";
+import { RootState } from "@/redux/store";
 import { useDispatch, useSelector } from "react-redux";
+import { useLoginModal, useLoginModalActions } from "@/hooks/useLoginModal";
 
 function DummyLeftDropdown() {
   return (
@@ -76,16 +76,14 @@ function DummyLeftDropdown() {
 }
 
 const DummySearchbar = () => {
-  const open = useSelector((state: RootState) => state.loginModal.open);
-  const dispatch = useDispatch();
-
+  const { setLoginModalOpen } = useLoginModalActions();
   const [enableSearch, setEnableSearch] = useState(false);
   const [pageFetchURL, setPageFetchURL] = useState("");
   const [fetchPageModal, setFetchPageModal] = useState(false);
 
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
-    dispatch(setOpen(false));
+    setLoginModalOpen(false);
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (
@@ -93,7 +91,7 @@ const DummySearchbar = () => {
   ) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      dispatch(setOpen(true));
+      setLoginModalOpen(true);
     }
   };
 

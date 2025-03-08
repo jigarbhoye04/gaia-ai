@@ -1,4 +1,3 @@
-import { useUser } from "@/contexts/UserContext";
 import useMediaQuery from "@/hooks/mediaQuery";
 import { Button } from "@heroui/button";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
@@ -14,6 +13,7 @@ import {
   SheetTrigger,
 } from "../ui/sheet";
 import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
 
 type MobileMenuProps = {
   user: any;
@@ -108,7 +108,7 @@ function DesktopMenu({ user, scrolled }: DesktopMenuProps) {
   if (scrolled)
     return (
       <div className="flex items-center gap-1">
-        {user ? (
+        {user.email && user.profilePicture && user.name ? (
           <Button
             as={Link}
             className="font-medium"
@@ -154,7 +154,9 @@ function DesktopMenu({ user, scrolled }: DesktopMenuProps) {
 }
 
 export default function Navbar() {
-  const { user } = useUser();
+  const user = useUser();
+  console.log(user);
+
   // const router = useRouter();
   const isMobileScreen = useMediaQuery("(max-width: 600px)");
   const [sheetOpen, setSheetOpen] = useState(false);
