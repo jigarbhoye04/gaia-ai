@@ -1,10 +1,4 @@
-# app/services/image_service_handler.py
-"""
-Service module for handling image generation and image-to-text conversion.
-"""
-
 import io
-import os
 import re
 import uuid
 
@@ -12,10 +6,15 @@ import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException
 
-from app.config.config_cloudinary import get_cloudinary_config
-from app.services.llm_service import llm_service
+from app.config.config_cloudinary import (
+    api_key,
+    api_secret,
+    cloud_name,
+    get_cloudinary_config,
+)
+from app.config.loggers import image_logger as logger
+from app.services.llm_service import do_prompt_no_stream
 from app.utils.image_utils import convert_image_to_text, generate_image
-from app.utils.logging_util import get_logger
 
 
 def generate_public_id(refined_text: str, max_length: int = 50) -> str:
@@ -38,13 +37,8 @@ class ImageService:
         Raises:
             HTTPException: If any required Cloudinary configuration environment variables are missing.
         """
-        self.logger = get_logger(name="image", log_file="image.log")
-        self.llm_service = llm_service
+        self.logger = logger
         self.cloudinary_config = get_cloudinary_config()
-
-        cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
-        api_key = os.getenv("CLOUDINARY_API_KEY")
-        api_secret = os.getenv("CLOUDINARY_API_SECRET")
 
         if not cloud_name or not api_key or not api_secret:
             self.logger.error("Missing required Cloudinary configuration values.")
@@ -75,7 +69,7 @@ class ImageService:
         try:
             self.logger.info(f"Received image generation request: {message}")
 
-            improved_prompt = await self.llm_service.do_prompt_no_stream(
+            improved_prompt = await do_prompt_no_stream(
                 prompt=f"""
                 You are an AI assistant specialized in refining prompts for generating high-quality images. Your task is to take the given prompt and enhance it by adding relevant keywords that improve detail, clarity, and visual accuracy.  
                 

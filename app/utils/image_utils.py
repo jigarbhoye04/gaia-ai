@@ -5,7 +5,7 @@ import httpx
 import requests
 from fastapi import File, Form, HTTPException, UploadFile
 from PIL import Image
-from app.services.llm_service import llm_service
+from app.services.llm_service import do_prompt_no_stream
 
 http_async_client = httpx.AsyncClient(timeout=100000)
 
@@ -60,7 +60,7 @@ async def convert_image_to_text(
         if len(contents) > 1 * 1024 * 1024:
             return "File too large"
 
-        improved_prompt = await llm_service.do_prompt_no_stream(
+        improved_prompt = await do_prompt_no_stream(
             prompt=f"""Convert this sentence to proper formatting, proper formal grammer for a prompt sent with an image: '{
                 message
             }'. Only give me the sentence without any additional headers or information. Be concise, but descriptive."""

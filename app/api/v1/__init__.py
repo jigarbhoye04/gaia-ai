@@ -4,22 +4,21 @@ from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routes import (
     audio,
-    # gmail,
     calendar,
     chat,
     document,
     feedback,
     goals,
     image,
+    mail,
     notes,
     oauth,
     search,
     waitlist,
 )
-from app.utils.logging_util import get_logger
 from app.utils.nltk_utils import download_nltk_resources
+from app.config.loggers import app_logger as logger
 
-logger = get_logger(name="main", log_file="app.log")
 
 api_router = APIRouter()
 
@@ -34,7 +33,7 @@ api_router.include_router(notes.router, tags=["Notes/Memories"])
 api_router.include_router(goals.router, tags=["Goals"])
 api_router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
 api_router.include_router(audio.router, tags=["Audio"])
-# api_router.include_router(gmail.router, tags=["GMail"])
+api_router.include_router(mail.router, tags=["Mail"])
 
 
 @asynccontextmanager

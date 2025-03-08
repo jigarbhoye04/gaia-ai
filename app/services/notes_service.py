@@ -1,19 +1,17 @@
 """
 Service module for handling note operations.
 """
-from typing import Any, Coroutine
+
+from typing import Any
 
 from fastapi import HTTPException, status
 from bson import ObjectId
-from app.models.notes_models import NoteModel, NoteResponse
+from app.models.notes_models import NoteModel
 from app.db.collections import notes_collection
 from app.db.utils import serialize_document
 from app.db.db_redis import get_cache, set_cache, delete_cache
 from app.utils.notes import insert_note
-from app.utils.logging_util import get_logger
-
-# Global logger instance for this module.
-logger = get_logger(name="notes", log_file="notes.log")
+from app.config.loggers import notes_logger as logger
 
 
 async def create_note(note: NoteModel, user_id: str) -> dict:

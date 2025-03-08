@@ -1,13 +1,10 @@
 import uvicorn
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1 import api_router, lifespan, logger
 from app.api.v1.routes import general
-
-load_dotenv()
 
 
 def create_app() -> FastAPI:
@@ -36,6 +33,7 @@ def create_app() -> FastAPI:
         allow_origins=[
             "http://localhost:5173",
             "https://localhost:5173",
+            "http://localhost:3000",
             "http://192.168.138.215:5173",
             "https://192.168.13.215:5173",
             "https://heygaia.io",

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.config.loggers import goals_logger as logger
 from app.db.collections import goals_collection
 from app.models.goals_models import (
     GoalCreate,
@@ -21,9 +22,7 @@ from app.services.goals_service import (
     get_user_goals_service,
     update_node_status_service,
 )
-from app.utils.logging_util import get_logger
 
-logger = get_logger(name="goals", log_file="goals.log")
 router = APIRouter()
 
 

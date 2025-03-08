@@ -1,6 +1,5 @@
 import json
 from datetime import datetime
-from typing import Any
 
 from bson import ObjectId
 from fastapi import HTTPException
@@ -8,11 +7,9 @@ from fastapi import HTTPException
 from app.db.collections import goals_collection
 from app.db.db_redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
 from app.models.goals_models import GoalCreate, UpdateNodeRequest
-from app.services.llm_service import llm_service
+from app.services.llm_service import do_prompt_no_stream, do_prompt_with_stream
 from app.utils.goals_utils import goal_helper
-from app.utils.logging_util import get_logger
-
-logger = get_logger(name="goals", log_file="goals.log")
+from app.config.loggers import goals_logger as logger
 
 
 jsonstructure = {
@@ -81,9 +78,7 @@ async def generate_roadmap_with_llm(title: str) -> dict:
     """
 
     try:
-        response = await llm_service.do_prompt_no_stream(
-            prompt=detailed_prompt, max_tokens=2048
-        )
+        response = await do_prompt_no_stream(prompt=detailed_prompt, max_tokens=2048)
         return response
     except Exception as e:
         print(f"LLM Generation Error: {e}")
@@ -104,7 +99,7 @@ async def generate_roadmap_with_llm_stream(title: str):
     """
 
     try:
-        async for chunk in llm_service.do_prompt_with_stream(
+        async for chunk in do_prompt_with_stream(
             messages=[{"role": "user", "content": detailed_prompt}],
             max_tokens=4096,
         ):

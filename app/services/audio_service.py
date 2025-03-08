@@ -1,4 +1,3 @@
-import os
 import queue
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -10,13 +9,12 @@ import httpx
 from fastapi import HTTPException
 from google.oauth2 import service_account
 
-from app.utils.logging_util import get_logger
+from app.config.loggers import audio_logger as logger
+from app.config.settings import settings
 
-aai.settings.api_key = os.environ.get("ASSEMBLYAI_API_KEY")
+aai.settings.api_key = settings.ASSEMBLYAI_API_KEY
 
 executor = ThreadPoolExecutor(max_workers=2)
-
-logger = get_logger(name="audio", log_file="audio.log")
 
 
 class TTSService:

@@ -1,17 +1,15 @@
-import os
 import httpx
-from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-from nltk.tokenize import word_tokenize
+from app.config.settings import settings
 from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
-load_dotenv()
+subscription_key = settings.BING_API_KEY_1
+search_url = settings.BING_SEARCH_URL
 
-subscription_key = os.getenv("BING_API_KEY_1")
 if not subscription_key:
     raise EnvironmentError("Missing BING_SUBSCRIPTION_KEY environment variable.")
 
-search_url = "https://api.bing.microsoft.com/v7.0/search"
 
 http_async_client = httpx.AsyncClient()
 
@@ -23,6 +21,7 @@ async def perform_search(query: str, count=7):
         "count": count,
         # "responseFilter": "webPages,images",
     }
+    
 
     try:
         response = await http_async_client.get(

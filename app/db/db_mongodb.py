@@ -1,14 +1,10 @@
-import os
 import sys
-from app.utils.logging_util import get_logger
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
 import pymongo
-from dotenv import load_dotenv
-
-load_dotenv()
-
-logger = get_logger(name="database", log_file="database.log")
+from app.config.settings import settings
+from app.config.loggers import mongo_logger as logger
 
 
 class MongoDB:
@@ -75,7 +71,6 @@ class MongoDB:
         return self.database.get_collection(collection_name)
 
 
-# Initialize the MongoDB instance using environment variables
-db_uri = os.getenv("MONGO_DB")
+db_uri = settings.MONGO_DB
 db_name = "GAIA"
 mongodb_instance = MongoDB(uri=db_uri, db_name=db_name)
