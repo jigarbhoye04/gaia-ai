@@ -15,6 +15,7 @@ from app.api.v1.routes import (
     oauth,
     search,
     waitlist,
+    blog,
 )
 from app.utils.nltk_utils import download_nltk_resources
 from app.config.loggers import app_logger as logger
@@ -34,6 +35,7 @@ api_router.include_router(goals.router, tags=["Goals"])
 api_router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
 api_router.include_router(audio.router, tags=["Audio"])
 api_router.include_router(mail.router, tags=["Mail"])
+api_router.include_router(blog.router, tags=["Blog"])
 
 
 @asynccontextmanager
