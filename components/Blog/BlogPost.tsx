@@ -115,12 +115,12 @@ export default function BlogPost() {
         <div className="mb-8">
           <Button
             variant="light"
-            className="mb-4 px-0 font-medium"
+            className="mb-4 font-medium"
             as={Link}
             href="/blog"
             size="sm"
+            startContent={<ChevronLeft />}
           >
-            <ChevronLeft />
             Blog
           </Button>
 

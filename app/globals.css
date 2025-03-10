@@ -376,7 +376,7 @@ main {
 }
 .navbar_content {
   height: 45px;
-  border-radius: 1000px;
+  /* border-radius: 1000px; */
   margin: 10px;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);

@@ -41,7 +41,7 @@ export default function BlogList() {
           {blogs.map((blog) => (
             <div key={blog.slug}>
               <Link href={`/blog/${blog.slug}`}>
-                <div className="transition-all bg-black px-5 py-4 grid grid-cols-6 gap-20">
+                <div className="transition-all bg-black hover:bg-zinc-800 px-5 py-3 grid grid-cols-6 gap-20 items-center">
                   <div className="font-medium col-span-3">{blog.title}</div>
                   <div className="truncate ">Category</div>
                   <div className="pt-0 text-sm text-foreground-500 text-nowrap">

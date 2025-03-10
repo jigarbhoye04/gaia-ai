@@ -17,7 +17,7 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
             endContent={
               <BubbleConversationChatIcon color="foreground" width="17" />
             }
-            radius="full"
+            radius="lg"
             size="md"
             href={"/c"}
             variant="shadow"
@@ -30,7 +30,7 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
               as={Link}
               className="p-0 px-4 font-semibold"
               color="primary"
-              radius="full"
+              radius="lg"
               size="md"
               href={"/login"}
               variant="light"
@@ -41,7 +41,7 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
               as={Link}
               className="p-0 px-4 font-semibold"
               color="primary"
-              radius="full"
+              radius="lg"
               size="md"
               href={"/get-started"}
               variant="shadow"
