@@ -1,3 +1,34 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description:
+    "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant services.",
+  openGraph: {
+    title: "Terms of Service",
+    description:
+      "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant services.",
+    url: "https://heygaia.io/terms",
+    images: ["/landing/screenshot.webp"],
+    siteName: "GAIA - AI Personal Assistant",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service",
+    description:
+      "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant services.",
+    images: ["/landing/screenshot.webp"],
+  },
+  keywords: [
+    "GAIA",
+    "Terms of Service",
+    "AI Assistant",
+    "User Agreement",
+    "Service Terms",
+    "Legal Policy",
+  ],
+};
 
 const TermsOfService = () => {
   return (

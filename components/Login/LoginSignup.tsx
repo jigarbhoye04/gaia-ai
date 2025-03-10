@@ -8,7 +8,7 @@ import { Spinner } from "@heroui/spinner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
+  
 export default function LoginSignup({
   isLogin = false,
 }: {

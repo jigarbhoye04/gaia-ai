@@ -1,4 +1,39 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "Learn more about GAIA, your personal AI assistant designed to enhance productivity, automate tasks, and assist in daily activities.",
+  openGraph: {
+    title: "About",
+    siteName: "GAIA - Personal Assistant",
+    url: "https://heygaia.io/about",
+    type: "website",
+    description:
+      "Learn more about GAIA, your personal AI assistant designed to enhance productivity, automate tasks, and assist in daily activities.",
+    images: ["/landing/screenshot.webp"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About",
+    description:
+      "Learn more about GAIA, your personal AI assistant designed to enhance productivity, automate tasks, and assist in daily activities.",
+    images: ["/landing/screenshot.webp"],
+  },
+  keywords: [
+    "GAIA",
+    "About GAIA",
+    "AI Assistant",
+    "Artificial Intelligence",
+    "Productivity Assistant",
+    "Virtual Assistant",
+    "Smart Assistant",
+    "AI Personal Assistant",
+    "Task Management",
+    "Automation",
+  ],
+};
 
 export default function About() {
   return (

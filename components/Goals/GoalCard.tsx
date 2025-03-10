@@ -166,7 +166,8 @@ export function GoalCard({
             color="primary"
             // size="sm"
             variant="flat"
-            onPress={() => router.push(`./${goal.id}`)}
+            className="text-primary"
+            onPress={() => router.push(`/goals/${goal.id}`)}
           >
             View Goal
           </Button>

@@ -1,3 +1,34 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "Review GAIA's Privacy Policy to learn how we collect, use, and protect your personal data while providing our AI assistant services.",
+  openGraph: {
+    title: "Privacy Policy",
+    description:
+      "Review GAIA's Privacy Policy to learn how we collect, use, and protect your personal data while providing our AI assistant services.",
+    url: "https://heygaia.io/privacy",
+    images: ["/landing/screenshot.webp"],
+    siteName: "GAIA - AI Personal Assistant",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy",
+    description:
+      "Review GAIA's Privacy Policy to learn how we collect, use, and protect your personal data while providing our AI assistant services.",
+    images: ["/landing/screenshot.webp"],
+  },
+  keywords: [
+    "GAIA",
+    "Privacy Policy",
+    "AI Assistant",
+    "Data Protection",
+    "Personal Data",
+    "Privacy",
+  ],
+};
 
 const PrivacyPolicy = () => {
   return (

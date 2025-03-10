@@ -1,18 +1,12 @@
-import LoginModal from "@/components/Login/LoginModal";
-import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import ProvidersLayout from "@/layouts/ProvidersLayout";
-import Providers from "@/redux/providers";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
-import { Toaster } from "sonner";
 import "./globals.css";
-import GlobalAuth from "@/hooks/providers/GlobalAuth";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
-  title: "GAIA - Your Personal Assistant",
+  title: { default: "GAIA - Your Personal Assistant", template: "%s | GAIA" },
   description:
     "GAIA is your personal AI assistant designed to help increase your productivity.",
   icons: {

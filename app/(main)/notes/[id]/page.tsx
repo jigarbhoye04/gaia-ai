@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { apiauth } from "@/utils/apiaxios";
+import { truncateTitle } from "@/lib/utils";
 
 interface Note {
   id: string;
@@ -203,80 +204,85 @@ export default function NotesAdd() {
   };
 
   return (
-    <div className="flex flex-col justify-between min-h-screen h-screen w-full">
-      <div className="flex w-full justify-between items-center dark">
-        <Link href="/notes">
-          <Button
-            className="text-white w-fit gap-1 px-0 font-normal"
-            variant={"link"}
-          >
-            <ArrowLeft width={17} />
-            All Notes
-          </Button>
-        </Link>
-
-        <Suspense fallback={<Spinner />}>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="hover:bg-zinc-800 hover:text-white"
-              >
-                <DotsVerticalIcon height={20} width={20} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-zinc-800 border-none hover:!bg-zinc-900 p-0"
+    <>
+      <title id="chat_title">
+        {`${truncateTitle(note.content || "New Note")} | GAIA`}
+      </title>
+      <div className="flex flex-col justify-between min-h-screen h-screen w-full">
+        <div className="flex w-full justify-between items-center dark">
+          <Link href="/notes">
+            <Button
+              className="text-white w-fit gap-1 px-0 font-normal"
+              variant={"link"}
             >
-              <DropdownMenuItem
-                className="text-red-500 hover:!bg-zinc-900 hover:!text-red-500 p-3 cursor-pointer"
-                onClick={deleteNote}
+              <ArrowLeft width={17} />
+              All Notes
+            </Button>
+          </Link>
+
+          <Suspense fallback={<Spinner />}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="hover:bg-zinc-800 hover:text-white"
+                >
+                  <DotsVerticalIcon height={20} width={20} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-zinc-800 border-none hover:!bg-zinc-900 p-0"
               >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Note
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </Suspense>
-      </div>
-
-      {isLoading ? (
-        <div className="h-full flex items-center justify-center">
-          <Spinner />
+                <DropdownMenuItem
+                  className="text-red-500 hover:!bg-zinc-900 hover:!text-red-500 p-3 cursor-pointer"
+                  onClick={deleteNote}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Note
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Suspense>
         </div>
-      ) : (
-        <div className="min-h-screen h-screen pt-3 flex flex-col editor">
-          {editor && (
-            <>
-              <BubbleMenuComponent editor={editor} />
-              <MenuBar editor={editor} />
-              <EditorContent className="min-h-screen" editor={editor} />
-            </>
-          )}
-        </div>
-      )}
 
-      <div
-        className={`fixed bottom-4 right-4 bg-zinc-800 p-5 rounded-lg shadow-lg transition-all duration-200 ${
-          hasUnsavedChanges
-            ? "opacity-100 pointer-events-auto scale-100"
-            : "opacity-0 pointer-events-none scale-80"
-        }`}
-      >
-        <p className="text-white mb-2 font-medium text-lg">
-          You have unsaved changes!
-        </p>
-        <Button
-          disabled={!hasUnsavedChanges || isSaving}
-          className="bg-[#00bbff] hover:bg-[#7bdcff] text-zinc-800 flex gap-2"
-          onClick={saveNote}
+        {isLoading ? (
+          <div className="h-full flex items-center justify-center">
+            <Spinner />
+          </div>
+        ) : (
+          <div className="min-h-screen h-screen pt-3 flex flex-col editor">
+            {editor && (
+              <>
+                <BubbleMenuComponent editor={editor} />
+                <MenuBar editor={editor} />
+                <EditorContent className="min-h-screen" editor={editor} />
+              </>
+            )}
+          </div>
+        )}
+
+        <div
+          className={`fixed bottom-4 right-4 bg-zinc-800 p-5 rounded-lg shadow-lg transition-all duration-200 ${
+            hasUnsavedChanges
+              ? "opacity-100 pointer-events-auto scale-100"
+              : "opacity-0 pointer-events-none scale-80"
+          }`}
         >
-          <SaveIcon />
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
+          <p className="text-white mb-2 font-medium text-lg">
+            You have unsaved changes!
+          </p>
+          <Button
+            disabled={!hasUnsavedChanges || isSaving}
+            className="bg-[#00bbff] hover:bg-[#7bdcff] text-zinc-800 flex gap-2"
+            onClick={saveNote}
+          >
+            <SaveIcon />
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
