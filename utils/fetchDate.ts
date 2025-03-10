@@ -30,8 +30,6 @@ export const parsingDate = (isoString: string) => {
 };
 
 export function parseDate(isoDateString: string): string {
-  console.log(isoDateString);
-
   const date = new Date(isoDateString);
   const optionsTime: Intl.DateTimeFormatOptions = {
     hour: "numeric",

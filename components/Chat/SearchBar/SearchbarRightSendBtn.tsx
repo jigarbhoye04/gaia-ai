@@ -35,7 +35,7 @@ export default function SearchbarRightSendBtn({
           radius="full"
           type="submit"
         >
-          <SentIcon color="black" fill="#ffffff40" />
+          <SentIcon color="black" />
         </Button>
       </Tooltip>
     </div>

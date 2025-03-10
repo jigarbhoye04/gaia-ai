@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Button } from "@heroui/button";
 import { ArrowDown } from "lucide-react";
-import { useParams } from "next/navigation";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useConversation } from "@/hooks/useConversation";
 import { toast } from "sonner";
-import SearchbarHeader from "./SearchbarHeader";
+import SearchbarToolbar from "./SearchbarToolbar";
 import SearchbarInput from "./SearchbarInput";
 import FetchPageModal from "./FetchPageModal";
+import { useParams } from "next/navigation";
 
 interface MainSearchbarProps {
   scrollToBottom: () => void;
@@ -82,7 +82,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   return (
     <>
       <div className="searchbar_container relative">
-        <div
+        {/* <div
           className={`absolute top-[-55px] flex justify-center w-full pointer-events-none transition-opacity ${
             isOverflowing && !isAtBottom ? "opacity-100" : "opacity-0"
           }`}
@@ -96,17 +96,9 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
           >
             <ArrowDown width={18} />
           </Button>
-        </div>
+        </div> */}
 
-        <div className="searchbar bg-zinc-900 px-3 py-2 rounded-3xl gap-3">
-          <SearchbarHeader
-            enableSearch={enableSearch}
-            toggleSearch={toggleSearch}
-            pageFetchURL={pageFetchURL}
-            fetchPageModal={fetchPageModal}
-            openPageFetchModal={openPageFetchModal}
-            searchbarText={searchbarText}
-          />
+        <div className="searchbar bg-zinc-800 px-1 pt-1 pb-2 rounded-3xl">
           <SearchbarInput
             searchbarText={searchbarText}
             onSearchbarTextChange={setSearchbarText}
@@ -116,6 +108,17 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
             onHeightChange={setCurrentHeight}
             inputRef={inputRef}
             loading={loading && isLoading}
+          />
+          <SearchbarToolbar
+            enableSearch={enableSearch}
+            toggleSearch={toggleSearch}
+            pageFetchURL={pageFetchURL}
+            fetchPageModal={fetchPageModal}
+            openPageFetchModal={openPageFetchModal}
+            searchbarText={searchbarText}
+            loading={loading && isLoading}
+            handleFormSubmit={handleFormSubmit}
+            onSearchbarTextChange={setSearchbarText}
           />
         </div>
       </div>

@@ -7,8 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 export default function UserContainer() {
   const user = useUser();
 
-  console.log(user?.profilePicture);
-
   return (
     <div className="justify-center flex w-full px-2 py-2 bg-black flex-col gap-3 z-[2] relative">
       {/* <div className="flex relative py-3 px-3 justify-between items-center hover:bg-zinc-900 rounded-xl transition-all bg-black">

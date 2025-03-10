@@ -67,23 +67,18 @@ export default function SearchbarLeftDropdown({
           <div
             className={`${
               loading ? "cursor-wait" : "cursor-pointer"
-            } z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 border-medium bg-zinc-900 text-small gap-2 rounded-full px-0 transition-transform-colors-opacity motion-reduce:transition-none border-default text-default-foreground hover:!bg-default min-w-10 w-10 h-10 mr-[2px]`}
+            } z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-1 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 outline-2 outline bg-zinc-900/50 text-small gap-2 rounded-full px-0 transition-transform-colors-opacity motion-reduce:transition-none outline-zinc-700 text-default-foreground hover:!bg-default min-w-8 w-8 h-8`}
           >
-            <PlusSignIcon />
+            <PlusSignIcon width={20} height={20} />
           </div>
         </DropdownTrigger>
 
-        <DropdownMenu
-          variant="faded"
-          aria-label="Static Actions"
-          // itemClasses={{
-          //   content: "w-full",
-          // }}
-        >
+        <DropdownMenu variant="faded" aria-label="Static Actions">
           <DropdownItem
             key="image"
             className="w-full transition-all"
             onPress={chooseImage}
+            isDisabled
           >
             <div className="flex justify-between items-center">
               Upload Image

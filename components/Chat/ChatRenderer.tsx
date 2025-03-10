@@ -72,7 +72,7 @@ export default function ChatRenderer() {
       <title id="chat_title">
         {`${
           conversations.find((convo) => convo.conversation_id === convoIdParam)
-            ?.description || ""
+            ?.description || "New Chat"
         } | GAIA`}
       </title>
 

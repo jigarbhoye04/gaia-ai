@@ -1,7 +1,5 @@
-import React from "react";
 import { Textarea } from "@heroui/input";
-import SearchbarRightSendBtn from "./SearchbarRightSendBtn";
-import SearchbarLeftDropdown from "./SearchbarLeftDropdown";
+import React from "react";
 
 interface SearchbarInputProps {
   searchbarText: string;
@@ -30,25 +28,17 @@ const SearchbarInput: React.FC<SearchbarInputProps> = ({
         ref={inputRef}
         autoFocus
         classNames={{
-          inputWrapper: "p-[6px] data-[hover=true]:bg-zinc-900",
+          inputWrapper:
+            " px-3 data-[hover=true]:bg-zinc-800 group-data-[focus-visible=true]:ring-zinc-800 group-data-[focus-visible=true]:ring-offset-0",
           innerWrapper: `${currentHeight > 24 ? "items-end" : "items-center"}`,
         }}
         disabled={loading}
-        endContent={
-          <SearchbarRightSendBtn
-            handleFormSubmit={handleFormSubmit}
-            loading={loading}
-            searchbarText={searchbarText}
-            setSearchbarText={onSearchbarTextChange}
-          />
-        }
         isInvalid={searchbarText.length > 10000}
         maxRows={13}
         minRows={1}
         placeholder="Ask gaia something..."
-        radius="full"
         size="lg"
-        startContent={<SearchbarLeftDropdown loading={loading} />}
+        // className="ring-1 ring-zinc-700"
         value={searchbarText}
         onHeightChange={onHeightChange}
         onKeyDown={handleKeyDown}
