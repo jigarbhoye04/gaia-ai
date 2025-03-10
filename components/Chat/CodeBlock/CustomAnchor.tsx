@@ -5,6 +5,8 @@ import { GlobeIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const CustomAnchor = ({ props }: { props?: any }) => {
+  if (!props?.href) return null;
+
   const { isLoading } = useLoading();
   const [metadata, setMetadata] = useState({
     title: "",
@@ -20,12 +22,12 @@ const CustomAnchor = ({ props }: { props?: any }) => {
     const fetchMetadata = async () => {
       try {
         const response = await api.post("/fetch-url-metadata", {
-          url: props.href,
+          url: props?.href,
         });
         const { title, description, favicon, website_name } = response.data;
         setMetadata({ title, description, favicon, website_name });
         setValidFavicon(true);
-        prevHref.current = props.href;
+        prevHref.current = props?.href;
       } catch (error) {
         console.error("Error fetching metadata:", error);
       }
@@ -77,7 +79,7 @@ const CustomAnchor = ({ props }: { props?: any }) => {
             rel="noopener noreferrer"
             target="_blank"
           >
-            {props.href.replace("https://", "")}
+            {props?.href.replace("https://", "")}
           </a>
         </div>
       }
@@ -86,7 +88,7 @@ const CustomAnchor = ({ props }: { props?: any }) => {
     >
       <a
         className="!text-[#00bbff] hover:underline font-medium hover:!text-white transition-all"
-        href={props.href}
+        href={props?.href}
         rel="noopener noreferrer"
         target="_blank"
         {...props}

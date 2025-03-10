@@ -64,9 +64,21 @@ export function CalendarEventCard({
         <div className="flex flex-col flex-1 pl-1 gap-1">
           <div className="font-medium">{event.summary}</div>
           <div className="text-xs text-primary">
-            {isTimedEvent(event)
-              ? `${parsingDate(event.start)} - ${parsingDate(event.end)}`
-              : event.time}
+            {isTimedEvent(event) ? (
+              <>
+                <div className="flex items-center">
+                  <span className="min-w-9 w-9 font-medium">Start: </span>
+                  {parsingDate(event.start)}
+                </div>
+
+                <div className="flex items-center">
+                  <span className="min-w-9 w-9 font-medium">End: </span>
+                  {parsingDate(event.end)}
+                </div>
+              </>
+            ) : (
+              event.time
+            )}
           </div>
         </div>
       </div>
