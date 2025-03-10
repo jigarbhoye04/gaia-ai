@@ -3,6 +3,7 @@
 import { BookIcon1 } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
@@ -111,8 +112,6 @@ export default function GoalPage() {
     string | null
   >(null);
   const { id: goalId } = useParams();
-
-
 
   const nodeTypes = useMemo(
     () => ({
@@ -282,205 +281,216 @@ export default function GoalPage() {
     }
   };
 
+  const rawTitle = goalData?.roadmap?.title || goalData?.title || "New Goal";
+
+  const truncatedTitle = useMemo(() => truncateTitle(rawTitle), [rawTitle]);
+
   return (
-    <ReactFlowProvider>
-      <div className="flex flex-row justify-between h-full relative w-full">
-        <div
-          className={`${
-            openSidebar ? "visible" : "hidden"
-          } fixed right-3 bottom-3 bg-zinc-800 max-w-[350px] p-2 rounded-xl flex flex-col gap-3 z-10 shadow-lg outline outline-2 outline-zinc-950`}
-        >
-          <div className="p-4 space-y-2">
-            <div className="text-xl font-medium ">
-              {currentlySelectedNodeId &&
-                nodes.find((node) => node.id === currentlySelectedNodeId)?.data
-                  .label}
-            </div>
-            <div className="text-md -mt-2 text-foreground-600 pb-4">
-              {currentlySelectedNodeId &&
-                nodes
-                  .find((node) => node.id === currentlySelectedNodeId)
-                  ?.data?.details?.join(", ")}
-            </div>
-            <div className="space-y-4">
-              {currentlySelectedNodeId &&
-                (() => {
-                  const selectedNode = nodes.find(
-                    (node) => node.id === currentlySelectedNodeId
-                  );
-                  const estimatedTime = selectedNode?.data?.estimatedTime;
+    <>
+      <title id="chat_title">{`${truncatedTitle || "New Goal"} | GAIA`}</title>
 
-                  return estimatedTime ? (
-                    <Chip
-                      color="primary"
-                      size="lg"
-                      startContent={
-                        <div className="flex items-center gap-1 text-md">
-                          <Clock width={18} />
-                          Estimated Time:
-                        </div>
-                      }
-                      variant="flat"
-                    >
-                      <span className="text-white text-md pl-1">
-                        {estimatedTime}
-                      </span>
-                    </Chip>
-                  ) : null;
-                })()}
+      <ReactFlowProvider>
+        <div className="flex flex-row justify-between h-full relative w-full">
+          <div
+            className={`${
+              openSidebar ? "visible" : "hidden"
+            } fixed right-3 bottom-3 bg-zinc-800 max-w-[350px] p-2 rounded-xl flex flex-col gap-3 z-10 shadow-lg outline outline-2 outline-zinc-950`}
+          >
+            <div className="p-4 space-y-2">
+              <div className="text-xl font-medium ">
+                {currentlySelectedNodeId &&
+                  nodes.find((node) => node.id === currentlySelectedNodeId)
+                    ?.data.label}
+              </div>
+              <div className="text-md -mt-2 text-foreground-600 pb-4">
+                {currentlySelectedNodeId &&
+                  nodes
+                    .find((node) => node.id === currentlySelectedNodeId)
+                    ?.data?.details?.join(", ")}
+              </div>
+              <div className="space-y-4">
+                {currentlySelectedNodeId &&
+                  (() => {
+                    const selectedNode = nodes.find(
+                      (node) => node.id === currentlySelectedNodeId
+                    );
+                    const estimatedTime = selectedNode?.data?.estimatedTime;
 
+                    return estimatedTime ? (
+                      <Chip
+                        color="primary"
+                        size="lg"
+                        startContent={
+                          <div className="flex items-center gap-1 text-md">
+                            <Clock width={18} />
+                            Estimated Time:
+                          </div>
+                        }
+                        variant="flat"
+                      >
+                        <span className="text-white text-md pl-1">
+                          {estimatedTime}
+                        </span>
+                      </Chip>
+                    ) : null;
+                  })()}
+
+                {currentlySelectedNodeId && (
+                  <Chip
+                    color="success"
+                    size="lg"
+                    startContent={
+                      <Checkbox
+                        isSelected={
+                          nodes.find(
+                            (node) => node.id === currentlySelectedNodeId
+                          )?.data?.isComplete ?? false
+                        }
+                        onValueChange={handleCheckboxClick}
+                        color="success"
+                        // lineThrough
+                        radius="full"
+                      >
+                        Mark as Complete
+                      </Checkbox>
+                    }
+                    variant="flat"
+                  />
+                )}
+              </div>
+            </div>
+            <div>
               {currentlySelectedNodeId && (
-                <Chip
-                  color="success"
-                  size="lg"
-                  startContent={
-                    <Checkbox
-                      isSelected={
-                        nodes.find(
-                          (node) => node.id === currentlySelectedNodeId
-                        )?.data?.isComplete ?? false
-                      }
-                      onValueChange={handleCheckboxClick}
-                      color="success"
-                      // lineThrough
-                      radius="full"
-                    >
-                      Mark as Complete
-                    </Checkbox>
-                  }
-                  variant="flat"
-                />
+                <>
+                  {(() => {
+                    const selectedNode = nodes.find(
+                      (node) => node.id === currentlySelectedNodeId
+                    );
+
+                    return (
+                      selectedNode?.data?.resources &&
+                      selectedNode?.data?.resources?.length > 0 && (
+                        <div className="bg-black bg-opacity-40 p-5 rounded-xl">
+                          <div className="flex text-md font-medium gap-2 items-center pb-2">
+                            <BookIcon1 width={18} />
+                            Resources
+                          </div>
+                          <div className="text-sm">
+                            {selectedNode.data.resources.map(
+                              (resource, index) => (
+                                <a
+                                  key={index}
+                                  className="hover:text-[#00bbff] underline underline-offset-4"
+                                  href={`https://www.google.com/search?q=${resource.split(
+                                    "+"
+                                  )}`}
+                                  target="__blank"
+                                >
+                                  <li>{resource}</li>
+                                </a>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )
+                    );
+                  })()}
+                </>
               )}
             </div>
           </div>
-          <div>
-            {currentlySelectedNodeId && (
-              <>
-                {(() => {
-                  const selectedNode = nodes.find(
-                    (node) => node.id === currentlySelectedNodeId
-                  );
 
-                  return (
-                    selectedNode?.data?.resources &&
-                    selectedNode?.data?.resources?.length > 0 && (
-                      <div className="bg-black bg-opacity-40 p-5 rounded-xl">
-                        <div className="flex text-md font-medium gap-2 items-center pb-2">
-                          <BookIcon1 width={18} />
-                          Resources
-                        </div>
-                        <div className="text-sm">
-                          {selectedNode.data.resources.map(
-                            (resource, index) => (
-                              <a
-                                key={index}
-                                className="hover:text-[#00bbff] underline underline-offset-4"
-                                href={`https://www.google.com/search?q=${resource.split(
-                                  "+"
-                                )}`}
-                                target="__blank"
-                              >
-                                <li>{resource}</li>
-                              </a>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )
-                  );
-                })()}
+          <div
+            className={`flex flex-wrap gap-4 justify-center items-center pb-8 h-screen text-background relative flex-row w-full min-w-full ${
+              loading ? "h-screen" : "h-fit"
+            }`}
+          >
+            {loading ? (
+              <div className="bg-black w-fit pt-9 pb-0 relative h-fit flex items-center justify-center rounded-xl bg-opacity-50 flex-col gap-10 overflow-hidden ">
+                <div className="text-center space-y-2">
+                  <div className="font-medium text-xl text-foreground">
+                    Creating your detailed Roadmap.
+                  </div>
+                  {goalData?.title}
+                  <div className="text-foreground-500 text-medium">
+                    Please Wait. This may take a while.
+                  </div>
+
+                  <div className="text-red-500 flex items-center gap-2">
+                    <TriangleAlert width={17} />
+                    Do not leave this page while the roadmap is being generated.
+                  </div>
+                </div>
+                <div className="px-32">
+                  <MultiStepLoader
+                    duration={4500}
+                    loading={true}
+                    loadingStates={[
+                      { text: "Setting your goal... Let's get started!" },
+                      { text: "Exploring your objectives... Almost there!" },
+                      { text: "Adding some details to your vision..." },
+                      { text: "Creating milestones to guide you..." },
+                      { text: "Building your personalized roadmap..." },
+                      { text: "Placing the first pieces of the puzzle..." },
+                      {
+                        text: "Connecting the dots... Things are coming together!",
+                      },
+                      { text: "Gathering the resources you’ll need..." },
+                      { text: "Estimating time... Getting a clearer picture!" },
+                      { text: "Putting the final touches on your plan..." },
+                    ]}
+                    loop={false}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col justify-center items-center w-full">
+                  <div className="flex flex-row items-center justify-between w-full">
+                    <Link href={"/goals"}>
+                      <Button
+                        className="text-white w-fit gap-1 font-normal"
+                        variant={"ghost"}
+                      >
+                        <ArrowLeft width={17} />
+                        All Goals
+                      </Button>
+                    </Link>
+                    <div className="font-bold text-white text-2xl mt-1">
+                      {goalData?.roadmap?.title || goalData?.title}
+                    </div>
+                    <div></div>
+                  </div>
+                  <div className="text-foreground-500 text-md mt-1 ">
+                    {goalData?.roadmap?.description || goalData?.description}
+                  </div>
+                </div>
+
+                <div className="w-full h-full relative">
+                  <ReactFlow
+                    fitView
+                    className="relative"
+                    connectionLineType={ConnectionLineType.SmoothStep}
+                    edges={edges}
+                    elementsSelectable={true}
+                    fitViewOptions={{ minZoom: 1.2 }}
+                    minZoom={0.2}
+                    nodeTypes={nodeTypes}
+                    nodes={nodes}
+                    nodesConnectable={false}
+                    nodesDraggable={false}
+                    style={{ background: "transparent" }}
+                    onInit={handleInit}
+                  >
+                    {/* <ZoomSlider className="fixed bottom-[25px] !right-[150px]  !left-auto h-fit !top-auto z-30 dark" /> */}
+                  </ReactFlow>
+                </div>
               </>
             )}
           </div>
+          <div className="bg-custom-gradient2 left-0 absolute bottom-0 w-full h-[100px] z-[1] pointer-events-none" />
         </div>
-
-        <div
-          className={`flex flex-wrap gap-4 justify-center items-center pb-8 h-screen text-background relative flex-row w-full min-w-full ${
-            !loading ? "h-fit" : "h-screen"
-          }`}
-        >
-          {loading ? (
-            <div className="bg-black w-fit pt-9 pb-0 relative h-fit flex items-center justify-center rounded-xl bg-opacity-50 flex-col gap-10 overflow-hidden ">
-              <div className="text-center space-y-2">
-                <div className="font-medium text-xl text-foreground">
-                  Creating your detailed Roadmap.
-                </div>
-                {goalData?.title}
-                <div className="text-foreground-500 text-medium">
-                  Please Wait. This may take a while.
-                </div>
-
-                <div className="text-red-500 flex items-center gap-2">
-                  <TriangleAlert width={17} />
-                  Do not leave this page while the roadmap is being generated.
-                </div>
-              </div>
-              <div className="px-32">
-                <MultiStepLoader
-                  duration={4500}
-                  loading={true}
-                  loadingStates={[
-                    { text: "Setting your goal... Let's get started!" },
-                    { text: "Exploring your objectives... Almost there!" },
-                    { text: "Adding some details to your vision..." },
-                    { text: "Creating milestones to guide you..." },
-                    { text: "Building your personalized roadmap..." },
-                    { text: "Placing the first pieces of the puzzle..." },
-                    {
-                      text: "Connecting the dots... Things are coming together!",
-                    },
-                    { text: "Gathering the resources you’ll need..." },
-                    { text: "Estimating time... Getting a clearer picture!" },
-                    { text: "Putting the final touches on your plan..." },
-                  ]}
-                  loop={false}
-                />
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col justify-center items-center w-full">
-                <div className="flex flex-row items-center justify-between w-full">
-                  <Link href={"/goals"}>
-                    <Button className="text-white w-fit gap-1 px-0 font-normal">
-                      <ArrowLeft width={17} />
-                      All Goals
-                    </Button>
-                  </Link>
-                  <div className="font-bold text-white text-2xl mt-1">
-                    {goalData?.roadmap?.title || goalData?.title}
-                  </div>
-                  <div></div>
-                </div>
-                <div className="text-foreground-500 text-md mt-1 ">
-                  {goalData?.roadmap?.description || goalData?.description}
-                </div>
-              </div>
-
-              <div className="w-full h-full relative">
-                <ReactFlow
-                  fitView
-                  className="relative"
-                  connectionLineType={ConnectionLineType.SmoothStep}
-                  edges={edges}
-                  elementsSelectable={true}
-                  fitViewOptions={{ minZoom: 1.2 }}
-                  minZoom={0.2}
-                  nodeTypes={nodeTypes}
-                  nodes={nodes}
-                  nodesConnectable={false}
-                  nodesDraggable={false}
-                  style={{ background: "transparent" }}
-                  onInit={handleInit}
-                >
-                  {/* <ZoomSlider className="fixed bottom-[25px] !right-[150px]  !left-auto h-fit !top-auto z-30 dark" /> */}
-                </ReactFlow>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="bg-custom-gradient2 left-0 absolute bottom-0 w-full h-[100px] z-[1] pointer-events-none" />
-      </div>
-    </ReactFlowProvider>
+      </ReactFlowProvider>
+    </>
   );
 }

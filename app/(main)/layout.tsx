@@ -2,8 +2,8 @@
 
 import {
   BubbleConversationChatIcon,
-  PencilSquareIcon,
   NotificationIcon,
+  PencilSquareIcon,
 } from "@/components/Misc/icons";
 import ChatOptionsDropdown from "@/components/Sidebar/ChatOptionsDropdown";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
@@ -15,8 +15,6 @@ import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import useMediaQuery from "@/hooks/mediaQuery";
-import useAxiosInterceptor from "@/hooks/useAxiosInterceptor";
-import { useLoginModalActions } from "@/hooks/useLoginModal";
 import useFetchUser from "@/hooks/useFetchUser";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -65,7 +63,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               />
 
               <div>
-                {convoIdParam ? (
+                {convoIdParam && pathname.startsWith("/c/") && (
                   <ChatOptionsDropdown
                     btnChildren={
                       <div className="!text-sm max-w-[250px] truncate flex items-center gap-2">
@@ -90,8 +88,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                       )?.starred || false
                     }
                   />
-                ) : (
-                  <></>
                 )}
               </div>
               <div className="flex gap-5">

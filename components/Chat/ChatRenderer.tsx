@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { useSearchParams } from "next/navigation";
+import Head from "next/head";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConvo();
@@ -68,13 +69,11 @@ export default function ChatRenderer() {
 
   return (
     <>
-      {/* {conversations.find()} */}
-      {/* Image Generation Dialog Box */}
       <title id="chat_title">
         {`${
           conversations.find((convo) => convo.conversation_id === convoIdParam)
             ?.description || ""
-        }` || "GAIA"}
+        } | GAIA`}
       </title>
 
       <Dialog open={openImage} onOpenChange={setOpenImage}>

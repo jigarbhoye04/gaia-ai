@@ -1,14 +1,16 @@
+"use client";
+
 import { Spinner } from "@heroui/spinner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import CalendarEventDialog from "./CalendarEventDialog";
-import CalendarSelector from "./CalendarSelector";
+import CalendarEventDialog from "@/components/Calendar/CalendarEventDialog";
+import CalendarSelector from "@/components/Calendar/CalendarSelector";
 import { GoogleCalendar, GoogleCalendarEvent } from "@/types/calendarTypes";
 import { apiauth } from "@/utils/apiaxios";
-import CalendarCard from "./CalendarCard";
+import CalendarCard from "@/components/Calendar/CalendarCard";
 import { toast } from "sonner";
 import { Button } from "@heroui/button";
-import { CalendarAdd01Icon } from "../Misc/icons";
+import { CalendarAdd01Icon } from "@/components/Misc/icons";
 
 // Utility function for debouncing
 function debounce<T extends (...args: any[]) => void>(
