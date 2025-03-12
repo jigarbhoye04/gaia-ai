@@ -6,6 +6,7 @@ import fetchDate from "@/utils/fetchDate";
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
 import { toast } from "sonner";
 import { useIntentParser } from "./useIntentParser";
+import { useEffect, useRef } from "react";
 
 /**
  * Custom hook to handle chat streaming via SSE (Server-Sent Events).
@@ -13,8 +14,13 @@ import { useIntentParser } from "./useIntentParser";
  */
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
-  const { appendBotMessage, updateConvoMessages } = useConversation();
+  const { updateConvoMessages, convoMessages } = useConversation();
   const { finalIntent, parseIntent } = useIntentParser();
+  const latestConvoRef = useRef(convoMessages);
+
+  useEffect(() => {
+    latestConvoRef.current = convoMessages;
+  }, [convoMessages]);
 
   /**
    * Handles streaming chat responses from the bot.
@@ -47,8 +53,6 @@ export const useChatStream = () => {
 
     /**
      * Handles incoming SSE messages and updates the bot's response in real time.
-     *
-     * @param {EventSourceMessage} event - The incoming event message.
      */
     const onMessage = (event: EventSourceMessage) => {
       const dataJson = JSON.parse(event.data);
@@ -57,23 +61,27 @@ export const useChatStream = () => {
 
       botResponseText += dataJson.response || "\n";
       parseIntent(dataJson);
-      // appendBotMessage(
-      //   buildBotResponse(),
-      //   finalIntent,
-      //   botResponseText,
-      //   currentMessages
-      // );
 
-      // const botResponse = buildBotResponse();
+      const currentConvo = latestConvoRef.current;
 
-      updateConvoMessages((messages = []) => {
-        const lastIndex = messages.length - 1;
+      if (
+        currentConvo.length > 0 &&
+        currentConvo[currentConvo.length - 1].type === "bot"
+      ) {
+        const updatedMessages = [...currentConvo];
+        updatedMessages[updatedMessages.length - 1] = buildBotResponse();
+        updateConvoMessages(updatedMessages);
+      } else {
+        updateConvoMessages([...currentConvo, buildBotResponse()]);
+      }
 
-        // If no messages exist, initialize with user message and bot response
-        if (lastIndex < 0) return [...currentMessages, buildBotResponse()];
+      // updateConvoMessages((messages = []) => {
+      //   // If no messages exist, initialize with user message and bot response
+      //   if (messages.length == 0)
+      //     return [...currentMessages, buildBotResponse()];
 
-        return [...messages, buildBotResponse()];
-      });
+      //   return [...messages, buildBotResponse()];
+      // });
     };
 
     /**

@@ -27,10 +27,14 @@ const MainChat = React.memo(function MainChat() {
       chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
+  const fetchAndScroll = async () => {
+    await fetchMessages(convoIdParam, updateConvoMessages, router);
+    setTimeout(() => scrollToBottom, 500);
+  };
+
   useEffect(() => {
-    if (convoIdParam) fetchMessages(convoIdParam, updateConvoMessages, router);
+    if (convoIdParam) fetchAndScroll();
     else router.push("/c");
-    scrollToBottom();
     if (inputRef?.current) inputRef?.current?.focus();
   }, [convoIdParam]);
 

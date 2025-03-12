@@ -129,9 +129,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               </Button>
             </div>
           </div>
-          {/* <Suspense fallback={<SuspenseLoader />}> */}
           {children}
-          {/* </Suspense> */}
         </div>
       </div>
     </TooltipProvider>

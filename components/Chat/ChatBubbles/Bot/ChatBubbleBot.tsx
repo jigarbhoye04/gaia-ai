@@ -5,6 +5,7 @@ import ChatBubble_Actions from "../Actions/ChatBubble_Actions";
 import ChatBubble_Actions_Image from "../Actions/ChatBubble_Actions_Image";
 import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
+import { parseDate } from "@/utils/fetchDate";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   const {
@@ -16,6 +17,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     filename,
     message_id,
     pinned,
+    date,
   } = props;
 
   const [fileScanningText, setFileScanningText] = useState(
@@ -91,9 +93,15 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
         {!loading && (
           <div
             ref={actionsRef}
-            className="transition-all"
+            className="transition-all flex flex-col gap-2"
             style={{ opacity: 0, visibility: "hidden" }}
           >
+            {date && (
+              <span className="text-xs text-white text-opacity-40 flex flex-col select-text p-1">
+                {parseDate(date)}
+              </span>
+            )}
+
             {isImage ? (
               <ChatBubble_Actions_Image
                 imagePrompt={imagePrompt}

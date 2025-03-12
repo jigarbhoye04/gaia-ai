@@ -26,7 +26,6 @@ export default function TextBubble({
   calendar_options,
   intent,
   fileScanningText,
-  date,
 }: TextBubbleProps) {
   return (
     <>
@@ -77,11 +76,9 @@ export default function TextBubble({
               )}
             </Chip>
           )}
-          {!!text && (
-            <Suspense fallback={<SuspenseLoader />}>
-              <MarkdownRenderer content={text.toString()} />
-            </Suspense>
-          )}
+
+          {!!text && <MarkdownRenderer content={text.toString()} />}
+          
           {!!disclaimer && (
             <Chip
               className="text-xs font-medium text-warning-500"
@@ -100,12 +97,6 @@ export default function TextBubble({
 
       {intent === "calendar" && calendar_options && (
         <CalendarEventSection calendar_options={calendar_options} />
-      )}
-
-      {date && (
-        <span className="text-xs text-white text-opacity-40 flex flex-col select-text p-1">
-          {parseDate(date)}
-        </span>
       )}
     </>
   );

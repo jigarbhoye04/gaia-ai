@@ -19,7 +19,7 @@ export default function ChatBubbleUser({
 }: ChatBubbleUserProps) {
   return (
     !!text && (
-      <div className="chat_bubble_container user" id={message_id}>
+      <div className="chat_bubble_container user group" id={message_id}>
         <div className="chat_bubble user">
           {searchWeb && (
             <Chip
@@ -121,7 +121,7 @@ export default function ChatBubbleUser({
         <PdfContainer file={file} chat_bubble={true} />
       )} */}
         </div>
-        <div className="flex justify-end">
+        <div className="flex justify-end group-hover:opacity-100 opacity-0 transition-all">
           {date && (
             <span className="text-xs text-white text-opacity-45 flex flex-col select-text pt-[2px]">
               {parseDate(date)}
