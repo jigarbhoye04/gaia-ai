@@ -1,5 +1,5 @@
 import { LegacyRef, ReactNode } from "react";
-import { PencilSquareIcon } from "@/components/Misc/icons";
+import { ChatBubbleAddIcon, PencilSquareIcon } from "@/components/Misc/icons";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
 import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
@@ -44,7 +44,7 @@ export default function SidebarLayout({
             <div className="flex items-center gap-1">
               <Button
                 aria-label="Create new chat"
-                className="rounded-lg hover:bg-[#00bbff] group"
+                className="rounded-lg hover:bg-[#00bbff] group text-foreground-700"
                 size="icon"
                 variant={"ghost"}
                 onClick={() => {
@@ -52,7 +52,10 @@ export default function SidebarLayout({
                   clearMessages();
                 }}
               >
-                <PencilSquareIcon className="group-hover:text-white transition-all" />
+                <ChatBubbleAddIcon
+                  className="group-hover:text-white transition-all"
+                  color={undefined}
+                />
               </Button>
               <CloseOpenSidebarBtn toggleSidebar={toggleSidebar} />
             </div>

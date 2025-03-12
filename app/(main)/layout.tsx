@@ -46,8 +46,8 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    setSidebarVisible(false);
-  }, [pathname]);
+    if (isMobileScreen) setSidebarVisible(false);
+  }, [pathname, isMobileScreen]);
 
   function toggleSidebar(): void {
     if (sidebarRef.current && contentContainerRef.current)
@@ -58,7 +58,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     if (sidebarRef.current && isMobileScreen && isSidebarVisible)
       setSidebarVisible(false);
   }
-  
+
   const bind = useDrag(
     ({ movement: [mx, my], last, tap }) => {
       // If this is just a tap, do nothing—allow click events to proceed.

@@ -271,8 +271,8 @@ main {
   display: flex;
   justify-content: flex-start;
   flex-direction: column;
-  /* padding: 2rem; */
-  padding-left: 0.5rem;
+  padding: 2rem 0;
+  padding-left: -0.5rem;
   /* gap: 1em; */
   height: fit-content;
   min-height: 70vh;
@@ -558,7 +558,7 @@ main {
   }
   .conversation_history {
     width: 100vw;
-    padding: 2em 1em;
+    /* padding: 2em 1em; */
   }
   .chatbubblebot_parent {
     margin-left: -0.5em;

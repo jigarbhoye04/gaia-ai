@@ -61,7 +61,12 @@ export default function SidebarTopButtons() {
 
       <div className="bg-[#141414] rounded-2xl p-2 gap-1 grid grid-cols-3 items-start grid-rows-2">
         {buttonData.map(({ route, icon, label }, index) => (
-          <Tooltip key={index} content={label} showArrow={true}>
+          <Tooltip
+            key={index}
+            content={label}
+            showArrow={true}
+            placement="bottom"
+          >
             <Button
               className="w-full"
               isIconOnly

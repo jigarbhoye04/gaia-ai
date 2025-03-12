@@ -1,11 +1,11 @@
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
-import { IntentType, MessageType } from "@/types/convoTypes";
+import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
-import { toast } from "sonner";
 import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { parseIntent } from "./useIntentParser";
 
 /**
@@ -73,9 +73,7 @@ export const useChatStream = () => {
         const updatedMessages = [...currentConvo];
         updatedMessages[updatedMessages.length - 1] = botResponse;
         updateConvoMessages(updatedMessages);
-      } else {
-        updateConvoMessages([...currentConvo, botResponse]);
-      }
+      } else updateConvoMessages([...currentConvo, botResponse]);
     };
 
     /**
@@ -84,12 +82,8 @@ export const useChatStream = () => {
      */
     const onClose = async () => {
       const finalizedBotResponse = buildBotResponse({ loading: false });
-
-      // Clone the current messages array and replace the last message with the finalized bot response.
-      // const updatedMessages = [...currentMessages];
-      currentMessages[currentMessages.length - 1] = finalizedBotResponse;
-
-      await ApiService.updateConversation(conversationId, currentMessages);
+      const updatedMessages = [...currentMessages, finalizedBotResponse];
+      await ApiService.updateConversation(conversationId, updatedMessages);
       setIsLoading(false);
     };
 

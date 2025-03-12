@@ -108,8 +108,10 @@ export function CalendarEventsList({
 }: UnifiedCalendarEventsListProps) {
   return (
     <AnimatedSection
-      disableAnimation
-      className="p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit"
+      disableAnimation={disableAnimation}
+      className={`p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit ${
+        disableAnimation ? "mt-3" : ""
+      }`}
     >
       <div>
         Would you like to add{" "}

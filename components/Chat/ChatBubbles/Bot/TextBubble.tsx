@@ -1,12 +1,19 @@
 // TextBubble.tsx
 import { Chip } from "@heroui/chip";
-import { AlertTriangleIcon, ArrowUpRight, Check, Loader2 } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  ArrowUpRight,
+  Check,
+  Globe,
+  Loader2,
+} from "lucide-react";
 import { lazy, Suspense } from "react";
 import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 import { parseDate } from "@/utils/fetchDate";
 import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
 import CalendarEventSection from "./CalendarEventSection";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
+import { InternetIcon } from "@/components/Misc/icons";
 
 const MarkdownRenderer = lazy(
   () => import("@/components/Chat/MarkdownRenderer")
@@ -27,9 +34,6 @@ export default function TextBubble({
   intent,
   fileScanningText,
 }: TextBubbleProps) {
-  console.log("intent in text bubble: ", intent);
-  console.log("calendar_options in text bubble: ", calendar_options);
-
   return (
     <>
       <div className="chat_bubble bg-zinc-800">
@@ -37,7 +41,7 @@ export default function TextBubble({
           {searchWeb && (
             <Chip
               color="primary"
-              startContent={<span className="text-primary">🌐</span>}
+              startContent={<InternetIcon color="#00bbff" height={20} />}
               variant="flat"
             >
               <div className="font-medium flex items-center gap-1 text-primary">
