@@ -27,6 +27,9 @@ export default function TextBubble({
   intent,
   fileScanningText,
 }: TextBubbleProps) {
+  console.log("intent in text bubble: ", intent);
+  console.log("calendar_options in text bubble: ", calendar_options);
+
   return (
     <>
       <div className="chat_bubble bg-zinc-800">
@@ -78,7 +81,7 @@ export default function TextBubble({
           )}
 
           {!!text && <MarkdownRenderer content={text.toString()} />}
-          
+
           {!!disclaimer && (
             <Chip
               className="text-xs font-medium text-warning-500"

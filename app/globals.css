@@ -271,9 +271,9 @@ main {
   display: flex;
   justify-content: flex-start;
   flex-direction: column;
-  padding: 2rem;
+  /* padding: 2rem; */
   padding-left: 0.5rem;
-  gap: 1em;
+  /* gap: 1em; */
   height: fit-content;
   min-height: 70vh;
 }

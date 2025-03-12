@@ -19,5 +19,5 @@ export default function CalendarEventSection({
     );
   }
 
-  return <CalendarEventsList events={eventsArray} />;
+  return <CalendarEventsList events={eventsArray} disableAnimation={true} />;
 }

@@ -5,8 +5,8 @@ import { IntentType, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
 import { toast } from "sonner";
-import { useIntentParser } from "./useIntentParser";
 import { useEffect, useRef } from "react";
+import { parseIntent } from "./useIntentParser";
 
 /**
  * Custom hook to handle chat streaming via SSE (Server-Sent Events).
@@ -15,7 +15,6 @@ import { useEffect, useRef } from "react";
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
-  const { finalIntent, parseIntent } = useIntentParser();
   const latestConvoRef = useRef(convoMessages);
 
   useEffect(() => {
@@ -46,8 +45,6 @@ export const useChatStream = () => {
       searchWeb: enableSearch,
       pageFetchURL,
       date: fetchDate(),
-      intent: finalIntent.intent,
-      calendar_options: finalIntent.calendar_options,
       ...overrides,
     });
 
@@ -60,19 +57,24 @@ export const useChatStream = () => {
       if (dataJson.error) return toast.error(dataJson.error);
 
       botResponseText += dataJson.response || "\n";
-      parseIntent(dataJson);
-
       const currentConvo = latestConvoRef.current;
+
+      const parsedIntent = parseIntent(dataJson);
+
+      const botResponse = buildBotResponse({
+        intent: parsedIntent.intent,
+        calendar_options: parsedIntent.calendar_options,
+      });
 
       if (
         currentConvo.length > 0 &&
         currentConvo[currentConvo.length - 1].type === "bot"
       ) {
         const updatedMessages = [...currentConvo];
-        updatedMessages[updatedMessages.length - 1] = buildBotResponse();
+        updatedMessages[updatedMessages.length - 1] = botResponse;
         updateConvoMessages(updatedMessages);
       } else {
-        updateConvoMessages([...currentConvo, buildBotResponse()]);
+        updateConvoMessages([...currentConvo, botResponse]);
       }
     };
 

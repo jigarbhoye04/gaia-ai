@@ -11,6 +11,7 @@ interface AnimatedSectionProps
   staggerDelay?: number;
   className?: string;
   childClassName?: string; // New prop for span classes
+  disableAnimation?: boolean;
 }
 
 const STATIC_ITEM_VARIANTS = {
@@ -18,11 +19,16 @@ const STATIC_ITEM_VARIANTS = {
   visible: { opacity: 1, y: 0 },
 };
 
+const NO_ANIMATION_VARIANTS = {
+  visible: { opacity: 1, y: 0 },
+};
+
 const AnimatedSectionComponent = ({
   children,
   staggerDelay = 0.2,
   className = "",
-  childClassName = "", // Default to empty if not provided
+  childClassName = "",
+  disableAnimation = false,
   ...restProps
 }: AnimatedSectionProps) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -33,10 +39,12 @@ const AnimatedSectionComponent = ({
       hidden: { opacity: 0 },
       visible: {
         opacity: 1,
-        transition: {
-          when: "beforeChildren",
-          staggerChildren: staggerDelay,
-        },
+        transition: disableAnimation
+          ? {}
+          : {
+              when: "beforeChildren",
+              staggerChildren: staggerDelay,
+            },
       },
     }),
     [staggerDelay]
@@ -45,8 +53,8 @@ const AnimatedSectionComponent = ({
   return (
     <motion.div
       ref={ref}
-      initial="hidden"
-      animate={isVisible ? "visible" : "hidden"}
+      initial={disableAnimation ? "visible" : "hidden"}
+      animate={disableAnimation || isVisible ? "visible" : "hidden"}
       variants={containerVariants}
       className={cn(className)}
       style={{ willChange: "transform, opacity" }}
@@ -58,7 +66,9 @@ const AnimatedSectionComponent = ({
         return (
           <motion.span
             key={key}
-            variants={STATIC_ITEM_VARIANTS}
+            variants={
+              disableAnimation ? NO_ANIMATION_VARIANTS : STATIC_ITEM_VARIANTS
+            }
             style={{ willChange: "transform, opacity" }}
             className={cn(childClassName)}
           >

@@ -104,9 +104,13 @@ export function CalendarEventsList({
   events,
   isDummy = false,
   onDummyAddEvent,
+  disableAnimation = false,
 }: UnifiedCalendarEventsListProps) {
   return (
-    <AnimatedSection className="p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit">
+    <AnimatedSection
+      disableAnimation
+      className="p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit"
+    >
       <div>
         Would you like to add{" "}
         {events.length === 1 ? "this event" : "these events"} to your Calendar?

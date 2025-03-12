@@ -58,14 +58,13 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     if (sidebarRef.current && isMobileScreen && isSidebarVisible)
       setSidebarVisible(false);
   }
+  
   const bind = useDrag(
     ({ movement: [mx, my], last, tap }) => {
       // If this is just a tap, do nothing—allow click events to proceed.
       if (tap) return;
 
       if (last && Math.abs(mx) > Math.abs(my)) {
-        console.log("test", mx);
-
         if (mx > 0) setSidebarVisible(true); // Swipe right to open
         else if (mx < 0) setSidebarVisible(false); // Swipe left to close
       }
@@ -76,10 +75,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       axis: "x", // Only track horizontal swipes.
     }
   );
-
-  useEffect(() => {
-    console.log(isSidebarVisible);
-  }, [isSidebarVisible]);
 
   return (
     <TooltipProvider>

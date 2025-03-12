@@ -118,4 +118,5 @@ export interface UnifiedCalendarEventsListProps {
   events: CalendarEvent[];
   isDummy?: boolean;
   onDummyAddEvent?: (index: number) => void;
+  disableAnimation?: boolean;
 }

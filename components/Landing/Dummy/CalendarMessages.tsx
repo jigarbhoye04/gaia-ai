@@ -93,6 +93,7 @@ Your client calls are at 4 PM and 7 PM, with a gym session in between (5:15 PM -
           events={events}
           isDummy={true}
           onDummyAddEvent={addToCalendar}
+          disableAnimation={false}
         />
       </div>
     </AnimatedSection>

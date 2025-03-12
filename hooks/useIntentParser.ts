@@ -1,20 +1,17 @@
 import { IntentType } from "@/types/convoTypes";
 
-export const useIntentParser = () => {
-  let finalIntent: IntentType = { intent: undefined, calendar_options: null };
+export function parseIntent(dataJson: any): any {
+  if (!dataJson || !dataJson.intent) {
+    return { ...dataJson, intent: undefined, calendar_options: null }; // ✅ Merge with original object
+  }
 
-  const parseIntent = (dataJson: any) => {
-    if (dataJson?.intent) {
-      finalIntent = {
-        intent: dataJson.intent,
-        calendar_options: Array.isArray(dataJson.calendar_options)
-          ? dataJson.calendar_options
-          : dataJson.calendar_options
-          ? [dataJson.calendar_options]
-          : null,
-      };
-    }
+  return {
+    ...dataJson, // ✅ Keep all existing properties
+    intent: dataJson.intent,
+    calendar_options: Array.isArray(dataJson.calendar_options)
+      ? dataJson.calendar_options
+      : dataJson.calendar_options
+      ? [dataJson.calendar_options]
+      : null,
   };
-
-  return { finalIntent, parseIntent };
-};
+}
