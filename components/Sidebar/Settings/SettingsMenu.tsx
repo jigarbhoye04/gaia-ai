@@ -16,7 +16,7 @@ import SettingsModal from "./SettingsModal";
 import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { useUserActions } from "@/hooks/useUser";
-import { ApiService } from "@/utils/chatUtils";
+import { ApiService } from "@/services/apiService";
 import { apiauth } from "@/utils/apiaxios";
 import { toast } from "sonner";
 

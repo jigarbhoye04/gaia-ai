@@ -1,3 +1,8 @@
+import { useConversationList } from "@/contexts/ConversationList";
+import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { ApiService } from "@/services/apiService";
+import { MessageType } from "@/types/convoTypes";
+import api from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import { Textarea } from "@heroui/input";
 import {
@@ -8,20 +13,11 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import ObjectID from "bson-objectid";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
 import { toast } from "sonner";
-
 import fetchDate from "../../utils/fetchDate";
 import { BrushIcon } from "../Misc/icons";
-
-import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { MessageType } from "@/types/convoTypes";
-import api from "@/utils/apiaxios";
-import { ApiService } from "@/utils/chatUtils";
 
 interface GenerateImageProps {
   openImageDialog: boolean;

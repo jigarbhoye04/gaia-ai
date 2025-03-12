@@ -1,13 +1,11 @@
-import React, { useState } from "react";
-import { Button } from "@heroui/button";
-import { ArrowDown } from "lucide-react";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useConversation } from "@/hooks/useConversation";
-import { toast } from "sonner";
-import SearchbarToolbar from "./SearchbarToolbar";
-import SearchbarInput from "./SearchbarInput";
-import FetchPageModal from "./FetchPageModal";
 import { useParams } from "next/navigation";
+import React, { useState } from "react";
+import { toast } from "sonner";
+import FetchPageModal from "./FetchPageModal";
+import SearchbarInput from "./SearchbarInput";
+import SearchbarToolbar from "./SearchbarToolbar";
 
 interface MainSearchbarProps {
   scrollToBottom: () => void;
@@ -28,7 +26,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   const [enableSearch, setEnableSearch] = useState<boolean>(false);
   const [pageFetchURL, setPageFetchURL] = useState<string>("");
   const [fetchPageModal, setFetchPageModal] = useState<boolean>(false);
-  const { loading, updateConversation } = useConversation(convoIdParam ?? null);
+  const { updateConversation } = useConversation(convoIdParam ?? null);
   const { isLoading, setIsLoading } = useLoading();
 
   const isValidURL = (url: string) => {
@@ -107,7 +105,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
             currentHeight={currentHeight}
             onHeightChange={setCurrentHeight}
             inputRef={inputRef}
-            loading={loading && isLoading}
+            loading={isLoading}
           />
           <SearchbarToolbar
             enableSearch={enableSearch}
@@ -116,7 +114,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
             fetchPageModal={fetchPageModal}
             openPageFetchModal={openPageFetchModal}
             searchbarText={searchbarText}
-            loading={loading && isLoading}
+            loading={isLoading}
             handleFormSubmit={handleFormSubmit}
             onSearchbarTextChange={setSearchbarText}
           />

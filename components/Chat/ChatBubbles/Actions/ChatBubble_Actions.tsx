@@ -7,7 +7,7 @@ import { PinIcon, Task01Icon } from "@/components/Misc/icons";
 
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { apiauth } from "@/utils/apiaxios";
-import { ApiService } from "@/utils/chatUtils";
+import { ApiService } from "@/services/apiService";
 
 interface ChatBubbleActionsProps {
   loading: boolean;

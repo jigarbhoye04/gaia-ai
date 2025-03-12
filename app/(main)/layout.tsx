@@ -17,8 +17,13 @@ import { LoadingProvider } from "@/contexts/LoadingContext";
 import useMediaQuery from "@/hooks/mediaQuery";
 import useFetchUser from "@/hooks/useFetchUser";
 import SidebarLayout from "@/layouts/SidebarLayout";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import { ReactNode, useRef, useState } from "react";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { ReactNode, useEffect, useRef, useState } from "react";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -29,8 +34,17 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const { conversations } = useConversationList();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
+  const searchParams = useSearchParams();
   const { resetMessages } = useConvo();
-  useFetchUser();
+  const { fetchUserInfo } = useFetchUser();
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, [searchParams]);
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
 
   function toggleSidebar(): void {
     if (sidebarRef.current && contentContainerRef.current)

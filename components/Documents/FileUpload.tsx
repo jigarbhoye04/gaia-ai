@@ -21,7 +21,7 @@ import { useConversationList } from "@/contexts/ConversationList";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
-import { ApiService } from "@/utils/chatUtils";
+import { ApiService } from "@/services/apiService";
 import fetchDate from "@/utils/fetchDate";
 
 interface FileUploadProps {

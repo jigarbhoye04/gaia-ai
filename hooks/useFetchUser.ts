@@ -9,7 +9,6 @@ export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];
 const useFetchUser = () => {
   const { updateUser, clearUser } = useUserActions();
   const searchParams = useSearchParams();
-
   const router = useRouter();
 
   const fetchUserInfo = async () => {
@@ -22,9 +21,9 @@ const useFetchUser = () => {
       });
 
       updateUser({
-        name: response?.data?.name,
-        email: response?.data?.email,
-        profilePicture: response?.data?.picture,
+        name: response?.data?.user.name,
+        email: response?.data?.user.email,
+        profilePicture: response?.data?.user.picture,
       });
 
       if (accessToken && refreshToken) router.push("/c");
@@ -33,9 +32,7 @@ const useFetchUser = () => {
     }
   };
 
-  useEffect(() => {
-    fetchUserInfo();
-  }, [searchParams]);
+  return { fetchUserInfo };
 };
 
 export default useFetchUser;

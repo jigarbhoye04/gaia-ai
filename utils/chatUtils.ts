@@ -1,15 +1,13 @@
-// utils/chatUtils.ts
-
-import {
-  EventSourceMessage,
-  fetchEventSource,
-} from "@microsoft/fetch-event-source";
-
-import { apiauth } from "@/utils/apiaxios";
+import { useConversationList } from "@/contexts/ConversationList";
+import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
+import { apiauth } from "@/utils/apiaxios";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { SetStateAction } from "react";
+import { v1 as uuidv1 } from "uuid";
 
 export const fetchConversationDescription = async (
-  searchbarText: string,
+  searchbarText: string
 ): Promise<string> => {
   const response = await apiauth.post(
     "/chat",
@@ -20,118 +18,52 @@ export const fetchConversationDescription = async (
       headers: {
         "Content-Type": "application/json",
       },
-    },
+    }
   );
 
   return response?.data?.response?.toString().replace('"', "") || "New Chat";
 };
 
-export const ApiService = {
-  fetchMessages: async (conversationId: string) => {
-    const response = await apiauth.get(`/conversations/${conversationId}`);
-
-    return response?.data?.messages;
+export const fetchMessages = async (
+  conversationId: string,
+  setConvoMessages: {
+    (value: SetStateAction<MessageType[]>): void;
+    (arg0: any): void;
   },
+  router: AppRouterInstance | string[]
+) => {
+  try {
+    const messages = await ApiService.fetchMessages(conversationId);
 
-  createConversation: async (convoID: string) => {
-    await apiauth.post("/conversations", {
-      conversation_id: convoID,
-    });
-  },
+    if (messages.length > 1) setConvoMessages(messages);
+  } catch (e) {
+    console.error("Failed to fetch messages:", e);
+    router.push("/c");
+  }
+};
 
-  deleteAllConversations: async () => {
-    await apiauth.delete(`/conversations`);
-  },
+export const createNewConversation = async (
+  currentMessages: MessageType[],
+  router: string[] | AppRouterInstance,
+  fetchConversations: () => void
+) => {
+  try {
+    const conversationId = uuidv1();
 
-  updateConversation: async (
-    conversationId: string,
-    messages: MessageType[],
-  ) => {
-    if (messages.length > 1) {
-      await apiauth.put(`/conversations/${conversationId}/messages`, {
-        conversation_id: conversationId,
-        messages,
-      });
-    }
-  },
+    await ApiService.createConversation(conversationId);
 
-  fetchChatStream: async (
-    inputText: string,
-    enableSearch: boolean,
-    pageFetchURL: string,
-    convoMessages: MessageType[],
-    conversationId: string,
-    onMessage: (event: EventSourceMessage) => void,
-    onClose: () => void,
-    onError: (err: any) => void,
-  ) => {
-    convoMessages.push({
-      type: "user",
-      response: inputText,
-      message_id: "",
-    });
-
-    const controller = new AbortController();
-
-    await fetchEventSource(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "text/event-stream",
-        },
-        credentials: "include",
-        signal: controller.signal,
-        body: JSON.stringify({
-          conversation_id: conversationId,
-          message: inputText,
-          search_web: enableSearch || false,
-          pageFetchURL,
-          messages: convoMessages
-            .slice(-10)
-            .filter(({ response }) => response.trim().length > 0)
-            // .filter(({ type }) => type == "user")
-            .map(({ type, response }, _index, _array) => ({
-              role: type === "bot" ? "assistant" : type,
-              // role: type,
-              // content: `mostRecent: ${index === array.length - 1}. ${response}`,
-              content: response,
-            })),
-        }),
-        onmessage(event) {
-          console.log(event.data);
-
-          if (event.data === "[DONE]") {
-            onClose();
-            controller.abort();
-
-            return;
-          }
-
-          onMessage(event);
-        },
-        onclose: onClose,
-        onerror: onError,
-      }
-    );
-  },
-
-  updateConversationDescription: async (
-    conversationId: string,
-    userFirstMessage: string,
-    fetchConversations: () => void,
-    llm: boolean = true,
-  ) => {
-    const response = await apiauth.put(
-      `/conversations/${conversationId}/description${llm ? "/llm" : ""}`,
-      {
-        userFirstMessage,
-      },
+    ApiService.updateConversationDescription(
+      conversationId,
+      JSON.stringify(currentMessages[0]?.response || currentMessages[0]),
+      fetchConversations
     );
 
-    fetchConversations();
+    router.push(`/c/${conversationId}`);
 
-    return response.data;
-  },
+    return conversationId;
+  } catch (err) {
+    console.error("Failed to create conversation:", err);
+
+    return null;
+  }
 };
