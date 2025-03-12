@@ -1,6 +1,5 @@
-// import { useChatStream } from "@/services/fetchChatStream";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useLoading } from "@/contexts/LoadingContext";
+import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
 import { CalendarOptions, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";

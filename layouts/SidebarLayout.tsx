@@ -5,7 +5,7 @@ import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
 import { useConvo } from "@/contexts/CurrentConvoMessages";
-import useMediaQuery from "@/hooks/mediaQuery";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { useRouter } from "next/navigation";
 
 export default function SidebarLayout({

@@ -1,25 +1,22 @@
+"use client";
+
 import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useLoading } from "@/contexts/LoadingContext";
-import { useChatStream } from "@/services/fetchChatStream";
+import { addMessage } from "@/redux/slices/convoSlice";
+import { useChatStream } from "@/services/useChatStream";
 import { MessageType } from "@/types/convoTypes";
-import { createNewConversation, fetchMessages } from "@/utils/chatUtils";
+import { createNewConversation } from "@/utils/chatUtils";
 import fetchDate from "@/utils/fetchDate";
 import ObjectID from "bson-objectid";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useLoading } from "./useLoading";
 
 export const useConversation = (convoIdParam: string | null) => {
   const router = useRouter();
-  const { setConvoMessages } = useConvo();
-  const fetchChatStream = useChatStream();
+  const dispatch = useDispatch();
   const { setIsLoading } = useLoading();
+  const fetchChatStream = useChatStream();
   const { fetchConversations } = useConversationList();
-
-  useEffect(() => {
-    if (convoIdParam) fetchMessages(convoIdParam, setConvoMessages, router);
-    else router.push("/c");
-  }, [convoIdParam]);
 
   const updateConversation = async (
     inputText: string,
@@ -47,10 +44,9 @@ export const useConversation = (convoIdParam: string | null) => {
       },
     ];
 
-    setConvoMessages((oldMessages) => {
-      return oldMessages && oldMessages?.length > 0 // If there are no messages in the convo history set only the current message
-        ? [...oldMessages, ...currentMessages]
-        : [...currentMessages];
+    // Add messages to Redux store
+    currentMessages.forEach((message) => {
+      dispatch(addMessage(message));
     });
 
     // If no existing conversation, create a new one.

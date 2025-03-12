@@ -1,6 +1,6 @@
 "use client";
 
-import { useLoading } from "@/contexts/LoadingContext";
+import { useLoading } from "@/hooks/useLoading";
 import mermaid from "mermaid";
 import React, { useEffect, useState } from "react";
 import CopyButton from "./CopyButton";

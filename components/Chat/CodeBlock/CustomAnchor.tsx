@@ -1,4 +1,4 @@
-import { useLoading } from "@/contexts/LoadingContext";
+import { useLoading } from "@/hooks/useLoading";
 import api from "@/utils/apiaxios";
 import { Tooltip } from "@heroui/tooltip";
 import { GlobeIcon } from "lucide-react";

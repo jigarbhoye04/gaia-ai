@@ -1,4 +1,4 @@
-import { useLoading } from "@/contexts/LoadingContext";
+import { useLoading } from "@/hooks/useLoading";
 import { useConversation } from "@/hooks/useConversation";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";

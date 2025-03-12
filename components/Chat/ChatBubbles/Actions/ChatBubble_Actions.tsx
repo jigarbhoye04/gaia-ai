@@ -48,10 +48,6 @@ export default function ChatBubble_Actions({
     try {
       if (!convoIdParam) return;
 
-      // Fetch updated messages first
-      // const messages = await ApiService.fetchMessages(convoIdParam);
-      // setConvoMessages(messages);
-
       if (!message_id) return;
 
       // Pin/unpin the message

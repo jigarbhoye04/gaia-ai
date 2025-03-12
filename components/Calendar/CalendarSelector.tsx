@@ -1,5 +1,8 @@
-import useMediaQuery from "@/hooks/mediaQuery";
-import { CalendarChipProps, CalendarSelectorProps } from "@/types/calendarTypes";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import {
+  CalendarChipProps,
+  CalendarSelectorProps,
+} from "@/types/calendarTypes";
 import { isTooDark } from "@/utils/calendarUtils";
 import { Chip, useCheckbox, VisuallyHidden } from "@heroui/react";
 import { Eye, EyeOffIcon, Filter, X, XIcon } from "lucide-react";

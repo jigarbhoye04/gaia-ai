@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { siteConfig } from "@/config/siteConfig";
-import useMediaQuery from "@/hooks/mediaQuery";
+import useMediaQuery from "@/hooks/useMediaQuery";
 import { Button } from "@heroui/button";
 import Link from "next/link";
 import { useState } from "react";
