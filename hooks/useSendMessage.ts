@@ -2,7 +2,7 @@
 
 import { useConversationList } from "@/contexts/ConversationList";
 import { addMessage } from "@/redux/slices/conversationSlice";
-import { useChatStream } from "@/services/useChatStream";
+import { useChatStream } from "@/hooks/useChatStream";
 import { MessageType } from "@/types/convoTypes";
 import { createNewConversation } from "@/utils/chatUtils";
 import fetchDate from "@/utils/fetchDate";
@@ -24,51 +24,36 @@ export const useSendMessage = (convoIdParam: string | null) => {
     enableSearch: boolean = false,
     pageFetchURL: string
   ) => {
-    const bot_message_id = String(ObjectID());
+    const botMessageId = String(ObjectID());
 
-    const currentMessages: MessageType[] = [
-      {
-        type: "user",
-        response: inputText,
-        searchWeb: enableSearch,
-        pageFetchURL,
-        date: fetchDate(),
-        message_id: String(ObjectID()),
-      },
-      {
-        searchWeb: enableSearch,
-        pageFetchURL,
-        type: "bot",
-        response: "",
-        message_id: bot_message_id,
-        date: fetchDate(),
-      },
-    ];
+    const currentMessage: MessageType = {
+      type: "user",
+      response: inputText,
+      searchWeb: enableSearch,
+      pageFetchURL,
+      date: fetchDate(),
+      message_id: String(ObjectID()),
+    };
 
-    // Add messages to Redux store
-    currentMessages.forEach((message) => {
-      dispatch(addMessage(message));
-    });
+    dispatch(addMessage(currentMessage));
 
-    // If no existing conversation, create a new one.
     const conversationId =
       convoIdParam ||
       (await createNewConversation(
-        currentMessages,
+        [currentMessage],
         router,
         fetchConversations
       ));
 
     if (!conversationId) return setIsLoading(false);
 
-    // Start fetching bot response stream.
     await fetchChatStream(
       inputText,
-      currentMessages,
+      [currentMessage],
       conversationId,
       enableSearch,
       pageFetchURL,
-      bot_message_id
+      botMessageId
     );
   };
 };

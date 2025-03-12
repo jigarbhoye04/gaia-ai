@@ -37,3 +37,8 @@ export type ConversationType = {
   description: string; // A description or title of the conversation
   messages: MessageType[]; // An array of MessageType, representing the messages exchanged in the conversation
 };
+
+export interface IntentType {
+  intent: string | undefined;
+  calendar_options?: CalendarOptions[] | null;
+}

@@ -197,7 +197,7 @@ export default function FileUpload({
     try {
       console.log(file);
 
-      const bot_message_id = String(ObjectID());
+      const botMessageId = String(ObjectID());
       const user_message_id = String(ObjectID());
 
       const currentMessages: MessageType[] = [
@@ -210,7 +210,7 @@ export default function FileUpload({
         },
         {
           type: "bot",
-          message_id: bot_message_id,
+          message_id: botMessageId,
           response: "",
           date: fetchDate(),
           loading: true,
@@ -235,7 +235,7 @@ export default function FileUpload({
 
       const finalBotMessage: MessageType = {
         type: "bot",
-        message_id: bot_message_id,
+        message_id: botMessageId,
         response: botResponse,
         date: fetchDate(),
         loading: false,

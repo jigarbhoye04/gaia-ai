@@ -5,47 +5,62 @@ import {
   EventSourceMessage,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
+import { toast } from "sonner";
 
 export const ApiService = {
   fetchMessages: async (conversationId: string) => {
-    const response = await apiauth.get(`/conversations/${conversationId}`);
-
-    return response?.data?.messages;
+    try {
+      const response = await apiauth.get(`/conversations/${conversationId}`);
+      return response?.data?.messages;
+    } catch (error) {
+      console.error(
+        `Error fetching messages for conversation ${conversationId}:`,
+        error
+      );
+      toast.error("Error fetching messages. Please try again later.");
+      throw error;
+    }
   },
 
   createConversation: async (convoID: string) => {
-    await apiauth.post("/conversations", {
-      conversation_id: convoID,
-    });
+    try {
+      await apiauth.post("/conversations", {
+        conversation_id: convoID,
+      });
+    } catch (error) {
+      console.error(`Error creating conversation with id ${convoID}:`, error);
+      toast.error("Error creating conversation. Please try again later.");
+      throw error;
+    }
   },
 
   deleteAllConversations: async () => {
-    await apiauth.delete(`/conversations`);
+    try {
+      await apiauth.delete(`/conversations`);
+    } catch (error) {
+      console.error("Error deleting all conversations:", error);
+      toast.error("Error deleting conversations. Please try again later.");
+      throw error;
+    }
   },
 
   updateConversation: async (
     conversationId: string,
     messages: MessageType[]
   ) => {
-    if (messages.length > 1) {
-      await apiauth.put(`/conversations/${conversationId}/messages`, {
-        conversation_id: conversationId,
-        messages,
-      });
+    try {
+      if (messages.length > 1) {
+        await apiauth.put(`/conversations/${conversationId}/messages`, {
+          conversation_id: conversationId,
+          messages,
+        });
+      }
+    } catch (error) {
+      console.error(`Error updating conversation ${conversationId}:`, error);
+      toast.error("Error updating conversation. Please try again later.");
+      throw error;
     }
   },
-
-  // await ApiService.fetchChatStream(
-  //     inputText,
-  //     enableSearch,
-  //     pageFetchURL,
-  //     convoMessages,
-  //     conversationId,
-  //     appendMessage,
-  //     onMessage,
-  //     onClose,
-  //     onError
-  //   );
 
   fetchChatStream: async (
     inputText: string,
@@ -53,20 +68,11 @@ export const ApiService = {
     pageFetchURL: string,
     convoMessages: MessageType[],
     conversationId: string,
-    // appendMessage: (msg: MessageType) => void,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: any) => void
   ) => {
-    // appendMessage({
-    //   type: "user",
-    //   response: inputText,
-    //   message_id: "",
-    // });
-
     const controller = new AbortController();
-
-    console.log(convoMessages, "convoMessages test 2");
 
     await fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,

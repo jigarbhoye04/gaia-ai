@@ -13,6 +13,32 @@ export const useConversation = () => {
     (state: RootState) => state.conversation.messages
   );
 
+  const appendBotMessage = (
+    botResponse: MessageType,
+    finalIntent: any,
+    botResponseText: string,
+    currentMessages: MessageType[]
+  ): void => {
+    updateConvoMessages((oldMessages = []) => {
+      // If there are no messages yet, start the conversation with the user message followed by the bot response
+      if (oldMessages.length === 0) return [currentMessages[0], botResponse];
+
+      // If the last message was a user message, append the bot response to it
+      const lastMessage = oldMessages[oldMessages.length - 1];
+      if (lastMessage.type === "user") return [...oldMessages, botResponse];
+
+      return [
+        ...oldMessages.slice(0, -1),
+        {
+          ...lastMessage,
+          response: botResponseText,
+          intent: finalIntent.intent,
+          calendar_options: finalIntent.calendar_options,
+        },
+      ] as MessageType[];
+    });
+  };
+
   const updateConvoMessages = (
     updater: MessageType[] | ((oldMessages: MessageType[]) => MessageType[])
   ): void => {
@@ -36,5 +62,6 @@ export const useConversation = () => {
     updateConvoMessages,
     appendMessage,
     clearMessages,
+    appendBotMessage,
   };
 };

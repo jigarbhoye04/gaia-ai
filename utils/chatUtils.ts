@@ -1,4 +1,3 @@
-import { useConversationList } from "@/contexts/ConversationList";
 import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";

@@ -1,4 +1,3 @@
-// ChatRenderer.tsx
 import StarterText from "@/components/Chat/StarterText";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useConversationList } from "@/contexts/ConversationList";
@@ -10,6 +9,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
+import { useLoading } from "@/hooks/useLoading";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -17,6 +17,7 @@ export default function ChatRenderer() {
   const [openImage, setOpenImage] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
+  const { isLoading } = useLoading();
   const { id: convoIdParam } = useParams<{ id: string }>();
 
   const [imageData, setImageData] = useState({
@@ -27,8 +28,6 @@ export default function ChatRenderer() {
 
   useEffect(() => {
     if (messageId && convoMessages.length > 0) scrollToMessage(messageId);
-
-    console.log(convoMessages);
   }, [messageId, convoMessages]);
 
   const scrollToMessage = (messageId: string) => {
@@ -169,6 +168,14 @@ export default function ChatRenderer() {
             text={message.response}
           />
         )
+      )}
+
+      {isLoading && (
+        <div className="flex font-medium text-sm items-center gap-4">
+          {/* pl-16 */}
+          <div className={`pingspinner relative`} />
+          GAIA is thinking...
+        </div>
       )}
     </>
   );
