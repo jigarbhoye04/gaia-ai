@@ -1,4 +1,4 @@
-import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
 import { CalendarOptions, MessageType } from "@/types/convoTypes";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
-  const { convoMessages, setConvoMessages } = useConvo();
+  const { convoMessages, updateConvoMessages } = useConversation();
 
   return async (
     inputText: string,
@@ -28,8 +28,6 @@ export const useChatStream = () => {
       intent: undefined,
       calendar_options: null,
     };
-
-    //   setLoading(true);
 
     const onMessage = (event: EventSourceMessage) => {
       const dataJson = JSON.parse(event.data);
@@ -65,7 +63,7 @@ export const useChatStream = () => {
         calendar_options: finalIntent.calendar_options, // Always an array or null
       };
 
-      setConvoMessages((oldMessages = []) => {
+      updateConvoMessages((oldMessages = []) => {
         // If there are no messages yet, start the conversation with the user message followed by the bot response
         if (oldMessages.length === 0) return [currentMessages[0], botResponse];
 
@@ -98,29 +96,30 @@ export const useChatStream = () => {
         calendar_options: finalIntent.calendar_options, // remains an array (or null)
       };
 
-      currentMessages[currentMessages.length - 1] = finalizedBotResponse;
+      const updatedMessages = [...currentMessages];
+      updatedMessages[updatedMessages.length - 1] = finalizedBotResponse;
 
       try {
-        await ApiService.updateConversation(conversationId, currentMessages);
+        await ApiService.updateConversation(conversationId, updatedMessages);
       } catch (err) {
         console.error("Failed to update conversation:", err);
       } finally {
-        //   setLoading(false);
         setIsLoading(false);
       }
     };
 
     const onError = (err: any) => {
       console.error("Error from server:", err);
-      // setLoading(false);
+      setIsLoading(false);
     };
 
     await ApiService.fetchChatStream(
       inputText,
       enableSearch,
       pageFetchURL,
-      convoMessages,
+      currentMessages,
       conversationId,
+      // appendMessage,
       onMessage,
       onClose,
       onError

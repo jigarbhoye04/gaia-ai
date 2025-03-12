@@ -1,3 +1,7 @@
+import { PencilRenameIcon } from "@/components/Misc/icons";
+import { useConversationList } from "@/contexts/ConversationList";
+import { useConversation } from "@/hooks/useConversation";
+import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import {
   Dropdown,
@@ -15,13 +19,8 @@ import {
 } from "@heroui/modal";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { ChevronDown, Star, Trash } from "lucide-react";
-import { ReactNode, SetStateAction, useState } from "react";
 import { useRouter } from "next/navigation";
-
-import { apiauth } from "@/utils/apiaxios";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useConversationList } from "@/contexts/ConversationList";
-import { PencilRenameIcon } from "@/components/Misc/icons";
+import { ReactNode, SetStateAction, useState } from "react";
 import { toast } from "sonner";
 
 export default function ChatOptionsDropdown({
@@ -42,12 +41,12 @@ export default function ChatOptionsDropdown({
   const { fetchConversations } = useConversationList();
   const [dangerStateHovered, setDangerStateHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const { clearMessages } = useConversation();
+  const [newName, setNewName] = useState(chatName);
+  const router = useRouter();
   const [modalAction, setModalAction] = useState<"edit" | "delete" | null>(
     null
   );
-  const [newName, setNewName] = useState(chatName);
-  const router = useRouter();
-  const { resetMessages } = useConvo();
 
   const handleStarToggle = async () => {
     try {
@@ -87,7 +86,7 @@ export default function ChatOptionsDropdown({
   const handleDelete = async () => {
     try {
       router.push("/c");
-      resetMessages();
+      clearMessages();
       await apiauth.delete(`/conversations/${chatId}`);
       setIsOpen(false);
       toast.success("Successfully deleted conversation");

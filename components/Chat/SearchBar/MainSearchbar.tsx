@@ -1,5 +1,5 @@
 import { useLoading } from "@/hooks/useLoading";
-import { useConversation } from "@/hooks/useConversation";
+import { useSendMessage } from "@/hooks/useSendMessage";
 import { useParams } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   const [enableSearch, setEnableSearch] = useState<boolean>(false);
   const [pageFetchURL, setPageFetchURL] = useState<string>("");
   const [fetchPageModal, setFetchPageModal] = useState<boolean>(false);
-  const { updateConversation } = useConversation(convoIdParam ?? null);
+  const sendMessage = useSendMessage(convoIdParam ?? null);
   const { isLoading, setIsLoading } = useLoading();
 
   const isValidURL = (url: string) => {
@@ -43,7 +43,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
     if (!searchbarText && !isValidURL(pageFetchURL)) return;
 
     setIsLoading(true);
-    updateConversation(searchbarText, enableSearch, pageFetchURL);
+    sendMessage(searchbarText, enableSearch, pageFetchURL);
     setSearchbarText("");
     inputRef.current?.focus();
     scrollToBottom();

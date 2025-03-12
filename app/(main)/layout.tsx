@@ -12,7 +12,7 @@ import Sidebar from "@/components/Sidebar/MainSidebar";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { useConversation } from "@/hooks/useConversation";
 import useFetchUser from "@/hooks/useFetchUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import SidebarLayout from "@/layouts/SidebarLayout";
@@ -34,7 +34,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const searchParams = useSearchParams();
-  const { resetMessages } = useConvo();
+  const { clearMessages } = useConversation();
   const { fetchUserInfo } = useFetchUser();
 
   useEffect(() => {
@@ -110,7 +110,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                 variant={isMobileScreen ? "default" : "ghost"}
                 onClick={() => {
                   router.push("/c");
-                  resetMessages();
+                  clearMessages();
                 }}
               >
                 <PencilSquareIcon className="group-hover:text-white transition-all" />
@@ -122,7 +122,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                 variant={isMobileScreen ? "default" : "ghost"}
                 onClick={() => {
                   router.push("/notifications");
-                  resetMessages();
+                  clearMessages();
                 }}
               >
                 <NotificationIcon className="group-hover:text-white transition-all" />

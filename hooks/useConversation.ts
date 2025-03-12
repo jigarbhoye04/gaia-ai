@@ -1,75 +1,40 @@
-"use client";
-
-import { useConversationList } from "@/contexts/ConversationList";
-import { addMessage } from "@/redux/slices/convoSlice";
-import { useChatStream } from "@/services/useChatStream";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
 import { MessageType } from "@/types/convoTypes";
-import { createNewConversation } from "@/utils/chatUtils";
-import fetchDate from "@/utils/fetchDate";
-import ObjectID from "bson-objectid";
-import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
-import { useLoading } from "./useLoading";
+import {
+  addMessage,
+  resetMessages,
+  setMessages,
+} from "@/redux/slices/conversationSlice";
 
-export const useConversation = (convoIdParam: string | null) => {
-  const router = useRouter();
-  const dispatch = useDispatch();
-  const { setIsLoading } = useLoading();
-  const fetchChatStream = useChatStream();
-  const { fetchConversations } = useConversationList();
+export const useConversation = () => {
+  const dispatch: AppDispatch = useDispatch();
+  const convoMessages = useSelector(
+    (state: RootState) => state.conversation.messages
+  );
 
-  const updateConversation = async (
-    inputText: string,
-    enableSearch: boolean = false,
-    pageFetchURL: string
-  ) => {
-    const bot_message_id = String(ObjectID());
-
-    const currentMessages: MessageType[] = [
-      {
-        type: "user",
-        response: inputText,
-        searchWeb: enableSearch,
-        pageFetchURL,
-        date: fetchDate(),
-        message_id: String(ObjectID()),
-      },
-      {
-        searchWeb: enableSearch,
-        pageFetchURL,
-        type: "bot",
-        response: "",
-        message_id: bot_message_id,
-        date: fetchDate(),
-      },
-    ];
-
-    // Add messages to Redux store
-    currentMessages.forEach((message) => {
-      dispatch(addMessage(message));
-    });
-
-    // If no existing conversation, create a new one.
-    const conversationId =
-      convoIdParam ||
-      (await createNewConversation(
-        currentMessages,
-        router,
-        fetchConversations
-      ));
-
-    if (!conversationId) return setIsLoading(false);
-
-    // Start fetching bot response stream.
-    await fetchChatStream(
-      inputText,
-      currentMessages,
-      conversationId,
-      enableSearch,
-      pageFetchURL,
-      bot_message_id
+  const updateConvoMessages = (
+    updater: MessageType[] | ((oldMessages: MessageType[]) => MessageType[])
+  ): void => {
+    dispatch(
+      setMessages(
+        typeof updater === "function" ? updater(convoMessages) : updater
+      )
     );
   };
 
-  return { updateConversation };
+  const appendMessage = (msg: MessageType): void => {
+    dispatch(addMessage(msg));
+  };
+
+  const clearMessages = (): void => {
+    dispatch(resetMessages());
+  };
+
+  return {
+    convoMessages,
+    updateConvoMessages,
+    appendMessage,
+    clearMessages,
+  };
 };

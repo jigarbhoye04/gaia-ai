@@ -4,9 +4,9 @@ import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
 import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { useRouter } from "next/navigation";
+import { useConversation } from "@/hooks/useConversation";
 
 export default function SidebarLayout({
   sidebarref,
@@ -22,7 +22,7 @@ export default function SidebarLayout({
   children: ReactNode;
 }) {
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
-  const { resetMessages } = useConvo();
+  const { clearMessages } = useConversation();
   const router = useRouter();
 
   return (
@@ -49,7 +49,7 @@ export default function SidebarLayout({
                 variant={isMobileScreen ? "default" : "ghost"}
                 onClick={() => {
                   router.push("/c");
-                  resetMessages();
+                  clearMessages();
                 }}
               >
                 <PencilSquareIcon className="group-hover:text-white transition-all" />

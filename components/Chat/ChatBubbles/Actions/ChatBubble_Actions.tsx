@@ -1,13 +1,11 @@
 import { Button } from "@heroui/button";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
-
 import TextToSpeech from "@/components/Audio/TextToSpeechComponent";
 import { PinIcon, Task01Icon } from "@/components/Misc/icons";
-
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { apiauth } from "@/utils/apiaxios";
 import { ApiService } from "@/services/apiService";
+import { apiauth } from "@/utils/apiaxios";
+import { useConversation } from "@/hooks/useConversation";
 
 interface ChatBubbleActionsProps {
   loading: boolean;
@@ -23,7 +21,7 @@ export default function ChatBubble_Actions({
   pinned = false,
 }: ChatBubbleActionsProps): JSX.Element {
   const { id: convoIdParam } = useParams<{ id: string }>();
-  const { setConvoMessages } = useConvo();
+  const { updateConvoMessages } = useConversation();
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(text);
@@ -61,7 +59,7 @@ export default function ChatBubble_Actions({
       // Fetch messages again to reflect the pin state
       const updatedMessages = await ApiService.fetchMessages(convoIdParam);
 
-      setConvoMessages(updatedMessages);
+      updateConvoMessages(updatedMessages);
     } catch (error) {
       toast.error("Could not pin this message");
       console.error("Could not pin this message", error);

@@ -1,14 +1,18 @@
+import { useConversationList } from "@/contexts/ConversationList";
+import { useConversation } from "@/hooks/useConversation";
+import { ApiService } from "@/services/apiService";
+import { MessageType } from "@/types/convoTypes";
+import { apiauth } from "@/utils/apiaxios";
+import fetchDate from "@/utils/fetchDate";
 import { Button } from "@heroui/button";
 import { Textarea } from "@heroui/input";
 import imageCompression from "browser-image-compression";
-import { FileIcon } from "lucide-react";
-import { useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import ObjectID from "bson-objectid";
+import { FileIcon } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { v1 as uuidv1 } from "uuid";
-
 import {
   Dialog,
   DialogContent,
@@ -16,13 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-
-import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { MessageType } from "@/types/convoTypes";
-import { apiauth } from "@/utils/apiaxios";
-import { ApiService } from "@/services/apiService";
-import fetchDate from "@/utils/fetchDate";
 
 interface FileUploadProps {
   isImage: boolean;
@@ -33,7 +30,7 @@ export default function FileUpload({
   isImage,
   fileInputRef,
 }: FileUploadProps): JSX.Element {
-  const { setConvoMessages } = useConvo();
+  const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const { fetchConversations } = useConversationList();
   const router = useRouter();
@@ -223,7 +220,7 @@ export default function FileUpload({
       ];
       // setConvoMessages((prev) => [...prev, ...currentMessages]);
 
-      setConvoMessages((oldMessages) => {
+      updateConvoMessages((oldMessages) => {
         return oldMessages && oldMessages?.length > 0
           ? [...oldMessages, ...currentMessages]
           : [...currentMessages];
@@ -247,7 +244,7 @@ export default function FileUpload({
           " Please try to be as specific as you can with your question when talking with documents!",
       };
 
-      setConvoMessages((prev) => [...prev.slice(0, -1), finalBotMessage]);
+      updateConvoMessages((prev) => [...prev.slice(0, -1), finalBotMessage]);
 
       currentMessages[currentMessages.length - 1] = finalBotMessage;
 

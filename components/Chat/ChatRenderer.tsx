@@ -1,19 +1,18 @@
 // ChatRenderer.tsx
-import { useParams } from "next/navigation";
+import StarterText from "@/components/Chat/StarterText";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useConversationList } from "@/contexts/ConversationList";
+import { useConversation } from "@/hooks/useConversation";
+import { MessageType } from "@/types/convoTypes";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
-import StarterText from "@/components/Chat/StarterText";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useSearchParams } from "next/navigation";
-import Head from "next/head";
 
 export default function ChatRenderer() {
-  const { convoMessages } = useConvo();
+  const { convoMessages } = useConversation();
   const { conversations } = useConversationList();
   const [openImage, setOpenImage] = useState<boolean>(false);
   const searchParams = useSearchParams();
@@ -28,6 +27,8 @@ export default function ChatRenderer() {
 
   useEffect(() => {
     if (messageId && convoMessages.length > 0) scrollToMessage(messageId);
+
+    console.log(convoMessages);
   }, [messageId, convoMessages]);
 
   const scrollToMessage = (messageId: string) => {
@@ -119,7 +120,7 @@ export default function ChatRenderer() {
         </DialogContent>
       </Dialog>
 
-      {convoMessages?.map((message, index) =>
+      {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
           <div key={index} className="relative flex items-end gap-2">
             <div

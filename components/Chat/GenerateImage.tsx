@@ -1,5 +1,4 @@
 import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
 import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import api from "@/utils/apiaxios";
@@ -18,6 +17,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import fetchDate from "../../utils/fetchDate";
 import { BrushIcon } from "../Misc/icons";
+import { useConversation } from "@/hooks/useConversation";
 
 interface GenerateImageProps {
   openImageDialog: boolean;
@@ -28,7 +28,7 @@ export default function GenerateImage({
   openImageDialog,
   setOpenImageDialog,
 }: GenerateImageProps) {
-  const { setConvoMessages } = useConvo();
+  const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const [imagePrompt, setImagePrompt] = useState<string>("");
   const [isValid, setIsValid] = useState<boolean>(true);
@@ -65,7 +65,7 @@ export default function GenerateImage({
     replaceLastMessage: boolean = false
   ) => {
     try {
-      setConvoMessages((prev) => {
+      updateConvoMessages((prev) => {
         const baseMessages = replaceLastMessage ? prev.slice(0, -1) : prev;
         // Send only final messages to the DB
         ApiService.updateConversation(conversationId, newMessages);
@@ -131,9 +131,13 @@ export default function GenerateImage({
       // Update UI state with user message and temporary loading state.
       if (isNewConversation) {
         // For new conversations, start a fresh state.
-        setConvoMessages([userMessage, botLoadingMessage]);
+        updateConvoMessages([userMessage, botLoadingMessage]);
       } else {
-        setConvoMessages((prev) => [...prev, userMessage, botLoadingMessage]);
+        updateConvoMessages((prev: MessageType) => [
+          ...(prev as MessageType),
+          userMessage,
+          botLoadingMessage,
+        ]);
       }
 
       // If new conversation, create it in the DB now (but do not store the loading message)
@@ -161,7 +165,7 @@ export default function GenerateImage({
       };
 
       // Update UI: remove the loading message and add the final bot message.
-      setConvoMessages((prev) => {
+      updateConvoMessages((prev) => {
         // If the last message is the loading message, replace it.
         if (prev.length && prev[prev.length - 1].loading) {
           return [...prev.slice(0, -1), finalBotMessage];

@@ -1,3 +1,7 @@
+import { useConversationList } from "@/contexts/ConversationList";
+import { useUserActions } from "@/hooks/useUser";
+import { ApiService } from "@/services/apiService";
+import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import {
   Dropdown,
@@ -8,17 +12,10 @@ import {
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-
-import { Logout02Icon, Settings01Icon, ThreeDotsMenu } from "../../Misc/icons";
-
-import SettingsModal from "./SettingsModal";
-
-import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
-import { useUserActions } from "@/hooks/useUser";
-import { ApiService } from "@/services/apiService";
-import { apiauth } from "@/utils/apiaxios";
 import { toast } from "sonner";
+import { Logout02Icon, Settings01Icon, ThreeDotsMenu } from "../../Misc/icons";
+import SettingsModal from "./SettingsModal";
+import { useConversation } from "@/hooks/useConversation";
 
 // Only allow these values in our modal state.
 export type ModalAction = "clear_chats" | "logout";
@@ -34,7 +31,7 @@ export default function SettingsMenu() {
   const { clearUser } = useUserActions();
   const router = useRouter();
   const { fetchConversations } = useConversationList();
-  const { setConvoMessages } = useConvo();
+  const { updateConvoMessages } = useConversation();
   const [openSettings, setOpenSettings] = useState(false);
   const [modalAction, setModalAction] = useState<ModalAction | null>(null);
   // either "clear_chats", "logout", or null (closed)
@@ -62,7 +59,7 @@ export default function SettingsMenu() {
       await ApiService.deleteAllConversations();
       await fetchConversations();
 
-      setConvoMessages([]);
+      updateConvoMessages([]);
       toast.success("All chats cleared successfully!");
     } catch (error) {
       toast.error("Failed to clear chats. Please try again.");

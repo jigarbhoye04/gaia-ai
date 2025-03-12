@@ -7,14 +7,12 @@ import {
 import { Button } from "@heroui/button";
 import { isToday, isYesterday, subDays } from "date-fns";
 import { Loader } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { ChatBubbleAddIcon } from "../Misc/icons";
-
 import { ChatTab } from "./ChatTab";
-
 import { useConversationList } from "@/contexts/ConversationList";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { useConversation } from "@/hooks/useConversation";
 
 const getTimeFrame = (dateString: string): string => {
   const date = new Date(dateString);
@@ -55,6 +53,8 @@ export default function ChatsList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+  const { clearMessages } = useConversation();
 
   useEffect(() => {
     fetchConversations();
@@ -131,12 +131,9 @@ export default function ChatsList() {
     (conversation) => conversation.starred
   );
 
-  const router = useRouter();
-  const { resetMessages } = useConvo();
-
   const createNewChat = (): void => {
     router.push(`/c`);
-    resetMessages();
+    clearMessages();
   };
 
   return (

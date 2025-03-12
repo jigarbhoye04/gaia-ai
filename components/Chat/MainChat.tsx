@@ -2,7 +2,7 @@
 
 import ChatRenderer from "@/components/Chat/ChatRenderer";
 import MainSearchbar from "@/components/Chat/SearchBar/MainSearchbar";
-import { useConvo } from "@/contexts/CurrentConvoMessages";
+import { useConversation } from "@/hooks/useConversation";
 import { fetchMessages } from "@/utils/chatUtils";
 import debounce from "lodash.debounce";
 import { useParams, useRouter } from "next/navigation";
@@ -10,7 +10,7 @@ import React, { useEffect, useRef, useState } from "react";
 
 const MainChat = React.memo(function MainChat() {
   const router = useRouter();
-  const { setConvoMessages } = useConvo();
+  const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>(); // This will be undefined for `/c` and set for `/c/:id`
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -28,7 +28,7 @@ const MainChat = React.memo(function MainChat() {
   };
 
   useEffect(() => {
-    if (convoIdParam) fetchMessages(convoIdParam, setConvoMessages, router);
+    if (convoIdParam) fetchMessages(convoIdParam, updateConvoMessages, router);
     else router.push("/c");
     scrollToBottom();
     if (inputRef?.current) inputRef?.current?.focus();

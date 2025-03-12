@@ -1,18 +1,18 @@
 "use client";
 
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MessageType } from "@/types/convoTypes";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface ConvoState {
+interface ConversationState {
   messages: MessageType[];
 }
 
-const initialState: ConvoState = {
+const initialState: ConversationState = {
   messages: [],
 };
 
-const convoSlice = createSlice({
-  name: "convo",
+const conversationSlice = createSlice({
+  name: "conversation",
   initialState,
   reducers: {
     setMessages: (state, action: PayloadAction<MessageType[]>) => {
@@ -27,5 +27,6 @@ const convoSlice = createSlice({
   },
 });
 
-export const { setMessages, addMessage, resetMessages } = convoSlice.actions;
-export default convoSlice.reducer;
+export const { setMessages, addMessage, resetMessages } =
+  conversationSlice.actions;
+export default conversationSlice.reducer;

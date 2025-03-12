@@ -1,3 +1,4 @@
+import { useConversation } from "@/hooks/useConversation";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 import {
@@ -34,23 +35,38 @@ export const ApiService = {
     }
   },
 
+  // await ApiService.fetchChatStream(
+  //     inputText,
+  //     enableSearch,
+  //     pageFetchURL,
+  //     convoMessages,
+  //     conversationId,
+  //     appendMessage,
+  //     onMessage,
+  //     onClose,
+  //     onError
+  //   );
+
   fetchChatStream: async (
     inputText: string,
     enableSearch: boolean,
     pageFetchURL: string,
     convoMessages: MessageType[],
     conversationId: string,
+    // appendMessage: (msg: MessageType) => void,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: any) => void
   ) => {
-    convoMessages.push({
-      type: "user",
-      response: inputText,
-      message_id: "",
-    });
+    // appendMessage({
+    //   type: "user",
+    //   response: inputText,
+    //   message_id: "",
+    // });
 
     const controller = new AbortController();
+
+    console.log(convoMessages, "convoMessages test 2");
 
     await fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,
