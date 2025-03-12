@@ -1,6 +1,6 @@
 import { PencilRenameIcon } from "@/components/Misc/icons";
-import { useConversationList } from "@/contexts/ConversationList";
 import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
 import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import {
@@ -38,7 +38,7 @@ export default function ChatOptionsDropdown({
   logo2?: boolean;
   btnChildren?: ReactNode;
 }) {
-  const { fetchConversations } = useConversationList();
+  const fetchConversations = useFetchConversations();
   const [dangerStateHovered, setDangerStateHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { clearMessages } = useConversation();

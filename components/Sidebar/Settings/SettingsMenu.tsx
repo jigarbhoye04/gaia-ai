@@ -1,4 +1,5 @@
-import { useConversationList } from "@/contexts/ConversationList";
+import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
 import { useUserActions } from "@/hooks/useUser";
 import { ApiService } from "@/services/apiService";
 import { apiauth } from "@/utils/apiaxios";
@@ -15,7 +16,6 @@ import React, { useState } from "react";
 import { toast } from "sonner";
 import { Logout02Icon, Settings01Icon, ThreeDotsMenu } from "../../Misc/icons";
 import SettingsModal from "./SettingsModal";
-import { useConversation } from "@/hooks/useConversation";
 
 // Only allow these values in our modal state.
 export type ModalAction = "clear_chats" | "logout";
@@ -30,7 +30,7 @@ interface MenuItem {
 export default function SettingsMenu() {
   const { clearUser } = useUserActions();
   const router = useRouter();
-  const { fetchConversations } = useConversationList();
+  const fetchConversations = useFetchConversations();
   const { updateConvoMessages } = useConversation();
   const [openSettings, setOpenSettings] = useState(false);
   const [modalAction, setModalAction] = useState<ModalAction | null>(null);

@@ -1,4 +1,5 @@
-import { useConversationList } from "@/contexts/ConversationList";
+import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
 import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import api from "@/utils/apiaxios";
@@ -17,7 +18,6 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import fetchDate from "../../utils/fetchDate";
 import { BrushIcon } from "../Misc/icons";
-import { useConversation } from "@/hooks/useConversation";
 
 interface GenerateImageProps {
   openImageDialog: boolean;
@@ -34,7 +34,7 @@ export default function GenerateImage({
   const [isValid, setIsValid] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
-  const { fetchConversations } = useConversationList();
+  const fetchConversations = useFetchConversations();
 
   useEffect(() => {
     setIsValid(imagePrompt.trim() !== "");

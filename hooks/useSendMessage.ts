@@ -1,8 +1,8 @@
 "use client";
 
-import { useConversationList } from "@/contexts/ConversationList";
-import { addMessage } from "@/redux/slices/conversationSlice";
 import { useChatStream } from "@/hooks/useChatStream";
+import { useFetchConversations } from "@/hooks/useConversationList";
+import { addMessage } from "@/redux/slices/conversationSlice";
 import { MessageType } from "@/types/convoTypes";
 import { createNewConversation } from "@/utils/chatUtils";
 import fetchDate from "@/utils/fetchDate";
@@ -16,7 +16,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
   const dispatch = useDispatch();
   const { setIsLoading } = useLoading();
   const fetchChatStream = useChatStream();
-  const { fetchConversations } = useConversationList();
+  const fetchConversations = useFetchConversations();
 
   // returns as sendMessage hook
   return async (

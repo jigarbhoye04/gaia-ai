@@ -1,5 +1,5 @@
-import { useConversationList } from "@/contexts/ConversationList";
 import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
 import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
@@ -32,7 +32,7 @@ export default function FileUpload({
 }: FileUploadProps): JSX.Element {
   const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>();
-  const { fetchConversations } = useConversationList();
+  const fetchConversations = useFetchConversations();
   const router = useRouter();
 
   const [file, setFile] = useState<File | null>(null);
@@ -81,41 +81,6 @@ export default function FileUpload({
     // setFileLoading(false);
   };
 
-  // const updateConversationState = async (
-  //   conversationId: string,
-  //   newMessages: MessageType[],
-  //   description?: string,
-  //   replaceLastMessage: boolean = false
-  // ) => {
-  //   try {
-  //     setConvoMessages((prev) => {
-  //       const baseMessages = replaceLastMessage ? prev.slice(0, -1) : prev;
-  //       return [...baseMessages, ...newMessages];
-  //     });
-
-  //     const finalizedBotResponse: MessageType = {
-  //       type: "bot",
-  //       response: botResponseText,
-  //       date: fetchDate(),
-  //       loading: false,
-  //       searchWeb: enableSearch,
-  //       pageFetchURL,
-  //     };
-
-  //     currentMessages[currentMessages.length - 1] = finalizedBotResponse;
-
-  //     await ApiService.updateConversation(conversationId, currentMessages);
-
-  //     // ApiService.updateConversationDescription(
-  //     //   conversationId,
-  //     //   description || "New Chat",
-  //     //   fetchConversations
-  //     // );
-  //   } catch (error) {
-  //     console.error("Failed to update conversation:", error);
-  //     throw new Error("Failed to update conversation state");
-  //   }
-  // };
 
   const createNewConversation = async (currentMessages: MessageType[]) => {
     const conversationId = uuidv1();

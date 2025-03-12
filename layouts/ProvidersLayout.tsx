@@ -3,7 +3,6 @@
 import LoginModal from "@/components/Login/LoginModal";
 import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 import { Toaster } from "@/components/ui/sonner";
-import { ConversationListProvider } from "@/contexts/ConversationList";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import useAxiosInterceptor from "@/hooks/useAxiosInterceptor";
@@ -21,16 +20,14 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}>
       <ReduxProviders>
-        <ConversationListProvider>
-          <HeroUIProvider navigate={router.push}>
-            <GlobalInterceptor />
-            <GlobalAuth />
+        <HeroUIProvider navigate={router.push}>
+          <GlobalInterceptor />
+          <GlobalAuth />
 
-            <LoginModal />
-            <Toaster closeButton richColors position="top-right" theme="dark" />
-            {children}
-          </HeroUIProvider>
-        </ConversationListProvider>
+          <LoginModal />
+          <Toaster closeButton richColors position="top-right" theme="dark" />
+          {children}
+        </HeroUIProvider>
       </ReduxProviders>
     </Suspense>
   );

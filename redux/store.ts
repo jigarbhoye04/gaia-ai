@@ -4,6 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import loginModalReducer from "./slices/loginModalSlice";
 import userReducer from "./slices/userSlice";
 import convoReducer from "./slices/conversationSlice";
+import conversationReducer from "./slices/conversationsSlice";
 import loadingReducer from "./slices/loadingSlice";
 
 export const store = configureStore({
@@ -12,6 +13,7 @@ export const store = configureStore({
     user: userReducer,
     loading: loadingReducer,
     conversation: convoReducer,
+    conversations: conversationReducer,
   },
 });
 

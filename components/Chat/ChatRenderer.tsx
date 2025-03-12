@@ -1,6 +1,6 @@
 import StarterText from "@/components/Chat/StarterText";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useConversationList } from "@/contexts/ConversationList";
+import { useConversationList } from "@/hooks/useConversationList";
 import { useConversation } from "@/hooks/useConversation";
 import { MessageType } from "@/types/convoTypes";
 import { useParams, useSearchParams } from "next/navigation";

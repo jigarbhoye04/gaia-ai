@@ -11,7 +11,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ChatBubbleAddIcon } from "../Misc/icons";
 import { ChatTab } from "./ChatTab";
-import { useConversationList } from "@/contexts/ConversationList";
+import {
+  useConversationList,
+  useFetchConversations,
+} from "@/hooks/useConversationList";
 import { useConversation } from "@/hooks/useConversation";
 
 const getTimeFrame = (dateString: string): string => {
@@ -47,8 +50,8 @@ const timeFramePriority = (timeFrame: string): number => {
 };
 
 export default function ChatsList() {
-  const { conversations, fetchConversations, paginationMeta } =
-    useConversationList();
+  const { conversations, paginationMeta } = useConversationList();
+  const fetchConversations = useFetchConversations();
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
