@@ -61,6 +61,7 @@ class MessageRequestPrimary(BaseModel):
 
 class DescriptionUpdateRequestLLM(BaseModel):
     userFirstMessage: str
+    model: str = "@cf/meta/llama-3.2-3b-instruct"
 
 
 class DescriptionUpdateRequest(BaseModel):

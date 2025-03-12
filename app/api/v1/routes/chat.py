@@ -38,11 +38,12 @@ async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
+    llm_model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ) -> StreamingResponse:
     """
     Stream chat messages in real time.
     """
-    return await chat_stream(body, background_tasks, user)
+    return await chat_stream(body, background_tasks, user, llm_model)
 
 
 @router.post("/chat")
@@ -117,7 +118,9 @@ async def update_conversation_description_llm_endpoint(
     """
     Update the conversation description using an LLM.
     """
-    response = await update_conversation_description_llm(conversation_id, data, user)
+    response = await update_conversation_description_llm(
+        conversation_id=conversation_id, data=data, user=user, model=data.model
+    )
     return JSONResponse(content=response)
 
 

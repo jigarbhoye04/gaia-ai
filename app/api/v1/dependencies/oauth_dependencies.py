@@ -89,10 +89,15 @@ async def get_current_user(
 
     try:
         user_email = None
+        user_name = None
+        user_picture = None
+
         if access_token:
             try:
                 user_info = await get_user_info(access_token)
                 user_email = user_info.get("email")
+                user_name = user_info.get("name")
+                user_picture = user_info.get("picture")
             except HTTPException:
                 logger.info("Access token invalid or expired")
 
@@ -107,6 +112,9 @@ async def get_current_user(
             access_token = new_access_token
             user_info = await get_user_info(access_token)
             user_email = user_info.get("email")
+            user_name = user_info.get("name")
+            user_picture = user_info.get("picture")
+
             # Update token cache using the retrieved email
             cache_key = f"user_token:{user_email}"
             expires_at = int(time.time()) + expires_in
@@ -133,6 +141,8 @@ async def get_current_user(
         user_info_to_cache = {
             "user_id": str(user_data.get("_id")),
             "email": user_email,
+            "name": user_name,
+            "picture": user_picture,
             "access_token": access_token,
             # "refresh_token": refresh_token,
             "cached_at": int(time.time()),
