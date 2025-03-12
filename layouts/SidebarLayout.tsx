@@ -46,7 +46,7 @@ export default function SidebarLayout({
                 aria-label="Create new chat"
                 className="rounded-lg hover:bg-[#00bbff] group"
                 size="icon"
-                variant={isMobileScreen ? "default" : "ghost"}
+                variant={"ghost"}
                 onClick={() => {
                   router.push("/c");
                   clearMessages();

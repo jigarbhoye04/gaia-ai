@@ -128,13 +128,13 @@ const badges = [
 export default function StarterText() {
   return (
     <>
-      <div className="text-4xl font-medium grow flex-1 text-center my-4 inline-flex flex-wrap items-center gap-2 justify-center">
+      <div className="sm:text-4xl text-3xl font-medium grow flex-1 text-center my-4 inline-flex flex-wrap items-center sm:gap-2 justify-center">
         Hey!
         <img
           alt="Waving Hand"
-          className="object-contain"
-          height={50}
+          className="object-contain sm:w-[50px] w-[35px] mx-2 sm:mx-0"
           src="https://em-content.zobj.net/source/apple/391/waving-hand_1f44b.png"
+          height={50}
           width={50}
         />
         What can I do for you today?

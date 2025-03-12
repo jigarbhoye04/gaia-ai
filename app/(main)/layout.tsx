@@ -2,8 +2,7 @@
 
 import {
   BubbleConversationChatIcon,
-  NotificationIcon,
-  PencilSquareIcon,
+  ChatBubbleAddIcon,
 } from "@/components/Misc/icons";
 import ChatOptionsDropdown from "@/components/Sidebar/ChatOptionsDropdown";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
@@ -16,6 +15,7 @@ import { useConversation } from "@/hooks/useConversation";
 import useFetchUser from "@/hooks/useFetchUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import SidebarLayout from "@/layouts/SidebarLayout";
+import { useDrag } from "@use-gesture/react";
 import {
   useParams,
   usePathname,
@@ -45,14 +45,58 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     fetchUserInfo();
   }, []);
 
+  useEffect(() => {
+    setSidebarVisible(false);
+  }, [pathname]);
+
   function toggleSidebar(): void {
     if (sidebarRef.current && contentContainerRef.current)
       setSidebarVisible((prev) => !prev);
   }
 
+  function closeOnTouch(): void {
+    if (sidebarRef.current && isMobileScreen && isSidebarVisible)
+      setSidebarVisible(false);
+  }
+  const bind = useDrag(
+    ({ movement: [mx, my], last, tap }) => {
+      // If this is just a tap, do nothing—allow click events to proceed.
+      if (tap) return;
+
+      if (last && Math.abs(mx) > Math.abs(my)) {
+        console.log("test", mx);
+
+        if (mx > 0) setSidebarVisible(true); // Swipe right to open
+        else if (mx < 0) setSidebarVisible(false); // Swipe left to close
+      }
+    },
+    {
+      filterTaps: true, // Taps are ignored for swipe detection.
+      threshold: 10, // Minimal movement before detecting a swipe.
+      axis: "x", // Only track horizontal swipes.
+    }
+  );
+
+  useEffect(() => {
+    console.log(isSidebarVisible);
+  }, [isSidebarVisible]);
+
   return (
     <TooltipProvider>
-      <div className="main_container dark">
+      <div
+        className="main_container dark"
+        style={{ touchAction: "pan-y" }}
+        {...bind()}
+      >
+        {/* <div
+          {...bind()}
+          className="absolute top-0 left-0 h-full w-[100vw] bg-transparent z-50"
+          style={{
+            touchAction: "pan-y", // Allow vertical scroll
+            pointerEvents: "none", // Let clicks pass through
+          }}
+        /> */}
+
         <SidebarLayout
           isSidebarVisible={isSidebarVisible}
           sidebarref={sidebarRef}
@@ -64,10 +108,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
         <div
           ref={contentContainerRef}
+          onClick={closeOnTouch}
           className="main_chat sm:p-[1rem] p-2 transition-all bg-custom-gradient"
         >
           <div
-            className={`sm:left-4 sm:px-0 pb-3 top-0 rounded-xl transition-opacity flex w-full justify-between z-10`}
+            className={`sm:left-4 sm:px-0 top-0 rounded-xl transition-opacity flex w-full justify-between z-10`}
           >
             <CloseOpenSidebarBtn
               isSidebarVisible={isSidebarVisible}
@@ -102,32 +147,36 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                 />
               )}
             </div>
-            <div className="flex gap-5">
-              <Button
-                aria-label="Create new chat"
-                className={`rounded-lg hover:bg-[#00bbff] group`}
-                size="icon"
-                variant={isMobileScreen ? "default" : "ghost"}
-                onClick={() => {
-                  router.push("/c");
-                  clearMessages();
-                }}
-              >
-                <PencilSquareIcon className="group-hover:text-white transition-all" />
-              </Button>
-              <Button
+            {/* <div className="flex gap-2"> */}
+            <Button
+              aria-label="Create new chat"
+              className={`rounded-lg hover:bg-[#00bbff] group text-foreground-600`}
+              size="icon"
+              variant={"ghost"}
+              onClick={() => {
+                router.push("/c");
+                clearMessages();
+              }}
+            >
+              <ChatBubbleAddIcon
+                className="group-hover:text-white transition-all"
+                color={undefined}
+              />
+            </Button>
+            {/* <Button
                 aria-label="Create new chat"
                 className={`rounded-lg hover:bg-[#00bbff]/20 group`}
                 size="icon"
-                variant={isMobileScreen ? "default" : "ghost"}
+                // variant={isMobileScreen ? "default" : "ghost"}
+                variant={"ghost"}
                 onClick={() => {
                   router.push("/notifications");
                   clearMessages();
                 }}
               >
                 <NotificationIcon className="group-hover:text-white transition-all" />
-              </Button>
-            </div>
+              </Button> */}
+            {/* </div> */}
           </div>
           {children}
         </div>

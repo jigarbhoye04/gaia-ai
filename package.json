@@ -121,6 +121,7 @@
     "@types/react-window-infinite-loader": "^1.0.9",
     "@types/tinycolor2": "^1.4.6",
     "@uiw/react-md-editor": "^4.0.5",
+    "@use-gesture/react": "^10.3.1",
     "@xyflow/react": "^12.4.2",
     "axios": "^1.7.9",
     "axios-auth-refresh": "^3.3.6",

@@ -74,14 +74,6 @@ export const useChatStream = () => {
       } else {
         updateConvoMessages([...currentConvo, buildBotResponse()]);
       }
-
-      // updateConvoMessages((messages = []) => {
-      //   // If no messages exist, initialize with user message and bot response
-      //   if (messages.length == 0)
-      //     return [...currentMessages, buildBotResponse()];
-
-      //   return [...messages, buildBotResponse()];
-      // });
     };
 
     /**

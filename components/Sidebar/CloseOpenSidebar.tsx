@@ -17,22 +17,24 @@ function CloseOpenSidebarBtn({
   return (
     <Button
       aria-label="Open Menu"
-      className={`rounded-lg group hover:bg-primary ${
+      className={`rounded-lg group hover:bg-primary text-foreground-700 ${
         isSidebarVisible ? "sm:opacity-0" : "sm:opacity-100"
       }`}
       size="icon"
-      variant={isMobileScreen ? "default" : "ghost"}
+      variant={"ghost"}
       onClick={toggleSidebar}
     >
       {isMobileScreen ? (
         <Menu02Icon
           className="group-hover:text-white transition-all"
           height="24"
+          color={undefined}
         />
       ) : (
         <SidebarLeftIcon
           className="group-hover:text-white transition-all"
           height="24"
+          color={undefined}
         />
       )}
     </Button>
