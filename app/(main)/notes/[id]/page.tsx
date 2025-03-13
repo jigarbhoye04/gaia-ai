@@ -21,6 +21,7 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import TipTapLink from "@tiptap/extension-link";
 import { convert } from "html-to-text";
 import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
 import Link from "next/link";
@@ -61,7 +62,11 @@ export default function NotesAdd() {
       Highlight,
       Typography,
       Underline,
-      Link,
+      TipTapLink.configure({
+        openOnClick: true,
+        autolink: true,
+        linkOnPaste: true,
+      }),
       CharacterCount.configure({ limit: 10_000 }),
       Placeholder.configure({
         placeholder: ({ node }) => {

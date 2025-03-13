@@ -2,10 +2,16 @@ import { useLoading } from "@/hooks/useLoading";
 import api from "@/utils/apiaxios";
 import { Tooltip } from "@heroui/tooltip";
 import { GlobeIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 
-const CustomAnchor = ({ props }: { props?: any }) => {
-  if (!props?.href) return null;
+const CustomAnchor = ({
+  href,
+  children,
+}: {
+  href: string | undefined;
+  children: ReactNode | string | null;
+}) => {
+  if (!href) return null;
 
   const { isLoading } = useLoading();
   const [metadata, setMetadata] = useState({
@@ -14,7 +20,7 @@ const CustomAnchor = ({ props }: { props?: any }) => {
     favicon: "",
     website_name: "",
   });
-  const prevHref = useRef(null);
+  const prevHref = useRef<string | null>(null);
   const [validFavicon, setValidFavicon] = useState(true);
   const [tooltipOpen, setTooltipOpen] = useState(false);
 
@@ -22,21 +28,21 @@ const CustomAnchor = ({ props }: { props?: any }) => {
     const fetchMetadata = async () => {
       try {
         const response = await api.post("/fetch-url-metadata", {
-          url: props?.href,
+          url: href,
         });
         const { title, description, favicon, website_name } = response.data;
         setMetadata({ title, description, favicon, website_name });
         setValidFavicon(true);
-        prevHref.current = props?.href;
+        prevHref.current = href ?? "";
       } catch (error) {
         console.error("Error fetching metadata:", error);
       }
     };
 
-    if (!isLoading && prevHref.current !== props.href) {
+    if (!isLoading && prevHref.current !== href) {
       fetchMetadata();
     }
-  }, [tooltipOpen, isLoading, props.href]);
+  }, [tooltipOpen, isLoading, href]);
 
   return (
     <Tooltip
@@ -75,11 +81,11 @@ const CustomAnchor = ({ props }: { props?: any }) => {
           )}
           <a
             className="w-[300px] text-primary text-xs truncate hover:underline"
-            href={props.href}
+            href={href}
             rel="noopener noreferrer"
             target="_blank"
           >
-            {props?.href.replace("https://", "")}
+            {href.replace("https://", "")}
           </a>
         </div>
       }
@@ -87,13 +93,12 @@ const CustomAnchor = ({ props }: { props?: any }) => {
       onOpenChange={setTooltipOpen}
     >
       <a
-        className="!text-[#00bbff] hover:underline font-medium hover:!text-white transition-all"
-        href={props?.href}
+        className="!text-[#00bbff] hover:underline font-medium hover:!text-white transition-all cursor-pointer"
         rel="noopener noreferrer"
         target="_blank"
-        {...props}
+        // {...props}
       >
-        {props.children}
+        {children}
       </a>
     </Tooltip>
   );

@@ -1,19 +1,11 @@
 // TextBubble.tsx
-import { Chip } from "@heroui/chip";
-import {
-  AlertTriangleIcon,
-  ArrowUpRight,
-  Check,
-  Globe,
-  Loader2,
-} from "lucide-react";
-import { lazy, Suspense } from "react";
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
-import { parseDate } from "@/utils/fetchDate";
 import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
-import CalendarEventSection from "./CalendarEventSection";
-import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { InternetIcon } from "@/components/Misc/icons";
+import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
+import { Chip } from "@heroui/chip";
+import { AlertTriangleIcon, ArrowUpRight, Check, Loader2 } from "lucide-react";
+import { lazy } from "react";
+import CalendarEventSection from "./CalendarEventSection";
 
 const MarkdownRenderer = lazy(
   () => import("@/components/Chat/MarkdownRenderer")
@@ -57,12 +49,9 @@ export default function TextBubble({
             >
               <div className="font-medium flex items-center gap-1 text-primary">
                 Fetched{" "}
-                <CustomAnchor
-                  props={{
-                    href: pageFetchURL,
-                    children: pageFetchURL.replace(/^https?:\/\//, ""),
-                  }}
-                />
+                <CustomAnchor href={pageFetchURL}>
+                  {pageFetchURL.replace(/^https?:\/\//, "")}
+                </CustomAnchor>
               </div>
             </Chip>
           )}

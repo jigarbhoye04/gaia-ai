@@ -1,9 +1,9 @@
 import React, { lazy, Suspense } from "react";
 import remarkGfm from "remark-gfm";
 import SuspenseLoader from "../Misc/SuspenseLoader";
+import CustomAnchor from "./CodeBlock/CustomAnchor";
 const ReactMarkdown = lazy(() => import("react-markdown"));
 const CodeBlock = lazy(() => import("./CodeBlock/CodeBlock"));
-const CustomAnchor = lazy(() => import("./CodeBlock/CustomAnchor"));
 
 export interface MarkdownRendererProps {
   content: string;
@@ -36,10 +36,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           ol: ({ node, ...props }) => (
             <ol className="list-decimal pl-6 mb-4" {...props} />
           ),
-          a: ({ node, ...props }) => (
-            <Suspense fallback={<SuspenseLoader />}>
-              <CustomAnchor {...props} />
-            </Suspense>
+          a: ({ href, children }) => (
+            <CustomAnchor href={href}>{children}</CustomAnchor>
           ),
           blockquote: ({ node, ...props }) => (
             <blockquote
