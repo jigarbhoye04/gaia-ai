@@ -1,5 +1,17 @@
 "use client";
 
+import { SaveIcon } from "@/components/Misc/icons";
+import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
+import { MenuBar } from "@/components/Notes/NotesMenuBar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { truncateTitle } from "@/lib/utils";
+import { apiauth } from "@/utils/apiaxios";
 import { Spinner } from "@heroui/spinner";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -15,19 +27,6 @@ import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-import { SaveIcon } from "@/components/Misc/icons";
-import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
-import { MenuBar } from "@/components/Notes/NotesMenuBar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { apiauth } from "@/utils/apiaxios";
-import { truncateTitle } from "@/lib/utils";
 
 interface Note {
   id: string;
@@ -62,6 +61,7 @@ export default function NotesAdd() {
       Highlight,
       Typography,
       Underline,
+      Link,
       CharacterCount.configure({ limit: 10_000 }),
       Placeholder.configure({
         placeholder: ({ node }) => {

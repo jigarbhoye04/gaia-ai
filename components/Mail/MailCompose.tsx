@@ -1,3 +1,5 @@
+import { MenuBar } from "@/components/Notes/NotesMenuBar";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,15 +11,24 @@ import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { ButtonGroup } from "@heroui/react";
+import CharacterCount from "@tiptap/extension-character-count";
+import Highlight from "@tiptap/extension-highlight";
+import Link from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import Typography from "@tiptap/extension-typography";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import { Tag, TagInput } from "emblor";
-import { Check, ChevronDown } from "lucide-react";
+import { AlertCircle, Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Drawer } from "vaul";
 import { AiSearch02Icon, BrushIcon, Sent02Icon, SentIcon } from "../Misc/icons";
-import { Textarea } from "../ui/textarea";
+import { Button as ShadcnButton } from "../ui/button";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
-import { Button as ShadcnButton } from "../ui/button";
+import { marked } from "marked";
 
 interface MailComposeProps {
   open: boolean;
@@ -35,12 +46,41 @@ export default function MailCompose({
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [prompt, setPrompt] = useState("");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [writingStyle, setWritingStyle] = useState("formal");
-  const [isWritingStyleMenuOpen, setIsWritingStyleMenuOpen] = useState(false);
+  const [error, setError] = useState(null);
   // For future use (e.g., Personalise menu)
   // const [isPersonaliseMenuOpen, setIsPersonaliseMenuOpen] = useState(false);
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Highlight,
+      Typography,
+      Underline,
+
+      Link.configure({
+        openOnClick: true,
+        autolink: true,
+        linkOnPaste: true,
+      }),
+      CharacterCount.configure({ limit: 10_000 }),
+      Placeholder.configure({
+        placeholder: () => {
+          return "Body";
+        },
+      }),
+    ],
+    editorProps: {
+      attributes: {
+        class: "h-[50vh] overflow-y-auto",
+      },
+    },
+    content: body,
+    onUpdate: ({ editor }) => {
+      setBody(editor.getHTML());
+    },
+  });
 
   const writingStyles = [
     { id: "formal", label: "Formal" },
@@ -58,27 +98,35 @@ export default function MailCompose({
     }));
     setToEmails((prev) => [...prev, ...newTags]);
   };
-
-  const handleAskGaia = async () => {
+  const handleAskGaia = async (overrideStyle?: string) => {
     setLoading(true);
+    setError(null);
     try {
       const res = await apiauth.post("/mail/ai/compose", {
         subject,
         body,
         prompt,
+        writingStyle: overrideStyle || writingStyle,
       });
-      const response = JSON.parse(res.data.result.response);
-      setAiResponse(response);
-      setBody(response.body);
-      setSubject(response.subject);
+
+      try {
+        const response = JSON.parse(res.data.result.response);
+        const formattedBody = marked(response.body.replace(/\n/g, "<br />"));
+        editor.commands.setContent(formattedBody);
+        setSubject(response.subject);
+      } catch (error) {
+        setError(res.data.result.response);
+      }
     } catch (error) {
       console.error("Error processing email:", error);
+      toast.error("Error processing email. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleAskGaiaKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (loading) return;
     if (e.key === "Enter") {
       e.preventDefault();
       handleAskGaia();
@@ -90,12 +138,20 @@ export default function MailCompose({
       <Drawer.Root open={open} onOpenChange={onOpenChange} direction="right">
         <Drawer.Portal>
           <Drawer.Overlay
-            className={`fixed inset-0 bg-black/40 backdrop-blur-sm ${
+            className={`fixed inset-0 bg-black/40 backdrop-blur-md ${
               isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
             }`}
           />
           <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
+
+            {error && (
+              <Alert variant="destructive" className="bg-red-500/10">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>There was an error.</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <Input
               variant="underlined"
@@ -144,24 +200,9 @@ export default function MailCompose({
               onChange={(e) => setSubject(e.target.value)}
             />
 
-            <div className="relative h-full w-full flex-1 flex flex-col">
+            <div className="relative h-full w-full flex flex-col">
               <div className="flex pb-2 gap-3 justify-end w-full z-[2]">
                 <div className="relative">
-                  {/* {isWritingStyleMenuOpen && (
-                    <DropdownMenuContent className="z-[50] absolute mt-2 w-40">
-                      {writingStyles.map((style) => (
-                        <DropdownMenuItem
-                          key={style.id}
-                          onClick={() => {
-                            setWritingStyle(style.id);
-                            setIsWritingStyleMenuOpen(false);
-                          }}
-                        >
-                          {style.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  )} */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
@@ -185,7 +226,7 @@ export default function MailCompose({
                           key={style.id}
                           onClick={() => {
                             setWritingStyle(style.id);
-                            setIsWritingStyleMenuOpen(false);
+                            handleAskGaia(style.id);
                           }}
                           className="cursor-pointer focus:bg-zinc-600 focus:text-white"
                         >
@@ -228,12 +269,21 @@ export default function MailCompose({
                 </div>
                 */}
               </div>
-              <Textarea
+
+              {editor && (
+                <>
+                  {/* <BubbleMenuComponent editor={editor} /> */}
+                  <MenuBar editor={editor} textLength={false} isEmail={true} />
+                  <EditorContent className="bg-zinc-800 p-2" editor={editor} />
+                </>
+              )}
+
+              {/* <Textarea
                 placeholder="Body"
                 className="bg-zinc-800 flex-1 p-2 rounded-none border-none outline-none focus-visible:!ring-0 text-white ring-0 mb-2"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-              />
+              /> */}
             </div>
 
             <footer className="flex w-full justify-end gap-5">
@@ -250,12 +300,24 @@ export default function MailCompose({
                 startContent={<div className="pingspinner size-[20px]" />}
                 endContent={
                   <Button
-                    isIconOnly
+                    isIconOnly={loading}
                     color="primary"
                     radius="full"
-                    onPress={handleAskGaia}
+                    onPress={() => handleAskGaia()}
+                    isLoading={loading}
                   >
-                    <SentIcon color={undefined} />
+                    <div className="flex px-3 w-fit gap-2 items-center text-medium">
+                      {!loading && (
+                        <>
+                          AI Draft
+                          <SentIcon
+                            color={undefined}
+                            width={25}
+                            className="min-w-[25px]"
+                          />
+                        </>
+                      )}
+                    </div>
                   </Button>
                 }
               />
