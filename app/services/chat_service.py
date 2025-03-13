@@ -37,9 +37,10 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     query_text = context["query_text"]
     search_result = await perform_search(query=query_text, count=5)
     last_message["content"] += (
-        f"\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. "
-        "Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1]](https://example.com))."
+        f"\nRelevant context using GAIA web search. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1]](https://example.com)). : {search_result}. Use citations and references for all the content. "
     )
+
+    print(context)
     return context
 
 
@@ -171,6 +172,8 @@ async def chat_stream(
     context = await pipeline.run(context)
 
     background_tasks.add_task(store_note, context["query_text"], context["user_id"])
+
+    context["messages"][-1] = context["last_message"]
 
     return StreamingResponse(
         do_prompt_with_stream(
