@@ -2,13 +2,12 @@ from typing import Annotated
 from urllib.parse import urlencode
 
 import httpx
-import requests
-from fastapi import APIRouter, Cookie, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
-from app.db.collections import users_collection
 from app.services.oauth_service import store_user_info
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 
@@ -118,44 +117,52 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/me")
-async def me(access_token: str = Cookie(None)):
-    if not access_token:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    try:
-        # Validate the access token with Google's API
-        user_info_response = requests.get(
-            settings.GOOGLE_USERINFO_URL,
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-        if user_info_response.status_code != 200:
-            raise HTTPException(
-                status_code=401, detail="Invalid or expired access token"
-            )
+@router.get("/me", response_model=dict)
+async def get_me(user: dict = Depends(get_current_user)):
+    """
+    Returns the current authenticated user's details.
+    Uses the dependency injection to fetch user data.
+    """
+    return {"message": "User retrieved successfully", **user}
 
-        user_info = user_info_response.json()
-        user_email = user_info.get("email")
-        if not user_email:
-            raise HTTPException(status_code=400, detail="Email not found in user info")
 
-        user_data = await users_collection.find_one({"email": user_email})
-        if not user_data:
-            raise HTTPException(status_code=404, detail="User not found")
+# async def me(access_token: str = Cookie(None)):
+# if not access_token:
+#     raise HTTPException(status_code=401, detail="Authentication required")
+# try:
+#     # Validate the access token with Google's API
+#     user_info_response = requests.get(
+#         settings.GOOGLE_USERINFO_URL,
+#         headers={"Authorization": f"Bearer {access_token}"},
+#     )
+#     if user_info_response.status_code != 200:
+#         raise HTTPException(
+#             status_code=401, detail="Invalid or expired access token"
+#         )
 
-        return JSONResponse(
-            content={
-                "email": user_data["email"],
-                "name": user_data["name"],
-                "picture": user_data["picture"],
-            }
-        )
+#     user_info = user_info_response.json()
+#     user_email = user_info.get("email")
+#     if not user_email:
+#         raise HTTPException(status_code=400, detail="Email not found in user info")
 
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching user info from Google: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error contacting Google API")
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+#     user_data = await users_collection.find_one({"email": user_email})
+#     if not user_data:
+#         raise HTTPException(status_code=404, detail="User not found")
+
+#     return JSONResponse(
+#         content={
+#             "email": user_data["email"],
+#             "name": user_data["name"],
+#             "picture": user_data["picture"],
+#         }
+#     )
+
+# except requests.exceptions.RequestException as e:
+#     logger.error(f"Error fetching user info from Google: {str(e)}")
+#     raise HTTPException(status_code=500, detail="Error contacting Google API")
+# except Exception as e:
+#     logger.error(f"Unexpected error: {str(e)}")
+#     raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.post("/logout")

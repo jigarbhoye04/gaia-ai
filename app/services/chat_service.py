@@ -37,9 +37,10 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     query_text = context["query_text"]
     search_result = await perform_search(query=query_text, count=5)
     last_message["content"] += (
-        f"\nRelevant context using GAIA web search: {search_result}. Use citations and references for all the content. "
-        "Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1]](https://example.com))."
+        f"\nRelevant context using GAIA web search. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1]](https://example.com)). : {search_result}. Use citations and references for all the content. "
     )
+
+    print(context)
     return context
 
 
@@ -140,6 +141,7 @@ async def chat_stream(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
     user: dict,
+    llm_model: str,
 ) -> StreamingResponse:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
@@ -152,8 +154,8 @@ async def chat_stream(
         "query_text": last_message["content"],
         "last_message": last_message,
         "body": body,
+        "llm_model": llm_model,
         "user": user,
-        "llm_model": "@cf/meta/llama-3.1-8b-instruct-fast",
         "intent": None,
         "messages": jsonable_encoder(body.messages),
     }
@@ -162,7 +164,7 @@ async def chat_stream(
         fetch_notes,
         fetch_documents,
         classify_event,
-        choose_llm_model,
+        # choose_llm_model,
         fetch_webpage,
         do_search,
     ]
@@ -171,6 +173,8 @@ async def chat_stream(
     context = await pipeline.run(context)
 
     background_tasks.add_task(store_note, context["query_text"], context["user_id"])
+
+    context["messages"][-1] = context["last_message"]
 
     return StreamingResponse(
         do_prompt_with_stream(
@@ -353,7 +357,7 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
 
 
 async def update_conversation_description_llm(
-    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict
+    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict, model: str
 ) -> dict:
     """
     Update the conversation description using an LLM-generated summary.
@@ -368,6 +372,7 @@ async def update_conversation_description_llm(
                 "Do not answer the message—simply summarize its subject. Do not add any sort of formatting or markdown, just respond in plaintext."
             ),
             max_tokens=5,
+            model=model,
         )
         description = (response.get("response", "New Chat")).replace('"', "")
     except Exception as e:
