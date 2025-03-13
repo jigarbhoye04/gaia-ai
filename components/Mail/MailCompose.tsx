@@ -21,6 +21,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Tag, TagInput } from "emblor";
 import { AlertCircle, Check, ChevronDown } from "lucide-react";
+import { marked } from "marked";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
@@ -28,7 +29,6 @@ import { AiSearch02Icon, BrushIcon, Sent02Icon, SentIcon } from "../Misc/icons";
 import { Button as ShadcnButton } from "../ui/button";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
-import { marked } from "marked";
 
 interface MailComposeProps {
   open: boolean;
@@ -48,9 +48,9 @@ export default function MailCompose({
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [writingStyle, setWritingStyle] = useState("formal");
+  const [contentLength, setContentLength] = useState("none");
+  const [clarityOption, setClarityOption] = useState("none");
   const [error, setError] = useState(null);
-  // For future use (e.g., Personalise menu)
-  // const [isPersonaliseMenuOpen, setIsPersonaliseMenuOpen] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -58,7 +58,6 @@ export default function MailCompose({
       Highlight,
       Typography,
       Underline,
-
       Link.configure({
         openOnClick: true,
         autolink: true,
@@ -66,9 +65,7 @@ export default function MailCompose({
       }),
       CharacterCount.configure({ limit: 10_000 }),
       Placeholder.configure({
-        placeholder: () => {
-          return "Body";
-        },
+        placeholder: () => "Body",
       }),
     ],
     editorProps: {
@@ -90,6 +87,19 @@ export default function MailCompose({
     { id: "humorous", label: "Humorous" },
   ];
 
+  const contentLengthOptions = [
+    { id: "none", label: "None" },
+    { id: "shorten", label: "Shorten" },
+    { id: "lengthen", label: "Lengthen" },
+    { id: "summarize", label: "Summarize" },
+  ];
+
+  const clarityOptions = [
+    { id: "none", label: "None" },
+    { id: "simplify", label: "Simplify" },
+    { id: "rephrase", label: "Rephrase" },
+  ];
+
   const handleAiSelect = (selectedSuggestions: EmailSuggestion[]) => {
     const newTags: Tag[] = selectedSuggestions.map((s) => ({
       id: s.email,
@@ -98,6 +108,7 @@ export default function MailCompose({
     }));
     setToEmails((prev) => [...prev, ...newTags]);
   };
+
   const handleAskGaia = async (overrideStyle?: string) => {
     setLoading(true);
     setError(null);
@@ -107,12 +118,13 @@ export default function MailCompose({
         body,
         prompt,
         writingStyle: overrideStyle || writingStyle,
+        contentLength,
+        clarityOption,
       });
-
       try {
         const response = JSON.parse(res.data.result.response);
         const formattedBody = marked(response.body.replace(/\n/g, "<br />"));
-        editor.commands.setContent(formattedBody);
+        if (editor) editor.commands.setContent(formattedBody);
         setSubject(response.subject);
       } catch (error) {
         setError(res.data.result.response);
@@ -187,7 +199,7 @@ export default function MailCompose({
                 color="primary"
                 onPress={() => setIsAiModalOpen(true)}
               >
-                <AiSearch02Icon width={19} />
+                <AiSearch02Icon color={undefined} width={19} />
               </Button>
             </div>
 
@@ -202,21 +214,26 @@ export default function MailCompose({
 
             <div className="relative h-full w-full flex flex-col">
               <div className="flex pb-2 gap-3 justify-end w-full z-[2]">
+                {/* Writing Style Dropdown */}
                 <div className="relative">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
                         className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
-                        size={"sm"}
+                        size="sm"
                       >
                         <div className="flex flex-row gap-1">
-                          <BrushIcon width={20} height={20} color={undefined} />
-                          Writing Style:{" "}
-                          {
-                            writingStyles.find((s) => s.id === writingStyle)
-                              ?.label
-                          }
-                          <ChevronDown width={20} />
+                          <BrushIcon color={undefined} width={20} height={20} />
+                          <span className="font-medium">
+                            Writing Style:
+                          </span>{" "}
+                          <span>
+                            {
+                              writingStyles.find((s) => s.id === writingStyle)
+                                ?.label
+                            }
+                          </span>
+                          <ChevronDown color={undefined} width={20} />
                         </div>
                       </ShadcnButton>
                     </DropdownMenuTrigger>
@@ -232,10 +249,9 @@ export default function MailCompose({
                         >
                           <div className="flex justify-between w-full items-center">
                             {style.label}
-
                             {writingStyles.find((s) => s.id === writingStyle)
-                              ?.label == style.label && (
-                              <Check width={20} height={20} />
+                              ?.label === style.label && (
+                              <Check color={undefined} width={20} height={20} />
                             )}
                           </div>
                         </DropdownMenuItem>
@@ -244,46 +260,99 @@ export default function MailCompose({
                   </DropdownMenu>
                 </div>
 
-                {/*
-                // Example for another controlled menu (e.g., Personalise):
+                {/* Content Length Dropdown */}
                 <div className="relative">
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    className="font-medium text-[#00bbff] bg-[#00bbff40]"
-                    onClick={() =>
-                      setIsPersonaliseMenuOpen((prev) => !prev)
-                    }
-                  >
-                    <PaletteIcon width={20} height={20} />
-                    Personalise <ChevronDown width={20} />
-                  </Button>
-                  {isPersonaliseMenuOpen && (
-                    <DropdownMenuContent className="z-[50] absolute mt-2">
-                      <DropdownMenuItem onClick={() => }>
-                        New file
-                      </DropdownMenuItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <ShadcnButton
+                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
+                        size="sm"
+                      >
+                        <div className="flex flex-row gap-1">
+                          <BrushIcon color={undefined} width={20} height={20} />
+                          <span className="font-medium">
+                            Content Length:
+                          </span>{" "}
+                          <span>
+                            {contentLengthOptions.find(
+                              (opt) => opt.id === contentLength
+                            )?.label || "None"}
+                          </span>
+                          <ChevronDown color={undefined} width={20} />
+                        </div>
+                      </ShadcnButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
+                      {contentLengthOptions.map((option) => (
+                        <DropdownMenuItem
+                          key={option.id}
+                          onClick={() => {
+                            setContentLength(option.id);
+                            handleAskGaia();
+                          }}
+                          className="cursor-pointer focus:bg-zinc-600 focus:text-white"
+                        >
+                          <div className="flex justify-between w-full items-center">
+                            {option.label}
+                            {contentLength === option.id && (
+                              <Check color={undefined} width={20} />
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
-                  )}
+                  </DropdownMenu>
                 </div>
-                */}
+
+                {/* Clarity Dropdown */}
+                <div className="relative">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <ShadcnButton
+                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
+                        size="sm"
+                      >
+                        <div className="flex flex-row gap-1">
+                          <BrushIcon color={undefined} width={20} height={20} />
+                          <span className="font-medium">Clarity:</span>{" "}
+                          <span>
+                            {clarityOptions.find(
+                              (opt) => opt.id === clarityOption
+                            )?.label || "None"}
+                          </span>
+                          <ChevronDown color={undefined} width={20} />
+                        </div>
+                      </ShadcnButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
+                      {clarityOptions.map((option) => (
+                        <DropdownMenuItem
+                          key={option.id}
+                          onClick={() => {
+                            setClarityOption(option.id);
+                            handleAskGaia();
+                          }}
+                          className="cursor-pointer focus:bg-zinc-600 focus:text-white"
+                        >
+                          <div className="flex justify-between w-full items-center">
+                            {option.label}
+                            {clarityOption === option.id && (
+                              <Check color={undefined} width={20} />
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
 
               {editor && (
                 <>
-                  {/* <BubbleMenuComponent editor={editor} /> */}
                   <MenuBar editor={editor} textLength={false} isEmail={true} />
                   <EditorContent className="bg-zinc-800 p-2" editor={editor} />
                 </>
               )}
-
-              {/* <Textarea
-                placeholder="Body"
-                className="bg-zinc-800 flex-1 p-2 rounded-none border-none outline-none focus-visible:!ring-0 text-white ring-0 mb-2"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-              /> */}
             </div>
 
             <footer className="flex w-full justify-end gap-5">
@@ -326,11 +395,8 @@ export default function MailCompose({
                 <ButtonGroup color="primary">
                   <Button className="text-medium">
                     Send
-                    <Sent02Icon width={23} height={23} />
+                    <Sent02Icon color={undefined} width={23} height={23} />
                   </Button>
-                  {/*
-                  // Additional controlled menus (e.g., schedule send) can be added here similarly.
-                  */}
                 </ButtonGroup>
               </div>
             </footer>
