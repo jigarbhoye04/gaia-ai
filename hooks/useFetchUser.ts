@@ -1,3 +1,5 @@
+"use client";
+
 import { useUserActions } from "@/hooks/useUser";
 import { apiauth } from "@/utils/apiaxios";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,9 +23,9 @@ const useFetchUser = () => {
       });
 
       updateUser({
-        name: response?.data?.user.name,
-        email: response?.data?.user.email,
-        profilePicture: response?.data?.user.picture,
+        name: response?.data?.name,
+        email: response?.data?.email,
+        profilePicture: response?.data?.picture,
       });
 
       if (accessToken && refreshToken) router.push("/c");
@@ -31,6 +33,10 @@ const useFetchUser = () => {
       clearUser();
     }
   };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, [searchParams]);
 
   return { fetchUserInfo };
 };

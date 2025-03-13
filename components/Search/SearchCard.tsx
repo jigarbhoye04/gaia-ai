@@ -125,7 +125,3 @@ export function SearchCard({
     </Link>
   ) : null;
 }
-
-// Example usage in a parent component
-// <SearchCard result={result} type="message" />
-// <SearchCard result={result} type="conversation" />

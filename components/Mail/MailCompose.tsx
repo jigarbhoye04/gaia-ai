@@ -1,25 +1,23 @@
-import { Button } from "@heroui/button";
 import {
-  Dropdown,
-  DropdownItem,
   DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/dropdown";
-import { Input, Textarea } from "@heroui/input";
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useUser } from "@/hooks/useUser";
+import { apiauth } from "@/utils/apiaxios";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import { ButtonGroup } from "@heroui/react";
 import { Tag, TagInput } from "emblor";
-import { ChevronDown, ChevronDownIcon, PaletteIcon } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Drawer } from "vaul";
-import {
-  AiSearch02Icon,
-  BrushIcon,
-  Sent02Icon,
-  SentIcon,
-  TimeScheduleIcon,
-} from "../Misc/icons";
+import { AiSearch02Icon, BrushIcon, Sent02Icon, SentIcon } from "../Misc/icons";
+import { Textarea } from "../ui/textarea";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
+import { Button as ShadcnButton } from "../ui/button";
 
 interface MailComposeProps {
   open: boolean;
@@ -30,13 +28,28 @@ export default function MailCompose({
   open,
   onOpenChange,
 }: MailComposeProps): JSX.Element {
-  // Store email tags as Tag[] to match TagInput's expected type.
+  const user = useUser();
   const [toEmails, setToEmails] = useState<Tag[]>([]);
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [writingStyle, setWritingStyle] = useState("formal");
+  const [isWritingStyleMenuOpen, setIsWritingStyleMenuOpen] = useState(false);
+  // For future use (e.g., Personalise menu)
+  // const [isPersonaliseMenuOpen, setIsPersonaliseMenuOpen] = useState(false);
 
-  // When the AI modal returns suggestions, convert them into Tag objects.
+  const writingStyles = [
+    { id: "formal", label: "Formal" },
+    { id: "friendly", label: "Friendly" },
+    { id: "casual", label: "Casual" },
+    { id: "persuasive", label: "Persuasive" },
+    { id: "humorous", label: "Humorous" },
+  ];
+
   const handleAiSelect = (selectedSuggestions: EmailSuggestion[]) => {
     const newTags: Tag[] = selectedSuggestions.map((s) => ({
       id: s.email,
@@ -46,13 +59,31 @@ export default function MailCompose({
     setToEmails((prev) => [...prev, ...newTags]);
   };
 
-  const writingStyles = [
-    { id: "formal", label: "Formal" },
-    { id: "friendly", label: "Friendly" },
-    { id: "casual", label: "Casual" },
-    { id: "persuasive", label: "Persuasive" },
-    { id: "humorous", label: "Humorous" },
-  ];
+  const handleAskGaia = async () => {
+    setLoading(true);
+    try {
+      const res = await apiauth.post("/mail/ai/compose", {
+        subject,
+        body,
+        prompt,
+      });
+      const response = JSON.parse(res.data.result.response);
+      setAiResponse(response);
+      setBody(response.body);
+      setSubject(response.subject);
+    } catch (error) {
+      console.error("Error processing email:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAskGaiaKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAskGaia();
+    }
+  };
 
   return (
     <>
@@ -63,7 +94,7 @@ export default function MailCompose({
               isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
             }`}
           />
-          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] h-[60vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
+          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
 
             <Input
@@ -73,6 +104,8 @@ export default function MailCompose({
                   From
                 </div>
               }
+              disabled
+              value={user.email}
               className="bg-zinc-800"
             />
 
@@ -91,7 +124,6 @@ export default function MailCompose({
                 activeTagIndex={activeTagIndex}
                 setActiveTagIndex={setActiveTagIndex}
               />
-
               <Button
                 isIconOnly
                 className="absolute right-[3px] top-[3px]"
@@ -108,78 +140,122 @@ export default function MailCompose({
               variant="underlined"
               className="bg-zinc-800"
               classNames={{ innerWrapper: "px-2" }}
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
             />
 
-            <div className="relative h-full w-full">
-              <Textarea
-                variant="underlined"
-                minRows={100}
-                size="lg"
-                classNames={{ innerWrapper: "px-2" }}
-                className="bg-zinc-800"
-              />
-              <div className="flex py-3 gap-3 justify-end w-full">
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button
-                      size="sm"
-                      color="primary"
-                      className="font-medium text-[#00bbff] bg-[#00bbff40]"
-                    >
-                      <BrushIcon width={20} height={20} />
-                      Writing Style:{" "}
-                      {
-                        writingStyles.find((ws) => ws.id === writingStyle)
-                          ?.label
-                      }
-                      <ChevronDown width={20} />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="Writing Styles">
-                    {writingStyles.map((style) => (
-                      <DropdownItem
-                        key={style.id}
-                        onSelect={() => setWritingStyle(style.id)}
+            <div className="relative h-full w-full flex-1 flex flex-col">
+              <div className="flex pb-2 gap-3 justify-end w-full z-[2]">
+                <div className="relative">
+                  {/* {isWritingStyleMenuOpen && (
+                    <DropdownMenuContent className="z-[50] absolute mt-2 w-40">
+                      {writingStyles.map((style) => (
+                        <DropdownMenuItem
+                          key={style.id}
+                          onClick={() => {
+                            setWritingStyle(style.id);
+                            setIsWritingStyleMenuOpen(false);
+                          }}
+                        >
+                          {style.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  )} */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <ShadcnButton
+                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
+                        size={"sm"}
                       >
-                        {style.label}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                </Dropdown>
+                        <div className="flex flex-row gap-1">
+                          <BrushIcon width={20} height={20} color={undefined} />
+                          Writing Style:{" "}
+                          {
+                            writingStyles.find((s) => s.id === writingStyle)
+                              ?.label
+                          }
+                          <ChevronDown width={20} />
+                        </div>
+                      </ShadcnButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
+                      {writingStyles.map((style) => (
+                        <DropdownMenuItem
+                          key={style.id}
+                          onClick={() => {
+                            setWritingStyle(style.id);
+                            setIsWritingStyleMenuOpen(false);
+                          }}
+                          className="cursor-pointer focus:bg-zinc-600 focus:text-white"
+                        >
+                          <div className="flex justify-between w-full items-center">
+                            {style.label}
 
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button
-                      size="sm"
-                      color="primary"
-                      variant="flat"
-                      className="font-medium text-[#00bbff] bg-[#00bbff40]"
-                    >
-                      <PaletteIcon width={20} height={20} />
-                      Personalise <ChevronDown width={20} />
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu aria-label="Personalisation Options">
-                    <DropdownItem key="new">New file</DropdownItem>
-                    <DropdownItem key="copy">Copy link</DropdownItem>
-                    <DropdownItem key="edit">Edit file</DropdownItem>
+                            {writingStyles.find((s) => s.id === writingStyle)
+                              ?.label == style.label && (
+                              <Check width={20} height={20} />
+                            )}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
                   </DropdownMenu>
-                </Dropdown>
+                </div>
+
+                {/*
+                // Example for another controlled menu (e.g., Personalise):
+                <div className="relative">
+                  <Button
+                    size="sm"
+                    color="primary"
+                    variant="flat"
+                    className="font-medium text-[#00bbff] bg-[#00bbff40]"
+                    onClick={() =>
+                      setIsPersonaliseMenuOpen((prev) => !prev)
+                    }
+                  >
+                    <PaletteIcon width={20} height={20} />
+                    Personalise <ChevronDown width={20} />
+                  </Button>
+                  {isPersonaliseMenuOpen && (
+                    <DropdownMenuContent className="z-[50] absolute mt-2">
+                      <DropdownMenuItem onClick={() => }>
+                        New file
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  )}
+                </div>
+                */}
               </div>
+              <Textarea
+                placeholder="Body"
+                className="bg-zinc-800 flex-1 p-2 rounded-none border-none outline-none focus-visible:!ring-0 text-white ring-0 mb-2"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+              />
             </div>
 
             <footer className="flex w-full justify-end gap-5">
               <Input
-                placeholder="Ask Gaia..."
+                placeholder="What is the email about?"
                 radius="full"
                 classNames={{ inputWrapper: "pr-1 pl-0" }}
                 className="pr-1"
                 variant="faded"
                 size="lg"
-                startContent={<div className="pingspinner"></div>}
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                onKeyDown={handleAskGaiaKeyPress}
+                startContent={<div className="pingspinner size-[20px]" />}
                 endContent={
-                  <Button isIconOnly color="primary" radius="full">
-                    <SentIcon />
+                  <Button
+                    isIconOnly
+                    color="primary"
+                    radius="full"
+                    onPress={handleAskGaia}
+                  >
+                    <SentIcon color={undefined} />
                   </Button>
                 }
               />
@@ -190,30 +266,9 @@ export default function MailCompose({
                     Send
                     <Sent02Icon width={23} height={23} />
                   </Button>
-                  <Dropdown placement="bottom-end">
-                    <DropdownTrigger>
-                      <Button isIconOnly>
-                        <ChevronDownIcon />
-                      </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                      aria-label="Mail Options"
-                      selectionMode="single"
-                      color="primary"
-                    >
-                      <DropdownItem
-                        key="squash"
-                        color="primary"
-                        classNames={{
-                          title:
-                            "flex items-center gap-2 p-0 w-fit justify-end",
-                        }}
-                      >
-                        Schedule Send{" "}
-                        <TimeScheduleIcon className="text-black" />
-                      </DropdownItem>
-                    </DropdownMenu>
-                  </Dropdown>
+                  {/*
+                  // Additional controlled menus (e.g., schedule send) can be added here similarly.
+                  */}
                 </ButtonGroup>
               </div>
             </footer>

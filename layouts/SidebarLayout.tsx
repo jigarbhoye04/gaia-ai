@@ -1,12 +1,11 @@
-import { LegacyRef, ReactNode } from "react";
-import { ChatBubbleAddIcon, PencilSquareIcon } from "@/components/Misc/icons";
+import { ChatBubbleAddIcon } from "@/components/Misc/icons";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
 import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
-import useMediaQuery from "@/hooks/useMediaQuery";
-import { useRouter } from "next/navigation";
 import { useConversation } from "@/hooks/useConversation";
+import { useRouter } from "next/navigation";
+import { LegacyRef, ReactNode } from "react";
 
 export default function SidebarLayout({
   sidebarref,
@@ -21,7 +20,6 @@ export default function SidebarLayout({
   isSidebarVisible: boolean;
   children: ReactNode;
 }) {
-  const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const { clearMessages } = useConversation();
   const router = useRouter();
 

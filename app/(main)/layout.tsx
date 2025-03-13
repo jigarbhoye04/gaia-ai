@@ -12,15 +12,13 @@ import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useConversation } from "@/hooks/useConversation";
 import { useConversationList } from "@/hooks/useConversationList";
-import useFetchUser from "@/hooks/useFetchUser";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import { useDrag } from "@use-gesture/react";
 import {
   useParams,
   usePathname,
-  useRouter,
-  useSearchParams,
+  useRouter
 } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
@@ -33,17 +31,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const { conversations } = useConversationList();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
-  const searchParams = useSearchParams();
   const { clearMessages } = useConversation();
-  const { fetchUserInfo } = useFetchUser();
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, [searchParams]);
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
 
   useEffect(() => {
     if (isMobileScreen) setSidebarVisible(false);

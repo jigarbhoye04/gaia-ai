@@ -115,6 +115,7 @@ module.exports = {
     },
   },
   darkMode: ["class", "class"],
+  mode: "jit",
   plugins: [
     addVariablesForColors,
     require("tailwindcss-animate"),

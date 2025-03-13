@@ -7,12 +7,7 @@ import { EmailData, EmailsResponse } from "@/types/mailTypes";
 import { fetchEmails, formatTime } from "@/utils/mailUtils";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
-import {
-  InfiniteData,
-  QueryClient,
-  QueryClientProvider,
-  useInfiniteQuery,
-} from "@tanstack/react-query";
+import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
@@ -80,7 +75,9 @@ export default function MailsPage() {
       <Tooltip
         showArrow
         placement="top"
+        delay={400}
         closeDelay={0}
+        shouldCloseOnInteractOutside={() => true}
         onOpenChange={fetchSummary}
         content={
           <div className="p-1 flex flex-col w-[300px]">
