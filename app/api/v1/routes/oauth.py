@@ -2,14 +2,12 @@ from typing import Annotated
 from urllib.parse import urlencode
 
 import httpx
-import requests
-from fastapi import APIRouter, Cookie, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
-from app.db.collections import users_collection
 from app.services.oauth_service import store_user_info
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 
@@ -125,7 +123,7 @@ async def get_me(user: dict = Depends(get_current_user)):
     Returns the current authenticated user's details.
     Uses the dependency injection to fetch user data.
     """
-    return {"message": "User retrieved successfully", "user": user}
+    return {"message": "User retrieved successfully", **user}
 
 
 # async def me(access_token: str = Cookie(None)):
