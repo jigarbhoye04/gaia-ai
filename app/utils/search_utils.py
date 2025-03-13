@@ -21,7 +21,6 @@ async def perform_search(query: str, count=7):
         "count": count,
         # "responseFilter": "webPages,images",
     }
-    
 
     try:
         response = await http_async_client.get(
@@ -44,7 +43,7 @@ async def perform_search(query: str, count=7):
             )
 
         # Extract images
-        images = []
+        # images = []
         # for img in data.get("images", {}).get("value", []):
         #     images.append(
         #         {
@@ -55,7 +54,7 @@ async def perform_search(query: str, count=7):
         #         }
         #     )
 
-        return {"results": results, "images": images}
+        return {"results": results}
 
     except httpx.HTTPStatusError as http_err:
         return {"error": f"HTTP error occurred: {http_err}"}
@@ -63,6 +62,34 @@ async def perform_search(query: str, count=7):
         return {"error": f"Request error occurred: {req_err}"}
     except Exception as e:
         return {"error": f"An unexpected error occurred: {e}"}
+
+
+def format_results_for_llm(results):
+    """
+    Formats search results into a clean, structured format for an LLM.
+
+    Args:
+        results (list): List of search result dictionaries containing 'title', 'url', 'snippet', 'source', and 'date'.
+
+    Returns:
+        str: Formatted string suitable for an LLM response.
+    """
+
+    if not results:
+        return "No relevant results found."
+
+    formatted_output = "Search Results:\n\n"
+
+    for index, result in enumerate(results, start=1):
+        formatted_output += (
+            f"{index}. **{result['title']}**\n"
+            f"   - Source: {result['source']}\n"
+            f"   - Date: {result['date']}\n"
+            f"   - Snippet: {result['snippet']}\n"
+            f"   - [Read more]({result['url']})\n\n"
+        )
+
+    return formatted_output
 
 
 async def perform_fetch(url: str):

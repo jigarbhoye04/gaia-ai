@@ -26,19 +26,30 @@ from app.services.text_service import classify_event_type
 from app.utils.embedding_utils import query_documents, search_notes_by_similarity
 from app.utils.notes import insert_note
 from app.utils.notes_utils import should_create_memory
-from app.utils.search_utils import perform_fetch, perform_search
+from app.utils.search_utils import format_results_for_llm, perform_fetch, perform_search
 
 
 async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Perform a web search and append relevant context to the last message.
     """
-    last_message = context["last_message"]
-    query_text = context["query_text"]
-    search_result = await perform_search(query=query_text, count=5)
-    last_message["content"] += (
-        f"\nRelevant context using GAIA web search. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1]](https://example.com)). : {search_result}. Use citations and references for all the content. "
-    )
+
+    if context["search_web"] and context["last_message"]:
+        last_message = context["last_message"]
+        query_text = context["query_text"]
+        search_result = await perform_search(query=query_text, count=5)
+        formatted_results = format_results_for_llm(
+            search_result.get("results") or search_result
+        )
+        print(formatted_results)
+        last_message[
+            "content"
+        ] += f"""\n\nSystem: You have access to accurate web search results using GAIA web search.
+            Below is the relevant context retrieved from the search:\n\n
+            {formatted_results}\n\n
+            You MUST include citations for all sourced content. Citations should be formatted as [1], with the link in markdown format, e.g., [[1]](https://example.com).
+            Ensure that every factual statement derived from the search results is properly cited. 
+            Maintain accuracy, neutrality, and coherence when integrating this information."""
 
     print(context)
     return context
@@ -158,6 +169,7 @@ async def chat_stream(
         "user": user,
         "intent": None,
         "messages": jsonable_encoder(body.messages),
+        "search_web": body.search_web,
     }
 
     pipeline_steps = [

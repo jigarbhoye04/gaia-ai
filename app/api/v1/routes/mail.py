@@ -1,14 +1,17 @@
 import base64
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import BatchHttpRequest
+from pydantic import BaseModel
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.settings import settings
+from app.services.llm_service import do_prompt_no_stream
+from app.utils.embedding_utils import search_notes_by_similarity
 
 router = APIRouter()
 
@@ -122,5 +125,64 @@ def list_messages(
             "messages": [transform_gmail_message(msg) for msg in detailed_messages],
             "nextPageToken": results.get("nextPageToken"),
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class EmailRequest(BaseModel):
+    subject: str
+    body: str
+    prompt: str
+    writingStyle: str
+
+
+@router.post("/mail/ai/compose")
+async def process_email(
+    request: EmailRequest,
+    current_user: dict = Depends(get_current_user),
+) -> Any:
+    try:
+        print(current_user)
+
+        notes = await search_notes_by_similarity(
+            input_text=request.prompt, user_id=current_user.get("user_id")
+        )
+
+        prompt = f"""You are an expert professional email writer. Based on the details provided below, craft a well-structured, engaging, and professional email. Follow these instructions carefully:
+
+        1. Analyze the provided email details.
+        2. If the current subject is "empty", generate a compelling subject line that reflects the main purpose of the email.
+        3. For the email body, include:
+        - A courteous greeting.
+        - A brief introduction.
+        - A clear explanation or message that fulfills the specified task.
+        - A professional closing with an appropriate sign-off.
+        4. Maintain a tone that is formal, respectful, and tailored to the context, unless the task specifies otherwise.
+        5. Do not include any additional commentary, headers, or titles outside of the email content.
+        6. Use proper markdown to format the email where necessary, but do not use it excessively.
+        7. Output your final response strictly in JSON format with the following structure:
+        {{
+            "subject": "Your generated subject line here",
+            "body": "Your generated email body here"
+        }}
+
+        Email Details:
+        - Current Subject: {request.subject or "empty"}
+        - Body: {request.body or "empty"}
+        - Writing Style: {request.writingStyle or "Professional"}
+
+        Task:
+        - {request.prompt}
+
+        User Name: {current_user.get("name", "not specified")}
+
+        System: The user has the following notes: "
+        f"{"- ".join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation
+
+        Generate the email accordingly.
+    """
+
+        response = await do_prompt_no_stream(prompt)
+        return {"result": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
