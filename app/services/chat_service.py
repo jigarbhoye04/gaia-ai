@@ -141,6 +141,7 @@ async def chat_stream(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
     user: dict,
+    llm_model: str,
 ) -> StreamingResponse:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
@@ -153,8 +154,8 @@ async def chat_stream(
         "query_text": last_message["content"],
         "last_message": last_message,
         "body": body,
+        "llm_model": llm_model,
         "user": user,
-        "llm_model": "@cf/meta/llama-3.1-8b-instruct-fast",
         "intent": None,
         "messages": jsonable_encoder(body.messages),
     }
@@ -163,7 +164,7 @@ async def chat_stream(
         fetch_notes,
         fetch_documents,
         classify_event,
-        choose_llm_model,
+        # choose_llm_model,
         fetch_webpage,
         do_search,
     ]
@@ -356,7 +357,7 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
 
 
 async def update_conversation_description_llm(
-    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict
+    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict, model: str
 ) -> dict:
     """
     Update the conversation description using an LLM-generated summary.
@@ -371,6 +372,7 @@ async def update_conversation_description_llm(
                 "Do not answer the message—simply summarize its subject. Do not add any sort of formatting or markdown, just respond in plaintext."
             ),
             max_tokens=5,
+            model=model,
         )
         description = (response.get("response", "New Chat")).replace('"', "")
     except Exception as e:
