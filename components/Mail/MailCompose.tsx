@@ -1,11 +1,4 @@
-import { MenuBar } from "@/components/Notes/NotesMenuBar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useUser } from "@/hooks/useUser";
 import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
@@ -17,18 +10,25 @@ import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { Editor, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Tag, TagInput } from "emblor";
-import { AlertCircle, Check, ChevronDown } from "lucide-react";
+import { Tag } from "emblor";
+import { convert } from "html-to-text";
+import { AlertCircle } from "lucide-react";
 import { marked } from "marked";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
-import { AiSearch02Icon, BrushIcon, Sent02Icon, SentIcon } from "../Misc/icons";
-import { Button as ShadcnButton } from "../ui/button";
+import { AttachmentIcon, Sent02Icon } from "../Misc/icons";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
+import { AIDraftInput } from "./components/AIDraftInput";
+import { ClarityDropdown } from "./components/ClarityDropdown";
+import { ContentLengthDropdown } from "./components/ContentLengthDropdown";
+import { EmailEditor } from "./components/EmailEditor";
+import { EmailRecipients } from "./components/EmailRecipients";
+import { FileAttachments } from "./components/FileAttachments";
+import { WritingStyleDropdown } from "./components/WritingStyleDropdown";
 
 interface MailComposeProps {
   open: boolean;
@@ -41,6 +41,8 @@ export default function MailCompose({
 }: MailComposeProps): JSX.Element {
   const user = useUser();
   const [toEmails, setToEmails] = useState<Tag[]>([]);
+  const [ccEmails, setCcEmails] = useState<Tag[]>([]);
+  const [bccEmails, setBccEmails] = useState<Tag[]>([]);
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [subject, setSubject] = useState("");
@@ -51,6 +53,11 @@ export default function MailCompose({
   const [contentLength, setContentLength] = useState("none");
   const [clarityOption, setClarityOption] = useState("none");
   const [error, setError] = useState(null);
+  const [showCcBcc, setShowCcBcc] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [sendLoading, setSendLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const editorContentSetRef = useRef(false);
 
   const editor = useEditor({
     extensions: [
@@ -70,35 +77,33 @@ export default function MailCompose({
     ],
     editorProps: {
       attributes: {
-        class: "h-[50vh] overflow-y-auto",
+        class: "h-[40vh] overflow-y-auto",
       },
     },
-    content: body,
+    content: "",
     onUpdate: ({ editor }) => {
-      setBody(editor.getHTML());
+      // Only update body state from editor when user is typing
+      // not when we programmatically update the editor
+      if (!editorContentSetRef.current) {
+        setBody(editor.getHTML());
+      } else {
+        editorContentSetRef.current = false;
+      }
     },
   });
 
-  const writingStyles = [
-    { id: "formal", label: "Formal" },
-    { id: "friendly", label: "Friendly" },
-    { id: "casual", label: "Casual" },
-    { id: "persuasive", label: "Persuasive" },
-    { id: "humorous", label: "Humorous" },
-  ];
+  // This effect runs when body state changes from external sources (like AI)
+  useEffect(() => {
+    if (editor && !editor.isDestroyed && body) {
+      // Set a flag to prevent feedback loop with onUpdate
+      editorContentSetRef.current = true;
 
-  const contentLengthOptions = [
-    { id: "none", label: "None" },
-    { id: "shorten", label: "Shorten" },
-    { id: "lengthen", label: "Lengthen" },
-    { id: "summarize", label: "Summarize" },
-  ];
-
-  const clarityOptions = [
-    { id: "none", label: "None" },
-    { id: "simplify", label: "Simplify" },
-    { id: "rephrase", label: "Rephrase" },
-  ];
+      // Schedule the update on next tick to ensure editor is ready
+      setTimeout(() => {
+        editor.commands.setContent(body);
+      }, 0);
+    }
+  }, [body, editor]);
 
   const handleAiSelect = (selectedSuggestions: EmailSuggestion[]) => {
     const newTags: Tag[] = selectedSuggestions.map((s) => ({
@@ -109,22 +114,31 @@ export default function MailCompose({
     setToEmails((prev) => [...prev, ...newTags]);
   };
 
-  const handleAskGaia = async (overrideStyle?: string) => {
+  const handleAskGaia = async (overrideStyle?: string | { id: string }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiauth.post("/mail/ai/compose", {
+      const selectedStyle = typeof overrideStyle === 'string'
+        ? overrideStyle
+        : (overrideStyle?.id || writingStyle);
+
+      const requestData = {
         subject,
-        body,
+        // Get content directly from editor if available
+        body: editor ? convert(editor.getHTML()) : convert(body),
         prompt,
-        writingStyle: overrideStyle || writingStyle,
+        writingStyle: selectedStyle,
         contentLength,
         clarityOption,
-      });
+      };
+
+      const res = await apiauth.post("/mail/ai/compose", requestData);
       try {
         const response = JSON.parse(res.data.result.response);
         const formattedBody = marked(response.body.replace(/\n/g, "<br />"));
-        if (editor) editor.commands.setContent(formattedBody);
+
+        // Update state - this will trigger the useEffect to update editor
+        setBody(formattedBody);
         setSubject(response.subject);
       } catch (error) {
         setError(res.data.result.response);
@@ -137,11 +151,81 @@ export default function MailCompose({
     }
   };
 
-  const handleAskGaiaKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (loading) return;
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAskGaia();
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setAttachments((prev) => [...prev, ...newFiles]);
+      // Reset the input value so the same file can be selected again if needed
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSendEmail = async () => {
+    if (toEmails.length === 0) {
+      toast.error("Please add at least one recipient");
+      return;
+    }
+
+    setSendLoading(true);
+    try {
+      const formData = new FormData();
+
+      // Add recipients
+      formData.append('to', toEmails.map(tag => tag.text).join(','));
+      formData.append('subject', subject);
+
+      // Get the latest HTML directly from the editor if available
+      const emailBody = editor ? editor.getHTML() : body;
+
+      // Gmail API expects an HTML content flag for proper rendering
+      formData.append('body', emailBody);
+      formData.append('contentType', 'text/html'); // Explicitly specify content type as HTML
+
+      // Add CC and BCC if present
+      if (ccEmails.length > 0) {
+        formData.append('cc', ccEmails.map(tag => tag.text).join(','));
+      }
+
+      if (bccEmails.length > 0) {
+        formData.append('bcc', bccEmails.map(tag => tag.text).join(','));
+      }
+
+      // Add all attachments
+      attachments.forEach(file => {
+        formData.append('attachments', file);
+      });
+
+      const response = await apiauth.post('/gmail/send', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success("Email sent successfully!");
+      onOpenChange(false);
+
+      // Reset form
+      setToEmails([]);
+      setCcEmails([]);
+      setBccEmails([]);
+      setSubject("");
+      setBody("");
+      if (editor) editor.commands.setContent("");
+      setAttachments([]);
+
+    } catch (error) {
+      console.error("Error sending email:", error);
+      toast.error("Failed to send email. Please try again.");
+    } finally {
+      setSendLoading(false);
     }
   };
 
@@ -150,9 +234,8 @@ export default function MailCompose({
       <Drawer.Root open={open} onOpenChange={onOpenChange} direction="right">
         <Drawer.Portal>
           <Drawer.Overlay
-            className={`fixed inset-0 bg-black/40 backdrop-blur-md ${
-              isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
-            }`}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-md ${isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
+              }`}
           />
           <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
@@ -177,31 +260,19 @@ export default function MailCompose({
               className="bg-zinc-800"
             />
 
-            <div className="relative">
-              <TagInput
-                styleClasses={{
-                  inlineTagsContainer:
-                    "bg-zinc-800 border border-t-0 border-x-0 !border-b-zinc-600 border-b-2 p-2 rounded-none",
-                  tag: { body: "p-0 bg-white/20 pl-3 text-sm border-none" },
-                }}
-                shape="pill"
-                animation="fadeIn"
-                placeholder="To"
-                tags={toEmails}
-                setTags={setToEmails}
-                activeTagIndex={activeTagIndex}
-                setActiveTagIndex={setActiveTagIndex}
-              />
-              <Button
-                isIconOnly
-                className="absolute right-[3px] top-[3px]"
-                size="sm"
-                color="primary"
-                onPress={() => setIsAiModalOpen(true)}
-              >
-                <AiSearch02Icon color={undefined} width={19} />
-              </Button>
-            </div>
+            <EmailRecipients
+              toEmails={toEmails}
+              setToEmails={setToEmails}
+              ccEmails={ccEmails}
+              setCcEmails={setCcEmails}
+              bccEmails={bccEmails}
+              setBccEmails={setBccEmails}
+              showCcBcc={showCcBcc}
+              setShowCcBcc={setShowCcBcc}
+              activeTagIndex={activeTagIndex}
+              setActiveTagIndex={setActiveTagIndex}
+              onOpenAiModal={() => setIsAiModalOpen(true)}
+            />
 
             <Input
               placeholder="Subject"
@@ -214,186 +285,65 @@ export default function MailCompose({
 
             <div className="relative h-full w-full flex flex-col">
               <div className="flex pb-2 gap-3 justify-end w-full z-[2]">
-                {/* Writing Style Dropdown */}
-                <div className="relative">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <ShadcnButton
-                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
-                        size="sm"
-                      >
-                        <div className="flex flex-row gap-1">
-                          <BrushIcon color={undefined} width={20} height={20} />
-                          <span className="font-medium">
-                            Writing Style:
-                          </span>{" "}
-                          <span>
-                            {
-                              writingStyles.find((s) => s.id === writingStyle)
-                                ?.label
-                            }
-                          </span>
-                          <ChevronDown color={undefined} width={20} />
-                        </div>
-                      </ShadcnButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
-                      {writingStyles.map((style) => (
-                        <DropdownMenuItem
-                          key={style.id}
-                          onClick={() => {
-                            setWritingStyle(style.id);
-                            handleAskGaia(style.id);
-                          }}
-                          className="cursor-pointer focus:bg-zinc-600 focus:text-white"
-                        >
-                          <div className="flex justify-between w-full items-center">
-                            {style.label}
-                            {writingStyles.find((s) => s.id === writingStyle)
-                              ?.label === style.label && (
-                              <Check color={undefined} width={20} height={20} />
-                            )}
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Content Length Dropdown */}
-                <div className="relative">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <ShadcnButton
-                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
-                        size="sm"
-                      >
-                        <div className="flex flex-row gap-1">
-                          <BrushIcon color={undefined} width={20} height={20} />
-                          <span className="font-medium">
-                            Content Length:
-                          </span>{" "}
-                          <span>
-                            {contentLengthOptions.find(
-                              (opt) => opt.id === contentLength
-                            )?.label || "None"}
-                          </span>
-                          <ChevronDown color={undefined} width={20} />
-                        </div>
-                      </ShadcnButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
-                      {contentLengthOptions.map((option) => (
-                        <DropdownMenuItem
-                          key={option.id}
-                          onClick={() => {
-                            setContentLength(option.id);
-                            handleAskGaia();
-                          }}
-                          className="cursor-pointer focus:bg-zinc-600 focus:text-white"
-                        >
-                          <div className="flex justify-between w-full items-center">
-                            {option.label}
-                            {contentLength === option.id && (
-                              <Check color={undefined} width={20} />
-                            )}
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Clarity Dropdown */}
-                <div className="relative">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <ShadcnButton
-                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
-                        size="sm"
-                      >
-                        <div className="flex flex-row gap-1">
-                          <BrushIcon color={undefined} width={20} height={20} />
-                          <span className="font-medium">Clarity:</span>{" "}
-                          <span>
-                            {clarityOptions.find(
-                              (opt) => opt.id === clarityOption
-                            )?.label || "None"}
-                          </span>
-                          <ChevronDown color={undefined} width={20} />
-                        </div>
-                      </ShadcnButton>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
-                      {clarityOptions.map((option) => (
-                        <DropdownMenuItem
-                          key={option.id}
-                          onClick={() => {
-                            setClarityOption(option.id);
-                            handleAskGaia();
-                          }}
-                          className="cursor-pointer focus:bg-zinc-600 focus:text-white"
-                        >
-                          <div className="flex justify-between w-full items-center">
-                            {option.label}
-                            {clarityOption === option.id && (
-                              <Check color={undefined} width={20} />
-                            )}
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
+                <WritingStyleDropdown
+                  writingStyle={writingStyle}
+                  setWritingStyle={setWritingStyle}
+                  handleAskGaia={handleAskGaia}
+                />
+                <ContentLengthDropdown
+                  contentLength={contentLength}
+                  setContentLength={setContentLength}
+                  handleAskGaia={handleAskGaia}
+                />
+                <ClarityDropdown
+                  clarityOption={clarityOption}
+                  setClarityOption={setClarityOption}
+                  handleAskGaia={handleAskGaia}
+                />
               </div>
 
-              {editor && (
-                <>
-                  <MenuBar editor={editor} textLength={false} isEmail={true} />
-                  <EditorContent className="bg-zinc-800 p-2" editor={editor} />
-                </>
-              )}
+              <EmailEditor body={body} setBody={setBody} editor={editor} />
+
+              <FileAttachments
+                attachments={attachments}
+                onRemove={handleRemoveAttachment}
+              />
             </div>
 
-            <footer className="flex w-full justify-end gap-5">
-              <Input
-                placeholder="What is the email about?"
-                radius="full"
-                classNames={{ inputWrapper: "pr-1 pl-0" }}
-                className="pr-1"
-                variant="faded"
-                size="lg"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={handleAskGaiaKeyPress}
-                startContent={<div className="pingspinner size-[20px]" />}
-                endContent={
-                  <Button
-                    isIconOnly={loading}
-                    color="primary"
-                    radius="full"
-                    onPress={() => handleAskGaia()}
-                    isLoading={loading}
-                  >
-                    <div className="flex px-3 w-fit gap-2 items-center text-medium">
-                      {!loading && (
-                        <>
-                          AI Draft
-                          <SentIcon
-                            color={undefined}
-                            width={25}
-                            className="min-w-[25px]"
-                          />
-                        </>
-                      )}
-                    </div>
-                  </Button>
-                }
+            <footer className="flex w-full justify-between items-center gap-5 mt-2">
+              <AIDraftInput
+                prompt={prompt}
+                setPrompt={setPrompt}
+                handleAskGaia={handleAskGaia}
+                loading={loading}
               />
 
-              <div className="flex items-center gap-2">
+              <div className="flex gap-3 items-center">
+                <div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="light"
+                    onPress={handleAttachmentClick}
+                    className="text-gray-400"
+                    startContent={<AttachmentIcon color={undefined} width={20} height={20} />}
+                  >
+                    Add Files
+                  </Button>
+                </div>
+
                 <ButtonGroup color="primary">
-                  <Button className="text-medium">
+                  <Button
+                    className="text-medium"
+                    onPress={handleSendEmail}
+                    isLoading={sendLoading}
+                    isDisabled={sendLoading || toEmails.length === 0}
+                  >
                     Send
                     <Sent02Icon color={undefined} width={23} height={23} />
                   </Button>
