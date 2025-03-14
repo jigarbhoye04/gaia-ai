@@ -1,12 +1,17 @@
 import base64
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
+import os
+import mimetypes
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import BatchHttpRequest
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.settings import settings
@@ -186,3 +191,257 @@ async def process_email(
         return {"result": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class SendEmailRequest(BaseModel):
+    to: List[EmailStr]
+    subject: str
+    body: str
+    cc: Optional[List[EmailStr]] = None
+    bcc: Optional[List[EmailStr]] = None
+    
+def create_message(sender: str, to: List[str], subject: str, body: str, cc: Optional[List[str]] = None, bcc: Optional[List[str]] = None, attachments: Optional[List[UploadFile]] = None):
+    """Create a message for an email with optional attachments.
+
+    Args:
+        sender: Email address of the sender.
+        to: Email addresses of the recipients.
+        subject: The subject of the email message.
+        body: The body of the email message.
+        cc: Optional. Email addresses for cc recipients.
+        bcc: Optional. Email addresses for bcc recipients.
+        attachments: Optional. List of files to attach.
+
+    Returns:
+        An object containing a base64url encoded email message.
+    """
+    if attachments and len(attachments) > 0:
+        # Create multipart message
+        message = MIMEMultipart()
+        message['from'] = sender
+        message['to'] = ', '.join(to)
+        message['subject'] = subject
+        
+        if cc:
+            message['cc'] = ', '.join(cc)
+        if bcc:
+            message['bcc'] = ', '.join(bcc)
+            
+        # Add body
+        message.attach(MIMEText(body))
+        
+        # Add attachments
+        for attachment in attachments:
+            content_type = attachment.content_type or mimetypes.guess_type(attachment.filename)[0] or 'application/octet-stream'
+            
+            attachment_part = MIMEApplication(
+                attachment.file.read(),
+                Name=os.path.basename(attachment.filename)
+            )
+            
+            # Add header to attachment
+            attachment_part['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment.filename)}"'
+            message.attach(attachment_part)
+            
+        # Reset file pointers
+        for attachment in attachments:
+            attachment.file.seek(0)
+            
+        encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    else:
+        # Simple message without attachments
+        message_parts = [
+            f"From: {sender}",
+            f"To: {', '.join(to)}"
+        ]
+        
+        # Add CC if present
+        if cc:
+            message_parts.append(f"Cc: {', '.join(cc)}")
+            
+        # Add BCC if present
+        if bcc:
+            message_parts.append(f"Bcc: {', '.join(bcc)}")
+            
+        # Add subject and body
+        message_parts.append(f"Subject: {subject}")
+        message_parts.append("")  # Empty line between headers and body
+        message_parts.append(body)
+        
+        # Join all parts with newlines
+        message_str = "\n".join(message_parts)
+        encoded_message = base64.urlsafe_b64encode(message_str.encode()).decode()
+    
+    return {'raw': encoded_message}
+
+@router.post("/gmail/send", summary="Send an email using Gmail API")
+async def send_email(
+    to: str = Form(...),
+    subject: str = Form(...),
+    body: str = Form(...),
+    cc: Optional[str] = Form(None),
+    bcc: Optional[str] = Form(None),
+    attachments: Optional[List[UploadFile]] = File(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Send an email using the Gmail API.
+    
+    - **to**: Recipient email addresses (comma-separated)
+    - **subject**: Email subject
+    - **body**: Email body
+    - **cc**: Optional CC recipients (comma-separated)
+    - **bcc**: Optional BCC recipients (comma-separated)
+    - **attachments**: Optional files to attach to the email
+    """
+    try:
+        service = get_gmail_service(current_user)
+        
+        # Get the user's email address
+        profile = service.users().getProfile(userId='me').execute()
+        sender = profile.get('emailAddress')
+        
+        # Parse recipients
+        to_list = [email.strip() for email in to.split(',') if email.strip()]
+        cc_list = [email.strip() for email in cc.split(',')] if cc else None
+        bcc_list = [email.strip() for email in bcc.split(',')] if bcc else None
+        
+        # Create the email message
+        message = create_message(
+            sender=sender,
+            to=to_list,
+            subject=subject,
+            body=body,
+            cc=cc_list,
+            bcc=bcc_list,
+            attachments=attachments
+        )
+        
+        # Send the email
+        sent_message = service.users().messages().send(
+            userId='me',
+            body=message
+        ).execute()
+        
+        return {
+            "message_id": sent_message.get('id'),
+            "status": "Email sent successfully",
+            "attachments_count": len(attachments) if attachments else 0
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+@router.post("/gmail/send-json", summary="Send an email using JSON payload")
+async def send_email_json(
+    request: SendEmailRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Send an email using the Gmail API with JSON payload (no attachments).
+    
+    - **to**: List of recipient email addresses
+    - **subject**: Email subject
+    - **body**: Email body
+    - **cc**: Optional list of CC recipients
+    - **bcc**: Optional list of BCC recipients
+    """
+    try:
+        service = get_gmail_service(current_user)
+        
+        # Get the user's email address
+        profile = service.users().getProfile(userId='me').execute()
+        sender = profile.get('emailAddress')
+        
+        # Create the email message
+        message = create_message(
+            sender=sender,
+            to=request.to,
+            subject=request.subject,
+            body=request.body,
+            cc=request.cc,
+            bcc=request.bcc
+        )
+        
+        # Send the email
+        sent_message = service.users().messages().send(
+            userId='me',
+            body=message
+        ).execute()
+        
+        return {
+            "message_id": sent_message.get('id'),
+            "status": "Email sent successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+
+
+class EmailSummaryRequest(BaseModel):
+    message_id: str
+    include_key_points: bool = True
+    include_action_items: bool = True
+    max_length: Optional[int] = 150
+
+
+@router.post("/gmail/summarize", summary="Summarize an email using LLM")
+async def summarize_email(
+    request: EmailSummaryRequest,
+    current_user: dict = Depends(get_current_user),
+) -> Any:
+    """
+    Summarize an email using the LLM service.
+    
+    - **message_id**: The Gmail message ID to summarize
+    - **include_key_points**: Whether to include key points in the summary
+    - **include_action_items**: Whether to include action items in the summary
+    - **max_length**: Maximum length of the summary in words
+    
+    Returns a summary of the email with optional key points and action items.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        
+        # Fetch the email by ID
+        message = service.users().messages().get(
+            userId='me', 
+            id=request.message_id,
+            format='full'
+        ).execute()
+        
+        # Transform the message into a readable format
+        email_data = transform_gmail_message(message)
+        
+        # Prepare the prompt for the LLM
+        prompt = f"""You are an expert email assistant. Please summarize the following email concisely and professionally.
+
+Email Subject: {email_data.get('subject', 'No Subject')}
+From: {email_data.get('from', 'Unknown')}
+Date: {email_data.get('time', 'Unknown')}
+
+Email Content:
+{email_data.get('body', email_data.get('snippet', 'No content available'))}
+
+Please provide a summary of this email in {request.max_length or 150} words or less.
+
+{" Include the key points of the email." if request.include_key_points else ""}
+{" Identify any action items or requests made in the email." if request.include_action_items else ""}
+
+Format your response as a JSON object with the following structure:
+{{
+    "summary": "The concise summary of the email",
+    "key_points": ["Key point 1", "Key point 2", ...],
+    "action_items": ["Action item 1", "Action item 2", ...],
+    "sentiment": "A brief description of the email's tone/sentiment (formal, urgent, friendly, etc.)"
+}}
+"""
+        
+        # Call the LLM service to generate the summary
+        llm_response = await do_prompt_no_stream(prompt)
+        
+        return {
+            "email_id": request.message_id,
+            "email_subject": email_data.get('subject', 'No Subject'),
+            "result": llm_response
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to summarize email: {str(e)}")
