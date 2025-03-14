@@ -12,35 +12,10 @@ import { useState } from "react";
 interface EmailEditorProps {
     body: string;
     setBody: (body: string) => void;
+    editor: any;
 }
 
-export const EmailEditor = ({ body, setBody }: EmailEditorProps): JSX.Element => {
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-            Highlight,
-            Typography,
-            Underline,
-            Link.configure({
-                openOnClick: true,
-                autolink: true,
-                linkOnPaste: true,
-            }),
-            CharacterCount.configure({ limit: 10_000 }),
-            Placeholder.configure({
-                placeholder: () => "Body",
-            }),
-        ],
-        editorProps: {
-            attributes: {
-                class: "h-[40vh] overflow-y-auto",
-            },
-        },
-        content: body,
-        onUpdate: ({ editor }) => {
-            setBody(editor.getHTML());
-        },
-    });
+export const EmailEditor = ({ body, setBody, editor }: EmailEditorProps): JSX.Element => {
 
     return (
         <>

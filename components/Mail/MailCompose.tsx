@@ -135,10 +135,9 @@ export default function MailCompose({
       const res = await apiauth.post("/mail/ai/compose", requestData);
       try {
         const response = JSON.parse(res.data.result.response);
-        const formattedBody = marked(response.body.replace(/\n/g, "<br />"));
 
         // Update state - this will trigger the useEffect to update editor
-        setBody(formattedBody);
+        setBody(marked(response.body.replace(/\n/g, "<br />")));
         setSubject(response.subject);
       } catch (error) {
         setError(res.data.result.response);
