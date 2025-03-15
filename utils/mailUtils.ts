@@ -58,11 +58,25 @@ export function formatTime(timestamp: string): string {
   });
 }
 
+// Fetch function for the normal inbox route
 export const fetchEmails = async ({
   pageParam = undefined,
 }: QueryFunctionContext<string[]>): Promise<EmailsResponse> => {
   const maxResults = 20;
   const url = `/gmail/messages?maxResults=${maxResults}${
+    pageParam ? `&pageToken=${pageParam}` : ""
+  }`;
+  const response = await apiauth.get(url);
+  const data = response.data;
+  return { emails: data.messages, nextPageToken: data.nextPageToken };
+};
+
+// Fetch function for the important emails route
+export const fetchImportantEmails = async ({
+  pageParam = undefined,
+}: QueryFunctionContext<string[]>): Promise<EmailsResponse> => {
+  const maxResults = 20;
+  const url = `/gmail/important?maxResults=${maxResults}${
     pageParam ? `&pageToken=${pageParam}` : ""
   }`;
   const response = await apiauth.get(url);

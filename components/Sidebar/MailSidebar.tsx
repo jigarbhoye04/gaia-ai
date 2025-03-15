@@ -1,17 +1,17 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import MailCompose from "../Mail/MailCompose";
 import {
   InboxIcon,
   LabelImportantIcon,
-  LicenseDraftIcon,
   QuillWrite01Icon,
   Sent02Icon,
-  TimeScheduleIcon,
+  TimeScheduleIcon
 } from "../Misc/icons";
-import MailCompose from "../Mail/MailCompose";
-import { useState } from "react";
-import { usePathname } from "next/navigation";
 
 type MailItem = {
   label: string;
@@ -29,15 +29,16 @@ const mailItems: MailItem[] = [
 type MailButtonProps = {
   label: string;
   Icon: React.ElementType;
-  path: string
+  path: string;
+  pathname: string;
+  router: ReturnType<typeof useRouter>;
 };
 
-function MailButton({ label, Icon, path }: MailButtonProps) {
-
-  const pathname = usePathname();
+function MailButton({ label, Icon, path, pathname, router }: MailButtonProps) {
 
   return (
     <Button
+      onPress={() => router.push(path)}
       startContent={<Icon color={undefined} className="mr-1" />}
       className={`text-start justify-start pl-2 ${path === pathname ? "text-primary" : "text-foreground-600"}`}
       variant="light"
@@ -54,13 +55,18 @@ type MailContainerProps = {
 };
 
 function MailContainer({ items }: MailContainerProps) {
+
+  const pathname = usePathname();
+  const router = useRouter();
+
+
   return (
     <div className="flex h-full flex-col">
       <div className="text-sm text-foreground-500 px-2 font-medium pb-1">
         Mail
       </div>
       {items.map((item, index) => (
-        <MailButton key={index} label={item.label} Icon={item.icon} path={item.path} />
+        <MailButton key={index} label={item.label} Icon={item.icon} path={item.path} pathname={pathname} router={router} />
       ))}
     </div>
   );

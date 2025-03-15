@@ -6,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <MailsPage category="inbox" title="Inbox" />;
+  return <MailsPage category="important" title="Important" />;
 }
