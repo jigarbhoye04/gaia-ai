@@ -450,3 +450,45 @@ async def get_all_calendar_events(
         else:
             events_by_calendar[cal_id] = result
     return {"calendars": events_by_calendar}
+
+
+async def get_user_calendar_preferences(user_id: str) -> Dict[str, List[str]]:
+    """
+    Retrieve the user's selected calendar preferences from the database.
+
+    Args:
+        user_id (str): The ID of the user whose preferences are being retrieved.
+
+    Returns:
+        Dict[str, List[str]]: A dictionary with the user's selected calendar IDs.
+
+    Raises:
+        HTTPException: If preferences are not found for the user.
+    """
+    preferences = await calendars_collection.find_one({"user_id": user_id})
+    if preferences and "selected_calendars" in preferences:
+        return {"selectedCalendars": preferences["selected_calendars"]}
+    else:
+        raise HTTPException(status_code=404, detail="Calendar preferences not found")
+
+
+async def update_user_calendar_preferences(user_id: str, selected_calendars: List[str]) -> Dict[str, str]:
+    """
+    Update the user's selected calendar preferences in the database.
+
+    Args:
+        user_id (str): The ID of the user whose preferences are being updated.
+        selected_calendars (List[str]): The list of selected calendar IDs to save.
+
+    Returns:
+        Dict[str, str]: A message indicating the result of the update operation.
+    """
+    result = await calendars_collection.update_one(
+        {"user_id": user_id},
+        {"$set": {"selected_calendars": selected_calendars}},
+        upsert=True,
+    )
+    if result.modified_count or result.upserted_id:
+        return {"message": "Calendar preferences updated successfully"}
+    else:
+        return {"message": "No changes made to calendar preferences"}
