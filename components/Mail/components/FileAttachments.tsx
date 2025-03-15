@@ -14,8 +14,8 @@ export const FileAttachments = ({ attachments, onRemove }: FileAttachmentsProps)
     if (attachments.length === 0) return null;
 
     return (
-        <div className="bg-zinc-800 p-3 mt-2 rounded-md">
-            <h3 className="text-sm text-gray-300 wmb-2">Attachments ({attachments.length})</h3>
+        <div className="p-3">
+            {/* <h3 className="text-sm text-gray-300 wmb-2">Attachments ({attachments.length})</h3> */}
             <div className="flex flex-wrap gap-2">
                 {attachments.map((file, index) => (
                     <div key={index} className="bg-zinc-700 rounded-md py-1 px-2 flex items-center gap-2 max-w-[250px]">

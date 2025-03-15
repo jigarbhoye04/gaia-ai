@@ -29,7 +29,7 @@ import { EmailEditor } from "./components/EmailEditor";
 import { EmailRecipients } from "./components/EmailRecipients";
 import { FileAttachments } from "./components/FileAttachments";
 import { WritingStyleDropdown } from "./components/WritingStyleDropdown";
-import JSON5 from 'json5';
+import { MenuBar } from "../Notes/NotesMenuBar";
 
 interface MailComposeProps {
   open: boolean;
@@ -78,7 +78,7 @@ export default function MailCompose({
     ],
     editorProps: {
       attributes: {
-        class: "h-[40vh] overflow-y-auto",
+        class: "min-h-[40vh] h-fit text-sm overflow-hidden",
       },
     },
     content: "",
@@ -233,7 +233,7 @@ export default function MailCompose({
             className={`fixed inset-0 bg-black/40 backdrop-blur-md ${isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
               }`}
           />
-          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
+          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[80vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
 
             {error && (
@@ -244,8 +244,9 @@ export default function MailCompose({
               </Alert>
             )}
 
-            <Input
+            {/* <Input
               variant="underlined"
+              size="sm"
               startContent={
                 <div className="text-sm text-foreground-500 w-[50px] flex justify-center">
                   From
@@ -254,7 +255,7 @@ export default function MailCompose({
               disabled
               value={user.email}
               className="bg-zinc-800"
-            />
+            /> */}
 
             <EmailRecipients
               toEmails={toEmails}
@@ -280,7 +281,15 @@ export default function MailCompose({
             />
 
             <div className="relative h-full w-full flex flex-col">
-              <div className="flex pb-2 gap-3 justify-end w-full z-[2] flex-wrap">
+              <div className="h-[50vh] overflow-y-auto bg-zinc-800">
+                <EmailEditor body={body} setBody={setBody} editor={editor} />
+                <FileAttachments
+                  attachments={attachments}
+                  onRemove={handleRemoveAttachment}
+                />
+              </div>
+              <MenuBar editor={editor} textLength={false} isEmail={true} />
+              <div className="flex pt-2 gap-3 justify-start w-full z-[2] flex-wrap">
                 <WritingStyleDropdown
                   writingStyle={writingStyle}
                   setWritingStyle={setWritingStyle}
@@ -297,13 +306,6 @@ export default function MailCompose({
                   handleAskGaia={handleAskGaia}
                 />
               </div>
-
-              <EmailEditor body={body} setBody={setBody} editor={editor} />
-
-              <FileAttachments
-                attachments={attachments}
-                onRemove={handleRemoveAttachment}
-              />
             </div>
 
             <footer className="flex w-full justify-between items-center gap-5 mt-2">
