@@ -17,12 +17,7 @@ from app.services.chat_service import (
     pin_message,
     get_starred_messages,
 )
-from app.models.chat_models import (
-    ConversationModel,
-    UpdateMessagesRequest,
-    StarredUpdate,
-    PinnedUpdate,
-)
+from app.models.chat_models import ConversationModel, UpdateMessagesRequest, StarredUpdate, PinnedUpdate
 from app.models.general_models import (
     MessageRequest,
     MessageRequestWithHistory,

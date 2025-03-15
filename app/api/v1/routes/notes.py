@@ -1,5 +1,7 @@
 """
 Router module for note-related endpoints.
+
+This module contains endpoints for creating, retrieving, updating, and deleting notes.
 """
 
 from fastapi import APIRouter, Depends, status

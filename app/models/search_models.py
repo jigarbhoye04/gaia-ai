@@ -1,13 +1,9 @@
-from pydantic import BaseModel, HttpUrl
-from typing import Optional
-
+from pydantic import BaseModel
 
 class URLRequest(BaseModel):
-    url: HttpUrl
-
+    url: str
 
 class URLResponse(BaseModel):
     title: str
     description: str
-    website_name: Optional[str] = None
-    favicon: Optional[str] = None
+    image: str

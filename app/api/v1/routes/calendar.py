@@ -1,8 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from pydantic import BaseModel
 
-from app.models.calendar_models import EventCreateRequest
+from app.models.calendar_models import EventCreateRequest, CalendarPreferencesUpdateRequest
 from app.services.calendar_service import (
     create_calendar_event,
     get_all_calendar_events,
@@ -151,14 +150,6 @@ async def get_all_events(
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-class CalendarPreferencesUpdateRequest(BaseModel):
-    """
-    Request model for updating user calendar preferences.
-    """
-
-    selected_calendars: List[str]
 
 
 @router.get("/calendar/preferences", summary="Get User Calendar Preferences")

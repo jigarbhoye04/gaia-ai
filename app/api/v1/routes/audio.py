@@ -5,9 +5,10 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.config.loggers import audio_logger as logger
 from app.config.settings import settings
 from app.models.audio_models import TTSRequest
-from app.services.audio_service import synthesize_audio
+from app.services.audio_service import TTSService
 
 router = APIRouter()
+tts_service = TTSService()
 
 DEEPGRAM_API_KEY = settings.DEEPGRAM_API_KEY
 
@@ -70,7 +71,7 @@ class DeepgramTranscriber:
 
 @router.post("/synthesize", responses={200: {"content": {"audio/wav": {}}}})
 async def synthesize(request: TTSRequest):
-    return await synthesize_audio(request)
+    return await tts_service.synthesize_speech(request)
 
 
 @router.websocket("/transcribe")

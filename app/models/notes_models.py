@@ -1,26 +1,10 @@
-from pydantic import BaseModel, Field
-
-# title: str = Field(..., max_length=100, example="Meeting Notes")
-# description: str = Field(..., max_length=1000, example="Discuss Q3 planning")
-
+from pydantic import BaseModel
 
 class NoteModel(BaseModel):
-    content: str = Field(
-        ...,
-        max_length=100000,
-    )
-
-    plaintext: str = Field(
-        ...,
-        max_length=100000,
-    )
-
+    title: str
+    content: str
 
 class NoteResponse(BaseModel):
     id: str
+    title: str
     content: str
-    plaintext: str
-    auto_created: bool = False
-    user_id: str | None = None
-    title: str | None = None
-    description: str | None = None
