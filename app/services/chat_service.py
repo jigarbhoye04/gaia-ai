@@ -27,6 +27,13 @@ from app.utils.embedding_utils import query_documents, search_notes_by_similarit
 from app.utils.notes import insert_note
 from app.utils.notes_utils import should_create_memory
 from app.utils.search_utils import format_results_for_llm, perform_fetch, perform_search
+from prompts.user.chat_prompts import (
+    CONVERSATION_DESCRIPTION_GENERATOR,
+    DOCUMENTS_CONTEXT_TEMPLATE,
+    NOTES_CONTEXT_TEMPLATE,
+    PAGE_CONTENT_TEMPLATE,
+    SEARCH_CONTEXT_TEMPLATE,
+)
 
 
 async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
@@ -42,14 +49,9 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
             search_result.get("results") or search_result
         )
         print(formatted_results)
-        last_message[
-            "content"
-        ] += f"""\n\nSystem: You have access to accurate web search results using GAIA web search.
-            Below is the relevant context retrieved from the search:\n\n
-            {formatted_results}\n\n
-            You MUST include citations for all sourced content. Citations should be formatted as [1], with the link in markdown format, e.g., [[1]](https://example.com).
-            Ensure that every factual statement derived from the search results is properly cited. 
-            Maintain accuracy, neutrality, and coherence when integrating this information."""
+        last_message["content"] += SEARCH_CONTEXT_TEMPLATE.format(
+            formatted_results=formatted_results
+        )
 
     print(context)
     return context
@@ -62,8 +64,8 @@ async def fetch_webpage(context: Dict[str, Any]) -> Dict[str, Any]:
     body = context["body"]
     if body.pageFetchURL and context["last_message"]:
         page_content = await perform_fetch(body.pageFetchURL)
-        context["last_message"]["content"] += (
-            f"\nRelevant context from the fetched URL: {page_content}"
+        context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
+            page_content=page_content
         )
     return context
 
@@ -92,9 +94,9 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
         input_text=query_text, user_id=user.get("user_id")
     )
     if notes:
-        last_message["content"] = (
-            f"User: {last_message['content']} \n System: The user has the following notes: "
-            f"{'- '.join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation."
+        last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
+            message=last_message['content'],
+            notes='- '.join(notes)
         )
         context["notes_added"] = True
     else:
@@ -116,10 +118,10 @@ async def fetch_documents(context: Dict[str, Any]) -> Dict[str, Any]:
     if documents and len(documents) > 0:
         content = [doc["content"] for doc in documents]
         titles = [doc["title"] for doc in documents]
-        prompt = (
-            f"Question: {last_message['content']}\n\n"
-            f"Context from document files uploaded by the user:\n"
-            f"{{'document_names': {titles}, 'content': {content}}}"
+        prompt = DOCUMENTS_CONTEXT_TEMPLATE.format(
+            message=last_message['content'],
+            titles=titles,
+            content=content
         )
         last_message["content"] = prompt
         context["docs_added"] = True
@@ -379,9 +381,8 @@ async def update_conversation_description_llm(
 
     try:
         response = await do_prompt_no_stream(
-            prompt=(
-                f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). "
-                "Do not answer the message—simply summarize its subject. Do not add any sort of formatting or markdown, just respond in plaintext."
+            prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(
+                user_message=data.userFirstMessage
             ),
             max_tokens=5,
             model=model,

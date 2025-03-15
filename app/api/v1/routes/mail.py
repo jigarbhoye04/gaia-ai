@@ -13,6 +13,7 @@ from app.services.mail_service import (
 )
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
+from prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 
 router = APIRouter()
 
@@ -66,65 +67,18 @@ async def process_email(
             input_text=request.prompt, user_id=current_user.get("user_id")
         )
 
-        prompt = f"""
-        You are an expert professional email writer. Your task is to generate a well-structured, engaging, and contextually appropriate email based on the sender's request. Follow these detailed instructions:
+        prompt = EMAIL_COMPOSER.format(
+            sender_name=current_user.get("name") or "none",
+            subject=request.subject or "empty",
+            body=request.body or "empty",
+            writing_style=request.writingStyle or "Professional",
+            content_length=request.contentLength or "None",
+            clarity_option=request.clarityOption or "None",
+            notes="- ".join(notes) if notes else "No relevant notes found.",
+            prompt=request.prompt
+        )
 
-        EXTREMELY IMPORTANT Guidelines:
-        1. Analyze the provided email details carefully to understand the context.
-        2. If the current subject is "empty", generate a compelling subject line that accurately reflects the email's purpose.
-        3. Maintain a professional and appropriate tone, unless explicitly instructed otherwise.
-        4. Ensure logical coherence and clarity in the email structure.
-        5. Do not include any additional commentary, headers, or titles outside of the email content.
-        6. Use proper markdown for readability where necessary, but avoid excessive formatting.
-        7. Do not hallucinate, fabricate information, or add anything off-topic or irrelevant.
-        8. The output must strictly follow the JSON format:
-        {{"subject": "Your generated subject line here", "body": "Your generated email body here"}}
-        9. Provide the JSON response so that it is extremely easy to parse and stringify.
-        10. Ensure the JSON output is valid, with all special characters (like newlines) properly escaped, and without any additional commentary. 
-        11. Do not add any additional text, explanations, or commentary before or after the JSON.
-
-        Email Structure:
-        - Greeting: Begin with a courteous and contextually appropriate greeting.
-        - Introduction: Provide a concise introduction to set the tone.
-        - Main Body: Clearly convey the main message, ensuring clarity and engagement.
-        - Closing: End with a professional closing, an appropriate call to action (if needed), and a proper sign-off.
-
-        User-Specified Modifications:  
-
-        Writing Style: Adjust the writing style based on user preference. The available options are:  
-            - Formal: Professional and structured.  
-            - Friendly: Warm, engaging, and conversational.  
-            - Casual: Relaxed and informal.  
-            - Persuasive: Convincing and compelling.  
-            - Humorous: Lighthearted and witty (if appropriate).  
-
-        Content Length: Modify the response length according to user preference:  
-            - None: Keep the content as is.  
-            - Shorten: Condense the content while retaining key details.  
-            - Lengthen: Expand the content with additional relevant details.  
-            - Summarize: Generate a concise summary while maintaining key points.  
-
-        Clarity Adjustments: Improve readability based on the following options:  
-            - None: No changes to clarity.  
-            - Simplify: Make the language easier to understand.  
-            - Rephrase: Restructure sentences for better flow and readability.  
-
-        Additional Context:
-        - Sender Name: {current_user.get("name") or "none"} 
-        - Current Subject: {request.subject or "empty"}
-        - Current Body: {request.body or "empty"}
-        - Writing Style: {request.writingStyle or "Professional"}
-        - Content Length Preference: {request.contentLength or "None"}
-        - Clarity Preference: {request.clarityOption or "None"}
-        - User Notes (from database): {"- ".join(notes) if notes else "No relevant notes found."}
-
-        Only mention user notes when relevant to the email context.
-
-        The user want's to write an email for: {request.prompt}.
-        Now, generate a well-structured email accordingly.
-        """
-
-        result = await do_prompt_no_stream(prompt=prompt,model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",)
+        result = await do_prompt_no_stream(prompt=prompt, model="@cf/meta/llama-3.3-70b-instruct-fp8-fast")
         print(result)
         if isinstance(result, dict) and result.get("response"):
             try:
@@ -267,28 +221,18 @@ async def summarize_email(
         email_data = transform_gmail_message(message)
         
         # Prepare the prompt for the LLM
-        prompt = f"""You are an expert email assistant. Please summarize the following email concisely and professionally.
-
-Email Subject: {email_data.get('subject', 'No Subject')}
-From: {email_data.get('from', 'Unknown')}
-Date: {email_data.get('time', 'Unknown')}
-
-Email Content:
-{email_data.get('body', email_data.get('snippet', 'No content available'))}
-
-Please provide a summary of this email in {request.max_length or 150} words or less.
-
-{" Include the key points of the email." if request.include_key_points else ""}
-{" Identify any action items or requests made in the email." if request.include_action_items else ""}
-
-Format your response as a JSON object with the following structure:
-{{
-    "summary": "The concise summary of the email",
-    "key_points": ["Key point 1", "Key point 2", ...],
-    "action_items": ["Action item 1", "Action item 2", ...],
-    "sentiment": "A brief description of the email's tone/sentiment (formal, urgent, friendly, etc.)"
-}}
-"""
+        key_points_instruction = "Include the key points of the email." if request.include_key_points else ""
+        action_items_instruction = "Identify any action items or requests made in the email." if request.include_action_items else ""
+        
+        prompt = EMAIL_SUMMARIZER.format(
+            subject=email_data.get('subject', 'No Subject'),
+            sender=email_data.get('from', 'Unknown'),
+            date=email_data.get('time', 'Unknown'),
+            content=email_data.get('body', email_data.get('snippet', 'No content available')),
+            max_length=request.max_length or 150,
+            key_points_instruction=key_points_instruction,
+            action_items_instruction=action_items_instruction
+        )
         
         # Call the LLM service to generate the summary
         llm_response = await do_prompt_no_stream(prompt)

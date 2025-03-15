@@ -15,6 +15,7 @@ from app.config.config_cloudinary import (
 from app.config.loggers import image_logger as logger
 from app.services.llm_service import do_prompt_no_stream
 from app.utils.image_utils import convert_image_to_text, generate_image
+from prompts.user.image_service_prompts import IMAGE_PROMPT_REFINER
 
 
 def generate_public_id(refined_text: str, max_length: int = 50) -> str:
@@ -70,18 +71,7 @@ class ImageService:
             self.logger.info(f"Received image generation request: {message}")
 
             improved_prompt = await do_prompt_no_stream(
-                prompt=f"""
-                You are an AI assistant specialized in refining prompts for generating high-quality images. Your task is to take the given prompt and enhance it by adding relevant keywords that improve detail, clarity, and visual accuracy.  
-                
-                **Instructions:**  
-                - Output should be a comma-separated list of keywords.  
-                - Focus on improving descriptions by adding details about colors, lighting, mood, perspective, environment, and relevant objects.  
-                - Do not generate a full sentence or a story.  
-                
-                Original user prompt: "{message}"  
-
-                Now, refine this prompt into a comma-separated list of descriptive keywords.
-            """,
+                prompt=IMAGE_PROMPT_REFINER.format(message=message),
                 temperature=1,
                 max_tokens=50,
             )
