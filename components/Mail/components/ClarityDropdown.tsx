@@ -1,3 +1,4 @@
+import { TextWrapIcon } from "@/components/Misc/icons";
 import { Button as ShadcnButton } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { BrushIcon, Check, ChevronDown } from "lucide-react";
@@ -28,7 +29,7 @@ export const ClarityDropdown = ({
                         size="sm"
                     >
                         <div className="flex flex-row gap-1">
-                            <BrushIcon color={undefined} width={20} height={20} />
+                            <TextWrapIcon color={undefined} width={20} height={20} />
                             <span className="font-medium">Clarity:</span>{" "}
                             <span>{clarityOptions.find((opt) => opt.id === clarityOption)?.label}</span>
                             <ChevronDown color={undefined} width={20} />

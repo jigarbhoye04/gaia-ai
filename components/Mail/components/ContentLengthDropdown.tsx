@@ -2,6 +2,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Button as ShadcnButton } from "@/components/ui/button";
 import { BrushIcon, Check, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { TapeMeasureIcon } from "@/components/Misc/icons";
 
 interface ContentLengthDropdownProps {
     contentLength: string;
@@ -30,8 +31,8 @@ export const ContentLengthDropdown = ({
                         size="sm"
                     >
                         <div className="flex flex-row gap-1">
-                            <BrushIcon color={undefined} width={20} height={20} />
-                            <span className="font-medium">Content Length:</span>{" "}
+                            <TapeMeasureIcon color={undefined} width={20} height={20} />
+                            <span className="font-medium">Length:</span>{" "}
                             <span>{contentLengthOptions.find((opt) => opt.id === contentLength)?.label || "None"}</span>
                             <ChevronDown color={undefined} width={20} />
                         </div>

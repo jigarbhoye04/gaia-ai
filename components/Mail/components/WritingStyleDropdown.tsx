@@ -31,7 +31,7 @@ export const WritingStyleDropdown = ({
                     >
                         <div className="flex flex-row gap-1">
                             <BrushIcon color={undefined} width={20} height={20} />
-                            <span className="font-medium">Writing Style:</span>{" "}
+                            <span className="font-medium">Tone:</span>{" "}
                             <span>{writingStyles.find((s) => s.id === writingStyle)?.label}</span>
                             <ChevronDown color={undefined} width={20} />
                         </div>

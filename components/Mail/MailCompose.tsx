@@ -29,6 +29,7 @@ import { EmailEditor } from "./components/EmailEditor";
 import { EmailRecipients } from "./components/EmailRecipients";
 import { FileAttachments } from "./components/FileAttachments";
 import { WritingStyleDropdown } from "./components/WritingStyleDropdown";
+import JSON5 from 'json5';
 
 interface MailComposeProps {
   open: boolean;
@@ -52,7 +53,7 @@ export default function MailCompose({
   const [writingStyle, setWritingStyle] = useState("formal");
   const [contentLength, setContentLength] = useState("none");
   const [clarityOption, setClarityOption] = useState("none");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [showCcBcc, setShowCcBcc] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sendLoading, setSendLoading] = useState(false);
@@ -81,15 +82,15 @@ export default function MailCompose({
       },
     },
     content: "",
-    onUpdate: ({ editor }) => {
-      // Only update body state from editor when user is typing
-      // not when we programmatically update the editor
-      if (!editorContentSetRef.current) {
-        setBody(editor.getHTML());
-      } else {
-        editorContentSetRef.current = false;
-      }
-    },
+    // onUpdate: ({ editor }) => {
+    //   // Only update body state from editor when user is typing
+    //   // not when we programmatically update the editor
+    //   if (!editorContentSetRef.current) {
+    //     setBody(editor.getHTML());
+    //   } else {
+    //     editorContentSetRef.current = false;
+    //   }
+    // },
   });
 
   // This effect runs when body state changes from external sources (like AI)
@@ -97,11 +98,7 @@ export default function MailCompose({
     if (editor && !editor.isDestroyed && body) {
       // Set a flag to prevent feedback loop with onUpdate
       editorContentSetRef.current = true;
-
-      // Schedule the update on next tick to ensure editor is ready
-      setTimeout(() => {
-        editor.commands.setContent(body);
-      }, 0);
+      editor.commands.setContent(body);
     }
   }, [body, editor]);
 
@@ -115,8 +112,9 @@ export default function MailCompose({
   };
 
   const handleAskGaia = async (overrideStyle?: string | { id: string }) => {
-    setLoading(true);
     setError(null);
+    if (prompt.length == 0 && body.length == 0) return;
+    setLoading(true);
     try {
       const selectedStyle = typeof overrideStyle === 'string'
         ? overrideStyle
@@ -134,13 +132,12 @@ export default function MailCompose({
 
       const res = await apiauth.post("/mail/ai/compose", requestData);
       try {
-        const response = JSON.parse(res.data.result.response);
-
-        // Update state - this will trigger the useEffect to update editor
-        setBody(marked(response.body.replace(/\n/g, "<br />")));
+        const response = res.data;
         setSubject(response.subject);
+        setBody(response.body.replace(/\n/g, "<br />"));
       } catch (error) {
-        setError(res.data.result.response);
+        console.error("Error parsing response:", error);
+        setError("Failed to parse response");
       }
     } catch (error) {
       console.error("Error processing email:", error);
@@ -243,7 +240,7 @@ export default function MailCompose({
               <Alert variant="destructive" className="bg-red-500/10">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>There was an error.</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="max-h-20 overflow-y-auto">{error}</AlertDescription>
               </Alert>
             )}
 
@@ -283,7 +280,7 @@ export default function MailCompose({
             />
 
             <div className="relative h-full w-full flex flex-col">
-              <div className="flex pb-2 gap-3 justify-end w-full z-[2]">
+              <div className="flex pb-2 gap-3 justify-end w-full z-[2] flex-wrap">
                 <WritingStyleDropdown
                   writingStyle={writingStyle}
                   setWritingStyle={setWritingStyle}
