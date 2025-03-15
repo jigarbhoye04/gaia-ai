@@ -11,32 +11,37 @@ import {
 } from "../Misc/icons";
 import MailCompose from "../Mail/MailCompose";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 type MailItem = {
   label: string;
   icon: React.ElementType;
+  path: string;
 };
 
 const mailItems: MailItem[] = [
-  { label: "Inbox", icon: InboxIcon },
-  { label: "Important", icon: LabelImportantIcon },
-  { label: "Sent", icon: Sent02Icon },
-  { label: "Drafts", icon: LicenseDraftIcon },
-  { label: "Scheduled", icon: TimeScheduleIcon },
-  //   { label: "Trash", icon: LicenseDraftIcon },
+  { label: "Inbox", icon: InboxIcon, path: "/mail" },
+  { label: "Important", icon: LabelImportantIcon, path: "/mail/important" },
+  { label: "Sent", icon: Sent02Icon, path: "/mail/sent" },
+  { label: "Scheduled", icon: TimeScheduleIcon, path: "/mail/scheduled" },
 ];
 
 type MailButtonProps = {
   label: string;
   Icon: React.ElementType;
+  path: string
 };
 
-function MailButton({ label, Icon }: MailButtonProps) {
+function MailButton({ label, Icon, path }: MailButtonProps) {
+
+  const pathname = usePathname();
+
   return (
     <Button
       startContent={<Icon color={undefined} className="mr-1" />}
-      className="text-start justify-start pl-2 text-foreground-600"
+      className={`text-start justify-start pl-2 ${path === pathname ? "text-primary" : "text-foreground-600"}`}
       variant="light"
+      color={path === pathname ? "primary" : "default"}
       radius="sm"
     >
       {label}
@@ -55,7 +60,7 @@ function MailContainer({ items }: MailContainerProps) {
         Mail
       </div>
       {items.map((item, index) => (
-        <MailButton key={index} label={item.label} Icon={item.icon} />
+        <MailButton key={index} label={item.label} Icon={item.icon} path={item.path} />
       ))}
     </div>
   );

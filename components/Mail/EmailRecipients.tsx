@@ -1,5 +1,5 @@
 import { Button } from "@heroui/button";
-import { AiSearch02Icon } from "../../Misc/icons";
+import { AiSearch02Icon } from "../Misc/icons";
 import { Tag, TagInput } from "emblor";
 import { SetStateAction } from "react";
 

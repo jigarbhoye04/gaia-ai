@@ -38,7 +38,7 @@ export default function SidebarLayout({
       <div className="flex flex-col h-full">
         <div className="p-2 pb-2 flex-none">
           <div className="flex items-center justify-between mb-1">
-            <span className="font-medium text-2xl">gaia</span>
+            <span className="font-medium text-2xl px-2">gaia</span>
             <div className="flex items-center gap-1">
               <Button
                 aria-label="Create new chat"

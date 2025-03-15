@@ -1,6 +1,6 @@
 import { Button } from "@heroui/button";
 import { X } from "lucide-react";
-import { getFileIcon } from "../utils/fileUtils";
+import { getFileIcon } from "./utils/fileUtils";
 
 interface FileAttachmentsProps {
     attachments: File[];

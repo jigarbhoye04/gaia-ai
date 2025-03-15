@@ -22,13 +22,13 @@ import { Drawer } from "vaul";
 import { AttachmentIcon, Sent02Icon } from "../Misc/icons";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
-import { AIDraftInput } from "./components/AIDraftInput";
-import { ClarityDropdown } from "./components/ClarityDropdown";
-import { ContentLengthDropdown } from "./components/ContentLengthDropdown";
-import { EmailEditor } from "./components/EmailEditor";
-import { EmailRecipients } from "./components/EmailRecipients";
-import { FileAttachments } from "./components/FileAttachments";
-import { WritingStyleDropdown } from "./components/WritingStyleDropdown";
+import { AIDraftInput } from "./AIDraftInput";
+import { ClarityDropdown } from "./ClarityDropdown";
+import { ContentLengthDropdown } from "./ContentLengthDropdown";
+import { EmailEditor } from "./EmailEditor";
+import { EmailRecipients } from "./EmailRecipients";
+import { FileAttachments } from "./FileAttachments";
+import { WritingStyleDropdown } from "./WritingStyleDropdown";
 import { MenuBar } from "../Notes/NotesMenuBar";
 
 interface MailComposeProps {

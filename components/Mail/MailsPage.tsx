@@ -1,16 +1,15 @@
 "use client";
 
-import { EmailFrom } from "@/components/Mail/MailFrom";
-import ViewEmail from "@/components/Mail/ViewMail";
+import ViewEmail from "@/components/Mail/ViewMailDrawer";
 import { InboxIcon } from "@/components/Misc/icons";
 import { EmailData, EmailsResponse } from "@/types/mailTypes";
-import { fetchEmails, formatTime } from "@/utils/mailUtils";
+import { fetchEmails } from "@/utils/mailUtils";
 import { Spinner } from "@heroui/spinner";
-import { Tooltip } from "@heroui/tooltip";
 import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
-import { FixedSizeList as List, ListChildComponentProps } from "react-window";
+import { FixedSizeList as List } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
+import { Row } from "./MailRow";
 
 export default function MailsPage() {
   const { data, isLoading, fetchNextPage, hasNextPage } = useInfiniteQuery<
@@ -47,68 +46,6 @@ export default function MailsPage() {
     setSelectedEmail(email);
   };
 
-  const Row = ({ index, style }: ListChildComponentProps) => {
-    if (!isItemLoaded(index)) {
-      return (
-        <div style={style} className="flex items-center justify-center">
-          <Spinner />
-        </div>
-      );
-    }
-    const email = emails[index];
-    if (!email) return null;
-
-    const [title, setTitle] = useState("");
-    const [subtitle, setSubtitle] = useState("");
-
-    const fetchSummary = (isOpen: boolean) => {
-      if (isOpen && !title && !subtitle) {
-        setTitle(email.subject);
-        // email.snippet ? he.decode(email.snippet) : "No summary available"
-        setSubtitle(
-          "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dignissimos, commodi."
-        );
-      }
-    };
-
-    return (
-      <Tooltip
-        showArrow
-        placement="top"
-        delay={400}
-        closeDelay={0}
-        shouldCloseOnInteractOutside={() => true}
-        onOpenChange={fetchSummary}
-        content={
-          <div className="p-1 flex flex-col w-[300px]">
-            <div className="font-medium text-lg leading-tight">{title}</div>
-            <div>{subtitle}</div>
-          </div>
-        }
-        onClose={() => {
-          return !!title && !!subtitle;
-        }}
-        color="foreground"
-        radius="sm"
-      >
-        <div
-          className={`flex p-3 gap-5 items-center px-6 hover:bg-primary/20 hover:text-primary bg-black bg-opacity-45 transition-all duration-200 cursor-pointer ${
-            email?.labelIds?.includes("UNREAD")
-              ? "font-medium"
-              : "font-normal text-foreground-400"
-          }`}
-          style={style}
-          onClick={() => openEmail(email)}
-        >
-          <div className="flex-[0.3] truncate">
-            <EmailFrom from={email.from} />
-          </div>
-          <div className="flex-1 truncate">{email.subject}</div>
-          <div className="text-sm opacity-50">{formatTime(email.time)}</div>
-        </div>
-      </Tooltip>
-    );
-  };
   if (isLoading) {
     return (
       <div className="h-full w-full flex items-center justify-center">
@@ -134,13 +71,19 @@ export default function MailsPage() {
           <List
             height={window.innerHeight - 100}
             itemCount={itemCount}
-            itemSize={55}
+            itemSize={80}
             onItemsRendered={onItemsRendered}
             ref={ref}
             width="100%"
             className="rounded-xl"
           >
-            {Row}
+            {({ index, style }) => (
+              <Row
+                index={index}
+                style={style}
+                data={{ emails, isItemLoaded, openEmail }}
+              />
+            )}
           </List>
         )}
       </InfiniteLoader>
