@@ -7,7 +7,6 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import base64
 import os
-import mimetypes
 from fastapi import UploadFile
 from app.config.settings import settings
 
@@ -77,11 +76,11 @@ def create_message(
 
         # Add each attachment
         for attachment in attachments:
-            content_type = (
-                attachment.content_type
-                or mimetypes.guess_type(attachment.filename)[0]
-                or "application/octet-stream"
-            )
+            # content_type = (
+            #     attachment.content_type
+            #     or mimetypes.guess_type(attachment.filename)[0]
+            #     or "application/octet-stream"
+            # )
 
             attachment_part = MIMEApplication(
                 attachment.file.read(), Name=os.path.basename(attachment.filename)
