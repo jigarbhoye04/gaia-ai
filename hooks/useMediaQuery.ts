@@ -3,19 +3,23 @@
 import { useState, useEffect } from "react";
 
 const useMediaQuery = (query: string): boolean => {
-  const [matches, setMatches] = useState<boolean>(false);
-  useEffect(() => {
-    if (window != undefined) setMatches(window.matchMedia(query).matches);
-  }, []);
+  // Prevent SSR mismatches by defaulting to `false` on the server
+  const isClient = typeof window !== "undefined";
+  const [matches, setMatches] = useState<boolean>(
+    isClient ? window.matchMedia(query).matches : false
+  );
 
   useEffect(() => {
+    if (!isClient) return; // Ensure this only runs on the client
+
     const mediaQueryList = window.matchMedia(query);
-    const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
+    const updateMatches = () => setMatches(mediaQueryList.matches);
 
-    mediaQueryList.addEventListener("change", listener);
+    updateMatches(); // Immediately apply the correct value
+    mediaQueryList.addEventListener("change", updateMatches);
 
-    return () => mediaQueryList.removeEventListener("change", listener);
-  }, [query]);
+    return () => mediaQueryList.removeEventListener("change", updateMatches);
+  }, [query, isClient]);
 
   return matches;
 };

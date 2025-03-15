@@ -12,6 +12,31 @@ import MobileMenu from "./Navbar/MobileMenu";
 import { LinkButton } from "./LinkButton";
 import Image from "next/image";
 
+export const pages = [
+  {
+    href: "/about",
+    label: "About",
+    icon: <GlobalIcon width={19} color={undefined} />,
+  },
+  {
+    href: "/blog",
+    label: "Blog",
+    icon: <BookOpen02Icon width={19} color={undefined} />,
+  },
+  {
+    href: "https://gaia.featurebase.app",
+    label: "Feature Request",
+    icon: <Idea01Icon width={19} color={undefined} />,
+    external: true,
+  },
+  {
+    href: "https://gaia.featurebase.app/roadmap",
+    label: "Roadmap",
+    icon: <MapsIcon width={19} color={undefined} />,
+    external: true,
+  },
+]
+
 export default function Navbar() {
   const pathname = usePathname(); // Get the current route
   const isMobileScreen = useMediaQuery("(max-width: 600px)");
@@ -20,11 +45,10 @@ export default function Navbar() {
   return (
     <div className="navbar">
       <div
-        className={`navbar_content rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all w-full min-w-fit duration-1000 ${
-          (!isMobileScreen && scrolled) || pathname !== "/"
-            ? "sm:max-w-screen-xl"
-            : "sm:max-w-[50px]"
-        }`}
+        className={`navbar_content rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all w-full min-w-fit duration-1000 ${(!isMobileScreen && scrolled) || pathname !== "/"
+          ? "sm:max-w-screen-xl"
+          : "sm:max-w-[50px]"
+          }`}
       >
         <Button
           as={Link}
@@ -45,48 +69,25 @@ export default function Navbar() {
           {siteConfig.name}
         </Button>
 
-        <div className="flex items-center gap-1">
-          {[
-            {
-              href: "/about",
-              label: "About",
-              icon: <GlobalIcon width={19} color={undefined} />,
-            },
-            {
-              href: "/blog",
-              label: "Blog",
-              icon: <BookOpen02Icon width={19} color={undefined} />,
-            },
-            {
-              href: "https://gaia.featurebase.app",
-              label: "Feature Request",
-              icon: <Idea01Icon width={19} color={undefined} />,
-              external: true,
-            },
-            {
-              href: "https://gaia.featurebase.app/roadmap",
-              label: "Roadmap",
-              icon: <MapsIcon width={19} color={undefined} />,
-              external: true,
-            },
-          ].map(({ href, label, icon, external }) => (
-            <LinkButton
-              key={href}
-              size="sm"
-              className={`font-medium text-sm ${
-                pathname === href
+        {!isMobileScreen &&
+          <div className="flex items-center gap-1">
+            {pages.map(({ href, label, icon, external }) => (
+              <LinkButton
+                key={href}
+                size="sm"
+                className={`font-medium text-sm ${pathname === href
                   ? "text-primary"
                   : "text-zinc-400 hover:text-zinc-300"
-              }`}
-              as={Link}
-              href={href}
-              startContent={icon}
-              external={external}
-            >
-              {label}
-            </LinkButton>
-          ))}
-        </div>
+                  }`}
+                as={Link}
+                href={href}
+                startContent={icon}
+                external={external}
+              >
+                {label}
+              </LinkButton>
+            ))}
+          </div>}
 
         {isMobileScreen ? <MobileMenu /> : <DesktopMenu scrolled={scrolled} />}
       </div>

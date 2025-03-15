@@ -64,7 +64,9 @@ export default function Section_Calendar() {
   ];
 
   return (
-    <AnimatedSection className="w-screen justify-center items-center flex z-[1] relative">
+    <AnimatedSection className="w-screen justify-center items-center flex z-[1] relative"
+      disableAnimation={false}
+    >
       <div className="max-w-screen-xl w-screen flex sm:flex-row flex-col justify-evenly items-start sm:space-x-10 space-x-5 ">
         <SectionHeading
           className="w-full"

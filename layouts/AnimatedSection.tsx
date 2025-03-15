@@ -28,7 +28,7 @@ const AnimatedSectionComponent = ({
   staggerDelay = 0.2,
   className = "",
   childClassName = "",
-  disableAnimation = false,
+  disableAnimation = true,
   ...restProps
 }: AnimatedSectionProps) => {
   const ref = useRef<HTMLDivElement>(null);

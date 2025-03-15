@@ -6,7 +6,9 @@ import DummySearchbar from "../Dummy/DummySearchbar";
 export default function HeroImage() {
   return (
     <div className="w-screen flex items-center justify-center">
-      <AnimatedSection className="flex items-center justify-center h-fit w-screen max-w-screen-lg lg:max-w-screen-xl mt-14 sm:mb-0 mb-[20vh]">
+      <AnimatedSection className="flex items-center justify-center h-fit w-screen max-w-screen-lg lg:max-w-screen-xl mt-14 sm:mb-0 mb-[20vh]"
+        disableAnimation={false}
+      >
         {/* <GridPattern
           width={20}
           height={20}

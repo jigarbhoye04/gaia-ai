@@ -20,7 +20,7 @@ export default function HeroSection() {
       <div className="fixed top-0 left-0 w-screen">
         <Spotlight duration={15} />
       </div>
-      <AnimatedSection className="flex flex-col justify-center items-center h-full z-[2] gap-4 relative">
+      <AnimatedSection className="flex flex-col justify-center items-center h-full z-[2] gap-4 relative" disableAnimation={false}>
         {/* <div className="tracking-[1rem] text-transparent bg-gradient-to-r via-white  bg-clip-text to-zinc-400 from-zinc-400">
           {/* INTRODUCING{"  "}GAIA 
         </div> 
@@ -37,7 +37,7 @@ export default function HeroSection() {
         </div>
 
         <AnimatedSection
-          className="sm:text-8xl text-5xl bg-gradient-to-b from-white bg-clip-text text-center font-medium leading-none text-transparent to-zinc-400 max-w-screen-lg sm:-my-2 py-3"
+          className="sm:text-8xl text-5xl bg-gradient-to-b from-white bg-clip-text text-center font-medium leading-none text-transparent to-zinc-400 max-w-screen-lg sm:-my-2 py-3" disableAnimation={false}
           childClassName="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent inline-block px-3"
         >
           <span className="">Your </span>

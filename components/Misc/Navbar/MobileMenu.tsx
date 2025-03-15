@@ -17,11 +17,11 @@ import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { pages } from "../Navbar";
 
 export default function MobileMenu() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const user = useUser();
-  const router = useRouter();
 
   return (
     <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
@@ -30,7 +30,7 @@ export default function MobileMenu() {
           <Menu01Icon color="foreground" />
         </div>
       </SheetTrigger>
-      <SheetContent className="dark text-foreground max-w-[250px] bg-zinc-900 border-none">
+      <SheetContent className="dark text-foreground max-w-[250px] bg-zinc-950 border-none">
         <SheetHeader>
           <SheetTitle>
             <VisuallyHidden.Root>Menu</VisuallyHidden.Root>
@@ -41,27 +41,48 @@ export default function MobileMenu() {
               endContent={
                 <Home01Icon color="foreground" width="20" height="20" />
               }
+              variant="flat"
               color="default"
+              as={Link}
+              href={"/"}
               onPress={() => {
-                router.push("/");
                 setSheetOpen(false);
               }}
             >
               Home
             </Button>
 
+            {pages.map(({ href, label, icon, external }) => (
+
+              <Button
+                className="w-full flex justify-between"
+                endContent={icon}
+                as={Link}
+                href={href}
+                variant="flat"
+                color="default"
+                onPress={() => {
+                  // router.push("/");
+                  setSheetOpen(false);
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+
+
             {user ? (
               <Button
-                className="font-medium"
+                className="w-full flex justify-between font-medium"
                 color="primary"
                 endContent={
-                  <BubbleConversationChatIcon color="foreground" width="17" />
+                  <BubbleConversationChatIcon color="foreground" width="20" height="20" />
                 }
-                radius="full"
                 size="md"
+                as={Link}
+                href={"/c"}
                 variant="shadow"
                 onPress={() => {
-                  router.push("/c");
                   setSheetOpen(false);
                 }}
               >

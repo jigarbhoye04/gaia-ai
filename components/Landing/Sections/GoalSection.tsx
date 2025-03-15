@@ -56,7 +56,7 @@ export default function GoalSection(): JSX.Element {
   }, [steps]);
 
   return (
-    <AnimatedSection className="flex w-screen flex-col items-center min-h-fit transition-all p-4 sm:mt-0 gap-5 ">
+    <AnimatedSection className="flex w-screen flex-col items-center min-h-fit transition-all p-4 sm:mt-0 gap-5 " disableAnimation={false}>
       <GoalHeader />
       <GoalSteps
         selectedStep={selectedStep}
@@ -184,7 +184,9 @@ function GoalSteps({
   return (
     <div className="space-y-5">
       <div ref={goalSectionRef} className="min-w-full">
-        <AnimatedSection className="grid w-screen max-w-screen-xl sm:grid-cols-3 items-center justify-center sm:gap-5">
+        <AnimatedSection className="grid w-screen max-w-screen-xl sm:grid-cols-3 items-center justify-center sm:gap-5"
+          disableAnimation={false}
+        >
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -227,17 +229,15 @@ function GoalStep({
 }: GoalStepProps): JSX.Element {
   return (
     <div
-      className={`flex items-start gap-1 sm:p-5 p-2 sm:flex-col flex-row justify-start rounded-3xl cursor-pointer transition-all hover:opacity-100 ${
-        isSelected ? "opacity-100" : "sm:opacity-60"
-      }`}
+      className={`flex items-start gap-1 sm:p-5 p-2 sm:flex-col flex-row justify-start rounded-3xl cursor-pointer transition-all hover:opacity-100 ${isSelected ? "opacity-100" : "sm:opacity-60"
+        }`}
       onClick={onClick}
     >
       <div
-        className={` outline outline-2 ${
-          isSelected
-            ? "outline-black/90 text-black/90 bg-primary"
-            : " outline-zinc-700 text-white bg-zinc-800"
-        } min-w-[50px] min-h-[50px] rounded-xl flex items-center justify-center relative mb-5`}
+        className={` outline outline-2 ${isSelected
+          ? "outline-black/90 text-black/90 bg-primary"
+          : " outline-zinc-700 text-white bg-zinc-800"
+          } min-w-[50px] min-h-[50px] rounded-xl flex items-center justify-center relative mb-5`}
       >
         {icon}
         <div className="bg-primary rounded-full min-w-5 min-h-5 text-sm font-bold text-black flex items-center justify-center absolute -bottom-1 -right-1">
@@ -283,18 +283,18 @@ function GoalImage({ image }: GoalImageProps): JSX.Element {
                 isIconOnly
                 className="font-medium"
                 color="primary"
-                // onPress={handleAddGoal}
+              // onPress={handleAddGoal}
               >
                 <Send />
               </Button>
             }
             label="What goal do you want to achieve?"
             variant="faded"
-            // value={goalTitle}
-            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            //   setGoalTitle(e.target.value)
-            // }
-            // onKeyDown={handleKeyPress}
+          // value={goalTitle}
+          // onChange={(e: { target: { value: SetStateAction<string> } }) =>
+          //   setGoalTitle(e.target.value)
+          // }
+          // onKeyDown={handleKeyPress}
           />
         </div>
       )}
