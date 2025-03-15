@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import os
 import mimetypes
-
+import json
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -139,6 +139,8 @@ class EmailRequest(BaseModel):
     body: str
     prompt: str
     writingStyle: str
+    contentLength:str
+    clarityOption:str
 
 
 @router.post("/mail/ai/compose")
@@ -147,48 +149,82 @@ async def process_email(
     current_user: dict = Depends(get_current_user),
 ) -> Any:
     try:
-        print(current_user)
-
         notes = await search_notes_by_similarity(
             input_text=request.prompt, user_id=current_user.get("user_id")
         )
 
-        prompt = f"""You are an expert professional email writer. Based on the details provided below, craft a well-structured, engaging, and professional email. Follow these instructions carefully:
+        prompt = f"""
+        You are an expert professional email writer. Your task is to generate a well-structured, engaging, and contextually appropriate email based on the sender's request. Follow these detailed instructions:
 
-        1. Analyze the provided email details.
-        2. If the current subject is "empty", generate a compelling subject line that reflects the main purpose of the email.
-        3. For the email body, include:
-        - A courteous greeting.
-        - A brief introduction.
-        - A clear explanation or message that fulfills the specified task.
-        - A professional closing with an appropriate sign-off.
-        4. Maintain a tone that is formal, respectful, and tailored to the context, unless the task specifies otherwise.
+        EXTREMELY IMPORTANT Guidelines:
+        1. Analyze the provided email details carefully to understand the context.
+        2. If the current subject is "empty", generate a compelling subject line that accurately reflects the email's purpose.
+        3. Maintain a professional and appropriate tone, unless explicitly instructed otherwise.
+        4. Ensure logical coherence and clarity in the email structure.
         5. Do not include any additional commentary, headers, or titles outside of the email content.
-        6. Use proper markdown to format the email where necessary, but do not use it excessively.
-        7. Output your final response strictly in JSON format with the following structure:
-        {{
-            "subject": "Your generated subject line here",
-            "body": "Your generated email body here"
-        }}
+        6. Use proper markdown for readability where necessary, but avoid excessive formatting.
+        7. Do not hallucinate, fabricate information, or add anything off-topic or irrelevant.
+        8. The output must strictly follow the JSON format:
+        {{"subject": "Your generated subject line here", "body": "Your generated email body here"}}
+        9. Provide the JSON response so that it is extremely easy to parse and stringify.
+        10. Ensure the JSON output is valid, with all special characters (like newlines) properly escaped, and without any additional commentary. 
+        11. Do not add any additional text, explanations, or commentary before or after the JSON.
 
-        Email Details:
+        Email Structure:
+        - Greeting: Begin with a courteous and contextually appropriate greeting.
+        - Introduction: Provide a concise introduction to set the tone.
+        - Main Body: Clearly convey the main message, ensuring clarity and engagement.
+        - Closing: End with a professional closing, an appropriate call to action (if needed), and a proper sign-off.
+
+        User-Specified Modifications:  
+
+        Writing Style: Adjust the writing style based on user preference. The available options are:  
+            - Formal: Professional and structured.  
+            - Friendly: Warm, engaging, and conversational.  
+            - Casual: Relaxed and informal.  
+            - Persuasive: Convincing and compelling.  
+            - Humorous: Lighthearted and witty (if appropriate).  
+
+        Content Length: Modify the response length according to user preference:  
+            - None: Keep the content as is.  
+            - Shorten: Condense the content while retaining key details.  
+            - Lengthen: Expand the content with additional relevant details.  
+            - Summarize: Generate a concise summary while maintaining key points.  
+
+        Clarity Adjustments: Improve readability based on the following options:  
+            - None: No changes to clarity.  
+            - Simplify: Make the language easier to understand.  
+            - Rephrase: Restructure sentences for better flow and readability.  
+
+        Additional Context:
+        - Sender Name: {current_user.get("name") or "none"} 
         - Current Subject: {request.subject or "empty"}
-        - Body: {request.body or "empty"}
+        - Current Body: {request.body or "empty"}
         - Writing Style: {request.writingStyle or "Professional"}
+        - Content Length Preference: {request.contentLength or "None"}
+        - Clarity Preference: {request.clarityOption or "None"}
+        - User Notes (from database): {"- ".join(notes) if notes else "No relevant notes found."}
 
-        Task:
-        - {request.prompt}
+        Only mention user notes when relevant to the email context.
 
-        User Name: {current_user.get("name", "not specified")}
+        The user want's to write an email for: {request.prompt}.
+        Now, generate a well-structured email accordingly.
+        """
 
-        System: The user has the following notes: "
-        f"{"- ".join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation
+        result = await do_prompt_no_stream(prompt=prompt,model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",)
+        print(result)
+        if isinstance(result, dict) and result.get("response"):
+            try:
+                parsed_result = json.loads(result["response"])
+                subject = parsed_result.get("subject", "")
+                body = parsed_result.get("body", "")
 
-        Generate the email accordingly.
-    """
+                return {"subject": subject, "body": body}
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"Failed to parse response {e}")
+        else:
+            raise HTTPException(status_code=500, detail="Invalid response format")
 
-        response = await do_prompt_no_stream(prompt)
-        return {"result": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
