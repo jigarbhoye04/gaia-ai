@@ -1,16 +1,8 @@
 import { FixedSizeList as List } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
-import { EmailData } from "@/types/mailTypes";
+import { EmailData, EmailListProps } from "@/types/mailTypes";
 import { Row } from "./MailRow";
 import { Spinner } from "@heroui/spinner";
-
-type EmailListProps = {
-    emails: EmailData[];
-    isLoading: boolean;
-    hasNextPage: boolean;
-    loadMoreItems: (startIndex: number, stopIndex: number) => Promise<void>;
-    onEmailSelect: (email: EmailData) => void;
-};
 
 export default function EmailList({
     emails,

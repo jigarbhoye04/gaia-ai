@@ -4,12 +4,7 @@ import { useEmails } from "@/hooks/useEmails";
 import EmailList from "@/components/Mail/EmailList";
 import ViewEmail from "@/components/Mail/ViewMailDrawer";
 import { useState, useCallback } from "react";
-import { EmailData } from "@/types/mailTypes";
-
-interface EmailsPageProps {
-  category: "inbox" | "important";
-  title: string;
-}
+import { EmailData, EmailsPageProps } from "@/types/mailTypes";
 
 export default function EmailsPage({ category, title }: EmailsPageProps) {
   const { data, isLoading, fetchNextPage, hasNextPage } = useEmails(category);

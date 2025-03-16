@@ -1,6 +1,7 @@
 import { useConversation } from "@/hooks/useConversation";
 import { useFetchConversations } from "@/hooks/useConversationList";
 import { ApiService } from "@/services/apiService";
+import { FileUploadProps } from "@/types/documentTypes";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 import fetchDate from "@/utils/fetchDate";
@@ -20,11 +21,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-
-interface FileUploadProps {
-  isImage: boolean;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-}
 
 export default function FileUpload({
   isImage,

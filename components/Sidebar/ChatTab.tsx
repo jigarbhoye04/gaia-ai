@@ -4,12 +4,7 @@ import { Button } from "../ui/button";
 import ChatOptionsDropdown from "./ChatOptionsDropdown";
 import { BubbleConversationChatIcon } from "@/components/Misc/icons";
 import { usePathname, useRouter } from "next/navigation";
-
-interface ChatTabProps {
-  name: string;
-  id: string;
-  starred: boolean;
-}
+import { ChatTabProps } from "@/types/sidebarTypes";
 
 export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
   const router = useRouter();

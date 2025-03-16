@@ -12,18 +12,7 @@ import {
 } from "framer-motion";
 
 import { cn } from "@/lib/utils";
-
-interface VelocityScrollProps {
-  text: string;
-  default_velocity?: number;
-  className?: string;
-}
-
-interface ParallaxProps {
-  children: string;
-  baseVelocity: number;
-  className?: string;
-}
+import { VelocityScrollProps, ParallaxProps } from "@/types/uiTypes";
 
 export const wrap = (min: number, max: number, v: number) => {
   const rangeSize = max - min;

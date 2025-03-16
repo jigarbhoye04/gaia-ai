@@ -1,7 +1,7 @@
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
-import { MessageType } from "@/types/convoTypes";
+import { MessageType, GenerateImageProps } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 import ObjectID from "bson-objectid";
 import { useParams, useRouter } from "next/navigation";
@@ -18,11 +18,6 @@ import {
 } from "@heroui/modal";
 import { BrushIcon } from "../Misc/icons";
 import { apiauth } from "@/utils/apiaxios";
-
-interface GenerateImageProps {
-  openImageDialog: boolean;
-  setOpenImageDialog: (open: boolean) => void;
-}
 
 export default function GenerateImage({
   openImageDialog,
@@ -102,7 +97,7 @@ export default function GenerateImage({
         message_id: botMessageId,
       };
 
-      updateConvoMessages([...convoMessages, finalBotMessage]);
+      updateConvoMessages([...convoMessages, userMessage, finalBotMessage]);
     } catch (error) {
       toast.error("Error generating image. Please try again later.");
     } finally {

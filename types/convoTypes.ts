@@ -42,3 +42,29 @@ export interface IntentType {
   intent: string | undefined;
   calendar_options?: CalendarOptions[] | null;
 }
+
+// Chat component types
+export interface GenerateImageProps {
+  openImageDialog: boolean;
+  setOpenImageDialog: (open: boolean) => void;
+}
+
+export interface ChatBubble_ActionsProps {
+  loading: boolean;
+  text: string;
+  pinned?: boolean;
+  message_id: string;
+}
+
+export interface MainChatProps {
+  className?: string;
+}
+
+export interface ChatRendererProps {
+  scrollToBottom?: () => void;
+}
+
+export interface StarterTextProps {
+  className?: string;
+  onNewChat?: () => void;
+}

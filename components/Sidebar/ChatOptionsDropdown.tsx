@@ -1,6 +1,7 @@
 import { PencilRenameIcon } from "@/components/Misc/icons";
 import { useConversation } from "@/hooks/useConversation";
 import { useFetchConversations } from "@/hooks/useConversationList";
+import { ChatOptionsDropdownProps } from "@/types/sidebarTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import {
@@ -20,7 +21,7 @@ import {
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import { ChevronDown, Star, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { ReactNode, SetStateAction, useState } from "react";
+import { SetStateAction, useState } from "react";
 import { toast } from "sonner";
 
 export default function ChatOptionsDropdown({
@@ -30,14 +31,7 @@ export default function ChatOptionsDropdown({
   starred = false,
   logo2 = false,
   btnChildren = undefined,
-}: {
-  buttonHovered: boolean;
-  chatId: string;
-  chatName: string;
-  starred: boolean;
-  logo2?: boolean;
-  btnChildren?: ReactNode;
-}) {
+}: ChatOptionsDropdownProps) {
   const fetchConversations = useFetchConversations();
   const [dangerStateHovered, setDangerStateHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
