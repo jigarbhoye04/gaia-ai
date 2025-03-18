@@ -6,8 +6,11 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   experimental: {
+    turbo: {
+      moduleIdStrategy: "deterministic",
+    },
+
     optimizePackageImports: ["@heroui/react"],
   },
   env: {
