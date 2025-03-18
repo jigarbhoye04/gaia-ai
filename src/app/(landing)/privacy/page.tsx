@@ -32,9 +32,9 @@ export const metadata: Metadata = {
 
 const PrivacyPolicy = () => {
   return (
-    <div className="flex w-screen items-center justify-center flex-col">
-      <div className="privacy-policy p-6 pt-24 max-w-screen-xl ">
-        <h1 className="text-2xl font-bold mb-4">Privacy Policy</h1>
+    <div className="flex w-screen flex-col items-center justify-center">
+      <div className="privacy-policy max-w-screen-xl p-6 pt-24">
+        <h1 className="mb-4 text-2xl font-bold">Privacy Policy</h1>
         <p className="mb-4">
           <strong>Effective Date:</strong> 1st Feb 2025
         </p>
@@ -45,10 +45,10 @@ const PrivacyPolicy = () => {
           "Service").
         </p>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">
+        <h2 className="mb-2 mt-4 text-xl font-semibold">
           1. Information We Collect
         </h2>
-        <ul className="list-disc ml-6 mb-4">
+        <ul className="mb-4 ml-6 list-disc">
           <li>
             <strong>Personal Information:</strong> Information you provide
             during account creation, such as name, email address, and payment
@@ -60,10 +60,10 @@ const PrivacyPolicy = () => {
           </li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">
+        <h2 className="mb-2 mt-4 text-xl font-semibold">
           2. How We Use Your Information
         </h2>
-        <ul className="list-disc ml-6 mb-4">
+        <ul className="mb-4 ml-6 list-disc">
           <li>Provide, maintain, and improve the Service.</li>
           <li>Personalize your experience.</li>
           <li>Process payments and manage subscriptions.</li>
@@ -71,13 +71,13 @@ const PrivacyPolicy = () => {
           <li>Ensure security and prevent unauthorized access.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">
+        <h2 className="mb-2 mt-4 text-xl font-semibold">
           3. Data Sharing and Disclosure
         </h2>
         <p className="mb-4">
           We do not sell your personal data. However, we may share data with:
         </p>
-        <ul className="list-disc ml-6 mb-4">
+        <ul className="mb-4 ml-6 list-disc">
           <li>
             <strong>Service Providers:</strong> Third parties who assist in
             delivering our services (e.g., payment processors, hosting
@@ -89,27 +89,27 @@ const PrivacyPolicy = () => {
           </li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">4. Data Security</h2>
+        <h2 className="mb-2 mt-4 text-xl font-semibold">4. Data Security</h2>
         <p className="mb-4">
           We use industry-standard measures to protect your data from
           unauthorized access, loss, or misuse.
         </p>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">5. Your Rights</h2>
+        <h2 className="mb-2 mt-4 text-xl font-semibold">5. Your Rights</h2>
         <p className="mb-4">You may have rights under applicable laws to:</p>
-        <ul className="list-disc ml-6 mb-4">
+        <ul className="mb-4 ml-6 list-disc">
           <li>Access, update, or delete your personal data.</li>
           <li>Opt-out of communications.</li>
           <li>Restrict or object to data processing.</li>
         </ul>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">6. Retention</h2>
+        <h2 className="mb-2 mt-4 text-xl font-semibold">6. Retention</h2>
         <p className="mb-4">
           We retain your data only as long as necessary to provide the Service
           or comply with legal obligations.
         </p>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">
+        <h2 className="mb-2 mt-4 text-xl font-semibold">
           7. Third-Party Services
         </h2>
         <p className="mb-4">
@@ -117,7 +117,7 @@ const PrivacyPolicy = () => {
           practices are governed by their policies.
         </p>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">
+        <h2 className="mb-2 mt-4 text-xl font-semibold">
           8. Changes to This Privacy Policy
         </h2>
         <p className="mb-4">
@@ -126,7 +126,7 @@ const PrivacyPolicy = () => {
           email.
         </p>
 
-        <h2 className="text-xl font-semibold mt-4 mb-2">9. Contact Us</h2>
+        <h2 className="mb-2 mt-4 text-xl font-semibold">9. Contact Us</h2>
         <p className="mb-4">
           If you have any questions or concerns, contact us at:
         </p>

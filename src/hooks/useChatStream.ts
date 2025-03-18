@@ -31,13 +31,13 @@ export const useChatStream = () => {
     enableSearch: boolean,
     pageFetchURL: string,
     botMessageId: string,
-    botResponseText: string = ""
+    botResponseText: string = "",
   ) => {
     /**
      * Builds a bot response object with optional overrides.
      */
     const buildBotResponse = (
-      overrides: Partial<MessageType> = {}
+      overrides: Partial<MessageType> = {},
     ): MessageType => ({
       type: "bot",
       message_id: botMessageId,
@@ -105,7 +105,7 @@ export const useChatStream = () => {
       conversationId,
       onMessage,
       onClose,
-      onError
+      onError,
     );
   };
 };

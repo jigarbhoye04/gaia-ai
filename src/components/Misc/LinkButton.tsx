@@ -20,7 +20,7 @@ export function LinkButton({
         target="_blank"
         rel="noopener noreferrer"
         variant="light"
-        className="font-medium text-md text-zinc-300"
+        className="text-md font-medium text-zinc-300"
         {...props}
       >
         {children}
@@ -35,7 +35,7 @@ export function LinkButton({
       variant="light"
       radius="sm"
       style={{ padding: "9px", height: "27px", width: "fit-content" }}
-      className="font-medium text-md text-start text-zinc-300"
+      className="text-md text-start font-medium text-zinc-300"
       {...props}
     >
       {children}

@@ -17,14 +17,14 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
   handleCheckboxClick,
 }) => {
   const selectedNode = nodes.find(
-    (node: any) => node.id === currentlySelectedNodeId
+    (node: any) => node.id === currentlySelectedNodeId,
   );
 
   return (
-    <div className="fixed right-3 bottom-3 bg-zinc-800 max-w-[350px] p-2 rounded-xl flex flex-col gap-3 z-10 shadow-lg outline outline-2 outline-zinc-950">
-      <div className="p-4 space-y-2">
+    <div className="fixed bottom-3 right-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950">
+      <div className="space-y-2 p-4">
         <div className="text-xl font-medium">{selectedNode?.data.label}</div>
-        <div className="text-md -mt-2 text-foreground-600 pb-4">
+        <div className="text-md -mt-2 pb-4 text-foreground-600">
           {selectedNode?.data?.details?.join(", ")}
         </div>
         <div className="space-y-4">
@@ -33,14 +33,14 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
               color="primary"
               size="lg"
               startContent={
-                <div className="flex items-center gap-1 text-md">
+                <div className="text-md flex items-center gap-1">
                   <Clock width={18} />
                   Estimated Time:
                 </div>
               }
               variant="flat"
             >
-              <span className="text-white text-md pl-1">
+              <span className="text-md pl-1 text-white">
                 {selectedNode.data.estimatedTime}
               </span>
             </Chip>
@@ -66,8 +66,8 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
       </div>
       {selectedNode?.data?.resources &&
         selectedNode.data.resources.length > 0 && (
-          <div className="bg-black bg-opacity-40 p-5 rounded-xl">
-            <div className="flex text-md font-medium gap-2 items-center pb-2">
+          <div className="rounded-xl bg-black bg-opacity-40 p-5">
+            <div className="text-md flex items-center gap-2 pb-2 font-medium">
               <BookIcon1 width={18} />
               Resources
             </div>
@@ -76,16 +76,16 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
                 (resource: string, index: number) => (
                   <a
                     key={index}
-                    className="hover:text-[#00bbff] underline underline-offset-4"
+                    className="underline underline-offset-4 hover:text-[#00bbff]"
                     href={`https://www.google.com/search?q=${resource.split(
-                      "+"
+                      "+",
                     )}`}
                     target="_blank"
                     rel="noreferrer"
                   >
                     <li>{resource}</li>
                   </a>
-                )
+                ),
               )}
             </div>
           </div>

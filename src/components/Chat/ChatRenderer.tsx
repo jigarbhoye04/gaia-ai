@@ -52,14 +52,14 @@ export default function ChatRenderer() {
 
   if (!!convoMessages && convoMessages?.length === 0) {
     return (
-      <div className="flex items-start justify-center flex-1">
-        <div className="flex items-center justify-center flex-col gap-2">
+      <div className="flex flex-1 items-start justify-center">
+        <div className="flex flex-col items-center justify-center gap-2">
           <Image
             alt="GAIA Logo"
             src={"/branding/logo.png"}
             width={150}
             height={150}
-            className="bobbing hover:translate-y-3 "
+            className="bobbing hover:translate-y-3"
           />
           <StarterText />
         </div>
@@ -70,38 +70,39 @@ export default function ChatRenderer() {
   return (
     <>
       <title id="chat_title">
-        {`${conversations.find((convo) => convo.conversation_id === convoIdParam)
-          ?.description || "New Chat"
-          } | GAIA`}
+        {`${
+          conversations.find((convo) => convo.conversation_id === convoIdParam)
+            ?.description || "New Chat"
+        } | GAIA`}
       </title>
 
       <Dialog open={openImage} onOpenChange={setOpenImage}>
-        <DialogContent className="!rounded-3xl bg-zinc-800 border-none text-white flex items-center flex-col min-w-fit py-3 px-5">
+        <DialogContent className="flex min-w-fit flex-col items-center !rounded-3xl border-none bg-zinc-800 px-5 py-3 text-white">
           <img
             alt={"Generated Image"}
-            className="rounded-3xl my-2 size-[65vh] min-w-[65vh] min-h-[65vh] aspect-square"
+            className="my-2 aspect-square size-[65vh] min-h-[65vh] min-w-[65vh] rounded-3xl"
             height={"auto"}
             src={imageData?.src}
             width={"auto"}
           />
 
-          <div className="flex max-w-[65vh] min-w-[65vh] justify-evenly flex-col gap-1">
+          <div className="flex min-w-[65vh] max-w-[65vh] flex-col justify-evenly gap-1">
             {imageData?.prompt && (
-              <div className="w-full bg-black/30 p-3 rounded-xl">
+              <div className="w-full rounded-xl bg-black/30 p-3">
                 <ScrollArea className="max-h-[50px]">
                   <div className="font-medium">Your Prompt:</div>
 
-                  <div className="text-foreground-500 text-sm">
+                  <div className="text-sm text-foreground-500">
                     {imageData.prompt}
                   </div>
                 </ScrollArea>
               </div>
             )}
             {imageData?.improvedPrompt && (
-              <div className="w-full bg-black/30 p-3 rounded-xl">
+              <div className="w-full rounded-xl bg-black/30 p-3">
                 <ScrollArea className="h-[70px]">
                   <div className="font-medium">Improved Prompt:</div>
-                  <div className="text-foreground-500 text-sm">
+                  <div className="text-sm text-foreground-500">
                     {imageData.improvedPrompt}
                   </div>
                 </ScrollArea>
@@ -121,7 +122,6 @@ export default function ChatRenderer() {
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
           <div key={index} className="relative flex items-end gap-2">
-
             <Image
               alt="GAIA Logo"
               src={"/branding/logo.png"}
@@ -162,12 +162,11 @@ export default function ChatRenderer() {
             subtype={message.subtype || null}
             text={message.response}
           />
-        )
+        ),
       )}
 
       {isLoading && (
-        <div className="flex font-medium text-sm items-center gap-4">
-
+        <div className="flex items-center gap-4 text-sm font-medium">
           <Image
             alt="GAIA Logo"
             src={"/branding/logo.png"}
@@ -175,7 +174,6 @@ export default function ChatRenderer() {
             height={30}
             className={`animate-spin`}
           />
-
           GAIA is thinking...
         </div>
       )}

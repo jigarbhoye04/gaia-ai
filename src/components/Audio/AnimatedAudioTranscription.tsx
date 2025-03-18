@@ -139,15 +139,15 @@ export default function AnimatedAudioTranscription({
           </Button>
         </Tooltip>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-zinc-900 rounded-2xl text-white border-none">
+      <DialogContent className="rounded-2xl border-none bg-zinc-900 text-white sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="text-center">Audio Transcription</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="flex justify-center items-center">
+          <div className="flex items-center justify-center">
             <AnimatePresence>
               <div className="pingspinner pingspinner_large relative">
-                <div className="h-full w-full absolute flex items-center justify-center z-[2]">
+                <div className="absolute z-[2] flex h-full w-full items-center justify-center">
                   <Mic02Icon color="white" height={50} width={50} />
                 </div>
               </div>
@@ -163,8 +163,8 @@ export default function AnimatedAudioTranscription({
               onValueChange={setTranscription}
             />
           )}
-          {error && <p className="text-red-500 text-center">{error}</p>}
-          <div className="flex justify-center gap-5 mt-3">
+          {error && <p className="text-center text-red-500">{error}</p>}
+          <div className="mt-3 flex justify-center gap-5">
             <Button color="danger" variant="flat" onClick={handleCancel}>
               <X className="mr-2 h-4 w-4" />
               Cancel

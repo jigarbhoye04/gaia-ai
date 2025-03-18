@@ -25,15 +25,15 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen w-screen p-6 bg-custom-gradient">
-      <div className="max-w-lg w-full bg-zinc-900 rounded-2xl shadow-lg p-8 text-center">
+    <div className="bg-custom-gradient flex min-h-screen w-screen items-center justify-center p-6">
+      <div className="w-full max-w-lg rounded-2xl bg-zinc-900 p-8 text-center shadow-lg">
         <h1 className="text-2xl font-bold">Need Help?</h1>
         <p className="mt-2 text-zinc-300">
           For any assistance or inquiries, feel free to reach out to us.
         </p>
         <a
           href="mailto:support@heygaia.io"
-          className="inline-block mt-4"
+          className="mt-4 inline-block"
           aria-label="Email GAIA Support"
         >
           <Button color="primary" size="lg" variant="shadow" radius="full">

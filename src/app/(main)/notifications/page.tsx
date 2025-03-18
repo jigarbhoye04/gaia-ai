@@ -54,8 +54,8 @@ export default function NotificationsPage() {
   ];
 
   return (
-    <div className="flex w-full flex-col h-full bg-[#0a1621] text-white">
-      <header className="p-4 border-b border-[#1e2a35]">
+    <div className="flex h-full w-full flex-col bg-[#0a1621] text-white">
+      <header className="border-b border-[#1e2a35] p-4">
         <h1 className="text-2xl font-semibold">Notifications</h1>
       </header>
 
@@ -75,36 +75,36 @@ export default function NotificationsPage() {
             <div className="flex items-center gap-2">
               <Bell size={18} />
               <span>Notifications</span>
-              <span className="ml-1 bg-[#1a91da] text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1a91da] text-xs">
                 {notifications.filter((n) => !n.read).length}
               </span>
             </div>
           }
         >
-          <Card className="bg-transparent border-none shadow-none">
-            <CardBody className="p-0 space-y-3">
+          <Card className="border-none bg-transparent shadow-none">
+            <CardBody className="space-y-3 p-0">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`p-4 rounded-lg flex items-start gap-4 cursor-pointer ${
+                  className={`flex cursor-pointer items-start gap-4 rounded-lg p-4 ${
                     notification.read ? "bg-[#060f16]" : "bg-[#0c1927]"
-                  } hover:bg-[#122334] transition-colors`}
+                  } transition-colors hover:bg-[#122334]`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
                       notification.read ? "bg-[#1e2a35]" : "bg-[#1a91da]"
                     }`}
                   >
                     <span className="text-lg">{notification.icon}</span>
                   </div>
                   <div className="flex-grow">
-                    <div className="flex justify-between items-start">
+                    <div className="flex items-start justify-between">
                       <h3 className="font-medium">{notification.title}</h3>
                       <span className="text-xs text-[#8b9aa8]">
                         {notification.time}
                       </span>
                     </div>
-                    <p className="text-sm text-[#8b9aa8] mt-1">
+                    <p className="mt-1 text-sm text-[#8b9aa8]">
                       {notification.message}
                     </p>
                   </div>
@@ -120,33 +120,33 @@ export default function NotificationsPage() {
             <div className="flex items-center gap-2">
               <Clock size={18} />
               <span>Reminders</span>
-              <span className="ml-1 bg-[#1e8e3e] text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#1e8e3e] text-xs">
                 {reminders.filter((r) => !r.completed).length}
               </span>
             </div>
           }
         >
-          <Card className="bg-transparent border-none shadow-none">
-            <CardBody className="p-0 space-y-3">
+          <Card className="border-none bg-transparent shadow-none">
+            <CardBody className="space-y-3 p-0">
               {reminders.map((reminder) => (
                 <div
                   key={reminder.id}
-                  className={`p-4 rounded-lg ${
+                  className={`rounded-lg p-4 ${
                     reminder.completed
                       ? "bg-[#060f16] opacity-75"
                       : "bg-[#0c1927]"
-                  } hover:bg-[#122334] transition-colors`}
+                  } transition-colors hover:bg-[#122334]`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#1a91da] flex items-center justify-center flex-shrink-0">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#1a91da]">
                       <Clock size={20} />
                     </div>
                     <div className="flex-grow">
-                      <div className="flex justify-between items-start">
+                      <div className="flex items-start justify-between">
                         <h3
                           className={`font-medium ${
                             reminder.completed
-                              ? "line-through text-[#8b9aa8]"
+                              ? "text-[#8b9aa8] line-through"
                               : ""
                           }`}
                         >
@@ -154,19 +154,19 @@ export default function NotificationsPage() {
                         </h3>
                         <div className="flex gap-2">
                           {!reminder.completed && (
-                            <button className="bg-[#1e8e3e] p-1 rounded-full">
+                            <button className="rounded-full bg-[#1e8e3e] p-1">
                               <CheckCircle size={16} />
                             </button>
                           )}
-                          <button className="bg-[#1e2a35] p-1 rounded-full">
+                          <button className="rounded-full bg-[#1e2a35] p-1">
                             <X size={16} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-sm text-[#8b9aa8] mt-1">
+                      <p className="mt-1 text-sm text-[#8b9aa8]">
                         {reminder.message}
                       </p>
-                      <div className="flex items-center mt-2 text-xs">
+                      <div className="mt-2 flex items-center text-xs">
                         <span
                           className={`inline-flex items-center gap-1 ${
                             isPast(new Date(reminder.dueDate)) &&

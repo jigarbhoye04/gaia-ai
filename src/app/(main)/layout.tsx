@@ -15,11 +15,7 @@ import { useConversationList } from "@/hooks/useConversationList";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import { useDrag } from "@use-gesture/react";
-import {
-  useParams,
-  usePathname,
-  useRouter
-} from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
@@ -53,7 +49,8 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       if (tap) return;
 
       if (last && Math.abs(mx) > Math.abs(my)) {
-        if (mx > 0) setSidebarVisible(true); // Swipe right to open
+        if (mx > 0)
+          setSidebarVisible(true); // Swipe right to open
         else if (mx < 0) setSidebarVisible(false); // Swipe left to close
       }
     },
@@ -61,7 +58,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       filterTaps: true, // Taps are ignored for swipe detection.
       threshold: 10, // Minimal movement before detecting a swipe.
       axis: "x", // Only track horizontal swipes.
-    }
+    },
   );
 
   return (
@@ -92,10 +89,10 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         <div
           ref={contentContainerRef}
           onClick={closeOnTouch}
-          className="main_chat sm:p-[1rem] p-2 transition-all bg-custom-gradient"
+          className="main_chat bg-custom-gradient p-2 transition-all sm:p-[1rem]"
         >
           <div
-            className={`sm:left-4 sm:px-0 top-0 rounded-xl transition-opacity flex w-full justify-between z-10`}
+            className={`top-0 z-10 flex w-full justify-between rounded-xl transition-opacity sm:left-4 sm:px-0`}
           >
             <CloseOpenSidebarBtn
               isSidebarVisible={isSidebarVisible}
@@ -106,11 +103,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               {convoIdParam && pathname.startsWith("/c/") && (
                 <ChatOptionsDropdown
                   btnChildren={
-                    <div className="!text-sm max-w-[250px] truncate flex items-center gap-2">
+                    <div className="flex max-w-[250px] items-center gap-2 truncate !text-sm">
                       <BubbleConversationChatIcon height={18} width={18} />
 
                       {conversations.find(
-                        (convo) => convo.conversation_id == convoIdParam
+                        (convo) => convo.conversation_id == convoIdParam,
                       )?.description || "New Chat"}
                     </div>
                   }
@@ -118,13 +115,13 @@ export default function MainLayout({ children }: { children: ReactNode }) {
                   chatId={convoIdParam}
                   chatName={
                     conversations.find(
-                      (convo) => convo.conversation_id == convoIdParam
+                      (convo) => convo.conversation_id == convoIdParam,
                     )?.description || "New Chat"
                   }
                   logo2={true}
                   starred={
                     conversations.find(
-                      (convo) => convo.conversation_id == convoIdParam
+                      (convo) => convo.conversation_id == convoIdParam,
                     )?.starred || false
                   }
                 />
@@ -133,7 +130,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
             {/* <div className="flex gap-2"> */}
             <Button
               aria-label="Create new chat"
-              className={`rounded-lg hover:bg-[#00bbff] group text-foreground-600`}
+              className={`group rounded-lg text-foreground-600 hover:bg-[#00bbff]`}
               size="icon"
               variant={"ghost"}
               onClick={() => {
@@ -142,7 +139,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               }}
             >
               <ChatBubbleAddIcon
-                className="group-hover:text-white transition-all"
+                className="transition-all group-hover:text-white"
                 color={undefined}
               />
             </Button>

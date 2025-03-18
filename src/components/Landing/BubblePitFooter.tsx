@@ -92,7 +92,7 @@ const BubblePitFooter: React.FC = () => {
           size: 20 + Math.random() * 20,
           color: COLORS[Math.floor(Math.random() * COLORS.length)],
           component,
-        })
+        }),
       );
 
       setBubbles(newBubbles);
@@ -136,14 +136,14 @@ const BubblePitFooter: React.FC = () => {
         }
 
         return { ...bubble, x: newX, y: newY };
-      })
+      }),
     );
   };
 
   return (
     <motion.div
       ref={containerRef}
-      className="fixed bottom-0 left-0 w-full h-screen overflow-hidden z-0"
+      className="fixed bottom-0 left-0 z-0 h-screen w-full overflow-hidden"
       onMouseMove={handleMouseMove}
     >
       {bubbles.map((bubble, index) => (

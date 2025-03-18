@@ -11,7 +11,7 @@ export function parseIntent(dataJson: any): any {
     calendar_options: Array.isArray(dataJson.calendar_options)
       ? dataJson.calendar_options
       : dataJson.calendar_options
-      ? [dataJson.calendar_options]
-      : null,
+        ? [dataJson.calendar_options]
+        : null,
   };
 }

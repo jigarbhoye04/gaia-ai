@@ -14,7 +14,7 @@ export default function TextInformation({
   btnhref = "/",
   button = (
     <Button
-      className="w-fit font-medium text-lg"
+      className="w-fit text-lg font-medium"
       color="primary"
       endContent={btnicon}
       radius="md"
@@ -35,7 +35,7 @@ export default function TextInformation({
 }) {
   return (
     <div
-      className={`md:h-[80vh] h-screen items-center w-full flex flex-col py-[10%] px-[10%] justify-around ${
+      className={`flex h-screen w-full flex-col items-center justify-around px-[10%] py-[10%] md:h-[80vh] ${
         alignleft ? "text-left" : "text-right"
       }`}
     >
@@ -45,12 +45,12 @@ export default function TextInformation({
         }`}
       >
         <WordPullUp
-          className={`relative z-1 md:text-6xl text-4xl font-medium ${
+          className={`z-1 relative text-4xl font-medium md:text-6xl ${
             alignleft ? "text-left" : "text-right"
           }`}
           words={title}
         />
-        <div className="md:text-2xl text-md display flex flex-col gap-2 z-2 relative text-zinc-400">
+        <div className="text-md display z-2 relative flex flex-col gap-2 text-zinc-400 md:text-2xl">
           {description.map((entry, index) => (
             <span key={index}>{entry}</span>
           ))}

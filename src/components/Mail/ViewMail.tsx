@@ -18,8 +18,8 @@ interface ViewEmailProps {
 function AISummary() {
   return (
     <>
-      <div className="bg-zinc-800 outline outline-2 outline-zinc-700 p-2 w-fit rounded-xl shadow-md flex flex-col mb-3">
-        <div className="text-sm font-medium text-white flex items-center gap-3 relative">
+      <div className="mb-3 flex w-fit flex-col rounded-xl bg-zinc-800 p-2 shadow-md outline outline-2 outline-zinc-700">
+        <div className="relative flex items-center gap-3 text-sm font-medium text-white">
           <Chip
             classNames={{
               content:
@@ -37,7 +37,7 @@ function AISummary() {
             <span>GAIA Email Summary</span>
           </Chip>
         </div>
-        <p className="text-sm text-white p-2">
+        <p className="p-2 text-sm text-white">
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi magnam
           doloribus tempore molestiae nemo debitis blanditiis. Consequatur iusto
           impedit atque aliquid maiores, cupiditate id autem porro temporibus
@@ -64,21 +64,21 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-md" />
         <Drawer.Content
-          className="right-0 top-2 bottom-2 fixed z-10 outline-none w-[50vw] flex"
+          className="fixed bottom-2 right-0 top-2 z-10 flex w-[50vw] outline-none"
           style={
             { "--initial-transform": "calc(100% + 8px)" } as React.CSSProperties
           }
         >
-          <div className="bg-zinc-900 h-full w-full grow p-6 pt-4 flex flex-col rounded-l-2xl overflow-y-auto relative">
-            <div className="w-full relative">
+          <div className="relative flex h-full w-full grow flex-col overflow-y-auto rounded-l-2xl bg-zinc-900 p-6 pt-4">
+            <div className="relative w-full">
               <Tooltip content="Close" color="foreground">
-                <div className="cursor-pointer absolute right-0 top-0">
+                <div className="absolute right-0 top-0 cursor-pointer">
                   <XIcon width={18} onClick={onOpenChange} />
                 </div>
               </Tooltip>
             </div>
 
-            <header className="flex items-center gap-2 mb-2">
+            <header className="mb-2 flex items-center gap-2">
               <Button
                 // variant="faded"
                 color="primary"
@@ -135,7 +135,7 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
               </Drawer.Title>
             )}
 
-            <Drawer.Description className="text-foreground-600 space-y-4">
+            <Drawer.Description className="space-y-4 text-foreground-600">
               {mail?.snippet && (
                 <>
                   <p className="text-md text-muted-foreground">

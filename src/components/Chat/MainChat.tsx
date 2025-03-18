@@ -35,8 +35,7 @@ const MainChat = React.memo(function MainChat() {
 
   useEffect(() => {
     if (convoIdParam) fetchAndScroll();
-    else if (pathname !== "/c")
-      router.push("/c");
+    else if (pathname !== "/c") router.push("/c");
     if (inputRef?.current) inputRef?.current?.focus();
   }, [convoIdParam]);
 
@@ -48,10 +47,10 @@ const MainChat = React.memo(function MainChat() {
 
   return (
     <React.Fragment>
-      <div className="w-full flex justify-center overflow-y-scroll">
+      <div className="flex w-full justify-center overflow-y-auto">
         <div
           ref={chatRef}
-          className="conversation_history max-w-screen-md w-full"
+          className="conversation_history w-full max-w-screen-md"
         >
           <ChatRenderer />
         </div>

@@ -8,7 +8,7 @@ export default function UserContainer() {
   const user = useUser();
 
   return (
-    <div className="justify-center flex w-full px-2 py-2 bg-black flex-col gap-3 z-[2] relative">
+    <div className="relative z-[2] flex w-full flex-col justify-center gap-3 bg-black px-2 py-2">
       {/* <div className="flex relative py-3 px-3 justify-between items-center hover:bg-zinc-900 rounded-xl transition-all bg-black">
       Syncing...
       <Spinner size="sm" />
@@ -36,7 +36,7 @@ export default function UserContainer() {
           className="text-nowrap"
           name={``} */}
           {/* /> */}
-          <Avatar className="size-9 rounded-full border-2 border-black outline-zinc-700 outline">
+          <Avatar className="size-9 rounded-full border-2 border-black outline outline-zinc-700">
             <AvatarImage
               src={
                 user?.profilePicture ||

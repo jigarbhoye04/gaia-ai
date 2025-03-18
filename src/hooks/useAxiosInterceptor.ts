@@ -21,7 +21,7 @@ export default function useAxiosInterceptor() {
           error.code == "ERR_NETWORK"
         )
           toast.error(
-            "Unable to connect to the server. Please try again later."
+            "Unable to connect to the server. Please try again later.",
           );
 
         if (error.response && error.response.status === 401) {
@@ -42,7 +42,7 @@ export default function useAxiosInterceptor() {
         }
 
         return Promise.reject(error);
-      }
+      },
     );
 
     return () => {

@@ -45,7 +45,7 @@ export default function ChatOptionsDropdown({
   const [newName, setNewName] = useState(chatName);
   const router = useRouter();
   const [modalAction, setModalAction] = useState<"edit" | "delete" | null>(
-    null
+    null,
   );
 
   const handleStarToggle = async () => {
@@ -57,7 +57,7 @@ export default function ChatOptionsDropdown({
       toast.success(
         starred
           ? "Conversation removed from starred"
-          : "Conversation added to starred"
+          : "Conversation added to starred",
       );
 
       await fetchConversations();
@@ -104,7 +104,7 @@ export default function ChatOptionsDropdown({
 
   return (
     <>
-      <Dropdown className="dark text-foreground w-fit min-w-fit" size="sm">
+      <Dropdown className="w-fit min-w-fit text-foreground dark" size="sm">
         <DropdownTrigger>
           <Button
             className="ml-auto"
@@ -123,7 +123,7 @@ export default function ChatOptionsDropdown({
                   "transition-all " +
                   (buttonHovered
                     ? "opacity-100"
-                    : "opacity-0 min-w-[20px] w-[20px]")
+                    : "w-[20px] min-w-[20px] opacity-0")
                 }
                 width={20}
               />
@@ -132,7 +132,7 @@ export default function ChatOptionsDropdown({
         </DropdownTrigger>
         <DropdownMenu aria-label="Static Actions">
           <DropdownItem key="star" textValue="Star" onPress={handleStarToggle}>
-            <div className="flex flex-row gap-2 items-center justify-between">
+            <div className="flex flex-row items-center justify-between gap-2">
               <Star color="white" width={16} />
               {starred ? "Remove" : "Add"} star
             </div>
@@ -142,7 +142,7 @@ export default function ChatOptionsDropdown({
             textValue="Rename"
             onPress={() => openModal("edit")}
           >
-            <div className="flex flex-row gap-2 items-center justify-between">
+            <div className="flex flex-row items-center justify-between gap-2">
               <PencilRenameIcon color="white" width={16} />
               Rename chat
             </div>
@@ -156,7 +156,7 @@ export default function ChatOptionsDropdown({
             onMouseOver={() => setDangerStateHovered(true)}
             onPress={() => openModal("delete")}
           >
-            <div className="flex flex-row gap-2 items-center justify-between">
+            <div className="flex flex-row items-center justify-between gap-2">
               <Trash color={dangerStateHovered ? "white" : "red"} width={16} />
               Delete chat
             </div>
@@ -165,7 +165,7 @@ export default function ChatOptionsDropdown({
       </Dropdown>
 
       <Modal
-        className="dark text-foreground"
+        className="text-foreground dark"
         isOpen={isOpen}
         onOpenChange={setIsOpen}
       >

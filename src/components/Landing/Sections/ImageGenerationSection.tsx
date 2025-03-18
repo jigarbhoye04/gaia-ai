@@ -37,16 +37,16 @@ export function GeneratedImageChatBubble({
   };
 }) {
   return (
-    <div className="p-1 !rounded-2xl !w-full">
-      <div className="text-sm font-medium flex flex-col gap-1 min-w-full">
+    <div className="!w-full !rounded-2xl p-1">
+      <div className="flex min-w-full flex-col gap-1 text-sm font-medium">
         <img
           alt={selectedOption?.prompt || "Generated image"}
-          className="rounded-3xl my-2 w-full"
+          className="my-2 w-full rounded-3xl"
           height={400}
           src={selectedOption?.src}
           width={400}
         />
-        <div className="flex gap-1 flex-wrap">
+        <div className="flex flex-wrap gap-1">
           {selectedOption.prompt.split(",").map((keyword, index) => (
             <Chip key={index} color="default" radius="md" size="sm">
               {keyword.trim()}
@@ -63,11 +63,14 @@ export default function ImageGeneration() {
 
   useEffect(() => {
     imageOptions.forEach((option, index) => {
-      setTimeout(() => {
-        const img = new Image();
+      setTimeout(
+        () => {
+          const img = new Image();
 
-        img.src = option.src;
-      }, 1000 * (index + 1));
+          img.src = option.src;
+        },
+        1000 * (index + 1),
+      );
     });
   }, []);
 
@@ -90,7 +93,7 @@ export default function ImageGeneration() {
       }
       heading="Generate Images"
       icon={
-        <AiImageIcon className="sm:size-[30px] size-[30px]" color="#9b9b9b" />
+        <AiImageIcon className="size-[30px] sm:size-[30px]" color="#9b9b9b" />
       }
       subheading="Create stunning & realistic images for free"
     >

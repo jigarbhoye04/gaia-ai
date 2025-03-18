@@ -18,9 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  CalendarEventDialogProps
-} from "@/types/calendarTypes";
+import { CalendarEventDialogProps } from "@/types/calendarTypes";
 import { formatEventDate, getEventIcon } from "@/utils/calendarUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
@@ -46,60 +44,60 @@ export default function CalendarEventDialog({
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="!bg-zinc-900 border-none max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader className="pb-4 border-b border-zinc-800">
+        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none !bg-zinc-900">
+          <DialogHeader className="border-b border-zinc-800 pb-4">
             <DialogTitle className="flex items-center gap-3">
               <CalendarIcon size={20} className="text-zinc-100" />
-              <span className="font-bold text-xl text-zinc-100">
+              <span className="text-xl font-bold text-zinc-100">
                 Create Event
               </span>
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
-              <label className="block text-zinc-300 font-medium mb-1">
+              <label className="mb-1 block font-medium text-zinc-300">
                 Summary
               </label>
               <input
                 type="text"
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                className="w-full p-2 rounded bg-zinc-800 text-zinc-100"
+                className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
                 required
               />
             </div>
             <div>
-              <label className="block text-zinc-300 font-medium mb-1">
+              <label className="mb-1 block font-medium text-zinc-300">
                 Description
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 rounded bg-zinc-800 text-zinc-100"
+                className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
               />
             </div>
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="block text-zinc-300 font-medium mb-1">
+                <label className="mb-1 block font-medium text-zinc-300">
                   Start
                 </label>
                 <input
                   type="datetime-local"
                   value={start}
                   onChange={(e) => setStart(e.target.value)}
-                  className="w-full p-2 rounded bg-zinc-800 text-zinc-100"
+                  className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
                   required
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-zinc-300 font-medium mb-1">
+                <label className="mb-1 block font-medium text-zinc-300">
                   End
                 </label>
                 <input
                   type="datetime-local"
                   value={end}
                   onChange={(e) => setEnd(e.target.value)}
-                  className="w-full p-2 rounded bg-zinc-800 text-zinc-100"
+                  className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
                   required
                 />
               </div>
@@ -108,13 +106,13 @@ export default function CalendarEventDialog({
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="px-4 py-2 bg-gray-600 text-white rounded"
+                className="rounded bg-gray-600 px-4 py-2 text-white"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="rounded bg-blue-600 px-4 py-2 text-white"
               >
                 Create
               </button>
@@ -133,7 +131,7 @@ export default function CalendarEventDialog({
     title: string;
     children: React.ReactNode;
   }) => (
-    <div className="bg-zinc-800 rounded-xl p-4 space-y-3">
+    <div className="space-y-3 rounded-xl bg-zinc-800 p-4">
       {!!title && <span className="text-medium font-medium">{title}</span>}
       {children}
     </div>
@@ -151,7 +149,7 @@ export default function CalendarEventDialog({
     if (!value) return null;
     return (
       <div className="flex items-center gap-3 text-zinc-300">
-        <div className="w-6 h-6 flex items-center justify-center text-zinc-400">
+        <div className="flex h-6 w-6 items-center justify-center text-zinc-400">
           <Icon size={16} />
         </div>
         <span className="font-medium text-zinc-400">{label}:</span>
@@ -164,15 +162,15 @@ export default function CalendarEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!bg-zinc-900 border-none max-w-lg max-h-[80vh] overflow-y-auto">
-        <DialogHeader className="pb-4 border-b border-zinc-800">
+      <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none !bg-zinc-900">
+        <DialogHeader className="border-b border-zinc-800 pb-4">
           <DialogTitle className="flex items-center gap-3">
             <Twemoji options={{ className: "twemoji max-w-[20px]" }}>
-              <div className="p-2 bg-zinc-800 rounded-xl">
+              <div className="rounded-xl bg-zinc-800 p-2">
                 {event && getEventIcon(event)}
               </div>
             </Twemoji>
-            <span className="font-bold text-xl text-zinc-100">
+            <span className="text-xl font-bold text-zinc-100">
               {event?.summary}
             </span>
           </DialogTitle>
@@ -186,8 +184,8 @@ export default function CalendarEventDialog({
               value={formatEventDate(event)}
             />
             {event?.description && (
-              <div className="flex gap-3 mt-2">
-                <div className="w-6 h-6 flex items-center justify-center text-zinc-400">
+              <div className="mt-2 flex gap-3">
+                <div className="flex h-6 w-6 items-center justify-center text-zinc-400">
                   <Edit3 size={16} />
                 </div>
                 <div className="flex-1">
@@ -218,15 +216,15 @@ export default function CalendarEventDialog({
             />
           </InfoSection>
 
-          <Accordion collapsible className="space-y-4 my-2" type="single">
+          <Accordion collapsible className="my-2 space-y-4" type="single">
             <AccordionItem
-              className="border-none bg-zinc-800 rounded-xl"
+              className="rounded-xl border-none bg-zinc-800"
               value="people"
             >
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
                 <span className="text-medium font-medium">People</span>
               </AccordionTrigger>
-              <AccordionContent className="bg-zinc-800 px-4 pb-4 mt-1 rounded-b-lg">
+              <AccordionContent className="mt-1 rounded-b-lg bg-zinc-800 px-4 pb-4">
                 <InfoItem
                   icon={User}
                   label="Creator"
@@ -242,10 +240,10 @@ export default function CalendarEventDialog({
 
             {event?.recurrence && (
               <AccordionItem className="border-none" value="recurrence">
-                <AccordionTrigger className="bg-zinc-800 rounded-xl px-4 py-3 hover:no-underline">
+                <AccordionTrigger className="rounded-xl bg-zinc-800 px-4 py-3 hover:no-underline">
                   <span className="text-lg font-semibold">Recurrence</span>
                 </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 mt-1 rounded-b-lg">
+                <AccordionContent className="mt-1 rounded-b-lg px-4 pb-4">
                   <InfoItem
                     icon={Repeat}
                     label="Pattern"
@@ -256,7 +254,7 @@ export default function CalendarEventDialog({
             )}
 
             <AccordionItem
-              className="border-none bg-zinc-800 rounded-xl"
+              className="rounded-xl border-none bg-zinc-800"
               value="additional"
             >
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -264,7 +262,7 @@ export default function CalendarEventDialog({
                   Additional Details
                 </span>
               </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4 mt-1 rounded-b-lg">
+              <AccordionContent className="mt-1 rounded-b-lg px-4 pb-4">
                 <InfoItem
                   icon={Info}
                   label="Status"
@@ -284,7 +282,7 @@ export default function CalendarEventDialog({
             </AccordionItem>
 
             <AccordionItem
-              className="border-none bg-zinc-800 rounded-xl"
+              className="rounded-xl border-none bg-zinc-800"
               value="technical"
             >
               <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -292,7 +290,7 @@ export default function CalendarEventDialog({
                   Technical Details
                 </span>
               </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4 mt-1 rounded-b-lg space-y-3">
+              <AccordionContent className="mt-1 space-y-3 rounded-b-lg px-4 pb-4">
                 <InfoItem
                   icon={History}
                   label="Created"
@@ -323,12 +321,12 @@ export default function CalendarEventDialog({
                 />
                 {event?.htmlLink && (
                   <div className="flex items-center gap-3 text-zinc-300">
-                    <div className="w-6 h-6 flex items-center justify-center text-zinc-400">
+                    <div className="flex h-6 w-6 items-center justify-center text-zinc-400">
                       <Link2 size={16} />
                     </div>
                     <span className="font-medium text-zinc-400">Link:</span>
                     <a
-                      className="text-blue-400 hover:text-blue-300 underline truncate max-w-[300px]"
+                      className="max-w-[300px] truncate text-blue-400 underline hover:text-blue-300"
                       href={event.htmlLink}
                       rel="noopener noreferrer"
                       target="_blank"

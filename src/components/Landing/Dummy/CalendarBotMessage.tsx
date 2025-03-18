@@ -25,17 +25,17 @@ export function CalendarBotMessage({
 }: CalendarBotMessageProps) {
   return (
     <div>
-      <AnimatedSection className="p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit">
+      <AnimatedSection className="flex w-fit flex-col gap-1 rounded-2xl rounded-bl-none bg-zinc-800 p-4 pt-3">
         <div>Want to add these events to your Calendar?</div>
 
         {tasks.map((task, index) => (
           <div
             key={index}
-            className="bg-zinc-900 p-3 flex rounded-xl items-start gap-2 flex-col"
+            className="flex flex-col items-start gap-2 rounded-xl bg-zinc-900 p-3"
           >
-            <div className="flex flex-row rounded-lg items-start gap-3 bg-primary/20 w-full p-3 relative overflow-hidden">
-              <div className="bg-primary h-full w-1 absolute inset-0"></div>
-              <div className="flex flex-col flex-1 gap-1 pl-1">
+            <div className="relative flex w-full flex-row items-start gap-3 overflow-hidden rounded-lg bg-primary/20 p-3">
+              <div className="absolute inset-0 h-full w-1 bg-primary"></div>
+              <div className="flex flex-1 flex-col gap-1 pl-1">
                 <div className="font-medium leading-none">{task.title}</div>
                 <div className="text-xs text-primary">{task.time}</div>
               </div>

@@ -62,7 +62,7 @@ export default function ChatBubble_Actions_Image({
   };
 
   return (
-    <div className="flex py-2 w-fit gap-2 items-center">
+    <div className="flex w-fit items-center gap-2 py-2">
       <Tooltip
         className={`${fullWidth ? "hidden" : ""}`}
         color="primary"
@@ -71,10 +71,11 @@ export default function ChatBubble_Actions_Image({
         size="md"
       >
         <Button
-          className={`w-fit ${fullWidth
-              ? "px-3 py-2 "
-              : "p-0 bg-transparent data-[hover=true]:bg-transparent"
-            } h-fit rounded-lg `}
+          className={`w-fit ${
+            fullWidth
+              ? "px-3 py-2"
+              : "bg-transparent p-0 data-[hover=true]:bg-transparent"
+          } h-fit rounded-lg`}
           color="primary"
           isIconOnly={!fullWidth}
           style={{ minWidth: "22px" }}
@@ -85,7 +86,7 @@ export default function ChatBubble_Actions_Image({
             className={`cursor-pointer ${fullWidth ? "text-black" : ""}`}
             height="22"
           />
-          <span className="text-black font-medium">
+          <span className="font-medium text-black">
             {fullWidth ? "Download" : ""}
           </span>
         </Button>

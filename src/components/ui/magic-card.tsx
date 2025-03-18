@@ -80,19 +80,22 @@ export function MagicCard({
     <div
       ref={cardRef}
       className={cn(
-        `group relative flex size-full ${noRadius ? "rounded-none" : "rounded-xl"
+        `group relative flex size-full ${
+          noRadius ? "rounded-none" : "rounded-xl"
         } `,
         className,
       )}
     >
       <div
-        className={`absolute inset-px z-10 ${noRadius ? "rounded-none" : "rounded-xl"
-          }  bg-background sm:opacity-90  opacity-50`}
+        className={`absolute inset-px z-10 ${
+          noRadius ? "rounded-none" : "rounded-xl"
+        } bg-background opacity-50 sm:opacity-90`}
       />
       <div className="relative z-30 w-full">{children}</div>
       <motion.div
-        className={`pointer-events-none absolute inset-px z-10 ${noRadius ? "rounded-none" : "rounded-xl"
-          } opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
+        className={`pointer-events-none absolute inset-px z-10 ${
+          noRadius ? "rounded-none" : "rounded-xl"
+        } opacity-0 transition-opacity duration-300 group-hover:opacity-100`}
         style={{
           background: useMotionTemplate`
             radial-gradient(${gradientSize}px circle at ${mouseX}px ${mouseY}px, ${gradientColor}, transparent 100%)
@@ -101,8 +104,9 @@ export function MagicCard({
         }}
       />
       <motion.div
-        className={`pointer-events-none absolute inset-0 ${noRadius ? "rounded-none" : "rounded-xl"
-          }  duration-300 group-hover:opacity-100`}
+        className={`pointer-events-none absolute inset-0 ${
+          noRadius ? "rounded-none" : "rounded-xl"
+        } duration-300 group-hover:opacity-100`}
         style={{
           background: useMotionTemplate`
             radial-gradient(${gradientSize}px circle at ${mouseX}px ${mouseY}px,

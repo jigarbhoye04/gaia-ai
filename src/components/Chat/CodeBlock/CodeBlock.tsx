@@ -42,7 +42,7 @@ const CodeBlock: React.FC<any> = ({
 
   if (isMermaid) {
     return (
-      <div className="relative flex flex-col gap-0 bg-zinc-900 !pb-0 !rounded-t-[10px] w-[40vw] max-w-[30vw] overflow-x-visible">
+      <div className="relative flex w-[40vw] max-w-[30vw] flex-col gap-0 overflow-x-visible !rounded-t-[10px] bg-zinc-900 !pb-0">
         <MermaidTabs
           activeTab={activeTab}
           onTabChange={(key) => {
@@ -56,7 +56,7 @@ const CodeBlock: React.FC<any> = ({
         >
           {children}
         </MermaidTabs>
-        <div className="absolute top-2 right-2">
+        <div className="absolute right-2 top-2">
           <CopyButton copied={copied} onPress={handleCopy} />
         </div>
       </div>
@@ -75,7 +75,7 @@ const CodeBlock: React.FC<any> = ({
         </StandardCodeBlock>
       ) : (
         <code
-          className={`${className} bg-black bg-opacity-40 rounded-sm`}
+          className={`${className} rounded-sm bg-black bg-opacity-40`}
           {...props}
         >
           {children}

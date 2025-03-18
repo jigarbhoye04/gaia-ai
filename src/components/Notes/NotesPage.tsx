@@ -53,11 +53,11 @@ export default function Notes() {
 
   return (
     <>
-      <div className="flex flex-col justify-between h-full">
+      <div className="flex h-full flex-col justify-between">
         <ScrollArea>
-          <div className="flex items-center flex-col gap-2">
-            <h1 className="font-bold text-center text-5xl">Notes</h1>
-            <div className=" text-center text-md pb-6 max-w-screen-md">
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-center text-5xl font-bold">Notes</h1>
+            <div className="text-md max-w-screen-md pb-6 text-center">
               Add and store custom notes as memories for your AI assistant,
               enabling it to recall important details and provide more
               personalized interactions over time.
@@ -65,12 +65,12 @@ export default function Notes() {
           </div>
 
           {loading ? (
-            <div className="h-[80vh] flex items-center justify-center">
+            <div className="flex h-[80vh] items-center justify-center">
               <Spinner />
             </div>
           ) : (
-            <div className="flex flex-wrap gap-4 justify-center pb-8 sm:px-[10vw]">
-              <div className="grid sm:grid-cols-3 grid-cols-1 gap-4 sm:pb-20 pb-24">
+            <div className="flex flex-wrap justify-center gap-4 pb-8 sm:px-[10vw]">
+              <div className="grid grid-cols-1 gap-4 pb-24 sm:grid-cols-3 sm:pb-20">
                 {notes.length > 0 &&
                   notes?.map((note, index) => (
                     <NoteCard key={index} note={note} onDelete={deleteNote} />
@@ -80,10 +80,10 @@ export default function Notes() {
           )}
         </ScrollArea>
 
-        <div className="absolute left-0 bottom-4 flex justify-center items-center w-full z-10">
+        <div className="absolute bottom-4 left-0 z-10 flex w-full items-center justify-center">
           <Link href={"/notes/add"}>
             <Button
-              className="font-semibold gap-1"
+              className="gap-1 font-semibold"
               color="primary"
               radius="full"
               size="lg"
@@ -94,7 +94,7 @@ export default function Notes() {
             </Button>
           </Link>
         </div>
-        <div className="bg-custom-gradient2 left-0 absolute bottom-0 w-full h-[100px] z-[1]" />
+        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
       </div>
       {/* <AddNoteDialog
         openDialog={openDialog}

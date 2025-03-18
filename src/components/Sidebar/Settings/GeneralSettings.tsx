@@ -11,7 +11,7 @@ export default function GeneralSection({
   return (
     <div className="flex flex-col gap-2">
       <h3 className="mb-3">General</h3>
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Eraser className="text-foreground-300" />
           Delete all chats

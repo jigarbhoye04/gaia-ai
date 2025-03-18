@@ -8,7 +8,7 @@ import { lazy } from "react";
 import CalendarEventSection from "./CalendarEventSection";
 
 const MarkdownRenderer = lazy(
-  () => import("@/components/Chat/MarkdownRenderer")
+  () => import("@/components/Chat/MarkdownRenderer"),
 );
 
 interface TextBubbleProps extends ChatBubbleBotProps {
@@ -36,7 +36,7 @@ export default function TextBubble({
               startContent={<InternetIcon color="#00bbff" height={20} />}
               variant="flat"
             >
-              <div className="font-medium flex items-center gap-1 text-primary">
+              <div className="flex items-center gap-1 font-medium text-primary">
                 Live Search Results from the Web
               </div>
             </Chip>
@@ -47,7 +47,7 @@ export default function TextBubble({
               startContent={<ArrowUpRight color="#00bbff" height={20} />}
               variant="flat"
             >
-              <div className="font-medium flex items-center gap-1 text-primary">
+              <div className="flex items-center gap-1 font-medium text-primary">
                 Fetched{" "}
                 <CustomAnchor href={pageFetchURL}>
                   {pageFetchURL.replace(/^https?:\/\//, "")}

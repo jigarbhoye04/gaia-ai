@@ -22,7 +22,7 @@ const BubbleMenuComponent = ({ editor }: { editor: any }) => {
   return (
     <Suspense fallback={<SuspenseLoader />}>
       <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
-        <div className="flex w-fit gap-5 bg-zinc-950 px-3 py-1 rounded-md">
+        <div className="flex w-fit gap-5 rounded-md bg-zinc-950 px-3 py-1">
           <button
             className={editor.isActive("bold") ? "is-active" : ""}
             onClick={() => editor.chain().focus().toggleBold().run()}

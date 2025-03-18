@@ -29,7 +29,7 @@ export function NoteDialog({
   return (
     <Modal
       backdrop="blur"
-      className="dark text-foreground"
+      className="text-foreground dark"
       isDismissable={false}
       isOpen={openDialog}
       onOpenChange={setOpenDialog}
@@ -57,7 +57,7 @@ export function NoteDialog({
                 }
               }}
             >
-              <DropdownItem key="delete" className="dark text-red-500">
+              <DropdownItem key="delete" className="text-red-500 dark">
                 Delete
               </DropdownItem>
             </DropdownMenu>

@@ -209,7 +209,9 @@
   justify-content: space-between;
   overflow: hidden;
   position: relative;
-  transition: all 0.2s ease-in-out, opacity 0.1s ease;
+  transition:
+    all 0.2s ease-in-out,
+    opacity 0.1s ease;
   z-index: 1;
 }
 .starter_container2 {
@@ -249,8 +251,9 @@ body {
 }
 code,
 .monospace {
-  font-family: Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono",
-    "Courier New", monospace !important;
+  font-family:
+    Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New",
+    monospace !important;
 }
 html,
 body {

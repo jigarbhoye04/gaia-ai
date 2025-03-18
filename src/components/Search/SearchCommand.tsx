@@ -164,13 +164,13 @@ export default function SearchCommand({
       handleSearch();
       setFilteredPages(
         pages.filter((page) =>
-          page.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+          page.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
       );
       setFilteredCommands(
         commands.filter((command) =>
-          command.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
+          command.name.toLowerCase().includes(searchQuery.toLowerCase()),
+        ),
       );
     }, 200);
 
@@ -186,7 +186,7 @@ export default function SearchCommand({
       />
 
       {searchQuery && (
-        <div className="flex gap-1 p-2 bg-zinc-900 text-sm text-foreground-500 items-center font-medium">
+        <div className="flex items-center gap-1 bg-zinc-900 p-2 text-sm font-medium text-foreground-500">
           {(results.messages.length > 0 ||
             results.conversations.length > 0 ||
             results.notes.length > 0) && <span className="mr-2">Filters:</span>}
@@ -263,16 +263,16 @@ export default function SearchCommand({
           {filteredCommands.map((command) => (
             <CommandItem
               key={command.name}
-              className="cursor-pointer group !my-3"
+              className="group !my-3 cursor-pointer"
               onSelect={() => {
                 setOpenSearchDialog(false);
                 command.action();
               }}
             >
-              <div className="flex gap-2 items-center w-full">
+              <div className="flex w-full items-center gap-2">
                 {command.icon}
                 {command.name}
-                <ArrowTopRightIcon className="text-foreground-500 ml-auto group-hover:text-[#00bbff] transition-all" />
+                <ArrowTopRightIcon className="ml-auto text-foreground-500 transition-all group-hover:text-[#00bbff]" />
               </div>
             </CommandItem>
           ))}
@@ -283,16 +283,16 @@ export default function SearchCommand({
           {filteredPages.map((page) => (
             <CommandItem
               key={page.name}
-              className="cursor-pointer group"
+              className="group cursor-pointer"
               onSelect={() => {
                 setOpenSearchDialog(false);
                 router.push(page.path);
               }}
             >
-              <div className="flex gap-2 items-center w-full">
+              <div className="flex w-full items-center gap-2">
                 {page.icon}
                 {page.name}
-                <ArrowTopRightIcon className="text-foreground-500 ml-auto group-hover:text-[#00bbff] transition-all" />
+                <ArrowTopRightIcon className="ml-auto text-foreground-500 transition-all group-hover:text-[#00bbff]" />
               </div>
             </CommandItem>
           ))}
@@ -309,7 +309,7 @@ export default function SearchCommand({
                 <SearchCard
                   result={message}
                   type="message"
-                // searchQuery={searchQuery}
+                  // searchQuery={searchQuery}
                 />
               ))}
             </CommandGroup>
@@ -340,15 +340,15 @@ export default function SearchCommand({
         {!!searchQuery &&
           results.conversations.length == 0 &&
           results.messages.length == 0 && (
-            <div className="text-sm p-3 text-center">No Results Found</div>
+            <div className="p-3 text-center text-sm">No Results Found</div>
           )}
       </CommandList>
 
       {/* {!searchQuery && ( */}
-      <div className="text-sm text-center p-2 bg-zinc-900 inline-flex gap-2 items-center justify-center text-foreground-500">
-        <Lightbulb className="size-[20px] text-white relative left-1" />
+      <div className="inline-flex items-center justify-center gap-2 bg-zinc-900 p-2 text-center text-sm text-foreground-500">
+        <Lightbulb className="relative left-1 size-[20px] text-white" />
         Tip: Hit
-        <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded  bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 bg-zinc-600 text-white">
+        <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded bg-zinc-600 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
           <span className="text-xs">⌘</span>K
         </kbd>
         to open this Command Menu

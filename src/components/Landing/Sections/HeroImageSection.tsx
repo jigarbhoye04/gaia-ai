@@ -5,8 +5,8 @@ import DummySearchbar from "../Dummy/DummySearchbar";
 
 export default function HeroImage() {
   return (
-    <div className="w-screen flex items-center justify-center">
-      <AnimatedSection className="flex items-center justify-center h-fit w-screen max-w-screen-lg lg:max-w-screen-xl mt-14 sm:mb-0 mb-[20vh]">
+    <div className="flex w-screen items-center justify-center">
+      <AnimatedSection className="mb-[20vh] mt-14 flex h-fit w-screen max-w-screen-lg items-center justify-center sm:mb-0 lg:max-w-screen-xl">
         {/* <GridPattern
           width={20}
           height={20}
@@ -17,21 +17,21 @@ export default function HeroImage() {
           )}
         /> */}
 
-        <div className="relative sm:scale-100 scale-[175%]">
+        <div className="relative scale-[175%] sm:scale-100">
           <ShineBorder
             borderRadius={10}
             borderWidth={3}
-            className="size-full w-fit !min-w-fit rounded-xl bg-zinc-800 p-0 animate-pulse-shadow relative"
+            className="relative size-full w-fit !min-w-fit animate-pulse-shadow rounded-xl bg-zinc-800 p-0"
             color={["#00bbff", "#27272a"]}
             duration={7}
           >
             <Safari
-              className="w-full h-fit"
+              className="h-fit w-full"
               imageSrc="/landing/hero_image_nosearchbar.webp"
               mode="simple"
               url="heygaia.io"
             />
-            <div className="absolute text-white flex w-full sm:bottom-4 bottom-[-15px] justify-center left-0 items-center sm:scale-100 scale-50">
+            <div className="absolute bottom-[-15px] left-0 flex w-full scale-50 items-center justify-center text-white sm:bottom-4 sm:scale-100">
               <DummySearchbar />
             </div>
           </ShineBorder>

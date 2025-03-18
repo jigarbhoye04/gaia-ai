@@ -52,13 +52,13 @@ export default function GoalsPage() {
 
   return (
     <>
-      <div className="flex flex-col justify-between h-full w-full">
+      <div className="flex h-full w-full flex-col justify-between">
         <div className="w-full overflow-y-auto">
-          <div className="flex items-center flex-col gap-2 w-full">
-            <div className="font-bold text-center sm:text-5xl text-3xl">
+          <div className="flex w-full flex-col items-center gap-2">
+            <div className="text-center text-3xl font-bold sm:text-5xl">
               Roadmaps
             </div>
-            <div className=" text-center text-md pb-6 max-w-screen-md">
+            <div className="text-md max-w-screen-md pb-6 text-center">
               A tool that instantly generates personalized goal roadmaps from a
               single prompt, helping you plan and track your objectives
               efficiently.
@@ -66,19 +66,19 @@ export default function GoalsPage() {
           </div>
 
           {goals.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 px-1 pb-28 sm:px-16 gap-4 justify-center">
+            <div className="grid grid-cols-1 justify-center gap-4 px-1 pb-28 sm:grid-cols-2 sm:px-16 md:grid-cols-3 lg:grid-cols-4">
               {goals.map((goal, index) => (
                 <GoalCard key={index} fetchGoals={fetchGoals} goal={goal} />
               ))}
             </div>
           ) : (
-            <div className="h-[70vh] w-full flex items-center justify-center">
+            <div className="flex h-[70vh] w-full items-center justify-center">
               {loading ? <Spinner /> : <div>No Goals created yet.</div>}
             </div>
           )}
         </div>
-        <div className="absolute left-0 bottom-6 flex justify-center items-center w-full z-10 flex-col gap-4">
-          <div className="flex flex-wrap gap-2 max-w-screen-lg justify-center">
+        <div className="absolute bottom-6 left-0 z-10 flex w-full flex-col items-center justify-center gap-4">
+          <div className="flex max-w-screen-lg flex-wrap justify-center gap-2">
             {[
               "Build a strong morning routine",
               "Read 12 books this year",
@@ -103,7 +103,7 @@ export default function GoalsPage() {
             ))}
           </div>
           <Button
-            className="font-semibold gap-2"
+            className="gap-2 font-semibold"
             color="primary"
             radius="full"
             size="lg"
@@ -114,7 +114,7 @@ export default function GoalsPage() {
             Create a new Goal
           </Button>
         </div>
-        <div className="bg-custom-gradient2 left-0 absolute bottom-0 w-full h-[100px] z-[1]" />
+        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
       </div>
       <AddGoalDialog
         addGoal={handleAddGoal}

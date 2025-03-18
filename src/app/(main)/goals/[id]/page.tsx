@@ -79,13 +79,15 @@ const CustomNode = React.memo(
         <Handle position={Position.Top} type="target" />
 
         <div
-          className={`${currentlySelectedNodeId === data.id
-              ? "!outline-[#00bbff] shadow-lg"
+          className={`${
+            currentlySelectedNodeId === data.id
+              ? "shadow-lg !outline-[#00bbff]"
               : "outline-zinc-700"
-            } ${data.isComplete
-              ? "bg-[#00bbff73] outline-[#00bbff30] line-through"
+          } ${
+            data.isComplete
+              ? "bg-[#00bbff73] line-through outline-[#00bbff30]"
               : "bg-zinc-800"
-            } transition-all outline outline-[3px] p-4 rounded-lg text-white flex flex-row gap-1 max-w-[250px] min-w-[250px] text-center items-center justify-center`}
+          } flex min-w-[250px] max-w-[250px] flex-row items-center justify-center gap-1 rounded-lg p-4 text-center text-white outline outline-[3px] transition-all`}
           onClick={() => {
             setCurrentlySelectedNodeId(data.id);
             setOpenSidebar(true);
@@ -97,7 +99,7 @@ const CustomNode = React.memo(
         <Handle position={Position.Bottom} type="source" />
       </>
     );
-  }
+  },
 );
 
 export default function GoalPage() {
@@ -122,7 +124,7 @@ export default function GoalPage() {
         />
       ),
     }),
-    [currentlySelectedNodeId]
+    [currentlySelectedNodeId],
   );
 
   const fetchGoalData = async () => {
@@ -180,7 +182,7 @@ export default function GoalPage() {
 
   const initiateWebSocket = (goalId: string, goalTitle: string) => {
     const ws = new WebSocket(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`,
     );
 
     ws.onopen = () => {
@@ -208,7 +210,7 @@ export default function GoalPage() {
   }, [goalId]);
 
   const handleInit = (
-    reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeType>>
+    reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeType>>,
   ) => {
     const viewport = reactFlowInstance.getViewport();
 
@@ -226,7 +228,7 @@ export default function GoalPage() {
 
     // Find the currently selected node
     const selectedNode = nodes.find(
-      (node) => node.id === currentlySelectedNodeId
+      (node) => node.id === currentlySelectedNodeId,
     );
 
     if (!selectedNode) return;
@@ -238,25 +240,25 @@ export default function GoalPage() {
       prevNodes.map((node) =>
         node.id === currentlySelectedNodeId
           ? {
-            ...node,
-            data: {
-              ...node.data,
-              isComplete: updatedIsComplete,
-            },
-          }
-          : node
-      )
+              ...node,
+              data: {
+                ...node.data,
+                isComplete: updatedIsComplete,
+              },
+            }
+          : node,
+      ),
     );
 
     // Update the server state
     try {
       await apiauth.patch(
         `/goals/${selectedNode.data.goalId}/roadmap/nodes/${selectedNode.id}`,
-        { is_complete: updatedIsComplete }
+        { is_complete: updatedIsComplete },
       );
 
       toast.success(
-        updatedIsComplete ? "Marked as completed!" : "Marked as not completed!"
+        updatedIsComplete ? "Marked as completed!" : "Marked as not completed!",
       );
     } catch (error) {
       console.error("Error updating node status:", error);
@@ -267,14 +269,14 @@ export default function GoalPage() {
         prevNodes.map((node) =>
           node.id === currentlySelectedNodeId
             ? {
-              ...node,
-              data: {
-                ...node.data,
-                isComplete: !updatedIsComplete,
-              },
-            }
-            : node
-        )
+                ...node,
+                data: {
+                  ...node.data,
+                  isComplete: !updatedIsComplete,
+                },
+              }
+            : node,
+        ),
       );
     }
   };
@@ -288,18 +290,19 @@ export default function GoalPage() {
       <title id="chat_title">{`${truncatedTitle || "New Goal"} | GAIA`}</title>
 
       <ReactFlowProvider>
-        <div className="flex flex-row justify-between h-full relative w-full">
+        <div className="relative flex h-full w-full flex-row justify-between">
           <div
-            className={`${openSidebar ? "visible" : "hidden"
-              } fixed right-3 bottom-3 bg-zinc-800 max-w-[350px] p-2 rounded-xl flex flex-col gap-3 z-10 shadow-lg outline outline-2 outline-zinc-950`}
+            className={`${
+              openSidebar ? "visible" : "hidden"
+            } fixed bottom-3 right-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950`}
           >
-            <div className="p-4 space-y-2">
-              <div className="text-xl font-medium ">
+            <div className="space-y-2 p-4">
+              <div className="text-xl font-medium">
                 {currentlySelectedNodeId &&
                   nodes.find((node) => node.id === currentlySelectedNodeId)
                     ?.data.label}
               </div>
-              <div className="text-md -mt-2 text-foreground-600 pb-4">
+              <div className="text-md -mt-2 pb-4 text-foreground-600">
                 {currentlySelectedNodeId &&
                   nodes
                     .find((node) => node.id === currentlySelectedNodeId)
@@ -309,7 +312,7 @@ export default function GoalPage() {
                 {currentlySelectedNodeId &&
                   (() => {
                     const selectedNode = nodes.find(
-                      (node) => node.id === currentlySelectedNodeId
+                      (node) => node.id === currentlySelectedNodeId,
                     );
                     const estimatedTime = selectedNode?.data?.estimatedTime;
 
@@ -318,14 +321,14 @@ export default function GoalPage() {
                         color="primary"
                         size="lg"
                         startContent={
-                          <div className="flex items-center gap-1 text-md">
+                          <div className="text-md flex items-center gap-1">
                             <Clock width={18} />
                             Estimated Time:
                           </div>
                         }
                         variant="flat"
                       >
-                        <span className="text-white text-md pl-1">
+                        <span className="text-md pl-1 text-white">
                           {estimatedTime}
                         </span>
                       </Chip>
@@ -340,7 +343,7 @@ export default function GoalPage() {
                       <Checkbox
                         isSelected={
                           nodes.find(
-                            (node) => node.id === currentlySelectedNodeId
+                            (node) => node.id === currentlySelectedNodeId,
                           )?.data?.isComplete ?? false
                         }
                         onValueChange={handleCheckboxClick}
@@ -361,14 +364,14 @@ export default function GoalPage() {
                 <>
                   {(() => {
                     const selectedNode = nodes.find(
-                      (node) => node.id === currentlySelectedNodeId
+                      (node) => node.id === currentlySelectedNodeId,
                     );
 
                     return (
                       selectedNode?.data?.resources &&
                       selectedNode?.data?.resources?.length > 0 && (
-                        <div className="bg-black bg-opacity-40 p-5 rounded-xl">
-                          <div className="flex text-md font-medium gap-2 items-center pb-2">
+                        <div className="rounded-xl bg-black bg-opacity-40 p-5">
+                          <div className="text-md flex items-center gap-2 pb-2 font-medium">
                             <BookIcon1 width={18} />
                             Resources
                           </div>
@@ -377,15 +380,15 @@ export default function GoalPage() {
                               (resource, index) => (
                                 <a
                                   key={index}
-                                  className="hover:text-[#00bbff] underline underline-offset-4"
+                                  className="underline underline-offset-4 hover:text-[#00bbff]"
                                   href={`https://www.google.com/search?q=${resource.split(
-                                    "+"
+                                    "+",
                                   )}`}
                                   target="__blank"
                                 >
                                   <li>{resource}</li>
                                 </a>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
@@ -398,21 +401,22 @@ export default function GoalPage() {
           </div>
 
           <div
-            className={`flex flex-wrap gap-4 justify-center items-center pb-8 h-screen text-background relative flex-row w-full min-w-full ${loading ? "h-screen" : "h-fit"
-              }`}
+            className={`relative flex h-screen w-full min-w-full flex-row flex-wrap items-center justify-center gap-4 pb-8 text-background ${
+              loading ? "h-screen" : "h-fit"
+            }`}
           >
             {loading ? (
-              <div className="bg-black w-fit pt-9 pb-0 relative h-fit flex items-center justify-center rounded-xl bg-opacity-50 flex-col gap-10 overflow-hidden ">
-                <div className="text-center space-y-2">
-                  <div className="font-medium text-xl text-foreground">
+              <div className="relative flex h-fit w-fit flex-col items-center justify-center gap-10 overflow-hidden rounded-xl bg-black bg-opacity-50 pb-0 pt-9">
+                <div className="space-y-2 text-center">
+                  <div className="text-xl font-medium text-foreground">
                     Creating your detailed Roadmap.
                   </div>
                   {goalData?.title}
-                  <div className="text-foreground-500 text-medium">
+                  <div className="text-medium text-foreground-500">
                     Please Wait. This may take a while.
                   </div>
 
-                  <div className="text-red-500 flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-red-500">
                     <TriangleAlert width={17} />
                     Do not leave this page while the roadmap is being generated.
                   </div>
@@ -441,28 +445,28 @@ export default function GoalPage() {
               </div>
             ) : (
               <>
-                <div className="flex flex-col justify-center items-center w-full">
-                  <div className="flex flex-row items-center justify-between w-full">
+                <div className="flex w-full flex-col items-center justify-center">
+                  <div className="flex w-full flex-row items-center justify-between">
                     <Link href={"/goals"}>
                       <Button
-                        className="text-white w-fit gap-1 font-normal"
+                        className="w-fit gap-1 font-normal text-white"
                         variant={"ghost"}
                       >
                         <ArrowLeft width={17} />
                         All Goals
                       </Button>
                     </Link>
-                    <div className="font-bold text-white text-2xl mt-1">
+                    <div className="mt-1 text-2xl font-bold text-white">
                       {goalData?.roadmap?.title || goalData?.title}
                     </div>
                     <div></div>
                   </div>
-                  <div className="text-foreground-500 text-md mt-1 ">
+                  <div className="text-md mt-1 text-foreground-500">
                     {goalData?.roadmap?.description || goalData?.description}
                   </div>
                 </div>
 
-                <div className="w-full h-full relative">
+                <div className="relative h-full w-full">
                   <ReactFlow
                     fitView
                     className="relative"
@@ -484,7 +488,7 @@ export default function GoalPage() {
               </>
             )}
           </div>
-          <div className="bg-custom-gradient2 left-0 absolute bottom-0 w-full h-[100px] z-[1] pointer-events-none" />
+          <div className="bg-custom-gradient2 pointer-events-none absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
         </div>
       </ReactFlowProvider>
     </>

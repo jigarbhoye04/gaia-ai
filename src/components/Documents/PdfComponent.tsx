@@ -20,7 +20,7 @@ interface PdfComponentProps {
 export function PdfContainer({ file }: PdfContainerProps) {
   return (
     <div
-      className={`flex w-full rounded-2xl flex-col justify-center p-2 my-1 items-center text-white bg-black bg-opacity-70`}
+      className={`my-1 flex w-full flex-col items-center justify-center rounded-2xl bg-black bg-opacity-70 p-2 text-white`}
     >
       {!!file && (
         <div className="pdf_container">
@@ -28,10 +28,10 @@ export function PdfContainer({ file }: PdfContainerProps) {
         </div>
       )}
 
-      <div className="h-[50px] flex w-full items-center gap-2 px-2">
+      <div className="flex h-[50px] w-full items-center gap-2 px-2">
         <Pdf02Icon color="zinc-600" height="25" width="25" />
         <div className="flex flex-col">
-          <span className="font-[500] text-small w-[270px] text-ellipsis whitespace-nowrap overflow-hidden">
+          <span className="w-[270px] overflow-hidden text-ellipsis whitespace-nowrap text-small font-[500]">
             {file?.name}
           </span>
           <span className="text-xs">{file?.type}</span>

@@ -106,9 +106,9 @@ function OuterIcons() {
 
 export default function IntegrationCircles() {
   return (
-    <div className="flex w-screen items-center justify-center md:scale-100 ">
+    <div className="flex w-screen items-center justify-center md:scale-100">
       <div className="relative flex h-screen w-full items-center justify-center rounded-lg md:shadow-xl">
-        <span className="pointer-events-none whitespace-pre-wrap bg-gradient-to-b from-black to-gray-300 bg-clip-text text-center text-6xl font-semibold leading-none text-transparent dark:from-white dark:to-zinc-900 relative">
+        <span className="pointer-events-none relative whitespace-pre-wrap bg-gradient-to-b from-black to-gray-300 bg-clip-text text-center text-6xl font-semibold leading-none text-transparent dark:from-white dark:to-zinc-900">
           Integrated with Workspaces
         </span>
 

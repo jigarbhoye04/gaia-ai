@@ -3,40 +3,40 @@ import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 
 const Section_ConvoManagement = lazy(
-  () => import("@/components/Landing/Sections/ConversationManagementSection")
+  () => import("@/components/Landing/Sections/ConversationManagementSection"),
 );
 
 const Section_Document = lazy(
-  () => import("@/components/Landing/Sections/DocumentsSection")
+  () => import("@/components/Landing/Sections/DocumentsSection"),
 );
 
 const FlowchartDemo = lazy(
-  () => import("@/components/Landing/Sections/FlowchartSection")
+  () => import("@/components/Landing/Sections/FlowchartSection"),
 );
 
 const ImageGeneration = lazy(
-  () => import("@/components/Landing/Sections/ImageGenerationSection")
+  () => import("@/components/Landing/Sections/ImageGenerationSection"),
 );
 
 export default function Section_Grid() {
   return (
-    <AnimatedSection className="w-screen flex justify-center min-h-screen items-center h-fit sm:pt-0 flex-col p-5 gap-10">
+    <AnimatedSection className="flex h-fit min-h-screen w-screen flex-col items-center justify-center gap-10 p-5 sm:pt-0">
       <div className="space-y-2">
-        <div className="font-medium text-5xl relative z-[2] text-center">
+        <div className="relative z-[2] text-center text-5xl font-medium">
           Ditch all other chatbots!
         </div>
-        <div className="text-foreground-600 mb-4 relative z-[1] text-center text-lg">
+        <div className="relative z-[1] mb-4 text-center text-lg text-foreground-600">
           GAIA has everything you need.
         </div>
       </div>
 
-      <div className="w-screen max-w-screen-xl relative z-[-1]">
-        <div className="h-full w-full absolute top-0 flex justify-start flex-col items-center pointer-events-none">
-          <div className="size-[500px] blur-[200px] bg-[#00bbff] z-[-1] relative" />
-          <div className="size-[500px] blur-[200px] bg-[#00bbff] z-[-1] relative top-[30vh]" />
+      <div className="relative z-[-1] w-screen max-w-screen-xl">
+        <div className="pointer-events-none absolute top-0 flex h-full w-full flex-col items-center justify-start">
+          <div className="relative z-[-1] size-[500px] bg-[#00bbff] blur-[200px]" />
+          <div className="relative top-[30vh] z-[-1] size-[500px] bg-[#00bbff] blur-[200px]" />
         </div>
 
-        <AnimatedSection className="grid w-screen max-w-screen-xl gap-4 sm:grid-cols-3 grid-cols-1 relative z-[0] sm:p-0 p-3">
+        <AnimatedSection className="relative z-[0] grid w-screen max-w-screen-xl grid-cols-1 gap-4 p-3 sm:grid-cols-3 sm:p-0">
           <Suspense fallback={<SuspenseLoader />}>
             <ImageGeneration />
           </Suspense>

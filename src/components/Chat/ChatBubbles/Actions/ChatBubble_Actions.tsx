@@ -51,7 +51,7 @@ export default function ChatBubble_Actions({
       // Pin/unpin the message
       await apiauth.put(
         `/conversations/${convoIdParam}/messages/${message_id}/pin`,
-        { pinned: !pinned }
+        { pinned: !pinned },
       );
 
       toast.success("Pinned message!");
@@ -69,10 +69,10 @@ export default function ChatBubble_Actions({
   return (
     <>
       {!loading && (
-        <div className="flex w-fit gap-2 items-center">
+        <div className="flex w-fit items-center gap-2">
           <Button
             isIconOnly
-            className="w-fit p-0 h-fit rounded-md"
+            className="h-fit w-fit rounded-md p-0"
             style={{ minWidth: "22px" }}
             variant="light"
             onPress={copyToClipboard}
@@ -82,7 +82,7 @@ export default function ChatBubble_Actions({
 
           <Button
             isIconOnly
-            className="w-fit p-0 h-fit rounded-md"
+            className="h-fit w-fit rounded-md p-0"
             variant="light"
             onClick={handlePinToggle}
             color={pinned ? "primary" : "default"}

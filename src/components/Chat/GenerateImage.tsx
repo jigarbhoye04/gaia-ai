@@ -51,7 +51,7 @@ export default function GenerateImage({
         { message: prompt },
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       return [response.data.url, response.data.improved_prompt];
     } catch (error) {
@@ -120,7 +120,7 @@ export default function GenerateImage({
         <ModalHeader className="flex flex-col items-center">
           Generate Image
         </ModalHeader>
-        <ModalBody className="flex justify-center items-center">
+        <ModalBody className="flex items-center justify-center">
           <Textarea
             isRequired
             color="primary"

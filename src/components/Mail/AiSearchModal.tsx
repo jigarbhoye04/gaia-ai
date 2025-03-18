@@ -47,7 +47,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
             id: `${index + 1}`,
             email,
             name: email.split("@")[0], // Extract name from email
-          }))
+          })),
         );
       } else {
         setResults([]); // No emails found
@@ -64,7 +64,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
     setSelected((prevSelected) =>
       prevSelected.find((s) => s.id === suggestion.id)
         ? prevSelected.filter((s) => s.id !== suggestion.id)
-        : [...prevSelected, suggestion]
+        : [...prevSelected, suggestion],
     );
   };
 
@@ -87,7 +87,8 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-zinc-900 border-none outline-none"
+      <DialogContent
+        className="border-none bg-zinc-900 outline-none"
         aria-description="Dialog box to search the internet for email suggestions."
       >
         <DialogHeader>
@@ -105,7 +106,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
             variant="faded"
             isClearable
             startContent={
-              <div className="text-sm text-nowrap text-foreground-500 font-medium">
+              <div className="text-nowrap text-sm font-medium text-foreground-500">
                 Find email of
               </div>
             }
@@ -126,7 +127,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
         {/* Display email results with Select All support */}
         {results.length > 0 ? (
           <div className="mt-3">
-            <div className="flex justify-between items-center mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm text-foreground-500">
                 {results.length} suggestion
                 {results.length > 1 ? "s" : ""}
@@ -169,7 +170,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-2 mt-4">
+        <div className="mt-4 flex justify-end gap-2">
           <Button
             color="danger"
             variant="light"

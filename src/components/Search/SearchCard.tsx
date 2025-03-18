@@ -62,7 +62,7 @@ const defaultConfigs = {
             </Chip>
           )}
         </div>
-        <CommandItem className="truncate w-full cursor-pointer data-[selected='true']:!bg-transparent !py-1 !px-0">
+        <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
           {result.snippet}
         </CommandItem>
       </>
@@ -78,7 +78,7 @@ const defaultConfigs = {
     ),
     linkTo: (result: any) => `/c/${result.conversation_id}`,
     bodyContent: (result: any) => (
-      <CommandItem className="truncate w-full cursor-pointer data-[selected='true']:!bg-transparent !py-1 !px-0">
+      <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
         {result.description}
       </CommandItem>
     ),
@@ -90,7 +90,7 @@ const defaultConfigs = {
     ),
     linkTo: (result: any) => `/notes/${result.id}`,
     bodyContent: (result: any) => (
-      <CommandItem className="truncate w-full cursor-pointer data-[selected='true']:!bg-transparent !py-1 !px-0">
+      <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
         {result.snippet}
       </CommandItem>
     ),
@@ -112,13 +112,13 @@ export function SearchCard({
       key={
         type === "message" ? result.message.message_id : result.conversation_id
       }
-      className={`bg-zinc-800 p-2 px-3 rounded-xl h-full overflow-hidden flex flex-row hover:bg-zinc-700 transition-colors my-2 items-center gap-2 ${className}`}
+      className={`my-2 flex h-full flex-row items-center gap-2 overflow-hidden rounded-xl bg-zinc-800 p-2 px-3 transition-colors hover:bg-zinc-700 ${className}`}
       href={linkTo(result)}
     >
       <div className="min-h-[22px] min-w-[22px]">{icon}</div>
       <div className="flex-1">{bodyContent(result)}</div>
       {footerContent && (
-        <div className="text-sm text-foreground-500 ml-auto">
+        <div className="ml-auto text-sm text-foreground-500">
           {footerContent(result)}
         </div>
       )}

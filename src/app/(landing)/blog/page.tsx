@@ -45,8 +45,8 @@ export default async function BlogList() {
   }
 
   return (
-    <div className="w-screen flex min-h-screen pt-28 justify-center px-6">
-      <div className="max-w-screen-lg w-full">
+    <div className="flex min-h-screen w-screen justify-center px-6 pt-28">
+      <div className="w-full max-w-screen-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold">Blog Posts</h1>
           <p className="text-zinc-400">
@@ -54,13 +54,13 @@ export default async function BlogList() {
           </p>
         </div>
 
-        <div className="dark space-y-4">
+        <div className="space-y-4 dark">
           {blogs.length > 0 ? (
             blogs.map((blog) => (
               <div key={blog.slug}>
                 <Link href={`/blog/${blog.slug}`} className="block">
-                  <div className="transition-all bg-black hover:bg-zinc-800 px-6 py-4 flex justify-between items-center cursor-pointer rounded-lg shadow-md">
-                    <div className="font-medium flex-1">{blog.title}</div>
+                  <div className="flex cursor-pointer items-center justify-between rounded-lg bg-black px-6 py-4 shadow-md transition-all hover:bg-zinc-800">
+                    <div className="flex-1 font-medium">{blog.title}</div>
                     <div className="text-sm text-zinc-400">{blog.date}</div>
                     <AvatarGroup isBordered>
                       {blog.authors.map((author) => (
@@ -71,7 +71,7 @@ export default async function BlogList() {
                         >
                           <Avatar
                             src={`https://i.pravatar.cc/150?u=${encodeURIComponent(
-                              author
+                              author,
                             )}`}
                             size="sm"
                             name={author}

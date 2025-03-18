@@ -17,14 +17,14 @@ function SearchWeb() {
   return (
     <AnimatedSection className="space-y-3">
       <SimpleChatBubbleUser>
-        <div className="relative max-w-fit min-w-min inline-flex items-center justify-between box-border whitespace-nowrap px-1 h-7 text-small rounded-full bg-default/40 text-default-700 mb-2">
-          <span className="flex-1 text-inherit font-normal px-2 pr-1">
+        <div className="relative mb-2 box-border inline-flex h-7 min-w-min max-w-fit items-center justify-between whitespace-nowrap rounded-full bg-default/40 px-1 text-small text-default-700">
+          <span className="flex-1 px-2 pr-1 font-normal text-inherit">
             <div className="flex items-center gap-1 font-medium text-white">
               Searching the Web
             </div>
           </span>
           <svg
-            className="max-h-[80%] mr-1"
+            className="mr-1 max-h-[80%]"
             color="transparent"
             fill="white"
             height="22"
@@ -52,14 +52,14 @@ function SearchWeb() {
             />
           </svg>
         </div>
-        <div className="flex text-wrap max-w-[25vw]">
+        <div className="flex max-w-[25vw] text-wrap">
           Who is the current president of America?
         </div>
       </SimpleChatBubbleUser>
 
       <SimpleChatBubbleBot>
         <div className="flex flex-col gap-3">
-          <div className="relative max-w-fit min-w-min inline-flex items-center justify-between box-border whitespace-nowrap px-1 h-7 text-small rounded-full bg-primary/20 text-primary-600">
+          <div className="relative box-border inline-flex h-7 min-w-min max-w-fit items-center justify-between whitespace-nowrap rounded-full bg-primary/20 px-1 text-small text-primary-600">
             <svg
               className="max-h-[80%]"
               color="#00bbff"
@@ -92,8 +92,8 @@ function SearchWeb() {
                 strokeWidth="1.5"
               />
             </svg>
-            <span className="flex-1 text-inherit font-normal px-2 pl-1">
-              <div className="font-medium flex items-center gap-1 text-primary">
+            <span className="flex-1 px-2 pl-1 font-normal text-inherit">
+              <div className="flex items-center gap-1 font-medium text-primary">
                 Live Search Results from the Web
               </div>
             </span>
@@ -118,7 +118,7 @@ function FetchWebpage() {
   return (
     <AnimatedSection className="space-y-3">
       <SimpleChatBubbleUser>
-        <div className="relative max-w-fit min-w-min inline-flex items-center justify-between box-border whitespace-nowrap px-1 h-7 text-small rounded-full bg-default/40 text-default-700 mb-2">
+        <div className="relative mb-2 box-border inline-flex h-7 min-w-min max-w-fit items-center justify-between whitespace-nowrap rounded-full bg-default/40 px-1 text-small text-default-700">
           <svg
             className="lucide lucide-arrow-up-right max-h-[80%]"
             fill="none"
@@ -134,11 +134,11 @@ function FetchWebpage() {
             <path d="M7 7h10v10" />
             <path d="M7 17 17 7" />
           </svg>
-          <span className="flex-1 text-inherit font-normal px-2 pl-1">
-            <div className="flex items-center gap-1 text-white ">
+          <span className="flex-1 px-2 pl-1 font-normal text-inherit">
+            <div className="flex items-center gap-1 text-white">
               Fetching
               <a
-                className="!text-white font-medium hover:!text-black transition-colors"
+                className="font-medium !text-white transition-colors hover:!text-black"
                 href="https://www.heroui.com/docs/components/modal"
                 rel="noreferrer"
                 target="_blank"
@@ -152,7 +152,7 @@ function FetchWebpage() {
       </SimpleChatBubbleUser>
 
       <SimpleChatBubbleBot>
-        <div className="relative max-w-fit min-w-min inline-flex items-center justify-between box-border whitespace-nowrap px-1 h-7 text-small rounded-full bg-primary/20 text-primary-600">
+        <div className="relative box-border inline-flex h-7 min-w-min max-w-fit items-center justify-between whitespace-nowrap rounded-full bg-primary/20 px-1 text-small text-primary-600">
           <svg
             className="lucide lucide-arrow-up-right max-h-[80%]"
             fill="none"
@@ -168,11 +168,11 @@ function FetchWebpage() {
             <path d="M7 7h10v10" />
             <path d="M7 17 17 7" />
           </svg>
-          <span className="flex-1 text-inherit font-normal px-2 pl-1">
-            <div className="font-medium flex items-center gap-1 text-primary">
+          <span className="flex-1 px-2 pl-1 font-normal text-inherit">
+            <div className="flex items-center gap-1 font-medium text-primary">
               Fetched
               <a
-                className="!text-[#00bbff] font-medium hover:!text-white transition-colors"
+                className="font-medium !text-[#00bbff] transition-colors hover:!text-white"
                 href="https://www.heroui.com/docs/components/modal"
                 rel="noreferrer"
                 target="_blank"
@@ -198,8 +198,8 @@ export default function Internet() {
   const [hover2, setHover2] = useState(false);
 
   return (
-    <AnimatedSection className="w-screen justify-center items-center flex">
-      <div className="max-w-screen-xl w-screen flex flex-col space-y-5">
+    <AnimatedSection className="flex w-screen items-center justify-center">
+      <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
         {/* 
       <div className="max-w-screen-xl w-screen flex flex-row justify-evenly items-start sm:space-x-10 space-x-5 ">
         
@@ -217,29 +217,29 @@ export default function Internet() {
           heading={"Smarter Answers"}
           icon={
             <BrainCircuitIcon
-              className="sm:min-w-[40px] min-w-[35px] sm:min-h-[40px] min-h-[40px]"
+              className="min-h-[40px] min-w-[35px] sm:min-h-[40px] sm:min-w-[40px]"
               color="#9b9b9b"
             />
           }
-          className="flex text-center items-center justify-center"
+          className="flex items-center justify-center text-center"
           headingClassName="text-5xl"
           // subheading={
           //   "GAIA doesn’t just rely on preloaded knowledge—it actively searches the web for the latest and most relevant information."
           // }
         />
-        <div className="sm:justify-around justify-start items-center flex gap-11 w-screen-md sm:flex-row flex-col">
+        <div className="w-screen-md flex flex-col items-center justify-start gap-11 sm:flex-row sm:justify-around">
           <AnimatedSection
-            className={`sm:w-1/2 w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm:w-[60%] min-h-fit flex justify-center flex-col relative z-[1] ${
+            className={`relative z-[1] flex min-h-fit w-[95%] flex-col justify-center space-y-3 rounded-3xl bg-zinc-900 p-5 outline outline-zinc-800 transition-all hover:scale-105 hover:bg-[#00bbff40] hover:outline-primary sm:w-1/2 hover:sm:w-[60%] ${
               hover2 ? "opacity-40" : "opacity-100"
             }`}
             onMouseOut={() => setHover1(false)}
             onMouseOver={() => setHover1(true)}
           >
-            <div className="sm:p-2 space-y-2">
-              <div className="font-medium text-3xl flex items-center w-full justify-between">
+            <div className="space-y-2 sm:p-2">
+              <div className="flex w-full items-center justify-between text-3xl font-medium">
                 Web Search
                 <GlobalSearchIcon
-                  className="sm:size-[35px] size-[35px]"
+                  className="size-[35px] sm:size-[35px]"
                   color="#9b9b9b"
                 />
               </div>
@@ -269,17 +269,17 @@ export default function Internet() {
           </AnimatedSection>
 
           <AnimatedSection
-            className={`sm:w-1/2 w-[95%] space-y-3 bg-zinc-900 outline outline-zinc-800 hover:outline-primary rounded-3xl p-5 hover:bg-[#00bbff40] transition-all hover:scale-105 hover:sm:w-[60%] min-h-fit flex justify-center flex-col relative z-[1] ${
+            className={`relative z-[1] flex min-h-fit w-[95%] flex-col justify-center space-y-3 rounded-3xl bg-zinc-900 p-5 outline outline-zinc-800 transition-all hover:scale-105 hover:bg-[#00bbff40] hover:outline-primary sm:w-1/2 hover:sm:w-[60%] ${
               hover1 ? "opacity-40" : "opacity-100"
             }`}
             onMouseOut={() => setHover2(false)}
             onMouseOver={() => setHover2(true)}
           >
-            <div className="p-2 space-y-2 ">
-              <div className="font-medium text-3xl flex items-center w-full justify-between">
+            <div className="space-y-2 p-2">
+              <div className="flex w-full items-center justify-between text-3xl font-medium">
                 Fetch Webpages
                 <AiBrowserIcon
-                  className="sm:size-[35px] size-[35px]"
+                  className="size-[35px] sm:size-[35px]"
                   color="#9b9b9b"
                 />
               </div>

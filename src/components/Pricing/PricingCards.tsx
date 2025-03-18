@@ -4,7 +4,7 @@ import { PricingCard } from "./PricingCard";
 
 export function PricingCards({ durationIsMonth = false }) {
   return (
-    <div className="grid grid-cols-2 w-screen max-w-screen-sm gap-3 ">
+    <div className="grid w-screen max-w-screen-sm grid-cols-2 gap-3">
       <PricingCard
         // description="lorem ipsum"
         durationIsMonth={durationIsMonth}
@@ -16,7 +16,7 @@ export function PricingCards({ durationIsMonth = false }) {
           "Talk to GAIA with your voice (Speech-to-text)",
         ]}
         featurestitle={
-          <div className="flex flex-col mb-1 !border-none">
+          <div className="mb-1 flex flex-col !border-none">
             <span>What's Included?</span>
           </div>
         }
@@ -37,7 +37,7 @@ export function PricingCards({ durationIsMonth = false }) {
           "Ability to use more open-source models",
         ]}
         featurestitle={
-          <div className="flex flex-col mb-1 !border-none">
+          <div className="mb-1 flex flex-col !border-none">
             <span>What's Included?</span>
           </div>
         }

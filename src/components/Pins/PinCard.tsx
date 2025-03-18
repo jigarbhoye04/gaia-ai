@@ -24,7 +24,7 @@ export const PinCard: React.FC<PinCardProps> = ({
   return (
     <Link
       key={message.message_id}
-      className="bg-zinc-800 hover:bg-zinc-700 p-3 rounded-xl h-full overflow-hidden max-h-[195px] min-h-[150px] flex flex-col gap-2 transition-colors relative"
+      className="relative flex h-full max-h-[195px] min-h-[150px] flex-col gap-2 overflow-hidden rounded-xl bg-zinc-800 p-3 transition-colors hover:bg-zinc-700"
       href={{
         pathname: `/c/${conversation_id}`,
         query: { messageId: message.message_id },
@@ -49,7 +49,7 @@ export const PinCard: React.FC<PinCardProps> = ({
             startContent={<InternetIcon color="#00bbff" height={20} />}
             variant="flat"
           >
-            <div className="font-medium flex items-center gap-1 text-primary">
+            <div className="flex items-center gap-1 font-medium text-primary">
               Web Search Results
             </div>
           </Chip>
@@ -62,10 +62,10 @@ export const PinCard: React.FC<PinCardProps> = ({
             startContent={<ArrowUpRight color="#00bbff" height={20} />}
             variant="flat"
           >
-            <div className="font-medium flex items-center gap-1 text-primary">
+            <div className="flex items-center gap-1 font-medium text-primary">
               Fetched
               <a
-                className="!text-[#00bbff] font-medium hover:!text-white transition-colors"
+                className="font-medium !text-[#00bbff] transition-colors hover:!text-white"
                 href={message.pageFetchURL}
                 rel="noreferrer"
                 target="_blank"
@@ -82,7 +82,7 @@ export const PinCard: React.FC<PinCardProps> = ({
         {message.response.length > 350 ? "..." : ""}
       </div>
 
-      <div className="text-xs mt-auto text-foreground-500">
+      <div className="mt-auto text-xs text-foreground-500">
         {parseDate(message.date as string)}
       </div>
     </Link>

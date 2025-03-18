@@ -54,7 +54,7 @@ const ReadMoreText = ({
       {needsTruncation && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="mt-1 z-[2] relative text-sm text-primary font-medium hover:underline"
+          className="relative z-[2] mt-1 text-sm font-medium text-primary hover:underline"
         >
           {expanded ? "Read Less" : "Read More"}...
         </button>
@@ -74,8 +74,8 @@ export default function CalendarMessages({
   };
 
   return (
-    <AnimatedSection className="flex flex-col gap-3 justify-between">
-      <div className="flex justify-end w-full">
+    <AnimatedSection className="flex flex-col justify-between gap-3">
+      <div className="flex w-full justify-end">
         <SimpleChatBubbleUser className="max-w-[90%]">
           {`I’ve got a busy day—need to finish a landing page, write a blog, do some DSA, study for an exam, hit the gym, and take client calls at 4 and 7 PM. Can you help me plan my day?`}
         </SimpleChatBubbleUser>

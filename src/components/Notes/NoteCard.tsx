@@ -5,17 +5,17 @@ import { NoteType } from "@/types/allTypes";
 export default function NoteCard({
   note,
 }: // onDelete,
-  {
-    note: NoteType;
-    onDelete?: (id: string) => void;
-  }) {
+{
+  note: NoteType;
+  onDelete?: (id: string) => void;
+}) {
   // const [openDialog, setOpenDialog] = useState(false);
 
   return (
     <Link className="w-full px-1" href={`/notes/${note.id}`}>
       <div
-        className="w-full bg-zinc-800 hover:bg-zinc-700 transition-all max-h-[250px] rounded-xl text-foreground flex p-[1em] flex-col justify-start overflow-hidden gap-1 cursor-pointer h-full relative "
-      // onClick={() => setOpenDialog(true)} // Open dialog on click
+        className="relative flex h-full max-h-[250px] w-full cursor-pointer flex-col justify-start gap-1 overflow-hidden rounded-xl bg-zinc-800 p-[1em] text-foreground transition-all hover:bg-zinc-700"
+        // onClick={() => setOpenDialog(true)} // Open dialog on click
       >
         {note.auto_created && (
           <Chip className="mb-1" color="primary" size="sm" variant="flat">
@@ -30,7 +30,7 @@ export default function NoteCard({
             color="transparent"
           />
         </div> */}
-        <div className="font-normal text-md whitespace-wrap overflow-hidden overflow-ellipsis min-h-7 max-h-[100px]">
+        <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden overflow-ellipsis font-normal">
           {note.plaintext}
         </div>
 

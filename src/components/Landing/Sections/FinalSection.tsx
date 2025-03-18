@@ -3,12 +3,12 @@ import GetStartedButton from "../GetStartedButton";
 
 export default function FinalSection() {
   return (
-    <div className="flex w-screen items-center flex-col !m-0 sm:p-36 p-5 sm:min-h-fit min-h-[50vh] z-[1] relative bg-gradient-to-t from-[#00bbff50] justify-center">
-      <AnimatedSection className="flex w-full flex-col items-center gap-3 justify-center">
-        <div className="sm:text-6xl text-6xl font-medium text-center">
+    <div className="relative z-[1] !m-0 flex min-h-[50vh] w-screen flex-col items-center justify-center bg-gradient-to-t from-[#00bbff50] p-5 sm:min-h-fit sm:p-36">
+      <AnimatedSection className="flex w-full flex-col items-center justify-center gap-3">
+        <div className="text-center text-6xl font-medium sm:text-6xl">
           Get Started for Free
         </div>
-        <div className="text-lg text-foreground-700 text-center max-w-screen-sm">
+        <div className="max-w-screen-sm text-center text-lg text-foreground-700">
           GAIA is your intelligent assistant, designed to help you organize your
           life, track your goals, and enhance productivity effortlessly.
           Experience the future of AI-driven assistance today.

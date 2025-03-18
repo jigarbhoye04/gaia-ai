@@ -30,15 +30,15 @@ export default async function BlogPostPage({ params }: PageProps) {
 
     if (!blog) {
       return (
-        <div className="flex items-center justify-center h-screen text-medium text-foreground-500 font-medium">
+        <div className="flex h-screen items-center justify-center text-medium font-medium text-foreground-500">
           Blog post not found.
         </div>
       );
     }
 
     return (
-      <div className="pt-28 flex justify-center w-screen min-h-screen h-fit overflow-y-auto">
-        <div className="max-w-screen-md w-full mx-auto">
+      <div className="flex h-fit min-h-screen w-screen justify-center overflow-y-auto pt-28">
+        <div className="mx-auto w-full max-w-screen-md">
           <div className="mb-8">
             <Button
               variant="light"
@@ -51,11 +51,11 @@ export default async function BlogPostPage({ params }: PageProps) {
               Blog
             </Button>
 
-            <h1 className="text-2xl font-bold tracking-tight mb-4">
+            <h1 className="mb-4 text-2xl font-bold tracking-tight">
               {blog.title}
             </h1>
 
-            <div className="flex items-center space-x-4 mb-6">
+            <div className="mb-6 flex items-center space-x-4">
               <AvatarGroup>
                 {blog.authors.map((author) => (
                   <Tooltip
@@ -69,7 +69,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               </AvatarGroup>
               <div>
                 <p className="font-medium">{blog.authors.join(", ")}</p>
-                <div className="flex items-center text-sm text-muted-foreground">
+                <div className="text-muted-foreground flex items-center text-sm">
                   <Calendar className="mr-1 h-4 w-4" />
                   <span className="text-foreground-500">{blog.date}</span>
                 </div>

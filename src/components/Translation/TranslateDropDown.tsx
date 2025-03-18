@@ -77,7 +77,7 @@ const TranslateDropdown: FC<TranslateDropdownProps> = ({
   //   // TranslateText(targetLang, language);
   // };
 
-  return <></>
+  return <></>;
 
   // return (
   //   <Dropdown classNames={{ content: "dark" }}>

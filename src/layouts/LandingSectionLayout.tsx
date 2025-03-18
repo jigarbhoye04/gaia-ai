@@ -24,12 +24,12 @@ export default function LandingSectionLayout({
   return (
     <div
       className={cn(
-        "sm:h-full sm:min-h-fit flex flex-col justify-start items-center sm:gap-7 w-full p-4 bg-zinc-900 rounded-3xl outline outline-zinc-800 hover:outline-primary transition-all",
-        className
+        "flex w-full flex-col items-center justify-start rounded-3xl bg-zinc-900 p-4 outline outline-zinc-800 transition-all hover:outline-primary sm:h-full sm:min-h-fit sm:gap-7",
+        className,
       )}
     >
-      <div className="flex items-start flex-col justify-start gap-5 w-full">
-        <div className="flex items-start gap-3 flex-col">
+      <div className="flex w-full flex-col items-start justify-start gap-5">
+        <div className="flex flex-col items-start gap-3">
           {icon}
           <div>
             <h2 className="text-3xl font-semibold text-white">{heading}</h2>
@@ -38,7 +38,7 @@ export default function LandingSectionLayout({
           {extraHeading}
         </div>
       </div>
-      <div className="w-full p-3 sm:p-0 rounded-3xl space-y-5">{children}</div>
+      <div className="w-full space-y-5 rounded-3xl p-3 sm:p-0">{children}</div>
     </div>
   );
 }

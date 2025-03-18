@@ -26,10 +26,7 @@ interface FileUploadProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
-export default function FileUpload({
-  isImage,
-  fileInputRef,
-}: FileUploadProps) {
+export default function FileUpload({ isImage, fileInputRef }: FileUploadProps) {
   const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const fetchConversations = useFetchConversations();
@@ -54,7 +51,7 @@ export default function FileUpload({
   };
 
   const handleFileSelect = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ): Promise<void> => {
     // setFileLoading(true);
     const selectedFile = event.target.files?.[0];
@@ -81,7 +78,6 @@ export default function FileUpload({
     // setFileLoading(false);
   };
 
-
   const createNewConversation = async (currentMessages: MessageType[]) => {
     const conversationId = uuidv1();
 
@@ -92,7 +88,7 @@ export default function FileUpload({
         ApiService.updateConversationDescription(
           conversationId,
           JSON.stringify(currentMessages[0]?.response || currentMessages[0]),
-          fetchConversations
+          fetchConversations,
         );
       }, 3000);
 
@@ -143,7 +139,7 @@ export default function FileUpload({
       const response = await apiauth.post(
         isImage ? "/image" : "/document/query",
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        { headers: { "Content-Type": "multipart/form-data" } },
       );
 
       console.log(response);
@@ -249,7 +245,7 @@ export default function FileUpload({
       />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-zinc-900 text-white w-[400px] md:rounded-2xl rounded-2xl border-none">
+        <DialogContent className="w-[400px] rounded-2xl border-none bg-zinc-900 text-white md:rounded-2xl">
           <DialogHeader>
             <DialogTitle>Upload File</DialogTitle>
           </DialogHeader>
@@ -269,7 +265,7 @@ export default function FileUpload({
             )} */}
 
             {file && (
-              <div className="bg-[#00bbff] rounded-xl p-3 text-black mb-2">
+              <div className="mb-2 rounded-xl bg-[#00bbff] p-3 text-black">
                 <div className="flex items-center gap-3">
                   <FileIcon />
                   <div>
@@ -285,16 +281,18 @@ export default function FileUpload({
 
             <Textarea
               isRequired
-              className="dark mt-4"
+              className="mt-4 dark"
               color="primary"
               isInvalid={!isValid}
-              label={`What do you want to do with this ${isImage ? "image" : "file"
-                }?`}
+              label={`What do you want to do with this ${
+                isImage ? "image" : "file"
+              }?`}
               labelPlacement="outside"
               maxRows={3}
               minRows={2}
-              placeholder={`e.g., ${isImage ? "What is in this image?" : "Summarize this document"
-                }`}
+              placeholder={`e.g., ${
+                isImage ? "What is in this image?" : "Summarize this document"
+              }`}
               size="lg"
               startContent={null}
               value={textContent}
@@ -308,7 +306,7 @@ export default function FileUpload({
               onValueChange={(value: string) => setTextContent(value)}
             />
           </div>
-          <DialogFooter className="flex flex-row !justify-between w-full">
+          <DialogFooter className="flex w-full flex-row !justify-between">
             <Button color="danger" variant="flat" onClick={closeModal}>
               Cancel
             </Button>

@@ -2,10 +2,10 @@
 
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
-import { Dispatch, lazy, SetStateAction, useEffect } from "react";
+import { lazy, useEffect } from "react";
 import LandingLayout from "./(landing)/layout";
 const LazyLoadedSections = lazy(
-  () => import("@/components/Landing/Sections/LazyLoadedSections")
+  () => import("@/components/Landing/Sections/LazyLoadedSections"),
 );
 
 export default function LandingPage() {
@@ -20,7 +20,7 @@ export default function LandingPage() {
   return (
     <LandingLayout>
       <div className="relative min-h-screen overflow-hidden">
-        <div className="fixed inset-0 bg-gradient-to-b bg-[#000000] z-[-1] top-0 h-screen" />
+        <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-gradient-to-b" />
         <HeroSection />
         <HeroImage />
         <LazyLoadedSections />

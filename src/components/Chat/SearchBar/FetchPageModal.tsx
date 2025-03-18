@@ -35,7 +35,7 @@ const FetchPageModal: React.FC<FetchPageModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="dark text-white bg-zinc-900 border-none">
+      <DialogContent className="border-none bg-zinc-900 text-white dark">
         <DialogHeader>
           <DialogTitle>Fetch Page</DialogTitle>
           <DialogDescription>
@@ -85,4 +85,3 @@ const FetchPageModal: React.FC<FetchPageModalProps> = ({
 };
 
 export default FetchPageModal;
-    

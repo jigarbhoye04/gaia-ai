@@ -21,7 +21,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   } = props;
 
   const [fileScanningText, setFileScanningText] = useState(
-    "Uploading Document..."
+    "Uploading Document...",
   );
 
   // Update file scanning text while the document is processing
@@ -93,11 +93,11 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
         {!loading && (
           <div
             ref={actionsRef}
-            className="transition-all flex flex-col gap-2"
+            className="flex flex-col gap-2 transition-all"
             style={{ opacity: 0, visibility: "hidden" }}
           >
             {date && (
-              <span className="text-xs text-white text-opacity-40 flex flex-col select-text p-1">
+              <span className="flex select-text flex-col p-1 text-xs text-white text-opacity-40">
                 {parseDate(date)}
               </span>
             )}

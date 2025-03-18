@@ -20,14 +20,15 @@ export default function Navbar() {
   return (
     <div className="navbar">
       <div
-        className={`navbar_content rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all w-full min-w-fit duration-1000 ${(!isMobileScreen && scrolled) || pathname !== "/"
-          ? "sm:max-w-screen-xl"
-          : "sm:max-w-[50px]"
-          }`}
+        className={`navbar_content w-full min-w-fit rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all duration-1000 ${
+          (!isMobileScreen && scrolled) || pathname !== "/"
+            ? "sm:max-w-screen-xl"
+            : "sm:max-w-[50px]"
+        }`}
       >
         <Button
           as={Link}
-          className="text-lg font-medium pl-2 pr-3"
+          className="pl-2 pr-3 text-lg font-medium"
           radius="lg"
           href={"/"}
           variant="light"
@@ -72,10 +73,11 @@ export default function Navbar() {
             <LinkButton
               key={href}
               size="sm"
-              className={`font-medium text-sm ${pathname === href
-                ? "text-primary"
-                : "text-zinc-400 hover:text-zinc-300"
-                }`}
+              className={`text-sm font-medium ${
+                pathname === href
+                  ? "text-primary"
+                  : "text-zinc-400 hover:text-zinc-300"
+              }`}
               as={Link}
               href={href}
               startContent={icon}

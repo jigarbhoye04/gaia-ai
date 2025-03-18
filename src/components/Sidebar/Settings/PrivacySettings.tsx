@@ -7,7 +7,7 @@ export default function PrivacySection() {
     <div className="flex flex-col gap-2">
       <h3 className="mb-3">Privacy</h3>
 
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <Switch
           classNames={{
             base: cn(
@@ -19,7 +19,7 @@ export default function PrivacySection() {
           disabled={true}
           isSelected={false}
         >
-          <div className=" !text-foreground-400">
+          <div className="!text-foreground-400">
             Switch on end-to-end Encryption for all chats?
           </div>
         </Switch>

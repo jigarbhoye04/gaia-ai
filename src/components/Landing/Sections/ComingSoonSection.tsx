@@ -101,22 +101,22 @@ export function Feature({
 }) {
   return (
     <div
-      className={`w-full flex flex-col gap-2 bg-zinc-950 px-5 py-3 rounded-xl hover:bg-zinc-800 transition-all min-h-full ${className}`}
+      className={`flex min-h-full w-full flex-col gap-2 rounded-xl bg-zinc-950 px-5 py-3 transition-all hover:bg-zinc-800 ${className}`}
     >
       {icon}
-      <span className="font-medium text-xl">{title}</span>
-      <span className="text-foreground-500 text-md">{description}</span>
+      <span className="text-xl font-medium">{title}</span>
+      <span className="text-md text-foreground-500">{description}</span>
     </div>
   );
 }
 
 export default function ComingSoonSection() {
   return (
-    <div className="flex justify-center items-center min-h-fit h-fit z-[1] relative">
-      <div className="flex justify-center items-center sm:p-5 p-2 flex-col gap-1">
-        <span className="font-medium text-3xl">Coming Soon!</span>
+    <div className="relative z-[1] flex h-fit min-h-fit items-center justify-center">
+      <div className="flex flex-col items-center justify-center gap-1 p-2 sm:p-5">
+        <span className="text-3xl font-medium">Coming Soon!</span>
         <span>What are we working on next?</span>
-        <AnimatedSection className="sm:rounded-3xl rounded-2xl bg-zinc-900 my-6 sm:p-10 py-3 px-2 sm:gap-2 sm:gap-y-5 grid gap-2 gap-y-2 sm:grid-cols-3 max-w-screen-xl h-fit items-center justify-center">
+        <AnimatedSection className="my-6 grid h-fit max-w-screen-xl items-center justify-center gap-2 gap-y-2 rounded-2xl bg-zinc-900 px-2 py-3 sm:grid-cols-3 sm:gap-2 sm:gap-y-5 sm:rounded-3xl sm:p-10">
           {list.map((item, index) => (
             <Feature
               key={index}

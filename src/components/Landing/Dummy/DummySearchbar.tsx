@@ -35,7 +35,7 @@ function DummyLeftDropdown() {
     <Dropdown
       showArrow
       backdrop="opaque"
-      className="dark text-foreground w-full"
+      className="w-full text-foreground dark"
       classNames={{ base: "dark" }}
       closeOnSelect={true}
       isDismissable={true}
@@ -43,7 +43,7 @@ function DummyLeftDropdown() {
       placement="top"
       shouldCloseOnInteractOutside={() => true}
     >
-      <DropdownTrigger className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 border-medium bg-zinc-900 text-small gap-2 rounded-full px-0 transition-transform-colors-opacity motion-reduce:transition-none border-default text-default-foreground hover:!bg-default min-w-10 w-10 h-10 mr-[2px]">
+      <DropdownTrigger className="group relative z-0 mr-[2px] box-border inline-flex h-10 w-10 min-w-10 select-none appearance-none items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full border-medium border-default bg-zinc-900 px-0 text-small font-normal text-default-foreground subpixel-antialiased outline-none tap-highlight-transparent transition-transform-colors-opacity hover:!bg-default data-[focus-visible=true]:z-10 data-[pressed=true]:scale-[0.97] data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-offset-2 data-[focus-visible=true]:outline-focus motion-reduce:transition-none">
         <div>
           <PlusSignIcon />
         </div>
@@ -51,21 +51,21 @@ function DummyLeftDropdown() {
 
       <DropdownMenu aria-label="Static Actions" variant="faded">
         <DropdownItem key="image" className="w-full transition-all">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             Upload Image
             <ImageUploadIcon color="#00bbff" />
           </div>
         </DropdownItem>
 
         <DropdownItem key="pdf" className="w-full transition-all">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             Upload Document
             <FileUploadIcon color="#00bbff" />
           </div>
         </DropdownItem>
 
         <DropdownItem key="generate_image" className="w-full transition-all">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             Generate Image
             <AiImageIcon color="#00bbff" />
           </div>
@@ -87,7 +87,7 @@ const DummySearchbar = () => {
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (
-    event
+    event,
   ) => {
     if (event.key === "Enter") {
       event.preventDefault();
@@ -109,14 +109,15 @@ const DummySearchbar = () => {
 
   return (
     <>
-      <div className="searchbar bg-zinc-900 px-3 py-2 rounded-3xl gap-3">
-        <div className="flex items-center justify-start mb-[6px] gap-1">
+      <div className="searchbar gap-3 rounded-3xl bg-zinc-900 px-3 py-2">
+        <div className="mb-[6px] flex items-center justify-start gap-1">
           <button
             aria-label="Dummy Search Button"
-            className={`flex w-fit gap-1 rounded-full px-3 py-1 text-sm items-center transition-all ${enableSearch
+            className={`flex w-fit items-center gap-1 rounded-full px-3 py-1 text-sm transition-all ${
+              enableSearch
                 ? "bg-primary text-white hover:bg-[#00bbffAA]"
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
+            }`}
             type="button"
             onClick={toggleSearch}
           >
@@ -130,10 +131,11 @@ const DummySearchbar = () => {
 
           <button
             aria-label="Dummy Fetch Page Button"
-            className={`flex w-fit gap-1 rounded-full px-3 py-1 text-sm items-center transition-all ${pageFetchURL.length > 0 && !fetchPageModal
+            className={`flex w-fit items-center gap-1 rounded-full px-3 py-1 text-sm transition-all ${
+              pageFetchURL.length > 0 && !fetchPageModal
                 ? "bg-primary text-white hover:bg-[#00bbffAA]"
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-              }`}
+            }`}
             type="button"
             onClick={openPageFetchModal}
           >
@@ -176,7 +178,7 @@ const DummySearchbar = () => {
         </form>
       </div>
       <Dialog open={fetchPageModal} onOpenChange={setFetchPageModal}>
-        <DialogContent className="dark text-white bg-zinc-900 border-none">
+        <DialogContent className="border-none bg-zinc-900 text-white dark">
           <DialogHeader>
             <DialogTitle>Fetch Page</DialogTitle>
             <DialogDescription>

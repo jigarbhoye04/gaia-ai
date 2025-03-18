@@ -8,7 +8,7 @@ export const buildBotResponse = (
   enableSearch: boolean,
   pageFetchURL: string,
   finalIntent: IntentType,
-  overrides: Partial<MessageType> = {}
+  overrides: Partial<MessageType> = {},
 ): MessageType => ({
   type: "bot",
   message_id: botMessageId,

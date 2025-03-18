@@ -15,7 +15,7 @@ import { CalendarAdd01Icon } from "@/components/Misc/icons";
 // Utility function for debouncing
 function debounce<T extends (...args: any[]) => void>(
   func: T,
-  wait: number
+  wait: number,
 ): T {
   let timeout: ReturnType<typeof setTimeout>;
   return ((...args: any[]) => {
@@ -27,7 +27,7 @@ function debounce<T extends (...args: any[]) => void>(
 export default function Calendar() {
   const [loading, setLoading] = useState<boolean>(true);
   const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(
-    []
+    [],
   );
   const [selectedEvent, setSelectedEvent] =
     useState<GoogleCalendarEvent | null>(null);
@@ -43,7 +43,7 @@ export default function Calendar() {
   const fetchEvents = useCallback(
     async (
       pageToken: string | null = null,
-      calendarIds: string[] | null = null
+      calendarIds: string[] | null = null,
     ) => {
       if (!pageToken) {
         setLoading(true);
@@ -72,7 +72,7 @@ export default function Calendar() {
 
         // Deduplicate events
         const newEvents = allEvents.filter(
-          (event) => !eventIdsRef.current.has(event.id)
+          (event) => !eventIdsRef.current.has(event.id),
         );
         newEvents.forEach((event) => eventIdsRef.current.add(event.id));
         // Merge and sort events
@@ -90,7 +90,7 @@ export default function Calendar() {
         setLoading(false);
       }
     },
-    [selectedCalendars]
+    [selectedCalendars],
   );
 
   // Fetch the list of calendars and the user's preferences.
@@ -113,7 +113,7 @@ export default function Calendar() {
       // Default to primary calendar if no preferences.
       if (!storedSelectedCalendars.length) {
         const primaryCalendar = calendarItems.find(
-          (cal: { primary: boolean }) => cal.primary
+          (cal: { primary: boolean }) => cal.primary,
         );
         if (primaryCalendar) {
           storedSelectedCalendars = [primaryCalendar.id];
@@ -143,7 +143,7 @@ export default function Calendar() {
         console.error("Error updating calendar preferences:", error);
       }
     }, 300),
-    []
+    [],
   );
 
   // Handle calendar selection: if deselected, remove events; if added, fetch events.
@@ -161,7 +161,7 @@ export default function Calendar() {
           // Remove events for the deselected calendar.
           setCalendarEvents((prevEvents) => {
             const updatedEvents = prevEvents.filter(
-              (event) => event.organizer.email !== calendarId
+              (event) => event.organizer.email !== calendarId,
             );
             eventIdsRef.current = new Set(updatedEvents.map((e) => e.id));
             return updatedEvents;
@@ -174,7 +174,7 @@ export default function Calendar() {
         return newSelection;
       });
     },
-    [loading, fetchEvents, updatePreferences]
+    [loading, fetchEvents, updatePreferences],
   );
 
   // Set up the Intersection Observer for infinite scrolling.
@@ -185,7 +185,7 @@ export default function Calendar() {
           fetchEvents(nextPageToken);
         }
       },
-      { rootMargin: "0px" }
+      { rootMargin: "0px" },
     );
     const currentElement = observerRef.current;
     if (currentElement) {
@@ -204,7 +204,7 @@ export default function Calendar() {
       {};
     calendarEvents.forEach((event) => {
       const eventDate = new Date(
-        (event.start.dateTime || event.start.date) as string | number | Date
+        (event.start.dateTime || event.start.date) as string | number | Date,
       );
       const monthKey = eventDate.toLocaleString("default", {
         month: "long",
@@ -237,9 +237,9 @@ export default function Calendar() {
 
   return (
     <>
-      <div className="flex flex-col h-full relative overflow-y-scroll w-full">
-        <div className="flex items-center flex-col gap-2 pb-6">
-          <div className="font-bold text-center text-5xl  sticky top-0 z-20">
+      <div className="relative flex h-full w-full flex-col overflow-y-scroll">
+        <div className="flex flex-col items-center gap-2 pb-6">
+          <div className="sticky top-0 z-20 text-center text-5xl font-bold">
             Your Calendar
           </div>
 
@@ -262,24 +262,24 @@ export default function Calendar() {
           />
         </div>
 
-        <div className="max-w-screen-sm mx-auto">
+        <div className="mx-auto max-w-screen-sm">
           {Object.entries(groupedEventsByMonth).map(([month, days]) => (
             <div key={month}>
               {/* Sticky Month Header */}
-              <div className="sticky top-0 z-10 p-2 bg-zinc-900 rounded-lg">
-                <h2 className="text-lg font-medium text-center">{month}</h2>
+              <div className="sticky top-0 z-10 rounded-lg bg-zinc-900 p-2">
+                <h2 className="text-center text-lg font-medium">{month}</h2>
               </div>
               {Object.entries(days).map(([day, events]) => (
-                <div key={day} className="flex gap-7 my-2">
-                  <div className="text-lg font-bold text-center min-w-[60px] max-w-[60px] min-h-[60px] max-h-[60px] rounded-full bg-zinc-900 text-foreground-500 flex items-center justify-center leading-none flex-col">
-                    <div className="font-normal text-md">
+                <div key={day} className="my-2 flex gap-7">
+                  <div className="flex max-h-[60px] min-h-[60px] min-w-[60px] max-w-[60px] flex-col items-center justify-center rounded-full bg-zinc-900 text-center text-lg font-bold leading-none text-foreground-500">
+                    <div className="text-md font-normal">
                       {day.split(" ")[1]}
                     </div>
                     <div className="text-foreground-600">
                       {day.split(" ")[0]}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-4 justify-center w-full">
+                  <div className="flex w-full flex-wrap justify-center gap-4">
                     {events.map((event) => (
                       <CalendarCard
                         key={event.id}
@@ -296,7 +296,7 @@ export default function Calendar() {
         </div>
 
         {loading && (
-          <div className="h-[80vh] flex items-center justify-center">
+          <div className="flex h-[80vh] items-center justify-center">
             <Spinner />
           </div>
         )}

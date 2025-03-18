@@ -64,14 +64,14 @@ export default function Section_Calendar() {
   ];
 
   return (
-    <AnimatedSection className="w-screen justify-center items-center flex z-[1] relative">
-      <div className="max-w-screen-xl w-screen flex sm:flex-row flex-col justify-evenly items-start sm:space-x-10 space-x-5 ">
+    <AnimatedSection className="relative z-[1] flex w-screen items-center justify-center">
+      <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
           heading={"Manage your Calendar"}
           icon={
             <CalendarAdd01Icon
-              className="sm:w-[40px] w-[35px] sm:h-[40px] h-[40px]"
+              className="h-[40px] w-[35px] sm:h-[40px] sm:w-[40px]"
               color="#9b9b9b"
             />
           }
@@ -85,7 +85,7 @@ export default function Section_Calendar() {
               </div>
               <Button
                 disableRipple
-                className="w-fit cursor-default mt-4 text-foreground-600"
+                className="mt-4 w-fit cursor-default text-foreground-600"
                 radius="full"
                 startContent={<GoogleCalendar width={23} />}
                 variant="flat"
@@ -96,7 +96,7 @@ export default function Section_Calendar() {
           }
         />
 
-        <div className="w-full sm:px-10 px-2 !m-0 !mt-0">
+        <div className="!m-0 !mt-0 w-full px-2 sm:px-10">
           <Tabs
             aria-label="GAIA Calendar Options"
             className="w-full"
@@ -120,7 +120,7 @@ export default function Section_Calendar() {
               }
             >
               <ScrollShadow className="h-[500px]">
-                <div className="w-full overflow-hidden bg-gradient-to-bl sm:px-5 rounded-3xl z-[1]">
+                <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl sm:px-5">
                   <CalendarMessages
                     events={events}
                     addedEvents={addedEvents}
@@ -143,7 +143,7 @@ export default function Section_Calendar() {
                   <div className="relative">
                     Your Calendar
                     {addedEvents.length > 0 && !openedCalendar && (
-                      <div className="bg-red-500 min-h-2 min-w-2 rounded-full absolute -right-2 -top-[2px]" />
+                      <div className="absolute -right-2 -top-[2px] min-h-2 min-w-2 rounded-full bg-red-500" />
                     )}
                   </div>
                 </div>
@@ -173,7 +173,7 @@ export default function Section_Calendar() {
                     ))}
                 </ScrollShadow>
               ) : (
-                <div className="text-white flex justify-center items-center w-full p-5 h-[500px]">
+                <div className="flex h-[500px] w-full items-center justify-center p-5 text-white">
                   No events added yet.
                 </div>
               )}

@@ -29,7 +29,7 @@ export default function GradualSpacing({
           <motion.h1
             key={i}
             animate="visible"
-            className={cn("drop-shadow-sm ", className)}
+            className={cn("drop-shadow-sm", className)}
             exit="hidden"
             initial="hidden"
             transition={{ duration, delay: i * delayMultiple }}

@@ -10,14 +10,14 @@ import {
 export const useConversation = () => {
   const dispatch: AppDispatch = useDispatch();
   const convoMessages = useSelector(
-    (state: RootState) => state.conversation.messages
+    (state: RootState) => state.conversation.messages,
   );
 
   const appendBotMessage = (
     botResponse: MessageType,
     finalIntent: any,
     botResponseText: string,
-    currentMessages: MessageType[]
+    currentMessages: MessageType[],
   ): void => {
     updateConvoMessages((oldMessages = []) => {
       // If there are no messages yet, start the conversation with the user message followed by the bot response
@@ -40,12 +40,12 @@ export const useConversation = () => {
   };
 
   const updateConvoMessages = (
-    updater: MessageType[] | ((oldMessages: MessageType[]) => MessageType[])
+    updater: MessageType[] | ((oldMessages: MessageType[]) => MessageType[]),
   ): void => {
     dispatch(
       setMessages(
-        typeof updater === "function" ? updater(convoMessages) : updater
-      )
+        typeof updater === "function" ? updater(convoMessages) : updater,
+      ),
     );
   };
 

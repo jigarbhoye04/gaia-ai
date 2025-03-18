@@ -37,17 +37,18 @@ export function PricingCard({
   return (
     <>
       <div
-        className={`w-full relative rounded-2xl ${className} ${type === "main"
-            ? "bg-zinc-900  outline outline-2 outline-primary"
-            : "bg-zinc-900 "
-          } `}
+        className={`relative w-full rounded-2xl ${className} ${
+          type === "main"
+            ? "bg-zinc-900 outline outline-2 outline-primary"
+            : "bg-zinc-900"
+        } `}
       >
-        <div className="p-[7%] h-full flex-col flex gap-4">
-          <div className="flex flex-row justify-between items-center !border-none">
-            <div className="text-2xl flex justify-between">{title}</div>
+        <div className="flex h-full flex-col gap-4 p-[7%]">
+          <div className="flex flex-row items-center justify-between !border-none">
+            <div className="flex justify-between text-2xl">{title}</div>
             {!durationIsMonth && discountPercentage > 0 && (
               <Chip
-                className="flex text-sm items-center gap-[2px] !border-none"
+                className="flex items-center gap-[2px] !border-none text-sm"
                 color="primary"
                 variant="flat"
               >
@@ -59,10 +60,10 @@ export function PricingCard({
             </span> */}
           </div>
 
-          <div className="!border-none flex flex-col gap-0 !m-0 flex-1">
-            <div className="!border-none flex gap-2 items-baseline">
+          <div className="!m-0 flex flex-1 flex-col gap-0 !border-none">
+            <div className="flex items-baseline gap-2 !border-none">
               {!durationIsMonth && discountPercentage > 0 && price > 0 && (
-                <span className="text-red-500 line-through text-3xl font-normal">
+                <span className="text-3xl font-normal text-red-500 line-through">
                   ${yearlyPrice}
                 </span>
               )}
@@ -70,24 +71,24 @@ export function PricingCard({
               <span className="text-2xl">USD</span>
             </div>
 
-            <span className="font-normal text-sm text-white text-opacity-70">
+            <span className="text-sm font-normal text-white text-opacity-70">
               {durationIsMonth ? "/ per month" : "/ per year"}
             </span>
           </div>
 
-          <div className="flex flex-col gap-1 mt-1">
+          <div className="mt-1 flex flex-col gap-1">
             {featurestitle}
 
             {!!features &&
               features.map((feature: string, index: number) => (
                 <div
                   key={index}
-                  className="text-sm font-normal flex items-center gap-3 !border-none"
+                  className="flex items-center gap-3 !border-none text-sm font-normal"
                 >
                   <Tick02Icon
                     height="20"
                     width="20"
-                    className="min-w-[20px] min-h-[20px]"
+                    className="min-h-[20px] min-w-[20px]"
                   />
                   {feature}
                 </div>

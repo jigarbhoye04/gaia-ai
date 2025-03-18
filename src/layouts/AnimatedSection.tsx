@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface AnimatedSectionProps
   extends MotionProps,
-  Omit<React.HTMLAttributes<HTMLDivElement>, keyof MotionProps> {
+    Omit<React.HTMLAttributes<HTMLDivElement>, keyof MotionProps> {
   children: React.ReactNode;
   staggerDelay?: number;
   className?: string;
@@ -42,12 +42,12 @@ const AnimatedSectionComponent = ({
         transition: disableAnimation
           ? {}
           : {
-            when: "beforeChildren",
-            staggerChildren: staggerDelay,
-          },
+              when: "beforeChildren",
+              staggerChildren: staggerDelay,
+            },
       },
     }),
-    [staggerDelay]
+    [staggerDelay],
   );
 
   return (

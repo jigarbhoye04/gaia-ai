@@ -6,7 +6,7 @@ import { SetStateAction } from "react";
 import { v1 as uuidv1 } from "uuid";
 
 export const fetchConversationDescription = async (
-  searchbarText: string
+  searchbarText: string,
 ): Promise<string> => {
   const response = await apiauth.post(
     "/chat",
@@ -17,7 +17,7 @@ export const fetchConversationDescription = async (
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   return response?.data?.response?.toString().replace('"', "") || "New Chat";
@@ -29,7 +29,7 @@ export const fetchMessages = async (
     (value: SetStateAction<MessageType[]>): void;
     (arg0: any): void;
   },
-  router: AppRouterInstance | string[]
+  router: AppRouterInstance | string[],
 ) => {
   try {
     const messages = await ApiService.fetchMessages(conversationId);
@@ -44,7 +44,7 @@ export const fetchMessages = async (
 export const createNewConversation = async (
   currentMessages: MessageType[],
   router: string[] | AppRouterInstance,
-  fetchConversations: () => void
+  fetchConversations: () => void,
 ) => {
   try {
     const conversationId = uuidv1();
@@ -54,7 +54,7 @@ export const createNewConversation = async (
     ApiService.updateConversationDescription(
       conversationId,
       JSON.stringify(currentMessages[0]?.response || currentMessages[0]),
-      fetchConversations
+      fetchConversations,
     );
 
     router.push(`/c/${conversationId}`);

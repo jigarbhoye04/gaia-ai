@@ -45,7 +45,7 @@ export default function Explore() {
   ];
 
   return (
-    <div className="w-full flex justify-center h-screen items-center p-4 sm:p-8 relative overflow-hidden flex-col transition-all duration-200">
+    <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden p-4 transition-all duration-200 sm:p-8">
       <div className="starter_container2">
         <StarterEmoji />
       </div>
@@ -74,7 +74,7 @@ export default function Explore() {
                 </div>
               }
             >
-              <div className="h-full w-full flex justify-center items-center">
+              <div className="flex h-full w-full items-center justify-center">
                 {tab.content}
               </div>
             </Tab>

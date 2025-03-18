@@ -65,7 +65,7 @@ export default function TextToSpeech({ text }: { text: string }) {
   return (
     <Button
       isIconOnly
-      className="w-fit p-0 h-fit rounded-md"
+      className="h-fit w-fit rounded-md p-0"
       disabled={loading || isPlaying}
       size="sm"
       style={{ minWidth: "22px" }}
@@ -73,9 +73,9 @@ export default function TextToSpeech({ text }: { text: string }) {
       onPress={handleTextToSpeech}
     >
       {loading ? (
-        <Loader className="text-[#9b9b9b] animate-spin text-[24px]" />
+        <Loader className="animate-spin text-[24px] text-[#9b9b9b]" />
       ) : isPlaying ? (
-        <VolumeOffIcon className="text-[#9b9b9b] text-[18px]" />
+        <VolumeOffIcon className="text-[18px] text-[#9b9b9b]" />
       ) : (
         <VolumeHighIcon />
       )}

@@ -26,14 +26,14 @@ export default function LoginModal() {
     >
       <ModalContent className="p-7">
         <ModalBody>
-          <div className="mb-3 text-center space-y-2">
+          <div className="mb-3 space-y-2 text-center">
             <div className="text-5xl font-medium">Login</div>
-            <div className="text-foreground-600 text-md">
+            <div className="text-md text-foreground-600">
               Please login to continue your journey with GAIA.
             </div>
           </div>
           <Button
-            className="rounded-full text-md gap-2 px-4"
+            className="text-md gap-2 rounded-full px-4"
             size="lg"
             variant="secondary"
             onClick={handleGoogleLogin}
@@ -43,7 +43,7 @@ export default function LoginModal() {
           </Button>
           <Link
             href="/get-started"
-            className="rounded-full text-md gap-2 px-4 text-primary font-normal text-center w-full"
+            className="text-md w-full gap-2 rounded-full px-4 text-center font-normal text-primary"
             onClick={() => setLoginModalOpen(false)}
           >
             New to GAIA? Create an Account

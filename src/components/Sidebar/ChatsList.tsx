@@ -98,7 +98,7 @@ export default function ChatsList() {
       {
         root: null, // viewport as container
         threshold: 1.0,
-      }
+      },
     );
 
     if (loadMoreRef.current) {
@@ -113,25 +113,28 @@ export default function ChatsList() {
   }, [currentPage, isFetchingMore, paginationMeta, fetchConversations]);
 
   // Group conversations by time frame.
-  const groupedConversations = conversations.reduce((acc, conversation) => {
-    const timeFrame = getTimeFrame(conversation.createdAt);
+  const groupedConversations = conversations.reduce(
+    (acc, conversation) => {
+      const timeFrame = getTimeFrame(conversation.createdAt);
 
-    if (!acc[timeFrame]) {
-      acc[timeFrame] = [];
-    }
-    acc[timeFrame].push(conversation);
+      if (!acc[timeFrame]) {
+        acc[timeFrame] = [];
+      }
+      acc[timeFrame].push(conversation);
 
-    return acc;
-  }, {} as Record<string, any[]>);
+      return acc;
+    },
+    {} as Record<string, any[]>,
+  );
 
   // Sort time frames by defined priority.
   const sortedTimeFrames = Object.entries(groupedConversations).sort(
     ([timeFrameA], [timeFrameB]) =>
-      timeFramePriority(timeFrameA) - timeFramePriority(timeFrameB)
+      timeFramePriority(timeFrameA) - timeFramePriority(timeFrameB),
   );
 
   const starredConversations = conversations.filter(
-    (conversation) => conversation.starred
+    (conversation) => conversation.starred,
   );
 
   const createNewChat = (): void => {
@@ -149,7 +152,7 @@ export default function ChatsList() {
         <>
           <div className="mt- w-full">
             <Button
-              className="w-full text-primary text-sm justify-start"
+              className="w-full justify-start text-sm text-primary"
               color="primary"
               size="sm"
               variant="flat"
@@ -168,13 +171,13 @@ export default function ChatsList() {
           >
             <AccordionItem
               value="item-1"
-              className="bg-zinc-900 min-h-fit pb-1 mt-2 flex items-start justify-start rounded-lg flex-col overflow-hidden pt-0 border-b-0 w-full"
+              className="mt-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 pb-1 pt-0"
             >
-              <AccordionTrigger className="text-xs px-3 pt-3 pb-2 w-[210px]">
+              <AccordionTrigger className="w-[210px] px-3 pb-2 pt-3 text-xs">
                 Starred Chats
               </AccordionTrigger>
-              <AccordionContent className="!p-0 w-full">
-                <div className="flex w-full flex-col -mr-4">
+              <AccordionContent className="w-full !p-0">
+                <div className="-mr-4 flex w-full flex-col">
                   {starredConversations.length > 0 ? (
                     starredConversations.map(
                       (conversation: {
@@ -188,10 +191,10 @@ export default function ChatsList() {
                           name={conversation.description || "New Chat"}
                           starred={conversation.starred || false}
                         />
-                      )
+                      ),
                     )
                   ) : (
-                    <div className="text-xs text-center text-nowrap text-foreground-500 pt-2 pb-3 w-full">
+                    <div className="w-full text-nowrap pb-3 pt-2 text-center text-xs text-foreground-500">
                       No Starred Chats yet.
                     </div>
                   )}
@@ -209,14 +212,14 @@ export default function ChatsList() {
           {/* Grouped Conversations by Time Frame */}
           {sortedTimeFrames.map(([timeFrame, conversationsGroup]) => (
             <div key={timeFrame}>
-              <div className="font-medium px-2 text-xs pt-3 text-foreground-500 pb-1 sticky top-0 bg-black z-[1]">
+              <div className="sticky top-0 z-[1] bg-black px-2 pb-1 pt-3 text-xs font-medium text-foreground-500">
                 {timeFrame}
               </div>
               {conversationsGroup
                 .sort(
                   (a: { createdAt: string }, b: { createdAt: string }) =>
                     new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
+                    new Date(a.createdAt).getTime(),
                 )
                 .map(
                   (conversation: {
@@ -230,7 +233,7 @@ export default function ChatsList() {
                       name={conversation.description || "New Chat"}
                       starred={conversation.starred}
                     />
-                  )
+                  ),
                 )}
             </div>
           ))}
@@ -240,7 +243,7 @@ export default function ChatsList() {
       {/* Sentinel element for the IntersectionObserver */}
       <div
         ref={loadMoreRef}
-        className="p-2 h-[250px] flex justify-center items-center"
+        className="flex h-[250px] items-center justify-center p-2"
       >
         {isFetchingMore && <Loader className="animate-spin text-[#00bbff]" />}
       </div>

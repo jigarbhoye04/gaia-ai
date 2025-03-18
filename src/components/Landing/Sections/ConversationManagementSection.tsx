@@ -85,7 +85,7 @@ export function DummySearchCommand() {
   };
 
   return (
-    <div className="rounded-md overflow-hidden ">
+    <div className="overflow-hidden rounded-md">
       <Command>
         <CommandInput
           placeholder="Search for messages..."
@@ -94,7 +94,7 @@ export function DummySearchCommand() {
         />
 
         {searchQuery && (
-          <div className="flex gap-1 p-2 bg-zinc-900 text-sm text-foreground-500 items-center font-medium">
+          <div className="flex items-center gap-1 bg-zinc-900 p-2 text-sm font-medium text-foreground-500">
             <Chip
               className="cursor-pointer"
               color={chipsVisibility.messages ? "primary" : "default"}
@@ -215,35 +215,35 @@ export function SidebarComponent() {
           key={index}
           className={`${
             section.starred ? "bg-zinc-800" : ""
-          } min-h-fit pt-3 pb-1 flex items-start justify-start rounded-lg flex-col overflow-hidden w-full`}
+          } flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg pb-1 pt-3`}
         >
-          <div className="font-medium text-xs flex items-center gap-1 px-3 pb-1">
+          <div className="flex items-center gap-1 px-3 pb-1 text-xs font-medium">
             {section.title}
           </div>
-          <div className="flex w-full px-1 flex-col">
+          <div className="flex w-full flex-col px-1">
             {section.conversations.map((chat, chatIndex) => (
               <Button
                 key={chatIndex}
-                className="w-full flex justify-start pr-0 pl-2 h-[35px] min-h-[35px]"
+                className="flex h-[35px] min-h-[35px] w-full justify-start pl-2 pr-0"
                 color={chat?.active ? "primary" : "default"}
                 radius="sm"
                 startContent={
                   chat.starred ? (
                     <Star
-                      className="min-w-[17px] w-[17px]"
+                      className="w-[17px] min-w-[17px]"
                       color={chat?.active ? "#00bbff" : "#9b9b9b"}
                       width="19"
                     />
                   ) : (
                     <BubbleConversationChatIcon
-                      className="min-w-[17px] w-[17px]"
+                      className="w-[17px] min-w-[17px]"
                       width="19"
                     />
                   )
                 }
                 variant="light"
               >
-                <span className="truncate w-[200px] text-left">
+                <span className="w-[200px] truncate text-left">
                   {chat.name}
                 </span>
               </Button>
@@ -260,13 +260,13 @@ export default function Section_ConvoManagement() {
       heading={"Advanced Conversation Management"}
       icon={
         <BubbleChatIcon
-          className="sm:size-[30px] size-[30px]"
+          className="size-[30px] sm:size-[30px]"
           color="#9b9b9b"
         />
       }
       subheading={"Never lose track of anything. Ever."}
     >
-      <Tabs className="w-full h-[430px] overflow-hidden" defaultValue="starred">
+      <Tabs className="h-[430px] w-full overflow-hidden" defaultValue="starred">
         <TabsList className="flex gap-4">
           <TabsTrigger className="flex items-center gap-2" value="starred">
             <Star height={20} width={20} /> Starred
@@ -288,7 +288,7 @@ export default function Section_ConvoManagement() {
           </div>
         </TabsContent>
         <TabsContent value="pins">
-          <div className="space-y-5 pt-5 p-1">
+          <div className="space-y-5 p-1 pt-5">
             {dummyMessages.map((message, index) => (
               <PinCard
                 key={index}

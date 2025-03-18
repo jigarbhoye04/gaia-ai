@@ -15,28 +15,24 @@ import { ReactNode } from "react";
 interface FeatureType {
   icon: ReactNode;
   title: string;
-  description: string
-};
+  description: string;
+}
 
-function FeatureCard({
-  feature,
-}: {
-  feature: FeatureType
-}) {
+function FeatureCard({ feature }: { feature: FeatureType }) {
   return (
     <MagicCard
-      className="p-5 !rounded-none !bg-transparent !w-full "
+      className="!w-full !rounded-none !bg-transparent p-5"
       gradientColor="#00bbff30"
       gradientFrom="#00bbff"
       gradientTo="#00bbff"
       noRadius={true}
     >
-      <AnimatedSection className=" items-center flex justify-center flex-col min-w-full w-full p-3">
-        <div className="sm:py-3 py-2 bg-transparent !rounded-none">
+      <AnimatedSection className="flex w-full min-w-full flex-col items-center justify-center p-3">
+        <div className="!rounded-none bg-transparent py-2 sm:py-3">
           {feature.icon}
         </div>
-        <div className="font-medium text-lg text-center">{feature.title}</div>
-        <div className="text-foreground-600 text-center">
+        <div className="text-center text-lg font-medium">{feature.title}</div>
+        <div className="text-center text-foreground-600">
           {feature.description}
         </div>
       </AnimatedSection>
@@ -91,13 +87,13 @@ export default function WhatCanYouDo() {
   ];
 
   return (
-    <AnimatedSection className="w-screen flex items-center min-h-fit justify-center flex-col z-[1] relative">
-      <div className="font-medium text-4xl text-center">
+    <AnimatedSection className="relative z-[1] flex min-h-fit w-screen flex-col items-center justify-center">
+      <div className="text-center text-4xl font-medium">
         What can GAIA do for you?
       </div>
-      <div className="max-w-screen-xl w-full min-h-fit rounded-3xl p-10 items-center grid sm:grid-cols-4 grid-cols-1 relative">
-        <div className="h-full w-full absolute top-0 flex justify-start flex-col items-center pointer-events-none">
-          <div className="size-[250px] blur-[100px] bg-[#00bbff] z-[-1] relative top-[40px]" />
+      <div className="relative grid min-h-fit w-full max-w-screen-xl grid-cols-1 items-center rounded-3xl p-10 sm:grid-cols-4">
+        <div className="pointer-events-none absolute top-0 flex h-full w-full flex-col items-center justify-start">
+          <div className="relative top-[40px] z-[-1] size-[250px] bg-[#00bbff] blur-[100px]" />
         </div>
 
         {features.map((feature, index) => (

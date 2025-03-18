@@ -36,10 +36,7 @@ interface MailComposeProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function MailCompose({
-  open,
-  onOpenChange,
-}: MailComposeProps) {
+export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
   console.log("test open");
 
   const user = useUser();
@@ -153,10 +150,12 @@ export default function MailCompose({
       <Drawer.Root open={open} onOpenChange={onOpenChange} direction="right">
         <Drawer.Portal>
           <Drawer.Overlay
-            className={`fixed inset-0 bg-black/40 backdrop-blur-md ${isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
-              }`}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-md ${
+              isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
+            }`}
           />
-          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2"
+          <Drawer.Content
+            className="fixed bottom-0 right-0 z-[10] flex min-h-[70vh] w-[50vw] flex-col gap-2 rounded-tl-xl bg-zinc-900 p-4"
             aria-describedby="Drawer to Compose a new email"
           >
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
@@ -172,7 +171,7 @@ export default function MailCompose({
             <Input
               variant="underlined"
               startContent={
-                <div className="text-sm text-foreground-500 w-[50px] flex justify-center">
+                <div className="flex w-[50px] justify-center text-sm text-foreground-500">
                   From
                 </div>
               }
@@ -216,14 +215,14 @@ export default function MailCompose({
               onChange={(e) => setSubject(e.target.value)}
             />
 
-            <div className="relative h-full w-full flex flex-col">
-              <div className="flex pb-2 gap-3 justify-end w-full z-[2]">
+            <div className="relative flex h-full w-full flex-col">
+              <div className="z-[2] flex w-full justify-end gap-3 pb-2">
                 {/* Writing Style Dropdown */}
                 <div className="relative">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
-                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
+                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] outline-none ring-0 hover:bg-[#00bbff20]"
                         size="sm"
                       >
                         <div className="flex flex-row gap-1">
@@ -241,7 +240,7 @@ export default function MailCompose({
                         </div>
                       </ShadcnButton>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
+                    <DropdownMenuContent className="border-none bg-zinc-900 text-white dark">
                       {writingStyles.map((style) => (
                         <DropdownMenuItem
                           key={style.id}
@@ -251,12 +250,12 @@ export default function MailCompose({
                           }}
                           className="cursor-pointer focus:bg-zinc-600 focus:text-white"
                         >
-                          <div className="flex justify-between w-full items-center">
+                          <div className="flex w-full items-center justify-between">
                             {style.label}
                             {writingStyles.find((s) => s.id === writingStyle)
                               ?.label === style.label && (
-                                <Check color={undefined} width={20} height={20} />
-                              )}
+                              <Check color={undefined} width={20} height={20} />
+                            )}
                           </div>
                         </DropdownMenuItem>
                       ))}
@@ -269,7 +268,7 @@ export default function MailCompose({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
-                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
+                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] outline-none ring-0 hover:bg-[#00bbff20]"
                         size="sm"
                       >
                         <div className="flex flex-row gap-1">
@@ -279,14 +278,14 @@ export default function MailCompose({
                           </span>{" "}
                           <span>
                             {contentLengthOptions.find(
-                              (opt) => opt.id === contentLength
+                              (opt) => opt.id === contentLength,
                             )?.label || "None"}
                           </span>
                           <ChevronDown color={undefined} width={20} />
                         </div>
                       </ShadcnButton>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
+                    <DropdownMenuContent className="border-none bg-zinc-900 text-white dark">
                       {contentLengthOptions.map((option) => (
                         <DropdownMenuItem
                           key={option.id}
@@ -296,7 +295,7 @@ export default function MailCompose({
                           }}
                           className="cursor-pointer focus:bg-zinc-600 focus:text-white"
                         >
-                          <div className="flex justify-between w-full items-center">
+                          <div className="flex w-full items-center justify-between">
                             {option.label}
                             {contentLength === option.id && (
                               <Check color={undefined} width={20} />
@@ -313,7 +312,7 @@ export default function MailCompose({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
-                        className="font-normal text-sm text-[#00bbff] bg-[#00bbff40] hover:bg-[#00bbff20] outline-none border-none ring-0"
+                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] outline-none ring-0 hover:bg-[#00bbff20]"
                         size="sm"
                       >
                         <div className="flex flex-row gap-1">
@@ -321,14 +320,14 @@ export default function MailCompose({
                           <span className="font-medium">Clarity:</span>{" "}
                           <span>
                             {clarityOptions.find(
-                              (opt) => opt.id === clarityOption
+                              (opt) => opt.id === clarityOption,
                             )?.label || "None"}
                           </span>
                           <ChevronDown color={undefined} width={20} />
                         </div>
                       </ShadcnButton>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="dark bg-zinc-900 border-none text-white">
+                    <DropdownMenuContent className="border-none bg-zinc-900 text-white dark">
                       {clarityOptions.map((option) => (
                         <DropdownMenuItem
                           key={option.id}
@@ -338,7 +337,7 @@ export default function MailCompose({
                           }}
                           className="cursor-pointer focus:bg-zinc-600 focus:text-white"
                         >
-                          <div className="flex justify-between w-full items-center">
+                          <div className="flex w-full items-center justify-between">
                             {option.label}
                             {clarityOption === option.id && (
                               <Check color={undefined} width={20} />
@@ -387,7 +386,7 @@ export default function MailCompose({
                     onPress={() => handleAskGaia()}
                     isLoading={loading}
                   >
-                    <div className="flex px-3 w-fit gap-2 items-center text-medium">
+                    <div className="flex w-fit items-center gap-2 px-3 text-medium">
                       {!loading && (
                         <>
                           AI Draft

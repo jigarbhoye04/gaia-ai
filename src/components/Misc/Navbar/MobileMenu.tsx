@@ -30,14 +30,14 @@ export default function MobileMenu() {
           <Menu01Icon color="foreground" />
         </div>
       </SheetTrigger>
-      <SheetContent className="dark text-foreground max-w-[250px] bg-zinc-900 border-none">
+      <SheetContent className="max-w-[250px] border-none bg-zinc-900 text-foreground dark">
         <SheetHeader>
           <SheetTitle>
             <VisuallyHidden.Root>Menu</VisuallyHidden.Root>
           </SheetTitle>
-          <SheetDescription className="pt-12 gap-3 flex flex-col">
+          <SheetDescription className="flex flex-col gap-3 pt-12">
             <Button
-              className="w-full flex justify-between"
+              className="flex w-full justify-between"
               endContent={
                 <Home01Icon color="foreground" width="20" height="20" />
               }

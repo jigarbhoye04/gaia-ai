@@ -57,10 +57,10 @@ export function FAQAccordion() {
   ];
 
   return (
-    <div className="sm:py-[1em] px-[5%] w-full py-[1em] flex justify-center items-center">
-      <div className="mb-[10vh] faq_container mt-[20px] bg-foreground-50 p-10 rounded-3xl">
-        <div className="flex flex-col justify-center w-full items-center gap-3 mb-5">
-          <span className="font-medium text-4xl">
+    <div className="flex w-full items-center justify-center px-[5%] py-[1em] sm:py-[1em]">
+      <div className="faq_container mb-[10vh] mt-[20px] rounded-3xl bg-foreground-50 p-10">
+        <div className="mb-5 flex w-full flex-col items-center justify-center gap-3">
+          <span className="text-4xl font-medium">
             Frequently asked questions
           </span>
         </div>

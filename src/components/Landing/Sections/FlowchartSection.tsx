@@ -76,7 +76,7 @@ const FlowchartDemo = () => {
         y: e.clientY - position.y,
       });
     },
-    [position]
+    [position],
   );
 
   const handleMouseMove = useCallback(
@@ -88,7 +88,7 @@ const FlowchartDemo = () => {
         });
       }
     },
-    [isDragging, startPosition]
+    [isDragging, startPosition],
   );
 
   const handleMouseUp = () => setIsDragging(false);
@@ -97,7 +97,7 @@ const FlowchartDemo = () => {
     if (!mermaidRef.current) return;
 
     const svgData = new XMLSerializer().serializeToString(
-      mermaidRef.current.querySelector("svg")!
+      mermaidRef.current.querySelector("svg")!,
     );
     const svgBlob = new Blob([svgData], {
       type: "image/svg+xml;charset=utf-8",
@@ -135,7 +135,7 @@ const FlowchartDemo = () => {
     <LandingSectionLayout
       heading={"Create flowcharts"}
       icon={
-        <FlowchartIcon className="sm:size-[30px] size-[30px]" color="#9b9b9b" />
+        <FlowchartIcon className="size-[30px] sm:size-[30px]" color="#9b9b9b" />
       }
       subheading={"Easily turn ideas into clear, interactive visuals instantly"}
     >
@@ -151,7 +151,7 @@ const FlowchartDemo = () => {
         <div className="mb-3">
           Here is a flowchart to help you plan a product launch:
         </div>
-        <div className="relative flex flex-col gap-0 bg-zinc-950 !rounded-[15px] overflow-hidden">
+        <div className="relative flex flex-col gap-0 overflow-hidden !rounded-[15px] bg-zinc-950">
           <Tabs
             className="px-3"
             selectedKey={activeTab}
@@ -164,15 +164,15 @@ const FlowchartDemo = () => {
             }}
           >
             <Tab key="code" className="p-0" title="Code">
-              <div className="whitespace-pre-wrap !font-mono px-5 py-2 h-[320px] overflow-y-auto">
+              <div className="h-[320px] overflow-y-auto whitespace-pre-wrap px-5 py-2 !font-mono">
                 {flowchartCode}
               </div>
             </Tab>
             <Tab key="preview" className="p-0" title="Flowchart">
-              <div className="p-4 bg-zinc-950 relative overflow-hidden h-[320px] ">
+              <div className="relative h-[320px] overflow-hidden bg-zinc-950 p-4">
                 <div
                   ref={mermaidRef}
-                  className="mermaid absolute select-none "
+                  className="mermaid absolute select-none"
                   style={{
                     transform: `scale(${scale}) translate(${25}px, ${
                       position.y
@@ -202,18 +202,18 @@ const FlowchartDemo = () => {
             </Tab>
           </Tabs>
           <Button
-            className="absolute top-2 right-2 text-foreground hover:text-gray-300 text-xs"
+            className="absolute right-2 top-2 text-xs text-foreground hover:text-gray-300"
             size="sm"
             variant="light"
             onPress={handleCopy}
           >
             {copied ? (
-              <div className="flex flex-row gap-1 items-center">
+              <div className="flex flex-row items-center gap-1">
                 <TaskDone01Icon color="foreground" width={21} />
                 <p>Copied!</p>
               </div>
             ) : (
-              <div className="flex flex-row gap-1 items-center">
+              <div className="flex flex-row items-center gap-1">
                 <Task01Icon color="foreground" width={21} />
                 <p>Copy Code</p>
               </div>

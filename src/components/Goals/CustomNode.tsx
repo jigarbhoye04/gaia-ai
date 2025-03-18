@@ -24,13 +24,13 @@ const CustomNode: React.FC<CustomNodeProps> = React.memo(
         <div
           className={`${
             currentlySelectedNodeId === data.id
-              ? "!outline-[#00bbff] shadow-lg"
+              ? "shadow-lg !outline-[#00bbff]"
               : "outline-zinc-700"
           } ${
             data.isComplete
-              ? "bg-[#00bbff73] outline-[#00bbff30] line-through"
+              ? "bg-[#00bbff73] line-through outline-[#00bbff30]"
               : "bg-zinc-800"
-          } transition-all outline outline-[3px] p-4 rounded-lg text-white flex flex-row gap-1 max-w-[250px] min-w-[250px] text-center items-center justify-center`}
+          } flex min-w-[250px] max-w-[250px] flex-row items-center justify-center gap-1 rounded-lg p-4 text-center text-white outline outline-[3px] transition-all`}
           onClick={() => {
             setCurrentlySelectedNodeId(data.id);
             setOpenSidebar(true);
@@ -41,7 +41,7 @@ const CustomNode: React.FC<CustomNodeProps> = React.memo(
         <Handle position={Position.Bottom} type="source" />
       </>
     );
-  }
+  },
 );
 
 export default CustomNode;

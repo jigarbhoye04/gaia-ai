@@ -17,15 +17,15 @@ export default function ImageBubble({
   return (
     <>
       <div className="chat_bubble bg-zinc-800">
-        <div className="text-sm font-medium w-full flex flex-col gap-2 flex-wrap max-w-[350px] my-1">
+        <div className="my-1 flex w-full max-w-[350px] flex-col flex-wrap gap-2 text-sm font-medium">
           <span>{text}</span>
           <Skeleton
-            className="rounded-3xl my-2 max-w-[250px] min-w-[250px] max-h-[250px] min-h-[250px] aspect-square"
+            className="my-2 aspect-square max-h-[250px] min-h-[250px] min-w-[250px] max-w-[250px] rounded-3xl"
             isLoaded={!loading && !!imageSrc}
           >
             <img
               alt="Generated Image"
-              className="rounded-3xl my-2 !cursor-pointer"
+              className="my-2 !cursor-pointer rounded-3xl"
               height="250px"
               src={imageSrc as string}
               width="250px"
@@ -42,11 +42,11 @@ export default function ImageBubble({
             />
           </Skeleton>
           {imagePrompt && (
-            <div className="flex gap-1 justify-start flex-wrap max-w-[250px]">
+            <div className="flex max-w-[250px] flex-wrap justify-start gap-1">
               {imagePrompt.split(",").map((keyword, index) => (
                 <Chip
                   key={index}
-                  className="text-wrap min-h-fit py-1"
+                  className="min-h-fit text-wrap py-1"
                   color="default"
                   radius="md"
                   size="sm"
@@ -59,7 +59,7 @@ export default function ImageBubble({
         </div>
       </div>
       {date && (
-        <span className="text-xs text-white text-opacity-40 flex flex-col select-text pt-1">
+        <span className="flex select-text flex-col pt-1 text-xs text-white text-opacity-40">
           {parseDate(date)}
         </span>
       )}

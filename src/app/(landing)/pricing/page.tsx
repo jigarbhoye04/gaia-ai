@@ -37,14 +37,14 @@ export const metadata: Metadata = {
 
 export default function Pricing() {
   return (
-    <div className="flex justify-center w-screen items-center min-h-screen flex-col bg-custom-gradient">
-      <div className="flex-col flex gap-2 items-center">
-        <div className="flex items-center flex-col gap-3 mb-2 w-full">
+    <div className="bg-custom-gradient flex min-h-screen w-screen flex-col items-center justify-center">
+      <div className="flex flex-col items-center gap-2">
+        <div className="mb-2 flex w-full flex-col items-center gap-3">
           <Chip color="primary" size="lg" variant="light">
             Pricing
           </Chip>
 
-          <span className="font-medium text-5xl text-center px-6 w-full">
+          <span className="w-full px-6 text-center text-5xl font-medium">
             GAIA - Your Personal AI Assistant
           </span>
           <span className="text-md text-center text-foreground-500">
@@ -52,7 +52,7 @@ export default function Pricing() {
           </span>
         </div>
 
-        <div className="flex w-full flex-col items-center font-medium mt-5">
+        <div className="mt-5 flex w-full flex-col items-center font-medium">
           <Tabs aria-label="Options" radius="full">
             <Tab key="monthly" title="Monthly">
               <PricingCards durationIsMonth />
@@ -60,10 +60,10 @@ export default function Pricing() {
             <Tab
               key="music"
               title={
-                <div className="flex gap-2 items-center justify-center w-full">
+                <div className="flex w-full items-center justify-center gap-2">
                   Yearly
                   <Chip color="primary" size="sm" variant="shadow">
-                    <div className="font-medium text-sm">Save 40%</div>
+                    <div className="text-sm font-medium">Save 40%</div>
                   </Chip>
                 </div>
               }

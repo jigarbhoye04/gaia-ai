@@ -35,17 +35,17 @@ const TargetCard = ({
   <div
     className={cn(
       current?.title === title && current?.description === description
-        ? "text-white "
+        ? "text-white"
         : "text-foreground-400 hover:text-foreground-600",
       "cursor-pointer transition-all",
     )}
     onClick={() => setCurrent({ title, description, icon, img })}
   >
-    <div className="font-medium sm:text-2xl text-xl flex items-center gap-2">
+    <div className="flex items-center gap-2 text-xl font-medium sm:text-2xl">
       {icon}
       {title}
     </div>
-    <div className="sm:text-lg text-medium">{description}</div>
+    <div className="text-medium sm:text-lg">{description}</div>
   </div>
 );
 
@@ -84,16 +84,16 @@ export default function TargetAudience() {
   const [current, setCurrent] = useState<TargetData>(targetData[0]);
 
   return (
-    <div className="w-screen flex items-center min-h-screen justify-center pt-32 flex-col p-5 sm:p-0 z-[1] relative">
-      <div className="w-full max-w-screen-xl py-5 space-y-2 sm:text-start text-center">
-        <div className="font-medium text-5xl">For Everyone</div>
-        <div className="font-normal text-md sm:w-[30%] text-foreground-500">
+    <div className="relative z-[1] flex min-h-screen w-screen flex-col items-center justify-center p-5 pt-32 sm:p-0">
+      <div className="w-full max-w-screen-xl space-y-2 py-5 text-center sm:text-start">
+        <div className="text-5xl font-medium">For Everyone</div>
+        <div className="text-md font-normal text-foreground-500 sm:w-[30%]">
           Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum,
           assumenda.
         </div>
       </div>
-      <div className="max-w-screen-xl w-full bg-zinc-900 min-h-[80vh] rounded-3xl outline outline-zinc-900 flex flex-col sm:p-10 p-0 overflow-hidden items-center">
-        <div className="w-full justify-start gap-10 grid sm:grid-cols-4 sm:p-0 p-5">
+      <div className="flex min-h-[80vh] w-full max-w-screen-xl flex-col items-center overflow-hidden rounded-3xl bg-zinc-900 p-0 outline outline-zinc-900 sm:p-10">
+        <div className="grid w-full justify-start gap-10 p-5 sm:grid-cols-4 sm:p-0">
           {targetData.map((item, index) => (
             <TargetCard
               key={index}
@@ -108,7 +108,7 @@ export default function TargetAudience() {
         </div>
         <img
           alt="GAIA Screenshot"
-          className="relative sm:top-[10vh] sm:mb-0 mb-3 rounded-2xl outline-zinc-700 outline-[4px] outline overflow-hidden min-w-[95%] max-w-[95%] "
+          className="relative mb-3 min-w-[95%] max-w-[95%] overflow-hidden rounded-2xl outline outline-[4px] outline-zinc-700 sm:top-[10vh] sm:mb-0"
           src={current.img}
         />
       </div>

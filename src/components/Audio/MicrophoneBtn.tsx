@@ -145,7 +145,7 @@ MicrophoneBtnProps) {
                 {/* /> */}
               </div>
             )}
-            <div className="w-full p-4 bg-gray-800 rounded-md min-h-[100px] max-h-[200px] overflow-y-auto">
+            <div className="max-h-[200px] min-h-[100px] w-full overflow-y-auto rounded-md bg-gray-800 p-4">
               <p className="whitespace-pre-wrap">{transcript}</p>
             </div>
           </ModalBody>

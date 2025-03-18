@@ -28,7 +28,7 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
         y: e.clientY - position.y,
       });
     },
-    [position]
+    [position],
   );
 
   const handleMouseMove = useCallback(
@@ -40,7 +40,7 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
         });
       }
     },
-    [isDragging, startPosition]
+    [isDragging, startPosition],
   );
 
   const handleMouseUp = () => setIsDragging(false);
@@ -49,7 +49,7 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
     if (!mermaidRef.current) return;
 
     const svgData = new XMLSerializer().serializeToString(
-      mermaidRef.current.querySelector("svg")!
+      mermaidRef.current.querySelector("svg")!,
     );
     const svgBlob = new Blob([svgData], {
       type: "image/svg+xml;charset=utf-8",
@@ -83,9 +83,9 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
   }, [handleWheel]);
 
   return (
-    <div className="p-4 bg-white relative overflow-hidden h-[50vh] ">
+    <div className="relative h-[50vh] overflow-hidden bg-white p-4">
       <div
-        className={`h-full w-full absolute left-0 top-0 ${
+        className={`absolute left-0 top-0 h-full w-full ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         onMouseDown={handleMouseDown}
@@ -105,7 +105,7 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
           {String(children).replace(/\n$/, "")}
         </div>
       </div>
-      <div className="absolute bottom-2 right-2 flex gap-1 items-center flex-col">
+      <div className="absolute bottom-2 right-2 flex flex-col items-center gap-1">
         <Tooltip content="Zoom Out">
           <Button size="sm" onPress={handleZoomOut} isIconOnly>
             <ZoomOut size={18} />

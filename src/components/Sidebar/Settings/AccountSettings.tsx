@@ -12,32 +12,32 @@ export default function AccountSection({
   setModalAction: React.Dispatch<React.SetStateAction<ModalAction | null>>;
 }) {
   return (
-    <div className="flex flex-col gap-2 min-h-full">
+    <div className="flex min-h-full flex-col gap-2">
       <h3 className="mb-3">Account</h3>
 
-      <div className="flex w-full justify-between items-center gap-5">
-        <div className="flex flex-col w-full bg-black/40 p-3 gap-2 rounded-2xl">
-          <div className="flex justify-between items-center">
+      <div className="flex w-full items-center justify-between gap-5">
+        <div className="flex w-full flex-col gap-2 rounded-2xl bg-black/40 p-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Mail01Icon className="text-foreground-300" />
               Email
             </div>
-            <div className="flex items-center gap-3  text-foreground-500">
+            <div className="flex items-center gap-3 text-foreground-500">
               user@gmail.com
             </div>
           </div>
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <UserIcon className="text-foreground-300" />
               Name
             </div>
-            <div className="flex items-center gap-3 text-foreground-500 text-left">
+            <div className="flex items-center gap-3 text-left text-foreground-500">
               lorem ipsum
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-black/40 p-3 rounded-2xl">
+        <div className="flex items-center gap-3 rounded-2xl bg-black/40 p-3">
           <Avatar
             className="aspect-square"
             size="lg"
@@ -50,7 +50,7 @@ export default function AccountSection({
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-auto">
+      <div className="mt-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Logout02Icon className="text-foreground-300" color={undefined} />
           Logout

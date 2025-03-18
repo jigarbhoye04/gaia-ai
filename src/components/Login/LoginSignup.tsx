@@ -23,21 +23,22 @@ export default function LoginSignup({
   }, [user]);
 
   return (
-    <form className="w-screen h-screen flex justify-center items-center flex-col overflow-auto select-none">
-      <div className="w-full max-w-screen-sm p-10 flex justify-center items-center flex-col gap-5 z-[1] relative bg-zinc-900 rounded-3xl">
-        <div className="mb-3 text-center space-y-2">
+    <form className="flex h-screen w-screen select-none flex-col items-center justify-center overflow-auto">
+      <div className="relative z-[1] flex w-full max-w-screen-sm flex-col items-center justify-center gap-5 rounded-3xl bg-zinc-900 p-10">
+        <div className="mb-3 space-y-2 text-center">
           <div className="text-5xl font-medium">
             {isLogin ? "Login" : "Sign Up"}
           </div>
-          <div className="text-foreground-600 text-lg">
+          <div className="text-lg text-foreground-600">
             {isLogin
               ? "Welcome back! Please login to continue your journey with GAIA."
               : "Join us today by creating an account. It's quick and easy!"}
           </div>
         </div>
         <Button
-          className={`rounded-full text-md gap-2 px-4 ${loading ? "bg-zinc-800 hover:bg-zinc-800 text-primary" : ""
-            }`}
+          className={`text-md gap-2 rounded-full px-4 ${
+            loading ? "bg-zinc-800 text-primary hover:bg-zinc-800" : ""
+          }`}
           size="lg"
           type="button"
           variant="secondary"
@@ -61,7 +62,7 @@ export default function LoginSignup({
         </Button>
         <Link href={isLogin ? "/get-started" : "/login"}>
           <Button
-            className="rounded-full text-md gap-2 px-4 text-primary font-normal"
+            className="text-md gap-2 rounded-full px-4 font-normal text-primary"
             size="lg"
             type="button"
             variant="link"

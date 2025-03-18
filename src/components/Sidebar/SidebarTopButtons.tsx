@@ -59,7 +59,7 @@ export default function SidebarTopButtons() {
         setOpenSearchDialog={setOpenSearchDialog}
       />
 
-      <div className="bg-[#141414] rounded-2xl p-2 gap-1 grid grid-cols-3 items-start grid-rows-2">
+      <div className="grid grid-cols-3 grid-rows-2 items-start gap-1 rounded-2xl bg-[#141414] p-2">
         {buttonData.map(({ route, icon, label }, index) => (
           <Tooltip
             key={index}
@@ -76,8 +76,8 @@ export default function SidebarTopButtons() {
                 label === "Search"
                   ? setOpenSearchDialog(true)
                   : route
-                  ? router.push(route)
-                  : undefined
+                    ? router.push(route)
+                    : undefined
               }
             >
               {React.cloneElement(icon, {

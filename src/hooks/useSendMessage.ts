@@ -22,7 +22,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
   return async (
     inputText: string,
     enableSearch: boolean = false,
-    pageFetchURL: string
+    pageFetchURL: string,
   ) => {
     const botMessageId = String(ObjectID());
 
@@ -42,7 +42,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       (await createNewConversation(
         [currentMessage],
         router,
-        fetchConversations
+        fetchConversations,
       ));
 
     if (!conversationId) return setIsLoading(false);
@@ -53,7 +53,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       conversationId,
       enableSearch,
       pageFetchURL,
-      botMessageId
+      botMessageId,
     );
   };
 };

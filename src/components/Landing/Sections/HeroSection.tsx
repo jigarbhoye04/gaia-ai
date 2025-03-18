@@ -12,15 +12,11 @@ import GetStartedButton from "../GetStartedButton";
 
 export default function HeroSection() {
   return (
-    <div
-      className="flex flex-col w-screen justify-center items-center gap-8 sm:pt-28 pt-16 h-fit
-    min-h-[55vh] 
-    "
-    >
-      <div className="fixed top-0 left-0 w-screen">
+    <div className="flex h-fit min-h-[55vh] w-screen flex-col items-center justify-center gap-8 pt-16 sm:pt-28">
+      <div className="fixed left-0 top-0 w-screen">
         <Spotlight duration={15} />
       </div>
-      <AnimatedSection className="flex flex-col justify-center items-center h-full z-[2] gap-4 relative">
+      <AnimatedSection className="relative z-[2] flex h-full flex-col items-center justify-center gap-4">
         {/* <div className="tracking-[1rem] text-transparent bg-gradient-to-r via-white  bg-clip-text to-zinc-400 from-zinc-400">
           {/* INTRODUCING{"  "}GAIA 
         </div> 
@@ -28,16 +24,16 @@ export default function HeroSection() {
 
         <div
           className={cn(
-            "group rounded-full border text-base text-white transition-all ease-in hover:cursor-pointer border-white/5 bg-neutral-900 hover:bg-neutral-800"
+            "group rounded-full border border-white/5 bg-neutral-900 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-800",
           )}
         >
-          <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:duration-300 hover:text-neutral-400">
+          <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-400 hover:duration-300">
             Currently in beta
           </AnimatedShinyText>
         </div>
 
         <AnimatedSection
-          className="sm:text-8xl text-5xl bg-gradient-to-b from-white bg-clip-text text-center font-medium leading-none text-transparent to-zinc-400 max-w-screen-lg sm:-my-2 py-3"
+          className="max-w-screen-lg bg-gradient-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-5xl font-medium leading-none text-transparent sm:-my-2 sm:text-8xl"
           childClassName="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent inline-block px-3"
         >
           <span className="">Your </span>
@@ -46,10 +42,7 @@ export default function HeroSection() {
           <span className="">Assistant awaits.</span>
         </AnimatedSection>
 
-        <div
-          className="text-lg font-normal py-0 sm:px-0 px-4 leading-7 sm:text-xl
-        text-white max-w-screen-sm text-center"
-        >
+        <div className="max-w-screen-sm px-4 py-0 text-center text-lg font-normal leading-7 text-white sm:px-0 sm:text-xl">
           GAIA is your all-in-one personal assistant to help organise your life.
         </div>
 

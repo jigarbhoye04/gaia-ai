@@ -45,12 +45,12 @@ export default function AddGoalDialog({
   return (
     <Modal
       backdrop="blur"
-      className="dark text-foreground"
+      className="text-foreground dark"
       isOpen={openDialog}
       onOpenChange={setOpenDialog}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 mb-0 pb-0">
+        <ModalHeader className="mb-0 flex flex-col gap-1 pb-0">
           Add Goal
         </ModalHeader>
         <ModalBody>

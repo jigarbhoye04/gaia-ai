@@ -45,29 +45,29 @@ export default function Search() {
 
   return (
     <>
-      <div className="flex flex-col justify-between h-full">
+      <div className="flex h-full flex-col justify-between">
         <ScrollArea>
-          <div className="flex items-center flex-col gap-2">
-            <h1 className="font-bold text-center text-5xl">Search</h1>
-            <div className=" text-center text-md pb-6 max-w-screen-md">
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-center text-5xl font-bold">Search</h1>
+            <div className="text-md max-w-screen-md pb-6 text-center">
               Lorem, ipsum dolor sit amet consectetur adipisicing elit. Facilis,
               sed!
             </div>
           </div>
 
           {loading ? (
-            <div className="h-[80vh] flex items-center justify-center">
+            <div className="flex h-[80vh] items-center justify-center">
               <Spinner />
             </div>
           ) : (
-            <div className="flex flex-wrap gap-4 justify-center pb-8 ">
+            <div className="flex flex-wrap justify-center gap-4 pb-8">
               <div>
                 {!!fetchedResults && fetchedResults?.length > 0 ? (
-                  <div className="grid gap-3 px-[10%] grid-cols-[repeat(auto-fill,_minmax(15vw,_1fr))]">
+                  <div className="grid grid-cols-[repeat(auto-fill,_minmax(15vw,_1fr))] gap-3 px-[10%]">
                     {fetchedResults.map((result) => (
                       <Link
                         key={result.message.message_id}
-                        className="bg-black p-3 rounded-xl h-full overflow-hidden max-h-[190px] min-h-[190px] flex flex-col gap-2 outline outline-zinc-800 outline-2 hover:bg-zinc-800 transition-colors"
+                        className="flex h-full max-h-[190px] min-h-[190px] flex-col gap-2 overflow-hidden rounded-xl bg-black p-3 outline outline-2 outline-zinc-800 transition-colors hover:bg-zinc-800"
                         href={{
                           pathname: `/c/${result.conversation_id}`,
                           query: { messageId: result.message.message_id },
@@ -94,7 +94,7 @@ export default function Search() {
                               }
                               variant="flat"
                             >
-                              <div className="font-medium flex items-center gap-1 text-primary">
+                              <div className="flex items-center gap-1 font-medium text-primary">
                                 Live Search Results from the Web
                               </div>
                             </Chip>
@@ -109,17 +109,17 @@ export default function Search() {
                               }
                               variant="flat"
                             >
-                              <div className="font-medium flex items-center gap-1 text-primary">
+                              <div className="flex items-center gap-1 font-medium text-primary">
                                 Fetched
                                 <a
-                                  className="!text-[#00bbff] font-medium hover:!text-white transition-colors"
+                                  className="font-medium !text-[#00bbff] transition-colors hover:!text-white"
                                   href={result.message.pageFetchURL}
                                   rel="noreferrer"
                                   target="_blank"
                                 >
                                   {result.message.pageFetchURL.replace(
                                     /^https?:\/\//,
-                                    ""
+                                    "",
                                   )}
                                 </a>
                               </div>
@@ -130,7 +130,7 @@ export default function Search() {
                           {result.message?.response?.slice(0, 350)}
                           {result?.message?.response?.length > 350 ? "..." : ""}
                         </div>
-                        <div className="text-xs mt-auto text-foreground-400">
+                        <div className="mt-auto text-xs text-foreground-400">
                           {parseDate(result?.message?.date)}
                         </div>
                       </Link>
@@ -144,8 +144,8 @@ export default function Search() {
           )}
         </ScrollArea>
 
-        <div className="absolute left-0 bottom-5 flex justify-center items-center w-full z-10">
-          <div className="flex items-center gap-3 max-w-screen-sm w-full">
+        <div className="absolute bottom-5 left-0 z-10 flex w-full items-center justify-center">
+          <div className="flex w-full max-w-screen-sm items-center gap-3">
             <Input
               autoFocus
               className="w-full"
@@ -172,7 +172,7 @@ export default function Search() {
             />
           </div>
         </div>
-        <div className="bg-custom-gradient2 left-0 absolute bottom-0 w-full h-[100px] z-[1]" />
+        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
       </div>
     </>
   );

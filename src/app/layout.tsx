@@ -2,8 +2,8 @@ import ProvidersLayout from "@/layouts/ProvidersLayout";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
-import "./globals.css";
-import "./tailwind.css";
+import "./styles/globals.css";
+import "./styles/tailwind.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),

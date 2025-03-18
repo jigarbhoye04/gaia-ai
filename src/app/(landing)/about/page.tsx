@@ -37,9 +37,9 @@ export const metadata: Metadata = {
 
 export default function About() {
   return (
-    <div className="w-screen flex min-h-screen pt-28 justify-center">
+    <div className="flex min-h-screen w-screen justify-center pt-28">
       <div className="max-w-screen-md space-y-2">
-        <h1 className="text-center ">
+        <h1 className="text-center">
           GAIA Lorem, ipsum dolor sit amet consectetur
         </h1>
         <div className="text-justify">
@@ -100,7 +100,7 @@ export default function About() {
           illum, laudantium beatae ab, nesciunt facere excepturi accusamus nam
           dolorem sunt earum eveniet quae necessitatibus, debitis sint.
         </div>
-        <div className="flex items-center py-3 gap-3 justify-center">
+        <div className="flex items-center justify-center gap-3 py-3">
           <Avatar className="size-9 rounded-full">
             <AvatarImage
               src={"https://github.com/aryanranderiya.png"}
@@ -111,7 +111,7 @@ export default function About() {
 
           <div>
             <div className="">Aryan Randeriya</div>
-            <div className="text-foreground-500 text-sm">— Founder & CEO</div>
+            <div className="text-sm text-foreground-500">— Founder & CEO</div>
           </div>
         </div>
       </div>

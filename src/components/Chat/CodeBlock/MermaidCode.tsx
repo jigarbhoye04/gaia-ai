@@ -16,7 +16,7 @@ const MermaidCode: React.FC<MermaidCodeProps> = ({
       {...syntaxHighlighterProps}
       showLineNumbers
       PreTag="div"
-      className="m-0 p-0 !bg-black !text-[10px]"
+      className="m-0 !bg-black p-0 !text-[10px]"
       language="mermaid"
       style={vscDarkPlus}
     >

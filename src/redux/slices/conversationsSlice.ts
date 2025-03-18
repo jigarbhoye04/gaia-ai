@@ -47,7 +47,7 @@ export const fetchConversations = createAsyncThunk<
   async ({ page = 1, limit = 20, append = true }, { rejectWithValue }) => {
     try {
       const response = await apiauth.get(
-        `/conversations?page=${page}&limit=${limit}`
+        `/conversations?page=${page}&limit=${limit}`,
       );
       const data = response.data;
       return {
@@ -63,7 +63,7 @@ export const fetchConversations = createAsyncThunk<
     } catch (error: any) {
       return rejectWithValue(error.message || "Failed to fetch conversations");
     }
-  }
+  },
 );
 
 // Create the slice.
@@ -92,7 +92,7 @@ const conversationSlice = createSlice({
         // Merge the existing conversations with the new ones while deduplicating.
         const combined = [...state.conversations, ...conversations];
         const uniqueMap = new Map(
-          combined.map((conv) => [conv.conversation_id, conv])
+          combined.map((conv) => [conv.conversation_id, conv]),
         );
         state.conversations = Array.from(uniqueMap.values());
       } else {

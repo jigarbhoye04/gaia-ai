@@ -20,7 +20,7 @@ const MermaidTabs: React.FC<MermaidTabsProps> = ({
 }) => {
   return (
     <Tabs
-      className="px-3 "
+      className="px-3"
       disabledKeys={isLoading ? ["editor"] : []}
       selectedKey={activeTab}
       variant="underlined"

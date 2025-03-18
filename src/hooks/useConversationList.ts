@@ -8,14 +8,14 @@ import {
 
 export const useConversationList = () => {
   const conversations = useSelector(
-    (state: RootState) => state.conversations.conversations
+    (state: RootState) => state.conversations.conversations,
   );
   const loading = useSelector(
-    (state: RootState) => state.conversations.loading
+    (state: RootState) => state.conversations.loading,
   );
   const error = useSelector((state: RootState) => state.conversations.error);
   const paginationMeta = useSelector(
-    (state: RootState) => state.conversations.paginationMeta
+    (state: RootState) => state.conversations.paginationMeta,
   ) as PaginationMeta | null;
 
   return { conversations, loading, error, paginationMeta };
@@ -27,7 +27,7 @@ export const useFetchConversations = () => {
   const fetchConvos = async (
     page: number = 1,
     limit: number = 20,
-    append: boolean = true
+    append: boolean = true,
   ) => {
     return dispatch(fetchConversations({ page, limit, append }));
   };

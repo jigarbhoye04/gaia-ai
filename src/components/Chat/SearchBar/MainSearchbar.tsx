@@ -50,7 +50,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (
-    event
+    event,
   ) => {
     if (event.key === "Enter" && event.shiftKey) {
       event.preventDefault();
@@ -96,7 +96,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
           </Button>
         </div> */}
 
-        <div className="searchbar bg-zinc-800 px-1 pt-1 pb-2 rounded-3xl">
+        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pb-2 pt-1">
           <SearchbarInput
             searchbarText={searchbarText}
             onSearchbarTextChange={setSearchbarText}

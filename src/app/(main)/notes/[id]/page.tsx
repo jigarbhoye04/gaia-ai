@@ -84,7 +84,7 @@ export default function NotesAdd() {
 
       if (noteContent.length === 9500) {
         toast.custom(() => (
-          <div className="bg-[#ffecd8] list-none py-2 px-4 rounded-md flex flex-row items-center gap-3 text-[#dc7609] font-medium w-full justify-evenly text-nowrap">
+          <div className="flex w-full list-none flex-row items-center justify-evenly gap-3 text-nowrap rounded-md bg-[#ffecd8] px-4 py-2 font-medium text-[#dc7609]">
             <TriangleAlert
               className="min-w-[30px]"
               color="#ffecd8"
@@ -100,7 +100,7 @@ export default function NotesAdd() {
         ));
       } else if (noteContent.length === 10_000) {
         toast.custom(() => (
-          <div className="bg-[#ffe1e1] list-none py-2 px-4 rounded-md flex flex-row items-center gap-3 text-[#e60000] font-medium w-full justify-evenly text-nowrap">
+          <div className="flex w-full list-none flex-row items-center justify-evenly gap-3 text-nowrap rounded-md bg-[#ffe1e1] px-4 py-2 font-medium text-[#e60000]">
             <CircleX
               className="min-w-[30px]"
               color="#ffe1e1"
@@ -213,11 +213,11 @@ export default function NotesAdd() {
       <title id="chat_title">
         {`${truncateTitle(note.content || "New Note")} | GAIA`}
       </title>
-      <div className="flex flex-col justify-between min-h-screen h-screen w-full">
-        <div className="flex w-full justify-between items-center dark">
+      <div className="flex h-screen min-h-screen w-full flex-col justify-between">
+        <div className="flex w-full items-center justify-between dark">
           <Link href="/notes">
             <Button
-              className="text-white w-fit gap-1 px-0 font-normal"
+              className="w-fit gap-1 px-0 font-normal text-white"
               variant={"link"}
             >
               <ArrowLeft width={17} />
@@ -238,10 +238,10 @@ export default function NotesAdd() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="bg-zinc-800 border-none hover:!bg-zinc-900 p-0"
+                className="border-none bg-zinc-800 p-0 hover:!bg-zinc-900"
               >
                 <DropdownMenuItem
-                  className="text-red-500 hover:!bg-zinc-900 hover:!text-red-500 p-3 cursor-pointer"
+                  className="cursor-pointer p-3 text-red-500 hover:!bg-zinc-900 hover:!text-red-500"
                   onClick={deleteNote}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -253,11 +253,11 @@ export default function NotesAdd() {
         </div>
 
         {isLoading ? (
-          <div className="h-full flex items-center justify-center">
+          <div className="flex h-full items-center justify-center">
             <Spinner />
           </div>
         ) : (
-          <div className="min-h-screen h-screen pt-3 flex flex-col editor">
+          <div className="editor flex h-screen min-h-screen flex-col pt-3">
             {editor && (
               <>
                 <BubbleMenuComponent editor={editor} />
@@ -269,17 +269,18 @@ export default function NotesAdd() {
         )}
 
         <div
-          className={`fixed bottom-4 right-4 bg-zinc-800 p-5 rounded-lg shadow-lg transition-all duration-200 ${hasUnsavedChanges
-              ? "opacity-100 pointer-events-auto scale-100"
-              : "opacity-0 pointer-events-none scale-80"
-            }`}
+          className={`fixed bottom-4 right-4 rounded-lg bg-zinc-800 p-5 shadow-lg transition-all duration-200 ${
+            hasUnsavedChanges
+              ? "pointer-events-auto scale-100 opacity-100"
+              : "pointer-events-none scale-80 opacity-0"
+          }`}
         >
-          <p className="text-white mb-2 font-medium text-lg">
+          <p className="mb-2 text-lg font-medium text-white">
             You have unsaved changes!
           </p>
           <Button
             disabled={!hasUnsavedChanges || isSaving}
-            className="bg-[#00bbff] hover:bg-[#7bdcff] text-zinc-800 flex gap-2"
+            className="flex gap-2 bg-[#00bbff] text-zinc-800 hover:bg-[#7bdcff]"
             onClick={saveNote}
           >
             <SaveIcon />

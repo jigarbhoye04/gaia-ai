@@ -22,36 +22,36 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             </Suspense>
           ),
           h1: ({ node, ...props }) => (
-            <h1 className="text-3xl font-bold mt-6 mb-4" {...props} />
+            <h1 className="mb-4 mt-6 text-3xl font-bold" {...props} />
           ),
           h2: ({ node, ...props }) => (
-            <h2 className="text-2xl font-bold mt-5 mb-3" {...props} />
+            <h2 className="mb-3 mt-5 text-2xl font-bold" {...props} />
           ),
           h3: ({ node, ...props }) => (
-            <h3 className="text-xl font-bold mt-4 mb-2" {...props} />
+            <h3 className="mb-2 mt-4 text-xl font-bold" {...props} />
           ),
           ul: ({ node, ...props }) => (
-            <ul className="list-disc pl-6 mb-4" {...props} />
+            <ul className="mb-4 list-disc pl-6" {...props} />
           ),
           ol: ({ node, ...props }) => (
-            <ol className="list-decimal pl-6 mb-4" {...props} />
+            <ol className="mb-4 list-decimal pl-6" {...props} />
           ),
           a: ({ href, children }) => (
             <CustomAnchor href={href}>{children}</CustomAnchor>
           ),
           blockquote: ({ node, ...props }) => (
             <blockquote
-              className="border-l-4 border-gray-300 pl-4 italic my-4"
+              className="my-4 border-l-4 border-gray-300 pl-4 italic"
               {...props}
             />
           ),
           img: ({ node, ...props }) => (
-            <img alt="image" className="max-w-full h-auto my-4" {...props} />
+            <img alt="image" className="my-4 h-auto max-w-full" {...props} />
           ),
           table: ({ node, ...props }) => (
             <div className="overflow-x-auto">
               <table
-                className="min-w-full border-collapse border border-gray-300 rounded-md"
+                className="min-w-full border-collapse rounded-md border border-gray-300"
                 {...props}
               />
             </div>

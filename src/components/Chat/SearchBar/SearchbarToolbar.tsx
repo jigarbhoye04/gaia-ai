@@ -29,16 +29,16 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
   onSearchbarTextChange,
 }) => {
   return (
-    <div className="flex items-center justify-between mt-[5px] px-2">
+    <div className="mt-[5px] flex items-center justify-between px-2">
       <div className="flex items-center justify-start gap-2">
         <SearchbarLeftDropdown loading={loading} />
 
         <Tooltip content="Search the Web">
           <button
-            className={`flex w-fit gap-1 rounded-full px-3 h-8 text-sm items-center transition-all outline outline-2 ${
+            className={`flex h-8 w-fit items-center gap-1 rounded-full px-3 text-sm outline outline-2 transition-all ${
               enableSearch
-                ? "bg-primary/15 text-primary hover:bg-[#113745] outline-primary/20"
-                : "bg-zinc-900/50 text-zinc-400 hover:bg-zinc-700 outline-zinc-700"
+                ? "bg-primary/15 text-primary outline-primary/20 hover:bg-[#113745]"
+                : "bg-zinc-900/50 text-zinc-400 outline-zinc-700 hover:bg-zinc-700"
             }`}
             type="button"
             onClick={toggleSearch}
@@ -54,10 +54,10 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
 
         <Tooltip content="Fetch content from a webpage">
           <button
-            className={`flex w-fit gap-1 rounded-full px-3 h-8 text-sm items-center outline-2 outline transition-all ${
+            className={`flex h-8 w-fit items-center gap-1 rounded-full px-3 text-sm outline outline-2 transition-all ${
               pageFetchURL.length > 0 && !fetchPageModal
-                ? "bg-primary/15 text-primary hover:bg-[#113745] outline-primary/20"
-                : "bg-zinc-900/50 text-zinc-400 hover:bg-zinc-700 outline-zinc-700"
+                ? "bg-primary/15 text-primary outline-primary/20 hover:bg-[#113745]"
+                : "bg-zinc-900/50 text-zinc-400 outline-zinc-700 hover:bg-zinc-700"
             }`}
             type="button"
             onClick={openPageFetchModal}

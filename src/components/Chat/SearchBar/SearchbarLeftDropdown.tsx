@@ -50,7 +50,7 @@ export default function SearchbarLeftDropdown({
       <Dropdown
         showArrow
         backdrop="opaque"
-        className={`dark text-foreground w-full ${
+        className={`w-full text-foreground dark ${
           loading ? "cursor-wait" : "cursor-pointer"
         }`}
         classNames={{
@@ -67,7 +67,7 @@ export default function SearchbarLeftDropdown({
           <div
             className={`${
               loading ? "cursor-wait" : "cursor-pointer"
-            } z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-1 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 outline-2 outline bg-zinc-900/50 text-small gap-2 rounded-full px-0 transition-transform-colors-opacity motion-reduce:transition-none outline-zinc-700 text-default-foreground hover:!bg-default min-w-8 w-8 h-8`}
+            } group relative z-0 box-border inline-flex h-8 w-8 min-w-8 select-none appearance-none items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-full bg-zinc-900/50 px-0 text-small font-normal text-default-foreground subpixel-antialiased outline-none outline outline-2 outline-zinc-700 tap-highlight-transparent transition-transform-colors-opacity hover:!bg-default data-[focus-visible=true]:z-10 data-[pressed=true]:scale-[0.97] data-[focus-visible=true]:outline-1 data-[focus-visible=true]:outline-offset-2 data-[focus-visible=true]:outline-focus motion-reduce:transition-none`}
           >
             <PlusSignIcon width={20} height={20} />
           </div>
@@ -80,7 +80,7 @@ export default function SearchbarLeftDropdown({
             onPress={chooseImage}
             isDisabled
           >
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               Upload Image
               <ImageUploadIcon color="#00bbff" />
             </div>
@@ -88,11 +88,11 @@ export default function SearchbarLeftDropdown({
 
           <DropdownItem
             key="pdf"
-            className="w-full darktransition-all"
+            className="darktransition-all w-full"
             onPress={chooseFile}
             isDisabled
           >
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               Upload Document
               <FileUploadIcon color="#00bbff" />
             </div>
@@ -103,7 +103,7 @@ export default function SearchbarLeftDropdown({
             className="w-full transition-all"
             onPress={() => setOpenImageDialog(true)}
           >
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               Generate Image
               <AiImageIcon color="#00bbff" />
             </div>

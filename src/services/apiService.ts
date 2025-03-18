@@ -15,7 +15,7 @@ export const ApiService = {
     } catch (error) {
       console.error(
         `Error fetching messages for conversation ${conversationId}:`,
-        error
+        error,
       );
       toast.error("Error fetching messages. Please try again later.");
       throw error;
@@ -46,7 +46,7 @@ export const ApiService = {
 
   updateConversation: async (
     conversationId: string,
-    messages: MessageType[]
+    messages: MessageType[],
   ) => {
     try {
       // if (messages.length > 1) {
@@ -70,7 +70,7 @@ export const ApiService = {
     conversationId: string,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
-    onError: (err: any) => void
+    onError: (err: any) => void,
   ) => {
     const controller = new AbortController();
 
@@ -108,7 +108,7 @@ export const ApiService = {
         },
         onclose: onClose,
         onerror: onError,
-      }
+      },
     );
   },
 
@@ -116,13 +116,13 @@ export const ApiService = {
     conversationId: string,
     userFirstMessage: string,
     fetchConversations: () => void,
-    llm: boolean = true
+    llm: boolean = true,
   ) => {
     const response = await apiauth.put(
       `/conversations/${conversationId}/description${llm ? "/llm" : ""}`,
       {
         userFirstMessage,
-      }
+      },
     );
 
     // To update in the sidebar

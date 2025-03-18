@@ -33,14 +33,14 @@ export default function MailsPage() {
 
   const isItemLoaded = useCallback(
     (index: number) => !hasNextPage || index < emails.length,
-    [emails.length, hasNextPage]
+    [emails.length, hasNextPage],
   );
 
   const loadMoreItems = useCallback(
     async (_startIndex: number, _stopIndex: number) => {
       if (hasNextPage) await fetchNextPage();
     },
-    [hasNextPage, fetchNextPage]
+    [hasNextPage, fetchNextPage],
   );
 
   const openEmail = (email: EmailData) => {
@@ -66,7 +66,7 @@ export default function MailsPage() {
         setTitle(email.subject);
         // email.snippet ? he.decode(email.snippet) : "No summary available"
         setSubtitle(
-          "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dignissimos, commodi."
+          "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dignissimos, commodi.",
         );
       }
     };
@@ -80,8 +80,8 @@ export default function MailsPage() {
         shouldCloseOnInteractOutside={() => true}
         onOpenChange={fetchSummary}
         content={
-          <div className="p-1 flex flex-col w-[300px]">
-            <div className="font-medium text-lg leading-tight">{title}</div>
+          <div className="flex w-[300px] flex-col p-1">
+            <div className="text-lg font-medium leading-tight">{title}</div>
             <div>{subtitle}</div>
           </div>
         }
@@ -92,10 +92,11 @@ export default function MailsPage() {
         radius="sm"
       >
         <div
-          className={`flex p-3 gap-5 items-center px-6 hover:bg-primary/20 hover:text-primary bg-black bg-opacity-45 transition-all duration-200 cursor-pointer ${email?.labelIds?.includes("UNREAD")
+          className={`flex cursor-pointer items-center gap-5 bg-black bg-opacity-45 p-3 px-6 transition-all duration-200 hover:bg-primary/20 hover:text-primary ${
+            email?.labelIds?.includes("UNREAD")
               ? "font-medium"
               : "font-normal text-foreground-400"
-            }`}
+          }`}
           style={style}
           onClick={() => openEmail(email)}
         >
@@ -110,7 +111,7 @@ export default function MailsPage() {
   };
   if (isLoading) {
     return (
-      <div className="h-full w-full flex items-center justify-center">
+      <div className="flex h-full w-full items-center justify-center">
         <Spinner />
       </div>
     );
@@ -119,8 +120,8 @@ export default function MailsPage() {
   const itemCount = hasNextPage ? emails.length + 1 : emails.length;
 
   return (
-    <div className="pl-2 w-full h-full">
-      <h1 className="flex items-center gap-2 w-full justify-start pb-5">
+    <div className="h-full w-full pl-2">
+      <h1 className="flex w-full items-center justify-start gap-2 pb-5">
         <InboxIcon color={undefined} width={25} height={25} />
         Inbox
       </h1>

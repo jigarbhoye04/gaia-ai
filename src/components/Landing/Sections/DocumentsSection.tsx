@@ -13,7 +13,7 @@ export default function Section_Document() {
       heading={"Chat with Documents"}
       icon={
         <FileUploadIcon
-          className="sm:size-[30px] size-[30px]"
+          className="size-[30px] sm:size-[30px]"
           color="#9b9b9b"
         />
       }

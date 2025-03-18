@@ -8,7 +8,7 @@ export default function Section_Notes() {
       heading="Your AI Assistant that remembers"
       icon={
         <StickyNote01Icon
-          className="sm:size-[30px] size-[30px]"
+          className="size-[30px] sm:size-[30px]"
           color="#9b9b9b"
         />
       }

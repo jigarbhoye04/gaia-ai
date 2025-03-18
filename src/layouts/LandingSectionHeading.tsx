@@ -16,18 +16,18 @@ export function SectionHeading({
   headingClassName?: string;
 }) {
   return (
-    <div className={`sm:p-0 p-7 z-[1] relative ${className}`}>
+    <div className={`relative z-[1] p-7 sm:p-0 ${className}`}>
       <div
         className={`${
           smallHeading ? "sm:text-3xl" : "sm:text-4xl"
-        } ${headingClassName} text-3xl font-bold flex items-center gap-4 mb-2`}
+        } ${headingClassName} mb-2 flex items-center gap-4 text-3xl font-bold`}
       >
         {icon}
         <span>{heading}</span>
       </div>
       {!!subheading && (
         <div
-          className={` text-foreground-500 max-w-screen-sm ${
+          className={`max-w-screen-sm text-foreground-500 ${
             smallHeading ? "text-md" : "text-lg"
           }`}
         >

@@ -58,21 +58,21 @@ export function CalendarEventCard({
   }, [event, isDummy, onDummyAddEvent]);
 
   return (
-    <div className="bg-zinc-900 p-3 rounded-xl flex flex-col gap-2">
-      <div className="relative flex flex-row gap-3 p-3 bg-primary/20 rounded-lg overflow-hidden w-full">
+    <div className="flex flex-col gap-2 rounded-xl bg-zinc-900 p-3">
+      <div className="relative flex w-full flex-row gap-3 overflow-hidden rounded-lg bg-primary/20 p-3">
         <div className="absolute inset-0 w-1 bg-primary" />
-        <div className="flex flex-col flex-1 pl-1 gap-1">
+        <div className="flex flex-1 flex-col gap-1 pl-1">
           <div className="font-medium">{event.summary}</div>
           <div className="text-xs text-primary">
             {isTimedEvent(event) ? (
               <>
                 <div className="flex items-center">
-                  <span className="min-w-9 w-9 font-medium">Start: </span>
+                  <span className="w-9 min-w-9 font-medium">Start: </span>
                   {parsingDate(event.start)}
                 </div>
 
                 <div className="flex items-center">
-                  <span className="min-w-9 w-9 font-medium">End: </span>
+                  <span className="w-9 min-w-9 font-medium">End: </span>
                   {parsingDate(event.end)}
                 </div>
               </>
@@ -109,7 +109,7 @@ export function CalendarEventsList({
   return (
     <AnimatedSection
       disableAnimation={disableAnimation}
-      className={`p-4 pt-3 bg-zinc-800 rounded-2xl rounded-bl-none flex flex-col gap-1 w-fit ${
+      className={`flex w-fit flex-col gap-1 rounded-2xl rounded-bl-none bg-zinc-800 p-4 pt-3 ${
         disableAnimation ? "mt-3" : ""
       }`}
     >

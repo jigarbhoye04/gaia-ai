@@ -21,7 +21,7 @@ const badges = [
     textClass: "text-purple-500",
     icon: (
       <FlowchartIcon
-        className="text-purple-500 group-hover:text-white transition-colors"
+        className="text-purple-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -33,7 +33,7 @@ const badges = [
     textClass: "text-emerald-500",
     icon: (
       <BlushBrush02Icon
-        className="text-emerald-500 group-hover:text-white transition-colors"
+        className="text-emerald-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -45,7 +45,7 @@ const badges = [
     textClass: "text-orange-500",
     icon: (
       <Mic01Icon
-        className="text-orange-500 group-hover:text-white transition-colors"
+        className="text-orange-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -57,7 +57,7 @@ const badges = [
     textClass: "text-blue-500",
     icon: (
       <GlobalSearchIcon
-        className="text-blue-500 group-hover:text-white transition-colors"
+        className="text-blue-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -69,7 +69,7 @@ const badges = [
     textClass: "text-lime-500",
     icon: (
       <ArrowUpRight
-        className="text-lime-500 group-hover:text-white transition-colors"
+        className="text-lime-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -81,7 +81,7 @@ const badges = [
     textClass: "text-red-500",
     icon: (
       <Calendar01Icon
-        className="text-red-500 group-hover:text-white transition-colors"
+        className="text-red-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -93,7 +93,7 @@ const badges = [
     textClass: "text-cyan-500",
     icon: (
       <StickyNote01Icon
-        className="text-cyan-500 group-hover:text-white transition-colors"
+        className="text-cyan-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -105,7 +105,7 @@ const badges = [
     textClass: "text-pink-500",
     icon: (
       <Route02Icon
-        className="text-pink-500 group-hover:text-white transition-colors"
+        className="text-pink-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -117,7 +117,7 @@ const badges = [
     textClass: "text-yellow-500",
     icon: (
       <DocumentAttachmentIcon
-        className="text-yellow-500 group-hover:text-white transition-colors"
+        className="text-yellow-500 transition-colors group-hover:text-white"
         width={17}
       />
     ),
@@ -128,11 +128,11 @@ const badges = [
 export default function StarterText() {
   return (
     <>
-      <div className="sm:text-4xl text-3xl font-medium grow flex-1 text-center my-4 inline-flex flex-wrap items-center sm:gap-2 justify-center">
+      <div className="my-4 inline-flex flex-1 grow flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-4xl">
         Hey!
         <img
           alt="Waving Hand"
-          className="object-contain sm:w-[50px] w-[35px] mx-2 sm:mx-0"
+          className="mx-2 w-[35px] object-contain sm:mx-0 sm:w-[50px]"
           src="https://em-content.zobj.net/source/apple/391/waving-hand_1f44b.png"
           height={50}
           width={50}
@@ -143,11 +143,11 @@ export default function StarterText() {
       {/* <div className="text-foreground-500 text-xs -mt-1 mb-1">
         I can do the following for you:
       </div> */}
-      <div className="flex gap-2 flex-wrap max-w-[650px] justify-center">
+      <div className="flex max-w-[650px] flex-wrap justify-center gap-2">
         {badges.map((badge, index) => (
           <div
             key={index}
-            className={`${badge.bgClass} cursor-pointer bg-opacity-20 hover:bg-opacity-80 text-sm ${badge.textClass} font-medium hover:text-white group px-2 rounded-full transition-all`}
+            className={`${badge.bgClass} cursor-pointer bg-opacity-20 text-sm hover:bg-opacity-80 ${badge.textClass} group rounded-full px-2 font-medium transition-all hover:text-white`}
           >
             <div className="flex items-center gap-1">
               {badge.icon}

@@ -30,36 +30,38 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
       onMouseOver={() => setButtonHovered(true)}
     >
       <Button
-        className={`w-full flex justify-start pr-0 pl-2 h-[32px] min-h-[32px] font-normal duration-0 hover:bg-white/10 bg-transparent ${currentConvoId === id ? "text-primary" : "text-white"
-          }`}
+        className={`flex h-[32px] min-h-[32px] w-full justify-start bg-transparent pl-2 pr-0 font-normal duration-0 hover:bg-white/10 ${
+          currentConvoId === id ? "text-primary" : "text-white"
+        }`}
         onClick={() => {
           setButtonHovered(false);
           router.push(`/c/${id}`);
         }}
       >
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex w-full items-center gap-2">
           {starred ? (
             <Star
-              className="min-w-[17px] w-[17px]"
+              className="w-[17px] min-w-[17px]"
               color={currentConvoId === id ? "#00bbff" : "#9b9b9b"}
               width="19"
             />
           ) : (
             <BubbleConversationChatIcon
-              className="min-w-[17px] w-[17px]"
+              className="w-[17px] min-w-[17px]"
               color={currentConvoId === id ? "#00bbff" : "#9b9b9b"}
               width="19"
             />
           )}
-          <span className="truncate w-[calc(100%-45px)] text-left">
+          <span className="w-[calc(100%-45px)] truncate text-left">
             {name.replace('"', "")}
           </span>
         </div>
       </Button>
 
       <div
-        className={`absolute right-0 ${buttonHovered ? "bg-black/20 backdrop-blur-md " : "bg-transparent"
-          } rounded-full`}
+        className={`absolute right-0 ${
+          buttonHovered ? "bg-black/20 backdrop-blur-md" : "bg-transparent"
+        } rounded-full`}
       >
         <ChatOptionsDropdown
           buttonHovered={buttonHovered}

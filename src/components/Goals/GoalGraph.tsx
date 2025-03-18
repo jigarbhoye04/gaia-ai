@@ -13,7 +13,7 @@ interface GoalGraphProps {
   edges: Edge<EdgeType>[];
   nodeTypes: any;
   handleInit: (
-    reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeType>>
+    reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeType>>,
   ) => void;
 }
 

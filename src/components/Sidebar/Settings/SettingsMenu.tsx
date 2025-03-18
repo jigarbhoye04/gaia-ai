@@ -113,7 +113,7 @@ export default function SettingsMenu() {
                 ? "Are you sure you want to logout?"
                 : "Are you sure you want to delete all chats?"}
             </ModalHeader>
-            <ModalBody className="flex flex-col gap-2 mb-4">
+            <ModalBody className="mb-4 flex flex-col gap-2">
               <Button
                 color="danger"
                 radius="full"
@@ -139,7 +139,7 @@ export default function SettingsMenu() {
         </ModalContent>
       </Modal>
 
-      <Dropdown className="dark text-foreground">
+      <Dropdown className="text-foreground dark">
         <DropdownTrigger>
           <Button isIconOnly aria-label="Three Dots Menu" variant="light">
             <ThreeDotsMenu />

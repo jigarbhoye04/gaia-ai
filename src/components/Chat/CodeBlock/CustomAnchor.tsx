@@ -47,7 +47,7 @@ const CustomAnchor = ({
   return (
     <Tooltip
       showArrow
-      className="bg-zinc-950 text-white border-none outline-none p-3"
+      className="border-none bg-zinc-950 p-3 text-white outline-none"
       content={
         <div className="flex flex-col gap-1">
           {(metadata.website_name || (metadata.favicon && validFavicon)) && (
@@ -55,7 +55,7 @@ const CustomAnchor = ({
               {metadata.favicon && validFavicon ? (
                 <img
                   alt="Fav Icon"
-                  className="w-[20px] h-[20px] rounded-full"
+                  className="h-[20px] w-[20px] rounded-full"
                   src={metadata.favicon}
                   onError={() => setValidFavicon(false)}
                 />
@@ -63,24 +63,24 @@ const CustomAnchor = ({
                 <GlobeIcon color="#9b9b9b" height={17} width={17} />
               )}
               {metadata.website_name && (
-                <div className="truncate w-[300px] text-md">
+                <div className="text-md w-[300px] truncate">
                   {metadata.website_name}
                 </div>
               )}
             </div>
           )}
           {metadata.title && (
-            <div className="w-[300px] font-medium text-white text-md truncate">
+            <div className="text-md w-[300px] truncate font-medium text-white">
               {metadata.title}
             </div>
           )}
           {metadata.description && (
-            <div className="w-[300px] max-h-[100px] text-foreground-600 text-sm mb-2 overflow-hidden">
+            <div className="mb-2 max-h-[100px] w-[300px] overflow-hidden text-sm text-foreground-600">
               {metadata.description}
             </div>
           )}
           <a
-            className="w-[300px] text-primary text-xs truncate hover:underline"
+            className="w-[300px] truncate text-xs text-primary hover:underline"
             href={href}
             rel="noopener noreferrer"
             target="_blank"
@@ -93,7 +93,7 @@ const CustomAnchor = ({
       onOpenChange={setTooltipOpen}
     >
       <a
-        className="!text-[#00bbff] hover:underline font-medium hover:!text-white transition-all cursor-pointer"
+        className="cursor-pointer font-medium !text-[#00bbff] transition-all hover:!text-white hover:underline"
         rel="noopener noreferrer"
         target="_blank"
         // {...props}

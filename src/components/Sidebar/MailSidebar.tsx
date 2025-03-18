@@ -35,7 +35,7 @@ function MailButton({ label, Icon }: MailButtonProps) {
   return (
     <Button
       startContent={<Icon color={undefined} className="mr-1" />}
-      className="text-start justify-start pl-2 text-foreground-600"
+      className="justify-start pl-2 text-start text-foreground-600"
       variant="light"
       radius="sm"
     >
@@ -51,7 +51,7 @@ type MailContainerProps = {
 function MailContainer({ items }: MailContainerProps) {
   return (
     <div className="flex h-full flex-col">
-      <div className="text-sm text-foreground-500 px-2 font-medium pb-1">
+      <div className="px-2 pb-1 text-sm font-medium text-foreground-500">
         Mail
       </div>
       {items.map((item, index) => (

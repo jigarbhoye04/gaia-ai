@@ -46,10 +46,10 @@ export default function ChatBubbleUser({
               startContent={<ArrowUpRight color="white" height={20} />}
               variant="flat"
             >
-              <div className="flex items-center gap-1 text-white ">
+              <div className="flex items-center gap-1 text-white">
                 Fetching
                 <a
-                  className="!text-white font-medium hover:!text-black transition-colors"
+                  className="font-medium !text-white transition-colors hover:!text-black"
                   href={pageFetchURL}
                   rel="noreferrer"
                   target="_blank"
@@ -76,7 +76,7 @@ export default function ChatBubbleUser({
       )} */}
 
           {filename && (
-            <div className="bg-black/30 rounded-xl p-3 text-white mb-2">
+            <div className="mb-2 rounded-xl bg-black/30 p-3 text-white">
               <div className="flex items-center gap-3">
                 <File />
                 <div>
@@ -91,7 +91,7 @@ export default function ChatBubbleUser({
           )}
 
           {!!text && (
-            <div className="flex select-text text-wrap max-w-[30vw] whitespace-pre-wrap">
+            <div className="flex max-w-[30vw] select-text whitespace-pre-wrap text-wrap">
               {text}
             </div>
           )}
@@ -121,9 +121,9 @@ export default function ChatBubbleUser({
         <PdfContainer file={file} chat_bubble={true} />
       )} */}
         </div>
-        <div className="flex justify-end group-hover:opacity-100 opacity-0 transition-all">
+        <div className="flex justify-end opacity-0 transition-all group-hover:opacity-100">
           {date && (
-            <span className="text-xs text-white text-opacity-45 flex flex-col select-text pt-[2px]">
+            <span className="flex select-text flex-col pt-[2px] text-xs text-white text-opacity-45">
               {parseDate(date)}
             </span>
           )}

@@ -6,16 +6,16 @@ import Image from "next/image";
 export default function Footer() {
   return (
     <div className="!m-0">
-      <div className="w-screen flex h-fit justify-center items-center sm:p-20 p-5">
-        <div className="w-full max-w-screen-lg grid grid-cols-2 sm:grid-cols-4 gap-8">
-          <div className="flex flex-col w-fit h-full text-foreground-600">
+      <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20">
+        <div className="grid w-full max-w-screen-lg grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="flex h-full w-fit flex-col text-foreground-600">
             <Image
               src="/branding/logo.webp"
               alt="GAIA Logo"
               width={50}
               height={50}
             />
-            <div className="text-3xl font-medium text-white mt-2">
+            <div className="mt-2 text-3xl font-medium text-white">
               {siteConfig.name}
             </div>
             <div>{siteConfig.copyright}</div>
@@ -25,9 +25,9 @@ export default function Footer() {
           {siteConfig.pageSections.map((section) => (
             <div
               key={section.title}
-              className="flex flex-col w-fit h-full text-foreground-500"
+              className="flex h-full w-fit flex-col text-foreground-500"
             >
-              <div className="pl-2 uppercase font-normal mb-1 text-foreground-400">
+              <div className="mb-1 pl-2 font-normal uppercase text-foreground-400">
                 {section.title}
               </div>
               {section.links.map((link) => (
@@ -36,10 +36,10 @@ export default function Footer() {
                     href={link.href}
                     className="group relative flex items-center justify-start text-white"
                   >
-                    <span className="group-hover:text-primary transition-colors">
+                    <span className="transition-colors group-hover:text-primary">
                       {link.label}
                     </span>
-                    <span className="opacity-0 group-hover:opacity-100 transition-all ml-1 -translate-x-10 group-hover:translate-x-0 duration-150">
+                    <span className="ml-1 -translate-x-10 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
                       <ArrowUpRight width={17} />
                     </span>
                   </LinkButton>

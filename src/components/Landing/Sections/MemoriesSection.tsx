@@ -14,11 +14,11 @@ import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 
 function LocalNotecard({ plaintext }: { plaintext: string }) {
   return (
-    <div className="bg-zinc-800 hover:bg-zinc-700 transition-all w-full rounded-xl text-foreground flex p-[1em] flex-col justify-start overflow-hidden gap-1 cursor-pointer h-full relative">
+    <div className="relative flex h-full w-full cursor-pointer flex-col justify-start gap-1 overflow-hidden rounded-xl bg-zinc-800 p-[1em] text-foreground transition-all hover:bg-zinc-700">
       <Chip className="mb-1" color="primary" size="sm" variant="flat">
         Auto Created by GAIA
       </Chip>
-      <div className="font-normal text-md whitespace-wrap overflow-hidden overflow-ellipsis min-h-7 max-h-[100px]">
+      <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden overflow-ellipsis font-normal">
         {plaintext}
       </div>
     </div>
@@ -27,14 +27,14 @@ function LocalNotecard({ plaintext }: { plaintext: string }) {
 
 export default function Section_Memories() {
   return (
-    <div className="w-screen justify-center items-center flex relative z-[1]">
-      <AnimatedSection className="max-w-screen-xl w-screen flex sm:flex-row flex-col justify-evenly items-start sm:space-x-10 space-x-5">
+    <div className="relative z-[1] flex w-screen items-center justify-center">
+      <AnimatedSection className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
           heading={"An Assistant That Remembers"}
           icon={
             <Brain02Icon
-              className="sm:min-w-[40px] min-w-[35px] sm:min-h-[40px] min-h-[40px]"
+              className="min-h-[40px] min-w-[35px] sm:min-h-[40px] sm:min-w-[40px]"
               color="#9b9b9b"
             />
           }
@@ -51,7 +51,7 @@ export default function Section_Memories() {
           }
         />
 
-        <div className="w-full sm:px-10 px-2 !m-0 !mt-0 h-[300px]">
+        <div className="!m-0 !mt-0 h-[300px] w-full px-2 sm:px-10">
           <Tabs
             aria-label="GAIA Notes Options"
             className="w-full overflow-hidden"
@@ -65,7 +65,7 @@ export default function Section_Memories() {
             <Tab
               key="chat"
               title={
-                <div className="flex gap-2 items-center ">
+                <div className="flex items-center gap-2">
                   <BubbleConversationChatIcon color={undefined} />
                   New Chat
                 </div>
@@ -90,13 +90,13 @@ export default function Section_Memories() {
             <Tab
               key="notes"
               title={
-                <div className="flex gap-2 items-center">
+                <div className="flex items-center gap-2">
                   <StickyNote01Icon color={undefined} />
                   Your Notes
                 </div>
               }
             >
-              <AnimatedSection className="grid sm:grid-cols-2 grid-cols-1 gap-2">
+              <AnimatedSection className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <LocalNotecard plaintext={"My name is Jake"} />
                 <LocalNotecard
                   plaintext={"Jake is a 3rd year Computer Science student"}

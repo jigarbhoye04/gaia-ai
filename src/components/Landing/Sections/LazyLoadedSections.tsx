@@ -4,16 +4,16 @@ import { lazy, Suspense } from "react";
 const sections = {
   GoalSection: lazy(() => import("@/components/Landing/Sections/GoalSection")),
   CalendarSection: lazy(
-    () => import("@/components/Landing/Sections/CalendarSection")
+    () => import("@/components/Landing/Sections/CalendarSection"),
   ),
   MemoriesSection: lazy(
-    () => import("@/components/Landing/Sections/MemoriesSection")
+    () => import("@/components/Landing/Sections/MemoriesSection"),
   ),
   InternetSection: lazy(
-    () => import("@/components/Landing/Sections/InternetSection")
+    () => import("@/components/Landing/Sections/InternetSection"),
   ),
   GridSection: lazy(
-    () => import("@/components/Landing/Sections/FeatureGridSection")
+    () => import("@/components/Landing/Sections/FeatureGridSection"),
   ),
   // CapabilitiesSection: lazy(
   //   () => import("@/components/Landing/Sections/CapabilitiesSection")
@@ -22,13 +22,13 @@ const sections = {
   //   () => import("@/components/Landing/Sections/ComingSoonSection")
   // ),
   FinalSection: lazy(
-    () => import("@/components/Landing/Sections/FinalSection")
+    () => import("@/components/Landing/Sections/FinalSection"),
   ),
 };
 
 export default function LazyLoadedSections() {
   return (
-    <div className="sm:space-y-[15rem] space-y-[5rem] sm:mt-[18rem] mt-[12rem]">
+    <div className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]">
       {Object.entries(sections).map(([name, Component]) => (
         <Suspense key={name} fallback={<SuspenseLoader />}>
           <Component />

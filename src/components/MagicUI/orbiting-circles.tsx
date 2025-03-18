@@ -42,9 +42,9 @@ export default function OrbitingCircles({
 
       <div
         className={cn(
-          "absolute flex h-full w-full transform-gpu animate-orbit items-center justify-center rounded-full border [animation-delay:calc(var(--delay)*1000ms)] ",
+          "absolute flex h-full w-full transform-gpu animate-orbit items-center justify-center rounded-full border [animation-delay:calc(var(--delay)*1000ms)]",
           { "[animation-direction:reverse]": reverse },
-          { "dark:bg-white/10  bg-black/10": bgcircle },
+          { "bg-black/10 dark:bg-white/10": bgcircle },
           className,
         )}
         style={

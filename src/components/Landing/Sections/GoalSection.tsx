@@ -45,7 +45,7 @@ export default function GoalSection() {
     },
   ];
   const [selectedImage, setSelectedImage] = useState<string>(
-    steps[selectedStep].image
+    steps[selectedStep].image,
   );
 
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function GoalSection() {
   }, [steps]);
 
   return (
-    <AnimatedSection className="flex w-screen flex-col items-center min-h-fit transition-all p-4 sm:mt-0 gap-5 ">
+    <AnimatedSection className="flex min-h-fit w-screen flex-col items-center gap-5 p-4 transition-all sm:mt-0">
       <GoalHeader />
       <GoalSteps
         selectedStep={selectedStep}
@@ -71,8 +71,8 @@ export default function GoalSection() {
 
 function GoalHeader() {
   return (
-    <div className="text-center max-w-screen-md">
-      <h2 className="sm:text-5xl text-4xl font-bold flex items-center gap-4 mb-2 justify-center">
+    <div className="max-w-screen-md text-center">
+      <h2 className="mb-2 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
         Need help setting goals?
       </h2>
       {/* <p className="text-foreground-700 text-lg">
@@ -120,7 +120,7 @@ function GoalSteps({
       ([entry]) => {
         setIsVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     if (goalSectionRef.current) {
@@ -147,7 +147,7 @@ function GoalSteps({
         return steps.map(() => 0);
       } else {
         return steps.map((_, index) =>
-          index < selectedStep ? 100 : index === selectedStep ? 0 : 0
+          index < selectedStep ? 100 : index === selectedStep ? 0 : 0,
         );
       }
     });
@@ -158,7 +158,7 @@ function GoalSteps({
         if (newProgresses[selectedStep] < 100) {
           newProgresses[selectedStep] = Math.min(
             newProgresses[selectedStep] + increment,
-            100
+            100,
           );
         }
         return newProgresses;
@@ -184,7 +184,7 @@ function GoalSteps({
   return (
     <div className="space-y-5">
       <div ref={goalSectionRef} className="min-w-full">
-        <AnimatedSection className="grid w-screen max-w-screen-xl sm:grid-cols-3 items-center justify-center sm:gap-5">
+        <AnimatedSection className="grid w-screen max-w-screen-xl items-center justify-center sm:grid-cols-3 sm:gap-5">
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -227,30 +227,32 @@ function GoalStep({
 }: GoalStepProps) {
   return (
     <div
-      className={`flex items-start gap-1 sm:p-5 p-2 sm:flex-col flex-row justify-start rounded-3xl cursor-pointer transition-all hover:opacity-100 ${isSelected ? "opacity-100" : "sm:opacity-60"
-        }`}
+      className={`flex cursor-pointer flex-row items-start justify-start gap-1 rounded-3xl p-2 transition-all hover:opacity-100 sm:flex-col sm:p-5 ${
+        isSelected ? "opacity-100" : "sm:opacity-60"
+      }`}
       onClick={onClick}
     >
       <div
-        className={` outline outline-2 ${isSelected
-            ? "outline-black/90 text-black/90 bg-primary"
-            : " outline-zinc-700 text-white bg-zinc-800"
-          } min-w-[50px] min-h-[50px] rounded-xl flex items-center justify-center relative mb-5`}
+        className={`outline outline-2 ${
+          isSelected
+            ? "bg-primary text-black/90 outline-black/90"
+            : "bg-zinc-800 text-white outline-zinc-700"
+        } relative mb-5 flex min-h-[50px] min-w-[50px] items-center justify-center rounded-xl`}
       >
         {icon}
-        <div className="bg-primary rounded-full min-w-5 min-h-5 text-sm font-bold text-black flex items-center justify-center absolute -bottom-1 -right-1">
+        <div className="absolute -bottom-1 -right-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary text-sm font-bold text-black">
           {index}
         </div>
       </div>
-      <div className="flex flex-col sm:items-start items-start max-w-fit">
-        <h3 className="text-xl font-bold sm:text-start text-start">{title}</h3>
-        <p className="sm:text-start text-start text-foreground-500 w-full">
+      <div className="flex max-w-fit flex-col items-start sm:items-start">
+        <h3 className="text-start text-xl font-bold sm:text-start">{title}</h3>
+        <p className="w-full text-start text-foreground-500 sm:text-start">
           {description}
         </p>
         {/* Each step’s progress bar */}
-        <div className="w-full h-[2px] bg-[rgba(0,187,255,0.1)] rounded-md overflow-hidden mt-3">
+        <div className="mt-3 h-[2px] w-full overflow-hidden rounded-md bg-[rgba(0,187,255,0.1)]">
           <div
-            className="h-full bg-primary transition-all ease-in-out duration-100"
+            className="h-full bg-primary transition-all duration-100 ease-in-out"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
@@ -265,14 +267,14 @@ interface GoalImageProps {
 
 function GoalImage({ image }: GoalImageProps) {
   return (
-    <div className="relative sm:flex hidden">
+    <div className="relative hidden sm:flex">
       <img
         alt="Goal step illustration"
-        className="h-[50vh] sm:w-screen max-w-screen-sm sm:max-w-screen-xl object-center object-cover rounded-3xl transition-all outline outline-4 outline-zinc-800"
+        className="h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center outline outline-4 outline-zinc-800 transition-all sm:w-screen sm:max-w-screen-xl"
         src={image}
       />
       {image === "/landing/blur_goals.webp" && (
-        <div className="absolute h-full w-full flex items-center justify-center z-[2] top-0 left-0">
+        <div className="absolute left-0 top-0 z-[2] flex h-full w-full items-center justify-center">
           <Input
             className="w-96"
             classNames={{ inputWrapper: "pr-2" }}
@@ -281,18 +283,18 @@ function GoalImage({ image }: GoalImageProps) {
                 isIconOnly
                 className="font-medium"
                 color="primary"
-              // onPress={handleAddGoal}
+                // onPress={handleAddGoal}
               >
                 <Send />
               </Button>
             }
             label="What goal do you want to achieve?"
             variant="faded"
-          // value={goalTitle}
-          // onChange={(e: { target: { value: SetStateAction<string> } }) =>
-          //   setGoalTitle(e.target.value)
-          // }
-          // onKeyDown={handleKeyPress}
+            // value={goalTitle}
+            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
+            //   setGoalTitle(e.target.value)
+            // }
+            // onKeyDown={handleKeyPress}
           />
         </div>
       )}

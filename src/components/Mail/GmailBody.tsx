@@ -21,7 +21,7 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
   const decodedHtml = useMemo(() => {
     const htmlPart = email.payload.parts?.find(
       (p: { mimeType: string; body: { data: string } }) =>
-        p.mimeType === "text/html"
+        p.mimeType === "text/html",
     )?.body?.data;
 
     if (htmlPart) return decodeBase64(htmlPart);
@@ -31,9 +31,9 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
   const sanitizedHtml = useMemo(() => {
     return decodedHtml
       ? DOMPurify.sanitize(decodedHtml, {
-        ADD_ATTR: ["target"],
-        ADD_TAGS: ["iframe"],
-      })
+          ADD_ATTR: ["target"],
+          ADD_TAGS: ["iframe"],
+        })
       : null;
   }, [decodedHtml]);
 
@@ -59,13 +59,13 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
   }, [sanitizedHtml]);
 
   return (
-    <div className="shadow-md relative overflow-auto w-full">
+    <div className="relative w-full overflow-auto shadow-md">
       {loading && (
-        <div className="h-full w-full z-10 absolute inset-0 flex justify-center items-start p-10 backdrop-blur-3xl bg-black/90">
+        <div className="absolute inset-0 z-10 flex h-full w-full items-start justify-center bg-black/90 p-10 backdrop-blur-3xl">
           <Spinner color="primary" className="z-[11]" size="lg" />
         </div>
       )}
-      <div ref={shadowHostRef} className="p-4 w-full bg-white text-black" />
+      <div ref={shadowHostRef} className="w-full bg-white p-4 text-black" />
     </div>
   );
 }

@@ -81,10 +81,10 @@ export const MenuBar = ({
         defaultValue={currentTextType.toLowerCase().replace(" ", "-")}
         onValueChange={handleSelect}
       >
-        <SelectTrigger className="outline-none border-none focus:!border-none w-fit space-x-3 hover:bg-black/30 focus:bg-black/30">
+        <SelectTrigger className="w-fit space-x-3 border-none outline-none hover:bg-black/30 focus:!border-none focus:bg-black/30">
           <ALargeSmall />
         </SelectTrigger>
-        <SelectContent className="bg-zinc-900 border-none text-foreground-300 active:bg-zinc-800">
+        <SelectContent className="border-none bg-zinc-900 text-foreground-300 active:bg-zinc-800">
           {[
             "Heading 1",
             "Heading 2",
@@ -96,7 +96,7 @@ export const MenuBar = ({
           ].map((type) => (
             <SelectItem
               key={type}
-              className="hover:!bg-zinc-800 focus:!bg-zinc-800 hover:!text-white focus:!text-white transition-all bg-zinc-900"
+              className="bg-zinc-900 transition-all hover:!bg-zinc-800 hover:!text-white focus:!bg-zinc-800 focus:!text-white"
               value={type.toLowerCase().replace(" ", "-")}
             >
               {type === "Paragraph" ? (
@@ -113,8 +113,9 @@ export const MenuBar = ({
 
   return (
     <div
-      className={`w-full bg-black/40 gap-1 ${isEmail ? "mb-0 p-0 rounded-none" : "p-2 mb-5 rounded-xl"
-        } flex flex-row items-center dark`}
+      className={`w-full gap-1 bg-black/40 ${
+        isEmail ? "mb-0 rounded-none p-0" : "mb-5 rounded-xl p-2"
+      } flex flex-row items-center dark`}
     >
       <Button
         className={editor.isActive("bold") ? "bg-white/20" : ""}
@@ -125,8 +126,9 @@ export const MenuBar = ({
         B
       </Button>
       <Button
-        className={`${editor.isActive("italic") ? "bg-white/20" : ""
-          } !font-serif italic`}
+        className={`${
+          editor.isActive("italic") ? "bg-white/20" : ""
+        } !font-serif italic`}
         size="icon"
         variant="ghost"
         onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -134,8 +136,9 @@ export const MenuBar = ({
         I
       </Button>
       <Button
-        className={`${editor.isActive("underline") ? "bg-white/20" : ""
-          } !font-serif underline`}
+        className={`${
+          editor.isActive("underline") ? "bg-white/20" : ""
+        } !font-serif underline`}
         size="icon"
         variant="ghost"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
@@ -178,12 +181,12 @@ export const MenuBar = ({
             <LinkIcon />
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-zinc-900 p-4 rounded-lg">
+        <DialogContent className="rounded-lg bg-zinc-900 p-4">
           <Input
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
             placeholder="Enter URL"
-            className="mb-3 p-2 rounded-md bg-zinc-800 text-white"
+            className="mb-3 rounded-md bg-zinc-800 p-2 text-white"
           />
           <div className="flex justify-end space-x-2">
             <Button variant="secondary" onClick={() => setOpen(false)}>
@@ -205,7 +208,7 @@ export const MenuBar = ({
         <Unlink />
       </Button>
 
-      <div className="flex items-center ml-auto mr-5">
+      <div className="ml-auto mr-5 flex items-center">
         <Button
           disabled={!editor.can().undo()}
           size="icon"
@@ -228,10 +231,11 @@ export const MenuBar = ({
 
       {textLength && (
         <div
-          className={`text-sm pr-3 ${editor?.storage?.characterCount?.characters() === 10_000
+          className={`pr-3 text-sm ${
+            editor?.storage?.characterCount?.characters() === 10_000
               ? "text-red-500"
               : "text-primary"
-            }`}
+          }`}
         >
           {editor?.storage?.characterCount?.characters()} / 10000 characters
         </div>
