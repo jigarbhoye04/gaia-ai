@@ -1,7 +1,3 @@
-import { PencilRenameIcon } from "@/components/Misc/icons";
-import { useConversation } from "@/hooks/useConversation";
-import { useFetchConversations } from "@/hooks/useConversationList";
-import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import {
   Dropdown,
@@ -22,6 +18,11 @@ import { ChevronDown, Star, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ReactNode, SetStateAction, useState } from "react";
 import { toast } from "sonner";
+
+import { PencilRenameIcon } from "@/components/Misc/icons";
+import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
+import { apiauth } from "@/utils/apiaxios";
 
 export default function ChatOptionsDropdown({
   buttonHovered,

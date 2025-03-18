@@ -1,11 +1,12 @@
 "use client";
 
-import { PinCard } from "@/components/Pins/PinCard";
-import { apiauth } from "@/utils/apiaxios";
 import { Input } from "@heroui/input";
 import { Spinner } from "@heroui/spinner";
 import { DeleteIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import { PinCard } from "@/components/Pins/PinCard";
+import { apiauth } from "@/utils/apiaxios";
 
 export default function Pins() {
   const [fetchedResults, setFetchedResults] = useState<any[]>([]);

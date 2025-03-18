@@ -1,21 +1,23 @@
+import { Button } from "@heroui/button";
+import { isToday, isYesterday, subDays } from "date-fns";
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@heroui/button";
-import { isToday, isYesterday, subDays } from "date-fns";
-import { Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { ChatBubbleAddIcon } from "../Misc/icons";
-import { ChatTab } from "./ChatTab";
+import { useConversation } from "@/hooks/useConversation";
 import {
   useConversationList,
   useFetchConversations,
 } from "@/hooks/useConversationList";
-import { useConversation } from "@/hooks/useConversation";
+
+import { ChatBubbleAddIcon } from "../Misc/icons";
+import { ChatTab } from "./ChatTab";
 
 const getTimeFrame = (dateString: string): string => {
   const date = new Date(dateString);

@@ -10,7 +10,6 @@ import * as React from "react";
 import { FC } from "react";
 
 import { LanguageSkillIcon } from "../Misc/icons";
-
 import { languages } from "./Languages";
 
 interface Language {

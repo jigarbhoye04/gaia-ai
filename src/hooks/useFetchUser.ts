@@ -1,9 +1,10 @@
 "use client";
 
-import { useUserActions } from "@/hooks/useUser";
-import { apiauth } from "@/utils/apiaxios";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+
+import { useUserActions } from "@/hooks/useUser";
+import { apiauth } from "@/utils/apiaxios";
 
 export const authPages = ["/login", "/signup", "/get-started"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];

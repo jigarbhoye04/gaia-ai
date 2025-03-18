@@ -1,8 +1,9 @@
-import api from "@/utils/apiaxios";
 import { Avatar, AvatarGroup } from "@heroui/avatar";
 import { Tooltip } from "@heroui/tooltip";
-import Link from "next/link";
 import type { Metadata } from "next";
+import Link from "next/link";
+
+import api from "@/utils/apiaxios";
 
 interface Blog {
   slug: string;

@@ -1,9 +1,11 @@
-import { GlobalSearchIcon } from "@/components/Misc/icons";
+import { Tooltip } from "@heroui/tooltip";
 import { ArrowUpRight } from "lucide-react";
 import React from "react";
+
+import { GlobalSearchIcon } from "@/components/Misc/icons";
+
 import SearchbarLeftDropdown from "./SearchbarLeftDropdown";
 import SearchbarRightSendBtn from "./SearchbarRightSendBtn";
-import { Tooltip } from "@heroui/tooltip";
 
 interface SearchbarToolbarProps {
   enableSearch: boolean;

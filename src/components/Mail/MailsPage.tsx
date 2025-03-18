@@ -1,16 +1,17 @@
 "use client";
 
-import { EmailFrom } from "@/components/Mail/MailFrom";
-import ViewEmail from "@/components/Mail/ViewMail";
-import { InboxIcon } from "@/components/Misc/icons";
-import { EmailData, EmailsResponse } from "@/types/mailTypes";
-import { fetchEmails, formatTime } from "@/utils/mailUtils";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
 import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
+
+import { EmailFrom } from "@/components/Mail/MailFrom";
+import ViewEmail from "@/components/Mail/ViewMail";
+import { InboxIcon } from "@/components/Misc/icons";
+import { EmailData, EmailsResponse } from "@/types/mailTypes";
+import { fetchEmails, formatTime } from "@/utils/mailUtils";
 
 export default function MailsPage() {
   const { data, isLoading, fetchNextPage, hasNextPage } = useInfiniteQuery<

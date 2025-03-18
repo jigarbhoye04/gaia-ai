@@ -1,10 +1,3 @@
-import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
-import {
-  SimpleChatBubbleBot,
-  SimpleChatBubbleUser,
-} from "@/components/Landing/Dummy/SimpleChatBubbles";
-import { AnimatedSection } from "@/layouts/AnimatedSection";
-import { CalendarEvent } from "@/types/calendarTypes";
 import {
   Dispatch,
   ReactNode,
@@ -14,6 +7,14 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+
+import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
+import {
+  SimpleChatBubbleBot,
+  SimpleChatBubbleUser,
+} from "@/components/Landing/Dummy/SimpleChatBubbles";
+import { AnimatedSection } from "@/layouts/AnimatedSection";
+import { CalendarEvent } from "@/types/calendarTypes";
 
 interface CalendarMessagesProps {
   events: CalendarEvent[];

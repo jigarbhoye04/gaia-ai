@@ -1,13 +1,3 @@
-import { MenuBar } from "@/components/Notes/NotesMenuBar";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useUser } from "@/hooks/useUser";
-import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { ButtonGroup } from "@heroui/react";
@@ -22,14 +12,26 @@ import StarterKit from "@tiptap/starter-kit";
 import { Tag, TagInput } from "emblor";
 import { AlertCircle, Check, ChevronDown } from "lucide-react";
 import { marked } from "marked";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
+
+import { MenuBar } from "@/components/Notes/NotesMenuBar";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useUser } from "@/hooks/useUser";
+import { apiauth } from "@/utils/apiaxios";
+
 import { AiSearch02Icon, BrushIcon, Sent02Icon, SentIcon } from "../Misc/icons";
 import { Button as ShadcnButton } from "../ui/button";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
-import Image from "next/image";
 
 interface MailComposeProps {
   open: boolean;

@@ -1,5 +1,5 @@
 // utils/botResponseBuilder.ts
-import { MessageType, IntentType } from "@/types/convoTypes";
+import { IntentType,MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 export const buildBotResponse = (

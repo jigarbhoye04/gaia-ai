@@ -2,8 +2,8 @@ import { Button } from "@heroui/button";
 import Link from "next/link";
 import React from "react";
 
-import { ColoredLine } from "./HorizontalRuler";
 import WordPullUp from "../MagicUI/word-pull-up";
+import { ColoredLine } from "./HorizontalRuler";
 
 export default function TextInformation({
   alignleft = true,

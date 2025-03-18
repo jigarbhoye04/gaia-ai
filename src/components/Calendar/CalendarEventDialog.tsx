@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/accordion";
 import { CalendarEventDialogProps } from "@/types/calendarTypes";
 import { formatEventDate, getEventIcon } from "@/utils/calendarUtils";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 export default function CalendarEventDialog({

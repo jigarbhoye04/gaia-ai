@@ -1,12 +1,13 @@
 // app/blog/[slug]/page.tsx
-import { Separator } from "@/components/ui/separator";
-import api from "@/utils/apiaxios";
 import { Avatar, AvatarGroup } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 import { Calendar, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Markdown from "react-markdown";
+
+import { Separator } from "@/components/ui/separator";
+import api from "@/utils/apiaxios";
 
 interface BlogPost {
   slug: string;

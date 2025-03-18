@@ -1,11 +1,12 @@
-import { useConversation } from "@/hooks/useConversation";
-import { MessageType } from "@/types/convoTypes";
-import { apiauth } from "@/utils/apiaxios";
 import {
   EventSourceMessage,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
 import { toast } from "sonner";
+
+import { useConversation } from "@/hooks/useConversation";
+import { MessageType } from "@/types/convoTypes";
+import { apiauth } from "@/utils/apiaxios";
 
 export const ApiService = {
   fetchMessages: async (conversationId: string) => {

@@ -1,8 +1,9 @@
-import { FAQAccordion } from "@/components/Pricing/FAQAccordion";
-import { PricingCards } from "@/components/Pricing/PricingCards";
 import { Chip } from "@heroui/chip";
 import { Tab, Tabs } from "@heroui/tabs";
 import type { Metadata } from "next";
+
+import { FAQAccordion } from "@/components/Pricing/FAQAccordion";
+import { PricingCards } from "@/components/Pricing/PricingCards";
 
 export const metadata: Metadata = {
   title: "Pricing",

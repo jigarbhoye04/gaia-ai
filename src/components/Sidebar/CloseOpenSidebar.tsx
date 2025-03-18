@@ -1,7 +1,7 @@
+import useMediaQuery from "@/hooks/useMediaQuery";
+
 import { Menu02Icon, SidebarLeftIcon } from "../Misc/icons";
 import { Button } from "../ui/button";
-
-import useMediaQuery from "@/hooks/useMediaQuery";
 
 export interface CloseOpenSidebarBtnProps {
   isSidebarVisible?: boolean;

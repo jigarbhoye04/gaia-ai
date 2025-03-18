@@ -1,5 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Metadata } from "next";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export const metadata: Metadata = {
   title: "About",

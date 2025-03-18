@@ -3,12 +3,13 @@ import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Spinner } from "@heroui/spinner";
 import { ArrowUpRight, SearchIcon } from "lucide-react";
-import { useState } from "react";
 import Link from "next/link";
-import { parseDate } from "@/utils/fetchDate";
-import { apiauth } from "@/utils/apiaxios";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
+
 import { InternetIcon } from "@/components/Misc/icons";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { apiauth } from "@/utils/apiaxios";
+import { parseDate } from "@/utils/fetchDate";
 
 // Define types for fetched messages
 interface Message {

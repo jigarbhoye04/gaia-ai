@@ -1,4 +1,8 @@
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import React from "react";
+import { toast } from "sonner";
+
 import {
   Dialog,
   DialogContent,
@@ -7,9 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@heroui/input";
-import { Button } from "@heroui/button";
-import { toast } from "sonner";
 
 interface FetchPageModalProps {
   open: boolean;

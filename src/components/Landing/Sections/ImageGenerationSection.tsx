@@ -3,10 +3,10 @@
 import { Chip } from "@heroui/chip";
 import { useEffect, useState } from "react";
 
-import { SimpleChatBubbleUser } from "../Dummy/SimpleChatBubbles";
-import { AiImageIcon } from "../../Misc/icons";
-
 import LandingSectionLayout from "@/layouts/LandingSectionLayout";
+
+import { AiImageIcon } from "../../Misc/icons";
+import { SimpleChatBubbleUser } from "../Dummy/SimpleChatBubbles";
 
 const imageOptions = [
   {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,7 +10,6 @@ import AddGoalDialog from "@/components/Goals/AddGoalDialog";
 import { GoalCard } from "@/components/Goals/GoalCard";
 import { Target04Icon } from "@/components/Misc/icons";
 import { apiauth } from "@/utils/apiaxios";
-import { Chip } from "@heroui/chip";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);

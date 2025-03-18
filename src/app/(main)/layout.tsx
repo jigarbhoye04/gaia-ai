@@ -1,5 +1,9 @@
 "use client";
 
+import { useDrag } from "@use-gesture/react";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { ReactNode, useEffect, useRef, useState } from "react";
+
 import {
   BubbleConversationChatIcon,
   ChatBubbleAddIcon,
@@ -14,9 +18,6 @@ import { useConversation } from "@/hooks/useConversation";
 import { useConversationList } from "@/hooks/useConversationList";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import SidebarLayout from "@/layouts/SidebarLayout";
-import { useDrag } from "@use-gesture/react";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import { ReactNode, useEffect, useRef, useState } from "react";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -81,10 +82,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           isSidebarVisible={isSidebarVisible}
           sidebarref={sidebarRef}
           toggleSidebar={toggleSidebar}
-          children={
-            pathname.startsWith("/mail") ? <EmailSidebar /> : <Sidebar />
-          }
-        />
+        >
+          {pathname.startsWith("/mail") ? <EmailSidebar /> : <Sidebar />}
+          </SidebarLayout>
 
         <div
           ref={contentContainerRef}

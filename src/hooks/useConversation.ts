@@ -1,11 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/redux/store";
-import { MessageType } from "@/types/convoTypes";
+
 import {
   addMessage,
   resetMessages,
   setMessages,
 } from "@/redux/slices/conversationSlice";
+import { AppDispatch, RootState } from "@/redux/store";
+import { MessageType } from "@/types/convoTypes";
 
 export const useConversation = () => {
   const dispatch: AppDispatch = useDispatch();

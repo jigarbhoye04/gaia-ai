@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import ComingSoonModal from "@/components/ComingSoon/ComingSoonModal";
 import ChatsList from "@/components/Sidebar/ChatsList";
 

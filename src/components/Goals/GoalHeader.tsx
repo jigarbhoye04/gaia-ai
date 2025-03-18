@@ -1,7 +1,8 @@
-import React from "react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import React from "react";
+
+import { Button } from "@/components/ui/button";
 import { GoalData } from "@/types/goalTypes";
 
 interface GoalHeaderProps {

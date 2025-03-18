@@ -1,12 +1,14 @@
 "use client";
 
-import { useLoginModal, useLoginModalActions } from "@/hooks/useLoginModal";
 import { Modal, ModalBody, ModalContent } from "@heroui/modal";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
+import { useLoginModal, useLoginModalActions } from "@/hooks/useLoginModal";
+
 import { GoogleColouredIcon } from "../Misc/icons";
 import { Button } from "../ui/button";
-import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
-import { usePathname } from "next/navigation";
 
 export default function LoginModal() {
   const isOpen = useLoginModal();

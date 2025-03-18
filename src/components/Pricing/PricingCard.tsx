@@ -1,9 +1,10 @@
 "use client";
 
-import { Tick02Icon } from "@/components/Misc/icons";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import React from "react";
+
+import { Tick02Icon } from "@/components/Misc/icons";
 
 interface PricingCardProps {
   title: string;

@@ -1,7 +1,8 @@
 // src/hooks/useLoginModal.ts
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState, AppDispatch } from "@/redux/store";
+import { useDispatch,useSelector } from "react-redux";
+
 import { setLoginModalOpen } from "@/redux/slices/loginModalSlice";
+import type { AppDispatch,RootState } from "@/redux/store";
 
 export const useLoginModal = () => {
   return useSelector((state: RootState) => state.loginModal.open);

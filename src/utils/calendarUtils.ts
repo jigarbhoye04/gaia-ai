@@ -1,4 +1,5 @@
 import tinycolor from "tinycolor2";
+
 import { GoogleCalendarEvent } from "@/types/calendarTypes";
 
 // Group events by a date string like "day dayOfWeek"

@@ -1,9 +1,9 @@
 "use client";
-import React from "react";
 import { Card, CardBody } from "@heroui/card";
 import { Tab, Tabs } from "@heroui/tabs";
-import { Bell, Clock, CheckCircle, X, AlertCircle } from "lucide-react";
-import { isPast, isToday, isYesterday, format } from "date-fns";
+import { format,isPast, isToday, isYesterday } from "date-fns";
+import { AlertCircle,Bell, CheckCircle, Clock, X } from "lucide-react";
+import React from "react";
 
 type NotificationType = {
   id: string;

@@ -1,10 +1,11 @@
+import { Button } from "@heroui/button";
+
 import {
   CalendarAdd01Icon,
   GoogleCalendar,
   Tick02Icon,
 } from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
-import { Button } from "@heroui/button";
 
 interface Task {
   title: string;

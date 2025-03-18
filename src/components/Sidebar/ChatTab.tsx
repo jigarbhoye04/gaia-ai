@@ -1,9 +1,11 @@
 import { Star } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
+
+import { BubbleConversationChatIcon } from "@/components/Misc/icons";
+
 import { Button } from "../ui/button";
 import ChatOptionsDropdown from "./ChatOptionsDropdown";
-import { BubbleConversationChatIcon } from "@/components/Misc/icons";
-import { usePathname, useRouter } from "next/navigation";
 
 interface ChatTabProps {
   name: string;

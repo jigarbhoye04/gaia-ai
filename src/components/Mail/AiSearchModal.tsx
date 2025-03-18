@@ -1,3 +1,8 @@
+import { Input } from "@heroui/input";
+import { Button } from "@heroui/react";
+import { Spinner } from "@heroui/spinner";
+import React, { useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -5,13 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@heroui/input";
-import { Button } from "@heroui/react";
-import { Spinner } from "@heroui/spinner";
-import React, { useState } from "react";
+import { apiauth } from "@/utils/apiaxios";
+
 import { AiSearch02Icon } from "../Misc/icons";
 import { EmailChip, EmailSuggestion } from "./EmailChip";
-import { apiauth } from "@/utils/apiaxios";
 
 export interface AiSearchModalProps {
   open: boolean;

@@ -1,13 +1,14 @@
 "use client";
 
-import { GoogleColouredIcon } from "@/components/Misc/icons";
-import { Button } from "@/components/ui/button";
-import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
-import { useUser } from "@/hooks/useUser";
 import { Spinner } from "@heroui/spinner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+
+import { GoogleColouredIcon } from "@/components/Misc/icons";
+import { Button } from "@/components/ui/button";
+import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
+import { useUser } from "@/hooks/useUser";
 
 export default function LoginSignup({
   isLogin = false,

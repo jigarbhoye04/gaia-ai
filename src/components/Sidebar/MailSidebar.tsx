@@ -1,6 +1,9 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import { useState } from "react";
+
+import MailCompose from "../Mail/MailCompose";
 import {
   InboxIcon,
   LabelImportantIcon,
@@ -9,8 +12,6 @@ import {
   Sent02Icon,
   TimeScheduleIcon,
 } from "../Misc/icons";
-import MailCompose from "../Mail/MailCompose";
-import { useState } from "react";
 
 type MailItem = {
   label: string;

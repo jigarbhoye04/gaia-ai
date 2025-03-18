@@ -1,6 +1,3 @@
-import { CalendarSimpleIcon, Target04Icon } from "@/components/Misc/icons";
-import { GoalData } from "@/types/goalTypes";
-import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import {
@@ -17,9 +14,13 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { toast } from "sonner";
+
+import { CalendarSimpleIcon, Target04Icon } from "@/components/Misc/icons";
+import { GoalData } from "@/types/goalTypes";
+import { apiauth } from "@/utils/apiaxios";
 
 export function GoalCard({
   goal,

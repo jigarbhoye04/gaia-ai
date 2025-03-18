@@ -1,5 +1,8 @@
 "use client";
 
+// import Lottie from "react-lottie";
+// import recordingAnimation from "../lotties/recording.json";
+import { Button } from "@heroui/button";
 import {
   Modal,
   ModalBody,
@@ -8,10 +11,6 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import { useRef, useState } from "react";
-
-// import Lottie from "react-lottie";
-// import recordingAnimation from "../lotties/recording.json";
-import { Button } from "@heroui/button";
 
 import { Cancel01Icon, Mic02Icon, Tick02Icon } from "../Misc/icons";
 

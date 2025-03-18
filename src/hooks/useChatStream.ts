@@ -1,11 +1,13 @@
+import { EventSourceMessage } from "@microsoft/fetch-event-source";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
+
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
-import { EventSourceMessage } from "@microsoft/fetch-event-source";
-import { useEffect, useRef } from "react";
-import { toast } from "sonner";
+
 import { parseIntent } from "./useIntentParser";
 
 /**

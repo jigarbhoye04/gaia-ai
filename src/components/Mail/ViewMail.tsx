@@ -1,14 +1,16 @@
-import GmailBody from "@/components/Mail/GmailBody";
-import { parseEmail } from "@/utils/mailUtils";
-import he from "he";
-import { User } from "@heroui/user";
-import { Drawer } from "vaul";
-import { MagicWand05Icon, StarsIcon } from "../Misc/icons";
-import { Chip } from "@heroui/chip";
-import { EmailData } from "@/types/mailTypes";
-import { XIcon } from "lucide-react";
-import { Tooltip } from "@heroui/tooltip";
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { Tooltip } from "@heroui/tooltip";
+import { User } from "@heroui/user";
+import he from "he";
+import { XIcon } from "lucide-react";
+import { Drawer } from "vaul";
+
+import GmailBody from "@/components/Mail/GmailBody";
+import { EmailData } from "@/types/mailTypes";
+import { parseEmail } from "@/utils/mailUtils";
+
+import { MagicWand05Icon, StarsIcon } from "../Misc/icons";
 
 interface ViewEmailProps {
   mail: EmailData | null;

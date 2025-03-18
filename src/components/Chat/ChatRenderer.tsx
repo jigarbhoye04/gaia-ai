@@ -1,16 +1,18 @@
-import StarterText from "@/components/Chat/StarterText";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { useConversationList } from "@/hooks/useConversationList";
-import { useConversation } from "@/hooks/useConversation";
-import { MessageType } from "@/types/convoTypes";
+import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+
+import StarterText from "@/components/Chat/StarterText";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useConversation } from "@/hooks/useConversation";
+import { useConversationList } from "@/hooks/useConversationList";
+import { useLoading } from "@/hooks/useLoading";
+import { MessageType } from "@/types/convoTypes";
+
 import { ScrollArea } from "../ui/scroll-area";
 import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
-import { useLoading } from "@/hooks/useLoading";
-import Image from "next/image";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();

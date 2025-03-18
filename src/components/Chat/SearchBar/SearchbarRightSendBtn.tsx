@@ -2,8 +2,6 @@ import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 
 import { SentIcon } from "../../Misc/icons";
-import AnimatedAudioTranscription from "../../Audio/AnimatedAudioTranscription";
-// import MicrophoneBtn from "../Audio/MicrophoneBtn";
 
 export default function SearchbarRightSendBtn({
   loading,
@@ -18,11 +16,11 @@ export default function SearchbarRightSendBtn({
 }) {
   return (
     <div className="ml-2 flex items-center gap-1">
-      <AnimatedAudioTranscription
+      {/* <AnimatedAudioTranscription
         handleFormSubmit={handleFormSubmit}
         setTranscription={setSearchbarText}
         transcription={searchbarText}
-      />
+      /> */}
 
       <Tooltip content="Send message" placement="right">
         <Button

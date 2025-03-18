@@ -1,18 +1,18 @@
 // import { Note } from "@/pages/Notes";
 import { Button } from "@heroui/button";
 import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/dropdown";
+import {
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   // ModalHeader,
 } from "@heroui/modal";
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/dropdown";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 
 export function NoteDialog({

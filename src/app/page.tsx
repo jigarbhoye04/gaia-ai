@@ -1,8 +1,10 @@
 "use client";
 
+import { lazy, useEffect } from "react";
+
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
-import { lazy, useEffect } from "react";
+
 import LandingLayout from "./(landing)/layout";
 const LazyLoadedSections = lazy(
   () => import("@/components/Landing/Sections/LazyLoadedSections"),

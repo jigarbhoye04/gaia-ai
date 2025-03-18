@@ -1,3 +1,7 @@
+import { Button } from "@heroui/button";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
+
 import { CalendarAdd01Icon, Tick02Icon } from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
 import {
@@ -8,9 +12,6 @@ import {
 } from "@/types/calendarTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { parsingDate } from "@/utils/fetchDate";
-import { Button } from "@heroui/button";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;

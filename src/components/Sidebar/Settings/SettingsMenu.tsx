@@ -1,8 +1,3 @@
-import { useConversation } from "@/hooks/useConversation";
-import { useFetchConversations } from "@/hooks/useConversationList";
-import { useUserActions } from "@/hooks/useUser";
-import { ApiService } from "@/services/apiService";
-import { apiauth } from "@/utils/apiaxios";
 import { Button } from "@heroui/button";
 import {
   Dropdown,
@@ -14,6 +9,13 @@ import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "sonner";
+
+import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
+import { useUserActions } from "@/hooks/useUser";
+import { ApiService } from "@/services/apiService";
+import { apiauth } from "@/utils/apiaxios";
+
 import { Logout02Icon, Settings01Icon, ThreeDotsMenu } from "../../Misc/icons";
 import SettingsModal from "./SettingsModal";
 

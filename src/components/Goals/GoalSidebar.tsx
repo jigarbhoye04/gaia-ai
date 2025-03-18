@@ -1,9 +1,10 @@
 // GoalSidebar.tsx
-import { BookIcon1 } from "@/components/Misc/icons";
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
 import { Clock } from "lucide-react";
 import React from "react";
+
+import { BookIcon1 } from "@/components/Misc/icons";
 
 interface GoalSidebarProps {
   nodes: any;

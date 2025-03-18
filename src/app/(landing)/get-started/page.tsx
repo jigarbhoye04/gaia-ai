@@ -1,5 +1,6 @@
-import LoginSignup from "@/components/Login/LoginSignup";
 import type { Metadata } from "next";
+
+import LoginSignup from "@/components/Login/LoginSignup";
 
 export const metadata: Metadata = {
   title: "Sign Up",

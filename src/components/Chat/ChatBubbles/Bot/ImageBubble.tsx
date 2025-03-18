@@ -1,8 +1,9 @@
 // ImageBubble.tsx
 import { Chip } from "@heroui/chip";
 import { Skeleton } from "@heroui/skeleton";
-import { parseDate } from "@/utils/fetchDate";
+
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
+import { parseDate } from "@/utils/fetchDate";
 
 export default function ImageBubble({
   text,

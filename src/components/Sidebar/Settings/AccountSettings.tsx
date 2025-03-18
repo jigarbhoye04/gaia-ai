@@ -3,7 +3,6 @@ import { Button } from "@heroui/button";
 import React from "react";
 
 import { Logout02Icon, Mail01Icon, UserIcon } from "../../Misc/icons";
-
 import { ModalAction } from "./SettingsMenu";
 
 export default function AccountSection({

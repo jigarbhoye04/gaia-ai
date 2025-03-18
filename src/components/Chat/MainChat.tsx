@@ -1,12 +1,13 @@
 "use client";
 
+import debounce from "lodash.debounce";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+
 import ChatRenderer from "@/components/Chat/ChatRenderer";
 import MainSearchbar from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
 import { fetchMessages } from "@/utils/chatUtils";
-import debounce from "lodash.debounce";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
 
 const MainChat = React.memo(function MainChat() {
   const router = useRouter();

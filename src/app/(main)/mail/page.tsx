@@ -1,5 +1,6 @@
-import MailsPage from "@/components/Mail/MailsPage";
 import { Metadata } from "next";
+
+import MailsPage from "@/components/Mail/MailsPage";
 
 export const metadata: Metadata = {
   title: "Mail",

@@ -1,16 +1,18 @@
 "use client";
 
+import { Button } from "@heroui/button";
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+
 import { siteConfig } from "@/config/siteConfig";
 import useMediaQuery from "@/hooks/useMediaQuery";
-import { Button } from "@heroui/button";
-import Link from "next/link";
-import { useState } from "react";
+
 import { BookOpen02Icon, GlobalIcon, Idea01Icon, MapsIcon } from "./icons";
+import { LinkButton } from "./LinkButton";
 import DesktopMenu from "./Navbar/DesktopMenu";
 import MobileMenu from "./Navbar/MobileMenu";
-import { LinkButton } from "./LinkButton";
-import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname(); // Get the current route

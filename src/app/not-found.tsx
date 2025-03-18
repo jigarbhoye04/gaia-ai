@@ -2,6 +2,7 @@
 
 import { Button } from "@heroui/button";
 import { useRouter } from "next/navigation";
+
 import { LinkBackwardIcon } from "@/components/Misc/icons";
 
 export default function PageNotFound() {

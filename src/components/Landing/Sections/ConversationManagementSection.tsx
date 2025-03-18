@@ -1,3 +1,5 @@
+import { SearchIcon, Star } from "lucide-react";
+
 import {
   BubbleChatIcon,
   BubbleConversationChatIcon,
@@ -5,7 +7,6 @@ import {
 } from "@/components/Misc/icons";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LandingSectionLayout from "@/layouts/LandingSectionLayout";
-import { SearchIcon, Star } from "lucide-react";
 
 const dummyMessages = [
   {
@@ -25,7 +26,12 @@ const dummyMessages = [
   },
 ];
 
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { useState } from "react";
+
 import { StickyNote01Icon, Tick02Icon } from "@/components/Misc/icons";
+import { PinCard } from "@/components/Pins/PinCard";
 import {
   Command,
   CommandGroup,
@@ -34,11 +40,6 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-
-import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { useState } from "react";
-import { PinCard } from "@/components/Pins/PinCard";
 
 const dummyResults = {
   conversations: [

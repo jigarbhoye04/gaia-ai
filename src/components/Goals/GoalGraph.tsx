@@ -1,4 +1,3 @@
-import { EdgeType, NodeData } from "@/types/goalTypes";
 import {
   ConnectionLineType,
   Edge,
@@ -7,6 +6,8 @@ import {
   ReactFlowInstance,
 } from "@xyflow/react";
 import React from "react";
+
+import { EdgeType, NodeData } from "@/types/goalTypes";
 
 interface GoalGraphProps {
   nodes: Node<NodeData>[];

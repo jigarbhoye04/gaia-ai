@@ -1,10 +1,7 @@
 "use client";
 
-import { BookIcon1 } from "@/components/Misc/icons";
-import { Button } from "@/components/ui/button";
-import { MultiStepLoader } from "@/components/ui/multi-step-loader";
-import { truncateTitle } from "@/lib/utils";
-import { apiauth } from "@/utils/apiaxios";
+import "@xyflow/react/dist/style.css";
+
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
 import {
@@ -17,13 +14,18 @@ import {
   ReactFlowInstance,
   ReactFlowProvider,
 } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
 import dagre from "dagre";
 import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
+import { BookIcon1 } from "@/components/Misc/icons";
+import { Button } from "@/components/ui/button";
+import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { truncateTitle } from "@/lib/utils";
+import { apiauth } from "@/utils/apiaxios";
 export interface GoalData {
   id: string;
   created_at: Date;

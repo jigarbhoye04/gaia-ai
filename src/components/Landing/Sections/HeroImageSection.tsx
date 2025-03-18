@@ -1,5 +1,6 @@
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
+
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import DummySearchbar from "../Dummy/DummySearchbar";
 

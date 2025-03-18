@@ -1,5 +1,3 @@
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
-
 // import GradualSpacing from "../MagicUI/gradual-spacing";
 // import WaitlistOnlyInput from "./WaitListIOnlyInput";
 // import { Avatar, AvatarGroup } from "@heroui/avatar";
@@ -7,6 +5,8 @@ import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
 import { Spotlight } from "@/components/ui/spotlight-new";
 import { cn } from "@/lib/utils";
+
+import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import GetStartedButton from "../GetStartedButton";
 // import { AnimatedShinyText } from "../../ui/animated-shiny-text";
 

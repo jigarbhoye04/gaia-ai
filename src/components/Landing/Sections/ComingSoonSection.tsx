@@ -1,5 +1,6 @@
 import React from "react";
 
+import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import {
   BubbleChatLockIcon,
   ComputerPhoneSyncIcon,
@@ -7,7 +8,6 @@ import {
   MoneyBag02Icon,
   VoiceIcon,
 } from "../../Misc/icons";
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
 
 const list: {
   icon?: React.ReactNode;

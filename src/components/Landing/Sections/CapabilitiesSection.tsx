@@ -1,4 +1,4 @@
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
+import { ReactNode } from "react";
 
 import {
   BlushBrush02Icon,
@@ -10,7 +10,8 @@ import {
   Target02Icon,
 } from "@/components/Misc/icons";
 import { MagicCard } from "@/components/ui/magic-card";
-import { ReactNode } from "react";
+
+import { AnimatedSection } from "../../../layouts/AnimatedSection";
 
 interface FeatureType {
   icon: ReactNode;

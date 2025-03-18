@@ -1,16 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import { Send } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
-
+import StaticSidebar from "@/components/Landing/Dummy/DummySidebar";
 import {
   CheckmarkSquare03Icon,
   FlowchartIcon1,
   Target02Icon,
 } from "@/components/Misc/icons";
-import StaticSidebar from "@/components/Landing/Dummy/DummySidebar";
+
+import { AnimatedSection } from "../../../layouts/AnimatedSection";
 
 interface Step {
   icon: React.ReactNode;

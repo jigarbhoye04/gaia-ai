@@ -1,7 +1,8 @@
 "use client";
+import { QueryFunctionContext } from "@tanstack/react-query";
+
 import { EmailsResponse } from "@/types/mailTypes";
 import { apiauth } from "@/utils/apiaxios";
-import { QueryFunctionContext } from "@tanstack/react-query";
 
 export function parseEmail(from: string | undefined): {
   name: string;

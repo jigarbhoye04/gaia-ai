@@ -1,9 +1,11 @@
 "use client";
 
-import { apiauth } from "@/utils/apiaxios";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
+
+import { apiauth } from "@/utils/apiaxios";
+
 import { useLoginModalActions } from "./useLoginModal";
 
 export default function useAxiosInterceptor() {

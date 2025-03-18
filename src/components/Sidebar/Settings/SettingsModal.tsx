@@ -2,8 +2,8 @@ import { Button } from "@heroui/button";
 import { Modal, ModalBody, ModalContent } from "@heroui/modal";
 import React, { useState } from "react";
 
-import PrivacySection from "./PrivacySettings";
 import GeneralSection from "./GeneralSettings";
+import PrivacySection from "./PrivacySettings";
 // import AccountSection from "./AccountSettings";
 import { ModalAction } from "./SettingsMenu";
 

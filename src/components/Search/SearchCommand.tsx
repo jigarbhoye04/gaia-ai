@@ -3,12 +3,13 @@
 import { Chip } from "@heroui/chip";
 import { ArrowTopRightIcon } from "@radix-ui/react-icons";
 import { Lightbulb } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  type Dispatch,
+  type SetStateAction,
   useCallback,
   useEffect,
   useState,
-  type Dispatch,
-  type SetStateAction,
 } from "react";
 
 import {
@@ -20,7 +21,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { apiauth } from "@/utils/apiaxios";
-import { usePathname, useRouter } from "next/navigation";
+
 import {
   BubbleChatIcon,
   BubbleConversationChatIcon,

@@ -10,7 +10,8 @@
     "format": "prettier --write .",
     "depcheck": "depcheck",
     "lint": "next lint",
-    "lint:fix": "next lint --fix"
+    "lint:fix": "next lint --fix",
+    "lint:export": "next lint --print-config . > .eslint-test.json"
   },
   "dependencies": {
     "@heroui/accordion": "2.2.13",

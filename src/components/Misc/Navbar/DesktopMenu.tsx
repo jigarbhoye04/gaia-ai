@@ -1,7 +1,8 @@
-import { useUser } from "@/hooks/useUser";
 import { Button } from "@heroui/button";
 import Link from "next/link";
+
 import { BubbleConversationChatIcon } from "@/components/Misc/icons";
+import { useUser } from "@/hooks/useUser";
 
 export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
   const user = useUser();

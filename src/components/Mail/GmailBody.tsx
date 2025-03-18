@@ -1,7 +1,8 @@
-import { EmailData } from "@/types/mailTypes";
 import { Spinner } from "@heroui/spinner";
 import DOMPurify from "dompurify";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+import { EmailData } from "@/types/mailTypes";
 
 export const decodeBase64 = (str: string): string => {
   try {

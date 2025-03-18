@@ -1,10 +1,12 @@
 // TextBubble.tsx
-import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
-import { InternetIcon } from "@/components/Misc/icons";
-import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { Chip } from "@heroui/chip";
 import { AlertTriangleIcon, ArrowUpRight, Check, Loader2 } from "lucide-react";
 import { lazy } from "react";
+
+import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
+import { InternetIcon } from "@/components/Misc/icons";
+import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
+
 import CalendarEventSection from "./CalendarEventSection";
 
 const MarkdownRenderer = lazy(

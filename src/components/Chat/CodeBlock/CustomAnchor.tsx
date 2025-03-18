@@ -1,8 +1,9 @@
-import { useLoading } from "@/hooks/useLoading";
-import api from "@/utils/apiaxios";
 import { Tooltip } from "@heroui/tooltip";
 import { GlobeIcon } from "lucide-react";
 import { ReactNode, useEffect, useRef, useState } from "react";
+
+import { useLoading } from "@/hooks/useLoading";
+import api from "@/utils/apiaxios";
 
 const CustomAnchor = ({
   href,

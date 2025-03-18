@@ -1,5 +1,6 @@
+import { Tab,Tabs } from "@heroui/tabs";
 import React from "react";
-import { Tabs, Tab } from "@heroui/tabs";
+
 import FlowchartPreview from "./FlowchartPreview";
 import MermaidCode from "./MermaidCode";
 

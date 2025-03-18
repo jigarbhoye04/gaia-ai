@@ -1,5 +1,6 @@
 import { Chip } from "@heroui/chip";
 import Link from "next/link";
+
 import { NoteType } from "@/types/allTypes";
 
 export default function NoteCard({

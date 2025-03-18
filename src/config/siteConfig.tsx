@@ -11,15 +11,16 @@ export interface Section {
   links: Link[];
 }
 
+import { ReactElement } from "react";
+
 import {
   BookOpen02Icon,
+  CreditCardPosIcon,
+  CustomerService01Icon,
+  GlobalIcon,
   Idea01Icon,
   MapsIcon,
-  GlobalIcon,
-  CustomerService01Icon,
-  CreditCardPosIcon,
 } from "@/components/Misc/icons";
-import { ReactElement } from "react";
 
 export const siteConfig = {
   name: "gaia",

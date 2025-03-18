@@ -1,5 +1,6 @@
-import MainChat from "@/components/Chat/MainChat";
 import type { Metadata } from "next";
+
+import MainChat from "@/components/Chat/MainChat";
 
 export const metadata: Metadata = {
   title: "New Chat",

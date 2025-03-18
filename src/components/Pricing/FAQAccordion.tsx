@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowLeft01Icon } from "@/components/Misc/icons";
 import { Accordion, AccordionItem } from "@heroui/accordion";
+
+import { ArrowLeft01Icon } from "@/components/Misc/icons";
 
 export function FAQAccordion() {
   const faqItems = [

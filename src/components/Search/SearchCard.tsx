@@ -1,16 +1,16 @@
 import { Chip } from "@heroui/chip";
+import { ArrowUpRight,GlobeIcon } from "lucide-react";
 import Link from "next/link";
-import { GlobeIcon, ArrowUpRight } from "lucide-react";
 import React from "react";
 
-import { CommandItem } from "../ui/command";
+import { parseDate2 } from "@/utils/fetchDate";
+
 import {
   BubbleChatIcon,
   BubbleConversationChatIcon,
   StickyNote01Icon,
 } from "../Misc/icons";
-
-import { parseDate2 } from "@/utils/fetchDate";
+import { CommandItem } from "../ui/command";
 
 interface SearchCardProps {
   result: any;

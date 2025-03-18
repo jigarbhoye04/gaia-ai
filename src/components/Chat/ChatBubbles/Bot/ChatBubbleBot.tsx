@@ -1,11 +1,13 @@
 // ChatBubbleBot.tsx
-import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
+import { parseDate } from "@/utils/fetchDate";
+
 import ChatBubble_Actions from "../Actions/ChatBubble_Actions";
 import ChatBubble_Actions_Image from "../Actions/ChatBubble_Actions_Image";
 import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
-import { parseDate } from "@/utils/fetchDate";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   const {

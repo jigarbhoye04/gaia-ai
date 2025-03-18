@@ -1,5 +1,22 @@
 "use client";
 
+import { Spinner } from "@heroui/spinner";
+import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import CharacterCount from "@tiptap/extension-character-count";
+import Highlight from "@tiptap/extension-highlight";
+import TipTapLink from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import Typography from "@tiptap/extension-typography";
+import Underline from "@tiptap/extension-underline";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { convert } from "html-to-text";
+import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
+import Link from "next/link";
+import { useParams, usePathname, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import { SaveIcon } from "@/components/Misc/icons";
 import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
 import { MenuBar } from "@/components/Notes/NotesMenuBar";
@@ -12,22 +29,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";
-import { Spinner } from "@heroui/spinner";
-import { DotsVerticalIcon } from "@radix-ui/react-icons";
-import CharacterCount from "@tiptap/extension-character-count";
-import Highlight from "@tiptap/extension-highlight";
-import Placeholder from "@tiptap/extension-placeholder";
-import Typography from "@tiptap/extension-typography";
-import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TipTapLink from "@tiptap/extension-link";
-import { convert } from "html-to-text";
-import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
-import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 interface Note {
   id: string;

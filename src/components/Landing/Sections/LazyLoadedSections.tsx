@@ -1,5 +1,6 @@
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 import { lazy, Suspense } from "react";
+
+import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 
 const sections = {
   GoalSection: lazy(() => import("@/components/Landing/Sections/GoalSection")),

@@ -1,10 +1,11 @@
 import { useDispatch, useSelector } from "react-redux";
-import type { RootState, AppDispatch } from "@/redux/store";
+
 import {
-  fetchConversations,
   type Conversation,
+  fetchConversations,
   type PaginationMeta,
 } from "@/redux/slices/conversationsSlice";
+import type { AppDispatch,RootState } from "@/redux/store";
 
 export const useConversationList = () => {
   const conversations = useSelector(

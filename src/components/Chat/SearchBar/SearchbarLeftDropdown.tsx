@@ -13,7 +13,6 @@ import {
   ImageUploadIcon,
   PlusSignIcon,
 } from "../../Misc/icons";
-
 import GenerateImage from "../GenerateImage";
 
 export default function SearchbarLeftDropdown({

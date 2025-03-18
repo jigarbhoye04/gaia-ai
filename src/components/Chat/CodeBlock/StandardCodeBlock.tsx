@@ -1,7 +1,8 @@
+import { Button } from "@heroui/button";
 import React from "react";
 import { PrismAsyncLight } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { Button } from "@heroui/button";
+
 import { Task01Icon, TaskDone01Icon } from "../../Misc/icons";
 
 interface StandardCodeBlockProps {

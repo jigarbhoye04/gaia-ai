@@ -1,8 +1,9 @@
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+
 import { Spinner } from "@heroui/spinner";
 import { Document, Page, pdfjs } from "react-pdf";
 
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
 import { Pdf02Icon } from "../Misc/icons";
 
 // Define interfaces for component props

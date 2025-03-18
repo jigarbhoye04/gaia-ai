@@ -1,3 +1,6 @@
+import { Chip } from "@heroui/chip";
+import { Tab, Tabs } from "@heroui/tabs";
+
 import {
   SimpleChatBubbleBot,
   SimpleChatBubbleUser,
@@ -7,8 +10,7 @@ import {
   BubbleConversationChatIcon,
   StickyNote01Icon,
 } from "@/components/Misc/icons";
-import { Chip } from "@heroui/chip";
-import { Tab, Tabs } from "@heroui/tabs";
+
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 

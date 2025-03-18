@@ -1,12 +1,12 @@
 import OrbitingCircles from "../MagicUI/orbiting-circles";
 import {
+  ComputerIcon,
+  Github,
+  Gmail,
   GoogleCalendar,
   GoogleDrive,
-  Github,
   Notion,
-  ComputerIcon,
   SmartPhone01Icon,
-  Gmail,
   Watch02Icon,
 } from "../Misc/icons";
 

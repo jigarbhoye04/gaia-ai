@@ -8,15 +8,7 @@ import {
 import { Input, Textarea } from "@heroui/input";
 import { ArrowUpRight } from "lucide-react";
 import React, { useState } from "react";
-
-import {
-  AiImageIcon,
-  FileUploadIcon,
-  GlobalSearchIcon,
-  ImageUploadIcon,
-  PlusSignIcon,
-  SentIcon,
-} from "../../Misc/icons";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   Dialog,
@@ -26,9 +18,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RootState } from "@/redux/store";
-import { useDispatch, useSelector } from "react-redux";
 import { useLoginModal, useLoginModalActions } from "@/hooks/useLoginModal";
+import { RootState } from "@/redux/store";
+
+import {
+  AiImageIcon,
+  FileUploadIcon,
+  GlobalSearchIcon,
+  ImageUploadIcon,
+  PlusSignIcon,
+  SentIcon,
+} from "../../Misc/icons";
 
 function DummyLeftDropdown() {
   return (

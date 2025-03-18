@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { Button } from "@heroui/button";
 import type {
-  GlobalOptions as ConfettiGlobalOptions,
   CreateTypes as ConfettiInstance,
+  GlobalOptions as ConfettiGlobalOptions,
   Options as ConfettiOptions,
 } from "canvas-confetti";
-
+import confetti from "canvas-confetti";
+import type { ReactNode } from "react";
 import React, {
   createContext,
   forwardRef,
@@ -14,8 +15,6 @@ import React, {
   useMemo,
   useRef,
 } from "react";
-import confetti from "canvas-confetti";
-import { Button } from "@heroui/button";
 
 type Api = {
   fire: (options?: ConfettiOptions) => void;
