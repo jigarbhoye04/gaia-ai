@@ -36,16 +36,11 @@ class MessageModel(BaseModel):
     calendar_options: Optional[List[CalIntentOptions]] = None
 
 
-# Define the structure for a single conversation
 class ConversationModel(BaseModel):
-    conversation_id: str
-    description: str = "New Chat"
-
-
-# Define the structure for all user conversations
-class ConversationHistoryModel(BaseModel):
     user_id: str
-    conversation_history: List[ConversationModel]
+    title: str
+    description: Optional[str] = None
+    messages: List[str]
 
 
 class UpdateMessagesRequest(BaseModel):

@@ -1,26 +1,23 @@
-from pydantic import BaseModel, EmailStr
 from typing import List, Optional
-
+from pydantic import BaseModel
 
 class EmailRequest(BaseModel):
-    subject: str
-    body: str
     prompt: str
-    writingStyle: str
-    contentLength: str
-    clarityOption: str
-
-
-class SendEmailRequest(BaseModel):
-    to: List[EmailStr]
-    subject: str
-    body: str
-    cc: Optional[List[EmailStr]] = None
-    bcc: Optional[List[EmailStr]] = None
-
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    writingStyle: Optional[str] = None
+    contentLength: Optional[str] = None
+    clarityOption: Optional[str] = None
 
 class EmailSummaryRequest(BaseModel):
     message_id: str
-    include_key_points: bool = True
-    include_action_items: bool = True
-    max_length: Optional[int] = 150
+    include_key_points: Optional[bool] = None
+    include_action_items: Optional[bool] = None
+    max_length: Optional[int] = None
+
+class SendEmailRequest(BaseModel):
+    to: List[str]
+    subject: str
+    body: str
+    cc: Optional[List[str]] = None
+    bcc: Optional[List[str]] = None

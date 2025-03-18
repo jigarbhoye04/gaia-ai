@@ -2,7 +2,6 @@ from pydantic import BaseModel
 
 
 class DocumentUploadResponse(BaseModel):
-    conversation_id: str
     message: str
 
 

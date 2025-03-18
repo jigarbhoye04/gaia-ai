@@ -6,7 +6,7 @@ from fastapi import HTTPException
 
 from app.db.collections import goals_collection
 from app.db.db_redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
-from app.models.goals_models import GoalCreate, UpdateNodeRequest
+from app.models.goals_models import GoalCreate, UpdateNodeRequest, GoalResponse
 from app.services.llm_service import do_prompt_no_stream, do_prompt_with_stream
 from app.utils.goals_utils import goal_helper
 from app.config.loggers import goals_logger as logger
@@ -51,7 +51,7 @@ async def generate_roadmap_with_llm_stream(title: str):
         yield json.dumps({"error": str(e)})
 
 
-async def create_goal_service(goal: GoalCreate, user: dict) -> dict:
+async def create_goal_service(goal: GoalCreate, user: dict) -> GoalResponse:
     """
     Create a new goal for the authenticated user.
 
@@ -60,11 +60,13 @@ async def create_goal_service(goal: GoalCreate, user: dict) -> dict:
         user (dict): The authenticated user's data.
 
     Returns:
-        dict: The created goal's details.
+        GoalResponse: The created goal's details.
+
+    Raises:
+        HTTPException: If goal creation fails.
     """
     user_id = user.get("user_id")
     if not user_id:
-        logger.warning("Unauthorized attempt to create a goal.")
         raise HTTPException(status_code=403, detail="Not authenticated")
 
     goal_data = {
@@ -75,14 +77,12 @@ async def create_goal_service(goal: GoalCreate, user: dict) -> dict:
         "roadmap": {"nodes": [], "edges": []},
     }
 
-    result = await goals_collection.insert_one(goal_data)
-    new_goal = await goals_collection.find_one({"_id": result.inserted_id})
-
-    cache_key = f"goals_cache:{user_id}"
-    await delete_cache(cache_key)
-
-    logger.info(f"Goal created successfully: {new_goal['_id']} by user {user_id}")
-    return goal_helper(new_goal)
+    try:
+        result = await goals_collection.insert_one(goal_data)
+        new_goal = await goals_collection.find_one({"_id": result.inserted_id})
+        return GoalResponse(**new_goal)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to create goal")
 
 
 async def get_goal_service(goal_id: str, user: dict) -> dict:

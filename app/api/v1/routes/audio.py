@@ -1,28 +1,19 @@
 import asyncio
-import base64
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from fastapi.responses import Response
 
 from app.config.loggers import audio_logger as logger
 from app.config.settings import settings
-from app.db.db_redis import get_cache, set_cache
 from app.models.audio_models import TTSRequest
 from app.services.audio_service import TTSService
-from app.utils.audio_utils import generate_cache_key, sanitize_text
 
 router = APIRouter()
+tts_service = TTSService()
 
 DEEPGRAM_API_KEY = settings.DEEPGRAM_API_KEY
 
-tts_service = TTSService()
-
 
 class DeepgramTranscriber:
-    """
-    Transcriber using Deepgram's SDK for real-time transcription.
-    """
-
     def __init__(self, result_callback):
         self.result_callback = result_callback
         self.dg_connection = None
@@ -35,7 +26,6 @@ class DeepgramTranscriber:
         self.dg_connection = deepgram.listen.websocket.v("1")
         logger.info("Deepgram WebSocket connection object created.")
 
-        # Correctly defined callback function based on Deepgram SDK expectations
         self.dg_connection.on(
             LiveTranscriptionEvents.Transcript, self.handle_transcript
         )
@@ -51,7 +41,6 @@ class DeepgramTranscriber:
         logger.info("Deepgram connection started successfully.")
 
     def handle_transcript(self, *args, **kwargs):
-        # Extract the result from either args or kwargs
         result = args[0] if args else kwargs.get("result")
         try:
             if (
@@ -71,63 +60,18 @@ class DeepgramTranscriber:
             logger.error("Error processing transcript: %s", str(e))
             logger.error("Result data: %s", str(result))
 
-    def send_audio(self, data: bytes):
+    def send_audio(self, data):
         if self.dg_connection:
-            logger.debug("Sending audio data of length: %d", len(data))
             self.dg_connection.send(data)
-        else:
-            logger.warning("Attempted to send audio data without an active connection.")
 
     def stop(self):
         if self.dg_connection:
-            logger.info("Stopping Deepgram connection.")
-            self.dg_connection.finish()
-        else:
-            logger.warning("No active Deepgram connection to stop.")
+            self.dg_connection.close()
 
 
 @router.post("/synthesize", responses={200: {"content": {"audio/wav": {}}}})
 async def synthesize(request: TTSRequest):
-    sanitized_text = sanitize_text(request.text)
-    logger.info("Received TTS request for sanitized text: %s", sanitized_text[:50])
-    cache_key = generate_cache_key(sanitized_text)
-
-    try:
-        from_cache = await get_cache(cache_key)
-    except Exception as e:
-        logger.error("Error accessing cache: %s", str(e))
-        from_cache = None
-
-    if from_cache:
-        logger.info("Cache hit for TTS request.")
-        try:
-            decoded_audio = base64.b64decode(from_cache)
-            return Response(content=decoded_audio, media_type="audio/wav")
-        except Exception as e:
-            logger.error("Error decoding cached audio: %s", str(e))
-
-    try:
-        tts_result = await tts_service.synthesize_speech(
-            text=sanitized_text,
-            language_code=request.language_code,
-            voice_name=request.voice_name,
-        )
-    except Exception as e:
-        logger.error("TTS synthesis failed: %s", str(e))
-        return Response(content=b"Error during TTS synthesis.", status_code=500)
-
-    try:
-        await set_cache(cache_key, tts_result, ttl=2628000)
-        logger.info("Cache set for TTS result.")
-    except Exception as e:
-        logger.error("Error setting cache: %s", str(e))
-
-    try:
-        decoded_audio = base64.b64decode(tts_result)
-        return Response(content=decoded_audio, media_type="audio/wav")
-    except Exception as e:
-        logger.error("Error decoding TTS result: %s", str(e))
-        return Response(content=b"Error processing TTS result.", status_code=500)
+    return await tts_service.synthesize_speech(request)
 
 
 @router.websocket("/transcribe")

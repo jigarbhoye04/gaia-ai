@@ -1,3 +1,10 @@
+"""
+Main module for the GAIA FastAPI application.
+
+This module initializes and configures the FastAPI application, including middleware,
+routers, and other settings.
+"""
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,6 +62,12 @@ app = create_app()
 @app.get("/api/v1/")
 @app.get("/api/v1/ping")
 def main_route():
+    """
+    Main route for the GAIA API.
+
+    Returns:
+        dict: A simple greeting message.
+    """
     return {"hello": "world"}
 
 
