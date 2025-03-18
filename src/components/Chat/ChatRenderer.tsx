@@ -10,6 +10,7 @@ import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_I
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
 import { useLoading } from "@/hooks/useLoading";
+import Image from "next/image";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -53,14 +54,13 @@ export default function ChatRenderer() {
     return (
       <div className="flex items-start justify-center flex-1">
         <div className="flex items-center justify-center flex-col gap-2">
-          <div className="pingspinner sm:!min-w-[10vw] sm:!min-h-[10vw] !min-w-[30vw] !min-h-[30vw] aspect-square" />
-          {/* <StarterEmoji /> */}
-          {/* <img
-            src={"/gaialogo.png"}
-            width={200}
-            height={200}
-            className="animate-bounce2"
-          /> */}
+          <Image
+            alt="GAIA Logo"
+            src={"/branding/logo.png"}
+            width={150}
+            height={150}
+            className="bobbing hover:translate-y-3 "
+          />
           <StarterText />
         </div>
       </div>
@@ -70,10 +70,9 @@ export default function ChatRenderer() {
   return (
     <>
       <title id="chat_title">
-        {`${
-          conversations.find((convo) => convo.conversation_id === convoIdParam)
-            ?.description || "New Chat"
-        } | GAIA`}
+        {`${conversations.find((convo) => convo.conversation_id === convoIdParam)
+          ?.description || "New Chat"
+          } | GAIA`}
       </title>
 
       <Dialog open={openImage} onOpenChange={setOpenImage}>
@@ -122,19 +121,15 @@ export default function ChatRenderer() {
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
           <div key={index} className="relative flex items-end gap-2">
-            <div
-              className={`pingspinner relative ${
-                message.loading ? "bottom-3" : "bottom-9"
-              }`}
+
+            <Image
+              alt="GAIA Logo"
+              src={"/branding/logo.png"}
+              width={30}
+              height={30}
+              className={`${isLoading ? "animate-spin" : ""} relative bottom-14`}
             />
-            {/* <img
-              src={"/gaialogo.png"}
-              width={40}
-              height={40}
-              className={`${
-                message.loading ? "animate-spin" : ""
-              } relative bottom-9`}
-            /> */}
+
             <ChatBubbleBot
               calendar_options={message.calendar_options}
               filename={message.filename}
@@ -172,8 +167,15 @@ export default function ChatRenderer() {
 
       {isLoading && (
         <div className="flex font-medium text-sm items-center gap-4">
-          {/* pl-16 */}
-          <div className={`pingspinner relative`} />
+
+          <Image
+            alt="GAIA Logo"
+            src={"/branding/logo.png"}
+            width={30}
+            height={30}
+            className={`animate-spin`}
+          />
+
           GAIA is thinking...
         </div>
       )}

@@ -29,6 +29,7 @@ import { AiSearch02Icon, BrushIcon, Sent02Icon, SentIcon } from "../Misc/icons";
 import { Button as ShadcnButton } from "../ui/button";
 import { AiSearchModal } from "./AiSearchModal";
 import { EmailSuggestion } from "./EmailChip";
+import Image from "next/image";
 
 interface MailComposeProps {
   open: boolean;
@@ -38,7 +39,9 @@ interface MailComposeProps {
 export default function MailCompose({
   open,
   onOpenChange,
-}: MailComposeProps): JSX.Element {
+}: MailComposeProps) {
+  console.log("test open");
+
   const user = useUser();
   const [toEmails, setToEmails] = useState<Tag[]>([]);
   const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
@@ -153,7 +156,9 @@ export default function MailCompose({
             className={`fixed inset-0 bg-black/40 backdrop-blur-md ${isAiModalOpen ? "pointer-events-auto" : "pointer-events-none"
               }`}
           />
-          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2">
+          <Drawer.Content className="bg-zinc-900 fixed right-0 bottom-0 w-[50vw] min-h-[70vh] z-[10] rounded-tl-xl p-4 flex flex-col gap-2"
+            aria-describedby="Drawer to Compose a new email"
+          >
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
 
             {error && (
@@ -365,7 +370,15 @@ export default function MailCompose({
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 onKeyDown={handleAskGaiaKeyPress}
-                startContent={<div className="pingspinner size-[20px]" />}
+                startContent={
+                  <Image
+                    alt="GAIA Logo"
+                    src={"/branding/logo.png"}
+                    width={25}
+                    height={25}
+                    className={`bobbing ml-2`}
+                  />
+                }
                 endContent={
                   <Button
                     isIconOnly={loading}

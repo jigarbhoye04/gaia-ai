@@ -4,6 +4,7 @@ import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
 import { useConversation } from "@/hooks/useConversation";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LegacyRef, ReactNode } from "react";
 
@@ -38,7 +39,15 @@ export default function SidebarLayout({
       <div className="flex flex-col h-full">
         <div className="p-2 pb-2 flex-none">
           <div className="flex items-center justify-between mb-1">
-            <span className="font-medium text-2xl">gaia</span>
+            <div className="flex items-center pl-1 gap-2">
+              <Image
+                alt="GAIA Logo"
+                src={"/branding/logo.png"}
+                width={25}
+                height={25}
+              />
+              <span className="font-medium text-2xl">gaia</span>
+            </div>
             <div className="flex items-center gap-1">
               <Button
                 aria-label="Create new chat"

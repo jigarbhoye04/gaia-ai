@@ -18,7 +18,7 @@ export default function ChatBubble_Actions_Image({
   imagePrompt,
   fullWidth = false,
   setOpenImage,
-}: ChatBubbleActionsImageProps): JSX.Element {
+}: ChatBubbleActionsImageProps) {
   const downloadFromSrc = async () => {
     try {
       // Get current date and time for filename
@@ -71,11 +71,10 @@ export default function ChatBubble_Actions_Image({
         size="md"
       >
         <Button
-          className={`w-fit ${
-            fullWidth
+          className={`w-fit ${fullWidth
               ? "px-3 py-2 "
               : "p-0 bg-transparent data-[hover=true]:bg-transparent"
-          } h-fit rounded-lg `}
+            } h-fit rounded-lg `}
           color="primary"
           isIconOnly={!fullWidth}
           style={{ minWidth: "22px" }}

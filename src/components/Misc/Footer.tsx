@@ -1,6 +1,7 @@
 import { siteConfig } from "@/config/siteConfig";
 import { ArrowUpRight } from "lucide-react";
 import { LinkButton } from "./LinkButton";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -8,7 +9,13 @@ export default function Footer() {
       <div className="w-screen flex h-fit justify-center items-center sm:p-20 p-5">
         <div className="w-full max-w-screen-lg grid grid-cols-2 sm:grid-cols-4 gap-8">
           <div className="flex flex-col w-fit h-full text-foreground-600">
-            <div className="text-3xl font-medium text-white">
+            <Image
+              src="/branding/logo.webp"
+              alt="GAIA Logo"
+              width={50}
+              height={50}
+            />
+            <div className="text-3xl font-medium text-white mt-2">
               {siteConfig.name}
             </div>
             <div>{siteConfig.copyright}</div>

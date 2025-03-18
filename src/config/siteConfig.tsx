@@ -3,7 +3,7 @@ export interface Link {
   href: string;
   isLoggedIn?: boolean;
   external?: boolean;
-  icon?: JSX.Element;
+  icon?: ReactElement;
 }
 
 export interface Section {
@@ -19,6 +19,7 @@ import {
   CustomerService01Icon,
   CreditCardPosIcon,
 } from "@/components/Misc/icons";
+import { ReactElement } from "react";
 
 export const siteConfig = {
   name: "gaia",

@@ -19,7 +19,7 @@ export default function ChatBubble_Actions({
   loading,
   text,
   pinned = false,
-}: ChatBubbleActionsProps): JSX.Element {
+}: ChatBubbleActionsProps) {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const { updateConvoMessages } = useConversation();
 

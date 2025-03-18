@@ -14,7 +14,7 @@ import { MagicCard } from "@/components/ui/magic-card";
 function FeatureCard({
   feature,
 }: {
-  feature: { icon: JSX.Element; title: string; description: string };
+  feature: { icon; title: string; description: string };
 }) {
   return (
     <MagicCard

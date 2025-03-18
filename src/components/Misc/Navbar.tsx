@@ -21,8 +21,8 @@ export default function Navbar() {
     <div className="navbar">
       <div
         className={`navbar_content rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all w-full min-w-fit duration-1000 ${(!isMobileScreen && scrolled) || pathname !== "/"
-            ? "sm:max-w-screen-xl"
-            : "sm:max-w-[50px]"
+          ? "sm:max-w-screen-xl"
+          : "sm:max-w-[50px]"
           }`}
       >
         <Button
@@ -34,7 +34,7 @@ export default function Navbar() {
           onPress={() => setScrolled(true)}
           startContent={
             <Image
-              src="/gaialogo.webp"
+              src="/branding/logo.webp"
               alt="GAIA Logo"
               width={25}
               height={25}
@@ -73,8 +73,8 @@ export default function Navbar() {
               key={href}
               size="sm"
               className={`font-medium text-sm ${pathname === href
-                  ? "text-primary"
-                  : "text-zinc-400 hover:text-zinc-300"
+                ? "text-primary"
+                : "text-zinc-400 hover:text-zinc-300"
                 }`}
               as={Link}
               href={href}

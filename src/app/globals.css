@@ -440,3 +440,16 @@ code {
 .ProseMirror a:hover {
   color: #2c5282;
 }
+
+@keyframes rotateBounce {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.bobbing {
+  animation: rotateBounce 2s ease-in-out infinite;
+}

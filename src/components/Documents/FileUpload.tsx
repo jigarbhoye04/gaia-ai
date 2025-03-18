@@ -29,7 +29,7 @@ interface FileUploadProps {
 export default function FileUpload({
   isImage,
   fileInputRef,
-}: FileUploadProps): JSX.Element {
+}: FileUploadProps) {
   const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const fetchConversations = useFetchConversations();
@@ -288,15 +288,13 @@ export default function FileUpload({
               className="dark mt-4"
               color="primary"
               isInvalid={!isValid}
-              label={`What do you want to do with this ${
-                isImage ? "image" : "file"
-              }?`}
+              label={`What do you want to do with this ${isImage ? "image" : "file"
+                }?`}
               labelPlacement="outside"
               maxRows={3}
               minRows={2}
-              placeholder={`e.g., ${
-                isImage ? "What is in this image?" : "Summarize this document"
-              }`}
+              placeholder={`e.g., ${isImage ? "What is in this image?" : "Summarize this document"
+                }`}
               size="lg"
               startContent={null}
               value={textContent}

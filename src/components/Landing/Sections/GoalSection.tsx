@@ -19,7 +19,7 @@ interface Step {
   image: string;
 }
 
-export default function GoalSection(): JSX.Element {
+export default function GoalSection() {
   const [selectedStep, setSelectedStep] = useState<number>(0);
   const steps: Step[] = [
     {
@@ -69,7 +69,7 @@ export default function GoalSection(): JSX.Element {
   );
 }
 
-function GoalHeader(): JSX.Element {
+function GoalHeader() {
   return (
     <div className="text-center max-w-screen-md">
       <h2 className="sm:text-5xl text-4xl font-bold flex items-center gap-4 mb-2 justify-center">
@@ -98,7 +98,7 @@ function GoalSteps({
   setSelectedStep,
   setSelectedImage,
   image,
-}: GoalStepsProps): JSX.Element {
+}: GoalStepsProps) {
   const [isComplete, setIsComplete] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const goalSectionRef = useRef<HTMLDivElement>(null);
@@ -224,20 +224,18 @@ function GoalStep({
   isSelected,
   onClick,
   progress,
-}: GoalStepProps): JSX.Element {
+}: GoalStepProps) {
   return (
     <div
-      className={`flex items-start gap-1 sm:p-5 p-2 sm:flex-col flex-row justify-start rounded-3xl cursor-pointer transition-all hover:opacity-100 ${
-        isSelected ? "opacity-100" : "sm:opacity-60"
-      }`}
+      className={`flex items-start gap-1 sm:p-5 p-2 sm:flex-col flex-row justify-start rounded-3xl cursor-pointer transition-all hover:opacity-100 ${isSelected ? "opacity-100" : "sm:opacity-60"
+        }`}
       onClick={onClick}
     >
       <div
-        className={` outline outline-2 ${
-          isSelected
+        className={` outline outline-2 ${isSelected
             ? "outline-black/90 text-black/90 bg-primary"
             : " outline-zinc-700 text-white bg-zinc-800"
-        } min-w-[50px] min-h-[50px] rounded-xl flex items-center justify-center relative mb-5`}
+          } min-w-[50px] min-h-[50px] rounded-xl flex items-center justify-center relative mb-5`}
       >
         {icon}
         <div className="bg-primary rounded-full min-w-5 min-h-5 text-sm font-bold text-black flex items-center justify-center absolute -bottom-1 -right-1">
@@ -265,7 +263,7 @@ interface GoalImageProps {
   image: string;
 }
 
-function GoalImage({ image }: GoalImageProps): JSX.Element {
+function GoalImage({ image }: GoalImageProps) {
   return (
     <div className="relative sm:flex hidden">
       <img
@@ -283,18 +281,18 @@ function GoalImage({ image }: GoalImageProps): JSX.Element {
                 isIconOnly
                 className="font-medium"
                 color="primary"
-                // onPress={handleAddGoal}
+              // onPress={handleAddGoal}
               >
                 <Send />
               </Button>
             }
             label="What goal do you want to achieve?"
             variant="faded"
-            // value={goalTitle}
-            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            //   setGoalTitle(e.target.value)
-            // }
-            // onKeyDown={handleKeyPress}
+          // value={goalTitle}
+          // onChange={(e: { target: { value: SetStateAction<string> } }) =>
+          //   setGoalTitle(e.target.value)
+          // }
+          // onKeyDown={handleKeyPress}
           />
         </div>
       )}
