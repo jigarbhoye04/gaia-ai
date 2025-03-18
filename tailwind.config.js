@@ -1,12 +1,8 @@
 import { heroui } from "@heroui/theme";
-// const {
-//   default: flattenColorPalette,
-// } = require("tailwindcss/lib/util/flattenColorPalette");
-// const colors = require("tailwindcss/colors");
-// const defaultTheme = require("tailwindcss/defaultTheme");
+import tailwindcssAnimate from "tailwindcss-animate";
 
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+const config = {
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -116,8 +112,7 @@ module.exports = {
   darkMode: ["class", "class"],
   mode: "jit",
   plugins: [
-    // addVariablesForColors,
-    require("tailwindcss-animate"),
+    tailwindcssAnimate,
     heroui({
       defaultExtendTheme: "dark",
       defaultTheme: "dark",
@@ -151,13 +146,4 @@ module.exports = {
   ],
 };
 
-// function addVariablesForColors({ addBase, theme }) {
-//   let allColors = flattenColorPalette(theme("colors"));
-//   let newVars = Object.fromEntries(
-//     Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
-//   );
-
-//   addBase({
-//     ":root": newVars,
-//   });
-// }
+export default config;
