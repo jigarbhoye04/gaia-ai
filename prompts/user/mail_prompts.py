@@ -72,11 +72,19 @@ Please provide a summary of this email in {max_length} words or less.
 {key_points_instruction}
 {action_items_instruction}
 
-Format your response as a JSON object with the following structure:
-{{
-    "summary": "The concise summary of the email",
-    "key_points": ["Key point 1", "Key point 2", ...],
-    "action_items": ["Action item 1", "Action item 2", ...],
-    "sentiment": "A brief description of the email's tone/sentiment (formal, urgent, friendly, etc.)"
-}}
+Response Format:
+- **Summary:** The concise summary of the email.
+- **Key Points:** 
+  - Key point 1
+  - Key point 2
+  - ...
+
+  <NEW LINE HERE (\\n)>
+- **Action Items:** 
+  - Action item 1
+  - Action item 2
+  - ...
+  <NEW LINE HERE (\\n)>
+- **Sentiment:** A brief description of the email's tone/sentiment (formal, urgent, friendly, etc.).
+  <NEW LINE HERE (\\n)>
 """

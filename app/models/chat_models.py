@@ -45,7 +45,7 @@ class ConversationModel(BaseModel):
 
 class UpdateMessagesRequest(BaseModel):
     conversation_id: str
-    messages: List[str]
+    messages: List[MessageModel]
 
 
 class StarredUpdate(BaseModel):
