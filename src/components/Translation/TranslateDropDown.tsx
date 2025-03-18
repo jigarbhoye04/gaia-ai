@@ -77,63 +77,65 @@ const TranslateDropdown: FC<TranslateDropdownProps> = ({
   //   // TranslateText(targetLang, language);
   // };
 
-  return (
-    <Dropdown classNames={{ content: "dark" }}>
-      <DropdownTrigger>{trigger}</DropdownTrigger>
-      <DropdownMenu aria-label="Translate" className="p-0">
-        <DropdownItem
-          key={0}
-          isReadOnly
-          className="dark m-0 p-"
-          closeOnSelect={false}
-        >
-          <Autocomplete
-            className="text-foreground"
-            color="primary"
-            defaultSelectedKey="en"
-            description="Select a language to translate from"
-            label="Search a Language"
-            listboxProps={{
-              emptyContent: "No Language Found",
-              selectionMode: "single",
-            }}
-            defaultItems={languages}
-            // onSelectionChange={setLanguage}
-            // selectedKey={targetLang}
-            popoverProps={{
-              offset: 10,
-              classNames: {
-                base: "rounded-large",
-                content: "dark text-foreground",
-              },
-            }}
-            size="lg"
-            startContent={<LanguageSkillIcon className="text-foreground" />}
-            variant="faded"
-          >
-            {(
-              item: Language, // Explicitly type the item
-            ) => (
-              <AutocompleteItem
-                key={item.value}
-                value={item.value}
-                // classNames={{ dialog: "dark" }}
-                startContent={
-                  <Avatar
-                    alt={item.label}
-                    className="w-6 h-6"
-                    src={item.flag}
-                  />
-                }
-              >
-                {item.label}
-              </AutocompleteItem>
-            )}
-          </Autocomplete>
-        </DropdownItem>
-      </DropdownMenu>
-    </Dropdown>
-  );
+  return <></>
+
+  // return (
+  //   <Dropdown classNames={{ content: "dark" }}>
+  //     <DropdownTrigger>{trigger}</DropdownTrigger>
+  //     <DropdownMenu aria-label="Translate" className="p-0">
+  //       <DropdownItem
+  //         key={0}
+  //         isReadOnly
+  //         className="dark m-0 p-"
+  //         closeOnSelect={false}
+  //       >
+  //         <Autocomplete
+  //           className="text-foreground"
+  //           color="primary"
+  //           defaultSelectedKey="en"
+  //           description="Select a language to translate from"
+  //           label="Search a Language"
+  //           listboxProps={{
+  //             emptyContent: "No Language Found",
+  //             selectionMode: "single",
+  //           }}
+  //           defaultItems={languages}
+  //           // onSelectionChange={setLanguage}
+  //           // selectedKey={targetLang}
+  //           popoverProps={{
+  //             offset: 10,
+  //             classNames: {
+  //               base: "rounded-large",
+  //               content: "dark text-foreground",
+  //             },
+  //           }}
+  //           size="lg"
+  //           startContent={<LanguageSkillIcon className="text-foreground" />}
+  //           variant="faded"
+  //         >
+  //           {(
+  //             item: Language, // Explicitly type the item
+  //           ) => (
+  //             <AutocompleteItem
+  //               key={item.value}
+  //               value={item.value}
+  //               // classNames={{ dialog: "dark" }}
+  //               startContent={
+  //                 <Avatar
+  //                   alt={item.label}
+  //                   className="w-6 h-6"
+  //                   src={item.flag}
+  //                 />
+  //               }
+  //             >
+  //               {item.label}
+  //             </AutocompleteItem>
+  //           )}
+  //         </Autocomplete>
+  //       </DropdownItem>
+  //     </DropdownMenu>
+  //   </Dropdown>
+  // );
 };
 
 export default TranslateDropdown;

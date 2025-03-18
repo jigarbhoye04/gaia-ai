@@ -23,7 +23,7 @@ import {
 
 interface FileUploadProps {
   isImage: boolean;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export default function FileUpload({

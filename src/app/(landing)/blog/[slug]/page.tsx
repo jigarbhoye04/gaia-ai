@@ -79,7 +79,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             <Separator className="my-6 bg-zinc-700" />
 
             <Markdown
-              className="prose prose-sm max-w-none space-y-6"
+            // className="prose prose-sm max-w-none space-y-6"
             // dangerouslySetInnerHTML={{ __html: blog.content }}
             >
               {blog.content}

@@ -8,7 +8,7 @@ interface SearchbarInputProps {
   handleKeyDown: React.KeyboardEventHandler<HTMLInputElement>;
   currentHeight: number;
   onHeightChange: (height: number) => void;
-  inputRef: React.RefObject<HTMLTextAreaElement>;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
   loading: boolean;
 }
 

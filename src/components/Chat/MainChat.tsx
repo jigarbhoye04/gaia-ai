@@ -14,7 +14,7 @@ const MainChat = React.memo(function MainChat() {
   const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>(); // This will be undefined for `/c` and set for `/c/:id`
   const chatRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
 
   const handleScroll = debounce((event: React.UIEvent, threshold = 1) => {

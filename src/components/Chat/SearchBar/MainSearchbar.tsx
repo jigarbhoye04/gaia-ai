@@ -11,7 +11,7 @@ interface MainSearchbarProps {
   scrollToBottom: () => void;
   isAtBottom: boolean;
   isOverflowing: boolean;
-  inputRef: React.RefObject<HTMLTextAreaElement>;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 const MainSearchbar: React.FC<MainSearchbarProps> = ({
@@ -45,7 +45,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
     setIsLoading(true);
     sendMessage(searchbarText, enableSearch, pageFetchURL);
     setSearchbarText("");
-    inputRef.current?.focus();
+    if (inputRef) inputRef.current?.focus();
     scrollToBottom();
   };
 

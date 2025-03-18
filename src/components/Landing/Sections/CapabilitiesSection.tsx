@@ -10,11 +10,18 @@ import {
   Target02Icon,
 } from "@/components/Misc/icons";
 import { MagicCard } from "@/components/ui/magic-card";
+import { ReactNode } from "react";
+
+interface FeatureType {
+  icon: ReactNode;
+  title: string;
+  description: string
+};
 
 function FeatureCard({
   feature,
 }: {
-  feature: { icon; title: string; description: string };
+  feature: FeatureType
 }) {
   return (
     <MagicCard
