@@ -6,6 +6,7 @@ import localFont from "next/font/local";
 import Script from "next/script";
 
 import ProvidersLayout from "@/layouts/ProvidersLayout";
+import CalendarModal from "@/components/Calendar/CalendarModal";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -90,7 +91,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${creato.variable} dark`}>
       <body className="dark">
-        <ProvidersLayout>{children}</ProvidersLayout>
+        <ProvidersLayout>
+          {children}
+          <CalendarModal />
+        </ProvidersLayout>
 
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />

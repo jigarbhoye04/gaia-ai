@@ -1,17 +1,21 @@
 import { Button } from "@heroui/button";
 import { useCallback, useState } from "react";
-import { toast } from "sonner";
 
-import { CalendarAdd01Icon, Tick02Icon } from "@/components/Misc/icons";
+import {
+  CalendarAdd01Icon,
+  PencilEdit01Icon,
+  Tick02Icon,
+} from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
+import { openModal } from "@/redux/slices/calendarModalSlice";
 import {
   CalendarEvent,
   EventCardProps,
   TimedEvent,
   UnifiedCalendarEventsListProps,
 } from "@/types/calendarTypes";
-import { apiauth } from "@/utils/apiaxios";
 import { parsingDate } from "@/utils/fetchDate";
+import { useDispatch } from "react-redux";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
@@ -22,48 +26,51 @@ export function CalendarEventCard({
   onDummyAddEvent,
 }: EventCardProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
+  const dispatch = useDispatch();
 
-  const handleAddEvent = useCallback(async () => {
-    if (isDummy) {
-      setStatus("loading");
-      setTimeout(() => {
-        toast.success("Event added!", { description: event.description });
-        setStatus("added");
-        onDummyAddEvent?.();
-      }, 300);
-      return;
-    }
-
-    if (!isTimedEvent(event)) {
-      toast.error("Real events require start and end times.");
-      return;
-    }
-
-    setStatus("loading");
-    try {
-      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      await apiauth.post("/calendar/event", {
-        ...event,
-        timezone: userTimeZone,
-      });
-      toast.success("Added event to calendar!", {
-        description: event.description,
-      });
-      setStatus("added");
-    } catch (error) {
-      toast.error("Failed to add event!");
-      console.error(error);
-    } finally {
-      setStatus("idle");
-    }
-  }, [event, isDummy, onDummyAddEvent]);
+  const handleEditPress = useCallback(() => {
+    dispatch(
+      openModal({
+        event,
+        isDummy,
+        onSuccess: () => {
+          console.log("Event added");
+          setStatus("added");
+          onDummyAddEvent?.();
+        },
+      }),
+    );
+  }, [event, isDummy, onDummyAddEvent, dispatch]);
 
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-zinc-900 p-3">
-      <div className="relative flex w-full flex-row gap-3 overflow-hidden rounded-lg bg-primary/20 p-3">
+      <div className="relative flex w-full flex-row gap-3 overflow-hidden rounded-lg bg-primary/20 p-3 pr-1 pt-1">
         <div className="absolute inset-0 w-1 bg-primary" />
-        <div className="flex flex-1 flex-col gap-1 pl-1">
-          <div className="font-medium">{event.summary}</div>
+        <div className="flex flex-1 flex-col pl-1">
+          <div className="flex w-full items-center justify-between">
+            <div className="font-medium">{event.summary}</div>
+            {/* <div
+              onClick={() => {
+                console.log("Test 1");
+                handleEditPress();
+              }}
+            >
+              onclick
+            </div> */}
+            <Button
+              isIconOnly
+              onPress={() => {
+                console.log("Test 1");
+                handleEditPress();
+              }}
+              className="z-10"
+              size="sm"
+              variant="light"
+              color="primary"
+            >
+              <PencilEdit01Icon width={20} color={undefined} />
+            </Button>
+          </div>
           <div className="text-xs text-primary">
             {isTimedEvent(event) ? (
               <>
@@ -88,7 +95,7 @@ export function CalendarEventCard({
         variant="faded"
         isDisabled={status === "added"}
         isLoading={status === "loading"}
-        onPress={handleAddEvent}
+        onPress={handleEditPress}
       >
         {status === "added" ? (
           <Tick02Icon width={22} />

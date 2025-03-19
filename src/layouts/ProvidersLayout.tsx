@@ -16,16 +16,15 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
 
   return (
     <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}>
-      <ReduxProviders>
-        <HeroUIProvider navigate={router.push}>
+      <HeroUIProvider navigate={router.push}>
+        <ReduxProviders>
           <GlobalInterceptor />
           <GlobalAuth />
-
           <LoginModal />
           <Toaster closeButton richColors position="top-right" theme="dark" />
           {children}
-        </HeroUIProvider>
-      </ReduxProviders>
+        </ReduxProviders>
+      </HeroUIProvider>
     </Suspense>
   );
 }
