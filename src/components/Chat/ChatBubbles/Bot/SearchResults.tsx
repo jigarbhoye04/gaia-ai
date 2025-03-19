@@ -11,7 +11,7 @@ import {
   VideoResult,
   WebResult,
 } from "@/types/convoTypes";
-import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
+import { Accordion, AccordionItem, Button, Tab, Tabs } from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
 import { Play } from "lucide-react";
 import Image from "next/image";
@@ -35,20 +35,24 @@ export default function SearchResultsTabs({
         <AccordionItem
           key="1"
           aria-label="Search Results"
+          indicator={<></>}
           title={
-            <div className="text-sm font-medium">
+            <div className="h-full w-fit rounded-md bg-white/10 p-1 px-3 text-sm font-medium transition-all hover:bg-white/20">
               {isExpanded ? "Hide Search Results" : "Show Search Results"}
             </div>
           }
-          onPress={() => setIsExpanded(!isExpanded)}
+          onPress={() => setIsExpanded((prev) => !prev)}
           className="w-screen max-w-screen-sm px-0"
           isCompact
         >
           <Tabs
             aria-label="Search Results"
             color="primary"
-            variant="underlined"
-            className="w-screen max-w-screen-sm"
+            // variant="underlined"
+            variant="light"
+            // className="w-screen max-w-screen-sm"
+            // fullWidth
+            classNames={{ base: "p-0" }}
           >
             {search_results.images && search_results.images?.length > 0 && (
               <Tab
@@ -120,13 +124,18 @@ function ImageResults({ images }: ImageResultsProps) {
   return (
     <div className="grid w-full max-w-screen-sm grid-cols-2 gap-4 pr-2 md:grid-cols-3 lg:grid-cols-4">
       {images.map((image, index) => (
-        <div key={index} className="overflow-hidden rounded-lg shadow-lg">
+        <div
+          key={index}
+          className={`cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-300 ${
+            index == 0 ? "col-span-2 row-span-2" : ""
+          }`}
+        >
           <Image
-            src={image.url}
+            src={image.url || "/placeholder.svg"}
             alt={image.title}
-            width={300}
-            height={200}
-            className="h-full rounded-lg object-cover"
+            width={600}
+            height={600}
+            className="h-full w-full rounded-lg object-cover"
           />
         </div>
       ))}
