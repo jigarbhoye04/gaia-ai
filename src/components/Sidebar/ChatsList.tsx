@@ -15,6 +15,7 @@ import {
   useConversationList,
   useFetchConversations,
 } from "@/hooks/useConversationList";
+import { Conversation } from "@/redux/slices/conversationsSlice";
 
 import { ChatBubbleAddIcon } from "../Misc/icons";
 import { ChatTab } from "./ChatTab";
@@ -63,7 +64,7 @@ export default function ChatsList() {
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   // We assume the provider auto-fetches the first page.
   // Once paginationMeta is available, we consider the initial load complete.
@@ -98,19 +99,17 @@ export default function ChatsList() {
         }
       },
       {
-        root: null, // viewport as container
+        root: null,
         threshold: 1.0,
       },
     );
 
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
+    const currentLoadMoreRef = loadMoreRef.current;
+
+    if (currentLoadMoreRef) observer.observe(currentLoadMoreRef);
 
     return () => {
-      if (loadMoreRef.current) {
-        observer.unobserve(loadMoreRef.current);
-      }
+      if (currentLoadMoreRef) observer.unobserve(currentLoadMoreRef);
     };
   }, [currentPage, isFetchingMore, paginationMeta, fetchConversations]);
 
@@ -126,7 +125,7 @@ export default function ChatsList() {
 
       return acc;
     },
-    {} as Record<string, any[]>,
+    {} as Record<string, Conversation[]>,
   );
 
   // Sort time frames by defined priority.
@@ -223,20 +222,14 @@ export default function ChatsList() {
                     new Date(b.createdAt).getTime() -
                     new Date(a.createdAt).getTime(),
                 )
-                .map(
-                  (conversation: {
-                    conversation_id: string;
-                    starred: boolean;
-                    description: string;
-                  }) => (
-                    <ChatTab
-                      key={conversation.conversation_id}
-                      id={conversation.conversation_id}
-                      name={conversation.description || "New Chat"}
-                      starred={conversation.starred}
-                    />
-                  ),
-                )}
+                .map((conversation: Conversation) => (
+                  <ChatTab
+                    key={conversation.conversation_id}
+                    id={conversation.conversation_id}
+                    name={conversation.description || "New Chat"}
+                    starred={conversation.starred}
+                  />
+                ))}
             </div>
           ))}
         </>

@@ -117,11 +117,11 @@ export default function SearchCommand({
     document.addEventListener("keydown", down);
 
     return () => document.removeEventListener("keydown", down);
-  }, []);
+  }, [setOpenSearchDialog]);
 
   useEffect(() => {
     setOpenSearchDialog(false);
-  }, [pathname]);
+  }, [pathname, setOpenSearchDialog]);
 
   const handleChipClick = (type: "conversations" | "messages" | "notes") => {
     setChipsVisibility((prevVisibilities) => ({
@@ -306,8 +306,9 @@ export default function SearchCommand({
           !!results.messages &&
           results.messages.length > 0 && (
             <CommandGroup heading="Messages">
-              {results.messages.map((message) => (
+              {results.messages.map((message, index) => (
                 <SearchCard
+                  key={index}
                   result={message}
                   type="message"
                   // searchQuery={searchQuery}
@@ -321,8 +322,12 @@ export default function SearchCommand({
           !!results.conversations &&
           results.conversations.length > 0 && (
             <CommandGroup heading="Conversations">
-              {results.conversations.map((conversation) => (
-                <SearchCard result={conversation} type="conversation" />
+              {results.conversations.map((conversation, index) => (
+                <SearchCard
+                  result={conversation}
+                  type="conversation"
+                  key={index}
+                />
               ))}
             </CommandGroup>
           )}
@@ -332,8 +337,8 @@ export default function SearchCommand({
           chipsVisibility.notes &&
           results.notes.length > 0 && (
             <CommandGroup heading="Notes">
-              {results.notes.map((note) => (
-                <SearchCard result={note} type="note" />
+              {results.notes.map((note, index) => (
+                <SearchCard key={index} result={note} type="note" />
               ))}
             </CommandGroup>
           )}

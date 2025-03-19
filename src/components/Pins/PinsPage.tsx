@@ -6,11 +6,12 @@ import { DeleteIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PinCard } from "@/components/Pins/PinCard";
+import { PinCardProps } from "@/types/pinTypes";
 import { apiauth } from "@/utils/apiaxios";
 
 export default function Pins() {
-  const [fetchedResults, setFetchedResults] = useState<any[]>([]);
-  const [filteredResults, setFilteredResults] = useState<any[]>([]);
+  const [fetchedResults, setFetchedResults] = useState<PinCardProps[]>([]);
+  const [filteredResults, setFilteredResults] = useState<PinCardProps[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 

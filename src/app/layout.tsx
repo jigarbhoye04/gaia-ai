@@ -5,8 +5,8 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 
-import ProvidersLayout from "@/layouts/ProvidersLayout";
 import CalendarModal from "@/components/Calendar/CalendarModal";
+import ProvidersLayout from "@/layouts/ProvidersLayout";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),

@@ -41,6 +41,11 @@ const MainChat = React.memo(function MainChat() {
   }, [convoIdParam]);
 
   useEffect(() => {
+    if (messages.length === 0) return;
+    fetchAndScroll();
+  }, [fetchAndScroll, messages.length, pathname, router]);
+
+  useEffect(() => {
     return () => {
       handleScroll.cancel();
     };

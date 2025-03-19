@@ -18,7 +18,7 @@ import dagre from "dagre";
 import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { BookIcon1 } from "@/components/Misc/icons";
@@ -104,6 +104,8 @@ const CustomNode = React.memo(
   },
 );
 
+CustomNode.displayName = "Custom Graph Node";
+
 export default function GoalPage() {
   const [goalData, setGoalData] = useState<GoalData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -115,9 +117,18 @@ export default function GoalPage() {
   >(null);
   const { id: goalId } = useParams();
 
-  const nodeTypes = useMemo(
+  const nodeTypes = useMemo<{
+    customNode: React.FC<{
+      data: NodeData;
+      currentlySelectedNodeId: string | null;
+      setCurrentlySelectedNodeId: React.Dispatch<
+        React.SetStateAction<string | null>
+      >;
+      setOpenSidebar: React.Dispatch<React.SetStateAction<boolean>>;
+    }>;
+  }>(
     () => ({
-      customNode: (props: any) => (
+      customNode: (props) => (
         <CustomNode
           {...props}
           currentlySelectedNodeId={currentlySelectedNodeId}
@@ -129,7 +140,7 @@ export default function GoalPage() {
     [currentlySelectedNodeId],
   );
 
-  const fetchGoalData = async () => {
+  const fetchGoalData = useCallback(async () => {
     try {
       if (!goalId) return;
 
@@ -142,7 +153,6 @@ export default function GoalPage() {
         setLoading(false);
 
         const graph = new dagre.graphlib.Graph();
-
         graph.setGraph({ rankdir: "TD" });
         graph.setDefaultEdgeLabel(() => ({}));
 
@@ -169,7 +179,7 @@ export default function GoalPage() {
 
         setNodes(updatedNodes || []);
 
-        setCurrentlySelectedNodeId(updatedNodes[0].id);
+        setCurrentlySelectedNodeId(updatedNodes[0]?.id);
         setOpenSidebar(true);
         setEdges(goal.roadmap.edges || []);
       } else {
@@ -180,7 +190,7 @@ export default function GoalPage() {
       console.error("Goal fetch error:", error);
       setGoalData(null);
     }
-  };
+  }, [goalId]);
 
   const initiateWebSocket = (goalId: string, goalTitle: string) => {
     const ws = new WebSocket(
@@ -209,7 +219,7 @@ export default function GoalPage() {
 
   useEffect(() => {
     if (goalId) fetchGoalData();
-  }, [goalId]);
+  }, [goalId, fetchGoalData]);
 
   const handleInit = (
     reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeType>>,

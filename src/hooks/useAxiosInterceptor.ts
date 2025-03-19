@@ -50,5 +50,5 @@ export default function useAxiosInterceptor() {
     return () => {
       apiauth.interceptors.response.eject(interceptor);
     };
-  }, [pathname]);
+  }, [pathname, setLoginModalOpen]);
 }

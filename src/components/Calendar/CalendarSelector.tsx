@@ -32,7 +32,7 @@ function CalendarChip({ calendar, selected, onSelect }: CalendarChipProps) {
         <Chip
           className="items-center text-center"
           variant="faded"
-          {...(getLabelProps() as any)}
+          {...getLabelProps()}
           startContent={
             selected ? (
               <Eye className="mr-1" />

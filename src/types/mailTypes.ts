@@ -6,7 +6,7 @@ export interface EmailData {
   snippet?: string;
   body?: string;
   labelIds?: string[];
-  headers: any;
+  headers: Record<string, string>;
   payload: EmailPayload;
 }
 
@@ -16,12 +16,26 @@ export interface EmailsResponse {
 }
 
 export interface EmailPayload {
-  [x: string]: any;
-  parts: any;
-  body: any;
+  [x: string]: unknown;
+  parts: EmailPart[];
+  body: EmailBody;
   payload: {
     headers: { name: string; value: string }[];
     parts?: { mimeType: string; body: { data: string } }[];
     body?: { data: string };
   };
+}
+
+export interface EmailPart {
+  mimeType: string;
+  filename?: string;
+  headers?: { name: string; value: string }[];
+  body?: EmailBody;
+  parts?: EmailPart[];
+}
+
+export interface EmailBody {
+  size: number;
+  data?: string;
+  attachmentId?: string;
 }

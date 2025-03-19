@@ -1,10 +1,11 @@
+import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
 import { GlobeIcon } from "lucide-react";
+import Image from "next/image";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
 import { useLoading } from "@/hooks/useLoading";
 import api from "@/utils/apiaxios";
-import { Spinner } from "@heroui/spinner";
 
 const CustomAnchor = ({
   href,
@@ -13,8 +14,6 @@ const CustomAnchor = ({
   href: string | undefined;
   children: ReactNode | string | null;
 }) => {
-  if (!href) return null;
-
   const { isLoading } = useLoading();
   const [metadata, setMetadata] = useState({
     title: "",
@@ -45,15 +44,17 @@ const CustomAnchor = ({
       }
     };
 
-    if (!isLoading && prevHref.current !== href) {
+    if (!isLoading && prevHref.current !== href && !!href) {
       fetchMetadata();
     }
   }, [tooltipOpen, isLoading, href]);
 
+  if (!href) return null;
+
   return (
     <Tooltip
       showArrow
-      className="border-solid border-2 border-zinc-700 bg-zinc-950 p-3 text-white shadow-lg outline-none"
+      className="border-2 border-solid border-zinc-700 bg-zinc-950 p-3 text-white shadow-lg outline-none"
       content={
         loading ? (
           <div className="p-5">
@@ -64,7 +65,9 @@ const CustomAnchor = ({
             {(metadata.website_name || (metadata.favicon && validFavicon)) && (
               <div className="flex items-center gap-2">
                 {metadata.favicon && validFavicon ? (
-                  <img
+                  <Image
+                    width={20}
+                    height={20}
                     alt="Fav Icon"
                     className="h-[20px] w-[20px] rounded-full"
                     src={metadata.favicon}

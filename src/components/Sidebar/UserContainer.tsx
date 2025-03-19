@@ -1,5 +1,3 @@
-import { User } from "@heroui/user";
-
 import { useUser } from "@/hooks/useUser";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";

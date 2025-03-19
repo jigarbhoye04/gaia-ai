@@ -9,20 +9,9 @@ import CalendarCard from "@/components/Calendar/CalendarCard";
 import CalendarEventDialog from "@/components/Calendar/CalendarEventDialog";
 import CalendarSelector from "@/components/Calendar/CalendarSelector";
 import { CalendarAdd01Icon } from "@/components/Misc/icons";
+import { debounce } from "@/lib/utils";
 import { GoogleCalendar, GoogleCalendarEvent } from "@/types/calendarTypes";
 import { apiauth } from "@/utils/apiaxios";
-
-// Utility function for debouncing
-function debounce<T extends (...args: any[]) => void>(
-  func: T,
-  wait: number,
-): T {
-  let timeout: ReturnType<typeof setTimeout>;
-  return ((...args: any[]) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  }) as T;
-}
 
 export default function Calendar() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,6 +27,7 @@ export default function Calendar() {
   const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch events; if pageToken is null, we are (re)loading so we show the spinner.
   const fetchEvents = useCallback(
@@ -51,23 +41,38 @@ export default function Calendar() {
       try {
         const allEvents: GoogleCalendarEvent[] = [];
         const calendarsToFetch = calendarIds || selectedCalendars;
+
+        if (!calendarsToFetch.length) {
+          toast.error("No calendars selected");
+          setLoading(false);
+          return;
+        }
+
         toast.loading("Fetching Events...", { id: "fetching" });
+
         for (const calendarId of calendarsToFetch) {
-          const response = await apiauth.get<{
-            events: GoogleCalendarEvent[];
-            nextPageToken: string | null;
-          }>(`/calendar/${calendarId}/events`, {
-            params: { page_token: pageToken },
-          });
-          allEvents.push(...response.data.events);
-          if (response.data.nextPageToken) {
-            setNextPageToken(response.data.nextPageToken);
-          } else {
-            // If there are no more pages for this calendar, clear nextPageToken
-            setNextPageToken(null);
+          try {
+            const response = await apiauth.get<{
+              events: GoogleCalendarEvent[];
+              nextPageToken: string | null;
+            }>(`/calendar/${calendarId}/events`, {
+              params: { page_token: pageToken },
+            });
+            allEvents.push(...response.data.events);
+            if (response.data.nextPageToken) {
+              setNextPageToken(response.data.nextPageToken);
+            } else {
+              setNextPageToken(null);
+            }
+          } catch (err) {
+            console.error(
+              `Error fetching events for calendar ${calendarId}:`,
+              err,
+            );
+            toast.error(`Failed to fetch events from ${calendarId}`);
           }
         }
-        // toast.dismiss("Fetching Events...");
+
         toast.success("Fetched Events!", { id: "fetching" });
 
         // Deduplicate events
@@ -75,6 +80,7 @@ export default function Calendar() {
           (event) => !eventIdsRef.current.has(event.id),
         );
         newEvents.forEach((event) => eventIdsRef.current.add(event.id));
+
         // Merge and sort events
         setCalendarEvents((prev) => {
           const mergedEvents = [...prev, ...newEvents];
@@ -84,8 +90,13 @@ export default function Calendar() {
             return dateA.getTime() - dateB.getTime();
           });
         });
-      } catch (error) {
-        console.error("Error fetching calendar events:", error);
+        setError(null);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Error fetching calendar events";
+        setError(errorMessage);
+        console.error("Error fetching calendar events:", err);
+        toast.error(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -108,7 +119,10 @@ export default function Calendar() {
           storedSelectedCalendars = preferencesResponse.data.selectedCalendars;
         }
       } catch (err) {
-        console.error("No calendar preferences found, using primary calendar.");
+        console.error(
+          "No calendar preferences found, using primary calendar.",
+          err,
+        );
       }
       // Default to primary calendar if no preferences.
       if (!storedSelectedCalendars.length) {
@@ -130,7 +144,7 @@ export default function Calendar() {
     } catch (error) {
       console.error("Error fetching calendars:", error);
     }
-  }, []); // Empty dependency array as we want to call this on mount
+  }, [fetchEvents]); // Added fetchEvents dependency
 
   // Debounced function to update calendar preferences.
   const updatePreferences = useCallback(
@@ -230,10 +244,13 @@ export default function Calendar() {
     fetchCalendars();
   }, [fetchCalendars]);
 
-  const handleEventClick = useCallback((event: GoogleCalendarEvent) => {
-    setSelectedEvent(event);
-    setIsDialogOpen(true);
-  }, []);
+  const handleEventClick = useCallback(
+    (event: GoogleCalendarEvent) => {
+      setSelectedEvent(event);
+      setIsDialogOpen(true);
+    },
+    [setSelectedEvent, setIsDialogOpen],
+  );
 
   return (
     <>
@@ -243,13 +260,17 @@ export default function Calendar() {
             Your Calendar
           </div>
 
+          {error && (
+            <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
+              {error}
+            </div>
+          )}
+
           <Button
             color="primary"
             variant="flat"
-            // size="sm"
             isDisabled
             onPress={() => setIsAddDialogOpen(true)}
-            // className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             <CalendarAdd01Icon color={undefined} width={17} />
             Add event

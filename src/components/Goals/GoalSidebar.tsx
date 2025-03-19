@@ -1,15 +1,19 @@
 // GoalSidebar.tsx
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
+import { Node } from "@xyflow/react";
 import { Clock } from "lucide-react";
 import React from "react";
 
 import { BookIcon1 } from "@/components/Misc/icons";
+import { NodeData } from "@/types/goalTypes";
 
 interface GoalSidebarProps {
-  nodes: any;
-  currentlySelectedNodeId: string | null;
-  handleCheckboxClick: () => void;
+  openSidebar: boolean;
+  setOpenSidebar: (open: boolean) => void;
+  node: Node<NodeData> | null;
+  nodes: Node<NodeData>[];
+  setNodes: React.Dispatch<React.SetStateAction<Node<NodeData>[]>>;
 }
 
 const GoalSidebar: React.FC<GoalSidebarProps> = ({

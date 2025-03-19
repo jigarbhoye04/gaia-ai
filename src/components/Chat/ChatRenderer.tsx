@@ -1,3 +1,4 @@
+import { Spinner } from "@heroui/spinner";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,7 +14,6 @@ import { ScrollArea } from "../ui/scroll-area";
 import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
-import { Spinner } from "@heroui/spinner";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -59,7 +59,7 @@ export default function ChatRenderer() {
         <div className="flex flex-col items-center justify-center gap-2">
           <Image
             alt="GAIA Logo"
-            src={"/branding/logo.png"}
+            src={"/branding/logo.webp"}
             width={150}
             height={150}
             className="bobbing hover:translate-y-3"
@@ -81,12 +81,12 @@ export default function ChatRenderer() {
 
       <Dialog open={openImage} onOpenChange={setOpenImage}>
         <DialogContent className="flex min-w-fit flex-col items-center !rounded-3xl border-none bg-zinc-800 px-5 py-3 text-white">
-          <img
+          <Image
             alt={"Generated Image"}
             className="my-2 aspect-square size-[65vh] min-h-[65vh] min-w-[65vh] rounded-3xl"
-            height={"auto"}
+            fill={true}
             src={imageData?.src}
-            width={"auto"}
+            objectFit="cover"
           />
 
           <div className="flex min-w-[65vh] max-w-[65vh] flex-col justify-evenly gap-1">
@@ -127,7 +127,7 @@ export default function ChatRenderer() {
           <div key={index} className="relative flex items-end gap-2">
             <Image
               alt="GAIA Logo"
-              src={"/branding/logo.png"}
+              src={"/branding/logo.webp"}
               width={30}
               height={30}
               className={`${isLoading ? "animate-spin" : ""} relative bottom-14`}
@@ -173,7 +173,7 @@ export default function ChatRenderer() {
         <div className="flex items-center gap-4 text-sm font-medium">
           <Image
             alt="GAIA Logo"
-            src={"/branding/logo.png"}
+            src={"/branding/logo.webp"}
             width={30}
             height={30}
             className={`animate-spin`}

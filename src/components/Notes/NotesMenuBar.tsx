@@ -1,4 +1,5 @@
 import { DashIcon } from "@radix-ui/react-icons";
+import { Editor } from "@tiptap/react";
 import {
   ALargeSmall,
   Link as LinkIcon,
@@ -25,7 +26,7 @@ export const MenuBar = ({
   isEmail = false,
   textLength = true,
 }: {
-  editor: any;
+  editor: Editor | null;
   isEmail?: boolean;
   textLength?: boolean;
 }) => {

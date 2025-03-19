@@ -1,5 +1,5 @@
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { SetStateAction } from "react";
+import { Dispatch,SetStateAction } from "react";
 import { v1 as uuidv1 } from "uuid";
 
 import { ApiService } from "@/services/apiService";
@@ -26,10 +26,7 @@ export const fetchConversationDescription = async (
 
 export const fetchMessages = async (
   conversationId: string,
-  setConvoMessages: {
-    (value: SetStateAction<MessageType[]>): void;
-    (arg0: any): void;
-  },
+  setConvoMessages: Dispatch<SetStateAction<MessageType[]>>,
   router: AppRouterInstance | string[],
 ) => {
   try {

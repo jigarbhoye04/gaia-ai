@@ -92,7 +92,17 @@ const Confetti = forwardRef<ConfettiRef, Props>((props, ref) => {
   );
 });
 
-function ConfettiButton({ options, children, ...props }: any) {
+interface ConfettiButtonProps {
+  options?: ConfettiOptions;
+  children?: ReactNode;
+  [key: string]: any; // For any additional props that might be passed to Button
+}
+
+function ConfettiButton({
+  options = {},
+  children,
+  ...props
+}: ConfettiButtonProps) {
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const x = rect.left + rect.width / 2;

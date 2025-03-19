@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Dispatch } from "react";
 
 import { CalendarOptions, SearchResults } from "./convoTypes";
 
@@ -12,6 +12,12 @@ export interface ChatBubbleUserProps {
   pageFetchURL?: string;
   date?: string;
   pinned?: boolean;
+}
+
+interface SetImageDataType {
+  src: string;
+  prompt: string;
+  improvedPrompt: string;
 }
 
 export interface ChatBubbleBotProps {
@@ -28,7 +34,7 @@ export interface ChatBubbleBotProps {
   date?: string;
   // userinputType?: string;
   setOpenImage: React.Dispatch<React.SetStateAction<boolean>>;
-  setImageData: any;
+  setImageData: Dispatch<React.SetStateAction<SetImageDataType>>;
   pageFetchURL?: string;
   filename?: string;
   pinned?: boolean;

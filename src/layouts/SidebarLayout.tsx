@@ -43,7 +43,7 @@ export default function SidebarLayout({
             <div className="flex items-center gap-2 pl-1">
               <Image
                 alt="GAIA Logo"
-                src={"/branding/logo.png"}
+                src={"/branding/logo.webp"}
                 width={25}
                 height={25}
               />

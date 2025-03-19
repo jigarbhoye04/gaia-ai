@@ -35,7 +35,7 @@ export default function ChatOptionsDropdown({
   buttonHovered: boolean;
   chatId: string;
   chatName: string;
-  starred: boolean;
+  starred: boolean | undefined;
   logo2?: boolean;
   btnChildren?: ReactNode;
 }) {
@@ -52,13 +52,15 @@ export default function ChatOptionsDropdown({
   const handleStarToggle = async () => {
     try {
       await apiauth.put(`/conversations/${chatId}/star`, {
-        starred: !starred,
+        starred: starred === undefined ? true : !starred,
       });
       setIsOpen(false);
       toast.success(
-        starred
-          ? "Conversation removed from starred"
-          : "Conversation added to starred",
+        starred === undefined
+          ? "Conversation added to starred"
+          : starred
+            ? "Conversation removed from starred"
+            : "Conversation added to starred",
       );
 
       await fetchConversations();

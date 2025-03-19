@@ -1,6 +1,6 @@
-import { IntentType } from "@/types/convoTypes";
+import { MessageType } from "@/types/convoTypes";
 
-export function parseIntent(dataJson: any): any {
+export function parseIntent(dataJson: MessageType) {
   if (!dataJson || !dataJson.intent) {
     return { ...dataJson, intent: undefined, calendar_options: null };
   }

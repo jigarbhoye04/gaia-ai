@@ -1,5 +1,5 @@
 import { Chip } from "@heroui/chip";
-import { ArrowUpRight,GlobeIcon } from "lucide-react";
+import { ArrowUpRight, GlobeIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 
@@ -12,25 +12,57 @@ import {
 } from "../Misc/icons";
 import { CommandItem } from "../ui/command";
 
-interface SearchCardProps {
-  result: any;
-  type: "message" | "conversation" | "note";
-  config?: {
-    icon: React.ReactNode;
-    linkTo: (result: any) => string;
-    bodyContent: (result: any) => React.ReactNode;
-    footerContent?: (result: any) => React.ReactNode;
+interface SearchMessageResult {
+  conversation_id: string;
+  message: {
+    message_id: string;
+    type: "bot" | "user";
+    date: string;
+    searchWeb?: boolean;
+    pageFetchURL?: string;
   };
+  snippet: string;
+}
+
+interface SearchConversationResult {
+  conversation_id: string;
+  description: string;
+}
+
+interface SearchNoteResult {
+  id: string;
+  snippet: string;
+}
+
+type SearchResultType =
+  | SearchMessageResult
+  | SearchConversationResult
+  | SearchNoteResult;
+
+interface SearchCardConfig<T extends SearchResultType> {
+  icon: React.ReactNode;
+  linkTo: (result: T) => string;
+  bodyContent: (result: T) => React.ReactNode;
+  footerContent?: (result: T) => React.ReactNode;
+}
+
+interface SearchCardProps {
+  result: SearchResultType;
+  type: "message" | "conversation" | "note";
+  config?: SearchCardConfig<any>;
   className?: string;
 }
 
-const defaultConfigs = {
+const defaultConfigs: Record<
+  "message" | "conversation" | "note",
+  SearchCardConfig<any>
+> = {
   message: {
     icon: (
       <BubbleChatIcon className="min-h-[22px] min-w-[22px]" color="#9b9b9b" />
     ),
-    linkTo: (result: any) => `/c/${result.conversation_id}`,
-    bodyContent: (result: any) => (
+    linkTo: (result: SearchMessageResult) => `/c/${result.conversation_id}`,
+    bodyContent: (result: SearchMessageResult) => (
       <>
         <div className="flex items-center gap-2">
           <Chip
@@ -39,7 +71,6 @@ const defaultConfigs = {
           >
             {result.message.type === "bot" ? "From GAIA" : "From You"}
           </Chip>
-
           {result.message.searchWeb && (
             <Chip
               color="primary"
@@ -50,7 +81,6 @@ const defaultConfigs = {
               Live Search Results from the Web
             </Chip>
           )}
-
           {!!result.message.pageFetchURL && (
             <Chip
               color="primary"
@@ -67,7 +97,8 @@ const defaultConfigs = {
         </CommandItem>
       </>
     ),
-    footerContent: (result: any) => parseDate2(result.message.date),
+    footerContent: (result: SearchMessageResult) =>
+      parseDate2(result.message.date),
   },
   conversation: {
     icon: (
@@ -76,8 +107,9 @@ const defaultConfigs = {
         color="#9b9b9b"
       />
     ),
-    linkTo: (result: any) => `/c/${result.conversation_id}`,
-    bodyContent: (result: any) => (
+    linkTo: (result: SearchConversationResult) =>
+      `/c/${result.conversation_id}`,
+    bodyContent: (result: SearchConversationResult) => (
       <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
         {result.description}
       </CommandItem>
@@ -88,8 +120,8 @@ const defaultConfigs = {
     icon: (
       <StickyNote01Icon className="min-h-[22px] min-w-[22px]" color="#9b9b9b" />
     ),
-    linkTo: (result: any) => `/notes/${result.id}`,
-    bodyContent: (result: any) => (
+    linkTo: (result: SearchNoteResult) => `/notes/${result.id}`,
+    bodyContent: (result: SearchNoteResult) => (
       <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
         {result.snippet}
       </CommandItem>
@@ -107,10 +139,15 @@ export function SearchCard({
   const { icon, linkTo, bodyContent, footerContent } =
     config || defaultConfigs[type];
 
-  return result.snippet || result.description || result.snippet ? (
+  return (result as SearchNoteResult).snippet ||
+    (result as SearchConversationResult).description ? (
     <Link
       key={
-        type === "message" ? result.message.message_id : result.conversation_id
+        "message" in result && result.message?.message_id
+          ? result.message.message_id
+          : "conversation_id" in result
+            ? result.conversation_id
+            : result.id
       }
       className={`my-2 flex h-full flex-row items-center gap-2 overflow-hidden rounded-xl bg-zinc-800 p-2 px-3 transition-colors hover:bg-zinc-700 ${className}`}
       href={linkTo(result)}

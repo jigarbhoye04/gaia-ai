@@ -129,6 +129,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
         if (editor) editor.commands.setContent(formattedBody);
         setSubject(response.subject);
       } catch (error) {
+        console.log("Error composing ai mail ");
         setError(res.data.result.response);
       }
     } catch (error) {
@@ -374,7 +375,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
                 startContent={
                   <Image
                     alt="GAIA Logo"
-                    src={"/branding/logo.png"}
+                    src={"/branding/logo.webp"}
                     width={25}
                     height={25}
                     className={`bobbing ml-2`}

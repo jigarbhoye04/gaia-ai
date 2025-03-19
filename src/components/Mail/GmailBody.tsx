@@ -15,11 +15,12 @@ export const decodeBase64 = (str: string): string => {
 };
 
 export default function GmailBody({ email }: { email: EmailData | null }) {
-  if (!email) return null;
   const [loading, setLoading] = useState(true);
   const shadowHostRef = useRef<HTMLDivElement | null>(null);
 
   const decodedHtml = useMemo(() => {
+    if (!email) return null;
+
     const htmlPart = email.payload.parts?.find(
       (p: { mimeType: string; body: { data: string } }) =>
         p.mimeType === "text/html",
@@ -29,6 +30,7 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
     if (email.payload.body?.data) return decodeBase64(email.payload.body.data);
     return null;
   }, [email]);
+
   const sanitizedHtml = useMemo(() => {
     return decodedHtml
       ? DOMPurify.sanitize(decodedHtml, {
@@ -58,6 +60,8 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
       setLoading(false);
     }
   }, [sanitizedHtml]);
+
+  if (!email) return null;
 
   return (
     <div className="relative w-full overflow-auto shadow-md">

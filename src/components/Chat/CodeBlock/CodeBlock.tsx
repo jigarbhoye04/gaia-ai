@@ -1,7 +1,7 @@
 "use client";
 
 import mermaid from "mermaid";
-import React, { useEffect, useState } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 
 import { useLoading } from "@/hooks/useLoading";
 
@@ -12,8 +12,13 @@ import StandardCodeBlock from "./StandardCodeBlock";
 // Initialize mermaid globally (if not already initialized elsewhere)
 mermaid.initialize({});
 
-const CodeBlock: React.FC<any> = ({
-  node,
+interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
+  inline?: boolean;
+  className?: string;
+  children: ReactNode;
+}
+
+const CodeBlock: React.FC<CodeBlockProps> = ({
   inline,
   className,
   children,

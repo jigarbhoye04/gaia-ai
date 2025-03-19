@@ -4,7 +4,6 @@ import {
 } from "@microsoft/fetch-event-source";
 import { toast } from "sonner";
 
-import { useConversation } from "@/hooks/useConversation";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 
@@ -69,7 +68,7 @@ export const ApiService = {
     conversationId: string,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
-    onError: (err: any) => void,
+    onError: (err: Error) => void,
   ) => {
     const controller = new AbortController();
 
@@ -98,13 +97,12 @@ export const ApiService = {
         }),
         onmessage(event) {
           onMessage(event);
-          
+
           if (event.data === "[DONE]") {
             onClose();
             controller.abort();
             return;
           }
-          
         },
         onclose() {
           onClose();

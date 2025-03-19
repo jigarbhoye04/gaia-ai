@@ -89,7 +89,11 @@ export default async function BlogPostPage({ params }: PageProps) {
         </div>
       </div>
     );
-  } catch (error: any) {
-    return <div>Error fetching blog post: {error.message}</div>;
+  } catch (error) {
+    return (
+      <div>
+        Error fetching blog post: {error instanceof Error ? error.message : "Unknown error"}
+      </div>
+    );
   }
 }

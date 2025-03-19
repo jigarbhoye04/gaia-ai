@@ -1,6 +1,7 @@
 // ImageBubble.tsx
 import { Chip } from "@heroui/chip";
 import { Skeleton } from "@heroui/skeleton";
+import Image from "next/image";
 
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { parseDate } from "@/utils/fetchDate";
@@ -24,12 +25,12 @@ export default function ImageBubble({
             className="my-2 aspect-square max-h-[250px] min-h-[250px] min-w-[250px] max-w-[250px] rounded-3xl"
             isLoaded={!loading && !!imageSrc}
           >
-            <img
+            <Image
               alt="Generated Image"
               className="my-2 !cursor-pointer rounded-3xl"
-              height="250px"
+              height={250}
+              width={250}
               src={imageSrc as string}
-              width="250px"
               onClick={() => {
                 if (imageSrc) {
                   setOpenImage(true);

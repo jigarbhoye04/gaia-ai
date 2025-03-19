@@ -47,7 +47,7 @@ const AnimatedSectionComponent = ({
             },
       },
     }),
-    [staggerDelay],
+    [staggerDelay, disableAnimation],
   );
 
   return (

@@ -1,6 +1,3 @@
-// import { Chip } from "@heroui/chip";
-// import { WavingHand01Icon } from "../icons";
-// import img from "/public/gaia.logo.png";
 import { ArrowUpRight } from "lucide-react";
 
 import {

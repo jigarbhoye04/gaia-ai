@@ -6,11 +6,13 @@ import {
   History,
   Info,
   Link2,
+  LucideIcon,
   Repeat,
   User,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect,useState } from "react";
 import Twemoji from "react-twemoji";
+import { toast } from "sonner";
 
 import {
   Accordion,
@@ -19,6 +21,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { CalendarEventDialogProps } from "@/types/calendarTypes";
+import { apiauth } from "@/utils/apiaxios";
 import { formatEventDate, getEventIcon } from "@/utils/calendarUtils";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -29,18 +32,96 @@ export default function CalendarEventDialog({
   onOpenChange,
   mode = "view",
 }: CalendarEventDialogProps) {
-  if (mode === "create") {
-    // Create mode: render a form to create a new event.
-    const [summary, setSummary] = useState("");
-    const [description, setDescription] = useState("");
-    const [start, setStart] = useState("");
-    const [end, setEnd] = useState("");
+  const [summary, setSummary] = useState("");
+  const [description, setDescription] = useState("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [errors, setErrors] = useState<{
+    summary?: string;
+    date?: string;
+  }>({});
 
-    const handleSubmit = (e: React.FormEvent) => {
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
+      setSummary("");
+      setDescription("");
+      setStart("");
+      setEnd("");
+      setErrors({});
+    }
+  }, [open]);
+
+  // If in edit mode, populate form with event data
+  useEffect(() => {
+    if (mode === "create" && event) {
+      setSummary(event.summary || "");
+      setDescription(event.description || "");
+      if ("start" in event) {
+        setStart(
+          new Date(event.start.dateTime || event.start.date || "")
+            .toISOString()
+            .slice(0, 16),
+        );
+        setEnd(
+          new Date(event.end.dateTime || event.end.date || "")
+            .toISOString()
+            .slice(0, 16),
+        );
+      }
+    }
+  }, [event, mode]);
+
+  if (mode === "create") {
+    const validateForm = () => {
+      const newErrors: { summary?: string; date?: string } = {};
+
+      if (!summary.trim()) {
+        newErrors.summary = "Summary is required";
+      }
+
+      if (start && end) {
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+        if (isNaN(startDate.getTime())) {
+          newErrors.date = "Invalid start date";
+        } else if (isNaN(endDate.getTime())) {
+          newErrors.date = "Invalid end date";
+        } else if (endDate <= startDate) {
+          newErrors.date = "End time must be after start time";
+        }
+      } else {
+        newErrors.date = "Start and end times are required";
+      }
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
-      // TODO: Replace this console.log with your API call to create the event.
-      console.log("Creating event", { summary, description, start, end });
-      onOpenChange(false);
+      if (!validateForm()) return;
+
+      try {
+        const event = {
+          summary,
+          description,
+          start: { dateTime: new Date(start).toISOString() },
+          end: { dateTime: new Date(end).toISOString() },
+        };
+
+        await apiauth.post("/calendar/event", {
+          ...event,
+          fixedTime: true,
+        });
+
+        toast.success("Event created successfully!");
+        onOpenChange(false);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to create event";
+        toast.error(errorMessage);
+      }
     };
 
     return (
@@ -57,15 +138,26 @@ export default function CalendarEventDialog({
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div>
               <label className="mb-1 block font-medium text-zinc-300">
-                Summary
+                Summary*
               </label>
               <input
                 type="text"
                 value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                onChange={(e) => {
+                  setSummary(e.target.value);
+                  if (errors.summary)
+                    setErrors({ ...errors, summary: undefined });
+                }}
+                className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
+                  errors.summary ? "border border-red-500" : ""
+                }`}
                 required
               />
+              {errors.summary && (
+                <span className="mt-1 text-sm text-red-500">
+                  {errors.summary}
+                </span>
+              )}
             </div>
             <div>
               <label className="mb-1 block font-medium text-zinc-300">
@@ -75,45 +167,61 @@ export default function CalendarEventDialog({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                rows={3}
               />
             </div>
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="mb-1 block font-medium text-zinc-300">
-                  Start
+                  Start*
                 </label>
                 <input
                   type="datetime-local"
                   value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                  className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                  onChange={(e) => {
+                    setStart(e.target.value);
+                    if (errors.date) setErrors({ ...errors, date: undefined });
+                  }}
+                  className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
+                    errors.date ? "border border-red-500" : ""
+                  }`}
                   required
                 />
               </div>
               <div className="flex-1">
                 <label className="mb-1 block font-medium text-zinc-300">
-                  End
+                  End*
                 </label>
                 <input
                   type="datetime-local"
                   value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                  className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                  onChange={(e) => {
+                    setEnd(e.target.value);
+                    if (errors.date) setErrors({ ...errors, date: undefined });
+                  }}
+                  className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
+                    errors.date ? "border border-red-500" : ""
+                  }`}
                   required
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
+            {errors.date && (
+              <span className="mt-1 block text-sm text-red-500">
+                {errors.date}
+              </span>
+            )}
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="rounded bg-gray-600 px-4 py-2 text-white"
+                className="rounded bg-zinc-700 px-4 py-2 text-white hover:bg-zinc-600"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="rounded bg-blue-600 px-4 py-2 text-white"
+                className="rounded bg-primary px-4 py-2 text-white hover:bg-primary/90"
               >
                 Create
               </button>
@@ -143,7 +251,7 @@ export default function CalendarEventDialog({
     label,
     value,
   }: {
-    icon: any;
+    icon: LucideIcon; // Fixed: Using LucideIcon type instead of any
     label: string;
     value: string | null;
   }) => {

@@ -35,7 +35,6 @@ export const useChatStream = () => {
     enableSearch: boolean,
     pageFetchURL: string,
     botMessageId: string,
-    botResponseText: string = "",
   ) => {
     accumulatedResponseRef.current = "";
 
@@ -135,7 +134,7 @@ export const useChatStream = () => {
     /**
      * Handles errors from the SSE stream.
      */
-    const onError = (err: any) => {
+    const onError = (err: unknown) => {
       setIsLoading(false);
       console.error("Error from server:", err);
       toast.error("Error fetching messages. Please try again later.");

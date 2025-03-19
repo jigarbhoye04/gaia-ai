@@ -1,3 +1,10 @@
+import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
+import { formatDistanceToNow } from "date-fns";
+import { Play } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+
 import {
   Image02Icon,
   InternetIcon,
@@ -12,12 +19,7 @@ import {
   VideoResult,
   WebResult,
 } from "@/types/convoTypes";
-import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
-import { formatDistanceToNow } from "date-fns";
-import { Play } from "lucide-react";
-import Image from "next/image";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
+
 import ImageDialog from "./ImageDialog";
 
 interface SearchResultsTabsProps {
@@ -167,7 +169,9 @@ function VideoResults({ videos }: VideoResultsProps) {
           <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 transition group-hover:opacity-0">
             <Play fill="white" color="white" width={35} height={35} />
           </div>
-          <img
+          <Image
+            width={600}
+            height={600}
             src={video.thumbnail}
             alt={video.title}
             className="h-full w-full rounded-lg object-cover"

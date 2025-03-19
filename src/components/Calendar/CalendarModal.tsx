@@ -1,29 +1,30 @@
 "use client";
 
-import { useCallback } from "react";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import {
   Modal,
-  ModalContent,
-  ModalHeader,
   ModalBody,
+  ModalContent,
   ModalFooter,
+  ModalHeader,
 } from "@heroui/react";
-import { Input } from "@heroui/input";
-import { Button } from "@heroui/button";
-import { toast } from "sonner";
+import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { parseISO, format } from "date-fns";
+import { toast } from "sonner";
 
-import { apiauth } from "@/utils/apiaxios";
-import { RootState } from "@/redux/store";
 import {
+  clearError,
   closeModal,
+  setError,
   setStatus,
   updateEditedEvent,
 } from "@/redux/slices/calendarModalSlice";
-import { TimedEvent } from "@/types/calendarTypes";
+import { RootState } from "@/redux/store";
+import { CalendarEvent, TimedEvent } from "@/types/calendarTypes";
+import { apiauth } from "@/utils/apiaxios";
 
-const isTimedEvent = (event: any): event is TimedEvent =>
+const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
 
 // Custom function to get date only from ISO string without timezone effects
@@ -50,15 +51,20 @@ const createISOWithFixedTime = (dateStr: string, timeStr: string): string => {
 
 export default function CalendarModal() {
   const dispatch = useDispatch();
-  const { isOpen, editedEvent, status, isDummyEvent, onEventSuccess } =
+  const { isOpen, editedEvent, status, isDummyEvent, onEventSuccess, error } =
     useSelector((state: RootState) => state.calendarModal);
 
   const handleClose = () => dispatch(closeModal());
 
   const handleEditSubmit = useCallback(async () => {
-    if (!editedEvent) return;
+    if (!editedEvent) {
+      dispatch(setError("No event data available"));
+      return;
+    }
 
+    dispatch(clearError());
     dispatch(setStatus("loading"));
+
     if (isDummyEvent) {
       setTimeout(() => {
         toast.success("Event updated and added!", {
@@ -71,32 +77,32 @@ export default function CalendarModal() {
     }
 
     if (!isTimedEvent(editedEvent)) {
-      toast.error("Real events require start and end times.");
+      dispatch(setError("Real events require start and end times"));
       return;
     }
 
     try {
-      // Don't include timezone in the request, since we're using fixed times
       await apiauth.post("/calendar/event", {
         ...editedEvent,
-        // Set fixed timezone flag to indicate this event should display at the exact time specified
         fixedTime: true,
       });
+
       toast.success("Event updated and added to calendar!", {
         description: editedEvent.description,
       });
       onEventSuccess?.();
       handleClose();
     } catch (error) {
-      toast.error("Failed to add event!");
-      console.error(error);
-    } finally {
-      dispatch(setStatus("idle"));
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add event";
+      dispatch(setError(errorMessage));
+      toast.error(errorMessage);
     }
-  }, [editedEvent, isDummyEvent, onEventSuccess, dispatch]);
+  }, [editedEvent, isDummyEvent, onEventSuccess, dispatch, handleClose]);
 
   const handleInputChange = (field: keyof TimedEvent, value: string) => {
     if (!editedEvent) return;
+    dispatch(clearError()); // Clear errors when user makes changes
     dispatch(updateEditedEvent({ ...editedEvent, [field]: value }));
   };
 
@@ -115,7 +121,6 @@ export default function CalendarModal() {
       type === "start" ? editedEvent.start : editedEvent.end,
     );
 
-    // Update either the date or time part
     let newDateStr = currentDateStr;
     let newTimeStr = currentTimeStr;
 
@@ -127,6 +132,26 @@ export default function CalendarModal() {
 
     // Create a new ISO string with the updated parts
     const newISOString = createISOWithFixedTime(newDateStr, newTimeStr);
+
+    // Validate end date is after start date
+    if (type === "end") {
+      const startDate = new Date(editedEvent.start);
+      const endDate = new Date(newISOString);
+      if (endDate <= startDate) {
+        toast.error("End time must be after start time");
+        return;
+      }
+    }
+
+    // Validate start date is before end date
+    if (type === "start") {
+      const endDate = new Date(editedEvent.end);
+      const startDate = new Date(newISOString);
+      if (startDate >= endDate) {
+        toast.error("Start time must be before end time");
+        return;
+      }
+    }
 
     dispatch(
       updateEditedEvent({
@@ -143,6 +168,11 @@ export default function CalendarModal() {
       <ModalContent>
         <ModalHeader>Edit Event Details</ModalHeader>
         <ModalBody>
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-500/20 p-3 text-sm text-red-500">
+              {error}
+            </div>
+          )}
           <Input
             labelPlacement="outside"
             label="Summary"
@@ -231,7 +261,7 @@ export default function CalendarModal() {
           <Button
             onPress={handleEditSubmit}
             isLoading={status === "loading"}
-            color="primary"
+            color={error ? "danger" : "primary"}
           >
             Save & Add
           </Button>

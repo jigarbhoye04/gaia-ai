@@ -10,7 +10,7 @@ import ChatOptionsDropdown from "./ChatOptionsDropdown";
 interface ChatTabProps {
   name: string;
   id: string;
-  starred: boolean;
+  starred: boolean | undefined;
 }
 
 export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {

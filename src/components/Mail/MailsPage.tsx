@@ -49,6 +49,9 @@ export default function MailsPage() {
   };
 
   const Row = ({ index, style }: ListChildComponentProps) => {
+    const [title, setTitle] = useState("");
+    const [subtitle, setSubtitle] = useState("");
+
     if (!isItemLoaded(index)) {
       return (
         <div style={style} className="flex items-center justify-center">
@@ -56,11 +59,10 @@ export default function MailsPage() {
         </div>
       );
     }
+    
     const email = emails[index];
     if (!email) return null;
 
-    const [title, setTitle] = useState("");
-    const [subtitle, setSubtitle] = useState("");
 
     const fetchSummary = (isOpen: boolean) => {
       if (isOpen && !title && !subtitle) {

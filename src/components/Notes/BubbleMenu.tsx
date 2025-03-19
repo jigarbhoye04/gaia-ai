@@ -1,3 +1,4 @@
+import { Editor } from "@tiptap/react";
 import {
   Heading1,
   Heading2,
@@ -14,7 +15,7 @@ const BubbleMenu = lazy(() =>
   import("@tiptap/react").then((module) => ({ default: module.BubbleMenu })),
 );
 
-const BubbleMenuComponent = ({ editor }: { editor: any }) => {
+const BubbleMenuComponent = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
     return null;
   }

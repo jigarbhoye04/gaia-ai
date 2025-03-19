@@ -6,7 +6,7 @@ import {
   setMessages,
 } from "@/redux/slices/conversationSlice";
 import { AppDispatch, RootState } from "@/redux/store";
-import { MessageType } from "@/types/convoTypes";
+import { IntentType, MessageType } from "@/types/convoTypes";
 
 export const useConversation = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -16,7 +16,7 @@ export const useConversation = () => {
 
   const appendBotMessage = (
     botResponse: MessageType,
-    finalIntent: any,
+    finalIntent: IntentType,
     botResponseText: string,
     currentMessages: MessageType[],
   ): void => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useCallback,useEffect } from "react";
 
 import { useUserActions } from "@/hooks/useUser";
 import { apiauth } from "@/utils/apiaxios";
@@ -14,7 +14,7 @@ const useFetchUser = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = useCallback(async () => {
     try {
       const accessToken = searchParams.get("access_token");
       const refreshToken = searchParams.get("refresh_token");
@@ -30,14 +30,15 @@ const useFetchUser = () => {
       });
 
       if (accessToken && refreshToken) router.push("/c");
-    } catch (err) {
+    } catch (e: unknown) {
+      console.error("Error fetching user info:", e);
       clearUser();
     }
-  };
+  }, [searchParams, updateUser, clearUser, router]);
 
   useEffect(() => {
     fetchUserInfo();
-  }, [searchParams]);
+  }, [fetchUserInfo]);
 
   return { fetchUserInfo };
 };

@@ -1,9 +1,11 @@
+import { CalendarOptions } from "@/types/convoTypes";
+
 import { CalendarEventsList } from "./CalendarEventCard";
 
 export default function CalendarEventSection({
   calendar_options,
 }: {
-  calendar_options: any;
+  calendar_options: CalendarOptions | CalendarOptions[];
 }) {
   const eventsArray = Array.isArray(calendar_options)
     ? calendar_options

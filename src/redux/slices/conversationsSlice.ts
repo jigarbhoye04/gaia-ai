@@ -61,8 +61,10 @@ export const fetchConversations = createAsyncThunk<
         },
         append,
       };
-    } catch (error: any) {
-      return rejectWithValue(error.message || "Failed to fetch conversations");
+    } catch (error: unknown) {
+      return rejectWithValue(
+        (error as Error).message || "Failed to fetch conversations",
+      );
     }
   },
 );

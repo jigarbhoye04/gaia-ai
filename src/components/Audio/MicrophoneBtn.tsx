@@ -25,9 +25,9 @@ export default function MicrophoneBtn({
 }: // onTranscriptionComplete,
 MicrophoneBtnProps) {
   const [open, setOpen] = useState<boolean>(false);
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [transcript, setTranscript] = useState<string>("");
-  const recognitionRef = useRef<any | null>(null);
+  const [_isRecording, _setIsRecording] = useState<boolean>(false);
+  const [transcript, _setTranscript] = useState<string>("");
+  const _recognitionRef = useRef(null);
 
   // useEffect(() => {
   //   if (
@@ -75,29 +75,29 @@ MicrophoneBtnProps) {
   //   return () => {
   //     stopRecording(); // Ensure to stop on cleanup
   //   };
-  // }, []);
+  // // }, []);
 
-  const startRecording = () => {
-    setTranscript("");
-    setIsRecording(true);
-    recognitionRef.current?.start();
-  };
+  // const startRecording = () => {
+  //   setTranscript("");
+  //   setIsRecording(true);
+  //   recognitionRef.current?.start();
+  // };
 
-  const stopRecording = () => {
-    recognitionRef.current?.stop();
-    setIsRecording(false);
-  };
+  // const stopRecording = () => {
+  //   recognitionRef.current?.stop();
+  //   setIsRecording(false);
+  // };
 
-  const handleClose = () => {
-    stopRecording();
-    setOpen(false);
-  };
+  // const handleClose = () => {
+  //   stopRecording();
+  //   setOpen(false);
+  // };
 
-  const handleSubmit = () => {
-    stopRecording();
-    // onTranscriptionComplete(transcript);
-    setOpen(false);
-  };
+  // const handleSubmit = () => {
+  //   stopRecording();
+  //   // onTranscriptionComplete(transcript);
+  //   setOpen(false);
+  // };
 
   return (
     <>
@@ -109,7 +109,7 @@ MicrophoneBtnProps) {
         variant="light"
         onPress={() => {
           setOpen(true);
-          startRecording();
+          // startRecording();
         }}
       >
         <Mic02Icon />
@@ -119,15 +119,15 @@ MicrophoneBtnProps) {
         backdrop="opaque"
         classNames={{ base: "w-full max-w-md p-4 dark text-white" }}
         isOpen={open}
-        onClose={handleClose}
+        // onClose={handleClose}
         onOpenChange={setOpen}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col items-center">
-            {isRecording ? "Recording Voice" : "Voice Recording Complete"}
+            {_isRecording ? "Recording Voice" : "Voice Recording Complete"}
           </ModalHeader>
           <ModalBody className="flex flex-col items-center space-y-4">
-            {isRecording && (
+            {_isRecording && (
               <div className="lottie_container">
                 {/* <Lottie
                   options={{
@@ -153,7 +153,7 @@ MicrophoneBtnProps) {
               isIconOnly
               color="danger"
               variant="flat"
-              onPress={handleClose}
+              // onPress={handleClose}
             >
               <Cancel01Icon color="red" />
             </Button>
@@ -161,7 +161,7 @@ MicrophoneBtnProps) {
               isIconOnly
               color="success"
               variant="flat"
-              onPress={handleSubmit}
+              // onPress={handleSubmit}
             >
               <Tick02Icon color="green" />
             </Button>

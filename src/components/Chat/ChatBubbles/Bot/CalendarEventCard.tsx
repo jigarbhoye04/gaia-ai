@@ -1,5 +1,7 @@
 import { Button } from "@heroui/button";
 import { useCallback, useState } from "react";
+import { useDispatch } from "react-redux";
+import { toast } from "sonner";
 
 import {
   CalendarAdd01Icon,
@@ -15,7 +17,6 @@ import {
   UnifiedCalendarEventsListProps,
 } from "@/types/calendarTypes";
 import { parsingDate } from "@/utils/fetchDate";
-import { useDispatch } from "react-redux";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
@@ -34,7 +35,6 @@ export function CalendarEventCard({
         event,
         isDummy,
         onSuccess: () => {
-          console.log("Event added");
           setStatus("added");
           onDummyAddEvent?.();
         },
@@ -43,9 +43,9 @@ export function CalendarEventCard({
   }, [event, isDummy, onDummyAddEvent, dispatch]);
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-zinc-900 p-3">
-      <div className="relative flex w-full flex-row gap-3 overflow-hidden rounded-lg bg-primary/20 p-3 pr-1 pt-1">
-        <div className="absolute inset-0 w-1 bg-primary" />
+    <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-900 p-2">
+      <div className="relative flex w-full flex-row gap-3 rounded-xl rounded-l-none bg-primary/20 p-3 pr-1 pt-1">
+        <div className="absolute inset-0 w-1 rounded-full bg-primary" />
         <div className="flex flex-1 flex-col pl-1">
           <div className="flex w-full items-center justify-between">
             <div className="font-medium">{event.summary}</div>
@@ -60,7 +60,6 @@ export function CalendarEventCard({
             <Button
               isIconOnly
               onPress={() => {
-                console.log("Test 1");
                 handleEditPress();
               }}
               className="z-10"
@@ -92,7 +91,7 @@ export function CalendarEventCard({
       </div>
       <Button
         className="w-full"
-        variant="faded"
+        variant="flat"
         isDisabled={status === "added"}
         isLoading={status === "loading"}
         onPress={handleEditPress}
@@ -114,6 +113,39 @@ export function CalendarEventsList({
   onDummyAddEvent,
   disableAnimation = false,
 }: UnifiedCalendarEventsListProps) {
+  const [isAddingAll, setIsAddingAll] = useState(false);
+  const dispatch = useDispatch();
+
+  const handleAddAll = useCallback(async () => {
+    setIsAddingAll(true);
+    let successCount = 0;
+
+    for (let i = 0; i < events.length; i++) {
+      await new Promise<void>((resolve) => {
+        dispatch(
+          openModal({
+            event: events[i],
+            isDummy,
+            onSuccess: () => {
+              successCount++;
+              onDummyAddEvent?.(i);
+              resolve();
+            },
+          }),
+        );
+      });
+    }
+
+    // Show single toast after all events are processed
+    if (successCount > 0) {
+      toast.success(
+        `Added ${successCount} ${successCount === 1 ? "event" : "events"} to calendar!`,
+      );
+    }
+
+    setIsAddingAll(false);
+  }, [events, isDummy, onDummyAddEvent, dispatch]);
+
   return (
     <AnimatedSection
       disableAnimation={disableAnimation}
@@ -133,6 +165,21 @@ export function CalendarEventsList({
           onDummyAddEvent={() => onDummyAddEvent?.(index)}
         />
       ))}
+      {events.length > 1 && (
+        <div>
+          <Button
+            color="primary"
+            variant="flat"
+            className="mt-2 w-full font-medium text-primary"
+            isLoading={isAddingAll}
+            onClick={handleAddAll}
+          >
+            <CalendarAdd01Icon width={22} color={undefined} />
+            Add all to calendar ({events.length}{" "}
+            {events.length > 1 ? "events" : "event"})
+          </Button>
+        </div>
+      )}
     </AnimatedSection>
   );
 }

@@ -3623,7 +3623,7 @@ export const CreditCardPosIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const NewsIcon = (props) => (
+export const NewsIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -3671,7 +3671,7 @@ export const NewsIcon = (props) => (
   </svg>
 );
 
-export const Video01Icon = (props) => (
+export const Video01Icon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
@@ -3702,7 +3702,7 @@ export const Video01Icon = (props) => (
   </svg>
 );
 
-export const PencilEdit01Icon = (props) => (
+export const PencilEdit01Icon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"

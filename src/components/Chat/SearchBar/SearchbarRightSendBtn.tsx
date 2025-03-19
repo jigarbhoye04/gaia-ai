@@ -3,33 +3,27 @@ import { Tooltip } from "@heroui/tooltip";
 
 import { SentIcon } from "../../Misc/icons";
 
-export default function SearchbarRightSendBtn({
-  loading,
-  setSearchbarText,
-  searchbarText,
-  handleFormSubmit,
-}: {
-  loading: boolean;
-  searchbarText: string;
-  setSearchbarText: any;
-  handleFormSubmit: any;
-}) {
+interface RightSideProps {
+  textHeight: number;
+  isLoadingStream: boolean;
+  onSubmit: () => void;
+}
+
+export default function RightSide({
+  textHeight,
+  isLoadingStream,
+  onSubmit,
+}: RightSideProps) {
   return (
     <div className="ml-2 flex items-center gap-1">
-      {/* <AnimatedAudioTranscription
-        handleFormSubmit={handleFormSubmit}
-        setTranscription={setSearchbarText}
-        transcription={searchbarText}
-      /> */}
-
       <Tooltip content="Send message" placement="right">
         <Button
           isIconOnly
           aria-label="Send message"
-          className={`${loading && "cursor-wait"}`}
+          className={`${isLoadingStream && "cursor-wait"}`}
           color="primary"
-          disabled={loading}
-          isLoading={loading}
+          disabled={isLoadingStream}
+          isLoading={isLoadingStream}
           radius="full"
           type="submit"
         >

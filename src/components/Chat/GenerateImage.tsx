@@ -7,19 +7,15 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@heroui/modal";
-import ObjectID from "bson-objectid";
-import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
-import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 import fetchDate from "@/utils/fetchDate";
-
-import { BrushIcon } from "../Misc/icons";
 
 interface GenerateImageProps {
   openImageDialog: boolean;
@@ -32,10 +28,8 @@ export default function GenerateImage({
 }: GenerateImageProps) {
   const { updateConvoMessages, convoMessages } = useConversation();
   const { setIsLoading } = useLoading();
-  const { id: convoIdParam } = useParams<{ id: string }>();
   const [imagePrompt, setImagePrompt] = useState("");
   const [isValid, setIsValid] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
     setIsValid(imagePrompt.trim() !== "");
@@ -107,6 +101,7 @@ export default function GenerateImage({
       updateConvoMessages([...convoMessages, finalBotMessage]);
     } catch (error) {
       toast.error("Error generating image. Please try again later.");
+      console.error("Error generating image:", error);
     } finally {
       setIsLoading(false);
     }

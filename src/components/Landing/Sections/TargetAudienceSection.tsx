@@ -4,6 +4,7 @@ import {
   GraduationCap,
   Handshake,
 } from "lucide-react";
+import Image from "next/image";
 import { Dispatch, ReactNode, SetStateAction, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -106,7 +107,8 @@ export default function TargetAudience() {
             />
           ))}
         </div>
-        <img
+        <Image
+          fill={true}
           alt="GAIA Screenshot"
           className="relative mb-3 min-w-[95%] max-w-[95%] overflow-hidden rounded-2xl outline outline-[4px] outline-zinc-700 sm:top-[10vh] sm:mb-0"
           src={current.img}

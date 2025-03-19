@@ -1,6 +1,6 @@
 // components/Mail/EmailChip.tsx
 import { Chip } from "@heroui/chip";
-import { Check, CircleCheck, XCircle } from "lucide-react";
+import { XCircle } from "lucide-react";
 import React from "react";
 
 export interface EmailSuggestion {

@@ -1,4 +1,4 @@
-import { Tab,Tabs } from "@heroui/tabs";
+import { Tab, Tabs } from "@heroui/tabs";
 import React from "react";
 
 import FlowchartPreview from "./FlowchartPreview";
@@ -10,6 +10,12 @@ interface MermaidTabsProps {
   onTabChange: (key: string) => void;
   isLoading: boolean;
   syntaxHighlighterProps?: any;
+}
+
+interface TabProps {
+  type: string;
+  value: string;
+  onChange: (value: string) => void;
 }
 
 const MermaidTabs: React.FC<MermaidTabsProps> = ({

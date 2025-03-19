@@ -59,12 +59,8 @@ export default [
         },
       ],
       "@typescript-eslint/explicit-function-return-type": "off",
-      "no-console": [
-        "warn",
-        {
-          allow: ["warn", "error"],
-        },
-      ],
+      "no-console": "off",
+      "@typescript-eslint/no-empty-object-type": "off",
     },
   },
 ];

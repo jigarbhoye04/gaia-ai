@@ -1,9 +1,10 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/redux/store";
-import { closeImageDialog } from "@/redux/slices/imageDialogSlice";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import Image from "next/image";
+import { useDispatch, useSelector } from "react-redux";
+
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { closeImageDialog } from "@/redux/slices/imageDialogSlice";
+import { RootState } from "@/redux/store";
 
 export default function ImageDialog() {
   const dispatch = useDispatch();
