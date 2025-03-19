@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi import HTTPException, status
 from bson import ObjectId
-from app.models.notes_models import NoteModel
+from app.models.notes_models import NoteModel, NoteResponse
 from app.db.collections import notes_collection
 from app.db.utils import serialize_document
 from app.db.db_redis import get_cache, set_cache, delete_cache
@@ -154,3 +154,27 @@ async def delete_note(note_id: str, user_id: str) -> None:
     await delete_cache(f"note:{user_id}:{note_id}")
     await delete_cache(f"notes:{user_id}")
     logger.info("Note deleted and cache invalidated.")
+
+
+async def create_note_service(note: NoteModel, user_id: str) -> NoteResponse:
+    """
+    Create a new note for the authenticated user.
+
+    Args:
+        note (NoteModel): The note data.
+        user_id (str): The ID of the authenticated user.
+
+    Returns:
+        NoteResponse: The created note.
+
+    Raises:
+        HTTPException: If note creation fails.
+    """
+    note_data = note.dict()
+    note_data["user_id"] = user_id
+    try:
+        result = await notes_collection.insert_one(note_data)
+        created_note = await notes_collection.find_one({"_id": result.inserted_id})
+        return NoteResponse(**created_note)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Failed to create note")

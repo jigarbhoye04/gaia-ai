@@ -1,3 +1,9 @@
+"""
+GAIA API v1 package.
+
+This package contains the API routes and dependencies for version 1 of the GAIA API.
+"""
+
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI

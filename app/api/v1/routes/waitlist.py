@@ -1,33 +1,36 @@
-from fastapi import APIRouter, HTTPException
-from app.db.collections import waitlist_collection
+"""
+Waitlist routes for the GAIA API.
+
+This module contains routes related to the waitlist functionality of the GAIA API.
+"""
+
+from fastapi import APIRouter
 from app.models.general_models import WaitlistItem
+from app.services.waitlist_service import get_waitlist_members_service, waitlist_signup_service
 
 router = APIRouter()
 
 
 @router.get("/waitlist-members")
 async def get_waitlist_members():
-    emails = set()
-    cursor = waitlist_collection.find()
-    members = await cursor.to_list(length=None)
+    """
+    Retrieve the list of waitlist members.
 
-    for member in members:
-        emails.add(member["email"])
-
-    return {"count": len(emails), "emails": emails}
+    Returns:
+        dict: A dictionary containing the count and emails of waitlist members.
+    """
+    return await get_waitlist_members_service()
 
 
 @router.post("/waitlist-members")
 async def waitlist_signup(item: WaitlistItem):
+    """
+    Sign up a new member to the waitlist.
 
-    try:
-        item_dict = item.dict()
-        result = await waitlist_collection.insert_one(item_dict)
+    Args:
+        item (WaitlistItem): The waitlist item containing the member's information.
 
-        if result.inserted_id:
-            return {"message": "Data inserted successfully"}
-        else:
-            raise HTTPException(status_code=500, detail="Failed to insert data")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    Returns:
+        dict: A message indicating the result of the signup operation.
+    """
+    return await waitlist_signup_service(item)

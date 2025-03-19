@@ -3,8 +3,7 @@ from pydantic import BaseModel, HttpUrl
 
 
 class URLRequest(BaseModel):
-    url: HttpUrl
-
+    url: str
 
 class URLResponse(BaseModel):
     title: Union[str, None] = None

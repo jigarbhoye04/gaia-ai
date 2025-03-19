@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from pydantic import BaseModel
 
-from app.models.calendar_models import EventCreateRequest
+from app.models.calendar_models import EventCreateRequest, CalendarPreferencesUpdateRequest
 from app.services.calendar_service import (
     create_calendar_event,
     get_all_calendar_events,
     get_calendar_events,
     get_calendar_events_by_id,
+    get_user_calendar_preferences,
     list_calendars,
+    update_user_calendar_preferences,
 )
-from app.db.collections import calendars_collection
 from app.api.v1.dependencies.oauth_dependencies import (
     get_current_user,
 )
@@ -152,14 +152,6 @@ async def get_all_events(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class CalendarPreferencesUpdateRequest(BaseModel):
-    """
-    Request model for updating user calendar preferences.
-    """
-
-    selected_calendars: List[str]
-
-
 @router.get("/calendar/preferences", summary="Get User Calendar Preferences")
 async def get_calendar_preferences(current_user: dict = Depends(get_current_user)):
     """
@@ -171,12 +163,12 @@ async def get_calendar_preferences(current_user: dict = Depends(get_current_user
     Raises:
         HTTPException: If the user is not authenticated or preferences are not found.
     """
-    user_id = current_user["user_id"]
-    preferences = await calendars_collection.find_one({"user_id": user_id})
-    if preferences and "selected_calendars" in preferences:
-        return {"selectedCalendars": preferences["selected_calendars"]}
-    else:
-        raise HTTPException(status_code=404, detail="Calendar preferences not found")
+    try:
+        return await get_user_calendar_preferences(current_user["user_id"])
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/calendar/preferences", summary="Update User Calendar Preferences")
@@ -196,13 +188,9 @@ async def update_calendar_preferences(
     Raises:
         HTTPException: If the user is not authenticated.
     """
-    user_id = current_user["user_id"]
-    result = await calendars_collection.update_one(
-        {"user_id": user_id},
-        {"$set": {"selected_calendars": preferences.selected_calendars}},
-        upsert=True,
-    )
-    if result.modified_count or result.upserted_id:
-        return {"message": "Calendar preferences updated successfully"}
-    else:
-        return {"message": "No changes made to calendar preferences"}
+    try:
+        return await update_user_calendar_preferences(
+            current_user["user_id"], preferences.selected_calendars
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
