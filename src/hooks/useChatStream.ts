@@ -18,6 +18,8 @@ export const useChatStream = () => {
   const { setIsLoading } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
   const latestConvoRef = useRef(convoMessages);
+  const botMessageRef = useRef<MessageType | null>(null);
+  const accumulatedResponseRef = useRef<string>("");
 
   useEffect(() => {
     latestConvoRef.current = convoMessages;
@@ -35,6 +37,8 @@ export const useChatStream = () => {
     botMessageId: string,
     botResponseText: string = "",
   ) => {
+    accumulatedResponseRef.current = "";
+
     /**
      * Builds a bot response object with optional overrides.
      */
@@ -43,10 +47,11 @@ export const useChatStream = () => {
     ): MessageType => ({
       type: "bot",
       message_id: botMessageId,
-      response: botResponseText,
+      response: accumulatedResponseRef.current,
       searchWeb: enableSearch,
       pageFetchURL,
       date: fetchDate(),
+      loading: true,
       ...overrides,
     });
 
@@ -54,41 +59,76 @@ export const useChatStream = () => {
      * Handles incoming SSE messages and updates the bot's response in real time.
      */
     const onMessage = (event: EventSourceMessage) => {
-      const dataJson = JSON.parse(event.data);
+      if (event.data === "[DONE]") return;
 
+      const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
 
-      botResponseText += dataJson.response || "\n";
+      accumulatedResponseRef.current += dataJson.response || "\n";
       const currentConvo = latestConvoRef.current;
 
       const parsedIntent = parseIntent(dataJson);
 
-      console.log("search results: ", parsedIntent.search_results);
-
-      const botResponse = buildBotResponse({
+      botMessageRef.current = buildBotResponse({
         intent: parsedIntent.intent,
         calendar_options: parsedIntent.calendar_options,
         search_results: parsedIntent.search_results,
       });
 
+      // Always ensure we have the most recent messages
       if (
         currentConvo.length > 0 &&
         currentConvo[currentConvo.length - 1].type === "bot"
       ) {
         const updatedMessages = [...currentConvo];
-        updatedMessages[updatedMessages.length - 1] = botResponse;
+        updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
         updateConvoMessages(updatedMessages);
-      } else updateConvoMessages([...currentConvo, botResponse]);
+      } else {
+        updateConvoMessages([...currentConvo, botMessageRef.current]);
+      }
     };
 
     /**
      * Handles the closing of the SSE connection.
-     * Updates the conversation history in the backend.
+     * Updates the conversation history in the backend with final message state.
      */
     const onClose = async () => {
-      const finalizedBotResponse = buildBotResponse({ loading: false });
-      const updatedMessages = [...currentMessages, finalizedBotResponse];
-      await ApiService.updateConversation(conversationId, updatedMessages);
+      if (!botMessageRef?.current) return;
+
+      // Finalize the bot message by setting loading to false
+      const finalBotMessage = {
+        ...botMessageRef.current,
+        loading: false,
+      };
+
+      // Get the current conversation state
+      const currentConvo = latestConvoRef.current;
+      let finalMessages: MessageType[];
+
+      if (
+        currentConvo.length >= 2 &&
+        currentConvo[currentConvo.length - 1].type === "bot"
+      ) {
+        // If we have a bot message as the last message, update it
+        finalMessages = [...currentConvo.slice(0, -1), finalBotMessage];
+      } else {
+        // Otherwise append the bot message
+        finalMessages = [...currentConvo, finalBotMessage];
+      }
+
+      // Update UI
+      updateConvoMessages(finalMessages);
+
+      // Save to database
+      try {
+        await ApiService.updateConversation(conversationId, finalMessages);
+      } catch (error) {
+        console.error("Failed to save conversation:", error);
+        toast.error(
+          "Failed to save the conversation. Some messages might not be preserved.",
+        );
+      }
+
       setIsLoading(false);
     };
 

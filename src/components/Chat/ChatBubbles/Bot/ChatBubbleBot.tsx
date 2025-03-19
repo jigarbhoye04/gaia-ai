@@ -20,11 +20,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     message_id,
     pinned,
     date,
-    search_results
   } = props;
-
-
-  console.log(search_results,"chat bubble bot")
 
   const [fileScanningText, setFileScanningText] = useState(
     "Uploading Document...",

@@ -23,7 +23,7 @@ export type MessageType = {
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
 
-  search_results?: SearchResults;
+  search_results?: SearchResults | null;
 };
 
 export type CalendarOptions = {

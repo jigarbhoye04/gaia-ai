@@ -50,12 +50,10 @@ export const ApiService = {
     messages: MessageType[],
   ) => {
     try {
-      // if (messages.length > 1) {
       await apiauth.put(`/conversations/${conversationId}/messages`, {
         conversation_id: conversationId,
         messages,
       });
-      // }
     } catch (error) {
       console.error(`Error updating conversation ${conversationId}:`, error);
       toast.error("Error updating conversation. Please try again later.");
@@ -99,13 +97,14 @@ export const ApiService = {
             })),
         }),
         onmessage(event) {
+          onMessage(event);
+          
           if (event.data === "[DONE]") {
             onClose();
             controller.abort();
             return;
           }
-
-          onMessage(event);
+          
         },
         onclose() {
           onClose();
