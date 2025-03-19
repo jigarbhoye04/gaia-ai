@@ -44,16 +44,30 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     if context["search_web"] and context["last_message"]:
         last_message = context["last_message"]
         query_text = context["query_text"]
-        search_result = await perform_search(query=query_text, count=5)
-        formatted_results = format_results_for_llm(
-            search_result.get("results") or search_result
-        )
+        search_results = await perform_search(query=query_text, count=5)
+        web_results = search_results.get("web", [])
+        news_results = search_results.get("news", [])
+        formatted_results = ""
+
+        if web_results:
+            formatted_results += (
+                format_results_for_llm(web_results, result_type="Web Results") + "\n"
+            )
+
+        if news_results:
+            formatted_results += format_results_for_llm(
+                news_results, result_type="News Results"
+            )
+
+        if not formatted_results:
+            formatted_results = "No relevant results found."
         print(formatted_results)
+        print(search_results)
         last_message["content"] += SEARCH_CONTEXT_TEMPLATE.format(
             formatted_results=formatted_results
         )
 
-    print(context)
+        context["search_results"] = search_results
     return context
 
 
@@ -95,8 +109,7 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
     )
     if notes:
         last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
-            message=last_message['content'],
-            notes='- '.join(notes)
+            message=last_message["content"], notes="- ".join(notes)
         )
         context["notes_added"] = True
     else:
@@ -119,9 +132,7 @@ async def fetch_documents(context: Dict[str, Any]) -> Dict[str, Any]:
         content = [doc["content"] for doc in documents]
         titles = [doc["title"] for doc in documents]
         prompt = DOCUMENTS_CONTEXT_TEMPLATE.format(
-            message=last_message['content'],
-            titles=titles,
-            content=content
+            message=last_message["content"], titles=titles, content=content
         )
         last_message["content"] = prompt
         context["docs_added"] = True
@@ -196,6 +207,7 @@ async def chat_stream(
             max_tokens=4096,
             intent=context["intent"],
             model=context["llm_model"],
+            context=context,
         ),
         media_type="text/event-stream",
     )

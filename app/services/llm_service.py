@@ -14,6 +14,7 @@ http_async_client = httpx.AsyncClient(timeout=1000000.0)
 
 async def do_prompt_with_stream(
     messages: list,
+    context: dict,
     temperature: float = 0.6,
     max_tokens: int = 256,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
@@ -36,14 +37,21 @@ async def do_prompt_with_stream(
             json=json,
         ) as response:
             response.raise_for_status()
-            async for line in process_streaming(response, user_message, intent):
+            async for line in process_streaming(
+                response=response,
+                user_message=user_message,
+                context=context,
+                intent=intent,
+            ):
                 yield line
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         yield f'data: {{"error": "An unexpected error occurred: {e}"}}\n\n'
 
 
-async def process_streaming(response, user_message: str, intent: Optional[str] = None):
+async def process_streaming(
+    response, user_message: str, context, intent: Optional[str] = None
+):
     """Process the streaming response from the LLM API."""
     bot_message = ""
     async for line in response.aiter_lines():
@@ -53,6 +61,8 @@ async def process_streaming(response, user_message: str, intent: Optional[str] =
         content = line.removeprefix("data:").strip()
 
         if content == "[DONE]":
+            yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
+
             if intent == "calendar":
                 success, options = await process_calendar_event(
                     user_message, bot_message
