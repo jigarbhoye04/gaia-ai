@@ -13,6 +13,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
+import { Spinner } from "@heroui/spinner";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -177,7 +178,12 @@ export default function ChatRenderer() {
             height={30}
             className={`animate-spin`}
           />
-          GAIA is thinking...
+          <div>GAIA is thinking</div>
+          <Spinner
+            variant="dots"
+            color="primary"
+            className="relative bottom-1"
+          />
         </div>
       )}
     </>
