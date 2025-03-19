@@ -7,7 +7,11 @@ from bs4 import BeautifulSoup
 from fastapi import HTTPException, status
 
 from app.config.loggers import search_logger as logger
-from app.db.collections import conversations_collection, notes_collection
+from app.db.collections import (
+    conversations_collection,
+    notes_collection,
+    search_urls_collection,
+)
 from app.db.db_redis import get_cache, set_cache
 from app.db.utils import serialize_document
 from app.models.search_models import URLResponse
@@ -132,64 +136,52 @@ async def search_messages(query: str, user_id: str) -> dict:
 
 
 async def fetch_url_metadata(url: str) -> URLResponse:
-    """
-    Fetch metadata from the provided URL, including title, description, favicon, and website name.
-    If fetching fails, store fallback (empty) metadata in the cache to prevent redundant API calls.
+    """Fetch metadata for a URL, with caching and database fallback."""
 
-    Args:
-        url (str): The URL to fetch metadata from.
+    cache_key = f"url_metadata:{url}"
+    metadata = await get_cache(cache_key) or await search_urls_collection.find_one(
+        {"url": url}
+    )
 
-    Returns:
-        URLResponse: An object containing the URL metadata.
-    """
-    cache_key = f"url_metadata:{str(url)}"
-    cached_data = await get_cache(cache_key)
+    if metadata:
+        return URLResponse(**metadata)
 
-    if cached_data:
-        return URLResponse(**cached_data)
+    metadata = await scrape_url_metadata(url)
 
+    await search_urls_collection.insert_one(metadata)
+    await set_cache(cache_key, metadata, 864000)
+
+    return URLResponse(**metadata)
+
+
+async def scrape_url_metadata(url: str) -> dict:
+    """Scrape metadata from a URL and handle errors gracefully."""
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(str(url))
+            response = await client.get(url)
             response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
-
-        title = soup.title.string if soup.title else None
-        description_tag = soup.find("meta", attrs={"name": "description"})
-        description = description_tag["content"] if description_tag else None
-        favicon_tag = soup.find("link", rel="icon")
-        favicon = favicon_tag["href"] if favicon_tag else None
-
-        # Extract website name from Open Graph metadata.
-        site_name_tag = soup.find("meta", property="og:site_name")
-        website_name = site_name_tag["content"] if site_name_tag else None
-
-        metadata = {
-            "title": title,
-            "description": description,
-            "favicon": favicon,
-            "website_name": website_name,
+        return {
+            "title": soup.title.string if soup.title else None,
+            "description": (soup.find("meta", attrs={"name": "description"}) or {}).get(
+                "content"
+            ),
+            "favicon": (soup.find("link", rel="icon") or {}).get("href"),
+            "website_name": (soup.find("meta", property="og:site_name") or {}).get(
+                "content"
+            ),
+            "url": url,
         }
     except (httpx.RequestError, httpx.HTTPStatusError) as exc:
         logger.error(f"Error fetching URL metadata: {exc}")
-        metadata = {
-            "title": None,
-            "description": None,
-            "favicon": None,
-            "website_name": None,
-        }
     except Exception as exc:
         logger.error(f"Unexpected error: {exc}")
-        metadata = {
-            "title": None,
-            "description": None,
-            "favicon": None,
-            "website_name": None,
-        }
 
-    await set_cache(
-        cache_key,
-        metadata,
-    )
-    return URLResponse(**metadata)
+    return {
+        "title": None,
+        "description": None,
+        "favicon": None,
+        "website_name": None,
+        "url": url,
+    }

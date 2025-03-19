@@ -1,5 +1,5 @@
+from typing import Union
 from pydantic import BaseModel, HttpUrl
-from typing import Optional
 
 
 class URLRequest(BaseModel):
@@ -7,7 +7,8 @@ class URLRequest(BaseModel):
 
 
 class URLResponse(BaseModel):
-    title: str
-    description: str
-    website_name: Optional[str] = None
-    favicon: Optional[str] = None
+    title: Union[str, None] = None
+    description: Union[str, None] = None
+    favicon: Union[str, None] = None
+    website_name: Union[str, None] = None
+    url: HttpUrl
