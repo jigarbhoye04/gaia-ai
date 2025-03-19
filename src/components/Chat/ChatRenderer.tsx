@@ -151,6 +151,7 @@ export default function ChatRenderer() {
               disclaimer={message.disclaimer}
               // userinputType={message.userinputType}
               date={message.date}
+              search_results={message.search_results}
             />
           </div>
         ) : (

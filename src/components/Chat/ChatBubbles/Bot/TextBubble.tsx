@@ -8,6 +8,7 @@ import { InternetIcon } from "@/components/Misc/icons";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 
 import CalendarEventSection from "./CalendarEventSection";
+import SearchResults from "./SearchResults";
 
 const MarkdownRenderer = lazy(
   () => import("@/components/Chat/MarkdownRenderer"),
@@ -26,10 +27,12 @@ export default function TextBubble({
   disclaimer,
   calendar_options,
   intent,
-  fileScanningText,
+  fileScanningText,search_results
 }: TextBubbleProps) {
   return (
     <>
+      {search_results && <SearchResults search_results={search_results} />}
+      
       <div className="chat_bubble bg-zinc-800">
         <div className="flex flex-col gap-3">
           {searchWeb && (

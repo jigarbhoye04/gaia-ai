@@ -63,9 +63,12 @@ export const useChatStream = () => {
 
       const parsedIntent = parseIntent(dataJson);
 
+      console.log("search results: ", parsedIntent.search_results);
+
       const botResponse = buildBotResponse({
         intent: parsedIntent.intent,
         calendar_options: parsedIntent.calendar_options,
+        search_results: parsedIntent.search_results,
       });
 
       if (

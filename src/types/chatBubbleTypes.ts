@@ -1,6 +1,6 @@
 import React from "react";
 
-import { CalendarOptions } from "./convoTypes";
+import { CalendarOptions, SearchResults } from "./convoTypes";
 
 export interface ChatBubbleUserProps {
   message_id: string;
@@ -37,4 +37,5 @@ export interface ChatBubbleBotProps {
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  search_results: SearchResults;
 }

@@ -107,7 +107,10 @@ export const ApiService = {
 
           onMessage(event);
         },
-        onclose: onClose,
+        onclose() {
+          onClose();
+          controller.abort();
+        },
         onerror: onError,
       },
     );
