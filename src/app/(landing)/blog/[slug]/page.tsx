@@ -21,11 +21,11 @@ interface BlogPost {
 }
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   try {
     const { data: blog } = await api.get<BlogPost>(`blogs/${slug}`);
 
@@ -92,7 +92,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   } catch (error) {
     return (
       <div>
-        Error fetching blog post: {error instanceof Error ? error.message : "Unknown error"}
+        Error fetching blog post:{" "}
+        {error instanceof Error ? error.message : "Unknown error"}
       </div>
     );
   }

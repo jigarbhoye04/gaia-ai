@@ -13,9 +13,7 @@ interface SearchbarToolbarProps {
   pageFetchURL: string;
   fetchPageModal: boolean;
   openPageFetchModal: () => void;
-  searchbarText: string;
   loading: boolean;
-  onSearchbarTextChange: (text: string) => void;
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
 }
 
@@ -25,10 +23,8 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
   pageFetchURL,
   fetchPageModal,
   openPageFetchModal,
-  searchbarText,
   loading,
   handleFormSubmit,
-  onSearchbarTextChange,
 }) => {
   return (
     <div className="mt-[5px] flex items-center justify-between px-2">
@@ -86,8 +82,6 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
       <SearchbarRightSendBtn
         handleFormSubmit={handleFormSubmit}
         loading={loading}
-        searchbarText={searchbarText}
-        setSearchbarText={onSearchbarTextChange}
       />
     </div>
   );

@@ -472,7 +472,7 @@ export default function GoalPage() {
                     elementsSelectable={true}
                     fitViewOptions={{ minZoom: 1.2 }}
                     minZoom={0.2}
-                    nodeTypes={nodeTypes}
+                    // nodeTypes={nodeTypes}
                     nodes={nodes}
                     nodesConnectable={false}
                     nodesDraggable={false}

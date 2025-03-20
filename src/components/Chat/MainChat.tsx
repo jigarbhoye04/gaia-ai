@@ -62,8 +62,8 @@ const MainChat = React.memo(function MainChat() {
       </div>
       <MainSearchbar
         inputRef={inputRef}
-        isAtBottom={isAtBottom}
-        isOverflowing={false}
+        // isAtBottom={isAtBottom}
+        // isOverflowing={false}
         scrollToBottom={scrollToBottom}
       />
     </React.Fragment>

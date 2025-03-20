@@ -12,11 +12,15 @@ import SearchbarToolbar from "./SearchbarToolbar";
 interface MainSearchbarProps {
   scrollToBottom: () => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  // isAtBottom?: boolean;
+  // isOverflowing?: boolean;
 }
 
 const MainSearchbar: React.FC<MainSearchbarProps> = ({
   scrollToBottom,
   inputRef,
+  // isAtBottom = true,
+  // isOverflowing = false,
 }) => {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const [currentHeight, setCurrentHeight] = useState<number>(24);
@@ -111,10 +115,8 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
             pageFetchURL={pageFetchURL}
             fetchPageModal={fetchPageModal}
             openPageFetchModal={openPageFetchModal}
-            searchbarText={searchbarText}
             loading={isLoading}
             handleFormSubmit={handleFormSubmit}
-            onSearchbarTextChange={setSearchbarText}
           />
         </div>
       </div>

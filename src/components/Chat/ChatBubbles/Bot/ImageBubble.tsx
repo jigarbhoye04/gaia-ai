@@ -16,6 +16,8 @@ export default function ImageBubble({
   setOpenImage,
   setImageData,
 }: ChatBubbleBotProps) {
+  if (!imageSrc && !loading) return null;
+
   return (
     <>
       <div className="chat_bubble bg-zinc-800">
@@ -23,25 +25,25 @@ export default function ImageBubble({
           <span>{text}</span>
           <Skeleton
             className="my-2 aspect-square max-h-[250px] min-h-[250px] min-w-[250px] max-w-[250px] rounded-3xl"
-            isLoaded={!loading && !!imageSrc}
+            isLoaded={!loading && Boolean(imageSrc)}
           >
-            <Image
-              alt="Generated Image"
-              className="my-2 !cursor-pointer rounded-3xl"
-              height={250}
-              width={250}
-              src={imageSrc as string}
-              onClick={() => {
-                if (imageSrc) {
+            {imageSrc && (
+              <Image
+                alt="Generated Image"
+                className="my-2 !cursor-pointer rounded-3xl"
+                height={250}
+                width={250}
+                src={imageSrc}
+                onClick={() => {
                   setOpenImage(true);
                   setImageData({
-                    prompt: imagePrompt,
+                    prompt: imagePrompt ?? "",
                     src: imageSrc,
-                    improvedPrompt: improvedImagePrompt,
+                    improvedPrompt: improvedImagePrompt ?? "",
                   });
-                }
-              }}
-            />
+                }}
+              />
+            )}
           </Skeleton>
           {imagePrompt && (
             <div className="flex max-w-[250px] flex-wrap justify-start gap-1">

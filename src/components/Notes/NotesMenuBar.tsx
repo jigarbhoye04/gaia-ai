@@ -73,7 +73,13 @@ export const MenuBar = ({
       if (value === "paragraph") {
         editor.chain().focus().setParagraph().run();
       } else if (value.startsWith("heading-")) {
-        const level = Number.parseInt(value.split("-")[1]);
+        const level = Number.parseInt(value.split("-")[1]) as
+          | 1
+          | 2
+          | 3
+          | 4
+          | 5
+          | 6;
         editor.chain().focus().toggleHeading({ level }).run();
       }
     };

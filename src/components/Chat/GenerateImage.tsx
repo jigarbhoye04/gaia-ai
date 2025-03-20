@@ -56,13 +56,17 @@ export default function GenerateImage({
     }
   };
 
+  const generateUniqueId = () => {
+    return crypto.randomUUID();
+  };
+
   const handleSubmit = async () => {
     if (!isValid) return;
     setIsLoading(true);
 
     try {
-      const botMessageId = String(ObjectID());
-      const userMessageId = String(ObjectID());
+      const botMessageId = generateUniqueId();
+      const userMessageId = generateUniqueId();
 
       const userMessage: MessageType = {
         type: "user",

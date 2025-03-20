@@ -1,3 +1,4 @@
+import { CalendarEvent } from "@/types/calendarTypes";
 import { CalendarOptions } from "@/types/convoTypes";
 
 import { CalendarEventsList } from "./CalendarEventCard";
@@ -21,5 +22,12 @@ export default function CalendarEventSection({
     );
   }
 
-  return <CalendarEventsList events={eventsArray} disableAnimation={true} />;
+  const calendarEvents: CalendarEvent[] = eventsArray.map((option) => ({
+    summary: option.summary!,
+    description: option.description || "",
+    start: option.start!,
+    end: option.end!,
+  }));
+
+  return <CalendarEventsList events={calendarEvents} disableAnimation={true} />;
 }

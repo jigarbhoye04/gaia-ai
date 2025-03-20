@@ -18,6 +18,7 @@ import { CalendarEvent } from "@/types/calendarTypes";
 
 interface CalendarMessagesProps {
   events: CalendarEvent[];
+  addedEvents: number[];
   setAddedEvents: Dispatch<SetStateAction<number[]>>;
 }
 

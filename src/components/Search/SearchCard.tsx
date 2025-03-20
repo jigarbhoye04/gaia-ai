@@ -53,83 +53,80 @@ interface SearchCardProps {
   className?: string;
 }
 
-const defaultConfigs: Record<
-  "message" | "conversation" | "note",
-  SearchCardConfig<
-    SearchMessageResult | SearchConversationResult | SearchNoteResult
-  >
-> = {
-  message: {
-    icon: (
-      <BubbleChatIcon className="min-h-[22px] min-w-[22px]" color="#9b9b9b" />
-    ),
-    linkTo: (result: SearchMessageResult) => `/c/${result.conversation_id}`,
-    bodyContent: (result: SearchMessageResult) => (
-      <>
-        <div className="flex items-center gap-2">
+const messageConfig: SearchCardConfig<SearchMessageResult> = {
+  icon: (
+    <BubbleChatIcon className="min-h-[22px] min-w-[22px]" color="#9b9b9b" />
+  ),
+  linkTo: (result) => `/c/${result.conversation_id}`,
+  bodyContent: (result) => (
+    <>
+      <div className="flex items-center gap-2">
+        <Chip
+          color={result.message.type === "bot" ? "primary" : "default"}
+          size="sm"
+        >
+          {result.message.type === "bot" ? "From GAIA" : "From You"}
+        </Chip>
+        {result.message.searchWeb && (
           <Chip
-            color={result.message.type === "bot" ? "primary" : "default"}
+            color="primary"
             size="sm"
+            startContent={<GlobeIcon color="#00bbff" height={20} />}
+            variant="flat"
           >
-            {result.message.type === "bot" ? "From GAIA" : "From You"}
+            Live Search Results from the Web
           </Chip>
-          {result.message.searchWeb && (
-            <Chip
-              color="primary"
-              size="sm"
-              startContent={<GlobeIcon color="#00bbff" height={20} />}
-              variant="flat"
-            >
-              Live Search Results from the Web
-            </Chip>
-          )}
-          {!!result.message.pageFetchURL && (
-            <Chip
-              color="primary"
-              size="sm"
-              startContent={<ArrowUpRight color="#00bbff" height={20} />}
-              variant="flat"
-            >
-              Fetched Webpage
-            </Chip>
-          )}
-        </div>
-        <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
-          {result.snippet}
-        </CommandItem>
-      </>
-    ),
-    footerContent: (result: SearchMessageResult) =>
-      parseDate2(result.message.date),
-  },
-  conversation: {
-    icon: (
-      <BubbleConversationChatIcon
-        className="min-h-[22px] min-w-[22px]"
-        color="#9b9b9b"
-      />
-    ),
-    linkTo: (result: SearchConversationResult) =>
-      `/c/${result.conversation_id}`,
-    bodyContent: (result: SearchConversationResult) => (
-      <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
-        {result.description}
-      </CommandItem>
-    ),
-    footerContent: undefined,
-  },
-  note: {
-    icon: (
-      <StickyNote01Icon className="min-h-[22px] min-w-[22px]" color="#9b9b9b" />
-    ),
-    linkTo: (result: SearchNoteResult) => `/notes/${result.id}`,
-    bodyContent: (result: SearchNoteResult) => (
+        )}
+        {!!result.message.pageFetchURL && (
+          <Chip
+            color="primary"
+            size="sm"
+            startContent={<ArrowUpRight color="#00bbff" height={20} />}
+            variant="flat"
+          >
+            Fetched Webpage
+          </Chip>
+        )}
+      </div>
       <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
         {result.snippet}
       </CommandItem>
-    ),
-    footerContent: undefined,
-  },
+    </>
+  ),
+  footerContent: (result) => parseDate2(result.message.date),
+};
+
+const conversationConfig: SearchCardConfig<SearchConversationResult> = {
+  icon: (
+    <BubbleConversationChatIcon
+      className="min-h-[22px] min-w-[22px]"
+      color="#9b9b9b"
+    />
+  ),
+  linkTo: (result) => `/c/${result.conversation_id}`,
+  bodyContent: (result) => (
+    <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
+      {result.description}
+    </CommandItem>
+  ),
+};
+
+const noteConfig: SearchCardConfig<SearchNoteResult> = {
+  icon: (
+    <StickyNote01Icon className="min-h-[22px] min-w-[22px]" color="#9b9b9b" />
+  ),
+  linkTo: (result) => `/notes/${result.id}`,
+  bodyContent: (result) => (
+    <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
+      {result.snippet}
+    </CommandItem>
+  ),
+};
+
+const defaultConfigs: Record<string, SearchCardConfig<SearchResultType>> = {
+  message: messageConfig as SearchCardConfig<SearchResultType>,
+  conversation: conversationConfig as SearchCardConfig<SearchResultType>,
+  note: noteConfig as SearchCardConfig<SearchResultType>,
 };
 
 export function SearchCard({
@@ -141,16 +138,22 @@ export function SearchCard({
   const { icon, linkTo, bodyContent, footerContent } =
     config || defaultConfigs[type];
 
-  return (result as SearchNoteResult).snippet ||
-    (result as SearchConversationResult).description ? (
+  const hasContent =
+    (result as SearchNoteResult).snippet ||
+    (result as SearchConversationResult).description;
+
+  if (!hasContent) return null;
+
+  const key =
+    "message" in result && result.message?.message_id
+      ? result.message.message_id
+      : "conversation_id" in result
+        ? result.conversation_id
+        : (result as SearchNoteResult).id;
+
+  return (
     <Link
-      key={
-        "message" in result && result.message?.message_id
-          ? result.message.message_id
-          : "conversation_id" in result
-            ? result.conversation_id
-            : result.id
-      }
+      key={key}
       className={`my-2 flex h-full flex-row items-center gap-2 overflow-hidden rounded-xl bg-zinc-800 p-2 px-3 transition-colors hover:bg-zinc-700 ${className}`}
       href={linkTo(result)}
     >
@@ -162,5 +165,5 @@ export function SearchCard({
         </div>
       )}
     </Link>
-  ) : null;
+  );
 }

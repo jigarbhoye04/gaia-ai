@@ -59,7 +59,10 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
             }, 10);
           }}
           isLoading={isLoading}
-          syntaxHighlighterProps={props}
+          syntaxHighlighterProps={{
+            ...props,
+            style: props.style as { [key: string]: unknown },
+          }}
         >
           {children}
         </MermaidTabs>

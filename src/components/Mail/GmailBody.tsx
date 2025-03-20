@@ -2,7 +2,7 @@ import { Spinner } from "@heroui/spinner";
 import DOMPurify from "dompurify";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { EmailData } from "@/types/mailTypes";
+import { EmailData, EmailPart } from "@/types/mailTypes";
 
 export const decodeBase64 = (str: string): string => {
   try {
@@ -22,8 +22,7 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
     if (!email) return null;
 
     const htmlPart = email.payload.parts?.find(
-      (p: { mimeType: string; body: { data: string } }) =>
-        p.mimeType === "text/html",
+      (p: EmailPart) => p.mimeType === "text/html",
     )?.body?.data;
 
     if (htmlPart) return decodeBase64(htmlPart);
@@ -50,12 +49,9 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
       const shadowRoot =
         shadowHostRef.current.shadowRoot ||
         shadowHostRef.current.attachShadow({ mode: "open" });
-
       shadowRoot.innerHTML = "";
-
       const contentWrapper = document.createElement("div");
       contentWrapper.innerHTML = sanitizedHtml;
-
       shadowRoot.appendChild(contentWrapper);
       setLoading(false);
     }
