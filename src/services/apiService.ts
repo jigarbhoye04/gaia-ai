@@ -9,6 +9,7 @@ import { apiauth } from "@/utils/apiaxios";
 
 export const ApiService = {
   fetchMessages: async (conversationId: string) => {
+    if (!conversationId) return;
     try {
       const response = await apiauth.get(`/conversations/${conversationId}`);
       return response?.data?.messages;

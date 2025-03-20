@@ -2,7 +2,7 @@
 
 import debounce from "lodash.debounce";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import ChatRenderer from "@/components/Chat/ChatRenderer";
 import MainSearchbar from "@/components/Chat/SearchBar/MainSearchbar";
@@ -29,7 +29,7 @@ const MainChat = React.memo(function MainChat() {
       chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
-  const fetchAndScroll = React.useCallback(async () => {
+  const fetchAndScroll = useCallback(async () => {
     await fetchMessages(convoIdParam, updateConvoMessages, router);
     setTimeout(scrollToBottom, 500);
   }, [convoIdParam, updateConvoMessages, router]);
@@ -38,7 +38,7 @@ const MainChat = React.memo(function MainChat() {
     if (convoIdParam) fetchAndScroll();
     else if (pathname !== "/c") router.push("/c");
     if (inputRef?.current) inputRef?.current?.focus();
-  }, [convoIdParam, pathname, router, fetchAndScroll]);
+  }, [convoIdParam, router, fetchAndScroll, pathname]);
 
   useEffect(() => {
     fetchAndScroll();

@@ -1,5 +1,5 @@
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import { Dispatch,SetStateAction } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { v1 as uuidv1 } from "uuid";
 
 import { ApiService } from "@/services/apiService";
@@ -30,8 +30,8 @@ export const fetchMessages = async (
   router: AppRouterInstance | string[],
 ) => {
   try {
+    if (!conversationId) return;
     const messages = await ApiService.fetchMessages(conversationId);
-
     if (messages.length > 1) setConvoMessages(messages);
   } catch (e) {
     console.error("Failed to fetch messages:", e);
