@@ -8,9 +8,9 @@ const Section_ConvoManagement = lazy(
   () => import("@/components/Landing/Sections/ConversationManagementSection"),
 );
 
-const Section_Document = lazy(
-  () => import("@/components/Landing/Sections/DocumentsSection"),
-);
+// const Section_Document = lazy(
+//   () => import("@/components/Landing/Sections/DocumentsSection"),
+// );
 
 const FlowchartDemo = lazy(
   () => import("@/components/Landing/Sections/FlowchartSection"),

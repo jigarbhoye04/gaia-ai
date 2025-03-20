@@ -9,10 +9,17 @@ import React from "react";
 
 import { EdgeType, NodeData } from "@/types/goalTypes";
 
+interface NodeTypes {
+  [key: string]: React.ComponentType<{
+    data: NodeData;
+    [key: string]: unknown;
+  }>;
+}
+
 interface GoalGraphProps {
   nodes: Node<NodeData>[];
   edges: Edge<EdgeType>[];
-  nodeTypes: any;
+  nodeTypes: NodeTypes;
   handleInit: (
     reactFlowInstance: ReactFlowInstance<Node<NodeData>, Edge<EdgeType>>,
   ) => void;

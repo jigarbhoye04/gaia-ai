@@ -1,6 +1,7 @@
 "use client";
 
 import { Chip } from "@heroui/chip";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import LandingSectionLayout from "@/layouts/LandingSectionLayout";
@@ -39,7 +40,7 @@ export function GeneratedImageChatBubble({
   return (
     <div className="!w-full !rounded-2xl p-1">
       <div className="flex min-w-full flex-col gap-1 text-sm font-medium">
-        <img
+        <Image
           alt={selectedOption?.prompt || "Generated image"}
           className="my-2 w-full rounded-3xl"
           height={400}

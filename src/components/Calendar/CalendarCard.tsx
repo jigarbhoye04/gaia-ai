@@ -1,4 +1,3 @@
-import { Clock } from "lucide-react";
 import { useState } from "react";
 import Twemoji from "react-twemoji";
 
@@ -16,7 +15,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
   calendars,
 }) => {
   // Add error state for failed calendar color loading
-  const [colorLoadError, setColorLoadError] = useState(false);
+  const [colorLoadError, _setColorLoadError] = useState(false);
 
   // Find the calendar that matches the event organizer's email.
   const calendar = calendars?.find((cal) => cal.id === event?.organizer?.email);

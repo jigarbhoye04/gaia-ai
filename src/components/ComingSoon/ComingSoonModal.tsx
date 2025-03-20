@@ -6,6 +6,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@heroui/modal";
+import Image from "next/image";
 import { useState } from "react";
 
 const steps = [
@@ -66,17 +67,19 @@ export default function ComingSoonModal({
           <h2 className="text-2xl">{steps[currentStep].title}</h2>
           <p>{steps[currentStep].description}</p>
         </ModalHeader>
-
         <ModalBody>
-          <img
-            alt={`Coming Soon - ${steps[currentStep].title}`}
-            className="h-[200px] w-full rounded-xl object-cover"
-            loading="eager"
-            src={steps[currentStep].image}
-          />
+          <div className="relative h-[200px] w-full">
+            <Image
+              alt={`Coming Soon - ${steps[currentStep].title}`}
+              className="rounded-xl object-cover"
+              fill
+              priority
+              src={steps[currentStep].image}
+              unoptimized // Since these are placeholder images
+            />
+          </div>
           <p>{steps[currentStep].content}</p>
         </ModalBody>
-
         <ModalFooter className="flex items-center justify-between">
           <Button
             color="danger"
@@ -86,7 +89,6 @@ export default function ComingSoonModal({
           >
             Previous
           </Button>
-
           <div className="flex items-center gap-2">
             {steps.map((_, index) => (
               <div
@@ -98,7 +100,6 @@ export default function ComingSoonModal({
               />
             ))}
           </div>
-
           <Button color="primary" onPress={handleNext}>
             {currentStep === steps.length - 1 ? "Finish" : "Next"}
           </Button>

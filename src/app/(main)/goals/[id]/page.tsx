@@ -143,32 +143,24 @@ export default function GoalPage() {
   const fetchGoalData = useCallback(async () => {
     try {
       if (!goalId) return;
-
       setLoading(true);
       const response = await apiauth.get(`/goals/${goalId}`);
       const goal = response.data;
-
       if (goal?.roadmap) {
         setGoalData(goal);
         setLoading(false);
-
         const graph = new dagre.graphlib.Graph();
         graph.setGraph({ rankdir: "TD" });
         graph.setDefaultEdgeLabel(() => ({}));
-
         goal.roadmap.nodes?.forEach((node: NodeType) => {
           graph.setNode(node.id, { width: 350, height: 100 });
         });
-
         goal.roadmap.edges?.forEach((edge: EdgeType) => {
           graph.setEdge(edge.source, edge.target);
         });
-
         dagre.layout(graph);
-
         const updatedNodes = goal.roadmap.nodes?.map((node: NodeType) => {
           const { x, y } = graph.node(node.id);
-
           return {
             id: node.id,
             position: { x, y },
@@ -176,14 +168,32 @@ export default function GoalPage() {
             data: { ...node.data, id: node.id, goalId: goal.id },
           };
         });
-
         setNodes(updatedNodes || []);
-
         setCurrentlySelectedNodeId(updatedNodes[0]?.id);
         setOpenSidebar(true);
         setEdges(goal.roadmap.edges || []);
       } else {
         console.log("initialising roadmap web socket");
+        const initiateWebSocket = (goalId: string, goalTitle: string) => {
+          const ws = new WebSocket(
+            `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`,
+          );
+          ws.onopen = () => {
+            ws.send(JSON.stringify({ goal_id: goalId, goal_title: goalTitle }));
+            console.log("WebSocket: Generating roadmap...");
+          };
+          ws.onmessage = (event) => {
+            const jsonData = event.data.replace(/^data: /, "");
+            const parsedData = JSON.parse(jsonData) || jsonData;
+            console.log("Parsed WebSocket response:", parsedData);
+          };
+          ws.onerror = (error) => console.error("WebSocket error:", error);
+          ws.onclose = () => {
+            console.log("WebSocket closed.");
+            fetchGoalData();
+            setLoading(false);
+          };
+        };
         initiateWebSocket(goalId as string, goal.title);
       }
     } catch (error) {
@@ -191,31 +201,6 @@ export default function GoalPage() {
       setGoalData(null);
     }
   }, [goalId]);
-
-  const initiateWebSocket = (goalId: string, goalTitle: string) => {
-    const ws = new WebSocket(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/roadmap`,
-    );
-
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ goal_id: goalId, goal_title: goalTitle }));
-      console.log("WebSocket: Generating roadmap...");
-    };
-
-    ws.onmessage = (event) => {
-      const jsonData = event.data.replace(/^data: /, "");
-      const parsedData = JSON.parse(jsonData) || jsonData;
-
-      console.log("Parsed WebSocket response:", parsedData);
-    };
-
-    ws.onerror = (error) => console.error("WebSocket error:", error);
-    ws.onclose = () => {
-      console.log("WebSocket closed.");
-      fetchGoalData();
-      setLoading(false);
-    };
-  };
 
   useEffect(() => {
     if (goalId) fetchGoalData();

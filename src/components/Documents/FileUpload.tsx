@@ -220,6 +220,7 @@ export default function FileUpload({ isImage, fileInputRef }: FileUploadProps) {
       //   true
       // );
     } catch (error) {
+      console.error("Something went wrong: " + error);
       toast.error("Uh oh! Something went wrong.", {
         classNames: {
           toast: "flex items-center p-3 rounded-xl gap-3 w-[350px] toast_error",

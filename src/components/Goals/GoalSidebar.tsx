@@ -1,4 +1,3 @@
-// GoalSidebar.tsx
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
 import { Node } from "@xyflow/react";
@@ -9,11 +8,9 @@ import { BookIcon1 } from "@/components/Misc/icons";
 import { NodeData } from "@/types/goalTypes";
 
 interface GoalSidebarProps {
-  openSidebar: boolean;
-  setOpenSidebar: (open: boolean) => void;
-  node: Node<NodeData> | null;
   nodes: Node<NodeData>[];
-  setNodes: React.Dispatch<React.SetStateAction<Node<NodeData>[]>>;
+  currentlySelectedNodeId: string | null;
+  handleCheckboxClick: () => void;
 }
 
 const GoalSidebar: React.FC<GoalSidebarProps> = ({
@@ -22,7 +19,7 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
   handleCheckboxClick,
 }) => {
   const selectedNode = nodes.find(
-    (node: any) => node.id === currentlySelectedNodeId,
+    (node) => node.id === currentlySelectedNodeId,
   );
 
   return (

@@ -4,18 +4,23 @@ import React from "react";
 import FlowchartPreview from "./FlowchartPreview";
 import MermaidCode from "./MermaidCode";
 
+interface SyntaxHighlighterProps {
+  language?: string;
+  style?: { [key: string]: unknown };
+  customStyle?: { [key: string]: unknown };
+  className?: string;
+  showLineNumbers?: boolean;
+  startingLineNumber?: number;
+  wrapLines?: boolean;
+  lineProps?: { [key: string]: unknown };
+}
+
 interface MermaidTabsProps {
   children: React.ReactNode;
   activeTab: string;
   onTabChange: (key: string) => void;
   isLoading: boolean;
-  syntaxHighlighterProps?: any;
-}
-
-interface TabProps {
-  type: string;
-  value: string;
-  onChange: (value: string) => void;
+  syntaxHighlighterProps?: SyntaxHighlighterProps;
 }
 
 const MermaidTabs: React.FC<MermaidTabsProps> = ({

@@ -147,17 +147,18 @@ export default function Calendar() {
   }, [fetchEvents]); // Added fetchEvents dependency
 
   // Debounced function to update calendar preferences.
-  const updatePreferences = useCallback(
-    debounce(async (newSelection: string[]) => {
-      try {
-        await apiauth.put("/calendar/preferences", {
-          selected_calendars: newSelection,
-        });
-      } catch (error) {
-        console.error("Error updating calendar preferences:", error);
-      }
-    }, 300),
-    [],
+  const updatePreferences = useMemo(
+    () =>
+      debounce(async (newSelection: string[]) => {
+        try {
+          await apiauth.put("/calendar/preferences", {
+            selected_calendars: newSelection,
+          });
+        } catch (error) {
+          console.error("Error updating calendar preferences:", error);
+        }
+      }, 300),
+    [], // Only recreate if dependencies change (add them here if needed)
   );
 
   // Handle calendar selection: if deselected, remove events; if added, fetch events.
@@ -244,13 +245,10 @@ export default function Calendar() {
     fetchCalendars();
   }, [fetchCalendars]);
 
-  const handleEventClick = useCallback(
-    (event: GoogleCalendarEvent) => {
-      setSelectedEvent(event);
-      setIsDialogOpen(true);
-    },
-    [setSelectedEvent, setIsDialogOpen],
-  );
+  const handleEventClick = useCallback((event: GoogleCalendarEvent) => {
+    setSelectedEvent(event);
+    setIsDialogOpen(true);
+  }, []);
 
   return (
     <>

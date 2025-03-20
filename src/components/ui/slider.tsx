@@ -3,9 +3,14 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+interface SliderProps
+  extends React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root> {
+  rangeClasses?: string;
+}
+
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<any>
+  SliderProps
 >(({ className, rangeClasses, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}

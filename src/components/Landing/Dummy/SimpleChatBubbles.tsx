@@ -7,7 +7,7 @@ export function SimpleChatBubbleUser({
   hideMobile = false,
   className = "",
 }: {
-  children: any;
+  children: ReactNode;
   hideMobile?: boolean;
   className?: string;
 }) {

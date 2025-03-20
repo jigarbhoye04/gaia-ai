@@ -13,7 +13,7 @@ import {
   SimpleChatBubbleUser,
 } from "../Dummy/SimpleChatBubbles";
 
-function SearchWeb() {
+export function SearchWeb() {
   return (
     <AnimatedSection className="space-y-3">
       <SimpleChatBubbleUser>
@@ -114,7 +114,7 @@ function SearchWeb() {
   );
 }
 
-function FetchWebpage() {
+export function FetchWebpage() {
   return (
     <AnimatedSection className="space-y-3">
       <SimpleChatBubbleUser>

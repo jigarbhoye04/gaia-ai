@@ -4,16 +4,10 @@ import { Tooltip } from "@heroui/tooltip";
 import { SentIcon } from "../../Misc/icons";
 
 interface RightSideProps {
-  textHeight: number;
   isLoadingStream: boolean;
-  onSubmit: () => void;
 }
 
-export default function RightSide({
-  textHeight,
-  isLoadingStream,
-  onSubmit,
-}: RightSideProps) {
+export default function RightSide({ isLoadingStream }: RightSideProps) {
   return (
     <div className="ml-2 flex items-center gap-1">
       <Tooltip content="Send message" placement="right">

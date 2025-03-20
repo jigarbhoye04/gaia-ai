@@ -29,21 +29,20 @@ const MainChat = React.memo(function MainChat() {
       chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
-  const fetchAndScroll = async () => {
+  const fetchAndScroll = React.useCallback(async () => {
     await fetchMessages(convoIdParam, updateConvoMessages, router);
-    setTimeout(() => scrollToBottom, 500);
-  };
+    setTimeout(scrollToBottom, 500);
+  }, [convoIdParam, updateConvoMessages, router]);
 
   useEffect(() => {
     if (convoIdParam) fetchAndScroll();
     else if (pathname !== "/c") router.push("/c");
     if (inputRef?.current) inputRef?.current?.focus();
-  }, [convoIdParam]);
+  }, [convoIdParam, pathname, router, fetchAndScroll]);
 
   useEffect(() => {
-    if (messages.length === 0) return;
     fetchAndScroll();
-  }, [fetchAndScroll, messages.length, pathname, router]);
+  }, [fetchAndScroll]);
 
   useEffect(() => {
     return () => {

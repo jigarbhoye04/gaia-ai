@@ -92,10 +92,11 @@ const Confetti = forwardRef<ConfettiRef, Props>((props, ref) => {
   );
 });
 
+Confetti.displayName = "Confetti";
 interface ConfettiButtonProps {
   options?: ConfettiOptions;
   children?: ReactNode;
-  [key: string]: any; // For any additional props that might be passed to Button
+  // [key: string]: any; // For any additional props that might be passed to Button
 }
 
 function ConfettiButton({

@@ -1,7 +1,8 @@
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Send } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import NextImage from "next/image";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import StaticSidebar from "@/components/Landing/Dummy/DummySidebar";
 import {
@@ -21,29 +22,36 @@ interface Step {
 
 export default function GoalSection() {
   const [selectedStep, setSelectedStep] = useState<number>(0);
-  const steps: Step[] = [
-    {
-      icon: <Target02Icon color={undefined} height={30} width={30} />,
-      title: "Enter your goal",
-      description:
-        "Define your objective clearly so we can create a personalized plan for you.",
-      image: "/landing/blur_goals.webp",
-    },
-    {
-      icon: <FlowchartIcon1 color={undefined} height={30} width={30} />,
-      title: "Create a Flowchart",
-      description:
-        "GAIA provides a step-by-step plan with resources to help you achieve your goal!",
-      image: "/landing/goal_tracking.webp",
-    },
-    {
-      icon: <CheckmarkSquare03Icon color={undefined} height={30} width={30} />,
-      title: "Keep Track",
-      description:
-        "Monitor your milestones and celebrate every step toward achieving your goal.",
-      image: "/landing/goal_cropped.webp",
-    },
-  ];
+
+  const steps = useMemo<Step[]>(
+    () => [
+      {
+        icon: <Target02Icon color={undefined} height={30} width={30} />,
+        title: "Enter your goal",
+        description:
+          "Define your objective clearly so we can create a personalized plan for you.",
+        image: "/landing/blur_goals.webp",
+      },
+      {
+        icon: <FlowchartIcon1 color={undefined} height={30} width={30} />,
+        title: "Create a Flowchart",
+        description:
+          "GAIA provides a step-by-step plan with resources to help you achieve your goal!",
+        image: "/landing/goal_tracking.webp",
+      },
+      {
+        icon: (
+          <CheckmarkSquare03Icon color={undefined} height={30} width={30} />
+        ),
+        title: "Keep Track",
+        description:
+          "Monitor your milestones and celebrate every step toward achieving your goal.",
+        image: "/landing/goal_cropped.webp",
+      },
+    ],
+    [],
+  );
+
   const [selectedImage, setSelectedImage] = useState<string>(
     steps[selectedStep].image,
   );
@@ -123,15 +131,7 @@ function GoalSteps({
       { threshold: 0.1 },
     );
 
-    if (goalSectionRef.current) {
-      observer.observe(goalSectionRef.current);
-    }
-
-    return () => {
-      if (goalSectionRef.current) {
-        observer.unobserve(goalSectionRef.current);
-      }
-    };
+    if (goalSectionRef.current) observer.observe(goalSectionRef.current);
   }, []);
 
   // Animate progress for the active step.
@@ -141,7 +141,7 @@ function GoalSteps({
     const increment = 100 / (progressDuration / intervalTime);
 
     // When the active step changes, set previous steps as complete (if moving forward) and reset current.
-    setProgresses((prev) => {
+    setProgresses((_prev) => {
       if (selectedStep === 0) {
         // Reset all on a cycle restart.
         return steps.map(() => 0);
@@ -268,7 +268,8 @@ interface GoalImageProps {
 function GoalImage({ image }: GoalImageProps) {
   return (
     <div className="relative hidden sm:flex">
-      <img
+      <NextImage
+        fill={true}
         alt="Goal step illustration"
         className="h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center outline outline-4 outline-zinc-800 transition-all sm:w-screen sm:max-w-screen-xl"
         src={image}

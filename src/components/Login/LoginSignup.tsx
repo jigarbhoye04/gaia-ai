@@ -20,8 +20,8 @@ export default function LoginSignup({
   const user = useUser();
 
   useEffect(() => {
-    if (user?.email && user.email) router.push("/c");
-  }, [user]);
+    if (user?.email) router.push("/c");
+  }, [user, router]);
 
   return (
     <form className="flex h-screen w-screen select-none flex-col items-center justify-center overflow-auto">

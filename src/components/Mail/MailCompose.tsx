@@ -129,7 +129,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
         if (editor) editor.commands.setContent(formattedBody);
         setSubject(response.subject);
       } catch (error) {
-        console.log("Error composing ai mail ");
+        console.log("Error composing ai mail " + error);
         setError(res.data.result.response);
       }
     } catch (error) {

@@ -8,7 +8,6 @@ import {
 import { Input, Textarea } from "@heroui/input";
 import { ArrowUpRight } from "lucide-react";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 
 import {
   Dialog,
@@ -18,8 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useLoginModal, useLoginModalActions } from "@/hooks/useLoginModal";
-import { RootState } from "@/redux/store";
+import { useLoginModalActions } from "@/hooks/useLoginModal";
 
 import {
   AiImageIcon,

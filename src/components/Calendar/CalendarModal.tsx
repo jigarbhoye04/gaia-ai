@@ -54,7 +54,7 @@ export default function CalendarModal() {
   const { isOpen, editedEvent, status, isDummyEvent, onEventSuccess, error } =
     useSelector((state: RootState) => state.calendarModal);
 
-  const handleClose = () => dispatch(closeModal());
+  const handleClose = useCallback(() => dispatch(closeModal()), [dispatch]);
 
   const handleEditSubmit = useCallback(async () => {
     if (!editedEvent) {

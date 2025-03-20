@@ -11,15 +11,11 @@ import SearchbarToolbar from "./SearchbarToolbar";
 
 interface MainSearchbarProps {
   scrollToBottom: () => void;
-  isAtBottom: boolean;
-  isOverflowing: boolean;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 const MainSearchbar: React.FC<MainSearchbarProps> = ({
   scrollToBottom,
-  isAtBottom,
-  isOverflowing,
   inputRef,
 }) => {
   const { id: convoIdParam } = useParams<{ id: string }>();

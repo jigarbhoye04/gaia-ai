@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
 
 import {
   BlushBrush02Icon,
@@ -127,19 +128,16 @@ export default function StarterText() {
     <>
       <div className="my-4 inline-flex flex-1 grow flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-4xl">
         Hey!
-        <img
+        <Image
           alt="Waving Hand"
           className="mx-2 w-[35px] object-contain sm:mx-0 sm:w-[50px]"
           src="https://em-content.zobj.net/source/apple/391/waving-hand_1f44b.png"
           height={50}
           width={50}
+          unoptimized // Since this is an external emoji image
         />
         What can I do for you today?
       </div>
-
-      {/* <div className="text-foreground-500 text-xs -mt-1 mb-1">
-        I can do the following for you:
-      </div> */}
       <div className="flex max-w-[650px] flex-wrap justify-center gap-2">
         {badges.map((badge, index) => (
           <div

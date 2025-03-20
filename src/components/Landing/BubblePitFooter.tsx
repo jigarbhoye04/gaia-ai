@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
   SimpleChatBubbleBot,
@@ -63,41 +69,43 @@ const BubblePitFooter: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [bubbles, setBubbles] = useState<BubbleConfig[]>([]);
 
-  // An array of custom bubble components.
-  // You can add as many variations as needed.
-  const providedComponents: ReactNode[] = [
-    <SimpleChatBubbleBot key="bot" className="text-nowrap">
-      hey there!
-    </SimpleChatBubbleBot>,
-    <SimpleChatBubbleUser key="user" className="text-nowrap">
-      Hey GAIA!
-    </SimpleChatBubbleUser>,
-    // <Calendaradd />,
-    // Add more custom bubbles here…
-  ];
+  // Memoize the components array
+  const providedComponents = React.useMemo<ReactNode[]>(
+    () => [
+      <SimpleChatBubbleBot key="bot" className="text-nowrap">
+        hey there!
+      </SimpleChatBubbleBot>,
+      <SimpleChatBubbleUser key="user" className="text-nowrap">
+        Hey GAIA!
+      </SimpleChatBubbleUser>,
+    ],
+    [],
+  );
 
-  // A palette for bubble colors (you can also use these colors inside your custom components if desired)
-  const COLORS = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"];
+  // Memoize the colors array
+  const COLORS = React.useMemo(
+    () => ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A", "#98D8C8"],
+    [],
+  );
+
+  // Move bubble generation logic to a callback
+  const generateBubbles = useCallback(() => {
+    if (!containerRef.current) return;
+
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    const newBubbles: BubbleConfig[] = providedComponents.map((component) => ({
+      x: Math.random() * (width - 100),
+      y: Math.random() * (height - 100),
+      size: 20 + Math.random() * 20,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      component,
+    }));
+    setBubbles(newBubbles);
+  }, [providedComponents, COLORS]);
 
   useEffect(() => {
-    if (containerRef.current) {
-      const { width, height } = containerRef.current.getBoundingClientRect();
-
-      // Create one bubble per provided component.
-      // You can also add more bubbles (e.g. by repeating components or using a default one).
-      const newBubbles: BubbleConfig[] = providedComponents.map(
-        (component) => ({
-          x: Math.random() * (width - 100),
-          y: Math.random() * (height - 100),
-          size: 20 + Math.random() * 20,
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          component,
-        }),
-      );
-
-      setBubbles(newBubbles);
-    }
-  }, [containerRef.current]); // Run once when the container is available
+    generateBubbles();
+  }, [generateBubbles]);
 
   // Optional: Update bubble positions on mouse move.
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {

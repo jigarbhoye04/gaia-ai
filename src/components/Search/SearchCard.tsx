@@ -49,13 +49,15 @@ interface SearchCardConfig<T extends SearchResultType> {
 interface SearchCardProps {
   result: SearchResultType;
   type: "message" | "conversation" | "note";
-  config?: SearchCardConfig<any>;
+  config?: SearchCardConfig<SearchResultType>;
   className?: string;
 }
 
 const defaultConfigs: Record<
   "message" | "conversation" | "note",
-  SearchCardConfig<any>
+  SearchCardConfig<
+    SearchMessageResult | SearchConversationResult | SearchNoteResult
+  >
 > = {
   message: {
     icon: (
