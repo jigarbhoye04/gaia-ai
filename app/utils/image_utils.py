@@ -6,7 +6,7 @@ import requests
 from fastapi import File, Form, HTTPException, UploadFile
 from PIL import Image
 from app.services.llm_service import do_prompt_no_stream
-from prompts.user.image_prompts import IMAGE_CAPTION_FORMATTER
+from app.prompts.user.image_prompts import IMAGE_CAPTION_FORMATTER
 
 http_async_client = httpx.AsyncClient(timeout=100000)
 

@@ -1,7 +1,7 @@
 import json
 from typing import Any
 from app.services.llm_service import do_prompt_no_stream
-from prompts.system.notes_prompts import MEMORY_CREATOR
+from app.prompts.system.notes_prompts import MEMORY_CREATOR
 
 
 async def should_create_memory(

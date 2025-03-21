@@ -1,0 +1,23 @@
+services:
+  gaia:
+    container_name: gaia
+    build: .
+    working_dir: /app
+    command:
+      [
+        "/app/.venv/bin/python",
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "80",
+      ]
+    environment:
+      DEBUG: 1
+    volumes:
+      - .:/app
+    ports:
+      - "8008:80"
+    restart: on-failure

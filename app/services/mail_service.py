@@ -136,3 +136,7 @@ def fetch_detailed_messages(service, messages):
 
     batch.execute()
     return detailed_messages
+
+
+async def fetch_and_process_emails():
+    pass

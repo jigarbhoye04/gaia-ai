@@ -6,7 +6,7 @@ import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException
 
-from app.config.config_cloudinary import (
+from app.config.cloudinary import (
     api_key,
     api_secret,
     cloud_name,
@@ -15,7 +15,7 @@ from app.config.config_cloudinary import (
 from app.config.loggers import image_logger as logger
 from app.services.llm_service import do_prompt_no_stream
 from app.utils.image_utils import convert_image_to_text, generate_image
-from prompts.user.image_service_prompts import IMAGE_PROMPT_REFINER
+from app.prompts.user.image_service_prompts import IMAGE_PROMPT_REFINER
 
 
 def generate_public_id(refined_text: str, max_length: int = 50) -> str:

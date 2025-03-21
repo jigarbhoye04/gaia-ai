@@ -27,7 +27,7 @@ from app.utils.embedding_utils import query_documents, search_notes_by_similarit
 from app.utils.notes import insert_note
 from app.utils.notes_utils import should_create_memory
 from app.utils.search_utils import format_results_for_llm, perform_fetch, perform_search
-from prompts.user.chat_prompts import (
+from app.prompts.user.chat_prompts import (
     CONVERSATION_DESCRIPTION_GENERATOR,
     DOCUMENTS_CONTEXT_TEMPLATE,
     NOTES_CONTEXT_TEMPLATE,

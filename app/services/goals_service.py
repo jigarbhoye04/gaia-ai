@@ -10,7 +10,7 @@ from app.models.goals_models import GoalCreate, UpdateNodeRequest, GoalResponse
 from app.services.llm_service import do_prompt_no_stream, do_prompt_with_stream
 from app.utils.goals_utils import goal_helper
 from app.config.loggers import goals_logger as logger
-from prompts.user.goals_prompts import (
+from app.prompts.user.goals_prompts import (
     ROADMAP_JSON_STRUCTURE,
     ROADMAP_INSTRUCTIONS,
     ROADMAP_GENERATOR,
@@ -21,7 +21,7 @@ async def generate_roadmap_with_llm(title: str) -> dict:
     detailed_prompt = ROADMAP_GENERATOR.format(
         title=title,
         instructions=ROADMAP_INSTRUCTIONS,
-        json_structure=ROADMAP_JSON_STRUCTURE
+        json_structure=ROADMAP_JSON_STRUCTURE,
     )
 
     try:
@@ -36,7 +36,7 @@ async def generate_roadmap_with_llm_stream(title: str):
     detailed_prompt = ROADMAP_GENERATOR.format(
         title=title,
         instructions=ROADMAP_INSTRUCTIONS,
-        json_structure=ROADMAP_JSON_STRUCTURE
+        json_structure=ROADMAP_JSON_STRUCTURE,
     )
 
     try:

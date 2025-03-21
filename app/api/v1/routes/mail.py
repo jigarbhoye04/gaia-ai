@@ -13,7 +13,7 @@ from app.services.mail_service import (
 )
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
-from prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
+from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 
 router = APIRouter()
 
@@ -75,10 +75,12 @@ async def process_email(
             content_length=request.contentLength or "None",
             clarity_option=request.clarityOption or "None",
             notes="- ".join(notes) if notes else "No relevant notes found.",
-            prompt=request.prompt
+            prompt=request.prompt,
         )
 
-        result = await do_prompt_no_stream(prompt=prompt, model="@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+        result = await do_prompt_no_stream(
+            prompt=prompt, model="@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        )
         print(result)
         if isinstance(result, dict) and result.get("response"):
             try:
@@ -88,7 +90,9 @@ async def process_email(
 
                 return {"subject": subject, "body": body}
             except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Failed to parse response {e}")
+                raise HTTPException(
+                    status_code=500, detail=f"Failed to parse response {e}"
+                )
         else:
             raise HTTPException(status_code=500, detail="Invalid response format")
 
@@ -104,11 +108,11 @@ async def send_email_route(
     cc: Optional[str] = Form(None),
     bcc: Optional[str] = Form(None),
     attachments: Optional[List[UploadFile]] = File(None),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Send an email using the Gmail API.
-    
+
     - **to**: Recipient email addresses (comma-separated)
     - **subject**: Email subject
     - **body**: Email body
@@ -118,16 +122,16 @@ async def send_email_route(
     """
     try:
         service = get_gmail_service(current_user)
-        
+
         # Get the user's email address
-        profile = service.users().getProfile(userId='me').execute()
-        sender = profile.get('emailAddress')
-        
+        profile = service.users().getProfile(userId="me").execute()
+        sender = profile.get("emailAddress")
+
         # Parse recipients
-        to_list = [email.strip() for email in to.split(',') if email.strip()]
-        cc_list = [email.strip() for email in cc.split(',')] if cc else None
-        bcc_list = [email.strip() for email in bcc.split(',')] if bcc else None
-        
+        to_list = [email.strip() for email in to.split(",") if email.strip()]
+        cc_list = [email.strip() for email in cc.split(",")] if cc else None
+        bcc_list = [email.strip() for email in bcc.split(",")] if bcc else None
+
         # Send the email
         sent_message = send_email(
             service=service,
@@ -138,13 +142,13 @@ async def send_email_route(
             is_html=True,
             cc_list=cc_list,
             bcc_list=bcc_list,
-            attachments=attachments
+            attachments=attachments,
         )
-        
+
         return {
-            "message_id": sent_message.get('id'),
+            "message_id": sent_message.get("id"),
             "status": "Email sent successfully",
-            "attachments_count": len(attachments) if attachments else 0
+            "attachments_count": len(attachments) if attachments else 0,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
@@ -152,12 +156,11 @@ async def send_email_route(
 
 @router.post("/gmail/send-json", summary="Send an email using JSON payload")
 async def send_email_json(
-    request: SendEmailRequest,
-    current_user: dict = Depends(get_current_user)
+    request: SendEmailRequest, current_user: dict = Depends(get_current_user)
 ):
     """
     Send an email using the Gmail API with JSON payload (no attachments).
-    
+
     - **to**: List of recipient email addresses
     - **subject**: Email subject
     - **body**: Email body
@@ -166,11 +169,11 @@ async def send_email_json(
     """
     try:
         service = get_gmail_service(current_user)
-        
+
         # Get the user's email address
-        profile = service.users().getProfile(userId='me').execute()
-        sender = profile.get('emailAddress')
-        
+        profile = service.users().getProfile(userId="me").execute()
+        sender = profile.get("emailAddress")
+
         # Send the email
         sent_message = send_email(
             service=service,
@@ -181,12 +184,12 @@ async def send_email_json(
             is_html=False,
             cc_list=request.cc,
             bcc_list=request.bcc,
-            attachments=None
+            attachments=None,
         )
-        
+
         return {
-            "message_id": sent_message.get('id'),
-            "status": "Email sent successfully"
+            "message_id": sent_message.get("id"),
+            "status": "Email sent successfully",
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
@@ -199,48 +202,59 @@ async def summarize_email(
 ) -> Any:
     """
     Summarize an email using the LLM service.
-    
+
     - **message_id**: The Gmail message ID to summarize
     - **include_key_points**: Whether to include key points in the summary
     - **include_action_items**: Whether to include action items in the summary
     - **max_length**: Maximum length of the summary in words
-    
+
     Returns a summary of the email with optional key points and action items.
     """
     try:
         service = get_gmail_service(current_user)
-        
+
         # Fetch the email by ID
-        message = service.users().messages().get(
-            userId='me', 
-            id=request.message_id,
-            format='full'
-        ).execute()
-        
+        message = (
+            service.users()
+            .messages()
+            .get(userId="me", id=request.message_id, format="full")
+            .execute()
+        )
+
         # Transform the message into a readable format
         email_data = transform_gmail_message(message)
-        
+
         # Prepare the prompt for the LLM
-        key_points_instruction = "Include the key points of the email." if request.include_key_points else ""
-        action_items_instruction = "Identify any action items or requests made in the email." if request.include_action_items else ""
-        
+        key_points_instruction = (
+            "Include the key points of the email." if request.include_key_points else ""
+        )
+        action_items_instruction = (
+            "Identify any action items or requests made in the email."
+            if request.include_action_items
+            else ""
+        )
+
         prompt = EMAIL_SUMMARIZER.format(
-            subject=email_data.get('subject', 'No Subject'),
-            sender=email_data.get('from', 'Unknown'),
-            date=email_data.get('time', 'Unknown'),
-            content=email_data.get('body', email_data.get('snippet', 'No content available')),
+            subject=email_data.get("subject", "No Subject"),
+            sender=email_data.get("from", "Unknown"),
+            date=email_data.get("time", "Unknown"),
+            content=email_data.get(
+                "body", email_data.get("snippet", "No content available")
+            ),
             max_length=request.max_length or 150,
             key_points_instruction=key_points_instruction,
-            action_items_instruction=action_items_instruction
+            action_items_instruction=action_items_instruction,
         )
-        
+
         # Call the LLM service to generate the summary
         llm_response = await do_prompt_no_stream(prompt)
-        
+
         return {
             "email_id": request.message_id,
-            "email_subject": email_data.get('subject', 'No Subject'),
-            "result": llm_response
+            "email_subject": email_data.get("subject", "No Subject"),
+            "result": llm_response,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to summarize email: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to summarize email: {str(e)}"
+        )

@@ -7,7 +7,7 @@ import httpx
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 from app.utils.llm_utils import extract_last_user_message, make_llm_request
-from prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
+from app.prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
 
 http_async_client = httpx.AsyncClient(timeout=1000000.0)
 
