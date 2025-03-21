@@ -99,88 +99,15 @@ export default function Section_Calendar() {
         />
 
         <div className="!m-0 !mt-0 w-full px-2 sm:px-10">
-          <Tabs
-            aria-label="GAIA Calendar Options"
-            className="w-full"
-            classNames={{
-              tabList: "w-full",
-              tabContent: "group-data-[selected=true]:text-black font-medium",
-            }}
-            color="primary"
-            radius="full"
-          >
-            <Tab
-              key="chat"
-              title={
-                <div className="flex items-center gap-2">
-                  <BubbleConversationChatIcon
-                    className="mr-2"
-                    color={undefined}
-                  />
-                  New Chat
-                </div>
-              }
-            >
-              <ScrollShadow className="h-[500px]">
-                <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl sm:px-5">
-                  <CalendarMessages
-                    events={events}
-                    addedEvents={addedEvents}
-                    setAddedEvents={setAddedEvents}
-                  />
-                </div>
-              </ScrollShadow>
-            </Tab>
-
-            <Tab
-              key="calendar"
-              title={
-                <div
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    if (addedEvents.length > 0) setOpenedCalendar(true);
-                  }}
-                >
-                  <Calendar01Icon className="mr-2" />
-                  <div className="relative">
-                    Your Calendar
-                    {addedEvents.length > 0 && !openedCalendar && (
-                      <div className="absolute -right-2 -top-[2px] min-h-2 min-w-2 rounded-full bg-red-500" />
-                    )}
-                  </div>
-                </div>
-              }
-            >
-              {addedEvents.length > 0 ? (
-                <ScrollShadow className="h-[500px] space-y-2">
-                  {events
-                    .map((task, index) => ({ ...task, index })) // add index to each event
-                    .filter(({ index }) => addedEvents.includes(index)) // filter only added events
-                    .map((event) => (
-                      <CalendarCard
-                        key={event.index}
-                        event={event}
-                        calendars={[
-                          {
-                            id: "organizer@heygaia.io",
-                            backgroundColor: "#00bbff",
-                            primary: true,
-                            summary: "lorem ipsum",
-                          },
-                        ]}
-                        onClick={() => {
-                          // Handle the calendar card click if needed
-                        }}
-                      />
-                    ))}
-                </ScrollShadow>
-              ) : (
-                <div className="flex h-[500px] w-full items-center justify-center p-5 text-white">
-                  No events added yet.
-                </div>
-              )}
-            </Tab>
-          </Tabs>
+          <ScrollShadow className="h-[500px]">
+            <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl sm:px-5">
+              <CalendarMessages
+                events={events}
+                addedEvents={addedEvents}
+                setAddedEvents={setAddedEvents}
+              />
+            </div>
+          </ScrollShadow>
         </div>
       </div>
     </AnimatedSection>

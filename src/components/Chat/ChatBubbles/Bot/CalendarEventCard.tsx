@@ -17,6 +17,7 @@ import {
   UnifiedCalendarEventsListProps,
 } from "@/types/calendarTypes";
 import { parsingDate } from "@/utils/fetchDate";
+import { apiauth } from "@/utils/apiaxios";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
@@ -42,6 +43,43 @@ export function CalendarEventCard({
     );
   }, [event, isDummy, onDummyAddEvent, dispatch]);
 
+  const handleAddEvent = useCallback(async () => {
+    if (isDummy) {
+      setStatus("loading");
+      setTimeout(() => {
+        toast.success(`Event '${event.summary}' added!`, {
+          description: event.description,
+        });
+        setStatus("added");
+        onDummyAddEvent?.();
+      }, 300);
+      return;
+    }
+
+    if (!isTimedEvent(event)) {
+      toast.error("Real events require start and end times.");
+      return;
+    }
+
+    setStatus("loading");
+    try {
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      await apiauth.post("/calendar/event", {
+        ...event,
+        timezone: userTimeZone,
+      });
+      toast.success("Added event to calendar!", {
+        description: event.description,
+      });
+      setStatus("added");
+    } catch (error) {
+      toast.error("Failed to add event!");
+      console.error(error);
+    } finally {
+      setStatus("idle");
+    }
+  }, [event, isDummy, onDummyAddEvent]);
+
   return (
     <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-900 p-2">
       <div className="relative flex w-full flex-row gap-3 rounded-xl rounded-l-none bg-primary/20 p-3 pr-1 pt-1">
@@ -49,15 +87,7 @@ export function CalendarEventCard({
         <div className="flex flex-1 flex-col pl-1">
           <div className="flex w-full items-center justify-between">
             <div className="font-medium">{event.summary}</div>
-            {/* <div
-              onClick={() => {
-                console.log("Test 1");
-                handleEditPress();
-              }}
-            >
-              onclick
-            </div> */}
-            <Button
+            {/* <Button
               isIconOnly
               onPress={() => {
                 handleEditPress();
@@ -68,7 +98,7 @@ export function CalendarEventCard({
               color="primary"
             >
               <PencilEdit01Icon width={20} color={undefined} />
-            </Button>
+            </Button> */}
           </div>
           <div className="text-xs text-primary">
             {isTimedEvent(event) ? (
@@ -94,7 +124,7 @@ export function CalendarEventCard({
         variant="flat"
         isDisabled={status === "added"}
         isLoading={status === "loading"}
-        onPress={handleEditPress}
+        onPress={handleAddEvent}
       >
         {status === "added" ? (
           <Tick02Icon width={22} />
@@ -165,7 +195,7 @@ export function CalendarEventsList({
           onDummyAddEvent={() => onDummyAddEvent?.(index)}
         />
       ))}
-      {events.length > 1 && (
+      {/* {events.length > 1 && (
         <div>
           <Button
             color="primary"
@@ -179,7 +209,7 @@ export function CalendarEventsList({
             {events.length > 1 ? "events" : "event"})
           </Button>
         </div>
-      )}
+      )} */}
     </AnimatedSection>
   );
 }

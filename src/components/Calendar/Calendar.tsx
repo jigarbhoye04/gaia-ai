@@ -2,257 +2,83 @@
 
 import { Button } from "@heroui/button";
 import { Spinner } from "@heroui/spinner";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 import CalendarCard from "@/components/Calendar/CalendarCard";
 import CalendarEventDialog from "@/components/Calendar/CalendarEventDialog";
 import CalendarSelector from "@/components/Calendar/CalendarSelector";
 import { CalendarAdd01Icon } from "@/components/Misc/icons";
-import { debounce } from "@/lib/utils";
-import { GoogleCalendar, GoogleCalendarEvent } from "@/types/calendarTypes";
-import { apiauth } from "@/utils/apiaxios";
+import { GoogleCalendarEvent } from "@/types/calendarTypes";
+import { useCalendarEvents } from "./hooks/useCalendarEvents";
+import { useCalendarPreferences } from "./hooks/useCalendarPreferences";
+import { useEventGroups } from "./hooks/useEventGroups";
 
 export default function Calendar() {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [calendarEvents, setCalendarEvents] = useState<GoogleCalendarEvent[]>(
-    [],
-  );
   const [selectedEvent, setSelectedEvent] =
     useState<GoogleCalendarEvent | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-  const observerRef = useRef<HTMLDivElement | null>(null);
-  const eventIdsRef = useRef<Set<string>>(new Set());
-  const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
-  const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const observerRef = useRef<HTMLDivElement | null>(null);
 
-  // Fetch events; if pageToken is null, we are (re)loading so we show the spinner.
-  const fetchEvents = useCallback(
-    async (
-      pageToken: string | null = null,
-      calendarIds: string[] | null = null,
-    ) => {
-      if (!pageToken) {
-        setLoading(true);
-      }
-      try {
-        const allEvents: GoogleCalendarEvent[] = [];
-        const calendarsToFetch = calendarIds || selectedCalendars;
+  const {
+    loading,
+    calendarEvents,
+    nextPageToken,
+    error,
+    fetchEvents,
+    resetEvents,
+    eventIdsRef,
+  } = useCalendarEvents();
 
-        if (!calendarsToFetch.length) {
-          toast.error("No calendars selected");
-          setLoading(false);
-          return;
-        }
+  const groupedEventsByMonth = useEventGroups(calendarEvents);
 
-        toast.loading("Fetching Events...", { id: "fetching" });
-
-        for (const calendarId of calendarsToFetch) {
-          try {
-            const response = await apiauth.get<{
-              events: GoogleCalendarEvent[];
-              nextPageToken: string | null;
-            }>(`/calendar/${calendarId}/events`, {
-              params: { page_token: pageToken },
-            });
-            allEvents.push(...response.data.events);
-            if (response.data.nextPageToken) {
-              setNextPageToken(response.data.nextPageToken);
-            } else {
-              setNextPageToken(null);
-            }
-          } catch (err) {
-            console.error(
-              `Error fetching events for calendar ${calendarId}:`,
-              err,
-            );
-            toast.error(`Failed to fetch events from ${calendarId}`);
-          }
-        }
-
-        toast.success("Fetched Events!", { id: "fetching" });
-
-        // Deduplicate events
-        const newEvents = allEvents.filter(
-          (event) => !eventIdsRef.current.has(event.id),
-        );
-        newEvents.forEach((event) => eventIdsRef.current.add(event.id));
-
-        // Merge and sort events
-        setCalendarEvents((prev) => {
-          const mergedEvents = [...prev, ...newEvents];
-          return mergedEvents.sort((a, b) => {
-            const dateA = new Date(a.start.dateTime || a.start.date || "");
-            const dateB = new Date(b.start.dateTime || b.start.date || "");
-            return dateA.getTime() - dateB.getTime();
-          });
-        });
-        setError(null);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Error fetching calendar events";
-        setError(errorMessage);
-        console.error("Error fetching calendar events:", err);
-        toast.error(errorMessage);
-      } finally {
-        setLoading(false);
+  const handleCalendarUpdate = useCallback(
+    (newCalendars: string[]) => {
+      resetEvents();
+      if (newCalendars.length) {
+        fetchEvents(null, newCalendars);
       }
     },
-    [selectedCalendars],
+    [resetEvents, fetchEvents],
   );
 
-  // Fetch the list of calendars and the user's preferences.
-  const fetchCalendars = useCallback(async () => {
-    try {
-      const calendarListResponse = await apiauth.get("/calendar/list");
-      const calendarItems = calendarListResponse.data.items;
-      setCalendars(calendarItems);
+  const { calendars, selectedCalendars, fetchCalendars, handleCalendarSelect } =
+    useCalendarPreferences(handleCalendarUpdate);
 
-      // Attempt to fetch user calendar preferences.
-      let storedSelectedCalendars: string[] = [];
-      try {
-        const preferencesResponse = await apiauth.get("/calendar/preferences");
-        if (preferencesResponse.data.selectedCalendars) {
-          storedSelectedCalendars = preferencesResponse.data.selectedCalendars;
-        }
-      } catch (err) {
-        console.error(
-          "No calendar preferences found, using primary calendar.",
-          err,
-        );
-      }
-      // Default to primary calendar if no preferences.
-      if (!storedSelectedCalendars.length) {
-        const primaryCalendar = calendarItems.find(
-          (cal: { primary: boolean }) => cal.primary,
-        );
-        if (primaryCalendar) {
-          storedSelectedCalendars = [primaryCalendar.id];
-          await apiauth.put("/calendar/preferences", {
-            selected_calendars: [primaryCalendar.id],
-          });
-        }
-      }
-      setSelectedCalendars(storedSelectedCalendars);
-      // Reset events and fetch for these calendars
-      setCalendarEvents([]);
-      eventIdsRef.current = new Set();
-      await fetchEvents(null, storedSelectedCalendars);
-    } catch (error) {
-      console.error("Error fetching calendars:", error);
-    }
-  }, [fetchEvents]); // Added fetchEvents dependency
-
-  // Debounced function to update calendar preferences.
-  const updatePreferences = useMemo(
-    () =>
-      debounce(async (newSelection: string[]) => {
-        try {
-          await apiauth.put("/calendar/preferences", {
-            selected_calendars: newSelection,
-          });
-        } catch (error) {
-          console.error("Error updating calendar preferences:", error);
-        }
-      }, 300),
-    [], // Only recreate if dependencies change (add them here if needed)
-  );
-
-  // Handle calendar selection: if deselected, remove events; if added, fetch events.
-  const handleCalendarSelect = useCallback(
-    (calendarId: string) => {
-      if (loading) return;
-
-      setSelectedCalendars((prev) => {
-        const isSelected = prev.includes(calendarId);
-        const newSelection = isSelected
-          ? prev.filter((id) => id !== calendarId)
-          : [...prev, calendarId];
-
-        if (isSelected) {
-          // Remove events for the deselected calendar.
-          setCalendarEvents((prevEvents) => {
-            const updatedEvents = prevEvents.filter(
-              (event) => event.organizer.email !== calendarId,
-            );
-            eventIdsRef.current = new Set(updatedEvents.map((e) => e.id));
-            return updatedEvents;
-          });
-        } else {
-          // Fetch events for the newly added calendar.
-          fetchEvents(null, [calendarId]);
-        }
-        updatePreferences(newSelection);
-        return newSelection;
-      });
-    },
-    [loading, fetchEvents, updatePreferences],
-  );
-
-  // Set up the Intersection Observer for infinite scrolling.
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !loading && nextPageToken) {
-          fetchEvents(nextPageToken);
+        if (
+          entry.isIntersecting &&
+          !loading &&
+          nextPageToken &&
+          selectedCalendars.length > 0
+        ) {
+          fetchEvents(nextPageToken, selectedCalendars);
         }
       },
       { rootMargin: "0px" },
     );
     const currentElement = observerRef.current;
-    if (currentElement) {
-      observer.observe(currentElement);
-    }
+    if (currentElement) observer.observe(currentElement);
+
     return () => {
-      if (currentElement) {
-        observer.unobserve(currentElement);
-      }
+      if (currentElement) observer.unobserve(currentElement);
     };
-  }, [loading, nextPageToken, fetchEvents]);
+  }, [loading, nextPageToken, fetchEvents, selectedCalendars]);
 
-  // Group events by month and day.
-  const groupedEventsByMonth = useMemo(() => {
-    const months: { [key: string]: { [key: string]: GoogleCalendarEvent[] } } =
-      {};
-    calendarEvents.forEach((event) => {
-      const eventDate = new Date(
-        (event.start.dateTime || event.start.date) as string | number | Date,
-      );
-      const monthKey = eventDate.toLocaleString("default", {
-        month: "long",
-        year: "numeric",
-      });
-      const dayKey = eventDate.toLocaleString("default", {
-        day: "numeric",
-        weekday: "short",
-      });
-      if (!months[monthKey]) {
-        months[monthKey] = {};
-      }
-      if (!months[monthKey][dayKey]) {
-        months[monthKey][dayKey] = [];
-      }
-      months[monthKey][dayKey].push(event);
-    });
-    return months;
-  }, [calendarEvents]);
-
-  // Fetch calendars on mount.
   useEffect(() => {
     fetchCalendars();
   }, [fetchCalendars]);
 
-  const handleEventClick = useCallback((event: GoogleCalendarEvent) => {
+  const handleEventClick = (event: GoogleCalendarEvent) => {
     setSelectedEvent(event);
     setIsDialogOpen(true);
-  }, []);
+  };
 
   return (
     <>
-      <div className="relative flex h-full w-full flex-col overflow-y-scroll">
+      <div className="relative flex h-full w-full flex-col overflow-y-auto">
         <div className="flex flex-col items-center gap-2 pb-6">
           <div className="sticky top-0 z-20 text-center text-5xl font-bold">
             Your Calendar
@@ -264,16 +90,6 @@ export default function Calendar() {
             </div>
           )}
 
-          <Button
-            color="primary"
-            variant="flat"
-            isDisabled
-            onPress={() => setIsAddDialogOpen(true)}
-          >
-            <CalendarAdd01Icon color={undefined} width={17} />
-            Add event
-          </Button>
-
           <CalendarSelector
             calendars={calendars}
             selectedCalendars={selectedCalendars}
@@ -282,36 +98,36 @@ export default function Calendar() {
         </div>
 
         <div className="mx-auto max-w-screen-sm">
-          {Object.entries(groupedEventsByMonth).map(([month, days]) => (
-            <div key={month}>
-              {/* Sticky Month Header */}
-              <div className="sticky top-0 z-10 rounded-lg bg-zinc-900 p-2">
-                <h2 className="text-center text-lg font-medium">{month}</h2>
-              </div>
-              {Object.entries(days).map(([day, events]) => (
-                <div key={day} className="my-2 flex gap-7">
-                  <div className="flex max-h-[60px] min-h-[60px] min-w-[60px] max-w-[60px] flex-col items-center justify-center rounded-full bg-zinc-900 text-center text-lg font-bold leading-none text-foreground-500">
-                    <div className="text-md font-normal">
-                      {day.split(" ")[1]}
-                    </div>
-                    <div className="text-foreground-600">
-                      {day.split(" ")[0]}
-                    </div>
-                  </div>
-                  <div className="flex w-full flex-wrap justify-center gap-4">
-                    {events.map((event) => (
-                      <CalendarCard
-                        key={event.id}
-                        calendars={calendars}
-                        event={event}
-                        onClick={() => handleEventClick(event)}
-                      />
-                    ))}
-                  </div>
+          {groupedEventsByMonth &&
+            Object.entries(groupedEventsByMonth).map(([month, days]) => (
+              <div key={month}>
+                <div className="sticky top-0 z-10 rounded-lg bg-zinc-900 p-2">
+                  <div className="text-md text-center font-medium">{month}</div>
                 </div>
-              ))}
-            </div>
-          ))}
+                {Object.entries(days).map(([day, events]) => (
+                  <div key={day} className="my-2 flex gap-7">
+                    <div className="flex max-h-[60px] min-h-[60px] min-w-[60px] max-w-[60px] flex-col items-center justify-center rounded-full bg-zinc-900 text-center text-lg font-bold leading-none text-foreground-500">
+                      <div className="text-md font-normal">
+                        {day.split(" ")[1]}
+                      </div>
+                      <div className="text-foreground-600">
+                        {day.split(" ")[0]}
+                      </div>
+                    </div>
+                    <div className="flex w-full flex-wrap justify-center gap-4">
+                      {events.map((event) => (
+                        <CalendarCard
+                          key={event.id}
+                          calendars={calendars}
+                          event={event}
+                          onClick={() => handleEventClick(event)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
         </div>
 
         {loading && (
@@ -321,6 +137,7 @@ export default function Calendar() {
         )}
         <div ref={observerRef} className="h-1" />
       </div>
+
       {selectedEvent && (
         <CalendarEventDialog
           event={selectedEvent}

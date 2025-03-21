@@ -267,11 +267,11 @@ interface GoalImageProps {
 
 function GoalImage({ image }: GoalImageProps) {
   return (
-    <div className="relative hidden sm:flex">
+    <div className="relative hidden h-[50vh] sm:flex">
       <NextImage
         fill={true}
         alt="Goal step illustration"
-        className="h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center outline outline-4 outline-zinc-800 transition-all sm:w-screen sm:max-w-screen-xl"
+        className="min-h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center outline outline-4 outline-zinc-800 transition-all sm:w-screen sm:max-w-screen-xl"
         src={image}
       />
       {image === "/landing/blur_goals.webp" && (

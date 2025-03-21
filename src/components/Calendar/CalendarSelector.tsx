@@ -81,7 +81,7 @@ export default function CalendarSelector({
       </Button>
 
       <div
-        className={`fixed bottom-4 right-4 z-30 flex max-h-[70vh] min-w-[250px] flex-col flex-nowrap justify-center gap-1 overflow-y-scroll rounded-xl bg-zinc-800 px-3 py-3 pb-4 shadow-lg transition-all ${
+        className={`fixed bottom-4 right-8 z-30 flex max-h-[70vh] min-w-[250px] flex-col flex-nowrap justify-center gap-1 overflow-y-auto rounded-xl bg-zinc-800 px-3 py-3 pb-4 shadow-lg transition-all ${
           isOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none !opacity-0"

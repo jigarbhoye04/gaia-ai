@@ -6,15 +6,14 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
 
-import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 import {
   SimpleChatBubbleBot,
   SimpleChatBubbleUser,
 } from "@/components/Landing/Dummy/SimpleChatBubbles";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
 import { CalendarEvent } from "@/types/calendarTypes";
+import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 
 interface CalendarMessagesProps {
   events: CalendarEvent[];
@@ -66,7 +65,6 @@ export default function CalendarMessages({
 }: CalendarMessagesProps) {
   const addToCalendar = (index: number) => {
     setAddedEvents((prev) => (prev.includes(index) ? prev : [...prev, index]));
-    toast.success(`${events[index].summary} has been added to Calendar!`);
   };
 
   return (
