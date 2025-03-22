@@ -3,6 +3,7 @@ services:
   gaia:
     container_name: gaia
     build: .
+    image: gaia-image
     working_dir: /app
     command:
       [
@@ -25,9 +26,6 @@ services:
     ports:
       - "8000:80"
     restart: on-failure
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
 
   # RabbitMQ Service
   rabbitmq:
@@ -48,10 +46,16 @@ services:
   # Celery Worker
   celery_worker:
     container_name: celery_worker
-    build: .
+    image: gaia-image
     working_dir: /app
     command:
       [
+        "watchmedo",
+        "auto-restart",
+        "--directory=.",
+        "--pattern=*.py",
+        "--recursive",
+        "--",
         "python",
         "-m",
         "celery",
@@ -63,14 +67,11 @@ services:
     environment:
       CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
       CELERY_RESULT_BACKEND: "rpc://"
+    restart: on-failure
     volumes:
       - .:/app
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-      gaia:
-        condition: service_started
-    restart: on-failure
+      - rabbitmq
 
 volumes:
   rabbitmq_data:

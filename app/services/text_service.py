@@ -1,14 +1,35 @@
 import asyncio
-from transformers import pipeline
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.lsa import LsaSummarizer
+from typing import Any, Callable, Dict, List, Union
+
 import nltk
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.summarizers.lsa import LsaSummarizer
+from transformers import pipeline
+
+zero_shot_classifier = pipeline(
+    "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
+)
+
+# zero_shot_classifier_larger = pipeline(
+#     "zero-shot-classification",
+#     model="MoritzLaurer/DeBERTa-v3-large-mnli-fever-anli-ling-wanli",
+# )
 
 
-def split_text_into_chunks(text, chunk_size=250, overlap=30):
+def split_text_into_chunks(
+    text: str, chunk_size: int = 250, overlap: int = 30
+) -> List[str]:
     """
-    Splits text into chunks of `chunk_size` with an `overlap` between chunks.
+    Split text into chunks of specified size with overlap between chunks.
+
+    Args:
+        text: The text to split into chunks
+        chunk_size: Maximum number of words per chunk
+        overlap: Number of words to overlap between consecutive chunks
+
+    Returns:
+        List of text chunks
     """
     words = text.split()
     chunks = []
@@ -18,43 +39,32 @@ def split_text_into_chunks(text, chunk_size=250, overlap=30):
     return chunks
 
 
-# Load the zero-shot classification pipeline
-zero_shot_classifier = pipeline(
-    "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
-)
+async def classify_text(
+    user_input: str,
+    candidate_labels: List[str],
+    classifier: Callable = zero_shot_classifier,
+) -> Dict[str, Any]:
+    """
+    Classify text into one of the provided candidate labels using zero-shot classification.
 
-candidate_labels = [
-    "add to calendar",
-    # "set a reminder",
-    "send email",
-    "generate image",
-    "search internet",
-    "flowchart",
-    "weather",
-    "other",
-]
+    Args:
+        user_input: The text to classify
+        candidate_labels: List of possible classification labels
+        classifier: The classification pipeline to use
 
-candidate_labels_output = ["i don't know this", "i know this"]
-
-
-def classify_event_type(user_input):
-    return classify_text(user_input, candidate_labels)
-
-
-def classify_output(user_input):
-    return classify_text(user_input, candidate_labels_output)
-
-
-# Async wrapper for the blocking Hugging Face pipeline call
-async def classify_text(user_input, candidate_labels):
-    if not user_input or not candidate_labels:
+    Returns:
+        Dictionary containing classification results:
+        - label_scores: Dictionary mapping labels to confidence scores
+        - highest_label: The label with the highest confidence score
+        - highest_score: The confidence score of the highest label
+        - error: Error message if classification fails
+    """
+    if not user_input or not candidate_labels or not classifier:
         return {"error": "Invalid input or candidate labels."}
 
     try:
         # Use asyncio.to_thread to run the blocking pipeline function in a separate thread
-        result = await asyncio.to_thread(
-            zero_shot_classifier, user_input, candidate_labels
-        )
+        result = await asyncio.to_thread(classifier, user_input, candidate_labels)
 
         label_scores = dict(zip(result["labels"], result["scores"]))
         highest_label = max(label_scores, key=label_scores.get)
@@ -68,50 +78,120 @@ async def classify_text(user_input, candidate_labels):
         return {"error": str(e)}
 
 
-#! Named Entity Recognition
+def classify_event_type(user_input: str) -> Dict[str, Any]:
+    """
+    Classify user input into event types for task routing.
 
-# Load the spaCy model
-# python - m spacy download en_core_web_sm
+    Args:
+        user_input: The text to classify
+
+    Returns:
+        Dictionary containing classification results
+    """
+    labels = [
+        "add to calendar",
+        # "set a reminder",
+        "send email",
+        "generate image",
+        "search internet",
+        "flowchart",
+        "weather",
+        "other",
+    ]
+    return classify_text(user_input, labels, zero_shot_classifier)
+
+
+def classify_output(user_input: str) -> Dict[str, Any]:
+    """
+    Classify whether the system has knowledge about the user input.
+
+    Args:
+        user_input: The text to classify
+
+    Returns:
+        Dictionary containing classification results
+    """
+    labels = ["i don't know this", "i know this"]
+    return classify_text(user_input, labels, zero_shot_classifier)
+
+
+def summarise_text(long_text: str, sentences: int = 4) -> str:
+    """
+    Summarize long text into a shorter version using LSA summarization.
+
+    Args:
+        long_text: The text to summarize
+        sentences: Number of sentences to include in the summary
+
+    Returns:
+        Summarized text
+    """
+    nltk.download("punkt", quiet=True)
+    parser = PlaintextParser.from_string(long_text, Tokenizer("english"))
+    summarizer = LsaSummarizer()
+    summary = summarizer(parser.document, sentences)
+    short_text = "".join(str(sentence) for sentence in summary)
+    return short_text
+
+
+async def classify_email(email_text: str) -> Union[Dict[str, Any], bool]:
+    """
+    Classify an email and determine if it requires notification.
+
+    Args:
+        email_text: The content of the email to classify
+
+    Returns:
+        Dictionary with classification results including should_notify flag,
+        or False if there was an error
+    """
+    email_labels = [
+        "reminder",
+        "important",
+        "personal",
+        "updates",
+        "promotional",
+        "social",
+    ]
+    notify_labels = ["reminder", "important", "personal"]
+
+    results = await classify_text(email_text, email_labels, zero_shot_classifier)
+
+    if "error" in results:
+        return {"error": results["error"], "is_important": False}
+
+    results["is_important"] = results["highest_label"] in notify_labels
+
+    return results
+
+
+# Named Entity Recognition functionality (currently commented out)
+# To enable:
+# 1. Uncomment the code
+# 2. Install spaCy and download the model with: python -m spacy download en_core_web_sm
+
+# import spacy
 # nlp = spacy.load("en_core_web_sm")
 
-
-# def parse_calendar_info(input_text):
+# def parse_calendar_info(input_text: str) -> Dict[str, str]:
+#     """
+#     Extract date and time information from text using spaCy NER.
+#
+#     Args:
+#         input_text: The text to extract information from
+#
+#     Returns:
+#         Dictionary containing extracted time and date information
+#     """
 #     doc = nlp(input_text)
-
+#
 #     time = "all day"
 #     date = "today"
-
+#
 #     for ent in doc.ents:
 #         if ent.label_ == "TIME":
 #             time = ent.text
 #         elif ent.label_ == "DATE":
 #             date = ent.text
-
+#
 #     return {"time": time, "date": date}
-
-
-def summarise_text(long_text):
-    nltk.download("punkt")
-    parser = PlaintextParser.from_string(long_text, Tokenizer("english"))
-    summarizer = LsaSummarizer()
-    summary = summarizer(parser.document, 4)
-    short_text = "".join(str(sentence) for sentence in summary)
-    print(short_text)
-    return short_text
-
-
-# Example to run the function asynchronously
-async def main():
-    result = await classify_event_type(
-        "Can you find a time for my meeting and send me a reminder?"
-    )
-
-    summarise_text("""The lion (Panthera leo) is a large cat of the genus Panthera, native to Africa and India. It has a muscular, broad-chested body; a short, rounded head; round ears; and a hairy tuft at the end of its tail. It is sexually dimorphic; adult male lions are larger than females and have a prominent mane. It is a social species, forming groups called prides. A lion's pride consists of a few adult males, related females, and cubs. Groups of female lions usually hunt together, preying mostly on large ungulates. The lion is an apex and keystone predator; although some lions scavenge when opportunities occur and have been known to hunt humans, lions typically do not actively seek out and prey on humans.
-
-    The lion inhabits grasslands, savannahs, and shrublands. It is usually more diurnal than other wild cats, but when persecuted, it adapts to being active at night and at twilight. During the Neolithic period, the lion ranged throughout Africa and Eurasia, from Southeast Europe to India, but it has been reduced to fragmented populations in sub-Saharan Africa and one population in western India. It has been listed as Vulnerable on the IUCN Red List since 1996 because populations in African countries have declined by about 43% since the early 1990s. Lion populations are untenable outside designated protected areas. Although the cause of the decline is not fully understood, habitat loss and conflicts with humans are the greatest causes for concern.
-
-    One of the most widely recognised animal symbols in human culture, the lion has been extensively depicted in sculptures and paintings, on national flags, and in literature and films. Lions have been kept in menageries since the time of the Roman Empire and have been a key species sought for exhibition in zoological gardens across the world since the late 18th century. Cultural depictions of lions were prominent in Ancient Egypt, and depictions have occurred in virtually all ancient and medieval cultures in the lion's historic and current range.
-
-    """)
-
-    print(result)
