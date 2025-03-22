@@ -3,6 +3,7 @@ services:
   gaia:
     container_name: gaia
     build: .
+    image: gaia-image
     working_dir: /app
     command:
       [
@@ -45,10 +46,16 @@ services:
   # Celery Worker
   celery_worker:
     container_name: celery_worker
-    build: .
+    image: gaia-image
     working_dir: /app
     command:
       [
+        "watchmedo",
+        "auto-restart",
+        "--directory=.",
+        "--pattern=*.py",
+        "--recursive",
+        "--",
         "python",
         "-m",
         "celery",

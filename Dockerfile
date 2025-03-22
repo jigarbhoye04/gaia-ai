@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# ---- Base Stage: Setup Python & Install Dependencies ----
+FROM python:3.12-slim AS base
 
 # Install uv (Ultra-Fast Python Package Installer)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -6,25 +7,34 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Set working directory
 WORKDIR /app
 
-# Enable bytecode compilation and copy from cache
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
+# Optimize Python performance
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-# Copy only dependency files first to leverage Docker caching
+# Copy dependency files first to leverage Docker caching
 COPY pyproject.toml ./
 
 # Install dependencies efficiently using UV with caching
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system -e .
 
-# Copy the rest of the application code
-COPY . /app
+# ---- Builder Stage: Download Additional Resources ----
+FROM base AS builder
 
-# Install NLTK data
+# Download necessary NLTK data
 RUN python -m nltk.downloader punkt stopwords punkt_tab
 
-# Expose the port
+# ---- Final Stage: Build Minimal Runtime Image ----
+FROM base AS final
+
+# Copy application code
+COPY . /app
+
+# Copy downloaded NLTK data from builder stage
+COPY --from=builder /root/nltk_data /root/nltk_data
+
+# Expose application port
 EXPOSE 80
 
-# Run the application using Uvicorn
+# Start the FastAPI application
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
