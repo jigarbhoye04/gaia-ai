@@ -1,15 +1,21 @@
 import asyncio
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Dict, List, Union
 
 import nltk
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lsa import LsaSummarizer
 from transformers import pipeline
+from functools import lru_cache
 
-zero_shot_classifier = pipeline(
-    "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
-)
+
+@lru_cache(maxsize=1)
+def get_zero_shot_classifier():
+    """Lazy-load the zero-shot classification pipeline and cache it."""
+    return pipeline(
+        "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
+    )
+
 
 # zero_shot_classifier_larger = pipeline(
 #     "zero-shot-classification",
@@ -42,7 +48,6 @@ def split_text_into_chunks(
 async def classify_text(
     user_input: str,
     candidate_labels: List[str],
-    classifier: Callable = zero_shot_classifier,
 ) -> Dict[str, Any]:
     """
     Classify text into one of the provided candidate labels using zero-shot classification.
@@ -59,6 +64,8 @@ async def classify_text(
         - highest_score: The confidence score of the highest label
         - error: Error message if classification fails
     """
+    classifier = get_zero_shot_classifier()
+
     if not user_input or not candidate_labels or not classifier:
         return {"error": "Invalid input or candidate labels."}
 
@@ -98,7 +105,7 @@ def classify_event_type(user_input: str) -> Dict[str, Any]:
         "weather",
         "other",
     ]
-    return classify_text(user_input, labels, zero_shot_classifier)
+    return classify_text(user_input, labels)
 
 
 def classify_output(user_input: str) -> Dict[str, Any]:
@@ -112,7 +119,7 @@ def classify_output(user_input: str) -> Dict[str, Any]:
         Dictionary containing classification results
     """
     labels = ["i don't know this", "i know this"]
-    return classify_text(user_input, labels, zero_shot_classifier)
+    return classify_text(user_input, labels)
 
 
 def summarise_text(long_text: str, sentences: int = 4) -> str:
@@ -155,7 +162,7 @@ async def classify_email(email_text: str) -> Union[Dict[str, Any], bool]:
     ]
     notify_labels = ["reminder", "important", "personal"]
 
-    results = await classify_text(email_text, email_labels, zero_shot_classifier)
+    results = await classify_text(email_text, email_labels)
 
     if "error" in results:
         return {"error": results["error"], "is_important": False}

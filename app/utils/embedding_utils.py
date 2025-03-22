@@ -1,6 +1,13 @@
+from functools import lru_cache
 from fastapi import HTTPException
 from app.db.collections import documents_collection, notes_collection
 from sentence_transformers import SentenceTransformer
+
+
+@lru_cache(maxsize=1)
+def get_embedding_model():
+    """Lazy-load the SentenceTransformer model and cache it."""
+    return SentenceTransformer("all-MiniLM-L6-v2")
 
 
 async def search_notes_by_similarity(input_text: str, user_id: str):
@@ -91,18 +98,6 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class EmbeddingModel:
-    _model = None
-
-    @classmethod
-    def get_model(cls):
-        if cls._model is None:
-            cls._model = SentenceTransformer("all-MiniLM-L6-v2")
-        return cls._model
-
-
-embedding_model = EmbeddingModel.get_model()
-
-
 def generate_embedding(text):
-    return embedding_model.encode(text).tolist()
+    model = get_embedding_model()
+    return model.encode(text).tolist()
