@@ -29,6 +29,7 @@ class MongoDB:
             self.database = self.client.get_database(db_name)
             self._initialize_indexes()
             self._ping()
+            logger.info("Successfully connected to MongoDB.")
         except Exception as e:
             logger.error(f"An error occurred while connecting to MongoDB: {e}")
             sys.exit(1)

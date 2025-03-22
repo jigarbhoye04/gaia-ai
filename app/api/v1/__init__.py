@@ -23,7 +23,8 @@ from app.api.v1.routes import (
     waitlist,
     blog,
 )
-from app.utils.nltk_utils import download_nltk_resources
+
+# from app.utils.nltk_utils import download_nltk_resources
 from app.config.loggers import app_logger as logger
 
 
@@ -54,7 +55,6 @@ async def lifespan(app: FastAPI):
         logger.info("Starting up GAIA API...")
         logger.info("Initializing services and dependencies...")
         logger.info("Downloading NLTK resources...")
-        download_nltk_resources()
     except Exception as e:
         logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed") from e
