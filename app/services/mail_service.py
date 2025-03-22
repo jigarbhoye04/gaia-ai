@@ -1,13 +1,17 @@
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from googleapiclient.http import BatchHttpRequest
-from typing import List, Optional
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.application import MIMEApplication
 import base64
 import os
+import time
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from typing import List, Optional
+
 from fastapi import UploadFile
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import BatchHttpRequest
+
 from app.config.settings import settings
 
 
@@ -117,7 +121,16 @@ def send_email(
     return sent_message
 
 
-def fetch_detailed_messages(service, messages):
+def fetch_detailed_messages(service, messages, batch_size=50, delay=1):
+    """
+    Fetch detailed Gmail messages using batch requests while handling rate limits.
+
+    :param service: Authenticated Gmail API service instance
+    :param messages: List of message metadata (each containing 'id')
+    :param batch_size: Number of messages per batch (default: 50)
+    :param delay: Time in seconds to wait between batch executions
+    :return: List of detailed message objects
+    """
     detailed_messages = []
 
     def callback(request_id, response, exception):
@@ -126,13 +139,32 @@ def fetch_detailed_messages(service, messages):
         else:
             detailed_messages.append(response)
 
-    batch = BatchHttpRequest(
-        callback=callback, batch_uri="https://www.googleapis.com/batch/gmail/v1"
-    )
+    total_messages = len(messages)
+    for i in range(0, total_messages, batch_size):
+        batch = BatchHttpRequest(
+            callback=callback, batch_uri="https://www.googleapis.com/batch/gmail/v1"
+        )
 
-    for msg in messages:
-        req = service.users().messages().get(userId="me", id=msg["id"], format="full")
-        batch.add(req)
+        for msg in messages[i : i + batch_size]:
+            req = (
+                service.users().messages().get(userId="me", id=msg["id"], format="full")
+            )
+            batch.add(req)
 
-    batch.execute()
+        retries = 3
+        for attempt in range(retries):
+            try:
+                batch.execute()
+                break
+            except HttpError as e:
+                if e.resp.status == 429:
+                    wait_time = (2**attempt) * delay
+                    print(f"Rate limit hit. Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"Unexpected error: {e}")
+                    break
+
+        time.sleep(delay)
+
     return detailed_messages
