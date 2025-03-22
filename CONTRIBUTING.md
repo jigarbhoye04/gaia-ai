@@ -20,7 +20,7 @@ Route handlers should be thin wrappers around service functions:
 ```python
 @router.post("/resource", response_model=ResourceResponse)
 async def create_resource_endpoint(
-    resource: ResourceModel, 
+    resource: ResourceModel,
     user: dict = Depends(get_current_user)
 ):
     """
@@ -57,7 +57,7 @@ async def create_resource(resource: ResourceModel, user_id: str) -> ResourceResp
     """
     # Implementation logic here
     # ...
-    
+
     return resource_response
 ```
 
@@ -66,11 +66,13 @@ async def create_resource(resource: ResourceModel, user_id: str) -> ResourceResp
 ### Branch Management
 
 1. **Feature Branches:** Create a new branch for each feature or bug fix
+
    ```sh
    git checkout -b feature/feature-name
    ```
 
 2. **Pull Requests:** Submit changes via pull request to the `main` branch
+
    - Include descriptive title and detailed description
    - Reference any related issues
 
@@ -90,8 +92,8 @@ async def create_resource(resource: ResourceModel, user_id: str) -> ResourceResp
 
 ## 📦 Dependencies
 
-- Use `uv pip install package_name` to add new dependencies
-- Update requirements.txt with `uv pip freeze > requirements.txt`
+- Use `uv add package_name` to add new dependencies
+<!-- - Update requirements.txt with `uv pip freeze > requirements.txt` -->
 
 ## 🚀 Pull Request Process
 
@@ -114,6 +116,7 @@ To move logic from routes to service files:
 ### Example
 
 **Before (route handler with logic):**
+
 ```python
 @router.post("/items")
 async def create_item(item: ItemModel, user: dict = Depends(get_current_user)):
@@ -121,7 +124,7 @@ async def create_item(item: ItemModel, user: dict = Depends(get_current_user)):
     item_dict = item.dict()
     item_dict["user_id"] = user["user_id"]
     item_dict["created_at"] = datetime.now()
-    
+
     try:
         result = await items_collection.insert_one(item_dict)
         return {"id": str(result.inserted_id), **item_dict}
@@ -130,6 +133,7 @@ async def create_item(item: ItemModel, user: dict = Depends(get_current_user)):
 ```
 
 **After (clean route handler):**
+
 ```python
 @router.post("/items", response_model=ItemResponse)
 async def create_item_endpoint(item: ItemModel, user: dict = Depends(get_current_user)):
@@ -138,25 +142,26 @@ async def create_item_endpoint(item: ItemModel, user: dict = Depends(get_current
 ```
 
 **Service function (in items_service.py):**
+
 ```python
 async def create_item(item: ItemModel, user_id: str) -> ItemResponse:
     """
     Create a new item in the database.
-    
+
     Args:
         item: The item data model
         user_id: The ID of the user creating the item
-        
+
     Returns:
         ItemResponse: The created item with additional metadata
-        
+
     Raises:
         HTTPException: If item creation fails
     """
     item_dict = item.dict()
     item_dict["user_id"] = user_id
     item_dict["created_at"] = datetime.now()
-    
+
     try:
         result = await items_collection.insert_one(item_dict)
         return ItemResponse(id=str(result.inserted_id), **item_dict)

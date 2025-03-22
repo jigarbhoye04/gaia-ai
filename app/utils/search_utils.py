@@ -1,10 +1,13 @@
 import asyncio
+
+import html2text
 import httpx
 from bs4 import BeautifulSoup
-from app.config.settings import settings
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+
 from app.config.loggers import search_logger as logger
+from app.config.settings import settings
 
 subscription_key = settings.BING_API_KEY_1
 search_url = settings.BING_SEARCH_URL
@@ -23,10 +26,7 @@ VIDEO_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/videos/search"
 
 MAX_QUERY_LENGTH = 1500
 
-http_async_client = httpx.AsyncClient()
 
-
-# --- Fetch Module ---
 async def fetch_endpoint(
     url: str, query: str, count: int, extra_params: dict = None
 ) -> dict:
@@ -232,3 +232,47 @@ async def perform_fetch(url: str):
     except Exception as e:
         error = f"An unexpected error occurred: {e}"
         return error
+
+
+async def fetch_and_convert_to_markdown(url: str):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+
+        # Parse HTML with BeautifulSoup
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.decompose()
+
+        # Convert cleaned HTML to Markdown
+        markdown_text = html2text.html2text(str(soup))
+
+        return markdown_text
+
+    except httpx.HTTPStatusError as http_err:
+        return f"HTTP error occurred: {http_err}"
+    except httpx.RequestError as req_err:
+        return f"HTTP Request error occurred: {req_err}"
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+
+
+if __name__ == "__main__":
+
+    async def main():
+        url = input("Enter the URL to fetch: ")
+
+        print("Fetching and converting to Markdown...")
+        markdown_result = await fetch_and_convert_to_markdown(url)
+        print("\nMarkdown Result:\n")
+        print(markdown_result)
+
+        print("\nFetching and preprocessing text...")
+        preprocessed_text = await perform_fetch(url)
+        print("\nPreprocessed Text:\n")
+        print(preprocessed_text)
+
+    asyncio.run(main())
