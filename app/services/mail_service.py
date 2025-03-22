@@ -13,7 +13,7 @@ from app.config.settings import settings
 
 def get_gmail_service(current_user: dict):
     creds = Credentials(
-        token=current_user["access_token"],
+        token=current_user.get("access_token"),
         refresh_token=current_user.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
         client_id=settings.GOOGLE_CLIENT_ID,
@@ -99,7 +99,10 @@ def create_message(
     encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
     return {"raw": encoded_message}
 
-def send_email(service, sender, to_list, subject, body, is_html, cc_list, bcc_list, attachments):
+
+def send_email(
+    service, sender, to_list, subject, body, is_html, cc_list, bcc_list, attachments
+):
     message = create_message(
         sender=sender,
         to=to_list,
@@ -108,12 +111,9 @@ def send_email(service, sender, to_list, subject, body, is_html, cc_list, bcc_li
         is_html=is_html,
         cc=cc_list,
         bcc=bcc_list,
-        attachments=attachments
+        attachments=attachments,
     )
-    sent_message = service.users().messages().send(
-        userId='me',
-        body=message
-    ).execute()
+    sent_message = service.users().messages().send(userId="me", body=message).execute()
     return sent_message
 
 
@@ -136,7 +136,3 @@ def fetch_detailed_messages(service, messages):
 
     batch.execute()
     return detailed_messages
-
-
-async def fetch_and_process_emails():
-    pass

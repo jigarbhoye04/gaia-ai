@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import computed_field
 
+
 class Settings(BaseSettings):
     """Configuration settings for the application."""
 
@@ -39,6 +40,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-print(settings.GOOGLE_REDIRECT_URI)
-print(settings.GOOGLE_CALLBACK_URL)

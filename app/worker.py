@@ -8,7 +8,7 @@ celery = Celery(
     "gaia",
     broker=broker_url,
     backend=result_backend,
-    include=["app.tasks.dummy"],
+    include=["app.tasks.mail_tasks"],
 )
 
 celery.conf.update(

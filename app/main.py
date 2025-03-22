@@ -12,7 +12,6 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1 import api_router, lifespan, logger
 from app.api.v1.routes import general
-from app.tasks.dummy import test_task
 
 
 def create_app() -> FastAPI:
@@ -60,6 +59,7 @@ app = create_app()
 
 @app.get("/")
 @app.get("/ping")
+@app.get("/health")
 @app.get("/api/v1/")
 @app.get("/api/v1/ping")
 def main_route():
@@ -68,13 +68,6 @@ def main_route():
         dict: A simple greeting message.
     """
     return {"hello": "world"}
-
-
-@app.get("/dummy")
-async def run_test_task(name: str = "World"):
-    """Simple endpoint to trigger Celery task"""
-    task = test_task.delay(name)
-    return {"task_id": task.id, "message": f"Task for {name} started"}
 
 
 if __name__ == "__main__":

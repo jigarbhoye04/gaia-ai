@@ -8,8 +8,8 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
-from app.services.mail_service import fetch_and_process_emails
 from app.services.oauth_service import store_user_info
+from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 
 router = APIRouter()
@@ -120,15 +120,14 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
 
 @router.get("/me", response_model=dict)
 async def get_me(
-    background_tasks: BackgroundTasks, user: dict = Depends(get_current_user)
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user),
 ):
     """
     Returns the current authenticated user's details.
     Uses the dependency injection to fetch user data.
     """
-
-    # Trigger email fetching and processing in the background
-    background_tasks.add_task(fetch_and_process_emails, user)
+    fetch_last_week_emails.delay(user)
 
     return {"message": "User retrieved successfully", **user}
 

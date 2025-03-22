@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import EmailRequest, EmailSummaryRequest, SendEmailRequest
+from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.services.llm_service import do_prompt_no_stream
 from app.services.mail_service import (
     fetch_detailed_messages,
@@ -13,7 +14,6 @@ from app.services.mail_service import (
 )
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
-from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 
 router = APIRouter()
 
