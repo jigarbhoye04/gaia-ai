@@ -18,6 +18,8 @@ services:
       ]
     environment:
       DEBUG: 1
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      CELERY_RESULT_BACKEND: "rpc://"
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
     volumes:
@@ -49,8 +51,7 @@ services:
     container_name: celery_worker
     image: gaia-image
     working_dir: /app
-    command:
-      [
+    command: [
         # "watchmedo",
         # "auto-restart",
         # "--directory=.",
@@ -65,10 +66,14 @@ services:
         "worker",
         "--loglevel=info",
       ]
+    environment:
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      CELERY_RESULT_BACKEND: "rpc://"
     restart: on-failure
     volumes:
       - .:/app
     depends_on:
-    - rabbitmq
+      - rabbitmq
+
 volumes:
   rabbitmq_data:

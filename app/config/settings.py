@@ -15,23 +15,31 @@ class Settings(BaseSettings):
     CLOUDFLARE_ACCOUNTID: str
     CLOUDFLARE_AUTH_TOKEN: str
     BING_API_KEY_1: str
-    BING_API_KEY_2: str
     BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
     ASSEMBLYAI_API_KEY: str
-    GOOGLE_REDIRECT_URI: str = "https://heygaia.io"
     HOST: str = "https://api.heygaia.io"
     DEEPGRAM_API_KEY: str
-    FRONTEND_URL: str = "heygaia.io"  # Production Domain
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
     ENV: str = "production"
     GROQ_API_KEY: str
-
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         return False if self.ENV == "production" else True
+
+    @computed_field
+    def GOOGLE_REDIRECT_URI(self) -> str:
+        return (
+            "https://heygaia.io"
+            if self.ENV == "production"
+            else "http://localhost:3000"
+        )
+
+    @computed_field
+    def FRONTEND_URL(self) -> str:
+        return "heygaia.io" if self.ENV == "production" else "localhost:3000"
 
     @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
