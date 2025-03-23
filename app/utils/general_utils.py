@@ -42,22 +42,42 @@ def get_context_window(
     return context
 
 
-def transform_gmail_message(msg) -> Dict:
-    """Transform Gmail API message to frontend-friendly format while keeping all raw data for debugging."""
+def transform_gmail_message(msg: Dict, config: Dict[str, bool] = None) -> Dict:
+    """Transform Gmail API message to a frontend-friendly format with configurable output.
+
+    Args:
+        msg (Dict): Raw Gmail message data.
+        config (Dict[str, bool]): Configuration for optional fields. Default: All enabled.
+
+    Returns:
+        Dict: Transformed email data with selected fields.
+    """
+    default_config = {
+        "body": True,
+        "headers": True,
+        "snippet": True,
+        "time": True,
+        "from": True,
+        "subject": True,
+        "raw": False,
+    }
+    config = {**default_config, **(config or {})}
+
     headers = {h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])}
 
-    timestamp = int(msg.get("internalDate", 0)) / 1000
-    time = datetime.fromtimestamp(timestamp).strftime("%Y-%m-%d %H:%M")
-
     return {
-        **msg,
         "id": msg.get("id", ""),
-        "from": headers.get("From", ""),
-        "subject": headers.get("Subject", ""),
-        "time": time,
-        "snippet": msg.get("snippet", ""),
-        "body": decode_message_body(msg),
-        # "raw": msg,
+        "from": headers.get("From", "") if config["from"] else None,
+        "subject": headers.get("Subject", "") if config["subject"] else None,
+        "time": datetime.fromtimestamp(int(msg.get("internalDate", 0)) / 1000).strftime(
+            "%Y-%m-%d %H:%M"
+        )
+        if config["time"]
+        else None,
+        "body": decode_message_body(msg) if config["body"] else None,
+        "headers": headers if config["headers"] else None,
+        "snippet": msg.get("snippet", "") if config["snippet"] else None,
+        "raw": msg if config["raw"] else None,
     }
 
 

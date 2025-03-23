@@ -7,6 +7,7 @@ This package contains the API routes and dependencies for version 1 of the GAIA 
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
+import nltk
 
 from app.api.v1.routes import (
     audio,
@@ -53,8 +54,12 @@ async def lifespan(app: FastAPI):
     """
     try:
         logger.info("Starting up GAIA API...")
-        logger.info("Initializing services and dependencies...")
-        logger.info("Downloading NLTK resources...")
+        logger.info("Initializing MongoDB...")
+        logger.info("Initializing NLTK for Natural Language Processing...")
+
+        nltk.download("stopwords", quiet=True)
+        nltk.download("punkt", quiet=True)
+
     except Exception as e:
         logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed") from e

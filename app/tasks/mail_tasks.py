@@ -1,43 +1,21 @@
 import time
 from datetime import datetime, timedelta, timezone
-import asyncio
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
 from googleapiclient.errors import HttpError
 
-from app.services.mail_service import fetch_detailed_messages, get_gmail_service
-from app.utils.general_utils import transform_gmail_message
-from app.services.text_service import classify_email
 from app.db.collections import mail_collection
+from app.services.mail_service import fetch_detailed_messages, get_gmail_service
+from app.services.text_service import classify_email
+from app.utils.general_utils import transform_gmail_message
 
 logger = get_task_logger(__name__)
 
 
-def remove_stopwords(text):
-    """Remove stopwords from text."""
-    try:
-        # Download stopwords if not already available
-        nltk.download("stopwords", quiet=True)
-        nltk.download("punkt", quiet=True)
-
-        stop_words = set(stopwords.words("english"))
-        word_tokens = word_tokenize(text)
-
-        # Filter out stopwords
-        filtered_text = [word for word in word_tokens if word.lower() not in stop_words]
-        return " ".join(filtered_text)
-    except Exception as e:
-        logger.warning(f"Error removing stopwords: {e}")
-        return text  # Return original text if there's an error
-
-
-@shared_task(name="process.email")
+@shared_task(name="process.email", rate_limit="5/s")
 def process_email(email_data: dict, user_dict: dict):
-    """Processes an email asynchronously.
+    """Processes an email.
 
     Args:
         email_data: A dictionary containing email data
@@ -66,9 +44,9 @@ def process_email(email_data: dict, user_dict: dict):
         combined_text = f"{subject} {body}".strip()
         # filtered_text = remove_stopwords(combined_text)
 
-        loop = asyncio.get_event_loop()
-        # classification_result = loop.run_until_complete(classify_email(filtered_text))
-        classification_result = loop.run_until_complete(classify_email(combined_text))
+        classification_result = classify_email(
+            email_text=combined_text, async_mode=False
+        )
 
         if classification_result and classification_result.get("is_important", False):
             email_record = {
@@ -155,13 +133,19 @@ def fetch_last_week_emails(user_dict: dict):
 
         detailed_messages = fetch_detailed_messages(service, all_messages)
         transformed_messages = [
-            transform_gmail_message(msg) for msg in detailed_messages
+            transform_gmail_message(
+                msg,
+                config={
+                    "headers": False,
+                    "snippet": False,
+                },
+            )
+            for msg in detailed_messages
         ]
 
         for _, email in enumerate(transformed_messages):
             process_email.delay(email, user_dict)
             count += 1
-            time.sleep(0.5)
 
         logger.info(f"Queued {count} emails for processing.")
 

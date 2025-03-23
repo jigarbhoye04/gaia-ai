@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
     @computed_field
+    def ENABLE_PROFILING(self) -> bool:
+        return False if self.ENV == "production" else True
+
+    @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
         return f"{self.HOST}/api/v1/oauth/google/callback"
 

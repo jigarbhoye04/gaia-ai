@@ -1,50 +1,44 @@
 import cProfile
 import pstats
 import io
-
+import threading
+from contextlib import contextmanager
 from app.config.loggers import profiler_logger as logger
 
+# Thread-local storage to track profiler state
+_local = threading.local()
 
-def profile_function(func, sort_by="cumulative"):
+
+@contextmanager
+def profile_block(name="Code Block", sort_by="cumulative", print_lines=5):
+    """A thread-safe contextmanager for profiling code blocks.
+
+    Args:
+        name: Identifier for this profiling block
+        sort_by: Stats sorting method
+        print_lines: Number of lines to print in the stats
     """
-    Profiles a function and logs the results.
+    # Check if profiling is already happening on this thread
+    if getattr(_local, "is_profiling", False):
+        logger.debug(f"Nested profiling detected for {name}, skipping")
+        try:
+            yield
+        finally:
+            pass
+        return
 
-    :param func: Function to profile
-    :param sort_by: Sorting criteria (default: "cumulative")
-    :return: Wrapped function with profiling
-    """
+    # Set profiling flag for this thread
+    _local.is_profiling = True
+    profiler = cProfile.Profile()
 
-    def wrapper(*args, **kwargs):
-        profiler = cProfile.Profile()
+    try:
         profiler.enable()
-        result = func(*args, **kwargs)
+        yield
+    finally:
         profiler.disable()
-
         s = io.StringIO()
         stats = pstats.Stats(profiler, stream=s).sort_stats(sort_by)
-        stats.print_stats(20)  # Show top 20 slowest calls
-
-        logger.info(f"Profiling Results for {func.__name__}:\n{s.getvalue()}")
-
-        return result
-
-    return wrapper
-
-
-class Profiler:
-    """Class-based context manager for profiling code blocks."""
-
-    def __init__(self, name="Code Block", sort_by="cumulative"):
-        self.name = name
-        self.sort_by = sort_by
-        self.profiler = cProfile.Profile()
-
-    def __enter__(self):
-        self.profiler.enable()
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.profiler.disable()
-        s = io.StringIO()
-        stats = pstats.Stats(self.profiler, stream=s).sort_stats(self.sort_by)
-        stats.print_stats(20)
-        logger.info(f"Profiling Results for {self.name}:\n{s.getvalue()}")
+        stats.print_stats(print_lines)
+        logger.info(f"Profiling Results for {name}:\n{s.getvalue()}")
+        # Clear the flag
+        _local.is_profiling = False

@@ -4,7 +4,6 @@ Module to expose commonly used MongoDB collections.
 
 from app.db.db_mongodb import mongodb_instance
 
-# Expose collections via the MongoDB instance.
 users_collection = mongodb_instance.get_collection("users")
 conversations_collection = mongodb_instance.get_collection("conversations")
 documents_collection = mongodb_instance.get_collection("documents")

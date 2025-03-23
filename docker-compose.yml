@@ -21,11 +21,15 @@ services:
       DEBUG: 1
       CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
       CELERY_RESULT_BACKEND: "rpc://"
+      PYTHONUNBUFFERED: 1
+      FORCE_COLOR: 1
     volumes:
       - .:/app
     ports:
       - "8000:80"
     restart: on-failure
+    tty: true
+    stdin_open: true
 
   # RabbitMQ Service
   rabbitmq:

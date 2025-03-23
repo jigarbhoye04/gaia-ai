@@ -121,13 +121,13 @@ def send_email(
     return sent_message
 
 
-def fetch_detailed_messages(service, messages, batch_size=50, delay=1):
+def fetch_detailed_messages(service, messages, batch_size=20, delay=2):
     """
     Fetch detailed Gmail messages using batch requests while handling rate limits.
 
     :param service: Authenticated Gmail API service instance
     :param messages: List of message metadata (each containing 'id')
-    :param batch_size: Number of messages per batch (default: 50)
+    :param batch_size: Number of messages per batch (default: 20)
     :param delay: Time in seconds to wait between batch executions
     :return: List of detailed message objects
     """
