@@ -37,6 +37,20 @@ async def get_user_info(access_token: str) -> dict:
 
 
 async def refresh_access_token(refresh_token: str) -> dict:
+    # Validate required fields
+    if not all(
+        [
+            settings.GOOGLE_CLIENT_ID,
+            settings.GOOGLE_CLIENT_SECRET,
+            settings.GOOGLE_TOKEN_URL,
+        ]
+    ):
+        logger.error("Missing required credentials for token refresh")
+        raise HTTPException(
+            status_code=500,
+            detail="Missing required credentials for token refresh. Ensure client_id, client_secret, and token_uri are set.",
+        )
+
     try:
         logger.info(f"Refreshing token using refresh_token: {refresh_token}")
         response = await http_async_client.post(
@@ -62,9 +76,7 @@ async def refresh_access_token(refresh_token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
-async def get_valid_access_token(
-    access_token: str, refresh_token: str
-) -> tuple[str, int]:
+async def get_valid_access_token(refresh_token: str) -> tuple[str, int]:
     """
     Refreshes the access token using the refresh token.
     Returns a tuple of the new access token and its expires_in value.
@@ -106,9 +118,7 @@ async def get_current_user(
             if not refresh_token:
                 raise HTTPException(status_code=401, detail="Authentication required")
             logger.info("Using refresh token to fetch new access token")
-            new_access_token, expires_in = await get_valid_access_token(
-                access_token, refresh_token
-            )
+            new_access_token, expires_in = await get_valid_access_token(refresh_token)
             access_token = new_access_token
             user_info = await get_user_info(access_token)
             user_email = user_info.get("email")

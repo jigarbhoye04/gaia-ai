@@ -1,5 +1,4 @@
 import asyncio
-from functools import lru_cache
 from typing import Any, Dict, List, Union
 
 import nltk
@@ -12,12 +11,9 @@ from transformers import pipeline
 from app.config.loggers import general_logger as logger
 
 
-@lru_cache(maxsize=1)
-def get_zero_shot_classifier():
-    """Lazy-load the zero-shot classification pipeline and cache it."""
-    return pipeline(
-        "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
-    )
+classifier = pipeline(
+    "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
+)
 
 
 def split_text_into_chunks(
@@ -46,7 +42,6 @@ def _classify_text_core(user_input: str, candidate_labels: List[str]) -> Dict[st
     """
     Core logic for classifying text synchronously.
     """
-    classifier = get_zero_shot_classifier()
 
     if not user_input or not candidate_labels or not classifier:
         return {"error": "Invalid input or candidate labels."}
@@ -97,28 +92,20 @@ def _classify_email_core(email_text: str) -> Dict[str, Any]:
         "priority",
         "personal",
         "professional",
-        "financial",
-        "official",
+        "important",
         "time_sensitive",
-        "health",
-        "confirmation",
-        "security",
     ]
 
     email_labels = notify_labels + [
         "updates",
         "promotional",
         "social",
-        "spam",
-        "newsletter",
-        "notification",
         "automated",
         "feedback",
         "subscription",
         "spam",
-        "advertisement",
-        "marketing",
         "transactional",
+        "not important",
     ]
 
     results = _classify_text_core(email_text, email_labels)

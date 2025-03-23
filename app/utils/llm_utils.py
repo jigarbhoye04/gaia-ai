@@ -13,10 +13,21 @@ async def extract_last_user_message(messages: List[dict]) -> str:
     )
 
 
-async def make_llm_request(payload: dict, http_async_client) -> dict:
+async def make_llm_request(payload: dict, http_async_client: httpx.AsyncClient) -> dict:
     """Helper function to make a request to the LLM API."""
     try:
         response = await http_async_client.post(settings.LLM_URL, json=payload)
+        response.raise_for_status()
+        return response.json()
+    except (httpx.RequestError, ValueError) as e:
+        logger.error(f"Request error: {e}")
+        return {"error": str(e)}
+
+
+def make_llm_request_sync(payload: dict, http_client: httpx.Client) -> dict:
+    """Helper function to make a request to the LLM API."""
+    try:
+        response = http_client.post(settings.LLM_URL, json=payload)
         response.raise_for_status()
         return response.json()
     except (httpx.RequestError, ValueError) as e:

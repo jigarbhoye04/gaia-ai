@@ -2,18 +2,20 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from celery import shared_task
-from celery.utils.log import get_task_logger
 from googleapiclient.errors import HttpError
 
+from app.config.loggers import celery_logger as logger
 from app.db.collections import mail_collection
+from app.prompts.user.mail_prompts import EMAIL_SUMMARIZER_SHORT
+from app.services.llm_service import do_prompt_no_stream_sync
 from app.services.mail_service import fetch_detailed_messages, get_gmail_service
-from app.services.text_service import classify_email
+from app.services.text_service import classify_email, remove_stopwords
 from app.utils.general_utils import transform_gmail_message
-
-logger = get_task_logger(__name__)
+from app.utils.profiler_utils import profile_celery_task
 
 
 @shared_task(name="process.email", rate_limit="5/s")
+@profile_celery_task(print_lines=3)
 def process_email(email_data: dict, user_dict: dict):
     """Processes an email.
 
@@ -39,27 +41,49 @@ def process_email(email_data: dict, user_dict: dict):
             return {"error": error_msg, "status": "failed"}
 
         subject = email_data.get("subject", "No subject")
-        body = email_data.get("snippet", "") or email_data.get("body", "")
+        snippet = email_data.get("snippet", None)
+        body = email_data.get("body", "Unknown body")
 
         combined_text = f"{subject} {body}".strip()
-        # filtered_text = remove_stopwords(combined_text)
+        filtered_text = remove_stopwords(combined_text)
+
+        logger.info(f"{subject=}")
+        logger.info(f"{snippet=}")
+
+        summary_response = do_prompt_no_stream_sync(
+            prompt=EMAIL_SUMMARIZER_SHORT.format(
+                subject=subject,
+                body=body,
+                snippet=snippet,
+                time=email_data.get("time", ""),
+                sender=email_data.get("from", "No sender"),
+            ),
+            model="@cf/meta/llama-3.2-3b-instruct",
+        )
+        summary = summary_response.get("response", None)
+
+        logger.info(f"{summary=}")
 
         classification_result = classify_email(
-            email_text=combined_text, async_mode=False
+            email_text=filtered_text, async_mode=False
         )
+
+        logger.info(f"{classification_result=}")
 
         if classification_result and classification_result.get("is_important", False):
             email_record = {
                 "email_id": email_id,
                 "subject": subject,
-                "category": classification_result.get("highest_label", "unknown"),
-                "importance_score": classification_result.get("highest_score", 0),
                 "processed_at": datetime.now(),
                 "is_important": True,
                 "user_id": user_id,
+                "summary": summary,
+                **classification_result,
             }
 
             query = {"email_id": email_id, "user_id": user_id}
+
+            logger.info("Updating in mongodb")
 
             mail_collection.update_one(query, {"$set": email_record}, upsert=True)
 
@@ -68,27 +92,30 @@ def process_email(email_data: dict, user_dict: dict):
             )
 
         return {
-            "id": email_id,
-            "status": "processed",
+            "email_id": email_id,
             "subject": subject,
+            "processed_at": datetime.now(),
             "user_id": user_id,
+            "summary": summary,
+            **classification_result,
             "is_important": classification_result.get("is_important", False)
             if classification_result
             else False,
         }
+
     except Exception as e:
         logger.error(f"Error processing email: {e}", exc_info=True)
         return {"error": str(e), "status": "failed"}
 
 
 @shared_task(name="fetch.last_week_emails")
+@profile_celery_task()
 def fetch_last_week_emails(user_dict: dict):
     """
     Fetch all emails from the last week using pagination and queue them for processing.
     Implements rate limiting, logging, and error handling.
     """
     try:
-        count = 0
         service = get_gmail_service(user_dict)
 
         now = datetime.now(timezone.utc)
@@ -120,7 +147,7 @@ def fetch_last_week_emails(user_dict: dict):
                 if not next_page_token:
                     break
 
-                time.sleep(1)
+                time.sleep(3)
 
             except HttpError as e:
                 logger.error(f"Gmail API Error: {e}", exc_info=True)
@@ -133,24 +160,18 @@ def fetch_last_week_emails(user_dict: dict):
 
         detailed_messages = fetch_detailed_messages(service, all_messages)
         transformed_messages = [
-            transform_gmail_message(
-                msg,
-                config={
-                    "headers": False,
-                    "snippet": False,
-                },
-            )
-            for msg in detailed_messages
+            transform_gmail_message(msg) for msg in detailed_messages
         ]
 
         for _, email in enumerate(transformed_messages):
             process_email.delay(email, user_dict)
-            count += 1
 
-        logger.info(f"Queued {count} emails for processing.")
+        result = f"Queued {len(transformed_messages)} emails for processing."
+
+        logger.info(result)
 
         return {
-            "result": f"Queued {count} emails for processing.",
+            "result": result,
             "total_messages": len(all_messages),
         }
 

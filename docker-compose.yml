@@ -5,8 +5,7 @@ services:
     build: .
     image: gaia-image
     working_dir: /app
-    command:
-      [
+    command: [
         "python",
         "-m",
         "uvicorn",
@@ -15,12 +14,10 @@ services:
         "0.0.0.0",
         "--port",
         "80",
-        "--reload",
+        # "--reload",
       ]
     environment:
       DEBUG: 1
-      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
-      CELERY_RESULT_BACKEND: "rpc://"
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
     volumes:
@@ -54,12 +51,12 @@ services:
     working_dir: /app
     command:
       [
-        "watchmedo",
-        "auto-restart",
-        "--directory=.",
-        "--pattern=*.py",
-        "--recursive",
-        "--",
+        # "watchmedo",
+        # "auto-restart",
+        # "--directory=.",
+        # "--pattern=*.py",
+        # "--recursive",
+        # "--",
         "python",
         "-m",
         "celery",
@@ -68,14 +65,10 @@ services:
         "worker",
         "--loglevel=info",
       ]
-    environment:
-      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
-      CELERY_RESULT_BACKEND: "rpc://"
     restart: on-failure
     volumes:
       - .:/app
     depends_on:
-      - rabbitmq
-
+    - rabbitmq
 volumes:
   rabbitmq_data:

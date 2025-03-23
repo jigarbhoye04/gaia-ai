@@ -52,6 +52,9 @@ class MongoDB:
         try:
             users_collection = self.database.get_collection("users")
             users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
+
+            mail_collection = self.database.get_collection("mail")
+            mail_collection.create_index([("email_id", pymongo.ASCENDING)], unique=True)
         except Exception as e:
             logger.error(f"Error while initializing indexes: {e}")
 

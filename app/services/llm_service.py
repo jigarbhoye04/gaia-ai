@@ -6,10 +6,15 @@ import httpx
 
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
-from app.utils.llm_utils import extract_last_user_message, make_llm_request
+from app.utils.llm_utils import (
+    extract_last_user_message,
+    make_llm_request,
+    make_llm_request_sync,
+)
 from app.prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
 
-http_async_client = httpx.AsyncClient(timeout=1000000.0)
+http_async_client = httpx.AsyncClient(timeout=1000000)
+http_sync_client = httpx.Client(timeout=1000000)
 
 
 async def do_prompt_with_stream(
@@ -108,7 +113,7 @@ async def do_prompt_no_stream(
     prompt: str,
     temperature: float = 0.6,
     max_tokens: int = 1024,
-    system_prompt: str = "",
+    system_prompt: str = None,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ) -> dict:
     """Send a prompt to the LLM API without streaming."""
@@ -121,9 +126,34 @@ async def do_prompt_no_stream(
             "messages": [
                 {
                     "role": "user",
-                    "content": f"System: {system_prompt} User Prompt: {prompt}",
+                    "content": f"{f'System: {system_prompt}. User Prompt: ' if system_prompt else ''} {prompt}",
                 }
             ],
         },
         http_async_client,
+    )
+
+
+def do_prompt_no_stream_sync(
+    prompt: str,
+    temperature: float = 0.6,
+    max_tokens: int = 1024,
+    system_prompt: str = None,
+    model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
+) -> dict:
+    """Send a prompt to the LLM API without streaming."""
+    return make_llm_request_sync(
+        {
+            "stream": "false",
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "model": model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": f"{f'System: {system_prompt}. User Prompt: ' if system_prompt else ''} {prompt}",
+                }
+            ],
+        },
+        http_sync_client,
     )
