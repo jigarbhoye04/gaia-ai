@@ -1,8 +1,13 @@
+import asyncio
+
+import html2text
 import httpx
 from bs4 import BeautifulSoup
-from app.config.settings import settings
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+
+from app.config.loggers import search_logger as logger
+from app.config.settings import settings
 
 subscription_key = settings.BING_API_KEY_1
 search_url = settings.BING_SEARCH_URL
@@ -14,55 +19,165 @@ if not subscription_key:
 http_async_client = httpx.AsyncClient()
 
 
-async def perform_search(query: str, count=7):
+WEB_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
+IMAGE_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/search"
+NEWS_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/news/search"
+VIDEO_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/videos/search"
+
+MAX_QUERY_LENGTH = 1500
+
+
+async def fetch_endpoint(
+    url: str, query: str, count: int, extra_params: dict = None
+) -> dict:
+    """
+    Generic function to call a Bing API endpoint.
+
+    Args:
+        url: The API endpoint.
+        query: The search query.
+        count: Number of results to return.
+        subscription_key: API subscription key.
+        extra_params: Additional query parameters, if needed.
+
+    Returns:
+        The JSON response as a dictionary, or an empty dict on error.
+    """
     headers = {"Ocp-Apim-Subscription-Key": subscription_key}
-    params = {
-        "q": query,
-        "count": count,
-        # "responseFilter": "webPages,images",
-    }
-    
+    params = {"q": query, "count": count}
+    if extra_params:
+        params.update(extra_params)
 
     try:
-        response = await http_async_client.get(
-            search_url, headers=headers, params=params
-        )
+        response = await http_async_client.get(url, headers=headers, params=params)
         response.raise_for_status()
-        data = response.json()
-
-        # Extract useful information
-        results = []
-        for item in data.get("webPages", {}).get("value", []):
-            results.append(
-                {
-                    "title": item.get("name"),
-                    "url": item.get("url"),
-                    "snippet": item.get("snippet"),
-                    "source": item.get("siteName"),
-                    "date": item.get("dateLastCrawled"),
-                }
-            )
-
-        # Extract images
-        images = []
-        # for img in data.get("images", {}).get("value", []):
-        #     images.append(
-        #         {
-        #             "image_url": img.get("contentUrl"),
-        #             "thumbnail": img.get("thumbnailUrl"),
-        #             "title": img.get("name"),
-        #             "source": img.get("hostPageUrl"),
-        #         }
-        #     )
-
-        return {"results": results, "images": images}
-
+        return response.json()
     except httpx.HTTPStatusError as http_err:
-        return {"error": f"HTTP error occurred: {http_err}"}
+        logger.error(f"HTTP error from {url}: {http_err}")
     except httpx.RequestError as req_err:
-        return {"error": f"Request error occurred: {req_err}"}
+        logger.error(f"Request error from {url}: {req_err}")
     except Exception as e:
-        return {"error": f"An unexpected error occurred: {e}"}
+        logger.error(f"Unexpected error from {url}: {e}")
+    return {}
+
+
+# --- Merge Modules ---
+def merge_web_results(data: dict) -> list:
+    """Extract and merge web search results."""
+    return [
+        {
+            "title": item.get("name", "No Title"),
+            "url": item.get("url", "#"),
+            "snippet": item.get("snippet", ""),
+            "source": item.get("displayUrl", "Unknown"),
+            "date": item.get("dateLastCrawled"),
+        }
+        for item in data.get("webPages", {}).get("value", [])
+    ]
+
+
+def merge_image_results(data: dict) -> list:
+    """Extract and merge image search results."""
+    return [
+        {
+            "title": item.get("name", "No Title"),
+            "url": item.get("contentUrl", "#"),
+            "thumbnail": item.get("thumbnailUrl", ""),
+            "source": item.get("hostPageUrl", "Unknown"),
+        }
+        for item in data.get("value", [])
+    ]
+
+
+def merge_news_results(data: dict) -> list:
+    """Extract and merge news search results."""
+    return [
+        {
+            "title": item.get("name", "No Title"),
+            "url": item.get("url", "#"),
+            "snippet": item.get("description", ""),
+            "source": (item.get("provider") or [{}])[0].get("name", "Unknown"),
+            "date": item.get("datePublished"),
+        }
+        for item in data.get("value", [])
+    ]
+
+
+def merge_video_results(data: dict) -> list:
+    """Extract and merge video search results."""
+    return [
+        {
+            "title": item.get("name", "No Title"),
+            "url": item.get("contentUrl", "#"),
+            "thumbnail": item.get("thumbnailUrl", ""),
+            "source": (item.get("publisher") or [{}])[0].get("name", "Unknown"),
+        }
+        for item in data.get("value", [])
+    ]
+
+
+# --- Main Coordinator ---
+async def perform_search(query: str, count: int) -> dict:
+    """
+    Call multiple Bing search APIs concurrently and merge their responses.
+
+    The APIs called include:
+      - Web search
+      - Image search
+      - News search
+      - Video search
+
+    Returns:
+        A dictionary containing merged results from each API.
+    """
+    # Ensure the query does not exceed the max length.
+    if len(query) > MAX_QUERY_LENGTH:
+        query = query[:MAX_QUERY_LENGTH]
+
+    # Set up concurrent API calls.
+    tasks = [
+        fetch_endpoint(WEB_SEARCH_URL, query, count),
+        fetch_endpoint(IMAGE_SEARCH_URL, query, count),
+        fetch_endpoint(NEWS_SEARCH_URL, query, count),
+        fetch_endpoint(VIDEO_SEARCH_URL, query, count),
+    ]
+    web_data, image_data, news_data, video_data = await asyncio.gather(*tasks)
+
+    # Merge the results from each endpoint.
+    return {
+        "web": merge_web_results(web_data),
+        "images": merge_image_results(image_data),
+        "news": merge_news_results(news_data),
+        "videos": merge_video_results(video_data),
+    }
+
+
+def format_results_for_llm(results, result_type="Search Results"):
+    """
+    Formats a list of result dictionaries into a clean, structured format for an LLM.
+
+    Args:
+        results (list): List of result dictionaries containing 'title', 'url', 'snippet', 'source', and 'date'.
+        result_type (str): Label for the results (e.g., "Web Results", "News Results").
+
+    Returns:
+        str: Formatted string suitable for an LLM response.
+    """
+    if not results:
+        return "No relevant results found."
+
+    formatted_output = f"{result_type}:\n\n"
+
+    for index, result in enumerate(results, start=1):
+        formatted_output += (
+            f"{index}. **{result.get('title', 'No Title')}**\n"
+            f"   - Source: {result.get('source', 'Unknown')}\n"
+            f"   - Date: {result.get('date', 'N/A')}\n"
+            f"   - Snippet: {result.get('snippet', 'No snippet available')}\n"
+            f"   - [URL]({result.get('url', '#')})\n\n"
+        )
+
+    return formatted_output
 
 
 async def perform_fetch(url: str):
@@ -117,3 +232,47 @@ async def perform_fetch(url: str):
     except Exception as e:
         error = f"An unexpected error occurred: {e}"
         return error
+
+
+async def fetch_and_convert_to_markdown(url: str):
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            response.raise_for_status()
+
+        # Parse HTML with BeautifulSoup
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Remove script and style elements
+        for script in soup(["script", "style"]):
+            script.decompose()
+
+        # Convert cleaned HTML to Markdown
+        markdown_text = html2text.html2text(str(soup))
+
+        return markdown_text
+
+    except httpx.HTTPStatusError as http_err:
+        return f"HTTP error occurred: {http_err}"
+    except httpx.RequestError as req_err:
+        return f"HTTP Request error occurred: {req_err}"
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+
+
+if __name__ == "__main__":
+
+    async def main():
+        url = input("Enter the URL to fetch: ")
+
+        print("Fetching and converting to Markdown...")
+        markdown_result = await fetch_and_convert_to_markdown(url)
+        print("\nMarkdown Result:\n")
+        print(markdown_result)
+
+        print("\nFetching and preprocessing text...")
+        preprocessed_text = await perform_fetch(url)
+        print("\nPreprocessed Text:\n")
+        print(preprocessed_text)
+
+    asyncio.run(main())

@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pydantic import computed_field
 
+
 class Settings(BaseSettings):
     """Configuration settings for the application."""
 
@@ -29,6 +30,10 @@ class Settings(BaseSettings):
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
     @computed_field
+    def ENABLE_PROFILING(self) -> bool:
+        return False if self.ENV == "production" else True
+
+    @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
         return f"{self.HOST}/api/v1/oauth/google/callback"
 
@@ -39,6 +44,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-
-print(settings.GOOGLE_REDIRECT_URI)
-print(settings.GOOGLE_CALLBACK_URL)

@@ -26,21 +26,48 @@ from app.services.text_service import classify_event_type
 from app.utils.embedding_utils import query_documents, search_notes_by_similarity
 from app.utils.notes import insert_note
 from app.utils.notes_utils import should_create_memory
-from app.utils.search_utils import perform_fetch, perform_search
+from app.utils.search_utils import format_results_for_llm, perform_fetch, perform_search
+from app.prompts.user.chat_prompts import (
+    CONVERSATION_DESCRIPTION_GENERATOR,
+    DOCUMENTS_CONTEXT_TEMPLATE,
+    NOTES_CONTEXT_TEMPLATE,
+    PAGE_CONTENT_TEMPLATE,
+    SEARCH_CONTEXT_TEMPLATE,
+)
 
 
 async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Perform a web search and append relevant context to the last message.
     """
-    last_message = context["last_message"]
-    query_text = context["query_text"]
-    search_result = await perform_search(query=query_text, count=5)
-    last_message["content"] += (
-        f"\nRelevant context using GAIA web search. Add citations after each line where something is cited like [1] but the link should be in markdown (like this: [[1]](https://example.com)). : {search_result}. Use citations and references for all the content. "
-    )
 
-    print(context)
+    if context["search_web"] and context["last_message"]:
+        last_message = context["last_message"]
+        query_text = context["query_text"]
+        search_results = await perform_search(query=query_text, count=5)
+        web_results = search_results.get("web", [])
+        news_results = search_results.get("news", [])
+        formatted_results = ""
+
+        if web_results:
+            formatted_results += (
+                format_results_for_llm(web_results, result_type="Web Results") + "\n"
+            )
+
+        if news_results:
+            formatted_results += format_results_for_llm(
+                news_results, result_type="News Results"
+            )
+
+        if not formatted_results:
+            formatted_results = "No relevant results found."
+        print(formatted_results)
+        print(search_results)
+        last_message["content"] += SEARCH_CONTEXT_TEMPLATE.format(
+            formatted_results=formatted_results
+        )
+
+        context["search_results"] = search_results
     return context
 
 
@@ -51,8 +78,8 @@ async def fetch_webpage(context: Dict[str, Any]) -> Dict[str, Any]:
     body = context["body"]
     if body.pageFetchURL and context["last_message"]:
         page_content = await perform_fetch(body.pageFetchURL)
-        context["last_message"]["content"] += (
-            f"\nRelevant context from the fetched URL: {page_content}"
+        context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
+            page_content=page_content
         )
     return context
 
@@ -81,9 +108,8 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
         input_text=query_text, user_id=user.get("user_id")
     )
     if notes:
-        last_message["content"] = (
-            f"User: {last_message['content']} \n System: The user has the following notes: "
-            f"{'- '.join(notes)} (Fetched from the Database). Only mention these notes when relevant to the conversation."
+        last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
+            message=last_message["content"], notes="- ".join(notes)
         )
         context["notes_added"] = True
     else:
@@ -105,10 +131,8 @@ async def fetch_documents(context: Dict[str, Any]) -> Dict[str, Any]:
     if documents and len(documents) > 0:
         content = [doc["content"] for doc in documents]
         titles = [doc["title"] for doc in documents]
-        prompt = (
-            f"Question: {last_message['content']}\n\n"
-            f"Context from document files uploaded by the user:\n"
-            f"{{'document_names': {titles}, 'content': {content}}}"
+        prompt = DOCUMENTS_CONTEXT_TEMPLATE.format(
+            message=last_message["content"], titles=titles, content=content
         )
         last_message["content"] = prompt
         context["docs_added"] = True
@@ -158,6 +182,7 @@ async def chat_stream(
         "user": user,
         "intent": None,
         "messages": jsonable_encoder(body.messages),
+        "search_web": body.search_web,
     }
 
     pipeline_steps = [
@@ -182,6 +207,7 @@ async def chat_stream(
             max_tokens=4096,
             intent=context["intent"],
             model=context["llm_model"],
+            context=context,
         ),
         media_type="text/event-stream",
     )
@@ -367,9 +393,8 @@ async def update_conversation_description_llm(
 
     try:
         response = await do_prompt_no_stream(
-            prompt=(
-                f"'{data.userFirstMessage}'\nRephrase this text into a succinct topic description (maximum 4 words). "
-                "Do not answer the message—simply summarize its subject. Do not add any sort of formatting or markdown, just respond in plaintext."
+            prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(
+                user_message=data.userFirstMessage
             ),
             max_tokens=5,
             model=model,

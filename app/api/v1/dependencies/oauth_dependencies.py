@@ -1,11 +1,13 @@
 import logging
 import time
+from typing import Optional
+
 import httpx
 from fastapi import Cookie, HTTPException
-from app.db.collections import users_collection
-from app.db.db_redis import set_cache, get_cache
-from typing import Optional
+
 from app.config.settings import settings
+from app.db.collections import users_collection
+from app.db.db_redis import get_cache, set_cache
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,9 @@ async def refresh_access_token(refresh_token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
-async def get_valid_access_token(access_token: str, refresh_token: str) -> (str, int):
+async def get_valid_access_token(
+    access_token: str, refresh_token: str
+) -> tuple[str, int]:
     """
     Refreshes the access token using the refresh token.
     Returns a tuple of the new access token and its expires_in value.
@@ -89,8 +93,6 @@ async def get_current_user(
 
     try:
         user_email = None
-        user_name = None
-        user_picture = None
 
         if access_token:
             try:
@@ -110,8 +112,6 @@ async def get_current_user(
             access_token = new_access_token
             user_info = await get_user_info(access_token)
             user_email = user_info.get("email")
-            user_name = user_info.get("name")
-            user_picture = user_info.get("picture")
 
             # Update token cache using the retrieved email
             cache_key = f"user_token:{user_email}"
@@ -142,7 +142,6 @@ async def get_current_user(
             "name": user_data.get("name"),
             "picture": user_data.get("picture"),
             "access_token": access_token,
-            # "refresh_token": refresh_token,
             "cached_at": int(time.time()),
         }
         await set_cache(cache_key, user_info_to_cache, USER_CACHE_EXPIRY)

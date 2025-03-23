@@ -1,6 +1,8 @@
 from pydantic import BaseModel
 from typing import List, Optional, Literal
 
+from app.models.search_models import SearchResults
+
 
 class CalIntentOptions(BaseModel):
     summary: Optional[str] = None
@@ -35,17 +37,12 @@ class MessageModel(BaseModel):
     intent: Optional[Literal["calendar"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
 
+    search_results: Optional[SearchResults] = None
 
-# Define the structure for a single conversation
+
 class ConversationModel(BaseModel):
     conversation_id: str
     description: str = "New Chat"
-
-
-# Define the structure for all user conversations
-class ConversationHistoryModel(BaseModel):
-    user_id: str
-    conversation_history: List[ConversationModel]
 
 
 class UpdateMessagesRequest(BaseModel):
@@ -59,3 +56,4 @@ class StarredUpdate(BaseModel):
 
 class PinnedUpdate(BaseModel):
     pinned: bool
+

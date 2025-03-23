@@ -1,15 +1,20 @@
-from pydantic import BaseModel, EmailStr
-from typing import Optional
-from bson import ObjectId
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
-class User(BaseModel):
-    id: Optional[ObjectId]
-    email: EmailStr
-    password: str
-    first_name: str
-    last_name: str
-    # Users inactive until email confirmation
-    # is_active: Optional[bool] = False
-    is_verified: Optional[bool] = False  # Ensure email confirmation
-    created_at: Optional[str]
+class CurrentUserModel(BaseModel):
+    user_id: str = Field(..., description="Unique identifier for the user")
+    name: str = Field(..., description="Name of the user")
+    email: str = Field(..., description="Email address of the user")
+    cached_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        description="Timestamp when the user data was cached",
+    )
+    profile_picture: str = Field(
+        default=None, description="URL of the user's profile picture"
+    )
+    is_active: bool = Field(default=True, description="Indicates if the user is active")
+
+    class Config:
+        arbitrary_types_allowed = True

@@ -1,0 +1,81 @@
+services:
+  # FastAPI Application
+  gaia:
+    container_name: gaia
+    build: .
+    image: gaia-image
+    working_dir: /app
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "80",
+        "--reload",
+      ]
+    environment:
+      DEBUG: 1
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      CELERY_RESULT_BACKEND: "rpc://"
+      PYTHONUNBUFFERED: 1
+      FORCE_COLOR: 1
+    volumes:
+      - .:/app
+    ports:
+      - "8000:80"
+    restart: on-failure
+    tty: true
+    stdin_open: true
+
+  # RabbitMQ Service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Celery Worker
+  celery_worker:
+    container_name: celery_worker
+    image: gaia-image
+    working_dir: /app
+    command:
+      [
+        "watchmedo",
+        "auto-restart",
+        "--directory=.",
+        "--pattern=*.py",
+        "--recursive",
+        "--",
+        "python",
+        "-m",
+        "celery",
+        "-A",
+        "app.worker",
+        "worker",
+        "--loglevel=info",
+      ]
+    environment:
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      CELERY_RESULT_BACKEND: "rpc://"
+    restart: on-failure
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+
+volumes:
+  rabbitmq_data:

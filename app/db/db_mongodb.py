@@ -1,10 +1,11 @@
 import sys
 
+import pymongo
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
-import pymongo
-from app.config.settings import settings
+
 from app.config.loggers import mongo_logger as logger
+from app.config.settings import settings
 
 
 class MongoDB:
@@ -29,6 +30,7 @@ class MongoDB:
             self.database = self.client.get_database(db_name)
             self._initialize_indexes()
             self._ping()
+            logger.info("Successfully connected to MongoDB.")
         except Exception as e:
             logger.error(f"An error occurred while connecting to MongoDB: {e}")
             sys.exit(1)
@@ -39,9 +41,7 @@ class MongoDB:
         """
         try:
             self.client.admin.command("ping")
-            logger.info(
-                "Pinged your deployment. You successfully connected to MongoDB!"
-            )
+            logger.info("Pinged your MongoDB deployment!")
         except Exception as e:
             logger.error(f"Ping failed: {e}")
 
@@ -51,10 +51,7 @@ class MongoDB:
         """
         try:
             users_collection = self.database.get_collection("users")
-            # Create a unique index on the 'email' field
             users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
-            logger.info("Created index on 'users' collection for the 'email' field.")
-            # Additional indexes for other collections can be added here.
         except Exception as e:
             logger.error(f"Error while initializing indexes: {e}")
 
@@ -71,6 +68,4 @@ class MongoDB:
         return self.database.get_collection(collection_name)
 
 
-db_uri = settings.MONGO_DB
-db_name = "GAIA"
-mongodb_instance = MongoDB(uri=db_uri, db_name=db_name)
+mongodb_instance = MongoDB(uri=settings.MONGO_DB, db_name="GAIA")

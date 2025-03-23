@@ -9,6 +9,7 @@ from app.utils.embedding_utils import query_documents
 from app.services.text_service import split_text_into_chunks
 from app.models.document_moels import DocumentUploadResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.prompts.user.document_prompts import DOCUMENT_QUERY_LARGE, DOCUMENT_QUERY_SMALL
 
 router = APIRouter()
 
@@ -91,14 +92,12 @@ async def query_with_document(
             )
             content_list = [doc["content"] for doc in documents]
             titles = [doc["title"] for doc in documents]
-            prompt = (
-                f"Question: {message}\n\nContext from documents uploaded by the user:\n"
-                f"{ {'document_names': titles, 'content': content_list} }"
+            prompt = DOCUMENT_QUERY_LARGE.format(
+                question=message, titles=titles, content=content_list
             )
         else:
-            prompt = (
-                f"Question: {message}\n\nContext from documents uploaded by the user:\n"
-                f"{ {'document_name': file.filename, 'content': text} }"
+            prompt = DOCUMENT_QUERY_SMALL.format(
+                question=message, filename=file.filename, text=text
             )
         response = await do_prompt_no_stream(prompt)
         return {

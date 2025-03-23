@@ -1,12 +1,14 @@
 """
 Router module for note-related endpoints.
+
+This module contains endpoints for creating, retrieving, updating, and deleting notes.
 """
 
 from fastapi import APIRouter, Depends, status
 from app.models.notes_models import NoteModel, NoteResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.notes_service import (
-    create_note,
+    create_note_service,
     get_note,
     get_all_notes,
     update_note,
@@ -28,7 +30,7 @@ async def create_note_endpoint(note: NoteModel, user: dict = Depends(get_current
     Returns:
         NoteResponse: The created note.
     """
-    return await create_note(note, user["user_id"])
+    return await create_note_service(note, user["user_id"])
 
 
 @router.get("/notes/{note_id}", response_model=NoteResponse)
