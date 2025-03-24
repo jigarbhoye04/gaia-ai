@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+
 import { GoogleCalendarEvent } from '@/types/calendarTypes';
 
 export const useEventGroups = (calendarEvents: GoogleCalendarEvent[]) => {

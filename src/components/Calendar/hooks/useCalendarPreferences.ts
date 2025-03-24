@@ -1,7 +1,8 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useCallback, useMemo,useState } from 'react';
+
+import { debounce } from '@/lib/utils';
 import { GoogleCalendar } from '@/types/calendarTypes';
 import { apiauth } from '@/utils/apiaxios';
-import { debounce } from '@/lib/utils';
 
 export const useCalendarPreferences = (onCalendarsUpdate: (calendars: string[]) => void) => {
     const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);

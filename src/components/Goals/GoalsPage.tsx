@@ -66,7 +66,7 @@ export default function GoalsPage() {
           </div>
 
           {goals.length > 0 ? (
-            <div className="grid grid-cols-1 justify-center gap-4 px-1 pb-28 sm:grid-cols-2 sm:px-16 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 justify-center gap-4 px-1 pb-28 sm:grid-cols-1 sm:px-16 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {goals.map((goal, index) => (
                 <GoalCard key={index} fetchGoals={fetchGoals} goal={goal} />
               ))}
@@ -92,7 +92,7 @@ export default function GoalsPage() {
                 key={index}
                 variant="flat"
                 color="primary"
-                className="cursor-pointer"
+                className="cursor-pointer text-primary"
                 onClick={() => {
                   setPrevGoalTitle(suggestion);
                   setOpenDialog(true);

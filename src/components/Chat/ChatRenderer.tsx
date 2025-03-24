@@ -1,7 +1,7 @@
 import { Spinner } from "@heroui/spinner";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import StarterText from "@/components/Chat/StarterText";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -23,6 +23,7 @@ export default function ChatRenderer() {
   const messageId = searchParams.get("messageId");
   const { isLoading } = useLoading();
   const { id: convoIdParam } = useParams<{ id: string }>();
+  const scrolledToMessageRef = useRef<string | null>(null);
 
   const [imageData, setImageData] = useState({
     src: "",
@@ -31,7 +32,14 @@ export default function ChatRenderer() {
   });
 
   useEffect(() => {
-    if (messageId && convoMessages.length > 0) scrollToMessage(messageId);
+    if (
+      messageId &&
+      convoMessages.length > 0 &&
+      scrolledToMessageRef.current !== messageId
+    ) {
+      scrollToMessage(messageId);
+      scrolledToMessageRef.current = messageId;
+    }
   }, [messageId, convoMessages]);
 
   const scrollToMessage = (messageId: string) => {

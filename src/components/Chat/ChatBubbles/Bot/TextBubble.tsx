@@ -27,12 +27,13 @@ export default function TextBubble({
   disclaimer,
   calendar_options,
   intent,
-  fileScanningText,search_results
+  fileScanningText,
+  search_results,
 }: TextBubbleProps) {
   return (
     <>
       {search_results && <SearchResults search_results={search_results} />}
-      
+
       <div className="chat_bubble bg-zinc-800">
         <div className="flex flex-col gap-3">
           {searchWeb && (

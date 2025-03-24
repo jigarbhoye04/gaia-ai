@@ -81,7 +81,7 @@ function GoalHeader() {
   return (
     <div className="max-w-screen-md text-center">
       <h2 className="mb-2 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
-        Need help setting goals?
+        Ever Felt Stuck Setting Goals?
       </h2>
       {/* <p className="text-foreground-700 text-lg">
         GAIA makes it easy by creating a step-by-step plan just for you. Enter

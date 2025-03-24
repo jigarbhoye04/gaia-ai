@@ -27,6 +27,8 @@ const CustomAnchor = ({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (!href || prevHref.current === href) return;
+
     const fetchMetadata = async () => {
       setLoading(true);
       try {
@@ -36,7 +38,7 @@ const CustomAnchor = ({
         const { title, description, favicon, website_name } = response.data;
         setMetadata({ title, description, favicon, website_name });
         setValidFavicon(true);
-        prevHref.current = href ?? "";
+        prevHref.current = href;
       } catch (error) {
         console.error("Error fetching metadata:", error);
       } finally {
@@ -44,10 +46,10 @@ const CustomAnchor = ({
       }
     };
 
-    if (!isLoading && prevHref.current !== href && !!href) {
+    if (!isLoading) {
       fetchMetadata();
     }
-  }, [tooltipOpen, isLoading, href]);
+  }, [href, isLoading]);
 
   if (!href) return null;
 

@@ -7,13 +7,13 @@ import {
   useState,
 } from "react";
 
+import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 import {
   SimpleChatBubbleBot,
   SimpleChatBubbleUser,
 } from "@/components/Landing/Dummy/SimpleChatBubbles";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
 import { CalendarEvent } from "@/types/calendarTypes";
-import { CalendarEventsList } from "@/components/Chat/ChatBubbles/Bot/CalendarEventCard";
 
 interface CalendarMessagesProps {
   events: CalendarEvent[];

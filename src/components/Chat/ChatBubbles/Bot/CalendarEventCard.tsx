@@ -16,8 +16,8 @@ import {
   TimedEvent,
   UnifiedCalendarEventsListProps,
 } from "@/types/calendarTypes";
-import { parsingDate } from "@/utils/fetchDate";
 import { apiauth } from "@/utils/apiaxios";
+import { parsingDate } from "@/utils/fetchDate";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;

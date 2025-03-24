@@ -1,3 +1,6 @@
+import { Clock } from "lucide-react";
+import Twemoji from "react-twemoji";
+
 import { CalendarCardProps, GoogleCalendarEvent } from "@/types/calendarTypes";
 import {
   formatEventDate,
@@ -5,8 +8,6 @@ import {
   getEventIcon,
   isTooDark,
 } from "@/utils/calendarUtils";
-import { Clock } from "lucide-react";
-import Twemoji from "react-twemoji";
 
 const CalendarCard: React.FC<CalendarCardProps> = ({
   event,

@@ -13,7 +13,7 @@ const MainChat = React.memo(function MainChat() {
   const router = useRouter();
   const pathname = usePathname();
   const { updateConvoMessages } = useConversation();
-  const { id: convoIdParam } = useParams<{ id: string }>(); // This will be undefined for `/c` and set for `/c/:id`
+  const { id: convoIdParam } = useParams<{ id: string }>();
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [isAtBottom, setIsAtBottom] = useState(false);
@@ -29,20 +29,15 @@ const MainChat = React.memo(function MainChat() {
       chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
-  const fetchAndScroll = useCallback(async () => {
-    await fetchMessages(convoIdParam, updateConvoMessages, router);
-    setTimeout(scrollToBottom, 500);
-  }, [convoIdParam, updateConvoMessages, router]);
-
   useEffect(() => {
-    if (convoIdParam) fetchAndScroll();
-    else if (pathname !== "/c") router.push("/c");
-    if (inputRef?.current) inputRef?.current?.focus();
-  }, [convoIdParam, router, fetchAndScroll, pathname]);
+    if (convoIdParam) {
+      fetchMessages(convoIdParam, updateConvoMessages, router).then(() => {
+        setTimeout(scrollToBottom, 500);
+      });
+    } else if (pathname !== "/c") router.push("/c");
 
-  useEffect(() => {
-    fetchAndScroll();
-  }, [fetchAndScroll]);
+    if (inputRef?.current) inputRef.current.focus();
+  }, [convoIdParam]);
 
   useEffect(() => {
     return () => {

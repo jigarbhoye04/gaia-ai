@@ -5,13 +5,14 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig = {
-  reactStrictMode: true,
+  // reactStrictMode: true,
+  reactStrictMode: false,
   experimental: {
-    turbo: {
-      moduleIdStrategy: "deterministic",
-    },
-
-    optimizePackageImports: ["@heroui/react"],
+    // turbo: {
+    //   moduleIdStrategy: "deterministic",
+    // },
+    webpackMemoryOptimizations: true,
+    // optimizePackageImports: ["@heroui/react"],
   },
 
   images: {
