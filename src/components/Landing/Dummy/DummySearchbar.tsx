@@ -6,7 +6,7 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Input, Textarea } from "@heroui/input";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, Plus, X } from "lucide-react";
 import React, { useState } from "react";
 
 import {
@@ -76,7 +76,8 @@ function DummyLeftDropdown() {
 const DummySearchbar = () => {
   const { setLoginModalOpen } = useLoginModalActions();
   const [enableSearch, setEnableSearch] = useState(false);
-  const [pageFetchURL, setPageFetchURL] = useState("");
+  const [pageFetchURLs, setPageFetchURLs] = useState<string[]>([]);
+  const [currentURL, setCurrentURL] = useState("");
   const [fetchPageModal, setFetchPageModal] = useState(false);
 
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
@@ -105,6 +106,17 @@ const DummySearchbar = () => {
     }
   }
 
+  const addURL = () => {
+    if (isValidURL(currentURL) && !pageFetchURLs.includes(currentURL)) {
+      setPageFetchURLs([...pageFetchURLs, currentURL]);
+      setCurrentURL("");
+    }
+  };
+
+  const removeURL = (urlToRemove: string) => {
+    setPageFetchURLs(pageFetchURLs.filter((url) => url !== urlToRemove));
+  };
+
   return (
     <>
       <div className="searchbar gap-3 rounded-3xl bg-zinc-900 px-3 py-2">
@@ -130,7 +142,7 @@ const DummySearchbar = () => {
           <button
             aria-label="Dummy Fetch Page Button"
             className={`flex w-fit items-center gap-1 rounded-full px-3 py-1 text-sm transition-all ${
-              pageFetchURL.length > 0 && !fetchPageModal
+              pageFetchURLs.length > 0 && !fetchPageModal
                 ? "bg-primary text-white hover:bg-[#00bbffAA]"
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
             }`}
@@ -140,7 +152,7 @@ const DummySearchbar = () => {
             <span className="text-nowrap">Fetch Page</span>
             <ArrowUpRight
               color={
-                pageFetchURL.length > 0 && !fetchPageModal ? "#fff" : "#A1A1AA"
+                pageFetchURLs.length > 0 && !fetchPageModal ? "#fff" : "#A1A1AA"
               }
               height={18}
               width={18}
@@ -175,42 +187,83 @@ const DummySearchbar = () => {
           />
         </form>
       </div>
+
       <Dialog open={fetchPageModal} onOpenChange={setFetchPageModal}>
         <DialogContent className="border-none bg-zinc-900 text-white dark">
           <DialogHeader>
             <DialogTitle>Fetch Page</DialogTitle>
             <DialogDescription>
-              Enter a URL to fetch and analyze the webpage's content. GAIA will
+              Enter URLs to fetch and analyze the webpages' content. GAIA will
               extract and process the text and relevant information to help
-              understand the page's context.
+              understand the pages' context.
             </DialogDescription>
           </DialogHeader>
-          <Input
-            errorMessage="Please enter a valid URL! (starting with https://)"
-            isInvalid={!isValidURL(pageFetchURL) && pageFetchURL.length > 0}
-            label="Enter URL"
-            value={pageFetchURL}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") setFetchPageModal(false);
-            }}
-            onValueChange={setPageFetchURL}
-          />
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2">
+              <Input
+                errorMessage="Please enter a valid URL! (starting with https://)"
+                isInvalid={!isValidURL(currentURL) && currentURL.length > 0}
+                label="Enter URL"
+                value={currentURL}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addURL();
+                  }
+                }}
+                onChange={(e) => setCurrentURL(e.target.value)}
+              />
+              <Button
+                isIconOnly
+                color="primary"
+                onPress={addURL}
+                isDisabled={
+                  !isValidURL(currentURL) || pageFetchURLs.includes(currentURL)
+                }
+              >
+                <Plus />
+              </Button>
+            </div>
+
+            {pageFetchURLs.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-zinc-400">Added URLs:</div>
+                {pageFetchURLs.map((url, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-2 rounded-lg bg-zinc-800 p-2 text-sm"
+                  >
+                    <span className="truncate">{url}</span>
+                    <Button
+                      isIconOnly
+                      size="sm"
+                      variant="light"
+                      onPress={() => removeURL(url)}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <DialogFooter>
             <Button
               color="danger"
               variant="flat"
               onPress={() => {
-                setPageFetchURL("");
+                setPageFetchURLs([]);
+                setCurrentURL("");
                 setFetchPageModal(false);
               }}
             >
               Clear
             </Button>
             <Button
+              isDisabled={pageFetchURLs.length === 0}
               color="primary"
               onPress={() => {
-                if (isValidURL(pageFetchURL) && pageFetchURL.length > 0)
-                  setFetchPageModal(false);
+                if (pageFetchURLs.length > 0) setFetchPageModal(false);
               }}
             >
               Fetch

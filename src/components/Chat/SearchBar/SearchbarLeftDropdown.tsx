@@ -95,6 +95,10 @@ export default function SearchbarLeftDropdown({
           disabled={isLoading}
         >
           <PlusSignIcon width={20} height={20} />
+          <span
+            className={`absolute -right-0 -top-0 h-2 w-2 rounded-full bg-primary transition ${currentMode ? "opacity-100" : "opacity-0"}`}
+            aria-hidden="true"
+          />
         </Button>
       </DropdownMenuTrigger>
 

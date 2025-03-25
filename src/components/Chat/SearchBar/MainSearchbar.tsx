@@ -31,7 +31,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   const [selectedMode, setSelectedMode] = useState<Set<SearchMode>>(
     new Set([null]),
   );
-  const [pageFetchURL, setPageFetchURL] = useState<string>("");
+  const [pageFetchURLs, setPageFetchURLs] = useState<string[]>([]);
   const [fetchPageModal, setFetchPageModal] = useState<boolean>(false);
   const [generateImageModal, setGenerateImageModal] = useState<boolean>(false);
   const sendMessage = useSendMessage(convoIdParam ?? null);
@@ -54,8 +54,11 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
 
-    if (currentMode === "fetch_webpage" && !isValidURL(pageFetchURL)) {
-      toast.error("Please enter a valid URL to fetch webpage content");
+    if (
+      currentMode === "fetch_webpage" &&
+      (!pageFetchURLs.length || !pageFetchURLs.every(isValidURL))
+    ) {
+      toast.error("Please enter valid URLs to fetch webpage content");
       return;
     }
 
@@ -64,8 +67,8 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
     setIsLoading(true);
     sendMessage(
       searchbarText,
-      currentMode === "web_search",
-      currentMode === "fetch_webpage" ? pageFetchURL : "",
+      currentMode,
+      currentMode === "fetch_webpage" ? pageFetchURLs : [],
     );
     setSearchbarText("");
     if (inputRef) inputRef.current?.focus();
@@ -126,8 +129,8 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
       <FetchPageModal
         open={fetchPageModal}
         onOpenChange={setFetchPageModal}
-        pageFetchURL={pageFetchURL}
-        onPageFetchURLChange={setPageFetchURL}
+        pageFetchURLs={pageFetchURLs}
+        onPageFetchURLsChange={setPageFetchURLs}
         handleSelectionChange={handleSelectionChange}
       />
       <GenerateImage

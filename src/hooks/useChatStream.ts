@@ -34,7 +34,8 @@ export const useChatStream = () => {
     currentMessages: MessageType[],
     conversationId: string,
     enableSearch: boolean,
-    pageFetchURL: string,
+    enableDeepSearch: boolean,
+    pageFetchURLs: string[],
     botMessageId: string,
   ) => {
     accumulatedResponseRef.current = "";
@@ -50,7 +51,8 @@ export const useChatStream = () => {
       message_id: botMessageId,
       response: accumulatedResponseRef.current,
       searchWeb: enableSearch,
-      pageFetchURL,
+      deepSearchWeb: enableDeepSearch,
+      pageFetchURLs,
       date: fetchDate(),
       loading: true,
       ...overrides,
@@ -193,7 +195,8 @@ export const useChatStream = () => {
     await ApiService.fetchChatStream(
       inputText,
       enableSearch,
-      pageFetchURL,
+      enableDeepSearch,
+      pageFetchURLs,
       currentMessages,
       conversationId,
       onMessage,

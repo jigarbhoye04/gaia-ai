@@ -11,6 +11,7 @@ import { MessageType } from "@/types/convoTypes";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
 import GeneratedImageSheet from "./GeneratedImageSheet";
+import { Spinner } from "@heroui/spinner";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -135,6 +136,23 @@ export default function ChatRenderer() {
             text={message.response}
           />
         ),
+      )}
+      {isLoading && (
+        <div className="flex items-center gap-4 text-sm font-medium">
+          <Image
+            alt="GAIA Logo"
+            src={"/branding/logo.webp"}
+            width={30}
+            height={30}
+            className={`animate-spin`}
+          />
+          <div>GAIA is thinking</div>
+          <Spinner
+            variant="dots"
+            color="primary"
+            className="relative bottom-1"
+          />
+        </div>
       )}
     </>
   );
