@@ -1,20 +1,27 @@
-from typing import Optional
 from pydantic import BaseModel
+from typing import Optional
+
 
 class GoalCreate(BaseModel):
     title: str
-    description: Optional[str] = None
-    due_date: Optional[str] = None
+    description: Optional[str] = ""
+
 
 class GoalResponse(BaseModel):
     id: str
     title: str
-    description: Optional[str] = None
-    due_date: Optional[str] = None
-    status: str
+    progress: int
+    description: str
+    roadmap: Optional[dict]
+    user_id: str
+    created_at: str
+
 
 class RoadmapUnavailableResponse(BaseModel):
     message: str
+    id: str
+    title: str
+
 
 class UpdateNodeRequest(BaseModel):
-    status: str
+    is_complete: bool

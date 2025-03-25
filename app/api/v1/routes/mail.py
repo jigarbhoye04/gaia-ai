@@ -224,10 +224,6 @@ async def summarize_email(
         # Transform the message into a readable format
         email_data = transform_gmail_message(message)
 
-        # Prepare the prompt for the LLM
-        key_points_instruction = (
-            "Include the key points of the email." if request.include_key_points else ""
-        )
         action_items_instruction = (
             "Identify any action items or requests made in the email."
             if request.include_action_items
@@ -242,7 +238,6 @@ async def summarize_email(
                 "body", email_data.get("snippet", "No content available")
             ),
             max_length=request.max_length or 150,
-            key_points_instruction=key_points_instruction,
             action_items_instruction=action_items_instruction,
         )
 

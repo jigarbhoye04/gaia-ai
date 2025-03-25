@@ -127,7 +127,7 @@ async def get_me(
     Returns the current authenticated user's details.
     Uses the dependency injection to fetch user data.
     """
-    fetch_last_week_emails.delay(user)
+    # fetch_last_week_emails.delay(user)
 
     return {"message": "User retrieved successfully", **user}
 

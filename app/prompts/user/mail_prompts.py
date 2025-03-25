@@ -67,25 +67,16 @@ Date: {date}
 Email Content:
 {content}
 
-Please provide a summary of this email in {max_length} words or less.
+Please provide a summary of this email in {max_length} words or less. Do not add any additional headings or titles.
 
-{key_points_instruction}
 {action_items_instruction}
 
 Response Format:
-- **Summary:** The concise summary of the email.
-- **Key Points:** 
-  - Key point 1
-  - Key point 2
-  - ...
-
+- The concise summary of the email.
   <NEW LINE HERE (\\n)>
-- **Action Items:** 
   - Action item 1
   - Action item 2
   - ...
-  <NEW LINE HERE (\\n)>
-- **Sentiment:** A brief description of the email's tone/sentiment (formal, urgent, friendly, etc.).
   <NEW LINE HERE (\\n)>
 """
 
