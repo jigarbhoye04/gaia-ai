@@ -20,6 +20,7 @@ export const useChatStream = () => {
   const latestConvoRef = useRef(convoMessages);
   const botMessageRef = useRef<MessageType | null>(null);
   const accumulatedResponseRef = useRef<string>("");
+  const userPromptRef = useRef<string>("");
 
   useEffect(() => {
     latestConvoRef.current = convoMessages;
@@ -37,6 +38,7 @@ export const useChatStream = () => {
     botMessageId: string,
   ) => {
     accumulatedResponseRef.current = "";
+    userPromptRef.current = inputText;
 
     /**
      * Builds a bot response object with optional overrides.
@@ -63,6 +65,53 @@ export const useChatStream = () => {
       const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
 
+      if (dataJson.status === "generate_image") {
+        botMessageRef.current = buildBotResponse({
+          response: "Generating image...",
+          isImage: true,
+          imagePrompt: userPromptRef.current,
+          loading: true,
+        });
+
+        const currentConvo = latestConvoRef.current;
+        if (
+          currentConvo.length > 0 &&
+          currentConvo[currentConvo.length - 1].type === "bot"
+        ) {
+          const updatedMessages = [...currentConvo];
+          updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
+          updateConvoMessages(updatedMessages);
+        } else updateConvoMessages([...currentConvo, botMessageRef.current]);
+
+        return;
+      }
+
+      // Handle image generation result
+      if (dataJson.intent === "generate_image" && dataJson.image_data) {
+        botMessageRef.current = buildBotResponse({
+          response: "Here is your generated image",
+          imageUrl: dataJson.image_data.url,
+          imagePrompt: userPromptRef.current,
+          improvedImagePrompt: dataJson.image_data.improved_prompt,
+          isImage: true,
+          loading: false,
+        });
+
+        const currentConvo = latestConvoRef.current;
+        if (
+          currentConvo.length > 0 &&
+          currentConvo[currentConvo.length - 1].type === "bot"
+        ) {
+          const updatedMessages = [...currentConvo];
+          updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
+          updateConvoMessages(updatedMessages);
+        } else {
+          updateConvoMessages([...currentConvo, botMessageRef.current]);
+        }
+        return;
+      }
+
+      // Handle regular text responses
       accumulatedResponseRef.current += dataJson.response || "\n";
       const currentConvo = latestConvoRef.current;
 

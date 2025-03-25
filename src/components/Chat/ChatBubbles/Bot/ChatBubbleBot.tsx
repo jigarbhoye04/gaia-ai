@@ -1,6 +1,8 @@
 // ChatBubbleBot.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 
+import { useLoading } from "@/hooks/useLoading";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { parseDate } from "@/utils/fetchDate";
 
@@ -8,6 +10,7 @@ import ChatBubble_Actions from "../Actions/ChatBubble_Actions";
 import ChatBubble_Actions_Image from "../Actions/ChatBubble_Actions_Image";
 import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
+import { Spinner } from "@heroui/spinner";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   const {
@@ -22,6 +25,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     date,
   } = props;
 
+  const { isLoading } = useLoading();
   const [fileScanningText, setFileScanningText] = useState(
     "Uploading Document...",
   );
@@ -75,21 +79,40 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
 
   // Memoize rendered component based on isImage prop
   const renderedComponent = useMemo(() => {
-    if (isImage) {
-      return <ImageBubble {...props} />;
-    }
+    if (isImage) return <ImageBubble {...props} />;
+
     return <TextBubble {...props} fileScanningText={fileScanningText} />;
   }, [isImage, fileScanningText, props]);
 
   return (
-    (!!text || loading || isImage) && (
+    (!!text || isImage || isLoading) && (
       <div
         id={message_id}
         onMouseOver={handleMouseOver}
         onMouseOut={handleMouseOut}
       >
         <div className="chatbubblebot_parent">
-          <div className="chat_bubble_container">{renderedComponent}</div>
+          <div className="chat_bubble_container">
+            {isLoading ? (
+              <div className="flex items-center gap-4 text-sm font-medium">
+                <Image
+                  alt="GAIA Logo"
+                  src={"/branding/logo.webp"}
+                  width={30}
+                  height={30}
+                  className="animate-spin"
+                />
+                <div>GAIA is thinking</div>
+                <Spinner
+                  variant="dots"
+                  color="primary"
+                  className="relative bottom-1"
+                />
+              </div>
+            ) : (
+              renderedComponent
+            )}
+          </div>
         </div>
 
         {!loading && (

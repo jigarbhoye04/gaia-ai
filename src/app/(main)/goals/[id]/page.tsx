@@ -62,20 +62,18 @@ export interface NodeData extends Record<string, unknown> {
   isComplete: boolean;
 }
 
-const CustomNode = React.memo(
-  ({
-    data,
-    currentlySelectedNodeId,
-    setCurrentlySelectedNodeId,
-    setOpenSidebar,
-  }: {
-    data: NodeData;
-    currentlySelectedNodeId: string | null;
-    setCurrentlySelectedNodeId: React.Dispatch<
-      React.SetStateAction<string | null>
-    >;
-    setOpenSidebar: React.Dispatch<React.SetStateAction<boolean>>;
-  }) => {
+export default function GoalPage() {
+  const [goalData, setGoalData] = useState<GoalData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [nodes, setNodes] = useState<Node<NodeData>[]>([]);
+  const [edges, setEdges] = useState<Edge<EdgeType>[]>([]);
+  const [openSidebar, setOpenSidebar] = useState(false);
+  const [currentlySelectedNodeId, setCurrentlySelectedNodeId] = useState<
+    string | null
+  >(null);
+  const { id: goalId } = useParams();
+
+  const CustomNode = React.memo(({ data }: { data: NodeData }) => {
     return (
       <>
         <Handle position={Position.Top} type="target" />
@@ -101,41 +99,11 @@ const CustomNode = React.memo(
         <Handle position={Position.Bottom} type="source" />
       </>
     );
-  },
-);
+  });
 
-CustomNode.displayName = "Custom Graph Node";
-
-export default function GoalPage() {
-  const [goalData, setGoalData] = useState<GoalData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [nodes, setNodes] = useState<Node<NodeData>[]>([]);
-  const [edges, setEdges] = useState<Edge<EdgeType>[]>([]);
-  const [openSidebar, setOpenSidebar] = useState(false);
-  const [currentlySelectedNodeId, setCurrentlySelectedNodeId] = useState<
-    string | null
-  >(null);
-  const { id: goalId } = useParams();
-
-  const nodeTypes = useMemo<{
-    customNode: React.FC<{
-      data: NodeData;
-      currentlySelectedNodeId: string | null;
-      setCurrentlySelectedNodeId: React.Dispatch<
-        React.SetStateAction<string | null>
-      >;
-      setOpenSidebar: React.Dispatch<React.SetStateAction<boolean>>;
-    }>;
-  }>(
+  const nodeTypes = useMemo<{ customNode: React.FC<{ data: NodeData }> }>(
     () => ({
-      customNode: (props) => (
-        <CustomNode
-          {...props}
-          currentlySelectedNodeId={currentlySelectedNodeId}
-          setCurrentlySelectedNodeId={setCurrentlySelectedNodeId}
-          setOpenSidebar={setOpenSidebar}
-        />
-      ),
+      customNode: (props) => <CustomNode {...props} />,
     }),
     [currentlySelectedNodeId],
   );
@@ -472,7 +440,7 @@ export default function GoalPage() {
                     elementsSelectable={true}
                     fitViewOptions={{ minZoom: 1.2 }}
                     minZoom={0.2}
-                    // nodeTypes={nodeTypes}
+                    nodeTypes={nodeTypes}
                     nodes={nodes}
                     nodesConnectable={false}
                     nodesDraggable={false}

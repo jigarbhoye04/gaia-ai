@@ -4,6 +4,7 @@ import { ShineBorder } from "@/components/ui/shine-border";
 import { Chip } from "@heroui/chip";
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import DummySearchbar from "../Dummy/DummySearchbar";
+import { Button } from "@heroui/button";
 
 const featureOptions = [
   { name: "Chat", imageSrc: "/landing/hero_image_nosearchbar.webp" },
@@ -32,21 +33,6 @@ export default function HeroImage() {
   return (
     <div className="flex w-screen items-center justify-center">
       <AnimatedSection className="mb-[20vh] mt-14 flex h-fit w-screen max-w-screen-lg flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-screen-xl">
-        {/* Feature selection chips */}
-        <div className="flex flex-wrap justify-center gap-2">
-          {featureOptions.map((feature) => (
-            <Chip
-              key={feature.name}
-              variant={selectedFeature.name === feature.name ? "solid" : "flat"}
-              color="primary"
-              className="cursor-pointer transition-all"
-              onClick={() => handleFeatureChange(feature)}
-            >
-              {feature.name}
-            </Chip>
-          ))}
-        </div>
-
         <div className="relative scale-[175%] sm:scale-100">
           <ShineBorder
             borderRadius={10}
@@ -110,6 +96,23 @@ export default function HeroImage() {
               <div className="pingspinner !min-h-[100px] !min-w-[100px]" />
             </div>
           </div> */}
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {featureOptions.map((feature) => (
+            <Button
+              key={feature.name}
+              radius="full"
+              variant={selectedFeature.name === feature.name ? "solid" : "flat"}
+              className={
+                selectedFeature.name === feature.name ? "" : "text-primary"
+              }
+              color="primary"
+              size="sm"
+              onPress={() => handleFeatureChange(feature)}
+            >
+              {feature.name}
+            </Button>
+          ))}
         </div>
       </AnimatedSection>
     </div>

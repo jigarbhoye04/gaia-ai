@@ -62,7 +62,15 @@ export default function ChatBubble_Actions_Image({
   };
 
   return (
-    <div className="flex w-fit items-center gap-2 py-2">
+    <div className="flex w-fit items-center gap-2">
+      {fullWidth && setOpenImage ? (
+        <Button variant="flat" onPress={() => setOpenImage(false)}>
+          <XIcon height="22" />
+          <span>Cancel</span>
+        </Button>
+      ) : (
+        <></>
+      )}
       <Tooltip
         className={`${fullWidth ? "hidden" : ""}`}
         color="primary"
@@ -86,23 +94,9 @@ export default function ChatBubble_Actions_Image({
             className={`cursor-pointer ${fullWidth ? "text-black" : ""}`}
             height="22"
           />
-          <span className="font-medium text-black">
-            {fullWidth ? "Download" : ""}
-          </span>
+          <span className="text-black">{fullWidth ? "Download" : ""}</span>
         </Button>
       </Tooltip>
-      {fullWidth && setOpenImage ? (
-        <Button
-          color="danger"
-          variant="ghost"
-          onPress={() => setOpenImage(false)}
-        >
-          <XIcon height="22" />
-          <span className="font-medium">Cancel</span>
-        </Button>
-      ) : (
-        <></>
-      )}
     </div>
   );
 }

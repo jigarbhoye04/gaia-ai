@@ -124,7 +124,7 @@ export default function GenerateImage({
         <ModalBody className="flex items-center justify-center">
           <Textarea
             isRequired
-            color="primary"
+            variant="faded"
             isDisabled={false}
             label="Describe the image you want to generate"
             placeholder="e.g - Futuristic city skyline"
@@ -132,22 +132,11 @@ export default function GenerateImage({
             onValueChange={handleInputChange}
           />
         </ModalBody>
-        <ModalFooter className="flex w-full justify-center">
-          <Button
-            color="danger"
-            radius="full"
-            size="md"
-            onPress={() => setOpenImageDialog(false)}
-          >
+        <ModalFooter className="flex w-full">
+          <Button variant="flat" onPress={() => setOpenImageDialog(false)}>
             Cancel
           </Button>
-          <Button
-            color="primary"
-            disabled={!isValid}
-            radius="full"
-            size="md"
-            onPress={handleSubmit}
-          >
+          <Button color="primary" isDisabled={!isValid} onPress={handleSubmit}>
             Generate
           </Button>
         </ModalFooter>
