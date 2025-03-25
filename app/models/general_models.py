@@ -25,7 +25,7 @@ class MessageRequestWithHistory(BaseModel):
     messages: List[MessageDict]
     search_web: Optional[bool] = False
     deep_search: Optional[bool] = False
-    pageFetchURL: Optional[str] = None
+    pageFetchURLs: Optional[List] = []
 
 
 class MessageRequest(BaseModel):

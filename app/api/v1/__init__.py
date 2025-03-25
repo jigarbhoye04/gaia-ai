@@ -27,6 +27,7 @@ from app.api.v1.routes import (
 
 # from app.utils.nltk_utils import download_nltk_resources
 from app.config.loggers import app_logger as logger
+from app.utils.nltk_utils import download_nltk_resources
 # from app.services.text_service import get_zero_shot_classifier
 
 
@@ -58,8 +59,7 @@ async def lifespan(app: FastAPI):
         logger.info("Initializing MongoDB...")
 
         logger.info("Initializing NLTK for Natural Language Processing...")
-        nltk.download("stopwords", quiet=True)
-        nltk.download("punkt", quiet=True)
+        download_nltk_resources()
 
         # logger.info("Initializing Model: MoritzLaurer/bge-m3-zeroshot-v2.0...")
         # get_zero_shot_classifier()

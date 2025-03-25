@@ -2,7 +2,7 @@ import asyncio
 import json
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List
 
 from bson import ObjectId
 from fastapi import BackgroundTasks, HTTPException, status
@@ -27,6 +27,7 @@ from app.prompts.user.chat_prompts import (
     PAGE_CONTENT_TEMPLATE,
     SEARCH_CONTEXT_TEMPLATE,
 )
+from app.services.image_service import image_service
 from app.services.llm_service import (
     do_prompt_no_stream,
     do_prompt_with_stream,
@@ -34,11 +35,11 @@ from app.services.llm_service import (
 from app.services.pipeline_service import Pipeline
 from app.services.search_service import perform_deep_search
 from app.services.text_service import classify_event_type
-from app.services.image_service import image_service
 from app.utils.embedding_utils import query_documents, search_notes_by_similarity
 from app.utils.notes import insert_note
 from app.utils.notes_utils import should_create_memory
 from app.utils.search_utils import (
+    extract_urls_from_text,
     format_results_for_llm,
     perform_fetch,
     perform_search,
@@ -218,16 +219,19 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     return context
 
 
-async def fetch_webpage(context: Dict[str, Any]) -> Dict[str, Any]:
+async def fetch_webpages(context: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Fetch a webpage and append its content to the last message.
+    Fetch multiple webpages and append their content to the last message.
     """
-    body = context["body"]
-    if body.pageFetchURL and context["last_message"]:
-        page_content = await perform_fetch(body.pageFetchURL)
-        context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
-            page_content=page_content
-        )
+    urls: List[str] = context.get("pageFetchURLs", [])
+    if urls and context.get("last_message"):
+        fetched_pages = await asyncio.gather(*[perform_fetch(url) for url in urls])
+        print(f"{fetched_pages=}")
+        for page_content in fetched_pages:
+            context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
+                page_content=page_content, urls=urls
+            )
+
     return context
 
 
@@ -311,7 +315,6 @@ async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
             context["intent"] = "calendar"
         elif result["highest_label"] in ["generate image"]:
             context["intent"] = "generate_image"
-        # Additional intents can be added here following the same pattern
 
     return context
 
@@ -322,6 +325,22 @@ async def choose_llm_model(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     if context.get("notes_added") or context.get("docs_added"):
         context["llm_model"] = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+    return context
+
+
+async def process_message_content(context: Dict[str, Any]) -> Dict[str, Any]:
+    """Process message content for URLs and other enrichments.
+
+    Args:
+        content (str): The message content to process
+
+    Returns:
+        Dict[str, Any]: Dictionary containing processed content and metadata
+    """
+    urls = extract_urls_from_text(context["query_text"])
+
+    context["pageFetchURLs"] = urls
+
     return context
 
 
@@ -362,6 +381,7 @@ async def chat_stream(
         "messages": jsonable_encoder(body.messages),
         "search_web": body.search_web,
         "deep_search": body.deep_search,
+        "pageFetchURLs": body.pageFetchURLs,
     }
 
     context = await classify_intent(context)
@@ -373,12 +393,12 @@ async def chat_stream(
         )
 
     pipeline_steps = [
-        fetch_notes,
-        fetch_documents,
+        fetch_webpages,
         # choose_llm_model,
         do_deep_search,
-        fetch_webpage,
         do_search,
+        fetch_notes,
+        fetch_documents,
     ]
 
     pipeline = Pipeline(pipeline_steps)

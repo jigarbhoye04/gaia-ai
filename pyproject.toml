@@ -82,6 +82,7 @@ dependencies = [
     "pillow==11.0.0",
     "pip-chill>=1.0.3",
     "pip-licenses>=5.0.0",
+    "playwright>=1.51.0",
     "preshed==3.0.9",
     "proto-plus==1.25.0",
     "protobuf==5.29.3",

@@ -262,7 +262,7 @@ async def search_messages(query: str, user_id: str) -> dict:
                                             }
                                         },
                                         {
-                                            "messages.pageFetchURL": {
+                                            "messages.pageFetchURLs": {
                                                 "$regex": query,
                                                 "$options": "i",
                                             }

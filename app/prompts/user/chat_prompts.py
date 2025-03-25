@@ -28,8 +28,22 @@ Each source should be cited appropriately when used, and ensure proper attributi
 Maintain accuracy, detail, and coherence when integrating this information.
 """
 
-PAGE_CONTENT_TEMPLATE = "\nRelevant context from the fetched URL: {page_content}"
+PAGE_CONTENT_TEMPLATE = """
+Relevant information from the fetched URLs ({urls}):  
+{page_content}  
+**End of fetched content.**  
 
-NOTES_CONTEXT_TEMPLATE = "User: {message} \nSystem: The user has the following notes: {notes} (Fetched from the Database). Only mention these notes when relevant to the conversation."
+These pages were retrieved using GAIA Webpage Fetch. Stay neutral and factual.  
+**You MUST cite all sources** in markdown format, e.g., [1](https://example.com).  
+"""
+
+NOTES_CONTEXT_TEMPLATE = """
+User: {message}  
+
+System: The user has the following relevant notes from the database:  
+{notes}  
+
+Only reference these notes if they add value to the conversation.  
+"""
 
 DOCUMENTS_CONTEXT_TEMPLATE = "Question: {message}\n\nContext from document files uploaded by the user:\n{{'document_names': {titles}, 'content': {content}}}"

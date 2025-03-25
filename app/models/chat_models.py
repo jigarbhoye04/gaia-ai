@@ -22,7 +22,7 @@ class MessageModel(BaseModel):
     isImage: Optional[bool] = False  # Whether it's an image message
     searchWeb: Optional[bool] = False  # Whether it's a web search request
     imageUrl: Optional[str] = None  # URL for the image
-    pageFetchURL: Optional[str] = None
+    pageFetchURLs: Optional[List] = []
     # Any disclaimer associated with the message
     disclaimer: Optional[str] = None
     # Type of user input (text, file, etc.)
