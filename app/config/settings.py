@@ -17,7 +17,6 @@ class Settings(BaseSettings):
     BING_API_KEY_1: str
     BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
     ASSEMBLYAI_API_KEY: str
-    HOST: str = "https://api.heygaia.io"
     DEEPGRAM_API_KEY: str
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
     ENV: str = "production"
@@ -35,6 +34,14 @@ class Settings(BaseSettings):
             "https://heygaia.io"
             if self.ENV == "production"
             else "http://localhost:3000"
+        )
+
+    @computed_field
+    def HOST(self) -> str:
+        return (
+            "https://api.heygaia.io"
+            if self.ENV == "production"
+            else "http://localhost:8000"
         )
 
     @computed_field

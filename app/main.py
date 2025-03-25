@@ -5,6 +5,7 @@ This module initializes and configures the FastAPI application, including middle
 routers, and other settings.
 """
 
+from fastapi.responses import FileResponse
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

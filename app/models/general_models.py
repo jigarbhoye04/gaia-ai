@@ -23,7 +23,8 @@ class MessageRequestWithHistory(BaseModel):
     message: str
     conversation_id: str
     messages: List[MessageDict]
-    search_web: Optional[bool] = None
+    search_web: Optional[bool] = False
+    deep_search: Optional[bool] = False
     pageFetchURL: Optional[str] = None
 
 

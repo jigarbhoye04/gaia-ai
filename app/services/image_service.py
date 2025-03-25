@@ -75,7 +75,6 @@ class ImageService:
                 temperature=1,
                 max_tokens=50,
             )
-            print(improved_prompt, "improved_prompt this is a test")
             refined_text = ", ".join(
                 part.strip()
                 for part in [
@@ -85,23 +84,14 @@ class ImageService:
                 if part.strip()
             )
 
-            print(refined_text, "refined_text this is a test")
-
             if not refined_text:
                 self.logger.error("Failed to generate an improved prompt.")
                 raise ValueError(
                     "Failed to generate an improved prompt or fallback to the original prompt."
                 )
 
-            self.logger.info(f"Generated refined prompt: {refined_text}")
-
             image_bytes: bytes = await generate_image(refined_text)
 
-            print(refined_text, "refined_text this is a test")
-
-            self.logger.info("Image generated successfully. Uploading to Cloudinary...")
-
-            # Upload the image bytes to Cloudinary
             upload_result = cloudinary.uploader.upload(
                 io.BytesIO(image_bytes),
                 resource_type="image",

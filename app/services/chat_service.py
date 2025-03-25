@@ -1,6 +1,8 @@
 import asyncio
+import json
+import time
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, AsyncGenerator
 
 from bson import ObjectId
 from fastapi import BackgroundTasks, HTTPException, status
@@ -17,57 +19,202 @@ from app.models.general_models import (
     MessageRequestWithHistory,
 )
 from app.models.notes_models import NoteModel
-from app.services.llm_service import (
-    do_prompt_no_stream,
-    do_prompt_with_stream,
-)
-from app.services.pipeline_service import Pipeline
-from app.services.text_service import classify_event_type
-from app.utils.embedding_utils import query_documents, search_notes_by_similarity
-from app.utils.notes import insert_note
-from app.utils.notes_utils import should_create_memory
-from app.utils.search_utils import format_results_for_llm, perform_fetch, perform_search
 from app.prompts.user.chat_prompts import (
     CONVERSATION_DESCRIPTION_GENERATOR,
+    DEEP_SEARCH_CONTEXT_TEMPLATE,
     DOCUMENTS_CONTEXT_TEMPLATE,
     NOTES_CONTEXT_TEMPLATE,
     PAGE_CONTENT_TEMPLATE,
     SEARCH_CONTEXT_TEMPLATE,
 )
+from app.services.llm_service import (
+    do_prompt_no_stream,
+    do_prompt_with_stream,
+)
+from app.services.pipeline_service import Pipeline
+from app.services.search_service import perform_deep_search
+from app.services.text_service import classify_event_type
+from app.services.image_service import image_service
+from app.utils.embedding_utils import query_documents, search_notes_by_similarity
+from app.utils.notes import insert_note
+from app.utils.notes_utils import should_create_memory
+from app.utils.search_utils import (
+    format_results_for_llm,
+    perform_fetch,
+    perform_search,
+)
+
+
+async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Perform a deep internet search by fetching and processing web content from search results.
+
+    This pipeline step:
+    1. Searches the web for relevant content based on the user's query
+    2. Fetches the full content of the top search results concurrently
+    3. Converts the content to markdown format for better LLM processing
+    4. Adds the enhanced content to the message context with appropriate formatting
+
+    Args:
+        context (Dict[str, Any]): The pipeline context containing user query and message data
+
+    Returns:
+        Dict[str, Any]: The updated context with deep search results added
+    """
+    start_time = time.time()
+
+    if context["deep_search"] and context["last_message"]:
+        query_text = context["query_text"]
+        logger.info(f"Starting deep search pipeline step for query: {query_text}")
+
+        try:
+            # Get deep search results independently of regular search
+            deep_search_results = await perform_deep_search(
+                query=query_text, max_results=3
+            )
+
+            # Extract enhanced results with full content
+            enhanced_results = deep_search_results.get("enhanced_results", [])
+            metadata = deep_search_results.get("metadata", {})
+
+            if enhanced_results:
+                # Format the results for the LLM with better structure
+                formatted_content = "## Deep Search Results\n\n"
+
+                for i, result in enumerate(enhanced_results, 1):
+                    title = result.get("title", "No Title")
+                    url = result.get("url", "#")
+                    snippet = result.get("snippet", "No snippet available")
+                    full_content = result.get("full_content", "")
+                    # from_cache = result.get("from_cache", False)
+                    fetch_error = result.get("fetch_error", None)
+
+                    formatted_content += f"### {i}. {title}\n"
+                    formatted_content += f"**URL**: {url}\n\n"
+
+                    if fetch_error:
+                        formatted_content += (
+                            f"**Note**: Could not fetch full content: {fetch_error}\n\n"
+                        )
+                        formatted_content += f"**Summary**: {snippet}\n\n"
+                    else:
+                        formatted_content += f"**Summary**: {snippet}\n\n"
+                        formatted_content += "**Content**:\n"
+                        formatted_content += full_content + "\n\n"
+
+                    formatted_content += "---\n\n"
+
+                # Add the formatted content to the context using the template
+                context["last_message"]["content"] += (
+                    DEEP_SEARCH_CONTEXT_TEMPLATE.format(
+                        formatted_content=formatted_content
+                    )
+                )
+
+                # Store relevant metadata in context for potential later use
+                context["deep_search_results"] = {
+                    "query": query_text,
+                    "result_count": len(enhanced_results),
+                    "content_size": metadata.get("total_content_size", 0),
+                    "search_time": metadata.get("elapsed_time", 0),
+                }
+
+                elapsed_time = time.time() - start_time
+                logger.info(
+                    f"Deep search pipeline step completed in {elapsed_time:.2f} seconds"
+                )
+            else:
+                logger.info("No enhanced results from deep search")
+                context["last_message"]["content"] += (
+                    "\n\nNo detailed information found from deep search."
+                )
+        except Exception as e:
+            logger.error(f"Error in deep search pipeline step: {e}", exc_info=True)
+            # Don't fail the whole pipeline if deep search fails
+            context["deep_search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nError performing deep search, falling back to standard results."
+            )
+
+    return context
 
 
 async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Perform a web search and append relevant context to the last message.
+
+    This pipeline step:
+    1. Validates if search is enabled and a query is available
+    2. Executes a web search with the query
+    3. Formats the results in a structured way for the LLM
+    4. Adds the search results to the message context
+
+    Args:
+        context (Dict[str, Any]): The pipeline context containing user query and message data
+
+    Returns:
+        Dict[str, Any]: The updated context with search results added
     """
+    start_time = time.time()
 
-    if context["search_web"] and context["last_message"]:
-        last_message = context["last_message"]
+    # Only perform search if search_web flag is enabled, deep search is disabled and we have a message
+    if context["search_web"] and context["last_message"] and not context["deep_search"]:
         query_text = context["query_text"]
-        search_results = await perform_search(query=query_text, count=5)
-        web_results = search_results.get("web", [])
-        news_results = search_results.get("news", [])
-        formatted_results = ""
+        logger.info(f"Starting web search for query: {query_text}")
 
-        if web_results:
-            formatted_results += (
-                format_results_for_llm(web_results, result_type="Web Results") + "\n"
+        try:
+            # Configure search parameters based on query characteristics
+            # For longer queries, we might want fewer results to keep context manageable
+            result_count = 5
+            if len(query_text) > 100:
+                result_count = 3
+
+            # Perform the search with error handling
+            search_results = await perform_search(query=query_text, count=result_count)
+
+            # Extract different result types
+            web_results = search_results.get("web", [])
+            news_results = search_results.get("news", [])
+
+            # Format results with better structure
+            formatted_results = ""
+
+            if web_results:
+                formatted_results += (
+                    format_results_for_llm(web_results, result_type="Web Results")
+                    + "\n\n"
+                )
+
+            if news_results:
+                formatted_results += format_results_for_llm(
+                    news_results, result_type="News Results"
+                )
+
+            # Handle case where no results were found
+            if not formatted_results.strip():
+                formatted_results = "No relevant search results found for your query."
+
+            # Add the formatted search results to the context
+            context["last_message"]["content"] += SEARCH_CONTEXT_TEMPLATE.format(
+                formatted_results=formatted_results
             )
 
-        if news_results:
-            formatted_results += format_results_for_llm(
-                news_results, result_type="News Results"
+            # Store the raw results in context for potential later use
+            context["search_results"] = search_results
+
+            elapsed_time = time.time() - start_time
+            logger.info(
+                f"Web search completed in {elapsed_time:.2f} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
             )
 
-        if not formatted_results:
-            formatted_results = "No relevant results found."
-        print(formatted_results)
-        print(search_results)
-        last_message["content"] += SEARCH_CONTEXT_TEMPLATE.format(
-            formatted_results=formatted_results
-        )
+        except Exception as e:
+            logger.error(f"Error in web search: {e}", exc_info=True)
+            # Add a note about the search failure to the message
+            context["search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nError performing web search. Please try again later."
+            )
 
-        context["search_results"] = search_results
     return context
 
 
@@ -141,14 +288,31 @@ async def fetch_documents(context: Dict[str, Any]) -> Dict[str, Any]:
     return context
 
 
-async def classify_event(context: Dict[str, Any]) -> Dict[str, Any]:
+async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Classify the event type and set the intent if applicable.
+    Classify the intent of the user's message and set the intent in the context.
+    This determines how the message will be processed in the pipeline.
+
+    Supported intents:
+    - "calendar": Add events to calendar
+    - "generate_image": Create an image from a text description
+    - None: Regular chat message (default)
+
+    Args:
+        context (Dict[str, Any]): The pipeline context
+
+    Returns:
+        Dict[str, Any]: Updated context with intent classification
     """
-    type_result = await classify_event_type(context["query_text"])
-    if type_result.get("highest_label") and type_result.get("highest_score", 0) >= 0.5:
-        if type_result["highest_label"] in ["add to calendar", "set a reminder"]:
+    result = await classify_event_type(context["query_text"])
+
+    if result.get("highest_label") and result.get("highest_score", 0) >= 0.5:
+        if result["highest_label"] in ["add to calendar"]:
             context["intent"] = "calendar"
+        elif result["highest_label"] in ["generate image"]:
+            context["intent"] = "generate_image"
+        # Additional intents can be added here following the same pattern
+
     return context
 
 
@@ -169,6 +333,20 @@ async def chat_stream(
 ) -> StreamingResponse:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
+
+    This function coordinates the processing of chat messages through a pipeline,
+    including optional web search, deep internet search, document fetching,
+    and other enhancements before sending to the language model.
+
+    Args:
+        body (MessageRequestWithHistory): Contains the message, conversation ID, message history,
+                                         and optional flags for search features
+        background_tasks (BackgroundTasks): FastAPI background tasks object for async operations
+        user (dict): User information from authentication
+        llm_model (str): Default LLM model identifier to use for generation
+
+    Returns:
+        StreamingResponse: A streaming response containing the LLM's generated content
     """
     last_message = body.messages[-1] if body.messages else None
 
@@ -183,13 +361,22 @@ async def chat_stream(
         "intent": None,
         "messages": jsonable_encoder(body.messages),
         "search_web": body.search_web,
+        "deep_search": body.deep_search,
     }
+
+    context = await classify_intent(context)
+
+    if context["intent"] == "generate_image":
+        return StreamingResponse(
+            generate_image_stream(context["query_text"]),
+            media_type="text/event-stream",
+        )
 
     pipeline_steps = [
         fetch_notes,
         fetch_documents,
-        classify_event,
         # choose_llm_model,
+        do_deep_search,
         fetch_webpage,
         do_search,
     ]
@@ -569,3 +756,29 @@ async def get_starred_messages(user: dict) -> dict:
         )
 
     return {"results": results}
+
+
+async def generate_image_stream(query_text: str) -> AsyncGenerator[str, None]:
+    """
+    Create a streaming generator for image generation responses.
+    This generator yields data in the format expected by the frontend
+    for image generation results.
+
+    Args:
+        query_text (str): The user's text prompt for image generation
+
+    Yields:
+        str: Formatted response lines for streaming
+    """
+    try:
+        yield f"data: {json.dumps({'status': 'generating_image'})}\n\n"
+
+        image_result = await image_service.api_generate_image(query_text)
+
+        yield f"data: {json.dumps({'intent': 'generate_image', 'image_data': image_result})}\n\n"
+
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        logger.error(f"Error generating image: {str(e)}")
+        yield f"data: {json.dumps({'error': f'Failed to generate image: {str(e)}'})}\n\n"
+        yield "data: [DONE]\n\n"

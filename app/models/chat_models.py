@@ -34,7 +34,7 @@ class MessageModel(BaseModel):
     filetype: Optional[str] = None  # Name of the file, if any
     message_id: Optional[str] = None  # Name of the file, if any
 
-    intent: Optional[Literal["calendar"]] = None
+    intent: Optional[Literal["calendar", "generate_image"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
 
     search_results: Optional[SearchResults] = None
@@ -56,4 +56,3 @@ class StarredUpdate(BaseModel):
 
 class PinnedUpdate(BaseModel):
     pinned: bool
-

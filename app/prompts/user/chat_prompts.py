@@ -17,6 +17,17 @@ Ensure that every factual statement derived from the search results is properly 
 Maintain accuracy, neutrality, and coherence when integrating this information.
 """
 
+DEEP_SEARCH_CONTEXT_TEMPLATE = """
+You have access to in-depth web search results with full page content using GAIA deep search.
+Below is the detailed context retrieved from the deep search:
+
+{formatted_content}
+
+You MUST include citations for all sourced content. Citations should be formatted with the link in markdown format, e.g., [1](https://example.com).
+Each source should be cited appropriately when used, and ensure proper attribution of quoted content.
+Maintain accuracy, detail, and coherence when integrating this information.
+"""
+
 PAGE_CONTENT_TEMPLATE = "\nRelevant context from the fetched URL: {page_content}"
 
 NOTES_CONTEXT_TEMPLATE = "User: {message} \nSystem: The user has the following notes: {notes} (Fetched from the Database). Only mention these notes when relevant to the conversation."

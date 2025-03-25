@@ -66,7 +66,11 @@ async def process_streaming(
         content = line.removeprefix("data:").strip()
 
         if content == "[DONE]":
-            yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
+            if context.get("search_results", None):
+                yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
+
+            if context.get("deep_search_results", None):
+                yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
 
             if intent == "calendar":
                 success, options = await process_calendar_event(
