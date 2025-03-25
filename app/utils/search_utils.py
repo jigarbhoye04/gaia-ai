@@ -3,9 +3,8 @@ import re
 
 import html2text
 import httpx
+import tldextract
 from bs4 import BeautifulSoup
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 from playwright.async_api import async_playwright
 
 from app.config.loggers import search_logger as logger
@@ -183,20 +182,21 @@ def format_results_for_llm(results, result_type="Search Results"):
 
 
 def extract_urls_from_text(text: str) -> list[str]:
-    """Extract URLs from text using regex pattern matching.
+    """Extracts valid URLs from text, even if missing http/https."""
 
-    Args:
-        text (str): The text to extract URLs from
+    url_pattern = r"(?:https?://)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(?:/[^\s]*)?"
+    possible_urls = re.findall(url_pattern, text)
 
-    Returns:
-        list[str]: List of URLs found in the text
-    """
-    # URL regex pattern
-    url_pattern = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+    valid_urls = []
 
-    # Find all URLs in text
-    urls = re.findall(url_pattern, text)
-    return urls
+    for url in possible_urls:
+        extracted = tldextract.extract(url)
+        if extracted.suffix:
+            valid_urls.append(
+                url if url.startswith(("http://", "https://")) else f"http://{url}"
+            )
+
+    return valid_urls
 
 
 class FetchError(Exception):
@@ -220,14 +220,40 @@ async def fetch_with_httpx(url: str) -> str:
         raise FetchError(f"Unexpected error: {type(e).__name__}: {e}") from e
 
 
-async def fetch_with_playwright(url: str) -> str:
-    """Fetches webpage content using Playwright (handles JavaScript-heavy pages)."""
+async def fetch_with_playwright(
+    url: str, wait_time: int = 3, wait_for: str = "body", use_stealth: bool = True
+) -> str:
+    """Fetches webpage content using Playwright with optimizations."""
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-            await page.goto(url, wait_until="load", timeout=15000)
+
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+
+
+            async def intercept_requests(route):
+                if route.request.resource_type in [
+                    "image",
+                    "stylesheet",
+                    "font",
+                    "media",
+                    "xhr",
+                ]:
+                    await route.abort()
+                else:
+                    await route.continue_()
+
+            await page.route("**/*", intercept_requests)
+            await page.goto(url, wait_until="domcontentloaded", timeout=10000)
+            await page.wait_for_selector(wait_for, timeout=10000)
+            await page.wait_for_timeout(wait_time * 1000)
+
             content = await page.content()
+            print(f"Fetched content from Playwright: {content[:500]}...")
+
             await browser.close()
             return content
     except Exception as e:
@@ -251,12 +277,13 @@ async def extract_text(html: str) -> str:
     text = "\n".join(chunk for chunk in chunks if chunk)
 
     # Optional: Remove special characters & tokenize
-    text = re.sub(r"[^a-zA-Z\s]", "", text.lower())
-    tokens = word_tokenize(text)
-    stop_words = set(stopwords.words("english"))
-    tokens = [word for word in tokens if word not in stop_words]
+    # text = re.sub(r"[^a-zA-Z\s]", "", text.lower())
+    # tokens = word_tokenize(text)
+    # stop_words = set(stopwords.words("english"))
+    # tokens = [word for word in tokens if word not in stop_words]
 
-    return " ".join(tokens)
+    # return " ".join(tokens)
+    return text
 
 
 async def perform_fetch(url: str, use_playwright: bool = True) -> str:

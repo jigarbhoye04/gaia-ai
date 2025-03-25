@@ -36,8 +36,7 @@ from app.services.pipeline_service import Pipeline
 from app.services.search_service import perform_deep_search
 from app.services.text_service import classify_event_type
 from app.utils.embedding_utils import query_documents, search_notes_by_similarity
-from app.utils.notes import insert_note
-from app.utils.notes_utils import should_create_memory
+from app.utils.notes_utils import insert_note, should_create_memory
 from app.utils.search_utils import (
     extract_urls_from_text,
     format_results_for_llm,
@@ -223,10 +222,26 @@ async def fetch_webpages(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fetch multiple webpages and append their content to the last message.
     """
+    # Get existing URLs
     urls: List[str] = context.get("pageFetchURLs", [])
+
+    # Extract URLs from user query text if available
+    if "query_text" in context:
+        extracted_urls = extract_urls_from_text(context["query_text"])
+        if extracted_urls:
+            # Add any new URLs to the existing list (avoid duplicates)
+            for url in extracted_urls:
+                if url not in urls:
+                    urls.append(url)
+            # Update the context with the combined list
+            context["pageFetchURLs"] = urls
+
+    # Fetch content for all URLs
     if urls and context.get("last_message"):
         fetched_pages = await asyncio.gather(*[perform_fetch(url) for url in urls])
-        print(f"{fetched_pages=}")
+        print(
+            f"{fetched_pages=} {urls=}",
+        )
         for page_content in fetched_pages:
             context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
                 page_content=page_content, urls=urls

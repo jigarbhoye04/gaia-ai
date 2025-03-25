@@ -10,8 +10,8 @@ from app.models.notes_models import NoteModel, NoteResponse
 from app.db.collections import notes_collection
 from app.db.utils import serialize_document
 from app.db.db_redis import get_cache, set_cache, delete_cache
-from app.utils.notes import insert_note
 from app.config.loggers import notes_logger as logger
+from app.utils.notes_utils import insert_note
 
 
 async def create_note(note: NoteModel, user_id: str) -> dict:

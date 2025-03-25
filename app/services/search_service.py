@@ -6,7 +6,7 @@ import asyncio
 import re
 import time
 from typing import Any, Dict, Optional
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
@@ -367,24 +367,77 @@ async def fetch_url_metadata(url: str) -> URLResponse:
 
 
 async def scrape_url_metadata(url: str) -> dict:
-    """Scrape metadata from a URL and handle errors gracefully."""
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.get(url, follow_redirects=True)
             response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
+
+        def to_absolute(relative_url: str) -> str:
+            if not relative_url:
+                return None
+            parsed = urlparse(relative_url)
+            if parsed.scheme in ["http", "https"]:
+                return relative_url
+            return urljoin(url, relative_url)
+
+        title = soup.title.string.strip() if soup.title else None
+
+        description_tag = soup.find("meta", attrs={"name": "description"}) or soup.find(
+            "meta", attrs={"property": "og:description"}
+        )
+        description = (
+            description_tag["content"].strip()
+            if description_tag and "content" in description_tag.attrs
+            else None
+        )
+
+        website_name_tag = soup.find("meta", property="og:site_name") or soup.find(
+            "meta", attrs={"name": "application-name"}
+        )
+        website_name = (
+            website_name_tag["content"].strip()
+            if website_name_tag and "content" in website_name_tag.attrs
+            else None
+        )
+
+        favicon_tag = soup.find("link", rel=lambda r: r and "icon" in r.lower())
+        favicon = (
+            to_absolute(favicon_tag["href"])
+            if favicon_tag and "href" in favicon_tag.attrs
+            else None
+        )
+
+        og_image_tag = soup.find("meta", property="og:image")
+        og_image = (
+            to_absolute(og_image_tag["content"])
+            if og_image_tag and "content" in og_image_tag.attrs
+            else None
+        )
+
+        logo_tag = soup.find("meta", property="og:logo") or soup.find(
+            "link", rel="logo"
+        )
+        website_image = (
+            to_absolute(
+                logo_tag["content"]
+                if logo_tag and "content" in logo_tag.attrs
+                else logo_tag["href"]
+            )
+            if logo_tag
+            else og_image
+        )
+
         return {
-            "title": soup.title.string if soup.title else None,
-            "description": (soup.find("meta", attrs={"name": "description"}) or {}).get(
-                "content"
-            ),
-            "favicon": (soup.find("link", rel="icon") or {}).get("href"),
-            "website_name": (soup.find("meta", property="og:site_name") or {}).get(
-                "content"
-            ),
+            "title": title,
+            "description": description,
+            "favicon": favicon or og_image,
+            "website_name": website_name,
+            "website_image": website_image,
             "url": url,
         }
+
     except (httpx.RequestError, httpx.HTTPStatusError) as exc:
         logger.error(f"Error fetching URL metadata: {exc}")
     except Exception as exc:
@@ -395,6 +448,7 @@ async def scrape_url_metadata(url: str) -> dict:
         "description": None,
         "favicon": None,
         "website_name": None,
+        "website_image": None,
         "url": url,
     }
 
