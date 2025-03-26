@@ -14,6 +14,7 @@ import Image from "next/image";
 import { useLoading } from "@/hooks/useLoading";
 import { apiauth } from "@/utils/apiaxios";
 import { UploadedFilePreview } from "./SearchBar/FilePreview";
+import { useLoadingText } from "@/hooks/useLoadingText";
 
 interface FileUploadProps {
   open: boolean;
@@ -30,8 +31,7 @@ interface FileWithPreview {
   error?: string;
 }
 
-// Configuration
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_FILES = 5;
 const ALLOWED_FILE_TYPES = [
   "image/jpeg",
@@ -52,6 +52,7 @@ export default function FileUpload({
   isPastedFile = false,
 }: FileUploadProps) {
   const { setIsLoading } = useLoading();
+  const { setLoadingText, resetLoadingText } = useLoadingText();
 
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -59,10 +60,8 @@ export default function FileUpload({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasProcessedInitialFiles = useRef(false);
 
-  // Process initial files when the modal opens
   useEffect(() => {
     if (open && initialFiles.length > 0 && !hasProcessedInitialFiles.current) {
-      // Process the initialFiles
       if (initialFiles.length + files.length > MAX_FILES) {
         toast.error(`You can upload a maximum of ${MAX_FILES} files at once`);
         return;
@@ -83,12 +82,10 @@ export default function FileUpload({
       setFiles((prev) => [...prev, ...newFilesWithPreview]);
       hasProcessedInitialFiles.current = true;
     } else if (!open) {
-      // Reset flag when modal closes
       hasProcessedInitialFiles.current = false;
     }
   }, [open, initialFiles, files.length]);
 
-  // Auto-open file selector when modal opens and no files
   useEffect(() => {
     if (
       open &&
@@ -114,7 +111,6 @@ export default function FileUpload({
     const selectedFiles = Array.from(e.target.files || []);
     if (selectedFiles.length === 0) return;
 
-    // Check if adding these files would exceed the maximum
     if (files.length + selectedFiles.length > MAX_FILES) {
       toast.error(`You can upload a maximum of ${MAX_FILES} files at once`);
       return;
@@ -142,7 +138,7 @@ export default function FileUpload({
   const removeFile = (index: number) => {
     setFiles((prevFiles) => {
       const newFiles = [...prevFiles];
-      // Release the object URL to avoid memory leaks
+
       if (newFiles[index].previewUrl) {
         URL.revokeObjectURL(newFiles[index].previewUrl);
       }
@@ -152,7 +148,6 @@ export default function FileUpload({
   };
 
   const clearAllFiles = () => {
-    // Release all object URLs
     files.forEach((file) => {
       if (file.previewUrl) URL.revokeObjectURL(file.previewUrl);
     });
@@ -163,17 +158,16 @@ export default function FileUpload({
   const uploadFiles = async () => {
     if (files.length === 0) return;
 
-    // Filter out files with errors
     const validFiles = files.filter((f) => !f.error);
     if (validFiles.length === 0) {
       toast.error("No valid files to upload");
       return;
     }
+    setLoadingText("Uploading files...");
     setIsLoading(true);
     setIsUploading(true);
 
     try {
-      // First, create temporary preview objects with loading state
       const tempPreviews: UploadedFilePreview[] = validFiles.map(
         (fileWithPreview, index) => ({
           id: `temp-${index}`,
@@ -184,15 +178,12 @@ export default function FileUpload({
         }),
       );
 
-      // Pass the temporary previews to show loading state
       if (onFilesUploaded) {
         onFilesUploaded(tempPreviews);
       }
 
-      // Close the modal to show the loading previews in toolbar
       onOpenChange(false);
 
-      // Upload files in parallel and wait for all to complete
       const uploadPromises = validFiles.map(async (fileWithPreview, index) => {
         const formData = new FormData();
         formData.append("file", fileWithPreview.file);
@@ -207,7 +198,7 @@ export default function FileUpload({
                 const progress = Math.round(
                   (progressEvent.loaded * 100) / progressEvent.total,
                 );
-                // Update progress for this specific file
+
                 setFiles((prevFiles) => {
                   const fileIndex = prevFiles.findIndex(
                     (f) => f.file === fileWithPreview.file,
@@ -225,7 +216,6 @@ export default function FileUpload({
             },
           });
 
-          // Return the response data with the file info
           return {
             response: response.data,
             fileInfo: fileWithPreview.file,
@@ -240,24 +230,21 @@ export default function FileUpload({
         }
       });
 
-      // Wait for all uploads to complete
       const results = await Promise.all(uploadPromises);
 
-      // Create the final uploaded file objects with description and message from the backend
       const uploadedFiles: UploadedFilePreview[] = results.map(
         ({ response, fileInfo, tempId }) => ({
           id: response.fileId,
           url: response.url,
           name: fileInfo.name,
           type: fileInfo.type,
-          description: response.description || `File: ${fileInfo.name}`, // Use description from backend response
-          message: response.message || "File uploaded successfully", // Use message from backend response
+          description: response.description || `File: ${fileInfo.name}`,
+          message: response.message || "File uploaded successfully",
           isUploading: false,
-          tempId, // Include tempId for mapping
+          tempId,
         }),
       );
 
-      // Pass the uploaded files with loading state disabled
       if (onFilesUploaded) {
         onFilesUploaded(uploadedFiles);
       }
@@ -266,23 +253,21 @@ export default function FileUpload({
         `${validFiles.length} file${validFiles.length > 1 ? "s" : ""} uploaded successfully`,
       );
 
-      // Clear the uploaded files from the modal
       clearAllFiles();
     } catch (error) {
       console.error("Error uploading files:", error);
       toast.error("Error uploading files. Please try again.");
 
-      // If we have the onFilesUploaded callback, call it with empty array to remove loading previews
       if (onFilesUploaded) {
         onFilesUploaded([]);
       }
     } finally {
       setIsUploading(false);
       setIsLoading(false);
+      resetLoadingText
     }
   };
 
-  // Handle drag and drop
   const onDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -313,7 +298,6 @@ export default function FileUpload({
       const droppedFiles = Array.from(e.dataTransfer.files);
       if (droppedFiles.length === 0) return;
 
-      // Check if adding these files would exceed the maximum
       if (files.length + droppedFiles.length > MAX_FILES) {
         toast.error(`You can upload a maximum of ${MAX_FILES} files at once`);
         return;
@@ -339,7 +323,6 @@ export default function FileUpload({
   );
 
   const closeModal = () => {
-    // Clean up any resources
     clearAllFiles();
     onOpenChange(false);
   };

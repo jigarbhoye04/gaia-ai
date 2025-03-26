@@ -17,7 +17,7 @@ export interface ChatBubbleUserProps {
   fileData?: FileData[];
 }
 
-interface SetImageDataType {
+export interface SetImageDataType {
   src: string;
   prompt: string;
   improvedPrompt: string;

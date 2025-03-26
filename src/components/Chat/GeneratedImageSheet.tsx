@@ -1,18 +1,13 @@
-import Image from "next/image";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { SetImageDataType } from "@/types/chatBubbleTypes";
+import Image from "next/image";
 import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
-
-interface ImageData {
-  src?: string;
-  prompt?: string;
-  improvedPrompt?: string;
-}
 
 interface GeneratedImageSheetProps {
   openImage: boolean;
   setOpenImage?: React.Dispatch<React.SetStateAction<boolean>>;
-  imageData?: ImageData;
+  imageData?: SetImageDataType;
 }
 
 export default function GeneratedImageSheet({

@@ -1,18 +1,17 @@
-import Image from "next/image";
-import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-
 import StarterText from "@/components/Chat/StarterText";
 import { useConversation } from "@/hooks/useConversation";
 import { useConversationList } from "@/hooks/useConversationList";
 import { useLoading } from "@/hooks/useLoading";
+import { useLoadingText } from "@/hooks/useLoadingText";
+import { SetImageDataType } from "@/types/chatBubbleTypes";
 import { MessageType } from "@/types/convoTypes";
-import { ChatFileType } from "@/types/chatBubbleTypes";
-
+import { Spinner } from "@heroui/spinner";
+import Image from "next/image";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
 import GeneratedImageSheet from "./GeneratedImageSheet";
-import { Spinner } from "@heroui/spinner";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -21,10 +20,10 @@ export default function ChatRenderer() {
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
   const { isLoading } = useLoading();
+  const { loadingText } = useLoadingText();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const scrolledToMessageRef = useRef<string | null>(null);
-
-  const [imageData, setImageData] = useState({
+  const [imageData, setImageData] = useState<SetImageDataType>({
     src: "",
     prompt: "",
     improvedPrompt: "",
@@ -117,7 +116,6 @@ export default function ChatRenderer() {
               setOpenImage={setOpenImage}
               text={message.response}
               disclaimer={message.disclaimer}
-              // userinputType={message.userinputType}
               date={message.date}
               search_results={message.search_results}
             />
@@ -131,7 +129,6 @@ export default function ChatRenderer() {
             searchWeb={message.searchWeb}
             text={message.response}
             fileData={message.fileData}
-            // files={prepareFileData(message)}
           />
         ),
       )}
@@ -144,7 +141,7 @@ export default function ChatRenderer() {
             height={30}
             className={`animate-spin`}
           />
-          <div>GAIA is thinking</div>
+          <div>{loadingText}</div>
           <Spinner
             variant="dots"
             color="primary"
@@ -154,17 +151,4 @@ export default function ChatRenderer() {
       )}
     </>
   );
-}
-
-/**
- * Helper function to determine file type from URL
- */
-function getFileTypeFromUrl(url: string): string {
-  if (url.match(/\.(jpe?g|png|gif|webp)$/i)) return "image/jpeg";
-  if (url.match(/\.(pdf)$/i)) return "application/pdf";
-  if (url.match(/\.(docx?)$/i)) return "application/msword";
-  if (url.match(/\.(xlsx?)$/i)) return "application/excel";
-  if (url.match(/\.(pptx?)$/i)) return "application/powerpoint";
-  if (url.match(/\.(txt|md)$/i)) return "text/plain";
-  return "application/octet-stream";
 }

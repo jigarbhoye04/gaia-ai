@@ -7,6 +7,7 @@ import convoReducer from "./slices/conversationSlice";
 import conversationReducer from "./slices/conversationsSlice";
 import imageDialogReducer from "./slices/imageDialogSlice";
 import loadingReducer from "./slices/loadingSlice";
+import loadingTextReducer from "./slices/loadingTextSlice";
 import loginModalReducer from "./slices/loginModalSlice";
 import userReducer from "./slices/userSlice";
 
@@ -15,6 +16,7 @@ export const store = configureStore({
     loginModal: loginModalReducer,
     user: userReducer,
     loading: loadingReducer,
+    loadingText: loadingTextReducer,
     conversation: convoReducer,
     conversations: conversationReducer,
     imageDialog: imageDialogReducer,

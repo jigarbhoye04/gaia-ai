@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight, Check } from "lucide-react";
 import React from "react";
 import {
+  AttachmentIcon,
   FileUploadIcon,
   GlobalSearchIcon,
   Image02Icon,
@@ -76,8 +77,8 @@ export default function SearchbarLeftDropdown({
     },
     {
       id: "upload_file",
-      label: "Upload File",
-      icon: <FileUploadIcon className="h-5 w-5 text-primary" />,
+      label: "Attach Files",
+      icon: <AttachmentIcon className="h-5 w-5 text-primary" />,
       action: openFileUploadModal,
       isMode: false,
     },
