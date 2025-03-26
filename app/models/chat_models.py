@@ -32,11 +32,10 @@ class MessageModel(BaseModel):
     file: Optional[bytes] = None  # Binary data for the file
     filename: Optional[str] = None  # Name of the file, if any
     filetype: Optional[str] = None  # Name of the file, if any
-    message_id: Optional[str] = None  # Name of the file, if any
-
+    message_id: Optional[str] = None  # Message ID
+    fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
     intent: Optional[Literal["calendar", "generate_image"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
-
     search_results: Optional[SearchResults] = None
 
 

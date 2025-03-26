@@ -26,6 +26,7 @@ class MessageRequestWithHistory(BaseModel):
     search_web: Optional[bool] = False
     deep_search: Optional[bool] = False
     pageFetchURLs: Optional[List] = []
+    fileIds: Optional[List[str]] = []
 
 
 class MessageRequest(BaseModel):

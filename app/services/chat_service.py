@@ -10,7 +10,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 
 from app.config.loggers import chat_logger as logger
-from app.db.collections import conversations_collection
+from app.db.collections import conversations_collection, files_collection
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.models.general_models import (
     DescriptionUpdateRequest,
@@ -121,7 +121,7 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
 
                 elapsed_time = time.time() - start_time
                 logger.info(
-                    f"Deep search pipeline step completed in {elapsed_time:.2f} seconds"
+                    f"Deep search pipeline step completed in {elapsed_time:.2} seconds"
                 )
             else:
                 logger.info("No enhanced results from deep search")
@@ -204,7 +204,7 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
 
             elapsed_time = time.time() - start_time
             logger.info(
-                f"Web search completed in {elapsed_time:.2f} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
+                f"Web search completed in {elapsed_time:.2} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
             )
 
         except Exception as e:
@@ -397,6 +397,7 @@ async def chat_stream(
         "search_web": body.search_web,
         "deep_search": body.deep_search,
         "pageFetchURLs": body.pageFetchURLs,
+        "fileIds": body.fileIds,  # Add fileIds to the context
     }
 
     context = await classify_intent(context)
@@ -413,7 +414,8 @@ async def chat_stream(
         do_deep_search,
         do_search,
         fetch_notes,
-        fetch_documents,
+        # fetch_documents,
+        fetch_files,
     ]
 
     pipeline = Pipeline(pipeline_steps)
@@ -576,7 +578,7 @@ async def get_conversation(conversation_id: str, user: dict) -> dict:
 
 async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
     """
-    Add messages to an existing conversation.
+    Add messages to an existing conversation, including any file IDs attached to the messages.
     """
     user_id = user.get("user_id")
     conversation_id = request.conversation_id
@@ -584,9 +586,11 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
     messages = []
     for message in request.messages:
         message_dict = message.model_dump(exclude={"loading"})
+        # Remove None values to keep the document clean
         message_dict = {
             key: value for key, value in message_dict.items() if value is not None
         }
+        # Ensure message has an ID
         message_dict.setdefault("message_id", str(ObjectId()))
         messages.append(message_dict)
 
@@ -817,3 +821,66 @@ async def generate_image_stream(query_text: str) -> AsyncGenerator[str, None]:
         logger.error(f"Error generating image: {str(e)}")
         yield f"data: {json.dumps({'error': f'Failed to generate image: {str(e)}'})}\n\n"
         yield "data: [DONE]\n\n"
+
+
+async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Fetch file data based on fileIds in the request and add to the message context.
+
+    Args:
+        context (Dict[str, Any]): The pipeline context containing request data.
+
+    Returns:
+        Dict[str, Any]: Updated context with file data added.
+    """
+    file_ids = context.get("fileIds", [])
+
+    if not file_ids or not context.get("last_message"):
+        context["files_added"] = False
+        return context
+
+    try:
+        print(f"Fetching data for {len(file_ids)} files")
+        files_data = []
+
+        for file_id in file_ids:
+            file_data = await files_collection.find_one({"file_id": file_id})
+            if file_data:
+                file_data["_id"] = str(file_data.get("_id", ""))
+
+                for date_field in ["created_at", "updated_at"]:
+                    if date_field in file_data and hasattr(
+                        file_data[date_field], "isoformat"
+                    ):
+                        file_data[date_field] = file_data[date_field].isoformat()
+
+                files_data.append(file_data)
+
+        if files_data:
+            print(f"{files_data=}")
+            formatted_files = "\n\n## Uploaded File(s) Information\n\n"
+
+            for file in files_data:
+                filename = file.get("filename", "Unnamed file")
+                file_type = file.get("content_type", "Unknown type")
+                description = file.get("description", "No description available")
+
+                formatted_files += f"### {filename}\n"
+                formatted_files += f"**Type**: {file_type}\n"
+                formatted_files += f"**Description**: {description}\n"
+                formatted_files += "\n"
+
+            context["last_message"]["content"] += formatted_files
+            context["files_data"] = files_data
+            context["files_added"] = True
+            print(f"Added {len(files_data)} files to message context")
+        else:
+            context["files_added"] = False
+            logger.warning(f"No file data found for the provided file IDs: {file_ids}")
+
+    except Exception as e:
+        logger.error(f"Error fetching file data: {str(e)}", exc_info=True)
+        context["files_added"] = False
+        context["file_error"] = str(e)
+
+    return context

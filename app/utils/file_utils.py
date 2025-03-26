@@ -74,7 +74,6 @@ def get_image_captioning_model() -> Tuple:
     return _processor, _model
 
 
-
 def extract_text_from_image(image: Image.Image) -> str:
     """
     Extract text from an image using OCR.
@@ -85,10 +84,10 @@ def extract_text_from_image(image: Image.Image) -> str:
     """
     try:
         text = pytesseract.image_to_string(image)
-        return text.strip() if text.strip() else "No readable text found."
+        return text.strip() if text.strip() else None
     except Exception as e:
         logger.error(f"Failed to extract text via OCR: {str(e)}", exc_info=True)
-        return "OCR extraction failed."
+        return None
 
 
 def generate_image_description(image_data: bytes, image_url: str) -> str:
@@ -131,8 +130,7 @@ def generate_image_description(image_data: bytes, image_url: str) -> str:
             description = processor.decode(out[0], skip_special_tokens=True)
             logger.info(f"Generated image description via local model: {description}")
 
-        # 3️⃣ Combine Caption & OCR Output
-        combined_description = f"Caption: {description}\nOCR Text: {extracted_text}"
+        combined_description = f"Caption: {description}\n {f'OCR Text: {extracted_text}' if extracted_text else ''}"
         return combined_description
 
     except Exception as e:
