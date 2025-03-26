@@ -1,19 +1,56 @@
 import asyncio
 from typing import Any, Dict, List, Union
 
+import httpx
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from sumy.nlp.tokenizers import Tokenizer
 from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lsa import LsaSummarizer
-from transformers import pipeline
 from app.config.loggers import general_logger as logger
+from app.config.settings import settings
+
+# Initialize httpx client for API requests
+http_async_client = httpx.AsyncClient()
+
+# Global variable to store the classifier
+_zero_shot_classifier = None
 
 
-classifier = pipeline(
-    "zero-shot-classification", model="MoritzLaurer/bge-m3-zeroshot-v2.0"
-)
+def get_zero_shot_classifier():
+    """
+    Get or initialize the zero-shot classifier.
+    If USE_HUGGINGFACE_API is True, this will return None as the API is used instead.
+    Otherwise, it loads the model locally.
+
+    Returns:
+        The classifier object if using local model, None if using API.
+    """
+    global _zero_shot_classifier
+
+    if settings.USE_HUGGINGFACE_API:
+        logger.info("Using Hugging Face API for zero-shot classification")
+        return None
+
+    if _zero_shot_classifier is None:
+        try:
+            from transformers import pipeline
+
+            logger.info(
+                f"Loading zero-shot classification model: {settings.HUGGINGFACE_ZSC_MODEL}"
+            )
+            _zero_shot_classifier = pipeline(
+                "zero-shot-classification",
+                model=settings.HUGGINGFACE_ZSC_MODEL,
+                device=-1,  # CPU
+            )
+            logger.info("Zero-shot classification model loaded successfully")
+        except Exception as e:
+            logger.error(f"Error loading zero-shot classification model: {str(e)}")
+            raise RuntimeError(f"Failed to load model: {str(e)}")
+
+    return _zero_shot_classifier
 
 
 def split_text_into_chunks(
@@ -38,17 +75,47 @@ def split_text_into_chunks(
     return chunks
 
 
-def _classify_text_core(user_input: str, candidate_labels: List[str]) -> Dict[str, Any]:
+async def _classify_text_core(
+    user_input: str, candidate_labels: List[str]
+) -> Dict[str, Any]:
     """
-    Core logic for classifying text synchronously.
+    Core logic for classifying text asynchronously.
+    Uses either Hugging Face API or local model based on settings.
     """
-
-    if not user_input or not candidate_labels or not classifier:
+    if not user_input or not candidate_labels:
         return {"error": "Invalid input or candidate labels."}
 
     try:
-        result = classifier(user_input, candidate_labels)
-        label_scores = dict(zip(result["labels"], result["scores"]))
+        # Check if we should use the Hugging Face API
+        if settings.USE_HUGGINGFACE_API:
+            # Use the Hugging Face Router API URL as specified
+            api_url = (
+                f"{settings.HUGGINGFACE_ROUTER_URL}{settings.HUGGINGFACE_ZSC_MODEL}"
+            )
+
+            response = await http_async_client.post(
+                api_url,
+                headers={"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"},
+                json={
+                    "inputs": user_input,
+                    "parameters": {"candidate_labels": candidate_labels},
+                },
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            result = response.json()
+            label_scores = dict(zip(result["labels"], result["scores"]))
+        else:
+            # Use the local model
+            classifier = get_zero_shot_classifier()
+            if classifier is None:
+                raise RuntimeError("Failed to get zero-shot classifier")
+
+            # Run classification
+            result = classifier(user_input, candidate_labels, multi_label=False)
+            label_scores = dict(zip(result["labels"], result["scores"]))
+
+        # Process results (same for both methods)
         highest_label = max(label_scores, key=label_scores.get)
         return {
             "label_scores": label_scores,
@@ -56,6 +123,7 @@ def _classify_text_core(user_input: str, candidate_labels: List[str]) -> Dict[st
             "highest_score": label_scores[highest_label],
         }
     except Exception as e:
+        logger.error(f"Error during text classification: {str(e)}")
         return {"error": str(e)}
 
 
@@ -74,14 +142,14 @@ def classify_text(
         If async_mode is True, returns a coroutine; otherwise, returns the classification dictionary.
     """
     if async_mode:
-        return asyncio.to_thread(_classify_text_core, user_input, candidate_labels)
+        return asyncio.ensure_future(_classify_text_core(user_input, candidate_labels))
     else:
-        return _classify_text_core(user_input, candidate_labels)
+        return asyncio.run(_classify_text_core(user_input, candidate_labels))
 
 
-def _classify_email_core(email_text: str) -> Dict[str, Any]:
+async def _classify_email_core(email_text: str) -> Dict[str, Any]:
     """
-    Core logic for classifying email synchronously.
+    Core logic for classifying email asynchronously using Hugging Face API.
 
     Returns a dictionary containing classification results and importance flag.
     Email is considered important if it matches a notify label AND has a score > 0.6.
@@ -108,7 +176,7 @@ def _classify_email_core(email_text: str) -> Dict[str, Any]:
         "not important",
     ]
 
-    results = _classify_text_core(email_text, email_labels)
+    results = await _classify_text_core(email_text, email_labels)
     if "error" in results:
         return {"error": results["error"], "is_important": False}
 
@@ -132,9 +200,9 @@ def classify_email(
         If async_mode is True, returns a coroutine; otherwise, returns the classification dictionary.
     """
     if async_mode:
-        return asyncio.to_thread(_classify_email_core, email_text)
+        return asyncio.ensure_future(_classify_email_core(email_text))
     else:
-        return _classify_email_core(email_text)
+        return asyncio.run(_classify_email_core(email_text))
 
 
 def classify_event_type(

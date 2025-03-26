@@ -5,7 +5,7 @@ from celery.signals import worker_init, worker_ready
 
 from app.config.loggers import celery_logger as logger
 from app.config.settings import settings
-# from app.services.text_service import get_zero_shot_classifier
+from app.services.text_service import get_zero_shot_classifier
 
 broker_url = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//")
 result_backend = os.getenv("CELERY_RESULT_BACKEND", "rpc://")
@@ -47,8 +47,9 @@ celery.conf.update(
 @worker_init.connect
 def startup_message(sender, **kwargs):
     logger.info("-------  Celery Worker is initializing...  -------")
-    # logger.info("Initializing Model: MoritzLaurer/bge-m3-zeroshot-v2.0...")
-    # logger.info("Model initialized successfully.")
+    logger.info("Initializing zero-shot classification model...")
+    get_zero_shot_classifier()
+    logger.info("Model initialization completed.")
 
 
 @worker_ready.connect

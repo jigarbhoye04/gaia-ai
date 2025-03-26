@@ -44,3 +44,13 @@ class DescriptionUpdateRequestLLM(BaseModel):
 
 class DescriptionUpdateRequest(BaseModel):
     description: str
+
+
+class FileUploadResponse(BaseModel):
+    """Response model for file uploads."""
+
+    fileId: str
+    url: str
+    filename: str
+    description: Optional[str] = None
+    message: str = "File uploaded successfully"
