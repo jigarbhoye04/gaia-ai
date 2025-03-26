@@ -130,7 +130,7 @@ export default function FileUpload({
       toast.error("No valid files to upload");
       return;
     }
-
+    setIsLoading(true);
     setIsUploading(true);
 
     try {
@@ -237,6 +237,7 @@ export default function FileUpload({
       }
     } finally {
       setIsUploading(false);
+      setIsLoading(false);
     }
   };
 
@@ -321,10 +322,10 @@ export default function FileUpload({
 
           {/* Main upload area */}
           <div
-            className={`flex h-64 w-full cursor-pointer flex-col items-center ${files.length > 0 ? "justify-start" : "justify-center"} rounded-xl border-2 border-dashed ${
+            className={`flex h-64 w-full cursor-pointer flex-col items-center ${files.length > 0 ? "justify-start" : "justify-center"} rounded-xl border-2 border-dashed bg-zinc-950 ${
               isDragging
                 ? "scale-105 border-primary bg-primary/10"
-                : "border-zinc-700 bg-zinc-900 hover:border-primary hover:bg-zinc-900"
+                : "border-zinc-700 hover:border-primary"
             } p-6 transition-all duration-200 ease-in-out`}
             onClick={openFileSelector}
             onDrop={onDrop}

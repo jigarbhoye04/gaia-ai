@@ -222,7 +222,6 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
             currentHeight={currentHeight}
             onHeightChange={setCurrentHeight}
             inputRef={inputRef}
-            loading={false}
           />
           <SearchbarToolbar
             selectedMode={selectedMode}
