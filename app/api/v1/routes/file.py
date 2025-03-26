@@ -5,15 +5,13 @@ Router module for file upload functionality with RAG integration.
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.models.general_models import FileUploadResponse
+from app.models.general_models import FileData
 from app.services.file_service import upload_file_service
 
 router = APIRouter()
 
 
-@router.post(
-    "/upload", response_model=FileUploadResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/upload", response_model=FileData, status_code=status.HTTP_201_CREATED)
 async def upload_file_endpoint(
     file: UploadFile = File(...),
     conversation_id: str = Form(None),
@@ -37,10 +35,11 @@ async def upload_file_endpoint(
         file=file, user_id=user.get("user_id"), conversation_id=conversation_id
     )
 
-    return FileUploadResponse(
+    return FileData(
         fileId=result["fileId"],
         url=result["url"],
         filename=result["filename"],
         description=result.get("description"),
         message="File uploaded successfully",
+        type=result.get("type", "file"),
     )

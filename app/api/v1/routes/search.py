@@ -10,7 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.search_models import URLRequest, URLResponse
-from app.services.search_service import fetch_url_metadata, search_messages
+from app.services.search_service import search_messages
+from app.utils.internet_utils import fetch_url_metadata
 from app.utils.search_utils import perform_search
 
 router = APIRouter()

@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, ForwardRef
 
 from app.models.search_models import SearchResults
+from app.models.general_models import FileData
 
 
 class CalIntentOptions(BaseModel):
@@ -34,6 +35,7 @@ class MessageModel(BaseModel):
     filetype: Optional[str] = None  # Name of the file, if any
     message_id: Optional[str] = None  # Message ID
     fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
+    fileData: Optional[List[FileData]] = []  # Complete file metadata
     intent: Optional[Literal["calendar", "generate_image"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
     search_results: Optional[SearchResults] = None

@@ -3,7 +3,7 @@ Service module for file upload functionality with vector search capabilities.
 """
 
 import io
-from typing import Any, Dict
+from typing import Any, Dict, List
 import uuid
 from datetime import datetime, timezone
 
@@ -13,6 +13,7 @@ from fastapi import HTTPException, UploadFile
 
 from app.config.loggers import app_logger as logger
 from app.db.collections import files_collection
+from app.models.general_models import FileData
 from app.utils.file_utils import generate_file_description
 from app.utils.embedding_utils import generate_embedding
 
@@ -63,7 +64,7 @@ async def upload_file_service(
         file_metadata = {
             "file_id": file_id,
             "filename": file.filename,
-            "content_type": file.content_type,
+            "type": file.content_type,
             "size": len(content),
             "url": file_url,
             "public_id": public_id,
@@ -87,6 +88,7 @@ async def upload_file_service(
                 )
 
         result = await files_collection.insert_one(file_metadata)
+
         if not result.inserted_id:
             raise HTTPException(status_code=500, detail="Failed to store file metadata")
 
@@ -97,7 +99,7 @@ async def upload_file_service(
             "url": file_url,
             "filename": file.filename,
             "description": file_description,
-            "has_embedding": "embedding" in file_metadata,
+            "type": file.content_type,
         }
 
     except Exception as e:
@@ -112,8 +114,9 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
 
     This pipeline step:
     1. Processes explicit file IDs provided in the request
-    2. Performs vector similarity search to find relevant files based on the query
-    3. Formats and adds the file information to the message context
+    2. Uses fileData if available to avoid redundant database lookups
+    3. Performs vector similarity search to find relevant files based on the query
+    4. Formats and adds the file information to the message context
 
     Args:
         context (Dict[str, Any]): The pipeline context containing request data
@@ -136,24 +139,49 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
 
         # 1. First, handle explicit file IDs provided in the request
         explicit_file_ids = context.get("fileIds", [])
+        file_data_list: List[FileData] = context.get("fileData", [])
+
+        # Create a mapping of file IDs to their complete metadata from fileData
+        file_data_map = {
+            file_data.fileId: file_data.dict() for file_data in file_data_list
+        }
+
+        print(file_data_map)
+
         if explicit_file_ids:
             logger.info(f"Fetching {len(explicit_file_ids)} files by ID")
-
             for file_id in explicit_file_ids:
-                file_data = await files_collection.find_one({"file_id": file_id})
-                if file_data:
-                    # Convert ObjectId to string for serialization
-                    if "_id" in file_data:
-                        file_data["_id"] = str(file_data["_id"])
-
-                    # Convert date fields to ISO format
-                    for date_field in ["created_at", "updated_at"]:
-                        if date_field in file_data and hasattr(
-                            file_data[date_field], "isoformat"
-                        ):
-                            file_data[date_field] = file_data[date_field].isoformat()
-
-                    included_files.append(file_data)
+                # First try to use the file data from fileData if available
+                if file_id in file_data_map:
+                    file_data = file_data_map[file_id]
+                    # Format field names to match database schema
+                    formatted_file_data = {
+                        "file_id": file_data["fileId"],
+                        "url": file_data["url"],
+                        "filename": file_data["filename"],
+                        "description": file_data.get("description", ""),
+                        "content_type": file_data.get("content_type", ""),
+                        "_id": file_data.get(
+                            "fileId"
+                        ),  # Use fileId as _id for consistency
+                    }
+                    included_files.append(formatted_file_data)
+                else:
+                    # Fall back to database lookup if not available in fileData
+                    file_data = await files_collection.find_one({"file_id": file_id})
+                    if file_data:
+                        # Convert ObjectId to string for serialization
+                        if "_id" in file_data:
+                            file_data["_id"] = str(file_data["_id"])
+                        # Convert date fields to ISO format
+                        for date_field in ["created_at", "updated_at"]:
+                            if date_field in file_data and hasattr(
+                                file_data[date_field], "isoformat"
+                            ):
+                                file_data[date_field] = file_data[
+                                    date_field
+                                ].isoformat()
+                        included_files.append(file_data)
 
         # 2. Perform vector search for relevant files based on the query
         # Only perform the search if there's a meaningful query

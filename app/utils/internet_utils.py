@@ -13,8 +13,12 @@ from app.db.collections import (
 )
 from app.db.db_redis import get_cache, set_cache
 from app.models.search_models import URLResponse
-from app.services.internet_service import CACHE_EXPIRY, MAX_CONTENT_LENGTH, URL_TIMEOUT
-from app.services.search_service import MAX_TOTAL_CONTENT
+from app.services.search_service import (
+    CACHE_EXPIRY,
+    MAX_CONTENT_LENGTH,
+    MAX_TOTAL_CONTENT,
+    URL_TIMEOUT,
+)
 from app.utils.search_utils import perform_search
 
 

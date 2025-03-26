@@ -104,11 +104,6 @@ def generate_image_description(image_data: bytes, image_url: str) -> str:
     try:
         raw_image = Image.open(io.BytesIO(image_data)).convert("RGB")
 
-        # 1️⃣ OCR Text Extraction
-        extracted_text = extract_text_from_image(raw_image)
-        logger.info(f"OCR Extracted Text: {extracted_text}")
-
-        # 2️⃣ Generate Image Caption
         if settings.USE_HUGGINGFACE_API:
             client = get_hf_client()
             image_buffer = io.BytesIO(image_data)
@@ -129,6 +124,9 @@ def generate_image_description(image_data: bytes, image_url: str) -> str:
             out = model.generate(**inputs)
             description = processor.decode(out[0], skip_special_tokens=True)
             logger.info(f"Generated image description via local model: {description}")
+
+        extracted_text = extract_text_from_image(raw_image)
+        logger.info(f"OCR Extracted Text: {extracted_text}")
 
         combined_description = f"Caption: {description}\n {f'OCR Text: {extracted_text}' if extracted_text else ''}"
         return combined_description

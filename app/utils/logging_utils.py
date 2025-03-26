@@ -22,6 +22,7 @@ def get_logger(
 
     logger = logging.getLogger(name or __name__)
     logger.setLevel(log_level)
+    logger.propagate = True
     logger.handlers.clear()
 
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")

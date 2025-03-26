@@ -19,6 +19,15 @@ class MessageDict(TypedDict):
     # mostRecent: bool
 
 
+class FileData(BaseModel):
+    fileId: str
+    url: str
+    filename: str
+    description: Optional[str] = None
+    type: Optional[str] = "file"
+    message: Optional[str] = "File uploaded successfully"
+
+
 class MessageRequestWithHistory(BaseModel):
     message: str
     conversation_id: str
@@ -27,6 +36,7 @@ class MessageRequestWithHistory(BaseModel):
     deep_search: Optional[bool] = False
     pageFetchURLs: Optional[List] = []
     fileIds: Optional[List[str]] = []
+    fileData: Optional[List[FileData]] = []
 
 
 class MessageRequest(BaseModel):
@@ -45,13 +55,3 @@ class DescriptionUpdateRequestLLM(BaseModel):
 
 class DescriptionUpdateRequest(BaseModel):
     description: str
-
-
-class FileUploadResponse(BaseModel):
-    """Response model for file uploads."""
-
-    fileId: str
-    url: str
-    filename: str
-    description: Optional[str] = None
-    message: str = "File uploaded successfully"

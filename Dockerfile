@@ -11,11 +11,11 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-# Install system dependencies required for Playwright browsers
+# Install system dependencies required for Playwright browsers and Tesseract
 RUN apt update && apt install -y \
     libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
     libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-    libgbm1 libasound2 curl unzip && rm -rf /var/lib/apt/lists/*
+    libgbm1 libasound2 curl unzip tesseract-ocr && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first to leverage Docker caching
 COPY pyproject.toml ./

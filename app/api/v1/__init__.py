@@ -13,7 +13,6 @@ from app.api.v1.routes import (
     blog,
     calendar,
     chat,
-    document,
     feedback,
     file,
     goals,
@@ -38,7 +37,6 @@ api_router.include_router(waitlist.router, tags=["Waitlist"])
 api_router.include_router(feedback.router, tags=["Feedback"])
 api_router.include_router(chat.router, tags=["Chat"])
 api_router.include_router(image.router, tags=["Image"])
-api_router.include_router(document.router, tags=["Document"])
 api_router.include_router(search.router, tags=["Search"])
 api_router.include_router(calendar.router, tags=["Calendar"])
 api_router.include_router(notes.router, tags=["Notes/Memories"])

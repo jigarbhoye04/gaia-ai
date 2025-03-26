@@ -57,7 +57,7 @@ async def chat_stream(
     context = {
         "user_id": user.get("user_id"),
         "conversation_id": body.conversation_id,
-        "query_text": last_message["content"],
+        "query_text": last_message.get("content", ""),
         "last_message": last_message,
         "body": body,
         "llm_model": llm_model,
@@ -67,7 +67,10 @@ async def chat_stream(
         "search_web": body.search_web,
         "deep_search": body.deep_search,
         "pageFetchURLs": body.pageFetchURLs,
-        "fileIds": body.fileIds,  # Add fileIds to the context
+        "fileIds": body.fileIds,  # File IDs associated with the message
+        "fileData": body.fileData
+        if hasattr(body, "fileData")
+        else [],  # Complete file metadata
     }
 
     context = await classify_intent(context)
