@@ -2,6 +2,7 @@ from app.db.collections import feedback_collection
 from app.models.general_models import FeedbackFormData
 from fastapi import HTTPException
 
+
 async def submit_feedback(form_data: FeedbackFormData) -> dict:
     """
     Submit feedback form data to the database.

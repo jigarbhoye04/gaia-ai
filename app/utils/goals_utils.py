@@ -35,5 +35,3 @@ def goal_helper(goal, has_roadmap=True) -> dict:
         goal_data["roadmap"] = {}
 
     return goal_data
-
-

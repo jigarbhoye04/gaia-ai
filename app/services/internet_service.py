@@ -1,0 +1,222 @@
+import asyncio
+import time
+from typing import Any, Dict, List
+
+from app.config.loggers import chat_logger as logger
+from app.prompts.user.chat_prompts import (
+    DEEP_SEARCH_CONTEXT_TEMPLATE,
+    PAGE_CONTENT_TEMPLATE,
+    SEARCH_CONTEXT_TEMPLATE,
+)
+from app.utils.internet_utils import perform_deep_search
+from app.utils.search_utils import (
+    extract_urls_from_text,
+    format_results_for_llm,
+    perform_fetch,
+    perform_search,
+)
+
+
+async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Perform a deep internet search by fetching and processing web content from search results.
+
+    This pipeline step:
+    1. Searches the web for relevant content based on the user's query
+    2. Fetches the full content of the top search results concurrently
+    3. Converts the content to markdown format for better LLM processing
+    4. Adds the enhanced content to the message context with appropriate formatting
+
+    Args:
+        context (Dict[str, Any]): The pipeline context containing user query and message data
+
+    Returns:
+        Dict[str, Any]: The updated context with deep search results added
+    """
+    start_time = time.time()
+
+    if context["deep_search"] and context["last_message"]:
+        query_text = context["query_text"]
+        logger.info(f"Starting deep search pipeline step for query: {query_text}")
+
+        try:
+            # Get deep search results independently of regular search
+            deep_search_results = await perform_deep_search(
+                query=query_text, max_results=3
+            )
+
+            # Extract enhanced results with full content
+            enhanced_results = deep_search_results.get("enhanced_results", [])
+            metadata = deep_search_results.get("metadata", {})
+
+            if enhanced_results:
+                # Format the results for the LLM with better structure
+                formatted_content = "## Deep Search Results\n\n"
+
+                for i, result in enumerate(enhanced_results, 1):
+                    title = result.get("title", "No Title")
+                    url = result.get("url", "#")
+                    snippet = result.get("snippet", "No snippet available")
+                    full_content = result.get("full_content", "")
+                    # from_cache = result.get("from_cache", False)
+                    fetch_error = result.get("fetch_error", None)
+
+                    formatted_content += f"### {i}. {title}\n"
+                    formatted_content += f"**URL**: {url}\n\n"
+
+                    if fetch_error:
+                        formatted_content += (
+                            f"**Note**: Could not fetch full content: {fetch_error}\n\n"
+                        )
+                        formatted_content += f"**Summary**: {snippet}\n\n"
+                    else:
+                        formatted_content += f"**Summary**: {snippet}\n\n"
+                        formatted_content += "**Content**:\n"
+                        formatted_content += full_content + "\n\n"
+
+                    formatted_content += "---\n\n"
+
+                # Add the formatted content to the context using the template
+                context["last_message"]["content"] += (
+                    DEEP_SEARCH_CONTEXT_TEMPLATE.format(
+                        formatted_content=formatted_content
+                    )
+                )
+
+                # Store relevant metadata in context for potential later use
+                context["deep_search_results"] = {
+                    "query": query_text,
+                    "result_count": len(enhanced_results),
+                    "content_size": metadata.get("total_content_size", 0),
+                    "search_time": metadata.get("elapsed_time", 0),
+                }
+
+                elapsed_time = time.time() - start_time
+                logger.info(
+                    f"Deep search pipeline step completed in {elapsed_time:.2} seconds"
+                )
+            else:
+                logger.info("No enhanced results from deep search")
+                context["last_message"]["content"] += (
+                    "\n\nNo detailed information found from deep search."
+                )
+        except Exception as e:
+            logger.error(f"Error in deep search pipeline step: {e}", exc_info=True)
+            # Don't fail the whole pipeline if deep search fails
+            context["deep_search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nError performing deep search, falling back to standard results."
+            )
+
+    return context
+
+
+async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Perform a web search and append relevant context to the last message.
+
+    This pipeline step:
+    1. Validates if search is enabled and a query is available
+    2. Executes a web search with the query
+    3. Formats the results in a structured way for the LLM
+    4. Adds the search results to the message context
+
+    Args:
+        context (Dict[str, Any]): The pipeline context containing user query and message data
+
+    Returns:
+        Dict[str, Any]: The updated context with search results added
+    """
+    start_time = time.time()
+
+    # Only perform search if search_web flag is enabled, deep search is disabled and we have a message
+    if context["search_web"] and context["last_message"] and not context["deep_search"]:
+        query_text = context["query_text"]
+        logger.info(f"Starting web search for query: {query_text}")
+
+        try:
+            # Configure search parameters based on query characteristics
+            # For longer queries, we might want fewer results to keep context manageable
+            result_count = 5
+            if len(query_text) > 100:
+                result_count = 3
+
+            # Perform the search with error handling
+            search_results = await perform_search(query=query_text, count=result_count)
+
+            # Extract different result types
+            web_results = search_results.get("web", [])
+            news_results = search_results.get("news", [])
+
+            # Format results with better structure
+            formatted_results = ""
+
+            if web_results:
+                formatted_results += (
+                    format_results_for_llm(web_results, result_type="Web Results")
+                    + "\n\n"
+                )
+
+            if news_results:
+                formatted_results += format_results_for_llm(
+                    news_results, result_type="News Results"
+                )
+
+            # Handle case where no results were found
+            if not formatted_results.strip():
+                formatted_results = "No relevant search results found for your query."
+
+            # Add the formatted search results to the context
+            context["last_message"]["content"] += SEARCH_CONTEXT_TEMPLATE.format(
+                formatted_results=formatted_results
+            )
+
+            # Store the raw results in context for potential later use
+            context["search_results"] = search_results
+
+            elapsed_time = time.time() - start_time
+            logger.info(
+                f"Web search completed in {elapsed_time:.2} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
+            )
+
+        except Exception as e:
+            logger.error(f"Error in web search: {e}", exc_info=True)
+            # Add a note about the search failure to the message
+            context["search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nError performing web search. Please try again later."
+            )
+
+    return context
+
+
+async def fetch_webpages(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Fetch multiple webpages and append their content to the last message.
+    """
+    # Get existing URLs
+    urls: List[str] = context.get("pageFetchURLs", [])
+
+    # Extract URLs from user query text if available
+    if "query_text" in context:
+        extracted_urls = extract_urls_from_text(context["query_text"])
+        if extracted_urls:
+            # Add any new URLs to the existing list (avoid duplicates)
+            for url in extracted_urls:
+                if url not in urls:
+                    urls.append(url)
+            # Update the context with the combined list
+            context["pageFetchURLs"] = urls
+
+    # Fetch content for all URLs
+    if urls and context.get("last_message"):
+        fetched_pages = await asyncio.gather(*[perform_fetch(url) for url in urls])
+        print(
+            f"{fetched_pages=} {urls=}",
+        )
+        for page_content in fetched_pages:
+            context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
+                page_content=page_content, urls=urls
+            )
+
+    return context

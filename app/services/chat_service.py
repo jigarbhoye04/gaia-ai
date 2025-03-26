@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict
 
 from bson import ObjectId
 from fastapi import BackgroundTasks, HTTPException, status
@@ -16,149 +15,18 @@ from app.models.general_models import (
     MessageRequest,
     MessageRequestWithHistory,
 )
-from app.models.notes_models import NoteModel
-from app.services.llm_service import (
+from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
+from app.services.file_service import fetch_files
+from app.services.image_service import generate_image_stream
+from app.services.internet_service import do_deep_search, do_search, fetch_webpages
+from app.utils.llm_utils import (
     do_prompt_no_stream,
     do_prompt_with_stream,
 )
-from app.services.pipeline_service import Pipeline
-from app.services.text_service import classify_event_type
-from app.utils.embedding_utils import query_documents, search_notes_by_similarity
-from app.utils.notes import insert_note
-from app.utils.notes_utils import should_create_memory
-from app.utils.search_utils import format_results_for_llm, perform_fetch, perform_search
-from app.prompts.user.chat_prompts import (
-    CONVERSATION_DESCRIPTION_GENERATOR,
-    DOCUMENTS_CONTEXT_TEMPLATE,
-    NOTES_CONTEXT_TEMPLATE,
-    PAGE_CONTENT_TEMPLATE,
-    SEARCH_CONTEXT_TEMPLATE,
-)
-
-
-async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Perform a web search and append relevant context to the last message.
-    """
-
-    if context["search_web"] and context["last_message"]:
-        last_message = context["last_message"]
-        query_text = context["query_text"]
-        search_results = await perform_search(query=query_text, count=5)
-        web_results = search_results.get("web", [])
-        news_results = search_results.get("news", [])
-        formatted_results = ""
-
-        if web_results:
-            formatted_results += (
-                format_results_for_llm(web_results, result_type="Web Results") + "\n"
-            )
-
-        if news_results:
-            formatted_results += format_results_for_llm(
-                news_results, result_type="News Results"
-            )
-
-        if not formatted_results:
-            formatted_results = "No relevant results found."
-        print(formatted_results)
-        print(search_results)
-        last_message["content"] += SEARCH_CONTEXT_TEMPLATE.format(
-            formatted_results=formatted_results
-        )
-
-        context["search_results"] = search_results
-    return context
-
-
-async def fetch_webpage(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Fetch a webpage and append its content to the last message.
-    """
-    body = context["body"]
-    if body.pageFetchURL and context["last_message"]:
-        page_content = await perform_fetch(body.pageFetchURL)
-        context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
-            page_content=page_content
-        )
-    return context
-
-
-async def store_note(query_text: str, user_id: str) -> None:
-    """
-    Store a note if the query meets memory creation criteria.
-    """
-    is_memory, plaintext, content = await should_create_memory(query_text)
-    if is_memory and content and plaintext:
-        await insert_note(
-            note=NoteModel(plaintext=plaintext, content=content),
-            user_id=user_id,
-            auto_created=True,
-        )
-
-
-async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Fetch similar notes and append their content to the last message.
-    """
-    last_message = context["last_message"]
-    query_text = context["query_text"]
-    user = context["user"]
-    notes = await search_notes_by_similarity(
-        input_text=query_text, user_id=user.get("user_id")
-    )
-    if notes:
-        last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
-            message=last_message["content"], notes="- ".join(notes)
-        )
-        context["notes_added"] = True
-    else:
-        context["notes_added"] = False
-    return context
-
-
-async def fetch_documents(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Fetch documents related to the query and append their content to the last message.
-    """
-    last_message = context["last_message"]
-    query_text = context["query_text"]
-    conversation_id = context["conversation_id"]
-    user_id = context["user_id"]
-
-    documents = await query_documents(query_text, conversation_id, user_id)
-
-    if documents and len(documents) > 0:
-        content = [doc["content"] for doc in documents]
-        titles = [doc["title"] for doc in documents]
-        prompt = DOCUMENTS_CONTEXT_TEMPLATE.format(
-            message=last_message["content"], titles=titles, content=content
-        )
-        last_message["content"] = prompt
-        context["docs_added"] = True
-    else:
-        context["docs_added"] = False
-    return context
-
-
-async def classify_event(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Classify the event type and set the intent if applicable.
-    """
-    type_result = await classify_event_type(context["query_text"])
-    if type_result.get("highest_label") and type_result.get("highest_score", 0) >= 0.5:
-        if type_result["highest_label"] in ["add to calendar", "set a reminder"]:
-            context["intent"] = "calendar"
-    return context
-
-
-async def choose_llm_model(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Choose an LLM model based on whether notes or documents were added.
-    """
-    if context.get("notes_added") or context.get("docs_added"):
-        context["llm_model"] = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
-    return context
+from app.services.notes_service import fetch_notes
+from app.utils.chat_utils import classify_intent
+from app.utils.notes_utils import store_note
+from app.utils.pipeline_utils import Pipeline
 
 
 async def chat_stream(
@@ -169,13 +37,27 @@ async def chat_stream(
 ) -> StreamingResponse:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
+
+    This function coordinates the processing of chat messages through a pipeline,
+    including optional web search, deep internet search, document fetching,
+    and other enhancements before sending to the language model.
+
+    Args:
+        body (MessageRequestWithHistory): Contains the message, conversation ID, message history,
+                                         and optional flags for search features
+        background_tasks (BackgroundTasks): FastAPI background tasks object for async operations
+        user (dict): User information from authentication
+        llm_model (str): Default LLM model identifier to use for generation
+
+    Returns:
+        StreamingResponse: A streaming response containing the LLM's generated content
     """
     last_message = body.messages[-1] if body.messages else None
 
     context = {
         "user_id": user.get("user_id"),
         "conversation_id": body.conversation_id,
-        "query_text": last_message["content"],
+        "query_text": last_message.get("content", ""),
         "last_message": last_message,
         "body": body,
         "llm_model": llm_model,
@@ -183,15 +65,29 @@ async def chat_stream(
         "intent": None,
         "messages": jsonable_encoder(body.messages),
         "search_web": body.search_web,
+        "deep_search": body.deep_search,
+        "pageFetchURLs": body.pageFetchURLs,
+        "fileIds": body.fileIds,  # File IDs associated with the message
+        "fileData": body.fileData
+        if hasattr(body, "fileData")
+        else [],  # Complete file metadata
     }
 
+    context = await classify_intent(context)
+
+    if context["intent"] == "generate_image":
+        return StreamingResponse(
+            generate_image_stream(context["query_text"]),
+            media_type="text/event-stream",
+        )
+
+    # choose_llm_model,
     pipeline_steps = [
-        fetch_notes,
-        fetch_documents,
-        classify_event,
-        # choose_llm_model,
-        fetch_webpage,
+        fetch_webpages,
+        do_deep_search,
         do_search,
+        fetch_notes,
+        fetch_files,
     ]
 
     pipeline = Pipeline(pipeline_steps)
@@ -354,7 +250,7 @@ async def get_conversation(conversation_id: str, user: dict) -> dict:
 
 async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
     """
-    Add messages to an existing conversation.
+    Add messages to an existing conversation, including any file IDs attached to the messages.
     """
     user_id = user.get("user_id")
     conversation_id = request.conversation_id
@@ -362,9 +258,11 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
     messages = []
     for message in request.messages:
         message_dict = message.model_dump(exclude={"loading"})
+        # Remove None values to keep the document clean
         message_dict = {
             key: value for key, value in message_dict.items() if value is not None
         }
+        # Ensure message has an ID
         message_dict.setdefault("message_id", str(ObjectId()))
         messages.append(message_dict)
 

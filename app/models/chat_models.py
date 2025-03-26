@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, ForwardRef
 
 from app.models.search_models import SearchResults
+from app.models.general_models import FileData
 
 
 class CalIntentOptions(BaseModel):
@@ -22,7 +23,7 @@ class MessageModel(BaseModel):
     isImage: Optional[bool] = False  # Whether it's an image message
     searchWeb: Optional[bool] = False  # Whether it's a web search request
     imageUrl: Optional[str] = None  # URL for the image
-    pageFetchURL: Optional[str] = None
+    pageFetchURLs: Optional[List] = []
     # Any disclaimer associated with the message
     disclaimer: Optional[str] = None
     # Type of user input (text, file, etc.)
@@ -32,11 +33,11 @@ class MessageModel(BaseModel):
     file: Optional[bytes] = None  # Binary data for the file
     filename: Optional[str] = None  # Name of the file, if any
     filetype: Optional[str] = None  # Name of the file, if any
-    message_id: Optional[str] = None  # Name of the file, if any
-
-    intent: Optional[Literal["calendar"]] = None
+    message_id: Optional[str] = None  # Message ID
+    fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
+    fileData: Optional[List[FileData]] = []  # Complete file metadata
+    intent: Optional[Literal["calendar", "generate_image"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
-
     search_results: Optional[SearchResults] = None
 
 
@@ -56,4 +57,3 @@ class StarredUpdate(BaseModel):
 
 class PinnedUpdate(BaseModel):
     pinned: bool
-

@@ -9,7 +9,8 @@ from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
 from app.services.oauth_service import store_user_info
-from app.tasks.mail_tasks import fetch_last_week_emails
+
+# from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 
 router = APIRouter()

@@ -6,47 +6,47 @@ from zoneinfo import ZoneInfo
 import httpx
 from fastapi import HTTPException
 
+from app.api.v1.dependencies.oauth_dependencies import refresh_access_token
 from app.config.loggers import calendar_logger as logger
 from app.db.collections import calendars_collection
 from app.models.calendar_models import EventCreateRequest
-from app.config.settings import settings
 from app.utils.calendar_utils import resolve_timezone
 
 http_async_client = httpx.AsyncClient()
 
 
-async def refresh_access_token(refresh_token: str) -> Dict[str, Any]:
-    """
-    Refresh the Google OAuth2.0 access token using the provided refresh token.
+# async def refresh_access_token(refresh_token: str) -> Dict[str, Any]:
+#     """
+#     Refresh the Google OAuth2.0 access token using the provided refresh token.
 
-    Args:
-        refresh_token (str): The refresh token.
+#     Args:
+#         refresh_token (str): The refresh token.
 
-    Returns:
-        dict: Contains the new access token and expiration details.
+#     Returns:
+#         dict: Contains the new access token and expiration details.
 
-    Raises:
-        HTTPException: If the refresh request fails.
-    """
-    try:
-        response = await http_async_client.post(
-            settings.GOOGLE_TOKEN_URL,
-            data={
-                "client_id": settings.GOOGLE_CLIENT_ID,
-                "client_secret": settings.GOOGLE_CLIENT_SECRET,
-                "refresh_token": refresh_token,
-                "grant_type": "refresh_token",
-            },
-        )
-        response.raise_for_status()
-        token_data = response.json()
-        return token_data
-    except httpx.RequestError as e:
-        logger.error(f"Token refresh request error: {e}")
-        raise HTTPException(status_code=500, detail="Token refresh failed")
-    except httpx.HTTPStatusError as e:
-        logger.error(f"Token refresh HTTP error: {e.response.text}")
-        raise HTTPException(status_code=401, detail="Invalid refresh token")
+#     Raises:
+#         HTTPException: If the refresh request fails.
+#     """
+#     try:
+#         response = await http_async_client.post(
+#             settings.GOOGLE_TOKEN_URL,
+#             data={
+#                 "client_id": settings.GOOGLE_CLIENT_ID,
+#                 "client_secret": settings.GOOGLE_CLIENT_SECRET,
+#                 "refresh_token": refresh_token,
+#                 "grant_type": "refresh_token",
+#             },
+#         )
+#         response.raise_for_status()
+#         token_data = response.json()
+#         return token_data
+#     except httpx.RequestError as e:
+#         logger.error(f"Token refresh request error: {e}")
+#         raise HTTPException(status_code=500, detail="Token refresh failed")
+#     except httpx.HTTPStatusError as e:
+#         logger.error(f"Token refresh HTTP error: {e.response.text}")
+#         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
 async def fetch_calendar_list(access_token: str) -> Dict[str, Any]:
@@ -472,7 +472,9 @@ async def get_user_calendar_preferences(user_id: str) -> Dict[str, List[str]]:
         raise HTTPException(status_code=404, detail="Calendar preferences not found")
 
 
-async def update_user_calendar_preferences(user_id: str, selected_calendars: List[str]) -> Dict[str, str]:
+async def update_user_calendar_preferences(
+    user_id: str, selected_calendars: List[str]
+) -> Dict[str, str]:
     """
     Update the user's selected calendar preferences in the database.
 

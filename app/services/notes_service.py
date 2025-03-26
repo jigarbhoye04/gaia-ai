@@ -2,16 +2,19 @@
 Service module for handling note operations.
 """
 
-from typing import Any
+from typing import Any, Dict
 
-from fastapi import HTTPException, status
 from bson import ObjectId
-from app.models.notes_models import NoteModel, NoteResponse
-from app.db.collections import notes_collection
-from app.db.utils import serialize_document
-from app.db.db_redis import get_cache, set_cache, delete_cache
-from app.utils.notes import insert_note
+from fastapi import HTTPException, status
+
 from app.config.loggers import notes_logger as logger
+from app.db.collections import notes_collection
+from app.db.db_redis import delete_cache, get_cache, set_cache
+from app.db.utils import serialize_document
+from app.models.notes_models import NoteModel, NoteResponse
+from app.prompts.user.chat_prompts import NOTES_CONTEXT_TEMPLATE
+from app.utils.embedding_utils import search_notes_by_similarity
+from app.utils.notes_utils import insert_note
 
 
 async def create_note(note: NoteModel, user_id: str) -> dict:
@@ -178,3 +181,23 @@ async def create_note_service(note: NoteModel, user_id: str) -> NoteResponse:
         return NoteResponse(**created_note)
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to create note")
+
+
+async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Fetch similar notes and append their content to the last message.
+    """
+    last_message = context["last_message"]
+    query_text = context["query_text"]
+    user = context["user"]
+    notes = await search_notes_by_similarity(
+        input_text=query_text, user_id=user.get("user_id")
+    )
+    if notes:
+        last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
+            message=last_message["content"], notes="- ".join(notes)
+        )
+        context["notes_added"] = True
+    else:
+        context["notes_added"] = False
+    return context

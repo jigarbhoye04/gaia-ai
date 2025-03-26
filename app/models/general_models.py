@@ -19,12 +19,24 @@ class MessageDict(TypedDict):
     # mostRecent: bool
 
 
+class FileData(BaseModel):
+    fileId: str
+    url: str
+    filename: str
+    description: Optional[str] = None
+    type: Optional[str] = "file"
+    message: Optional[str] = "File uploaded successfully"
+
+
 class MessageRequestWithHistory(BaseModel):
     message: str
     conversation_id: str
     messages: List[MessageDict]
-    search_web: Optional[bool] = None
-    pageFetchURL: Optional[str] = None
+    search_web: Optional[bool] = False
+    deep_search: Optional[bool] = False
+    pageFetchURLs: Optional[List] = []
+    fileIds: Optional[List[str]] = []
+    fileData: Optional[List[FileData]] = []
 
 
 class MessageRequest(BaseModel):

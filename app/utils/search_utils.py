@@ -1,10 +1,11 @@
 import asyncio
+import re
 
 import html2text
 import httpx
+import tldextract
 from bs4 import BeautifulSoup
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from playwright.async_api import async_playwright
 
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
@@ -180,58 +181,119 @@ def format_results_for_llm(results, result_type="Search Results"):
     return formatted_output
 
 
-async def perform_fetch(url: str):
+def extract_urls_from_text(text: str) -> list[str]:
+    """Extracts valid URLs from text, even if missing http/https."""
+
+    url_pattern = r"(?:https?://)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(?:/[^\s]*)?"
+    possible_urls = re.findall(url_pattern, text)
+
+    valid_urls = []
+
+    for url in possible_urls:
+        extracted = tldextract.extract(url)
+        if extracted.suffix:
+            valid_urls.append(
+                url if url.startswith(("http://", "https://")) else f"http://{url}"
+            )
+
+    return valid_urls
+
+
+class FetchError(Exception):
+    """Custom exception for fetch-related errors."""
+
+    pass
+
+
+async def fetch_with_httpx(url: str) -> str:
+    """Fetches webpage content using httpx (fast for static pages)."""
     try:
-        # Send HTTP request and get the response
-        response = await http_async_client.get(url)
-        response.raise_for_status()  # Raise an exception for bad status codes
-
-        # Parse the HTML content using BeautifulSoup
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # Remove all script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-
-        # Get the text from the HTML content
-        text = soup.get_text()
-
-        # Break the text into lines and remove leading and trailing whitespace
-        lines = (line.strip() for line in text.splitlines())
-
-        # Break multi-headlines into a line each
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-
-        # Drop blank lines
-        text = "\n".join(chunk for chunk in chunks if chunk)
-
-        # Convert to lowercase
-        text = text.lower()
-
-        # Remove special characters and numbers
-        # text = re.sub(r"[^a-zA-Z\s]", "", text)
-
-        # Tokenize the text
-        tokens = word_tokenize(text)
-
-        # Remove stopwords
-        stop_words = set(stopwords.words("english"))
-        tokens = [word for word in tokens if word not in stop_words]
-
-        # Join the tokens back into a string
-        preprocessed_text = " ".join(tokens)
-
-        return preprocessed_text
-
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=10)
+            response.raise_for_status()
+            return response.text
     except httpx.HTTPStatusError as http_err:
-        error = f"HTTP error occurred: {http_err}"
-        return error
+        raise FetchError(f"HTTP error: {http_err}") from http_err
     except httpx.RequestError as req_err:
-        error = f"HTTP Request error occurred: {req_err}"
-        return error
+        raise FetchError(f"Request error: {req_err}") from req_err
     except Exception as e:
-        error = f"An unexpected error occurred: {e}"
-        return error
+        raise FetchError(f"Unexpected error: {type(e).__name__}: {e}") from e
+
+
+async def fetch_with_playwright(
+    url: str, wait_time: int = 3, wait_for: str = "body", use_stealth: bool = True
+) -> str:
+    """Fetches webpage content using Playwright with optimizations."""
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            )
+            page = await context.new_page()
+
+            async def intercept_requests(route):
+                if route.request.resource_type in [
+                    "image",
+                    "stylesheet",
+                    "font",
+                    "media",
+                    "xhr",
+                ]:
+                    await route.abort()
+                else:
+                    await route.continue_()
+
+            await page.route("**/*", intercept_requests)
+            await page.goto(url, wait_until="domcontentloaded", timeout=10000)
+            await page.wait_for_selector(wait_for, timeout=10000)
+            await page.wait_for_timeout(wait_time * 1000)
+
+            content = await page.content()
+            print(f"Fetched content from Playwright: {content[:500]}...")
+
+            await browser.close()
+            return content
+    except Exception as e:
+        raise FetchError(f"Playwright error: {type(e).__name__}: {e}") from e
+
+
+async def extract_text(html: str) -> str:
+    """Extracts and cleans text from HTML content."""
+    soup = BeautifulSoup(html, "html.parser")
+
+    # Remove script & style tags
+    for script in soup(["script", "style"]):
+        script.decompose()
+
+    # Extract visible text
+    text = soup.get_text()
+
+    # Clean and process text
+    lines = (line.strip() for line in text.splitlines())
+    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+    text = "\n".join(chunk for chunk in chunks if chunk)
+
+    # Optional: Remove special characters & tokenize
+    # text = re.sub(r"[^a-zA-Z\s]", "", text.lower())
+    # tokens = word_tokenize(text)
+    # stop_words = set(stopwords.words("english"))
+    # tokens = [word for word in tokens if word not in stop_words]
+
+    # return " ".join(tokens)
+    return text
+
+
+async def perform_fetch(url: str, use_playwright: bool = True) -> str:
+    """Fetches webpage content using either httpx or Playwright based on `use_playwright`."""
+    try:
+        html = await (
+            fetch_with_playwright(url) if use_playwright else fetch_with_httpx(url)
+        )
+        return await extract_text(html)
+    except FetchError as e:
+        return f"[ERROR] {e}"  # This ensures errors are still captured but handled properly
 
 
 async def fetch_and_convert_to_markdown(url: str):

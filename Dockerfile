@@ -11,6 +11,12 @@ WORKDIR /app
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
+# Install system dependencies required for Playwright browsers and Tesseract
+RUN apt update && apt install -y \
+    libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
+    libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
+    libgbm1 libasound2 curl unzip tesseract-ocr && rm -rf /var/lib/apt/lists/*
+
 # Copy dependency files first to leverage Docker caching
 COPY pyproject.toml ./
 
@@ -20,6 +26,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # ---- Builder Stage: Download Additional Resources ----
 FROM base AS builder
+
+# Install Playwright and download browsers
+RUN uv pip install --system playwright && playwright install --with-deps
 
 # Download necessary NLTK data
 RUN python -m nltk.downloader punkt stopwords punkt_tab
@@ -32,6 +41,9 @@ COPY . /app
 
 # Copy downloaded NLTK data from builder stage
 COPY --from=builder /root/nltk_data /root/nltk_data
+
+# Copy Playwright browsers from builder stage
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Expose application port
 EXPOSE 80

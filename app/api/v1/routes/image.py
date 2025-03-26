@@ -1,12 +1,16 @@
-# app/routers/image.py
 """
 Router module for image generation and image-to-text endpoints.
 """
 
-from fastapi import UploadFile, File, APIRouter, Form
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, File, Form, UploadFile
+from fastapi.responses import JSONResponse, StreamingResponse
+
 from app.models.general_models import MessageRequest
-from app.services.image_service import image_service
+from app.services.image_service import (
+    api_generate_image,
+    generate_image_stream,
+    image_to_text_endpoint,
+)
 
 router = APIRouter()
 
@@ -14,28 +18,27 @@ router = APIRouter()
 @router.post("/image/generate")
 async def image(request: MessageRequest):
     """
-    Endpoint to generate an image based on the provided prompt.
-
-    Args:
-        request (MessageRequest): The request body containing the user's message.
-
-    Returns:
-        dict: A dictionary containing the URL of the generated image and the improved prompt.
+    Generate an image based on the text prompt.
     """
-    return await image_service.api_generate_image(request.message)
+    response = await api_generate_image(request.message)
+    return JSONResponse(content=response)
 
 
 @router.post("/image/text")
 async def imagetotext(message: str = Form(...), file: UploadFile = File(...)):
     """
-    Endpoint to convert an uploaded image to text.
-
-    Args:
-        message (str): A message accompanying the image.
-        file (UploadFile): The uploaded image file.
-
-    Returns:
-        JSONResponse: A JSON response containing the extracted text from the image.
+    Extract text from an image using OCR.
     """
-    response = await image_service.image_to_text_endpoint(message, file)
+    response = await image_to_text_endpoint(message, file)
     return JSONResponse(content=response)
+
+
+@router.post("/image/generate/stream")
+async def image_stream(request: MessageRequest):
+    """
+    Generate an image with streaming response.
+    """
+    return StreamingResponse(
+        generate_image_stream(request.message),
+        media_type="text/event-stream",
+    )
