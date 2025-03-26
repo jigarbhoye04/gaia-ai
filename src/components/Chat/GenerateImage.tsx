@@ -16,6 +16,7 @@ import { useLoading } from "@/hooks/useLoading";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 import fetchDate from "@/utils/fetchDate";
+import { useLoadingText } from "@/hooks/useLoadingText";
 
 interface GenerateImageProps {
   openImageDialog: boolean;
@@ -28,6 +29,7 @@ export default function GenerateImage({
 }: GenerateImageProps) {
   const { updateConvoMessages, convoMessages } = useConversation();
   const { setIsLoading } = useLoading();
+  const { setLoadingText, resetLoadingText } = useLoadingText();
   const [imagePrompt, setImagePrompt] = useState("");
   const [isValid, setIsValid] = useState(true);
 
@@ -63,6 +65,7 @@ export default function GenerateImage({
   const handleSubmit = async () => {
     if (!isValid) return;
     setIsLoading(true);
+    setLoadingText("Generating Image...");
 
     try {
       const botMessageId = generateUniqueId();
@@ -77,7 +80,7 @@ export default function GenerateImage({
 
       const botLoadingMessage: MessageType = {
         type: "bot",
-        response: "Generating Image...",
+        response: "",
         date: fetchDate(),
         loading: true,
         imagePrompt,
@@ -108,6 +111,7 @@ export default function GenerateImage({
       console.error("Error generating image:", error);
     } finally {
       setIsLoading(false);
+      resetLoadingText();
     }
   };
 

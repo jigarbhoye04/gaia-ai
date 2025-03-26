@@ -4,20 +4,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLoading } from "@/hooks/useLoading";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight, Check } from "lucide-react";
 import React from "react";
 import {
   AttachmentIcon,
-  FileUploadIcon,
   GlobalSearchIcon,
   Image02Icon,
   InternetIcon,
   PlusSignIcon,
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
-import { useLoading } from "@/hooks/useLoading";
-import { Button } from "@heroui/button";
+import { Button } from "@/components/ui/button";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;
@@ -88,12 +87,10 @@ export default function SearchbarLeftDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          isIconOnly
-          radius="full"
-          variant="faded"
+          variant="outline"
+          size="icon"
           className={cn(
-            // "group relative h-8 w-8 rounded-full border-2 border-zinc-700 bg-zinc-900/50 p-0 hover:bg-zinc-800",
-            "",
+            "group relative h-10 w-10 rounded-full border-2 border-zinc-700 bg-zinc-900/50 p-0 hover:bg-zinc-800",
             isLoading && "cursor-wait",
           )}
           disabled={isLoading}

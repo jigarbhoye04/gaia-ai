@@ -76,7 +76,7 @@ export const useChatStream = () => {
 
       if (dataJson.status === "generate_image") {
         botMessageRef.current = buildBotResponse({
-          response: "Generating image...",
+          response: "",
           isImage: true,
           imagePrompt: userPromptRef.current,
           loading: true,
