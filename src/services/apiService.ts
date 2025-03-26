@@ -71,6 +71,7 @@ export const ApiService = {
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: Error) => void,
+    fileIds: string[] = [] // Add fileIds parameter with default empty array
   ) => {
     const controller = new AbortController();
 
@@ -90,6 +91,7 @@ export const ApiService = {
           search_web: enableSearch || false,
           deep_search: enableDeepSearch || false,
           pageFetchURLs,
+          fileIds, // Add fileIds to the request body
           messages: convoMessages
             .slice(-10)
             .filter(({ response }) => response.trim().length > 0)

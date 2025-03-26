@@ -37,6 +37,7 @@ export const useChatStream = () => {
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
     botMessageId: string,
+    fileIds: string[] = [] // Add fileIds parameter with default empty array
   ) => {
     accumulatedResponseRef.current = "";
     userPromptRef.current = inputText;
@@ -55,6 +56,7 @@ export const useChatStream = () => {
       pageFetchURLs,
       date: fetchDate(),
       loading: true,
+      fileIds: fileIds.length > 0 ? fileIds : undefined, // Include file IDs if provided
       ...overrides,
     });
 
@@ -202,6 +204,7 @@ export const useChatStream = () => {
       onMessage,
       onClose,
       onError,
+      fileIds // Pass fileIds to the API service
     );
   };
 };

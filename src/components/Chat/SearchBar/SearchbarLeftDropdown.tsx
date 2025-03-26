@@ -22,6 +22,7 @@ interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;
   openPageFetchModal: () => void;
   openGenerateImageModal: () => void;
+  openFileUploadModal: () => void;
   handleSelectionChange: (mode: SearchMode) => void;
 }
 
@@ -37,10 +38,10 @@ export default function SearchbarLeftDropdown({
   selectedMode,
   openPageFetchModal,
   openGenerateImageModal,
+  openFileUploadModal,
   handleSelectionChange,
 }: SearchbarLeftDropdownProps) {
   const { isLoading } = useLoading();
-
   const currentMode = React.useMemo(
     () => Array.from(selectedMode)[0],
     [selectedMode],
@@ -77,7 +78,7 @@ export default function SearchbarLeftDropdown({
       id: "upload_file",
       label: "Upload File",
       icon: <FileUploadIcon className="h-5 w-5 text-primary" />,
-      action: openGenerateImageModal,
+      action: openFileUploadModal,
       isMode: false,
     },
   ];
@@ -101,7 +102,6 @@ export default function SearchbarLeftDropdown({
           />
         </Button>
       </DropdownMenuTrigger>
-
       <DropdownMenuContent
         align="end"
         side="top"

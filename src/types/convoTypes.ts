@@ -19,7 +19,10 @@ export type MessageType = {
   subtype?: "image" | "pdf" | null; // Optional: Specifies the type of file if the message contains a file (e.g., image or PDF)
   // file?: File | null | string; // Optional: A file object associated with the message, if any. Or URL from created object
   filename?: string; // Optional: Name of the file if there's a file included
+  fileId?: string;
+  fileUrl?: string;
   pinned?: boolean;
+  fileType?: string
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;

@@ -7,6 +7,7 @@ interface SearchbarToolbarProps {
   selectedMode: Set<SearchMode>;
   openPageFetchModal: () => void;
   openGenerateImageModal: () => void;
+  openFileUploadModal: () => void;
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   handleSelectionChange: (mode: SearchMode) => void;
 }
@@ -15,6 +16,7 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
   selectedMode,
   openPageFetchModal,
   openGenerateImageModal,
+  openFileUploadModal,
   handleFormSubmit,
   handleSelectionChange,
 }) => {
@@ -25,6 +27,7 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
           selectedMode={selectedMode}
           openPageFetchModal={openPageFetchModal}
           openGenerateImageModal={openGenerateImageModal}
+          openFileUploadModal={openFileUploadModal}
           handleSelectionChange={handleSelectionChange}
         />
       </div>
