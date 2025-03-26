@@ -16,45 +16,10 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     isImage = false,
     imageSrc = null,
     imagePrompt,
-    filename,
     message_id,
     pinned,
     date,
   } = props;
-
-  const [fileScanningText, setFileScanningText] = useState(
-    "Uploading Document...",
-  );
-
-  // Update file scanning text while the document is processing
-  useEffect(() => {
-    if (loading && !!filename) {
-      const updateFileScanningText = async () => {
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        setFileScanningText("Processing File...Please Wait");
-
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        setFileScanningText("Document analysis in progress...");
-
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        setFileScanningText("Converting file format...");
-
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-        setFileScanningText("Extracting text from document...");
-
-        await new Promise((resolve) => setTimeout(resolve, 4000));
-        setFileScanningText("Analyzing document content...");
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        setFileScanningText("Processing document... Please wait...");
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        setFileScanningText("Document upload complete, processing metadata...");
-      };
-
-      updateFileScanningText();
-    }
-  }, [filename, loading]);
 
   // Memoized actions container to avoid unnecessary re-renders
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -73,13 +38,11 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     }
   }, []);
 
-  // Memoize rendered component based on isImage prop
   const renderedComponent = useMemo(() => {
-    if (isImage) {
-      return <ImageBubble {...props} />;
-    }
-    return <TextBubble {...props} fileScanningText={fileScanningText} />;
-  }, [isImage, fileScanningText, props]);
+    if (isImage) return <ImageBubble {...props} />;
+
+    return <TextBubble {...props} />;
+  }, [isImage, props]);
 
   return (
     (!!text || loading || isImage) && (

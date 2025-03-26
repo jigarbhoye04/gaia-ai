@@ -7,39 +7,12 @@ import ChatBubbleFilePreview from "./ChatBubbleFilePreview";
 
 export default function ChatBubbleUser({
   text,
-  subtype = null,
-  filename,
   date,
   searchWeb = false,
   pageFetchURLs,
   message_id,
   fileData = [],
 }: ChatBubbleUserProps) {
-  // const hasLegacyFiles =
-  //   fileIds &&
-  //   fileIds.length > 0 &&
-  //   fileUrls &&
-  //   fileUrls.length === fileIds.length;
-  // const displayFiles: ChatFileType[] =
-  //   files.length > 0
-  //     ? files
-  //     : hasLegacyFiles
-  //       ? fileIds.map((id, index) => ({
-  //           id,
-  //           url: fileUrls[index],
-  //           name: filename || `file-${index + 1}`,
-  //           type: fileUrls[index].endsWith(".pdf")
-  //             ? "application/pdf"
-  //             : fileUrls[index].match(/\.(jpe?g|png|gif|webp)$/i)
-  //               ? "image/jpeg"
-  //               : "application/octet-stream",
-  //         }))
-  //       : [];
-
-  // Display legacy filename if no files but filename exists
-  // const showLegacyFile = !displayFiles.length && filename;
-
-  // Only render the component if there's content to display
   const hasContent =
     !!text ||
     fileData.length > 0 ||

@@ -1,20 +1,19 @@
+import { useLoading } from "@/hooks/useLoading";
+import { useSendMessage } from "@/hooks/useSendMessage";
 import { useParams } from "next/navigation";
 import React, {
   useEffect,
+  useImperativeHandle,
   useMemo,
   useState,
-  useRef,
-  useImperativeHandle,
 } from "react";
 import { toast } from "sonner";
-import { useLoading } from "@/hooks/useLoading";
-import { useSendMessage } from "@/hooks/useSendMessage";
+import FileUpload from "../FileUpload";
+import GenerateImage from "../GenerateImage";
 import FetchPageModal from "./FetchPageModal";
+import FilePreview, { UploadedFilePreview } from "./FilePreview";
 import SearchbarInput from "./SearchbarInput";
 import SearchbarToolbar from "./SearchbarToolbar";
-import GenerateImage from "../GenerateImage";
-import FileUpload from "../FileUpload";
-import FilePreview, { UploadedFilePreview } from "./FilePreview";
 
 // Define an interface for the complete file data
 export interface FileData {
@@ -66,7 +65,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   const [uploadedFileData, setUploadedFileData] = useState<FileData[]>([]);
   const [pendingDroppedFiles, setPendingDroppedFiles] = useState<File[]>([]);
   const sendMessage = useSendMessage(convoIdParam ?? null);
-  const { setIsLoading } = useLoading();
+  const { isLoading, setIsLoading } = useLoading();
   const currentMode = useMemo(
     () => Array.from(selectedMode)[0],
     [selectedMode],
@@ -156,7 +155,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
     if (event.key === "Enter" && event.shiftKey) {
       event.preventDefault();
       setSearchbarText((text) => `${text}\n`);
-    } else if (event.key === "Enter") {
+    } else if (event.key === "Enter" && !isLoading) {
       event.preventDefault();
       handleFormSubmit();
     }

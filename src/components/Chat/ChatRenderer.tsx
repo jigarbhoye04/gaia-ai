@@ -103,7 +103,6 @@ export default function ChatRenderer() {
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
-              filename={message.filename}
               imagePrompt={message.imagePrompt}
               imageSrc={message.imageUrl}
               improvedImagePrompt={message.improvedImagePrompt}
@@ -127,11 +126,9 @@ export default function ChatRenderer() {
           <ChatBubbleUser
             key={index}
             date={message.date}
-            filename={message.filename}
             message_id={message.message_id}
             pageFetchURLs={message.pageFetchURLs}
             searchWeb={message.searchWeb}
-            subtype={message.subtype || null}
             text={message.response}
             fileData={message.fileData}
             // files={prepareFileData(message)}
