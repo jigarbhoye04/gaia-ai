@@ -7,9 +7,9 @@ from googleapiclient.errors import HttpError
 from app.config.loggers import celery_logger as logger
 from app.db.collections import mail_collection
 from app.prompts.user.mail_prompts import EMAIL_SUMMARIZER_SHORT
-from app.services.llm_service import do_prompt_no_stream_sync
+from app.utils.llm_utils import do_prompt_no_stream_sync
 from app.services.mail_service import fetch_detailed_messages, get_gmail_service
-from app.services.text_service import classify_email, remove_stopwords
+from app.utils.text_utils import classify_email, remove_stopwords
 from app.utils.general_utils import transform_gmail_message
 from app.utils.profiler_utils import profile_celery_task
 

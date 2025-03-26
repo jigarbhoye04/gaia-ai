@@ -8,7 +8,12 @@ from fastapi.websockets import WebSocketState
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import goals_logger as logger
 from app.db.collections import goals_collection
-from app.models.goals_models import GoalCreate, GoalResponse, RoadmapUnavailableResponse, UpdateNodeRequest
+from app.models.goals_models import (
+    GoalCreate,
+    GoalResponse,
+    RoadmapUnavailableResponse,
+    UpdateNodeRequest,
+)
 from app.services.goals_service import (
     create_goal_service,
     delete_goal_service,

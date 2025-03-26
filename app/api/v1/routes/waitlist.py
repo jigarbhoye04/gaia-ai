@@ -6,7 +6,10 @@ This module contains routes related to the waitlist functionality of the GAIA AP
 
 from fastapi import APIRouter
 from app.models.general_models import WaitlistItem
-from app.services.waitlist_service import get_waitlist_members_service, waitlist_signup_service
+from app.services.waitlist_service import (
+    get_waitlist_members_service,
+    waitlist_signup_service,
+)
 
 router = APIRouter()
 

@@ -1,4 +1,4 @@
-from app.utils.logging_util import get_logger
+from app.utils.logging_utils import get_logger
 from celery.utils.log import get_task_logger
 
 

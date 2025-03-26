@@ -1,6 +1,6 @@
 from functools import lru_cache
 from fastapi import HTTPException
-from app.db.collections import documents_collection, notes_collection
+from app.db.collections import documents_collection, notes_collection, files_collection
 from sentence_transformers import SentenceTransformer
 
 
@@ -96,6 +96,66 @@ async def query_documents(query_text, conversation_id, user_id, top_k=5):
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def query_files(query_text, user_id, conversation_id=None, top_k=5):
+    """
+    Query files using vector similarity search.
+
+    This function searches for files with embeddings similar to the query text.
+    It can optionally filter by conversation_id.
+
+    Args:
+        query_text (str): The query text to search for
+        user_id (str): The user ID to filter by
+        conversation_id (str, optional): The conversation ID to filter by
+        top_k (int): Maximum number of results to return
+
+    Returns:
+        list: Files matching the query with similarity scores
+    """
+    try:
+        # Generate embedding for the query text
+        query_embedding = generate_embedding(query_text)
+
+        # Build match criteria
+        match_criteria = {"user_id": user_id}
+        if conversation_id:
+            match_criteria["conversation_id"] = conversation_id
+
+        # MongoDB aggregation pipeline for vector search of files
+        pipeline = [
+            {
+                "$vectorSearch": {
+                    "index": "file_vector",  # Name of your vector index for files
+                    "path": "embedding",  # Path where embeddings are stored
+                    "queryVector": query_embedding,  # Embedding of the input query
+                    "numCandidates": 100,
+                    "limit": top_k,
+                }
+            },
+            {"$match": match_criteria},
+            {
+                "$project": {
+                    "_id": 0,
+                    "file_id": 1,
+                    "filename": 1,
+                    "url": 1,
+                    "content_type": 1,
+                    "description": 1,
+                    "score": {"$meta": "vectorSearchScore"},
+                }
+            },
+        ]
+
+        results = await files_collection.aggregate(pipeline).to_list(length=top_k)
+
+        # Filter results with a minimum threshold
+        filtered_results = [file for file in results if file.get("score", 0) >= 0.6]
+
+        return filtered_results
+    except Exception:
+        return []
 
 
 def generate_embedding(text):

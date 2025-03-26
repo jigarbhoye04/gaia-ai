@@ -11,10 +11,10 @@ from sumy.summarizers.lsa import LsaSummarizer
 from app.config.loggers import general_logger as logger
 from app.config.settings import settings
 
-# Initialize httpx client for API requests
+
 http_async_client = httpx.AsyncClient()
 
-# Global variable to store the classifier
+
 _zero_shot_classifier = None
 
 
@@ -43,7 +43,7 @@ def get_zero_shot_classifier():
             _zero_shot_classifier = pipeline(
                 "zero-shot-classification",
                 model=settings.HUGGINGFACE_ZSC_MODEL,
-                device=-1,  # CPU
+                device=-1,
             )
             logger.info("Zero-shot classification model loaded successfully")
         except Exception as e:
@@ -86,9 +86,7 @@ async def _classify_text_core(
         return {"error": "Invalid input or candidate labels."}
 
     try:
-        # Check if we should use the Hugging Face API
         if settings.USE_HUGGINGFACE_API:
-            # Use the Hugging Face Router API URL as specified
             api_url = (
                 f"{settings.HUGGINGFACE_ROUTER_URL}{settings.HUGGINGFACE_ZSC_MODEL}"
             )
@@ -106,16 +104,13 @@ async def _classify_text_core(
             result = response.json()
             label_scores = dict(zip(result["labels"], result["scores"]))
         else:
-            # Use the local model
             classifier = get_zero_shot_classifier()
             if classifier is None:
                 raise RuntimeError("Failed to get zero-shot classifier")
 
-            # Run classification
             result = classifier(user_input, candidate_labels, multi_label=False)
             label_scores = dict(zip(result["labels"], result["scores"]))
 
-        # Process results (same for both methods)
         highest_label = max(label_scores, key=label_scores.get)
         return {
             "label_scores": label_scores,

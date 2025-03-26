@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import EmailRequest, EmailSummaryRequest, SendEmailRequest
 from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
-from app.services.llm_service import do_prompt_no_stream
+from app.utils.llm_utils import do_prompt_no_stream
 from app.services.mail_service import (
     fetch_detailed_messages,
     get_gmail_service,

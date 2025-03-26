@@ -2,6 +2,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
+
 class BlogPostBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -11,8 +12,10 @@ class BlogPostBase(BaseModel):
     category: Optional[str] = None
     content: str
 
+
 class BlogPostCreate(BlogPostBase):
     slug: str
+
 
 class BlogPostUpdate(BaseModel):
     title: Optional[str]
@@ -22,6 +25,7 @@ class BlogPostUpdate(BaseModel):
     readTime: Optional[str]
     category: Optional[str]
     content: Optional[str]
+
 
 class BlogPost(BlogPostBase):
     slug: str

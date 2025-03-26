@@ -233,7 +233,6 @@ async def fetch_with_playwright(
             )
             page = await context.new_page()
 
-
             async def intercept_requests(route):
                 if route.request.resource_type in [
                     "image",

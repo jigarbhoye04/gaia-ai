@@ -1,6 +1,6 @@
 import json
 from typing import Any
-from app.services.llm_service import do_prompt_no_stream
+from app.utils.llm_utils import do_prompt_no_stream
 from app.prompts.system.notes_prompts import MEMORY_CREATOR
 
 
@@ -75,3 +75,16 @@ async def should_create_memory(
 
     except Exception:
         return (False, None, None)
+
+
+async def store_note(query_text: str, user_id: str) -> None:
+    """
+    Store a note if the query meets memory creation criteria.
+    """
+    is_memory, plaintext, content = await should_create_memory(query_text)
+    if is_memory and content and plaintext:
+        await insert_note(
+            note=NoteModel(plaintext=plaintext, content=content),
+            user_id=user_id,
+            auto_created=True,
+        )

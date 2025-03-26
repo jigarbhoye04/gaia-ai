@@ -6,10 +6,12 @@ from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
 
 router = APIRouter()
 
+
 @router.get("/blogs", response_model=List[BlogPost])
 async def get_blogs():
     blogs = await blog_collection.find().to_list(100)
     return blogs
+
 
 @router.get("/blogs/{slug}", response_model=BlogPost)
 async def get_blog(slug: str):
@@ -18,12 +20,14 @@ async def get_blog(slug: str):
         raise HTTPException(status_code=404, detail="Blog post not found")
     return blog
 
+
 @router.post("/blogs", response_model=BlogPost, status_code=status.HTTP_201_CREATED)
 async def create_blog(blog: BlogPostCreate):
     blog_data = jsonable_encoder(blog)
     result = await blog_collection.insert_one(blog_data)
     created_blog = await blog_collection.find_one({"_id": result.inserted_id})
     return created_blog
+
 
 @router.put("/blogs/{slug}", response_model=BlogPost)
 async def update_blog(slug: str, blog: BlogPostUpdate):
@@ -36,6 +40,7 @@ async def update_blog(slug: str, blog: BlogPostUpdate):
     if not updated_blog:
         raise HTTPException(status_code=404, detail="Blog post not found")
     return updated_blog
+
 
 @router.delete("/blogs/{slug}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_blog(slug: str):

@@ -5,7 +5,7 @@ from celery.signals import worker_init, worker_ready
 
 from app.config.loggers import celery_logger as logger
 from app.config.settings import settings
-from app.services.text_service import get_zero_shot_classifier
+from app.utils.text_utils import get_zero_shot_classifier
 
 broker_url = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//")
 result_backend = os.getenv("CELERY_RESULT_BACKEND", "rpc://")

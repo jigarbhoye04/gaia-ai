@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 
-from app.models.calendar_models import EventCreateRequest, CalendarPreferencesUpdateRequest
+from app.models.calendar_models import (
+    EventCreateRequest,
+    CalendarPreferencesUpdateRequest,
+)
 from app.services.calendar_service import (
     create_calendar_event,
     get_all_calendar_events,
