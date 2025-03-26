@@ -7,6 +7,7 @@ import { useConversation } from "@/hooks/useConversation";
 import { useConversationList } from "@/hooks/useConversationList";
 import { useLoading } from "@/hooks/useLoading";
 import { MessageType } from "@/types/convoTypes";
+import { ChatFileType } from "@/types/chatBubbleTypes";
 
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
@@ -61,17 +62,15 @@ export default function ChatRenderer() {
 
   if (!!convoMessages && convoMessages?.length === 0) {
     return (
-      <div className="flex flex-1 items-start justify-center">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <Image
-            alt="GAIA Logo"
-            src={"/branding/logo.webp"}
-            width={150}
-            height={150}
-            className="bobbing hover:translate-y-3"
-          />
-          <StarterText />
-        </div>
+      <div className="flex flex-1 flex-col items-center justify-center gap-2">
+        <Image
+          alt="GAIA Logo"
+          src={"/branding/logo.webp"}
+          width={150}
+          height={150}
+          className="bobbing hover:translate-y-3"
+        />
+        <StarterText />
       </div>
     );
   }
@@ -112,7 +111,7 @@ export default function ChatRenderer() {
               isImage={message.isImage}
               loading={message.loading}
               message_id={message.message_id}
-              pageFetchURL={message.pageFetchURL}
+              pageFetchURLs={message.pageFetchURLs}
               pinned={message.pinned}
               searchWeb={message.searchWeb}
               setImageData={setImageData}
@@ -130,10 +129,12 @@ export default function ChatRenderer() {
             date={message.date}
             filename={message.filename}
             message_id={message.message_id}
-            pageFetchURL={message.pageFetchURL}
+            pageFetchURLs={message.pageFetchURLs}
             searchWeb={message.searchWeb}
             subtype={message.subtype || null}
             text={message.response}
+            fileData={message.fileData}
+            // files={prepareFileData(message)}
           />
         ),
       )}
@@ -156,4 +157,17 @@ export default function ChatRenderer() {
       )}
     </>
   );
+}
+
+/**
+ * Helper function to determine file type from URL
+ */
+function getFileTypeFromUrl(url: string): string {
+  if (url.match(/\.(jpe?g|png|gif|webp)$/i)) return "image/jpeg";
+  if (url.match(/\.(pdf)$/i)) return "application/pdf";
+  if (url.match(/\.(docx?)$/i)) return "application/msword";
+  if (url.match(/\.(xlsx?)$/i)) return "application/excel";
+  if (url.match(/\.(pptx?)$/i)) return "application/powerpoint";
+  if (url.match(/\.(txt|md)$/i)) return "text/plain";
+  return "application/octet-stream";
 }

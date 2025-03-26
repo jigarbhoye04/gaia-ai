@@ -1,5 +1,9 @@
 // Define the structure for each message in the conversation
 // This type represents an individual message, including details about whether it's from the user or bot,
+
+import { UploadedFilePreview } from "@/components/Chat/SearchBar/FilePreview";
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
+
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
 export type MessageType = {
   message_id: string;
@@ -20,9 +24,9 @@ export type MessageType = {
   // file?: File | null | string; // Optional: A file object associated with the message, if any. Or URL from created object
   filename?: string; // Optional: Name of the file if there's a file included
   fileIds?: string[];
-  fileUrl?: string;
+  // fileUrl?: string;
   pinned?: boolean;
-  fileType?: string
+  fileData?: FileData[]
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;

@@ -19,6 +19,8 @@ interface FileUploadProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onFilesUploaded?: (files: UploadedFilePreview[]) => void;
+  initialFiles?: File[];
+  isPastedFile?: boolean;
 }
 
 interface FileWithPreview {
@@ -46,6 +48,8 @@ export default function FileUpload({
   open,
   onOpenChange,
   onFilesUploaded,
+  initialFiles = [],
+  isPastedFile = false,
 }: FileUploadProps) {
   const { setIsLoading } = useLoading();
 
@@ -53,13 +57,48 @@ export default function FileUpload({
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasProcessedInitialFiles = useRef(false);
 
-  // Auto-open file selector when modal opens
+  // Process initial files when the modal opens
   useEffect(() => {
-    if (open && files.length === 0) {
+    if (open && initialFiles.length > 0 && !hasProcessedInitialFiles.current) {
+      // Process the initialFiles
+      if (initialFiles.length + files.length > MAX_FILES) {
+        toast.error(`You can upload a maximum of ${MAX_FILES} files at once`);
+        return;
+      }
+
+      const newFilesWithPreview = initialFiles.map((file) => {
+        const error = validateFile(file);
+        return {
+          file,
+          previewUrl: file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : null,
+          progress: 0,
+          error,
+        };
+      });
+
+      setFiles((prev) => [...prev, ...newFilesWithPreview]);
+      hasProcessedInitialFiles.current = true;
+    } else if (!open) {
+      // Reset flag when modal closes
+      hasProcessedInitialFiles.current = false;
+    }
+  }, [open, initialFiles, files.length]);
+
+  // Auto-open file selector when modal opens and no files
+  useEffect(() => {
+    if (
+      open &&
+      files.length === 0 &&
+      initialFiles.length === 0 &&
+      !isPastedFile
+    ) {
       setTimeout(() => fileInputRef.current?.click(), 100);
     }
-  }, [open, files.length]);
+  }, [open, files.length, initialFiles.length, isPastedFile]);
 
   const validateFile = (file: File): string | undefined => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
@@ -204,13 +243,15 @@ export default function FileUpload({
       // Wait for all uploads to complete
       const results = await Promise.all(uploadPromises);
 
-      // Create the final uploaded file objects
+      // Create the final uploaded file objects with description and message from the backend
       const uploadedFiles: UploadedFilePreview[] = results.map(
         ({ response, fileInfo, tempId }) => ({
           id: response.fileId,
           url: response.url,
           name: fileInfo.name,
           type: fileInfo.type,
+          description: response.description || `File: ${fileInfo.name}`, // Use description from backend response
+          message: response.message || "File uploaded successfully", // Use message from backend response
           isUploading: false,
           tempId, // Include tempId for mapping
         }),

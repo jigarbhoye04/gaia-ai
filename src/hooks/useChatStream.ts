@@ -9,6 +9,7 @@ import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 /**
  * Custom hook to handle chat streaming via SSE (Server-Sent Events).
@@ -37,10 +38,13 @@ export const useChatStream = () => {
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
     botMessageId: string,
-    fileIds: string[] = [] // Add fileIds parameter with default empty array
+    fileData: FileData[] = [] // Updated to accept FileData instead of fileIds
   ) => {
     accumulatedResponseRef.current = "";
     userPromptRef.current = inputText;
+
+    // Extract fileIds from fileData for backward compatibility
+    const fileIds = fileData.map(file => file.fileId);
 
     /**
      * Builds a bot response object with optional overrides.
@@ -56,7 +60,8 @@ export const useChatStream = () => {
       pageFetchURLs,
       date: fetchDate(),
       loading: true,
-      fileIds: fileIds.length > 0 ? fileIds : undefined, // Include file IDs if provided
+      fileIds: fileIds.length > 0 ? fileIds : undefined,
+      fileData: fileData.length > 0 ? fileData : undefined,
       ...overrides,
     });
 
@@ -204,7 +209,7 @@ export const useChatStream = () => {
       onMessage,
       onClose,
       onError,
-      fileIds // Pass fileIds to the API service
+      fileData // Pass the complete fileData to the API service
     );
   };
 };

@@ -20,6 +20,8 @@ export interface UploadedFilePreview {
   url: string;
   name: string;
   type: string;
+  description?: string; // Add description field from backend
+  message?: string; // Add message field from backend
   isUploading?: boolean;
   tempId?: string;
 }
@@ -29,122 +31,120 @@ interface FilePreviewProps {
   onRemove: (id: string) => void;
 }
 
+export const getFileIcon = (fileType: string, fileName: string) => {
+  const extension = getFileExtension(fileName).toLowerCase();
+
+  // Image files
+  if (fileType.startsWith("image/"))
+    return <FileImage className="h-6 w-6 text-zinc-800" />;
+
+  // Document files
+  if (fileType === "application/pdf" || extension === "pdf")
+    return <Pdf02Icon className="h-6 w-6 text-zinc-800" />;
+
+  if (
+    ["doc", "docx", "odt", "rtf"].includes(extension) ||
+    fileType.includes("wordprocessing") ||
+    fileType.includes("msword")
+  )
+    return <FileText className="h-6 w-6 text-zinc-800" />;
+
+  // Spreadsheet files
+  if (
+    ["xls", "xlsx", "csv", "ods"].includes(extension) ||
+    fileType.includes("spreadsheet") ||
+    fileType.includes("excel")
+  )
+    return <FileSpreadsheet className="h-6 w-6 text-zinc-800" />;
+
+  // Code/text files
+  if (["txt", "md"].includes(extension) || fileType === "text/plain")
+    return <FileText className="h-6 w-6 text-zinc-800" />;
+
+  if (
+    [
+      "js",
+      "ts",
+      "jsx",
+      "tsx",
+      "py",
+      "java",
+      "c",
+      "cpp",
+      "html",
+      "css",
+    ].includes(extension) ||
+    fileType.includes("javascript") ||
+    fileType.includes("typescript")
+  )
+    return <FileCode className="h-6 w-6 text-yellow-400" />;
+
+  if (["json", "xml", "yaml", "yml"].includes(extension))
+    return <FileJson className="h-6 w-6 text-zinc-400" />;
+
+  // Media files
+  if (
+    fileType.startsWith("video/") ||
+    ["mp4", "avi", "mov", "mkv"].includes(extension)
+  )
+    return <FileVideo className="h-6 w-6 text-purple-400" />;
+
+  if (
+    fileType.startsWith("audio/") ||
+    ["mp3", "wav", "ogg"].includes(extension)
+  )
+    return <FileAudio className="h-6 w-6 text-pink-400" />;
+
+  // Archive files
+  if (
+    ["zip", "rar", "tar", "gz", "7z"].includes(extension) ||
+    fileType.includes("archive") ||
+    fileType.includes("compressed")
+  )
+    return <FileArchive className="h-6 w-6 text-amber-400" />;
+
+  // Default fallback
+  return <File className="h-6 w-6 text-zinc-400" />;
+};
+
+export const getFileExtension = (fileName: string) => {
+  const parts = fileName.split(".");
+  return parts.length > 1 ? parts[parts.length - 1] : "";
+};
+
+// Format the file type more clearly
+export const getFormattedFileType = (fileType: string, fileName: string) => {
+  const ext = getFileExtension(fileName).toUpperCase();
+
+  // Handle common document types with cleaner labels
+  if (fileType.includes("msword") || fileType.includes("wordprocessing"))
+    return "DOC";
+
+  if (fileType.includes("spreadsheet") || fileType.includes("excel"))
+    return "SPREADSHEET";
+
+  // Extract meaningful part from MIME type or use extension
+  const typePart = fileType.split("/")[1];
+
+  if (!typePart || typePart === "octet-stream") {
+    return ext || "FILE";
+  }
+
+  // Cleanup and shorten common verbose MIME types
+  const cleanType = typePart
+    .replace("vnd.openxmlformats-officedocument.", "")
+    .replace("vnd.ms-", "")
+    .replace("x-", "")
+    .replace("document.", "")
+    .replace("presentation.", "")
+    .replace("application.", "")
+    .split(".")[0];
+
+  return cleanType.toUpperCase().substring(0, 8);
+};
+
 const FilePreview: React.FC<FilePreviewProps> = ({ files, onRemove }) => {
   if (files.length === 0) return null;
-
-  // Enhanced file icon detection
-  const getFileIcon = (fileType: string, fileName: string) => {
-    const extension = getFileExtension(fileName).toLowerCase();
-
-    // Image files
-    if (fileType.startsWith("image/"))
-      return <FileImage className="h-6 w-6 text-zinc-800" />;
-
-    // Document files
-    if (fileType === "application/pdf" || extension === "pdf")
-      return <Pdf02Icon className="h-6 w-6 text-zinc-800" />;
-
-    if (
-      ["doc", "docx", "odt", "rtf"].includes(extension) ||
-      fileType.includes("wordprocessing") ||
-      fileType.includes("msword")
-    )
-      return <FileText className="h-6 w-6 text-zinc-800" />;
-
-    // Spreadsheet files
-    if (
-      ["xls", "xlsx", "csv", "ods"].includes(extension) ||
-      fileType.includes("spreadsheet") ||
-      fileType.includes("excel")
-    )
-      return <FileSpreadsheet className="h-6 w-6 text-zinc-800" />;
-
-    // Code/text files
-    if (["txt", "md"].includes(extension) || fileType === "text/plain")
-      return <FileText className="h-6 w-6 text-zinc-800" />;
-
-    if (
-      [
-        "js",
-        "ts",
-        "jsx",
-        "tsx",
-        "py",
-        "java",
-        "c",
-        "cpp",
-        "html",
-        "css",
-      ].includes(extension) ||
-      fileType.includes("javascript") ||
-      fileType.includes("typescript")
-    )
-      return <FileCode className="h-6 w-6 text-yellow-400" />;
-
-    if (["json", "xml", "yaml", "yml"].includes(extension))
-      return <FileJson className="h-6 w-6 text-zinc-400" />;
-
-    // Media files
-    if (
-      fileType.startsWith("video/") ||
-      ["mp4", "avi", "mov", "mkv"].includes(extension)
-    )
-      return <FileVideo className="h-6 w-6 text-purple-400" />;
-
-    if (
-      fileType.startsWith("audio/") ||
-      ["mp3", "wav", "ogg"].includes(extension)
-    )
-      return <FileAudio className="h-6 w-6 text-pink-400" />;
-
-    // Archive files
-    if (
-      ["zip", "rar", "tar", "gz", "7z"].includes(extension) ||
-      fileType.includes("archive") ||
-      fileType.includes("compressed")
-    )
-      return <FileArchive className="h-6 w-6 text-amber-400" />;
-
-    // Default fallback
-    return <File className="h-6 w-6 text-zinc-400" />;
-  };
-
-  // Get a clean file extension
-  const getFileExtension = (fileName: string) => {
-    const parts = fileName.split(".");
-    return parts.length > 1 ? parts[parts.length - 1] : "";
-  };
-
-  // Format the file type more clearly
-  const getFormattedFileType = (fileType: string, fileName: string) => {
-    const ext = getFileExtension(fileName).toUpperCase();
-
-    // Handle common document types with cleaner labels
-    if (fileType.includes("msword") || fileType.includes("wordprocessing"))
-      return "DOC";
-
-    if (fileType.includes("spreadsheet") || fileType.includes("excel"))
-      return "SPREADSHEET";
-
-    // Extract meaningful part from MIME type or use extension
-    const typePart = fileType.split("/")[1];
-
-    if (!typePart || typePart === "octet-stream") {
-      return ext || "FILE";
-    }
-
-    // Cleanup and shorten common verbose MIME types
-    const cleanType = typePart
-      .replace("vnd.openxmlformats-officedocument.", "")
-      .replace("vnd.ms-", "")
-      .replace("x-", "")
-      .replace("document.", "")
-      .replace("presentation.", "")
-      .replace("application.", "")
-      .split(".")[0];
-
-    return cleanType.toUpperCase().substring(0, 8);
-  };
 
   return (
     <div className="mb-2 flex w-full flex-col gap-2 rounded-t-xl px-3 py-2">

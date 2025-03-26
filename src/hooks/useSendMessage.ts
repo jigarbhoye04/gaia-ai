@@ -12,7 +12,7 @@ import { createNewConversation } from "@/utils/chatUtils";
 import fetchDate from "@/utils/fetchDate";
 
 import { useLoading } from "./useLoading";
-import { SearchMode } from "@/components/Chat/SearchBar/MainSearchbar";
+import { FileData, SearchMode } from "@/components/Chat/SearchBar/MainSearchbar";
 
 export const useSendMessage = (convoIdParam: string | null) => {
   const router = useRouter();
@@ -26,13 +26,16 @@ export const useSendMessage = (convoIdParam: string | null) => {
     inputText: string,
     currentMode: SearchMode,
     pageFetchURLs: string[] = [],
-    fileIds: string[] = []
+    fileData: FileData[] = [] // Update parameter to accept FileData objects
   ) => {
 
     const enableSearch = currentMode === "web_search"
     const enableDeepSearch = currentMode === "deep_search"
 
     const botMessageId = String(ObjectID());
+
+    // Extract just the file IDs for the message
+    const fileIds = fileData.map(file => file.fileId);
 
     const currentMessage: MessageType = {
       type: "user",
@@ -43,6 +46,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       date: fetchDate(),
       message_id: String(ObjectID()),
       fileIds: fileIds.length > 0 ? fileIds : undefined, // Include file IDs if provided
+      fileData: fileData.length > 0 ? fileData : undefined, // Store the complete file data
     };
 
     dispatch(addMessage(currentMessage));
@@ -65,7 +69,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       enableDeepSearch,
       pageFetchURLs,
       botMessageId,
-      fileIds // Pass file IDs to chat stream
+      fileData // Pass complete file data to chat stream
     );
   };
 };

@@ -1,6 +1,8 @@
 import React, { Dispatch } from "react";
 
 import { CalendarOptions, SearchResults } from "./convoTypes";
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
+
 
 export interface ChatBubbleUserProps {
   message_id: string;
@@ -9,9 +11,13 @@ export interface ChatBubbleUserProps {
   file?: File | null | string;
   filename?: string;
   searchWeb?: boolean;
-  pageFetchURL?: string;
+  pageFetchURLs?: string[];
   date?: string;
   pinned?: boolean;
+  // Replace fileIds and fileUrls with a single files array
+  // Keep these for backward compatibility (deprecated)
+  fileIds?: string[];
+  fileData?: FileData[];
 }
 
 interface SetImageDataType {
@@ -35,7 +41,7 @@ export interface ChatBubbleBotProps {
   // userinputType?: string;
   setOpenImage: React.Dispatch<React.SetStateAction<boolean>>;
   setImageData: Dispatch<React.SetStateAction<SetImageDataType>>;
-  pageFetchURL?: string;
+  pageFetchURLs?: string[];
   filename?: string;
   pinned?: boolean;
   // setImageSrc: React.Dispatch<React.SetStateAction<string>>;

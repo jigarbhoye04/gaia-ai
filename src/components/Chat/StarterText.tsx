@@ -126,7 +126,7 @@ const badges = [
 export default function StarterText() {
   return (
     <>
-      <div className="my-4 inline-flex flex-1 grow flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-4xl">
+      <div className="my-4 inline-flex flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-4xl">
         Hey!
         <Image
           alt="Waving Hand"

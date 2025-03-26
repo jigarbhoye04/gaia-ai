@@ -33,8 +33,8 @@ const SearchbarInput: React.FC<SearchbarInputProps> = ({
             " px-3 data-[hover=true]:bg-zinc-800 group-data-[focus-visible=true]:ring-zinc-800 group-data-[focus-visible=true]:ring-offset-0",
           innerWrapper: `${currentHeight > 24 ? "items-end" : "items-center"}`,
         }}
-        disabled={isLoading}
-        isInvalid={searchbarText.length > 10000}
+        // disabled={isLoading}
+        isInvalid={searchbarText.length > 10_000}
         maxRows={13}
         minRows={1}
         placeholder="Ask gaia something..."

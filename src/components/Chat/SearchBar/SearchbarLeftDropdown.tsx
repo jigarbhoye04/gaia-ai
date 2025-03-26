@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +16,7 @@ import {
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
 import { useLoading } from "@/hooks/useLoading";
+import { Button } from "@heroui/button";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;
@@ -87,10 +87,12 @@ export default function SearchbarLeftDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          size="icon"
+          isIconOnly
+          radius="full"
+          variant="faded"
           className={cn(
-            "group relative h-8 w-8 rounded-full border-2 border-zinc-700 bg-zinc-900/50 p-0 hover:bg-zinc-800",
+            // "group relative h-8 w-8 rounded-full border-2 border-zinc-700 bg-zinc-900/50 p-0 hover:bg-zinc-800",
+            "",
             isLoading && "cursor-wait",
           )}
           disabled={isLoading}
