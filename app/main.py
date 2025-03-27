@@ -5,6 +5,8 @@ This module initializes and configures the FastAPI application, including middle
 routers, and other settings.
 """
 
+import os
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +14,10 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1 import api_router, lifespan, logger
 from app.middleware.profiling import ProfilingMiddleware
+
+# Set the TOKENIZERS_PARALLELISM environment variable to avoid warnings
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 app = FastAPI(
     lifespan=lifespan,

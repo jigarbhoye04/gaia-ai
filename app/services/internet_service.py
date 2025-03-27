@@ -25,7 +25,8 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
     1. Searches the web for relevant content based on the user's query
     2. Fetches the full content of the top search results concurrently
     3. Converts the content to markdown format for better LLM processing
-    4. Adds the enhanced content to the message context with appropriate formatting
+    4. Optionally takes screenshots of the web pages if enabled
+    5. Adds the enhanced content to the message context with appropriate formatting
 
     Args:
         context (Dict[str, Any]): The pipeline context containing user query and message data
@@ -37,20 +38,17 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
 
     if context["deep_search"] and context["last_message"]:
         query_text = context["query_text"]
+
         logger.info(f"Starting deep search pipeline step for query: {query_text}")
 
         try:
-            # Get deep search results independently of regular search
             deep_search_results = await perform_deep_search(
-                query=query_text, max_results=3
+                query=query_text, max_results=3, take_screenshots=True
             )
 
-            # Extract enhanced results with full content
             enhanced_results = deep_search_results.get("enhanced_results", [])
-            metadata = deep_search_results.get("metadata", {})
 
             if enhanced_results:
-                # Format the results for the LLM with better structure
                 formatted_content = "## Deep Search Results\n\n"
 
                 for i, result in enumerate(enhanced_results, 1):
@@ -58,11 +56,15 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
                     url = result.get("url", "#")
                     snippet = result.get("snippet", "No snippet available")
                     full_content = result.get("full_content", "")
-                    # from_cache = result.get("from_cache", False)
                     fetch_error = result.get("fetch_error", None)
+                    screenshot_url = result.get("screenshot_url", None)
 
                     formatted_content += f"### {i}. {title}\n"
                     formatted_content += f"**URL**: {url}\n\n"
+
+                    # Include screenshot if available
+                    if screenshot_url:
+                        formatted_content += f"**Screenshot**: ![Screenshot of {title}]({screenshot_url})\n\n"
 
                     if fetch_error:
                         formatted_content += (
@@ -76,20 +78,13 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
 
                     formatted_content += "---\n\n"
 
-                # Add the formatted content to the context using the template
                 context["last_message"]["content"] += (
                     DEEP_SEARCH_CONTEXT_TEMPLATE.format(
                         formatted_content=formatted_content
                     )
                 )
 
-                # Store relevant metadata in context for potential later use
-                context["deep_search_results"] = {
-                    "query": query_text,
-                    "result_count": len(enhanced_results),
-                    "content_size": metadata.get("total_content_size", 0),
-                    "search_time": metadata.get("elapsed_time", 0),
-                }
+                context["deep_search_results"] = deep_search_results
 
                 elapsed_time = time.time() - start_time
                 logger.info(
@@ -100,9 +95,20 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
                 context["last_message"]["content"] += (
                     "\n\nNo detailed information found from deep search."
                 )
+        except (asyncio.TimeoutError, ConnectionError) as e:
+            logger.error(f"Network error in deep search: {e}", exc_info=True)
+            context["deep_search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nConnection timed out during deep search, falling back to standard results."
+            )
+        except ValueError as e:
+            logger.error(f"Value error in deep search: {e}", exc_info=True)
+            context["deep_search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nInvalid search parameters, falling back to standard results."
+            )
         except Exception as e:
-            logger.error(f"Error in deep search pipeline step: {e}", exc_info=True)
-            # Don't fail the whole pipeline if deep search fails
+            logger.error(f"Unexpected error in deep search: {e}", exc_info=True)
             context["deep_search_error"] = str(e)
             context["last_message"]["content"] += (
                 "\n\nError performing deep search, falling back to standard results."
@@ -179,9 +185,20 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
                 f"Web search completed in {elapsed_time:.2} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
             )
 
+        except (asyncio.TimeoutError, ConnectionError) as e:
+            logger.error(f"Network error in web search: {e}", exc_info=True)
+            context["search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nConnection timed out during web search. Please try again later."
+            )
+        except ValueError as e:
+            logger.error(f"Value error in web search: {e}", exc_info=True)
+            context["search_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nInvalid search parameters. Please try a different query."
+            )
         except Exception as e:
-            logger.error(f"Error in web search: {e}", exc_info=True)
-            # Add a note about the search failure to the message
+            logger.error(f"Unexpected error in web search: {e}", exc_info=True)
             context["search_error"] = str(e)
             context["last_message"]["content"] += (
                 "\n\nError performing web search. Please try again later."
@@ -210,13 +227,20 @@ async def fetch_webpages(context: Dict[str, Any]) -> Dict[str, Any]:
 
     # Fetch content for all URLs
     if urls and context.get("last_message"):
-        fetched_pages = await asyncio.gather(*[perform_fetch(url) for url in urls])
-        print(
-            f"{fetched_pages=} {urls=}",
-        )
-        for page_content in fetched_pages:
-            context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
-                page_content=page_content, urls=urls
+        try:
+            fetched_pages = await asyncio.gather(
+                *[perform_fetch(url) for url in urls], return_exceptions=True
             )
+
+            for i, page_content in enumerate(fetched_pages):
+                if isinstance(page_content, Exception):
+                    logger.error(f"Error fetching URL {urls[i]}: {page_content}")
+                    continue
+
+                context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
+                    page_content=page_content, urls=[urls[i]]
+                )
+        except Exception as e:
+            logger.error(f"Error in fetch_webpages: {e}", exc_info=True)
 
     return context

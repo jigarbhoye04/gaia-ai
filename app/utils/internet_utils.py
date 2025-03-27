@@ -12,6 +12,7 @@ from app.db.collections import (
     search_urls_collection,
 )
 from app.db.db_redis import get_cache, set_cache
+from app.db.utils import serialize_document
 from app.models.search_models import URLResponse
 from app.services.search_service import (
     CACHE_EXPIRY,
@@ -19,7 +20,12 @@ from app.services.search_service import (
     MAX_TOTAL_CONTENT,
     URL_TIMEOUT,
 )
-from app.utils.search_utils import perform_search
+from app.utils.search_utils import (
+    fetch_with_playwright,
+    perform_fetch,
+    perform_search,
+    upload_screenshot_to_cloudinary,
+)
 
 
 def is_valid_url(url: str) -> bool:
@@ -94,7 +100,7 @@ async def save_webpage_cache(url: str, content: str, markdown_content: str) -> N
 
 
 async def fetch_and_process_url(
-    url: str, max_length: int = MAX_CONTENT_LENGTH
+    url: str, max_length: int = MAX_CONTENT_LENGTH, take_screenshot: bool = False
 ) -> Dict[str, Any]:
     """
     Fetch and process a single URL with error handling, validation and caching.
@@ -102,6 +108,7 @@ async def fetch_and_process_url(
     Args:
         url (str): The URL to fetch
         max_length (int): Maximum content length to return
+        take_screenshot (bool): Whether to take a screenshot of the page
 
     Returns:
         Dict[str, Any]: Dictionary with processed content and metadata
@@ -123,37 +130,20 @@ async def fetch_and_process_url(
             "url": url,
             "content": cached_content.get("content", ""),
             "markdown_content": cached_content.get("markdown_content", ""),
+            "screenshot_url": cached_content.get("screenshot_url"),
             "from_cache": True,
         }
 
     # Fetch new content with proper error handling
     try:
-        async with httpx.AsyncClient(
-            follow_redirects=True,
-            timeout=URL_TIMEOUT,
-            headers={"User-Agent": "Mozilla/5.0 GAIA Web Research Bot"},
-        ) as client:
-            response = await client.get(url)
-            response.raise_for_status()
+        if take_screenshot:
+            logger.info(f"Fetching {url} with screenshot")
+            result = await fetch_with_playwright(url=url, take_screenshot=True)
+            html_content = result.get("content", "")
+            screenshot_bytes = result.get("screenshot")
 
-            # Check content type - reject non-text content
-            content_type = response.headers.get("content-type", "")
-            if not content_type.startswith(
-                (
-                    "text/",
-                    "application/json",
-                    "application/xml",
-                    "application/xhtml+xml",
-                )
-            ):
-                return {
-                    "url": url,
-                    "error": f"Unsupported content type: {content_type}",
-                    "content": "",
-                    "markdown_content": "",
-                }
-
-            soup = BeautifulSoup(response.text, "html.parser")
+            # Process the HTML content
+            soup = BeautifulSoup(html_content, "html.parser")
 
             # Remove script, style, and other non-content elements
             for element in soup(
@@ -176,15 +166,93 @@ async def fetch_and_process_url(
             # Convert to markdown
             markdown_content = await convert_to_markdown(content)
 
-            # Cache the result
-            await save_webpage_cache(url, content, markdown_content)
+            # Upload screenshot to Cloudinary if available
+            screenshot_url = None
+            if screenshot_bytes:
+                screenshot_url = await upload_screenshot_to_cloudinary(
+                    screenshot_bytes, url
+                )
+
+            # Cache the result with screenshot URL
+            cache_data = {
+                "url": url,
+                "content": content,
+                "markdown_content": markdown_content,
+                "screenshot_url": screenshot_url,
+                "timestamp": time.time(),
+            }
+
+            cache_key = f"webpage_content:{url}"
+            await set_cache(cache_key, cache_data, CACHE_EXPIRY)
 
             return {
                 "url": url,
                 "content": content,
                 "markdown_content": markdown_content,
+                "screenshot_url": screenshot_url,
                 "from_cache": False,
             }
+        else:
+            # Use standard httpx fetch when screenshots aren't needed
+            async with httpx.AsyncClient(
+                follow_redirects=True,
+                timeout=URL_TIMEOUT,
+                headers={"User-Agent": "Mozilla/5.0 GAIA Web Research Bot"},
+            ) as client:
+                response = await client.get(url)
+                response.raise_for_status()
+
+                # Check content type - reject non-text content
+                content_type = response.headers.get("content-type", "")
+                if not content_type.startswith(
+                    (
+                        "text/",
+                        "application/json",
+                        "application/xml",
+                        "application/xhtml+xml",
+                    )
+                ):
+                    return {
+                        "url": url,
+                        "error": f"Unsupported content type: {content_type}",
+                        "content": "",
+                        "markdown_content": "",
+                    }
+
+                soup = BeautifulSoup(response.text, "html.parser")
+
+                # Remove script, style, and other non-content elements
+                for element in soup(
+                    ["script", "style", "nav", "footer", "iframe", "noscript"]
+                ):
+                    element.extract()
+
+                # Get text content
+                text = soup.get_text(separator="\n", strip=True)
+
+                # Process text
+                lines = (line.strip() for line in text.splitlines())
+                chunks = (
+                    phrase.strip() for line in lines for phrase in line.split("  ")
+                )
+                content = "\n".join(chunk for chunk in chunks if chunk)
+
+                # Truncate if needed
+                if len(content) > max_length:
+                    content = content[:max_length] + "...[content truncated]"
+
+                # Convert to markdown
+                markdown_content = await convert_to_markdown(content)
+
+                # Cache the result
+                await save_webpage_cache(url, content, markdown_content)
+
+                return {
+                    "url": url,
+                    "content": content,
+                    "markdown_content": markdown_content,
+                    "from_cache": False,
+                }
     except httpx.TimeoutException:
         logger.error(f"Timeout fetching {url}")
         return {
@@ -233,7 +301,7 @@ async def fetch_url_metadata(url: str) -> URLResponse:
     metadata = await scrape_url_metadata(url)
 
     await search_urls_collection.insert_one(metadata)
-    await set_cache(cache_key, metadata, 864000)
+    await set_cache(cache_key, serialize_document(metadata), 864000)
 
     return URLResponse(**metadata)
 
@@ -354,7 +422,9 @@ async def convert_to_markdown(text: str) -> str:
     return markdown_text
 
 
-async def perform_deep_search(query: str, max_results: int = 3) -> Dict[str, Any]:
+async def perform_deep_search(
+    query: str, max_results: int = 3, take_screenshots: bool = False
+) -> Dict[str, Any]:
     """
     Perform a deep search by first searching the web, then concurrently fetching
     the content of the top results and converting them to markdown.
@@ -362,14 +432,17 @@ async def perform_deep_search(query: str, max_results: int = 3) -> Dict[str, Any
     Args:
         query (str): The search query
         max_results (int): Maximum number of results to process in depth
+        take_screenshots (bool): Whether to take screenshots of the webpages
 
     Returns:
-        Dict[str, Any]: A dictionary containing search results with fetched content
+        Dict[str, Any]: A dictionary containing search results with fetched content and optional screenshots
     """
     start_time = time.time()
-    logger.info(f"Starting deep search for query: {query}")
+    logger.info(
+        f"Starting deep search for query: {query}"
+        + (" with screenshots" if take_screenshots else "")
+    )
 
-    # Get basic search results first
     search_results = await perform_search(query=query, count=max_results)
     web_results = search_results.get("web", [])
 
@@ -377,41 +450,45 @@ async def perform_deep_search(query: str, max_results: int = 3) -> Dict[str, Any
         logger.info("No web results found for deep search")
         return {"original_search": search_results, "enhanced_results": []}
 
-    # Set up concurrent fetching tasks for all URLs
+    # Use the new fetch_and_process_url function for more robust processing
+    # and to handle screenshots if requested
     fetch_tasks = []
     for result in web_results[:max_results]:
         url = result.get("url")
         if url and is_valid_url(url):
-            fetch_tasks.append(fetch_and_process_url(url))
+            fetch_tasks.append(
+                fetch_and_process_url(url, take_screenshot=take_screenshots)
+            )
 
-    # Execute all fetch tasks concurrently
     if fetch_tasks:
-        url_contents = await asyncio.gather(*fetch_tasks)
+        fetched_contents = await asyncio.gather(*fetch_tasks)
     else:
-        url_contents = []
+        fetched_contents = []
 
-    # Process results and manage total content size
     enhanced_results = []
     total_content_size = 0
 
-    for i, (result, content_data) in enumerate(
-        zip(web_results[:max_results], url_contents)
-    ):
-        # Skip if no URL or we've reached content limit
+    for i, content_data in enumerate(fetched_contents):
+        # Skip if we've reached content limit or no more results
         if i >= len(web_results) or total_content_size >= MAX_TOTAL_CONTENT:
             break
 
-        url = result.get("url")
-        if not url:
-            continue
+        # Get the corresponding search result
+        result = web_results[i]
 
-        # If fetching was successful, add the content
-        if not content_data.get("error"):
+        # Check if there was an error during fetching
+        if "error" in content_data:
+            enhanced_result = {
+                **result,
+                "full_content": f"Error fetching content: {content_data['error']}",
+                "fetch_error": content_data["error"],
+            }
+        else:
+            # Get markdown content
             markdown_content = content_data.get("markdown_content", "")
 
-            # Check if adding this content would exceed the total limit
+            # Check if we need to truncate for size limits
             if total_content_size + len(markdown_content) > MAX_TOTAL_CONTENT:
-                # Truncate the content to fit within limits
                 available_space = MAX_TOTAL_CONTENT - total_content_size
                 if available_space > 0:
                     markdown_content = (
@@ -419,33 +496,34 @@ async def perform_deep_search(query: str, max_results: int = 3) -> Dict[str, Any
                         + "...[content truncated for size limits]"
                     )
 
-            # Update running total of content size
             total_content_size += len(markdown_content)
 
-            # Create the enhanced result with the processed content
+            # Add the content and screenshot URL if available
             enhanced_result = {
                 **result,
                 "full_content": markdown_content,
-                "from_cache": content_data.get("from_cache", False),
             }
-        else:
-            # Still include results where fetching failed, but note the error
-            enhanced_result = {
-                **result,
-                "full_content": f"Error fetching content: {content_data.get('error')}",
-                "fetch_error": content_data.get("error"),
-            }
+
+            # Include screenshot URL if available
+            if (
+                take_screenshots
+                and "screenshot_url" in content_data
+                and content_data["screenshot_url"]
+            ):
+                enhanced_result["screenshot_url"] = content_data["screenshot_url"]
 
         enhanced_results.append(enhanced_result)
 
     elapsed_time = time.time() - start_time
     logger.info(
         f"Deep search completed in {elapsed_time:.2f} seconds. Processed {len(enhanced_results)} results."
+        + (" with screenshots" if take_screenshots else "")
     )
 
     return {
         "original_search": search_results,
         "enhanced_results": enhanced_results,
+        "screenshots_taken": take_screenshots,
         "metadata": {
             "total_content_size": total_content_size,
             "elapsed_time": elapsed_time,

@@ -18,14 +18,14 @@ Maintain accuracy, neutrality, and coherence when integrating this information.
 """
 
 DEEP_SEARCH_CONTEXT_TEMPLATE = """
-You have access to in-depth web search results with full page content using GAIA deep search.
+You have access to in-depth web search results with full page content using GAIA Deep Search.
 Below is the detailed context retrieved from the deep search:
 
 {formatted_content}
 
 You MUST include citations for all sourced content. Citations should be formatted with the link in markdown format, e.g., [1](https://example.com).
 Each source should be cited appropriately when used, and ensure proper attribution of quoted content.
-Maintain accuracy, detail, and coherence when integrating this information.
+Maintain accuracy, detail, and coherence when integrating this information. Do not directly paste the contents of the webpage, but format it and explain it properly for the user to understand.
 """
 
 PAGE_CONTENT_TEMPLATE = """

@@ -1,8 +1,9 @@
-from pydantic import BaseModel
-from typing import List, Optional, Literal, ForwardRef
+from typing import List, Literal, Optional
 
-from app.models.search_models import SearchResults
+from pydantic import BaseModel
+
 from app.models.general_models import FileData
+from app.models.search_models import SearchResults
 
 
 class CalIntentOptions(BaseModel):
@@ -10,6 +11,22 @@ class CalIntentOptions(BaseModel):
     description: Optional[str] = None
     start: Optional[str] = None
     end: Optional[str] = None
+
+
+class DeepSearchResult(BaseModel):
+    title: Optional[str] = None
+    url: Optional[str] = None
+    snippet: Optional[str] = None
+    full_content: Optional[str] = None
+    fetch_error: Optional[str] = None
+    screenshot_url: Optional[str] = None
+
+
+class DeepSearchResults(BaseModel):
+    original_search: Optional[SearchResults] = None
+    enhanced_results: Optional[List[DeepSearchResult]] = None
+    query: Optional[str] = None
+    error: Optional[str] = None
 
 
 # Define the structure for each message
@@ -22,6 +39,7 @@ class MessageModel(BaseModel):
     loading: Optional[bool] = False  # Whether the message is still loading
     isImage: Optional[bool] = False  # Whether it's an image message
     searchWeb: Optional[bool] = False  # Whether it's a web search request
+    deepSearchWeb: Optional[bool] = False  # Whether it's a deep search request
     imageUrl: Optional[str] = None  # URL for the image
     pageFetchURLs: Optional[List] = []
     # Any disclaimer associated with the message
@@ -39,6 +57,8 @@ class MessageModel(BaseModel):
     intent: Optional[Literal["calendar", "generate_image"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
     search_results: Optional[SearchResults] = None
+    deep_search_results: Optional[DeepSearchResults] = None  # Results from deep search
+    deep_search_error: Optional[str] = None  # Errors from deep search
 
 
 class ConversationModel(BaseModel):

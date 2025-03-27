@@ -16,7 +16,7 @@ async def do_prompt_with_stream(
     messages: list,
     context: dict,
     temperature: float = 0.6,
-    max_tokens: int = 256,
+    max_tokens: int = 2048,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
     intent=None,
 ):

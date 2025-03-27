@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 from pydantic import BaseModel, HttpUrl
+from datetime import datetime
 
 
 class URLRequest(BaseModel):
@@ -46,7 +47,27 @@ class VideoResult(BaseModel):
 
 
 class SearchResults(BaseModel):
-    web: Optional[List[WebResult]] = []  # noqa: F821
+    web: Optional[List[WebResult]] = []
     images: Optional[List[ImageResult]] = []
     news: Optional[List[NewsResult]] = []
     videos: Optional[List[VideoResult]] = []
+
+
+class DeepSearchResult(BaseModel):
+    title: str
+    url: str
+    snippet: str
+    full_content: Optional[str] = None
+    screenshot_url: Optional[str] = None
+    fetch_error: Optional[str] = None
+    source: Optional[str] = None
+    date: Optional[str] = None
+
+
+class DeepSearchResponse(BaseModel):
+    query: str
+    enhanced_results: List[DeepSearchResult]
+    screenshots_taken: bool = False
+    timestamp: Optional[datetime] = None
+    search_id: Optional[str] = None
+    user_id: Optional[str] = None

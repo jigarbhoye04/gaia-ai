@@ -221,9 +221,28 @@ async def fetch_with_httpx(url: str) -> str:
 
 
 async def fetch_with_playwright(
-    url: str, wait_time: int = 3, wait_for: str = "body", use_stealth: bool = True
-) -> str:
-    """Fetches webpage content using Playwright with optimizations."""
+    url: str,
+    wait_time: int = 3,
+    wait_for_element: str = "body",
+    use_stealth: bool = True,
+    take_screenshot: bool = False,
+) -> dict:
+    """Fetches webpage content using Playwright with optimizations.
+
+    Args:
+        url: URL to fetch
+        wait_time: Time to wait after page load
+        wait_for_element: Selector to wait for
+        use_stealth: Whether to use stealth mode
+        take_screenshot: Whether to take a screenshot of the page
+
+    Returns:
+        Dictionary containing HTML content and optionally screenshot data
+    """
+    browser = None
+    page = None
+    context = None
+
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
@@ -245,18 +264,102 @@ async def fetch_with_playwright(
                 else:
                     await route.continue_()
 
-            await page.route("**/*", intercept_requests)
-            await page.goto(url, wait_until="domcontentloaded", timeout=10000)
-            await page.wait_for_selector(wait_for, timeout=10000)
+            # Only intercept requests if not taking screenshot to ensure visuals load properly
+            if not take_screenshot:
+                await page.route("**/*", intercept_requests)
+
+            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            await page.wait_for_selector(wait_for_element, timeout=15000)
             await page.wait_for_timeout(wait_time * 1000)
-
             content = await page.content()
-            print(f"Fetched content from Playwright: {content[:500]}...")
 
+            result = {"content": content}
+
+            # Take screenshot if requested
+            if take_screenshot:
+                # Set viewport to a reasonable size
+                await page.set_viewport_size({"width": 1280, "height": 1024})
+                # Wait extra time for visuals to load when taking screenshots
+                await page.wait_for_timeout(2000)
+                screenshot_bytes = await page.screenshot(
+                    type="jpeg", quality=80, full_page=True
+                )
+                result["screenshot"] = screenshot_bytes
+
+            await page.close()
+            await context.close()
             await browser.close()
-            return content
+
+            return result
+
     except Exception as e:
-        raise FetchError(f"Playwright error: {type(e).__name__}: {e}") from e
+        logger.error(f"Unexpected error: {type(e).__name__}: {e}")
+        if page and not page.is_closed():
+            await page.close()
+        if context:
+            await context.close()
+        if browser and not browser.is_closed():
+            await browser.close()
+        raise FetchError(f"Unexpected error: {type(e).__name__}") from e
+
+
+async def upload_screenshot_to_cloudinary(screenshot_bytes: bytes, url: str) -> str:
+    """
+    Upload a screenshot to Cloudinary and return the secure URL.
+
+    Args:
+        screenshot_bytes: The raw bytes of the screenshot
+        url: The URL that was screenshotted (for naming purposes)
+
+    Returns:
+        str: The secure URL of the uploaded image
+    """
+    import io
+    import time
+    import uuid
+    import cloudinary
+    import cloudinary.uploader
+    from urllib.parse import urlparse
+    from app.config.cloudinary import init_cloudinary
+
+    try:
+        # Ensure Cloudinary is initialized
+        init_cloudinary()
+
+        # Create a unique ID for the screenshot
+        screenshot_id = str(uuid.uuid4())
+
+        # Get the hostname for the public_id
+        parsed_url = urlparse(url)
+        hostname = parsed_url.netloc
+
+        # Create public_id with timestamp, hostname, and UUID to ensure uniqueness
+        timestamp = int(time.time())
+        public_id = (
+            f"screenshots/{hostname.replace('.', '_')}/{timestamp}_{screenshot_id}"
+        )
+
+        # Upload the screenshot to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            io.BytesIO(screenshot_bytes),
+            resource_type="image",
+            public_id=public_id,
+            overwrite=True,
+        )
+
+        image_url = upload_result.get("secure_url")
+        if not image_url:
+            logger.error("Missing secure_url in Cloudinary upload response")
+            return None
+
+        logger.info(f"Screenshot uploaded successfully. URL: {image_url}")
+        return image_url
+
+    except Exception as e:
+        logger.error(
+            f"Failed to upload screenshot to Cloudinary: {str(e)}", exc_info=True
+        )
+        return None
 
 
 async def extract_text(html: str) -> str:

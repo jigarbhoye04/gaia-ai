@@ -67,10 +67,8 @@ async def chat_stream(
         "search_web": body.search_web,
         "deep_search": body.deep_search,
         "pageFetchURLs": body.pageFetchURLs,
-        "fileIds": body.fileIds,  # File IDs associated with the message
-        "fileData": body.fileData
-        if hasattr(body, "fileData")
-        else [],  # Complete file metadata
+        "fileIds": body.fileIds,
+        "fileData": body.fileData if body.fileData else [],
     }
 
     context = await classify_intent(context)
@@ -81,8 +79,8 @@ async def chat_stream(
             media_type="text/event-stream",
         )
 
-    # choose_llm_model,
     pipeline_steps = [
+        # choose_llm_model,
         fetch_webpages,
         do_deep_search,
         do_search,

@@ -1,5 +1,8 @@
 import os
 
+# Set TOKENIZERS_PARALLELISM environment variable to avoid warnings when forking
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 from celery import Celery
 from celery.signals import worker_init, worker_ready
 

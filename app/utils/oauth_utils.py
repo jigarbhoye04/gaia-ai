@@ -1,8 +1,10 @@
 import io
+
+import cloudinary
+import cloudinary.uploader
 import httpx
 from fastapi import HTTPException
 
-from app.config import cloudinary
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
 from app.db.collections import users_collection
