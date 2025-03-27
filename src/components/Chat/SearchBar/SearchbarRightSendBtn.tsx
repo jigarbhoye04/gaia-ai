@@ -2,26 +2,25 @@ import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 
 import { SentIcon } from "../../Misc/icons";
+import { useLoading } from "@/hooks/useLoading";
 
 interface RightSideProps {
-  loading: boolean;
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
 }
 
-export default function RightSide({
-  loading,
-  handleFormSubmit,
-}: RightSideProps) {
+export default function RightSide({ handleFormSubmit }: RightSideProps) {
+  const { isLoading } = useLoading();
+
   return (
     <div className="ml-2 flex items-center gap-1">
       <Tooltip content="Send message" placement="right">
         <Button
           isIconOnly
           aria-label="Send message"
-          className={`${loading && "cursor-wait"}`}
+          className={`${isLoading && "cursor-wait"}`}
           color="primary"
-          disabled={loading}
-          isLoading={loading}
+          disabled={isLoading}
+          isLoading={isLoading}
           radius="full"
           type="submit"
           onPress={() => handleFormSubmit()}

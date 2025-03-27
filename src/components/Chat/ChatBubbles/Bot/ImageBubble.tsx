@@ -12,7 +12,6 @@ export default function ImageBubble({
   imageSrc,
   imagePrompt,
   improvedImagePrompt,
-  date,
   setOpenImage,
   setImageData,
 }: ChatBubbleBotProps) {
@@ -62,11 +61,6 @@ export default function ImageBubble({
           )}
         </div>
       </div>
-      {date && (
-        <span className="flex select-text flex-col pt-1 text-xs text-white text-opacity-40">
-          {parseDate(date)}
-        </span>
-      )}
     </>
   );
 }

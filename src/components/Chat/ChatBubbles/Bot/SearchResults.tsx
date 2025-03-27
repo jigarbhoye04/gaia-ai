@@ -20,7 +20,7 @@ import {
   WebResult,
 } from "@/types/convoTypes";
 
-import ImageDialog from "./ImageDialog";
+import ImageDialog from "./SearchedImageDialog";
 
 interface SearchResultsTabsProps {
   search_results: SearchResults;
