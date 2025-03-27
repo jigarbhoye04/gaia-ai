@@ -1,14 +1,15 @@
 "use client";
 
-import { lazy, useEffect } from "react";
+import { useEffect } from "react";
 
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
 
+import LazyLoadedSections from "@/components/Landing/Sections/LazyLoadedSections";
 import LandingLayout from "./(landing)/layout";
-const LazyLoadedSections = lazy(
-  () => import("@/components/Landing/Sections/LazyLoadedSections"),
-);
+// const LazyLoadedSections = lazy(
+//   () => import("@/components/Landing/Sections/LazyLoadedSections"),
+// );
 
 export default function LandingPage() {
   useEffect(() => {
