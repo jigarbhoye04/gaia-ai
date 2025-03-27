@@ -10,13 +10,14 @@ import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
-import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
-import GeneratedImageSheet from "./GeneratedImageSheet";
+import ChatBubbleUser from "./ChatBubbles/User/ChatBubbleUser";
+import GeneratedImageSheet from "./Image/GeneratedImageSheet";
+import SearchedImageDialog from "./ChatBubbles/Bot/SearchResults/SearchedImageDialog";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
   const { conversations } = useConversationList();
-  const [openImage, setOpenImage] = useState<boolean>(false);
+  const [openGeneratedImage, setOpenGeneratedImage] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
   const { isLoading } = useLoading();
@@ -85,9 +86,11 @@ export default function ChatRenderer() {
 
       <GeneratedImageSheet
         imageData={imageData}
-        openImage={openImage}
-        setOpenImage={setOpenImage}
+        openImage={openGeneratedImage}
+        setOpenImage={setOpenGeneratedImage}
       />
+
+      <SearchedImageDialog />
 
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
@@ -113,7 +116,7 @@ export default function ChatRenderer() {
               pinned={message.pinned}
               searchWeb={message.searchWeb}
               setImageData={setImageData}
-              setOpenImage={setOpenImage}
+              setOpenImage={setOpenGeneratedImage}
               text={message.response}
               disclaimer={message.disclaimer}
               date={message.date}

@@ -1,8 +1,8 @@
 import { StarsIcon } from "@/components/Misc/icons";
 import { ChatBubbleUserProps } from "@/types/chatBubbleTypes";
+import { parseDate } from "@/utils/fetchDate";
 import { Chip } from "@heroui/chip";
 import { ArrowUpRight } from "lucide-react";
-import { parseDate } from "../../../utils/fetchDate";
 import ChatBubbleFilePreview from "./ChatBubbleFilePreview";
 
 export default function ChatBubbleUser({

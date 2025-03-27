@@ -8,12 +8,12 @@ import React, {
   useState,
 } from "react";
 import { toast } from "sonner";
-import FileUpload from "../FileUpload";
-import GenerateImage from "../GenerateImage";
+import GenerateImage from "../Image/GenerateImage";
 import FetchPageModal from "./FetchPageModal";
-import FilePreview, { UploadedFilePreview } from "./FilePreview";
+import FilePreview, { UploadedFilePreview } from "../Files/FilePreview";
 import SearchbarInput from "./SearchbarInput";
 import SearchbarToolbar from "./SearchbarToolbar";
+import FileUpload from "../Files/FileUpload";
 
 // Define an interface for the complete file data
 export interface FileData {

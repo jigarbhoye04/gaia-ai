@@ -6,8 +6,8 @@ import { Chip } from "@heroui/chip";
 import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
 import MarkdownRenderer from "../../MarkdownRenderer";
 import CalendarEventSection from "./CalendarEventSection";
-import DeepSearchResultsTabs from "./DeepSearchResults";
-import SearchResultsTabs from "./SearchResults";
+import DeepSearchResultsTabs from "./SearchResults/DeepSearchResultsTabs";
+import SearchResultsTabs from "./SearchResults/SearchResultsTabs";
 
 export default function TextBubble({
   text,

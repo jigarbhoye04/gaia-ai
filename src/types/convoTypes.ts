@@ -1,7 +1,7 @@
 // Define the structure for each message in the conversation
 // This type represents an individual message, including details about whether it's from the user or bot,
 
-import { UploadedFilePreview } from "@/components/Chat/SearchBar/FilePreview";
+import { UploadedFilePreview } from "@/components/Chat/Files/FilePreview";
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
@@ -58,8 +58,8 @@ export type WebResult = {
 export type ImageResult = {
   title: string;
   url: string;
-  thumbnail: string;
   source: string;
+  thumbnail?: string;
 };
 
 export type NewsResult = {

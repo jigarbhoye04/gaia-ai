@@ -1,13 +1,12 @@
+import { InternetIcon } from "@/components/Misc/icons";
+import { DeepSearchResults, EnhancedWebResult } from "@/types/convoTypes";
 import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
-import { formatDistanceToNow } from "date-fns";
 import { ExternalLinkIcon, LinkIcon, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-
-import { InternetIcon } from "@/components/Misc/icons";
-import { DeepSearchResults, EnhancedWebResult } from "@/types/convoTypes";
-
-import SearchResultsTabs from "./SearchResults";
+import SearchResultsTabs from "./SearchResultsTabs";
+import { useDispatch } from "react-redux";
+import { openImageDialog } from "@/redux/slices/imageDialogSlice";
 
 interface DeepSearchResultsTabsProps {
   deep_search_results: DeepSearchResults;
@@ -101,6 +100,8 @@ interface EnhancedWebResultsProps {
 }
 
 function EnhancedWebResults({ results }: EnhancedWebResultsProps) {
+  const dispatch = useDispatch();
+
   return (
     <div className="space-y-4">
       {results.map((result, index) => (
@@ -139,7 +140,7 @@ function EnhancedWebResults({ results }: EnhancedWebResultsProps) {
             </span>
           </div>
 
-          {result.screenshot_url && (
+          {result.url && (
             <div className="mb-3 overflow-hidden rounded-lg">
               <a
                 href={result.url}
@@ -150,16 +151,29 @@ function EnhancedWebResults({ results }: EnhancedWebResultsProps) {
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
                   <ExternalLinkIcon className="h-8 w-8 text-white" />
                 </div>
-                <div className="relative h-[300px] w-full overflow-y-auto">
-                  <Image
-                    src={result.screenshot_url}
-                    alt={`Screenshot of ${result.title}`}
-                    width={800} // Use your own fallback width
-                    height={1200} // Adjust based on the expected image ratio
-                    className="w-full rounded-lg object-cover"
-                  />
-                </div>
               </a>
+            </div>
+          )}
+
+          {result.screenshot_url && (
+            <div className="relative h-[300px] w-full overflow-y-auto rounded-lg">
+              <Image
+                onClick={() => {
+                  if (result.screenshot_url)
+                    dispatch(
+                      openImageDialog({
+                        url: result.screenshot_url,
+                        title: result.title,
+                        source: result.url,
+                      }),
+                    );
+                }}
+                src={result.screenshot_url}
+                alt={`Screenshot of ${result.title}`}
+                width={800}
+                height={1200}
+                className="w-full cursor-pointer rounded-lg object-cover"
+              />
             </div>
           )}
 

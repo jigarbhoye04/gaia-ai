@@ -1,10 +1,3 @@
-import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
-import { formatDistanceToNow } from "date-fns";
-import { Play } from "lucide-react";
-import Image from "next/image";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
-
 import {
   Image02Icon,
   InternetIcon,
@@ -19,8 +12,12 @@ import {
   VideoResult,
   WebResult,
 } from "@/types/convoTypes";
-
-import ImageDialog from "./SearchedImageDialog";
+import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
+import { formatDistanceToNow } from "date-fns";
+import { Play } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 
 interface SearchResultsTabsProps {
   search_results: SearchResults;
@@ -30,7 +27,7 @@ export default function SearchResultsTabs({
   search_results,
 }: SearchResultsTabsProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  console.log(search_results, "this is atest");
+
   return (
     <div className="w-full">
       <Accordion
@@ -126,28 +123,25 @@ function ImageResults({ images }: ImageResultsProps) {
   const dispatch = useDispatch();
 
   return (
-    <>
-      <div className="grid w-full max-w-screen-sm grid-cols-2 gap-4 pr-2 md:grid-cols-3 lg:grid-cols-4">
-        {images.map((image, index) => (
-          <div
-            key={index}
-            onClick={() => dispatch(openImageDialog(image))}
-            className={`cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:scale-[1.02] hover:opacity-50 ${
-              index == 0 ? "col-span-2 row-span-2" : ""
-            }`}
-          >
-            <Image
-              src={image.url || "/placeholder.svg"}
-              alt={image.title}
-              width={600}
-              height={600}
-              className="h-full w-full rounded-lg object-cover"
-            />
-          </div>
-        ))}
-      </div>
-      <ImageDialog />
-    </>
+    <div className="grid w-full max-w-screen-sm grid-cols-2 gap-4 pr-2 md:grid-cols-3 lg:grid-cols-4">
+      {images.map((image, index) => (
+        <div
+          key={index}
+          onClick={() => dispatch(openImageDialog(image))}
+          className={`cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:scale-[1.02] hover:opacity-50 ${
+            index == 0 ? "col-span-2 row-span-2" : ""
+          }`}
+        >
+          <Image
+            src={image.url || "/placeholder.svg"}
+            alt={image.title}
+            width={600}
+            height={600}
+            className="h-full w-full rounded-lg object-cover"
+          />
+        </div>
+      ))}
+    </div>
   );
 }
 

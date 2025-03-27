@@ -13,8 +13,8 @@ import Image from "next/image";
 
 import { useLoading } from "@/hooks/useLoading";
 import { apiauth } from "@/utils/apiaxios";
-import { UploadedFilePreview } from "./SearchBar/FilePreview";
 import { useLoadingText } from "@/hooks/useLoadingText";
+import { UploadedFilePreview } from "./FilePreview";
 
 interface FileUploadProps {
   open: boolean;
@@ -264,7 +264,7 @@ export default function FileUpload({
     } finally {
       setIsUploading(false);
       setIsLoading(false);
-      resetLoadingText
+      resetLoadingText;
     }
   };
 
