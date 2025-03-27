@@ -118,6 +118,7 @@ export default function ChatRenderer() {
               disclaimer={message.disclaimer}
               date={message.date}
               search_results={message.search_results}
+              deep_search_results={message.deep_search_results}
             />
           </div>
         ) : (

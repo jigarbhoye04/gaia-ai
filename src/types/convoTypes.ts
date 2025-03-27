@@ -25,6 +25,7 @@ export type MessageType = {
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
   search_results?: SearchResults | null;
+  deep_search_results?: DeepSearchResults | null;
 };
 
 export type CalendarOptions = {
@@ -82,4 +83,22 @@ export type SearchResults = {
   images?: ImageResult[];
   news?: NewsResult[];
   videos?: VideoResult[];
+};
+
+// Enhanced result including full_content and screenshot_url
+export type EnhancedWebResult = WebResult & {
+  full_content?: string;
+  screenshot_url?: string;
+};
+
+// Define the DeepSearchResults type for deep search results
+export type DeepSearchResults = {
+  original_search?: SearchResults;
+  enhanced_results?: EnhancedWebResult[];
+  screenshots_taken?: boolean;
+  metadata?: {
+    total_content_size?: number;
+    elapsed_time?: number;
+    query?: string;
+  };
 };

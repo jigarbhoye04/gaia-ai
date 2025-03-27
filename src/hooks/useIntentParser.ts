@@ -13,7 +13,7 @@ export function parseIntent(dataJson: MessageType) {
       : dataJson.calendar_options
         ? [dataJson.calendar_options]
         : null,
-
     search_results: dataJson.search_results || null,
+    deep_search_results: dataJson.deep_search_results || null,
   };
 }

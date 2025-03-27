@@ -123,15 +123,13 @@ export const useChatStream = () => {
       // Handle regular text responses
       accumulatedResponseRef.current += dataJson.response || "\n";
       const currentConvo = latestConvoRef.current;
-
       const parsedIntent = parseIntent(dataJson);
-
       botMessageRef.current = buildBotResponse({
         intent: parsedIntent.intent,
         calendar_options: parsedIntent.calendar_options,
         search_results: parsedIntent.search_results,
+        deep_search_results: parsedIntent.deep_search_results,
       });
-
       // Always ensure we have the most recent messages
       if (
         currentConvo.length > 0 &&

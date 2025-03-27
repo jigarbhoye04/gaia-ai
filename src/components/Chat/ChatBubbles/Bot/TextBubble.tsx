@@ -3,27 +3,33 @@ import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
 import { InternetIcon } from "@/components/Misc/icons";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { Chip } from "@heroui/chip";
-import { AlertTriangleIcon, ArrowUpRight, Check, Loader2 } from "lucide-react";
-import { lazy } from "react";
+import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
+import MarkdownRenderer from "../../MarkdownRenderer";
 import CalendarEventSection from "./CalendarEventSection";
-import SearchResults from "./SearchResults";
-
-const MarkdownRenderer = lazy(
-  () => import("@/components/Chat/MarkdownRenderer"),
-);
+import DeepSearchResultsTabs from "./DeepSearchResults";
+import SearchResultsTabs from "./SearchResults";
 
 export default function TextBubble({
   text,
   searchWeb,
+  deepSearchWeb,
   pageFetchURLs,
   disclaimer,
   calendar_options,
   intent,
   search_results,
+  deep_search_results,
 }: ChatBubbleBotProps) {
+  console.log("deep_search_results", deep_search_results);
   return (
     <>
-      {search_results && <SearchResults search_results={search_results} />}
+      {!!search_results && (
+        <SearchResultsTabs search_results={search_results} />
+      )}
+
+      {deep_search_results && (
+        <DeepSearchResultsTabs deep_search_results={deep_search_results} />
+      )}
 
       <div className="chat_bubble bg-zinc-800">
         <div className="flex flex-col gap-3">
@@ -35,6 +41,18 @@ export default function TextBubble({
             >
               <div className="flex items-center gap-1 font-medium text-primary">
                 Live Search Results from the Web
+              </div>
+            </Chip>
+          )}
+
+          {deepSearchWeb && (
+            <Chip
+              color="primary"
+              startContent={<InternetIcon color="#00bbff" height={20} />}
+              variant="flat"
+            >
+              <div className="flex items-center gap-1 font-medium text-primary">
+                Enhanced Search Results from the Web
               </div>
             </Chip>
           )}

@@ -1,6 +1,6 @@
 import React, { Dispatch } from "react";
 
-import { CalendarOptions, SearchResults } from "./convoTypes";
+import { CalendarOptions, DeepSearchResults, SearchResults } from "./convoTypes";
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 
@@ -10,6 +10,7 @@ export interface ChatBubbleUserProps {
   file?: File | null | string;
   filename?: string;
   searchWeb?: boolean;
+  deepSearchWeb?: boolean;
   pageFetchURLs?: string[];
   date?: string;
   pinned?: boolean;
@@ -30,6 +31,7 @@ export interface ChatBubbleBotProps {
   loading?: boolean;
   isImage?: boolean;
   searchWeb?: boolean;
+  deepSearchWeb?: boolean;
   imageSrc?: string | null;
   imagePrompt?: string;
   improvedImagePrompt?: string;
@@ -47,4 +49,5 @@ export interface ChatBubbleBotProps {
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
   search_results?: SearchResults | null;
+  deep_search_results?: DeepSearchResults | null;
 }

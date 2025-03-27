@@ -29,11 +29,11 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   },
-  modularizeImports: {
-    "@radix-ui/react-icons": {
-      transform: "@radix-ui/react-icons/dist/{{member}}",
-    },
-  },
+  // modularizeImports: {
+  //   "@radix-ui/react-icons": {
+  //     transform: "@radix-ui/react-icons/dist/{{member}}",
+  //   },
+  // },
 };
 
 export default withBundleAnalyzer(nextConfig);

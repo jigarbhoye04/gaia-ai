@@ -30,7 +30,7 @@ export default function SearchResultsTabs({
   search_results,
 }: SearchResultsTabsProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-
+  console.log(search_results, "this is atest");
   return (
     <div className="w-full">
       <Accordion
