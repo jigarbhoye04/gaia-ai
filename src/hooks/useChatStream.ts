@@ -9,6 +9,7 @@ import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 /**
  * Custom hook to handle chat streaming via SSE (Server-Sent Events).
@@ -20,6 +21,7 @@ export const useChatStream = () => {
   const latestConvoRef = useRef(convoMessages);
   const botMessageRef = useRef<MessageType | null>(null);
   const accumulatedResponseRef = useRef<string>("");
+  const userPromptRef = useRef<string>("");
 
   useEffect(() => {
     latestConvoRef.current = convoMessages;
@@ -33,10 +35,16 @@ export const useChatStream = () => {
     currentMessages: MessageType[],
     conversationId: string,
     enableSearch: boolean,
-    pageFetchURL: string,
+    enableDeepSearch: boolean,
+    pageFetchURLs: string[],
     botMessageId: string,
+    fileData: FileData[] = [] // Updated to accept FileData instead of fileIds
   ) => {
     accumulatedResponseRef.current = "";
+    userPromptRef.current = inputText;
+
+    // Extract fileIds from fileData for backward compatibility
+    const fileIds = fileData.map(file => file.fileId);
 
     /**
      * Builds a bot response object with optional overrides.
@@ -48,9 +56,12 @@ export const useChatStream = () => {
       message_id: botMessageId,
       response: accumulatedResponseRef.current,
       searchWeb: enableSearch,
-      pageFetchURL,
+      deepSearchWeb: enableDeepSearch,
+      pageFetchURLs,
       date: fetchDate(),
       loading: true,
+      fileIds: fileIds.length > 0 ? fileIds : undefined,
+      fileData: fileData.length > 0 ? fileData : undefined,
       ...overrides,
     });
 
@@ -63,6 +74,53 @@ export const useChatStream = () => {
       const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
 
+      if (dataJson.status === "generate_image") {
+        botMessageRef.current = buildBotResponse({
+          response: "",
+          isImage: true,
+          imagePrompt: userPromptRef.current,
+          loading: true,
+        });
+
+        const currentConvo = latestConvoRef.current;
+        if (
+          currentConvo.length > 0 &&
+          currentConvo[currentConvo.length - 1].type === "bot"
+        ) {
+          const updatedMessages = [...currentConvo];
+          updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
+          updateConvoMessages(updatedMessages);
+        } else updateConvoMessages([...currentConvo, botMessageRef.current]);
+
+        return;
+      }
+
+      // Handle image generation result
+      if (dataJson.intent === "generate_image" && dataJson.image_data) {
+        botMessageRef.current = buildBotResponse({
+          response: "Here is your generated image",
+          imageUrl: dataJson.image_data.url,
+          imagePrompt: userPromptRef.current,
+          improvedImagePrompt: dataJson.image_data.improved_prompt,
+          isImage: true,
+          loading: false,
+        });
+
+        const currentConvo = latestConvoRef.current;
+        if (
+          currentConvo.length > 0 &&
+          currentConvo[currentConvo.length - 1].type === "bot"
+        ) {
+          const updatedMessages = [...currentConvo];
+          updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
+          updateConvoMessages(updatedMessages);
+        } else {
+          updateConvoMessages([...currentConvo, botMessageRef.current]);
+        }
+        return;
+      }
+
+      // Handle regular text responses
       accumulatedResponseRef.current += dataJson.response || "\n";
       const currentConvo = latestConvoRef.current;
 
@@ -144,12 +202,14 @@ export const useChatStream = () => {
     await ApiService.fetchChatStream(
       inputText,
       enableSearch,
-      pageFetchURL,
+      enableDeepSearch,
+      pageFetchURLs,
       currentMessages,
       conversationId,
       onMessage,
       onClose,
       onError,
+      fileData // Pass the complete fileData to the API service
     );
   };
 };

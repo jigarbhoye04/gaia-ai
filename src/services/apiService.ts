@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 export const ApiService = {
   fetchMessages: async (conversationId: string) => {
@@ -64,14 +65,19 @@ export const ApiService = {
   fetchChatStream: async (
     inputText: string,
     enableSearch: boolean,
-    pageFetchURL: string,
+    enableDeepSearch: boolean,
+    pageFetchURLs: string[],
     convoMessages: MessageType[],
     conversationId: string,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: Error) => void,
+    fileData: FileData[] = [] // Updated to accept FileData instead of fileIds
   ) => {
     const controller = new AbortController();
+
+    // Extract fileIds from fileData for backward compatibility
+    const fileIds = fileData.map(file => file.fileId);
 
     await fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,
@@ -87,7 +93,10 @@ export const ApiService = {
           conversation_id: conversationId,
           message: inputText,
           search_web: enableSearch || false,
-          pageFetchURL,
+          deep_search: enableDeepSearch || false,
+          pageFetchURLs,
+          fileIds, // For backward compatibility
+          fileData, // Send complete file data
           messages: convoMessages
             .slice(-10)
             .filter(({ response }) => response.trim().length > 0)

@@ -20,9 +20,11 @@ const CustomAnchor = ({
     description: "",
     favicon: "",
     website_name: "",
+    website_image: "",
   });
   const prevHref = useRef<string | null>(null);
   const [validFavicon, setValidFavicon] = useState(true);
+  const [validImage, setValidImage] = useState(true);
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -35,9 +37,17 @@ const CustomAnchor = ({
         const response = await api.post("/fetch-url-metadata", {
           url: href,
         });
-        const { title, description, favicon, website_name } = response.data;
-        setMetadata({ title, description, favicon, website_name });
+        const { title, description, favicon, website_name, website_image } =
+          response.data;
+        setMetadata({
+          title,
+          description,
+          favicon,
+          website_name,
+          website_image,
+        });
         setValidFavicon(true);
+        setValidImage(true);
         prevHref.current = href;
       } catch (error) {
         console.error("Error fetching metadata:", error);
@@ -56,14 +66,31 @@ const CustomAnchor = ({
   return (
     <Tooltip
       showArrow
-      className="border-2 border-solid border-zinc-700 bg-zinc-950 p-3 text-white shadow-lg outline-none"
+      className="relative max-w-[280px] border border-zinc-700 bg-zinc-900 p-3 text-white shadow-lg"
       content={
         loading ? (
-          <div className="p-5">
+          <div className="flex justify-center p-5">
             <Spinner color="primary" />
           </div>
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="flex w-full flex-col gap-2">
+            {/* Website Image */}
+            {metadata.website_image && validImage && (
+              <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+                <Image
+                  src={metadata.website_image}
+                  alt="Website Image"
+                  layout="responsive"
+                  width={280}
+                  height={157}
+                  objectFit="cover"
+                  className="rounded-lg"
+                  onError={() => setValidImage(false)}
+                />
+              </div>
+            )}
+
+            {/* Website Name & Favicon */}
             {(metadata.website_name || (metadata.favicon && validFavicon)) && (
               <div className="flex items-center gap-2">
                 {metadata.favicon && validFavicon ? (
@@ -71,37 +98,43 @@ const CustomAnchor = ({
                     width={20}
                     height={20}
                     alt="Fav Icon"
-                    className="h-[20px] w-[20px] rounded-full"
+                    className="h-5 w-5 rounded-full"
                     src={metadata.favicon}
                     onError={() => setValidFavicon(false)}
                   />
                 ) : (
-                  <GlobeIcon color="#9b9b9b" height={17} width={17} />
+                  <GlobeIcon className="h-5 w-5 text-gray-400" />
                 )}
                 {metadata.website_name && (
-                  <div className="text-md w-[300px] truncate">
+                  <div className="truncate text-sm font-semibold">
                     {metadata.website_name}
                   </div>
                 )}
               </div>
             )}
+
+            {/* Title */}
             {metadata.title && (
-              <div className="text-md w-[300px] truncate font-medium text-white">
+              <div className="truncate text-sm font-medium text-white">
                 {metadata.title}
               </div>
             )}
+
+            {/* Description */}
             {metadata.description && (
-              <div className="mb-2 max-h-[100px] w-[300px] overflow-hidden text-sm text-foreground-600">
+              <div className="line-clamp-3 text-xs text-gray-400">
                 {metadata.description}
               </div>
             )}
+
+            {/* URL Link */}
             <a
-              className="w-[300px] truncate text-xs text-primary hover:underline"
+              className="truncate text-xs text-primary hover:underline"
               href={href}
               rel="noopener noreferrer"
               target="_blank"
             >
-              {href.replace("https://", "")}
+              {href.replace("https://", "").replace("http://", "")}
             </a>
           </div>
         )
@@ -110,10 +143,9 @@ const CustomAnchor = ({
       onOpenChange={setTooltipOpen}
     >
       <a
-        className="cursor-pointer font-medium !text-[#00bbff] transition-all hover:!text-white hover:underline"
+        className="cursor-pointer rounded-sm bg-primary/20 px-1 text-sm font-medium text-primary transition-all hover:text-white hover:underline"
         rel="noopener noreferrer"
         target="_blank"
-        // {...props}
       >
         {children}
       </a>

@@ -1,19 +1,17 @@
-import { Spinner } from "@heroui/spinner";
-import Image from "next/image";
-import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-
 import StarterText from "@/components/Chat/StarterText";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useConversation } from "@/hooks/useConversation";
 import { useConversationList } from "@/hooks/useConversationList";
 import { useLoading } from "@/hooks/useLoading";
+import { useLoadingText } from "@/hooks/useLoadingText";
+import { SetImageDataType } from "@/types/chatBubbleTypes";
 import { MessageType } from "@/types/convoTypes";
-
-import { ScrollArea } from "../ui/scroll-area";
-import ChatBubble_Actions_Image from "./ChatBubbles/Actions/ChatBubble_Actions_Image";
+import { Spinner } from "@heroui/spinner";
+import Image from "next/image";
+import { useParams, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import ChatBubbleUser from "./ChatBubbles/ChatBubbleUser";
+import GeneratedImageSheet from "./GeneratedImageSheet";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
@@ -22,10 +20,10 @@ export default function ChatRenderer() {
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
   const { isLoading } = useLoading();
+  const { loadingText } = useLoadingText();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const scrolledToMessageRef = useRef<string | null>(null);
-
-  const [imageData, setImageData] = useState({
+  const [imageData, setImageData] = useState<SetImageDataType>({
     src: "",
     prompt: "",
     improvedPrompt: "",
@@ -63,17 +61,15 @@ export default function ChatRenderer() {
 
   if (!!convoMessages && convoMessages?.length === 0) {
     return (
-      <div className="flex flex-1 items-start justify-center">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <Image
-            alt="GAIA Logo"
-            src={"/branding/logo.webp"}
-            width={150}
-            height={150}
-            className="bobbing hover:translate-y-3"
-          />
-          <StarterText />
-        </div>
+      <div className="flex flex-1 flex-col items-center justify-center gap-2">
+        <Image
+          alt="GAIA Logo"
+          src={"/branding/logo.webp"}
+          width={150}
+          height={150}
+          className="bobbing hover:translate-y-3"
+        />
+        <StarterText />
       </div>
     );
   }
@@ -87,48 +83,11 @@ export default function ChatRenderer() {
         } | GAIA`}
       </title>
 
-      <Dialog open={openImage} onOpenChange={setOpenImage}>
-        <DialogContent className="flex min-w-fit flex-col items-center !rounded-3xl border-none bg-zinc-800 px-5 py-3 text-white">
-          <Image
-            alt={"Generated Image"}
-            className="my-2 aspect-square size-[65vh] min-h-[65vh] min-w-[65vh] rounded-3xl"
-            fill={true}
-            src={imageData?.src}
-            objectFit="cover"
-          />
-
-          <div className="flex min-w-[65vh] max-w-[65vh] flex-col justify-evenly gap-1">
-            {imageData?.prompt && (
-              <div className="w-full rounded-xl bg-black/30 p-3">
-                <ScrollArea className="max-h-[50px]">
-                  <div className="font-medium">Your Prompt:</div>
-
-                  <div className="text-sm text-foreground-500">
-                    {imageData.prompt}
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
-            {imageData?.improvedPrompt && (
-              <div className="w-full rounded-xl bg-black/30 p-3">
-                <ScrollArea className="h-[70px]">
-                  <div className="font-medium">Improved Prompt:</div>
-                  <div className="text-sm text-foreground-500">
-                    {imageData.improvedPrompt}
-                  </div>
-                </ScrollArea>
-              </div>
-            )}
-          </div>
-
-          <ChatBubble_Actions_Image
-            fullWidth
-            imagePrompt={imageData?.prompt}
-            setOpenImage={setOpenImage}
-            src={imageData?.src}
-          />
-        </DialogContent>
-      </Dialog>
+      <GeneratedImageSheet
+        imageData={imageData}
+        openImage={openImage}
+        setOpenImage={setOpenImage}
+      />
 
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
@@ -143,7 +102,6 @@ export default function ChatRenderer() {
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
-              filename={message.filename}
               imagePrompt={message.imagePrompt}
               imageSrc={message.imageUrl}
               improvedImagePrompt={message.improvedImagePrompt}
@@ -151,14 +109,13 @@ export default function ChatRenderer() {
               isImage={message.isImage}
               loading={message.loading}
               message_id={message.message_id}
-              pageFetchURL={message.pageFetchURL}
+              pageFetchURLs={message.pageFetchURLs}
               pinned={message.pinned}
               searchWeb={message.searchWeb}
               setImageData={setImageData}
               setOpenImage={setOpenImage}
               text={message.response}
               disclaimer={message.disclaimer}
-              // userinputType={message.userinputType}
               date={message.date}
               search_results={message.search_results}
             />
@@ -167,16 +124,14 @@ export default function ChatRenderer() {
           <ChatBubbleUser
             key={index}
             date={message.date}
-            filename={message.filename}
             message_id={message.message_id}
-            pageFetchURL={message.pageFetchURL}
+            pageFetchURLs={message.pageFetchURLs}
             searchWeb={message.searchWeb}
-            subtype={message.subtype || null}
             text={message.response}
+            fileData={message.fileData}
           />
         ),
       )}
-
       {isLoading && (
         <div className="flex items-center gap-4 text-sm font-medium">
           <Image
@@ -186,7 +141,7 @@ export default function ChatRenderer() {
             height={30}
             className={`animate-spin`}
           />
-          <div>GAIA is thinking</div>
+          <div>{loadingText}</div>
           <Spinner
             variant="dots"
             color="primary"

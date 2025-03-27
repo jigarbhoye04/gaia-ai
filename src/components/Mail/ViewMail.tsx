@@ -1,13 +1,17 @@
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
+import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
 import { User } from "@heroui/user";
 import he from "he";
 import { XIcon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Drawer } from "vaul";
 
 import GmailBody from "@/components/Mail/GmailBody";
 import { EmailData } from "@/types/mailTypes";
+import { apiauth } from "@/utils/apiaxios";
 import { parseEmail } from "@/utils/mailUtils";
 
 import { MagicWand05Icon, StarsIcon } from "../Misc/icons";
@@ -17,7 +21,21 @@ interface ViewEmailProps {
   onOpenChange: () => void;
 }
 
-function AISummary() {
+interface EmailSummaryRequest {
+  message_id: string;
+  include_action_items: boolean;
+  max_length?: number;
+}
+
+interface EmailSummaryResponse {
+  email_id: string;
+  email_subject: string;
+  result: { response: string };
+}
+
+function AISummary({ summary }: { summary: string | null }) {
+  if (!summary) return null;
+
   return (
     <>
       <div className="mb-3 flex w-fit flex-col rounded-xl bg-zinc-800 p-2 shadow-md outline outline-2 outline-zinc-700">
@@ -39,20 +57,7 @@ function AISummary() {
             <span>GAIA Email Summary</span>
           </Chip>
         </div>
-        <p className="p-2 text-sm text-white">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi magnam
-          doloribus tempore molestiae nemo debitis blanditiis. Consequatur iusto
-          impedit atque aliquid maiores, cupiditate id autem porro temporibus
-          est! Nemo necessitatibus quod officia cupiditate doloribus quidem
-          nihil temporibus, ullam, voluptates soluta reprehenderit maxime
-          dolorum minus accusantium aperiam quas voluptatibus! Dolore, aliquid
-          ratione facilis voluptates corrupti sit molestias? Ipsam enim, dicta
-          iusto vitae, autem nostrum illo accusamus iste ea deleniti aliquam
-          quas sapiente reiciendis. Nobis placeat tempore assumenda fuga modi.
-          Esse minima quaerat accusantium, alias facere vero voluptas suscipit
-          quod quo repellendus magni molestiae quis eum, rem nisi cumque a
-          laborum libero?
-        </p>
+        <div className="p-2 text-sm text-white">{summary}</div>
       </div>
     </>
   );
@@ -60,6 +65,33 @@ function AISummary() {
 
 export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
   const { name: nameFrom, email: emailFrom } = parseEmail(mail?.from);
+  const [summary, setSummary] = useState<string | null>(mail?.summary || null);
+  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
+
+  const handleSummarize = async () => {
+    if (!mail?.id) return;
+
+    setIsLoadingSummary(true);
+
+    try {
+      const summaryRequest: EmailSummaryRequest = {
+        message_id: mail.id,
+        include_action_items: true,
+        max_length: 250,
+      };
+
+      const response = await apiauth.post("/gmail/summarize", summaryRequest);
+      const summaryData: EmailSummaryResponse = response.data;
+
+      setSummary(summaryData.result.response);
+    } catch (error) {
+      console.error("Error summarizing email:", error);
+      toast.error("Failed to summarize email. Please try again.");
+      setSummary(null);
+    } finally {
+      setIsLoadingSummary(false);
+    }
+  };
 
   return (
     <Drawer.Root direction="right" open={!!mail} onOpenChange={onOpenChange}>
@@ -82,25 +114,18 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
 
             <header className="mb-2 flex items-center gap-2">
               <Button
-                // variant="faded"
                 color="primary"
                 className="font-medium"
                 startContent={<MagicWand05Icon color={undefined} />}
+                isLoading={isLoadingSummary}
+                onPress={handleSummarize}
+                isDisabled={isLoadingSummary}
               >
-                Summarise
-              </Button>
-              <Button
-                variant="faded"
-                color="primary"
-                className="font-medium"
-                isDisabled
-                startContent={<MagicWand05Icon color={undefined} />}
-              >
-                Categorise
+                {isLoadingSummary ? "Summarizing..." : "Summarise"}
               </Button>
             </header>
 
-            <AISummary />
+            <AISummary summary={summary} />
 
             {/* <div className="flex items-center gap-4"> */}
             {/* <Chip
@@ -139,24 +164,22 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
 
             <Drawer.Description className="space-y-4 text-foreground-600">
               {mail?.snippet && (
-                <>
-                  <p className="text-md text-muted-foreground">
-                    {he.decode(mail.snippet)}
-                  </p>
-                  <User
-                    avatarProps={{
-                      src: "/profile_photo/profile_photo.webp",
-                      size: "sm",
-                    }}
-                    description={emailFrom}
-                    name={nameFrom}
-                    classNames={{
-                      name: "font-medium",
-                      description: "text-gray-400",
-                    }}
-                  />
-                </>
+                <div className="text-md text-muted-foreground">
+                  {he.decode(mail.snippet)}
+                </div>
               )}
+              <User
+                avatarProps={{
+                  src: "/profile_photo/profile_photo.webp",
+                  size: "sm",
+                }}
+                description={emailFrom}
+                name={nameFrom}
+                classNames={{
+                  name: "font-medium",
+                  description: "text-gray-400",
+                }}
+              />
 
               {mail && (
                 <div>

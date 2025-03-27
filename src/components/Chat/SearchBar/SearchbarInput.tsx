@@ -1,3 +1,4 @@
+import { useLoading } from "@/hooks/useLoading";
 import { Textarea } from "@heroui/input";
 import React from "react";
 
@@ -9,7 +10,6 @@ interface SearchbarInputProps {
   currentHeight: number;
   onHeightChange: (height: number) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  loading: boolean;
 }
 
 const SearchbarInput: React.FC<SearchbarInputProps> = ({
@@ -20,7 +20,6 @@ const SearchbarInput: React.FC<SearchbarInputProps> = ({
   currentHeight,
   onHeightChange,
   inputRef,
-  loading,
 }) => {
   return (
     <form onSubmit={handleFormSubmit}>
@@ -32,13 +31,11 @@ const SearchbarInput: React.FC<SearchbarInputProps> = ({
             " px-3 data-[hover=true]:bg-zinc-800 group-data-[focus-visible=true]:ring-zinc-800 group-data-[focus-visible=true]:ring-offset-0",
           innerWrapper: `${currentHeight > 24 ? "items-end" : "items-center"}`,
         }}
-        disabled={loading}
-        isInvalid={searchbarText.length > 10000}
+        isInvalid={searchbarText.length > 10_000}
         maxRows={13}
         minRows={1}
         placeholder="Ask gaia something..."
         size="lg"
-        // className="ring-1 ring-zinc-700"
         value={searchbarText}
         onHeightChange={onHeightChange}
         onKeyDown={handleKeyDown}

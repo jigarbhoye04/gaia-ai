@@ -1,12 +1,10 @@
 // TextBubble.tsx
-import { Chip } from "@heroui/chip";
-import { AlertTriangleIcon, ArrowUpRight, Check, Loader2 } from "lucide-react";
-import { lazy } from "react";
-
 import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
 import { InternetIcon } from "@/components/Misc/icons";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
-
+import { Chip } from "@heroui/chip";
+import { AlertTriangleIcon, ArrowUpRight, Check, Loader2 } from "lucide-react";
+import { lazy } from "react";
 import CalendarEventSection from "./CalendarEventSection";
 import SearchResults from "./SearchResults";
 
@@ -14,22 +12,15 @@ const MarkdownRenderer = lazy(
   () => import("@/components/Chat/MarkdownRenderer"),
 );
 
-interface TextBubbleProps extends ChatBubbleBotProps {
-  fileScanningText: string;
-}
-
 export default function TextBubble({
   text,
-  loading,
   searchWeb,
-  pageFetchURL,
-  filename,
+  pageFetchURLs,
   disclaimer,
   calendar_options,
   intent,
-  fileScanningText,
   search_results,
-}: TextBubbleProps) {
+}: ChatBubbleBotProps) {
   return (
     <>
       {search_results && <SearchResults search_results={search_results} />}
@@ -47,37 +38,23 @@ export default function TextBubble({
               </div>
             </Chip>
           )}
-          {!!pageFetchURL && (
-            <Chip
-              color="primary"
-              startContent={<ArrowUpRight color="#00bbff" height={20} />}
-              variant="flat"
-            >
-              <div className="flex items-center gap-1 font-medium text-primary">
-                Fetched{" "}
-                <CustomAnchor href={pageFetchURL}>
-                  {pageFetchURL.replace(/^https?:\/\//, "")}
-                </CustomAnchor>
-              </div>
-            </Chip>
-          )}
-          {!!filename && (
-            <Chip color="primary" size="lg" variant="flat">
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <span className="animate-spin">
-                    <Loader2 className="text-white" height={17} width={17} />
-                  </span>
-                  {fileScanningText}
+
+          {!!pageFetchURLs &&
+            pageFetchURLs.map((pageFetchURL, index) => (
+              <Chip
+                key={index}
+                color="primary"
+                startContent={<ArrowUpRight color="#00bbff" height={20} />}
+                variant="flat"
+              >
+                <div className="flex items-center gap-1 font-medium text-primary">
+                  Fetched{" "}
+                  <CustomAnchor href={pageFetchURL}>
+                    {pageFetchURL.replace(/^https?:\/\//, "")}
+                  </CustomAnchor>
                 </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Check className="text-white" height={17} width={17} />
-                  Document Uploaded!
-                </div>
-              )}
-            </Chip>
-          )}
+              </Chip>
+            ))}
 
           {!!text && <MarkdownRenderer content={text.toString()} />}
 

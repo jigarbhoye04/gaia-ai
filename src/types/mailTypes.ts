@@ -8,6 +8,7 @@ export interface EmailData {
   labelIds?: string[];
   headers: Record<string, string>;
   payload: EmailPayload;
+  summary?: string
 }
 
 export interface EmailsResponse {
