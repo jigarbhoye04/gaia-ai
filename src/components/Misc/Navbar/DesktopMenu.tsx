@@ -16,7 +16,11 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
             className="font-medium"
             color="primary"
             endContent={
-              <BubbleConversationChatIcon color="foreground" width="17" />
+              <BubbleConversationChatIcon
+                color="foreground"
+                width="17"
+                className="focus:outline-none"
+              />
             }
             radius="lg"
             size="md"

@@ -106,7 +106,7 @@ export default function GoalPage() {
     () => ({
       customNode: (props) => <CustomNode {...props} />,
     }),
-    [currentlySelectedNodeId],
+    [CustomNode],
   );
 
   const fetchGoalData = useCallback(async () => {

@@ -1,4 +1,5 @@
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tab, Tabs } from "@heroui/tabs";
 import { useState } from "react";
@@ -7,7 +8,6 @@ import CalendarCard from "@/components/Calendar/CalendarCard";
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
-  CalendarAdd01Icon,
   GoogleCalendar as GoogleCalendarIcon,
 } from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
@@ -15,11 +15,9 @@ import { SectionHeading } from "@/layouts/LandingSectionHeading";
 import { CalendarEvent, GoogleCalendar } from "@/types/calendarTypes";
 
 import CalendarMessages from "../Dummy/CalendarMessages";
-import { Chip } from "@heroui/chip";
 
 export default function Section_Calendar() {
   const [addedEvents, setAddedEvents] = useState<number[]>([]);
-  const [openedCalendar, setOpenedCalendar] = useState(false);
   const [selectedTab, setSelectedTab] = useState("chat");
 
   const dummyCalendars: GoogleCalendar[] = [

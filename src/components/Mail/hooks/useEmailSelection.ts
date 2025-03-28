@@ -2,7 +2,7 @@ import { InfiniteData, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { EmailData, EmailsResponse } from "@/types/mailTypes";
+import { EmailsResponse } from "@/types/mailTypes";
 import { apiauth } from "@/utils/apiaxios";
 
 /**

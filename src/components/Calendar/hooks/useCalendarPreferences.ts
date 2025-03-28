@@ -1,4 +1,4 @@
-import { useCallback, useMemo,useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { debounce } from '@/lib/utils';
 import { GoogleCalendar } from '@/types/calendarTypes';
@@ -8,7 +8,10 @@ export const useCalendarPreferences = (onCalendarsUpdate: (calendars: string[]) 
     const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
     const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
 
-    const stableOnCalendarsUpdate = useCallback(onCalendarsUpdate, []);
+    const stableOnCalendarsUpdate = useCallback(
+        (updatedCalendars: string[]) => onCalendarsUpdate(updatedCalendars),
+        [onCalendarsUpdate]
+    );
 
     const updatePreferences = useMemo(
         () =>

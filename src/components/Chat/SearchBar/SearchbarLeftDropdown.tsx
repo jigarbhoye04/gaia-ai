@@ -16,8 +16,7 @@ import {
   AttachmentIcon,
   GlobalSearchIcon,
   Image02Icon,
-  InternetIcon,
-  PlusSignIcon,
+  PlusSignIcon
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
 

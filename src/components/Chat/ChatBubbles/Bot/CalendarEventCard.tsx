@@ -1,15 +1,9 @@
 import { Button } from "@heroui/button";
 import { useCallback, useState } from "react";
-import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
-import {
-  CalendarAdd01Icon,
-  PencilEdit01Icon,
-  Tick02Icon,
-} from "@/components/Misc/icons";
+import { CalendarAdd01Icon, Tick02Icon } from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
-import { openModal } from "@/redux/slices/calendarModalSlice";
 import {
   CalendarEvent,
   EventCardProps,
@@ -28,20 +22,20 @@ export function CalendarEventCard({
   onDummyAddEvent,
 }: EventCardProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "added">("idle");
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
-  const handleEditPress = useCallback(() => {
-    dispatch(
-      openModal({
-        event,
-        isDummy,
-        onSuccess: () => {
-          setStatus("added");
-          onDummyAddEvent?.();
-        },
-      }),
-    );
-  }, [event, isDummy, onDummyAddEvent, dispatch]);
+  // const handleEditPress = useCallback(() => {
+  //   dispatch(
+  //     openModal({
+  //       event,
+  //       isDummy,
+  //       onSuccess: () => {
+  //         setStatus("added");
+  //         onDummyAddEvent?.();
+  //       },
+  //     }),
+  //   );
+  // }, [event, isDummy, onDummyAddEvent, dispatch]);
 
   const handleAddEvent = useCallback(async () => {
     if (isDummy) {
@@ -87,18 +81,6 @@ export function CalendarEventCard({
         <div className="flex flex-1 flex-col pl-1">
           <div className="flex w-full items-center justify-between">
             <div className="font-medium">{event.summary}</div>
-            {/* <Button
-              isIconOnly
-              onPress={() => {
-                handleEditPress();
-              }}
-              className="z-10"
-              size="sm"
-              variant="light"
-              color="primary"
-            >
-              <PencilEdit01Icon width={20} color={undefined} />
-            </Button> */}
           </div>
           <div className="text-xs text-primary">
             {isTimedEvent(event) ? (
@@ -143,38 +125,38 @@ export function CalendarEventsList({
   onDummyAddEvent,
   disableAnimation = false,
 }: UnifiedCalendarEventsListProps) {
-  const [isAddingAll, setIsAddingAll] = useState(false);
-  const dispatch = useDispatch();
+  // const [isAddingAll, setIsAddingAll] = useState(false);
+  // const dispatch = useDispatch();
 
-  const handleAddAll = useCallback(async () => {
-    setIsAddingAll(true);
-    let successCount = 0;
+  // const handleAddAll = useCallback(async () => {
+  //   setIsAddingAll(true);
+  //   let successCount = 0;
 
-    for (let i = 0; i < events.length; i++) {
-      await new Promise<void>((resolve) => {
-        dispatch(
-          openModal({
-            event: events[i],
-            isDummy,
-            onSuccess: () => {
-              successCount++;
-              onDummyAddEvent?.(i);
-              resolve();
-            },
-          }),
-        );
-      });
-    }
+  //   for (let i = 0; i < events.length; i++) {
+  //     await new Promise<void>((resolve) => {
+  //       dispatch(
+  //         openModal({
+  //           event: events[i],
+  //           isDummy,
+  //           onSuccess: () => {
+  //             successCount++;
+  //             onDummyAddEvent?.(i);
+  //             resolve();
+  //           },
+  //         }),
+  //       );
+  //     });
+  //   }
 
-    // Show single toast after all events are processed
-    if (successCount > 0) {
-      toast.success(
-        `Added ${successCount} ${successCount === 1 ? "event" : "events"} to calendar!`,
-      );
-    }
+  //   // Show single toast after all events are processed
+  //   if (successCount > 0) {
+  //     toast.success(
+  //       `Added ${successCount} ${successCount === 1 ? "event" : "events"} to calendar!`,
+  //     );
+  //   }
 
-    setIsAddingAll(false);
-  }, [events, isDummy, onDummyAddEvent, dispatch]);
+  //   setIsAddingAll(false);
+  // }, [events, isDummy, onDummyAddEvent, dispatch]);
 
   return (
     <AnimatedSection

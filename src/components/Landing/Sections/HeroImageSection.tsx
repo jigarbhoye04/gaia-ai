@@ -1,8 +1,6 @@
 import { Button } from "@heroui/button";
 import { ReactNode, useState } from "react";
 
-import { Safari } from "@/components/ui/safari";
-import { ShineBorder } from "@/components/ui/shine-border";
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
@@ -10,6 +8,8 @@ import {
   Mail01Icon,
   Target02Icon,
 } from "@/components/Misc/icons";
+import { Safari } from "@/components/ui/safari";
+import { ShineBorder } from "@/components/ui/shine-border";
 
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import DummySearchbar from "../Dummy/DummySearchbar";

@@ -1,21 +1,21 @@
 import React from "react";
+import { CSSProperties } from "react";
 import { PrismAsyncLight } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 interface SyntaxHighlighterProps {
-  style?: object;
+  style?: CSSProperties;
   language?: string;
   children?: React.ReactNode;
   className?: string;
   showLineNumbers?: boolean;
-  lineNumberStyle?: object;
+  lineNumberStyle?: CSSProperties;
   wrapLines?: boolean;
   wrapLongLines?: boolean;
   lineProps?: object | ((lineNumber: number) => object);
-  customStyle?: object;
+  customStyle?: CSSProperties;
   codeTagProps?: object;
   useInlineStyles?: boolean;
-  // [key: string]: any;
 }
 
 interface MermaidCodeProps {
@@ -35,6 +35,7 @@ const MermaidCode: React.FC<MermaidCodeProps> = ({
       className="m-0 !bg-black p-0 !text-[10px]"
       language="mermaid"
       style={vscDarkPlus}
+      customStyle={{} as CSSProperties}
     >
       {String(children).replace(/\n$/, "")}
     </PrismAsyncLight>

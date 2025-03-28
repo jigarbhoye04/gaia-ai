@@ -1,4 +1,5 @@
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Send } from "lucide-react";
 import NextImage from "next/image";
@@ -12,7 +13,6 @@ import {
 } from "@/components/Misc/icons";
 
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
-import { Chip } from "@heroui/chip";
 
 interface Step {
   icon: React.ReactNode;

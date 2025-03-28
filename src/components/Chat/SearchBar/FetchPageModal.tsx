@@ -1,7 +1,7 @@
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
-import { AlertCircle, Plus, X } from "lucide-react";
-import React, { useEffect,useState } from "react";
+import { Plus, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
 import {
   Dialog,
@@ -37,6 +37,7 @@ const FetchPageModal: React.FC<FetchPageModalProps> = ({
       new URL(url);
       return true;
     } catch (err) {
+      console.error("Invalid URL:", err);
       return false;
     }
   };

@@ -1,6 +1,5 @@
 "use client";
 
-import debounce from "lodash.debounce";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
@@ -18,7 +17,7 @@ const MainChat = React.memo(function MainChat() {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
-  const [isAtBottom, setIsAtBottom] = useState(false);
+  // const [isAtBottom, setIsAtBottom] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
   const fileUploadRef = useRef<{
@@ -26,11 +25,11 @@ const MainChat = React.memo(function MainChat() {
     handleDroppedFiles: (files: File[]) => void;
   } | null>(null);
 
-  const handleScroll = debounce((event: React.UIEvent, threshold = 1) => {
-    const { scrollTop, scrollHeight, clientHeight } =
-      event.target as HTMLElement;
-    setIsAtBottom(scrollHeight - scrollTop <= clientHeight + threshold);
-  }, 100);
+  // const handleScroll = debounce((event: React.UIEvent, threshold = 1) => {
+  //   const { scrollTop, scrollHeight, clientHeight } =
+  //     event.target as HTMLElement;
+  //   setIsAtBottom(scrollHeight - scrollTop <= clientHeight + threshold);
+  // }, 100);
 
   const scrollToBottom = () => {
     if (chatRef.current)
@@ -69,12 +68,10 @@ const MainChat = React.memo(function MainChat() {
     e.stopPropagation();
     setIsDragging(false);
 
-    // Check if files were dropped
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const files = Array.from(e.dataTransfer.files);
       setDroppedFiles(files);
 
-      // If we have a reference to the file upload modal, open it with the dropped files
       if (fileUploadRef.current) {
         fileUploadRef.current.handleDroppedFiles(files);
         fileUploadRef.current.openFileUploadModal();
@@ -82,21 +79,36 @@ const MainChat = React.memo(function MainChat() {
     }
   }, []);
 
-  useEffect(() => {
+  // ! THIS DOESNT CAUSE AN INFINITE LOOP
+  // useEffect(() => {
+  //   if (convoIdParam) {
+  //     fetchMessages(convoIdParam, updateConvoMessages, router).then(() => {
+  //       setTimeout(scrollToBottom, 500);
+  //     });
+  //   } else if (pathname !== "/c") router.push("/c");
+
+  //   if (inputRef?.current) inputRef.current.focus();
+  // }, [convoIdParam]);
+
+  const fetchConvoMessages = useCallback(async () => {
     if (convoIdParam) {
-      fetchMessages(convoIdParam, updateConvoMessages, router).then(() => {
-        setTimeout(scrollToBottom, 500);
-      });
-    } else if (pathname !== "/c") router.push("/c");
+      await fetchMessages(convoIdParam, updateConvoMessages, router);
+      setTimeout(scrollToBottom, 500);
+    } else if (pathname !== "/c") {
+      router.push("/c");
+    }
 
     if (inputRef?.current) inputRef.current.focus();
-  }, [convoIdParam]);
+  }, [convoIdParam, updateConvoMessages, router, pathname]);
 
   useEffect(() => {
-    return () => {
-      handleScroll.cancel();
-    };
-  }, [handleScroll]);
+    fetchConvoMessages();
+  }, [fetchConvoMessages]);
+  // useEffect(() => {
+  //   return () => {
+  //     handleScroll.cancel();
+  //   };
+  // }, [handleScroll]);
 
   return (
     <React.Fragment>

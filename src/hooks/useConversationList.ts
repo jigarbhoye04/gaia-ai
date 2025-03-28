@@ -24,13 +24,11 @@ export const useConversationList = () => {
 export const useFetchConversations = () => {
   const dispatch: AppDispatch = useDispatch();
 
-  const fetchConvos = async (
+  return async (
     page: number = 1,
     limit: number = 20,
     append: boolean = true,
   ) => {
     return dispatch(fetchConversations({ page, limit, append }));
   };
-
-  return fetchConvos;
 };

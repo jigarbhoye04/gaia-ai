@@ -1,6 +1,6 @@
+import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 
-import Image from "next/image";
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
@@ -31,17 +31,14 @@ const ImageCarousel = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const nextIndex = () => {
+  const nextIndex = useCallback(() => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
-  };
+  }, [images.length]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      nextIndex();
-    }, 4000);
-
+    const timer = setInterval(nextIndex, 4000);
     return () => clearInterval(timer);
-  }, [images.length]);
+  }, [nextIndex]);
 
   const handleDotClick = useCallback((index: number) => {
     setCurrentIndex(index);

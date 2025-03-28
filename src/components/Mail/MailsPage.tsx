@@ -17,10 +17,7 @@ import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
 import { useEmailActions } from "@/components/Mail/hooks/useEmailActions";
-import {
-  ListItem,
-  useEmailGrouping,
-} from "@/components/Mail/hooks/useEmailGrouping";
+import { useEmailGrouping } from "@/components/Mail/hooks/useEmailGrouping";
 import { useEmailReadStatus } from "@/components/Mail/hooks/useEmailReadStatus";
 import { useEmailSelection } from "@/components/Mail/hooks/useEmailSelection";
 import { useEmailViewer } from "@/components/Mail/hooks/useEmailViewer";
@@ -45,7 +42,6 @@ export default function MailsPage() {
     loadMoreItems,
   } = useInfiniteEmails();
 
-  // Email selection and bulk actions
   const {
     selectedEmails,
     toggleEmailSelection,
@@ -53,15 +49,13 @@ export default function MailsPage() {
     bulkMarkAsRead,
     bulkMarkAsUnread,
     bulkStarEmails,
-    bulkUnstarEmails,
+    // bulkUnstarEmails,
     bulkArchiveEmails,
     bulkTrashEmails,
   } = useEmailSelection();
 
-  // Group emails by date
   const groupedItems = useEmailGrouping(emails);
 
-  // Email viewing functionality
   const {
     selectedEmail,
     threadMessages,

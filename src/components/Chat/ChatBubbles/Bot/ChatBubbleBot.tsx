@@ -1,5 +1,5 @@
 // ChatBubbleBot.tsx
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef } from "react";
 
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { parseDate } from "@/utils/fetchDate";
@@ -21,7 +21,6 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     date,
   } = props;
 
-  // Memoized actions container to avoid unnecessary re-renders
   const actionsRef = useRef<HTMLDivElement>(null);
 
   const handleMouseOver = useCallback(() => {

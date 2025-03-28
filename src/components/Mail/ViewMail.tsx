@@ -11,22 +11,13 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import he from "he";
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronRight,
-  Reply,
-  ReplyAll,
-  Send,
-  XIcon,
-} from "lucide-react";
+import { Reply, ReplyAll, Send, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
 
 import GmailBody from "@/components/Mail/GmailBody";
-import { useEmailReadStatus } from "@/components/Mail/hooks/useEmailReadStatus";
-import { EmailData, EmailThreadResponse } from "@/types/mailTypes";
+import { EmailData } from "@/types/mailTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { parseEmail } from "@/utils/mailUtils";
 
@@ -95,24 +86,21 @@ export default function ViewEmail({
   const [replyTo, setReplyTo] = useState<EmailData | null>(null);
   const [isSending, setIsSending] = useState(false);
 
-  // Sort thread messages by date if available
   const sortedThreadMessages = [...threadMessages].sort((a, b) => {
     return new Date(a.time).getTime() - new Date(b.time).getTime();
   });
 
-  // Get and format recipients for reply
-  const getRecipients = (email: EmailData | null) => {
-    if (!email) return { to: "", cc: "", bcc: "" };
+  // const getRecipients = (email: EmailData | null) => {
+  //   if (!email) return { to: "", cc: "", bcc: "" };
 
-    const headers = email.headers || {};
-    return {
-      to: headers["Reply-To"] || headers["From"] || email.from || "",
-      cc: "",
-      bcc: "",
-    };
-  };
+  //   const headers = email.headers || {};
+  //   return {
+  //     to: headers["Reply-To"] || headers["From"] || email.from || "",
+  //     cc: "",
+  //     bcc: "",
+  //   };
+  // };
 
-  // TipTap editor for reply
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -274,7 +262,7 @@ export default function ViewEmail({
               {/* Thread messages */}
               {sortedThreadMessages.length > 0 ? (
                 <div className="mt-4 space-y-6">
-                  {sortedThreadMessages.map((message, index) => {
+                  {sortedThreadMessages.map((message) => {
                     const {
                       name: messageSenderName,
                       email: messageSenderEmail,

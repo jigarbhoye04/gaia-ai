@@ -1,13 +1,11 @@
 "use client";
 
-import { Button } from "@heroui/button";
 import { Spinner } from "@heroui/spinner";
-import { useCallback,useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import CalendarCard from "@/components/Calendar/CalendarCard";
 import CalendarEventDialog from "@/components/Calendar/CalendarEventDialog";
 import CalendarSelector from "@/components/Calendar/CalendarSelector";
-import { CalendarAdd01Icon } from "@/components/Misc/icons";
 import { GoogleCalendarEvent } from "@/types/calendarTypes";
 
 import { useCalendarEvents } from "./hooks/useCalendarEvents";
@@ -28,7 +26,7 @@ export default function Calendar() {
     error,
     fetchEvents,
     resetEvents,
-    eventIdsRef,
+    // eventIdsRef,
   } = useCalendarEvents();
 
   const groupedEventsByMonth = useEventGroups(calendarEvents);

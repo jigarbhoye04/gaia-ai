@@ -64,7 +64,7 @@ export default function ChatsList() {
 
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [fetchConversations]);
 
   // We assume the provider auto-fetches the first page.
   // Once paginationMeta is available, we consider the initial load complete.
