@@ -13,6 +13,7 @@ const sections = {
   InternetSection: lazy(
     () => import("@/components/Landing/Sections/InternetSection"),
   ),
+  MailSection: lazy(() => import("@/components/Landing/Sections/MailSection")),
   GridSection: lazy(
     () => import("@/components/Landing/Sections/FeatureGridSection"),
   ),

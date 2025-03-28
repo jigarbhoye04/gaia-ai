@@ -144,7 +144,7 @@ export default function MailsPage() {
         content={
           <div className="flex w-[300px] flex-col p-1">
             <div className="text-lg font-medium leading-tight">{title}</div>
-            <div>{subtitle}</div>
+            {/* <div>{subtitle}</div> */}
           </div>
         }
         onClose={() => {

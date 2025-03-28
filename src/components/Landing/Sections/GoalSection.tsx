@@ -263,7 +263,8 @@ function GoalImage({ image }: GoalImageProps) {
       <NextImage
         fill={true}
         alt="Goal step illustration"
-        className="min-h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center outline outline-4 outline-zinc-800 transition-all sm:w-screen sm:max-w-screen-xl"
+        // outline outline-4 outline-zinc-800
+        className="min-h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center transition-all sm:w-screen sm:max-w-screen-xl"
         src={image}
       />
       {image === "/landing/blur_goals.webp" && (

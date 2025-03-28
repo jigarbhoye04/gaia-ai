@@ -25,7 +25,7 @@ const StaticSidebar = ({
 
   return (
     <div
-      className={`absolute -bottom-12 -right-12 z-20 h-fit max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 ${
+      className={`absolute -bottom-14 -right-14 z-20 h-fit max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 ${
         isVisible
           ? `pointer-events-auto sm:opacity-100`
           : "pointer-events-none sm:opacity-0"

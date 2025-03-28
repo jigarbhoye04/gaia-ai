@@ -62,7 +62,7 @@ const ImageCarousel = ({
               src={image.src}
               alt={image.alt}
               fill
-              className="rounded-lg object-cover"
+              className="rounded-2xl object-cover"
             />
           </div>
         ))}

@@ -123,14 +123,16 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
         contentLength,
         clarityOption,
       });
-      try {
-        const response = JSON.parse(res.data.result.response);
+
+      const response = res.data;
+      if (response.subject && response.body) {
         const formattedBody = marked(response.body.replace(/\n/g, "<br />"));
         if (editor) editor.commands.setContent(formattedBody);
         setSubject(response.subject);
-      } catch (error) {
-        console.log("Error composing ai mail " + error);
-        setError(res.data.result.response);
+      } else {
+        console.log(`Invalid response format: ${JSON.stringify(response)}`);
+        setError("Invalid response format from server");
+        toast.error("Invalid response format from server");
       }
     } catch (error) {
       console.error("Error processing email:", error);
@@ -158,7 +160,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
             }`}
           />
           <Drawer.Content
-            className="fixed bottom-0 right-0 z-[10] flex min-h-[70vh] w-[50vw] flex-col gap-2 rounded-tl-xl bg-zinc-900 p-4"
+            className="fixed bottom-0 right-0 z-[10] flex min-h-[60vh] w-[50vw] flex-col gap-2 rounded-tl-xl bg-zinc-900 p-4"
             aria-describedby="Drawer to Compose a new email"
           >
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
