@@ -13,10 +13,10 @@ import { toast } from "sonner";
 
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
+import { useLoadingText } from "@/hooks/useLoadingText";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 import fetchDate from "@/utils/fetchDate";
-import { useLoadingText } from "@/hooks/useLoadingText";
 
 interface GenerateImageProps {
   openImageDialog: boolean;

@@ -1,7 +1,9 @@
+import Image from "next/image";
+
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { SetImageDataType } from "@/types/chatBubbleTypes";
-import Image from "next/image";
+
 import ChatBubble_Actions_Image from "../ChatBubbles/Actions/ChatBubble_Actions_Image";
 
 interface GeneratedImageSheetProps {

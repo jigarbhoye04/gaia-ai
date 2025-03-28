@@ -4,6 +4,7 @@ import ObjectID from "bson-objectid";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 
+import { FileData, SearchMode } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useChatStream } from "@/hooks/useChatStream";
 import { useFetchConversations } from "@/hooks/useConversationList";
 import { addMessage } from "@/redux/slices/conversationSlice";
@@ -12,7 +13,6 @@ import { createNewConversation } from "@/utils/chatUtils";
 import fetchDate from "@/utils/fetchDate";
 
 import { useLoading } from "./useLoading";
-import { FileData, SearchMode } from "@/components/Chat/SearchBar/MainSearchbar";
 
 export const useSendMessage = (convoIdParam: string | null) => {
   const router = useRouter();

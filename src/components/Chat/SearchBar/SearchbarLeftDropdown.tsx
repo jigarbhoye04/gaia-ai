@@ -1,3 +1,7 @@
+import { ArrowUpRight, Check } from "lucide-react";
+import React from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,8 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLoading } from "@/hooks/useLoading";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight, Check } from "lucide-react";
-import React from "react";
+
 import {
   AttachmentIcon,
   GlobalSearchIcon,
@@ -16,7 +19,6 @@ import {
   PlusSignIcon,
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
-import { Button } from "@/components/ui/button";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;

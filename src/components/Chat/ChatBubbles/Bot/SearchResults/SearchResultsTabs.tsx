@@ -1,3 +1,10 @@
+import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
+import { formatDistanceToNow } from "date-fns";
+import { Play } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+
 import {
   Image02Icon,
   InternetIcon,
@@ -12,12 +19,6 @@ import {
   VideoResult,
   WebResult,
 } from "@/types/convoTypes";
-import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
-import { formatDistanceToNow } from "date-fns";
-import { Play } from "lucide-react";
-import Image from "next/image";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
 
 interface SearchResultsTabsProps {
   search_results: SearchResults;

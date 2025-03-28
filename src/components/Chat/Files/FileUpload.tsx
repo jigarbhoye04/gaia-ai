@@ -6,14 +6,15 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@heroui/modal";
-import { X, File, Upload, Loader2, Plus, AlertCircle } from "lucide-react";
-import { useState, useRef, useCallback, useEffect } from "react";
-import { toast } from "sonner";
+import { AlertCircle, File, Loader2, Plus, Upload, X } from "lucide-react";
 import Image from "next/image";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { useLoading } from "@/hooks/useLoading";
-import { apiauth } from "@/utils/apiaxios";
 import { useLoadingText } from "@/hooks/useLoadingText";
+import { apiauth } from "@/utils/apiaxios";
+
 import { UploadedFilePreview } from "./FilePreview";
 
 interface FileUploadProps {
@@ -264,7 +265,7 @@ export default function FileUpload({
     } finally {
       setIsUploading(false);
       setIsLoading(false);
-      resetLoadingText;
+      resetLoadingText();
     }
   };
 

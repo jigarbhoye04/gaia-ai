@@ -1,24 +1,8 @@
 "use client";
 
+import { Button } from "@heroui/button";
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
-import { Button } from "@heroui/button";
-import { useState, useCallback } from "react";
-import { FixedSizeList as List, ListChildComponentProps } from "react-window";
-import InfiniteLoader from "react-window-infinite-loader";
-
-import { EmailFrom } from "@/components/Mail/MailFrom";
-import ViewEmail from "@/components/Mail/ViewMail";
-import { useEmailReadStatus } from "@/components/Mail/hooks/useEmailReadStatus";
-import { useEmailActions } from "@/components/Mail/hooks/useEmailActions";
-import { useEmailSelection } from "@/components/Mail/hooks/useEmailSelection";
-import { useEmailGrouping, ListItem } from "@/components/Mail/hooks/useEmailGrouping";
-import { useInfiniteEmails } from "@/components/Mail/hooks/useInfiniteEmails";
-import { useEmailViewer } from "@/components/Mail/hooks/useEmailViewer";
-import { InboxIcon } from "@/components/Misc/icons";
-import { EmailData } from "@/types/mailTypes";
-import { formatTime } from "@/utils/mailUtils";
-import useMediaQuery from "@/hooks/useMediaQuery";
 import {
   ArchiveIcon,
   Square,
@@ -28,18 +12,37 @@ import {
   Trash,
   X,
 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { FixedSizeList as List, ListChildComponentProps } from "react-window";
+import InfiniteLoader from "react-window-infinite-loader";
+
+import { useEmailActions } from "@/components/Mail/hooks/useEmailActions";
+import {
+  ListItem,
+  useEmailGrouping,
+} from "@/components/Mail/hooks/useEmailGrouping";
+import { useEmailReadStatus } from "@/components/Mail/hooks/useEmailReadStatus";
+import { useEmailSelection } from "@/components/Mail/hooks/useEmailSelection";
+import { useEmailViewer } from "@/components/Mail/hooks/useEmailViewer";
+import { useInfiniteEmails } from "@/components/Mail/hooks/useInfiniteEmails";
+import { EmailFrom } from "@/components/Mail/MailFrom";
+import ViewEmail from "@/components/Mail/ViewMail";
+import { InboxIcon } from "@/components/Misc/icons";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import { EmailData } from "@/types/mailTypes";
+import { formatTime } from "@/utils/mailUtils";
 
 export default function MailsPage() {
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
   const { toggleReadStatus: hookToggleReadStatus } = useEmailReadStatus();
   const { toggleStarStatus, archiveEmail, trashEmail } = useEmailActions();
-  
+
   // Get emails with infinite loading
-  const { 
-    emails, 
-    isLoading, 
-    isItemLoaded: isItemLoadedBase, 
-    loadMoreItems 
+  const {
+    emails,
+    isLoading,
+    isItemLoaded: isItemLoadedBase,
+    loadMoreItems,
   } = useInfiniteEmails();
 
   // Email selection and bulk actions
@@ -52,14 +55,20 @@ export default function MailsPage() {
     bulkStarEmails,
     bulkUnstarEmails,
     bulkArchiveEmails,
-    bulkTrashEmails
+    bulkTrashEmails,
   } = useEmailSelection();
 
   // Group emails by date
   const groupedItems = useEmailGrouping(emails);
-  
+
   // Email viewing functionality
-  const { selectedEmail, openEmail, closeEmail } = useEmailViewer();
+  const {
+    selectedEmail,
+    threadMessages,
+    isLoadingThread,
+    openEmail,
+    closeEmail,
+  } = useEmailViewer();
 
   // Handlers for single email actions
   const handleToggleReadStatus = (e: React.MouseEvent, email: EmailData) => {
@@ -372,6 +381,8 @@ export default function MailsPage() {
 
       <ViewEmail
         mail={selectedEmail}
+        threadMessages={threadMessages}
+        isLoadingThread={isLoadingThread}
         onOpenChange={closeEmail}
       />
     </div>

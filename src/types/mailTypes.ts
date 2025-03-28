@@ -8,12 +8,21 @@ export interface EmailData {
   labelIds?: string[];
   headers: Record<string, string>;
   payload: EmailPayload;
-  summary?: string
+  summary?: string;
+  threadId?: string; // Thread ID for grouping related messages
 }
 
 export interface EmailsResponse {
   emails: EmailData[];
   nextPageToken?: string;
+}
+
+export interface EmailThreadResponse {
+  thread_id: string;
+  messages_count: number;
+  thread: {
+    messages: EmailData[];
+  };
 }
 
 export interface EmailPayload {

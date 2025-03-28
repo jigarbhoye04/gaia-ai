@@ -1,12 +1,14 @@
-import { InternetIcon } from "@/components/Misc/icons";
-import { DeepSearchResults, EnhancedWebResult } from "@/types/convoTypes";
 import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
 import { ExternalLinkIcon, LinkIcon, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import SearchResultsTabs from "./SearchResultsTabs";
 import { useDispatch } from "react-redux";
+
+import { InternetIcon } from "@/components/Misc/icons";
 import { openImageDialog } from "@/redux/slices/imageDialogSlice";
+import { DeepSearchResults, EnhancedWebResult } from "@/types/convoTypes";
+
+import SearchResultsTabs from "./SearchResultsTabs";
 
 interface DeepSearchResultsTabsProps {
   deep_search_results: DeepSearchResults;

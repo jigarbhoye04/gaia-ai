@@ -1,8 +1,9 @@
 import Image from "next/image";
 import React from "react";
-import remarkGfm from "remark-gfm";
 // import SuspenseLoader from "../Misc/SuspenseLoader";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 import CodeBlock from "./CodeBlock/CodeBlock";
 import CustomAnchor from "./CodeBlock/CustomAnchor";
 // const ReactMarkdown = lazy(() => import("react-markdown"));

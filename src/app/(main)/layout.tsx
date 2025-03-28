@@ -84,12 +84,12 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           toggleSidebar={toggleSidebar}
         >
           {pathname.startsWith("/mail") ? <EmailSidebar /> : <Sidebar />}
-          </SidebarLayout>
+        </SidebarLayout>
 
         <div
           ref={contentContainerRef}
           onClick={closeOnTouch}
-          className="main_chat bg-custom-gradient p-2 transition-all sm:p-[1rem]"
+          className="main_chat bg-zinc-900/60 p-2 transition-all sm:p-[1rem]"
         >
           <div
             className={`top-0 z-10 flex w-full justify-between rounded-xl transition-opacity sm:left-4 sm:px-0`}

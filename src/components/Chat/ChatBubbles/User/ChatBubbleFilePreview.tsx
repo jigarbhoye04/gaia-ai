@@ -1,5 +1,6 @@
 // filepath: /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/components/Chat/ChatBubbles/ChatBubbleFilePreview.tsx
 import Image from "next/image";
+
 import { getFileIcon, getFormattedFileType } from "../../Files/FilePreview";
 import { FileData } from "../../SearchBar/MainSearchbar";
 

@@ -1,5 +1,8 @@
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import { AlertCircle, Plus, X } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useEffect,useState } from "react";
+
 import {
   Dialog,
   DialogContent,
@@ -8,8 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
+
 import { SearchMode } from "./MainSearchbar";
 
 interface FetchPageModalProps {

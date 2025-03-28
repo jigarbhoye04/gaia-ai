@@ -1,10 +1,12 @@
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { useState } from "react";
+
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
-import { Chip } from "@heroui/chip";
+
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import DummySearchbar from "../Dummy/DummySearchbar";
-import { Button } from "@heroui/button";
 
 const featureOptions = [
   { name: "Chat", imageSrc: "/landing/hero_image_nosearchbar.webp" },

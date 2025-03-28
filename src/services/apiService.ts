@@ -4,9 +4,9 @@ import {
 } from "@microsoft/fetch-event-source";
 import { toast } from "sonner";
 
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import { MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
-import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 export const ApiService = {
   fetchMessages: async (conversationId: string) => {

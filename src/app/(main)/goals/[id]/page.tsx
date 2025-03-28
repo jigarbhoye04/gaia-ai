@@ -100,6 +100,7 @@ export default function GoalPage() {
       </>
     );
   });
+  CustomNode.displayName = "Custom Node";
 
   const nodeTypes = useMemo<{ customNode: React.FC<{ data: NodeData }> }>(
     () => ({

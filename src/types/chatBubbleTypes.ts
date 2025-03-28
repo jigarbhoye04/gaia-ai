@@ -1,7 +1,8 @@
 import React, { Dispatch } from "react";
 
-import { CalendarOptions, DeepSearchResults, SearchResults } from "./convoTypes";
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
+
+import { CalendarOptions, DeepSearchResults, SearchResults } from "./convoTypes";
 
 
 export interface ChatBubbleUserProps {

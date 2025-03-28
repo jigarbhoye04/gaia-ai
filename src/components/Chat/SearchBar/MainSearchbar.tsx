@@ -1,5 +1,3 @@
-import { useLoading } from "@/hooks/useLoading";
-import { useSendMessage } from "@/hooks/useSendMessage";
 import { useParams } from "next/navigation";
 import React, {
   useEffect,
@@ -8,12 +6,16 @@ import React, {
   useState,
 } from "react";
 import { toast } from "sonner";
+
+import { useLoading } from "@/hooks/useLoading";
+import { useSendMessage } from "@/hooks/useSendMessage";
+
+import FilePreview, { UploadedFilePreview } from "../Files/FilePreview";
+import FileUpload from "../Files/FileUpload";
 import GenerateImage from "../Image/GenerateImage";
 import FetchPageModal from "./FetchPageModal";
-import FilePreview, { UploadedFilePreview } from "../Files/FilePreview";
 import SearchbarInput from "./SearchbarInput";
 import SearchbarToolbar from "./SearchbarToolbar";
-import FileUpload from "../Files/FileUpload";
 
 // Define an interface for the complete file data
 export interface FileData {

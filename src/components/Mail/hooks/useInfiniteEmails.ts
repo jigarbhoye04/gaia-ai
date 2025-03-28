@@ -1,5 +1,6 @@
-import { useCallback } from "react";
 import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
+import { useCallback } from "react";
+
 import { EmailsResponse } from "@/types/mailTypes";
 import { fetchEmails } from "@/utils/mailUtils";
 

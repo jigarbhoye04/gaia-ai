@@ -1,6 +1,7 @@
-import { useLoading } from "@/hooks/useLoading";
 import { Textarea } from "@heroui/input";
 import React from "react";
+
+import { useLoading } from "@/hooks/useLoading";
 
 interface SearchbarInputProps {
   searchbarText: string;

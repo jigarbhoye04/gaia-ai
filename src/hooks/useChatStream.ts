@@ -2,6 +2,7 @@ import { EventSourceMessage } from "@microsoft/fetch-event-source";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
+import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
@@ -9,7 +10,6 @@ import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
-import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 /**
  * Custom hook to handle chat streaming via SSE (Server-Sent Events).

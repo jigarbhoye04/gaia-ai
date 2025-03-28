@@ -1,12 +1,12 @@
 // utils/botResponseBuilder.ts
-import { IntentType,MessageType } from "@/types/convoTypes";
+import { IntentType, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 export const buildBotResponse = (
   botMessageId: string,
   botResponseText: string,
   enableSearch: boolean,
-  pageFetchURL: string,
+  pageFetchURLs: string[],
   finalIntent: IntentType,
   overrides: Partial<MessageType> = {},
 ): MessageType => ({
@@ -14,7 +14,7 @@ export const buildBotResponse = (
   message_id: botMessageId,
   response: botResponseText,
   searchWeb: enableSearch,
-  pageFetchURL,
+  pageFetchURLs,
   date: fetchDate(),
   intent: finalIntent.intent,
   calendar_options: finalIntent.calendar_options,

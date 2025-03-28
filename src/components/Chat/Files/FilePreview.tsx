@@ -1,19 +1,20 @@
-import { Pdf02Icon } from "@/components/Misc/icons";
 import { Button } from "@heroui/button";
 import { Spinner } from "@heroui/spinner";
 import {
   File,
-  FileImage,
-  FileText,
-  FileVideo,
+  FileArchive,
   FileAudio,
   FileCode,
+  FileImage,
   FileJson,
-  FileArchive,
   FileSpreadsheet,
+  FileText,
+  FileVideo,
   X,
 } from "lucide-react";
 import Image from "next/image";
+
+import { Pdf02Icon } from "@/components/Misc/icons";
 
 export interface UploadedFilePreview {
   id: string;

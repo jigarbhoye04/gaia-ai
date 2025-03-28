@@ -8,6 +8,7 @@ import ChatRenderer from "@/components/Chat/ChatRenderer";
 import MainSearchbar from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
 import { fetchMessages } from "@/utils/chatUtils";
+
 import { FileDropModal } from "./Files/FileDropModal";
 
 const MainChat = React.memo(function MainChat() {

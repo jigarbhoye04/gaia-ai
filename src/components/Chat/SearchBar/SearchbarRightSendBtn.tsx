@@ -1,8 +1,9 @@
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 
-import { SentIcon } from "../../Misc/icons";
 import { useLoading } from "@/hooks/useLoading";
+
+import { SentIcon } from "../../Misc/icons";
 
 interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
