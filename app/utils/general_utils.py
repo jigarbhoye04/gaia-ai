@@ -52,11 +52,16 @@ def transform_gmail_message(msg) -> Dict:
     return {
         **msg,
         "id": msg.get("id", ""),
+        "threadId": msg.get("threadId", ""),
         "from": headers.get("From", ""),
+        "to": headers.get("To", ""),
+        "cc": headers.get("Cc", ""),
+        "replyTo": headers.get("Reply-To", ""),
         "subject": headers.get("Subject", ""),
         "time": time,
         "snippet": msg.get("snippet", ""),
         "body": decode_message_body(msg),
+        "isThread": bool(msg.get("threadId") and len(msg.get("labelIds", [])) > 0),
         # "raw": msg,
     }
 

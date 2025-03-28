@@ -70,7 +70,22 @@ def process_email(email_data: dict, user_dict: dict):
 
         logger.info(f"{classification_result=}")
 
-        if classification_result and classification_result.get("is_important", False):
+        # Check for Gmail's native important markers
+        is_important_by_gmail = False
+        label_ids = email_data.get("labelIds", [])
+        gmail_important_labels = ["IMPORTANT", "CATEGORY_PRIORITY"]
+
+        for label in gmail_important_labels:
+            if label in label_ids:
+                is_important_by_gmail = True
+                logger.info(f"Email marked as important by Gmail with label: {label}")
+                break
+
+        is_important = (
+            classification_result and classification_result.get("is_important", False)
+        ) or is_important_by_gmail
+
+        if is_important:
             email_record = {
                 "email_id": email_id,
                 "subject": subject,
@@ -78,7 +93,7 @@ def process_email(email_data: dict, user_dict: dict):
                 "is_important": True,
                 "user_id": user_id,
                 "summary": summary,
-                **classification_result,
+                **(classification_result or {}),
             }
 
             query = {"email_id": email_id, "user_id": user_id}
@@ -98,9 +113,7 @@ def process_email(email_data: dict, user_dict: dict):
             "user_id": user_id,
             "summary": summary,
             **classification_result,
-            "is_important": classification_result.get("is_important", False)
-            if classification_result
-            else False,
+            "is_important": is_important,
         }
 
     except Exception as e:

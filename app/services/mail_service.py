@@ -14,6 +14,7 @@ from googleapiclient.http import BatchHttpRequest
 
 from app.config.settings import settings
 from app.config.loggers import general_logger as logger
+from app.utils.general_utils import transform_gmail_message
 
 
 def get_gmail_service(current_user: dict):
@@ -380,3 +381,39 @@ def move_to_inbox(service, message_ids: List[str]) -> List[Dict[str, Any]]:
     """
     logger.info(f"Moving {len(message_ids)} messages to inbox")
     return modify_message_labels(service, message_ids, add_labels=["INBOX"])
+
+
+def fetch_thread(service, thread_id: str) -> Dict[str, Any]:
+    """
+    Fetch a complete email thread with all messages.
+
+    Args:
+        service: Gmail API service instance
+        thread_id: ID of the thread to fetch
+
+    Returns:
+        Thread data including all messages
+    """
+    logger.info(f"Fetching thread with ID: {thread_id}")
+    try:
+        # Get thread with all its messages in a single API call
+        thread = (
+            service.users()
+            .threads()
+            .get(userId="me", id=thread_id, format="full")
+            .execute()
+        )
+
+        # Transform messages in the thread for easier frontend processing
+        if "messages" in thread:
+            thread["messages"] = [
+                transform_gmail_message(msg) for msg in thread["messages"]
+            ]
+
+            # Sort messages by date (oldest first)
+            thread["messages"].sort(key=lambda msg: int(msg.get("internalDate", 0)))
+
+        return thread
+    except HttpError as error:
+        logger.error(f"Error fetching thread {thread_id}: {error}")
+        raise

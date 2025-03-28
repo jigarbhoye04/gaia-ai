@@ -15,7 +15,8 @@ ENV UV_COMPILE_BYTECODE=1 \
 RUN apt update && apt install -y \
     libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
     libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-    libgbm1 libasound2 curl unzip tesseract-ocr && rm -rf /var/lib/apt/lists/*
+    libgbm1 libasound2 curl unzip tesseract-ocr && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first to leverage Docker caching
 COPY pyproject.toml ./
@@ -27,26 +28,38 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---- Builder Stage: Download Additional Resources ----
 FROM base AS builder
 
-# Install Playwright and download browsers
-RUN uv pip install --system playwright && playwright install --with-deps
+# Install the Playwright Python module and download browser binaries
+# RUN uv pip install --system playwright && \
+#     python -m playwright install --with-deps
 
 # Download necessary NLTK data
 RUN python -m nltk.downloader punkt stopwords punkt_tab
 
+# ---- Playwright Stage: Official Browser Assets ----
+FROM mcr.microsoft.com/playwright:v1.51.1-noble AS playwright
+# This stage is used solely to source the official browser assets
+
 # ---- Final Stage: Build Minimal Runtime Image ----
 FROM base AS final
+
+# Create a non-root user for improved security
+RUN adduser --disabled-password --gecos '' appuser && \
+    chown -R appuser /app /root
 
 # Copy application code
 COPY . /app
 
-# Copy downloaded NLTK data from builder stage
+# Copy downloaded NLTK data from the builder stage
 COPY --from=builder /root/nltk_data /root/nltk_data
 
-# Copy Playwright browsers from builder stage
-COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
+# Copy Playwright browser assets from the official image stage
+COPY --from=playwright /ms-playwright /root/.cache/ms-playwright
 
 # Expose application port
 EXPOSE 80
+
+# Switch to non-root user
+USER appuser
 
 # Start the FastAPI application
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

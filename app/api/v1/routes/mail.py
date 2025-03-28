@@ -15,6 +15,7 @@ from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.utils.llm_utils import do_prompt_no_stream
 from app.services.mail_service import (
     fetch_detailed_messages,
+    fetch_thread,
     get_gmail_service,
     send_email,
     mark_messages_as_read,
@@ -482,4 +483,28 @@ async def move_emails_to_inbox(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to move messages to inbox: {str(e)}"
+        )
+
+
+@router.get("/gmail/thread/{thread_id}", summary="Get complete email thread")
+async def get_thread(thread_id: str, current_user: dict = Depends(get_current_user)):
+    """
+    Fetch a complete email thread with all messages.
+
+    - **thread_id**: The Gmail thread ID to fetch
+
+    Returns the thread with all its messages in chronological order.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        thread = fetch_thread(service, thread_id)
+
+        return {
+            "thread_id": thread_id,
+            "messages_count": len(thread.get("messages", [])),
+            "thread": thread,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch email thread: {str(e)}"
         )
