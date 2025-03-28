@@ -4,13 +4,27 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.models.mail_models import EmailRequest, EmailSummaryRequest, SendEmailRequest
+from app.models.mail_models import (
+    EmailRequest,
+    EmailSummaryRequest,
+    SendEmailRequest,
+    EmailReadStatusRequest,
+    EmailActionRequest,
+)
 from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.utils.llm_utils import do_prompt_no_stream
 from app.services.mail_service import (
     fetch_detailed_messages,
     get_gmail_service,
     send_email,
+    mark_messages_as_read,
+    mark_messages_as_unread,
+    star_messages,
+    unstar_messages,
+    trash_messages,
+    untrash_messages,
+    archive_messages,
+    move_to_inbox,
 )
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
@@ -252,4 +266,220 @@ async def summarize_email(
     except Exception as e:
         raise HTTPException(
             status_code=500, detail=f"Failed to summarize email: {str(e)}"
+        )
+
+
+@router.post("/gmail/mark-as-read", summary="Mark emails as read")
+async def mark_as_read(
+    request: EmailReadStatusRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Mark Gmail messages as read by removing the UNREAD label.
+
+    - **message_ids**: List of Gmail message IDs to mark as read
+
+    Returns a list of IDs that were successfully marked as read.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = mark_messages_as_read(service, request.message_ids)
+
+        return {
+            "success": True,
+            "marked_as_read": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages marked as read",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to mark messages as read: {str(e)}"
+        )
+
+
+@router.post("/gmail/mark-as-unread", summary="Mark emails as unread")
+async def mark_as_unread(
+    request: EmailReadStatusRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Mark Gmail messages as unread by adding the UNREAD label.
+
+    - **message_ids**: List of Gmail message IDs to mark as unread
+
+    Returns a list of IDs that were successfully marked as unread.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = mark_messages_as_unread(service, request.message_ids)
+
+        return {
+            "success": True,
+            "marked_as_unread": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages marked as unread",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to mark messages as unread: {str(e)}"
+        )
+
+
+@router.post("/gmail/star", summary="Star emails")
+async def star_emails(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Star Gmail messages by adding the STARRED label.
+
+    - **message_ids**: List of Gmail message IDs to star
+
+    Returns a list of IDs that were successfully starred.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = star_messages(service, request.message_ids)
+
+        return {
+            "success": True,
+            "starred": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages starred",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to star messages: {str(e)}"
+        )
+
+
+@router.post("/gmail/unstar", summary="Unstar emails")
+async def unstar_emails(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Unstar Gmail messages by removing the STARRED label.
+
+    - **message_ids**: List of Gmail message IDs to unstar
+
+    Returns a list of IDs that were successfully unstarred.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = unstar_messages(service, request.message_ids)
+
+        return {
+            "success": True,
+            "unstarred": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages unstarred",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to unstar messages: {str(e)}"
+        )
+
+
+@router.post("/gmail/trash", summary="Move emails to trash")
+async def trash_emails(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Move Gmail messages to trash.
+
+    - **message_ids**: List of Gmail message IDs to move to trash
+
+    Returns a list of IDs that were successfully moved to trash.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = trash_messages(service, request.message_ids)
+
+        return {
+            "success": True,
+            "trashed": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages moved to trash",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to move messages to trash: {str(e)}"
+        )
+
+
+@router.post("/gmail/untrash", summary="Restore emails from trash")
+async def untrash_emails(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Restore Gmail messages from trash.
+
+    - **message_ids**: List of Gmail message IDs to restore from trash
+
+    Returns a list of IDs that were successfully restored from trash.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = untrash_messages(service, request.message_ids)
+
+        return {
+            "success": True,
+            "restored": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages restored from trash",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to restore messages from trash: {str(e)}"
+        )
+
+
+@router.post("/gmail/archive", summary="Archive emails")
+async def archive_emails(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Archive Gmail messages by removing the INBOX label.
+
+    - **message_ids**: List of Gmail message IDs to archive
+
+    Returns a list of IDs that were successfully archived.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = archive_messages(service, request.message_ids)
+
+        return {
+            "success": True,
+            "archived": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages archived",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to archive messages: {str(e)}"
+        )
+
+
+@router.post("/gmail/move-to-inbox", summary="Move emails to inbox")
+async def move_emails_to_inbox(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Move Gmail messages to inbox by adding the INBOX label.
+
+    - **message_ids**: List of Gmail message IDs to move to inbox
+
+    Returns a list of IDs that were successfully moved to inbox.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = move_to_inbox(service, request.message_ids)
+
+        return {
+            "success": True,
+            "moved_to_inbox": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Messages moved to inbox",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to move messages to inbox: {str(e)}"
         )

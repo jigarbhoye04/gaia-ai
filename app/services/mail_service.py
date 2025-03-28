@@ -4,7 +4,7 @@ import time
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from fastapi import UploadFile
 from google.oauth2.credentials import Credentials
@@ -13,6 +13,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import BatchHttpRequest
 
 from app.config.settings import settings
+from app.config.loggers import general_logger as logger
 
 
 def get_gmail_service(current_user: dict):
@@ -168,3 +169,214 @@ def fetch_detailed_messages(service, messages, batch_size=20, delay=2):
         time.sleep(delay)
 
     return detailed_messages
+
+
+def modify_message_labels(
+    service,
+    message_ids: List[str],
+    add_labels: List[str] = None,
+    remove_labels: List[str] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Modify the labels of Gmail messages.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to modify
+        add_labels: Labels to add to the messages
+        remove_labels: Labels to remove from the messages
+
+    Returns:
+        List of modified messages
+    """
+    if not add_labels and not remove_labels:
+        return []
+
+    add_labels = add_labels or []
+    remove_labels = remove_labels or []
+
+    batch = service.new_batch_http_request()
+
+    def callback(request_id, response, exception):
+        if exception:
+            print(f"Error modifying message {request_id}: {exception}")
+
+    for message_id in message_ids:
+        batch.add(
+            service.users()
+            .messages()
+            .modify(
+                userId="me",
+                id=message_id,
+                body={"addLabelIds": add_labels, "removeLabelIds": remove_labels},
+            ),
+            callback=callback,
+            request_id=message_id,
+        )
+
+    batch.execute()
+
+    # Return the updated messages
+    results = []
+    for message_id in message_ids:
+        try:
+            message = (
+                service.users().messages().get(userId="me", id=message_id).execute()
+            )
+            results.append(message)
+        except HttpError as error:
+            print(f"Error getting message {message_id}: {error}")
+
+    return results
+
+
+def mark_messages_as_read(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Mark Gmail messages as read by removing the UNREAD label.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to mark as read
+
+    Returns:
+        List of modified messages
+    """
+    return modify_message_labels(service, message_ids, remove_labels=["UNREAD"])
+
+
+def mark_messages_as_unread(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Mark Gmail messages as unread by adding the UNREAD label.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to mark as unread
+
+    Returns:
+        List of modified messages
+    """
+    return modify_message_labels(service, message_ids, add_labels=["UNREAD"])
+
+
+def star_messages(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Star Gmail messages by adding the STARRED label.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to star
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Starring {len(message_ids)} messages")
+    return modify_message_labels(service, message_ids, add_labels=["STARRED"])
+
+
+def unstar_messages(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Unstar Gmail messages by removing the STARRED label.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to unstar
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Unstarring {len(message_ids)} messages")
+    return modify_message_labels(service, message_ids, remove_labels=["STARRED"])
+
+
+def trash_messages(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Move Gmail messages to trash.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to trash
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Moving {len(message_ids)} messages to trash")
+    batch = service.new_batch_http_request()
+    results = []
+
+    def callback(request_id, response, exception):
+        if exception:
+            logger.error(f"Error trashing message {request_id}: {exception}")
+        elif response:
+            results.append(response)
+
+    for message_id in message_ids:
+        batch.add(
+            service.users().messages().trash(userId="me", id=message_id),
+            callback=callback,
+            request_id=message_id,
+        )
+
+    batch.execute()
+    return results
+
+
+def untrash_messages(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Restore Gmail messages from trash.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to restore from trash
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Restoring {len(message_ids)} messages from trash")
+    batch = service.new_batch_http_request()
+    results = []
+
+    def callback(request_id, response, exception):
+        if exception:
+            logger.error(f"Error untrashing message {request_id}: {exception}")
+        elif response:
+            results.append(response)
+
+    for message_id in message_ids:
+        batch.add(
+            service.users().messages().untrash(userId="me", id=message_id),
+            callback=callback,
+            request_id=message_id,
+        )
+
+    batch.execute()
+    return results
+
+
+def archive_messages(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Archive Gmail messages by removing the INBOX label.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to archive
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Archiving {len(message_ids)} messages")
+    return modify_message_labels(service, message_ids, remove_labels=["INBOX"])
+
+
+def move_to_inbox(service, message_ids: List[str]) -> List[Dict[str, Any]]:
+    """
+    Move Gmail messages to inbox by adding the INBOX label.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs to move to inbox
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Moving {len(message_ids)} messages to inbox")
+    return modify_message_labels(service, message_ids, add_labels=["INBOX"])

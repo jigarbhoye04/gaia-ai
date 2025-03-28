@@ -23,3 +23,13 @@ class SendEmailRequest(BaseModel):
     body: str
     cc: Optional[List[str]] = None
     bcc: Optional[List[str]] = None
+
+
+class EmailReadStatusRequest(BaseModel):
+    message_ids: List[str]
+
+
+class EmailActionRequest(BaseModel):
+    """Request model for performing actions on emails like star, trash, archive."""
+
+    message_ids: List[str]

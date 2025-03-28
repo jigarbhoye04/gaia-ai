@@ -22,9 +22,16 @@ class DeepSearchResult(BaseModel):
     screenshot_url: Optional[str] = None
 
 
+class DeepSearchResultsMedata(BaseModel):
+    elapsed_time: Optional[float] = None
+    query: Optional[str] = None
+    total_content_size: Optional[int] = None
+
+
 class DeepSearchResults(BaseModel):
     original_search: Optional[SearchResults] = None
     enhanced_results: Optional[List[DeepSearchResult]] = None
+    metadata: Optional[DeepSearchResultsMedata] = None
     query: Optional[str] = None
     error: Optional[str] = None
 

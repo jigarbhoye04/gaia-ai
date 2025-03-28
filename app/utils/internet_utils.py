@@ -145,9 +145,29 @@ async def fetch_and_process_url(
             # Process the HTML content
             soup = BeautifulSoup(html_content, "html.parser")
 
-            # Remove script, style, and other non-content elements
             for element in soup(
-                ["script", "style", "nav", "footer", "iframe", "noscript"]
+                [
+                    "script",
+                    "style",
+                    "nav",
+                    "footer",
+                    "iframe",
+                    "noscript",
+                    "header",
+                    "aside",
+                    "object",
+                    "embed",
+                    "video",
+                    "audio",
+                    "picture",
+                    "source",
+                    "link",
+                    "meta",
+                    "svg",
+                    "canvas",
+                    "ins",
+                    "del",
+                ]
             ):
                 element.extract()
 
@@ -443,7 +463,7 @@ async def perform_deep_search(
         + (" with screenshots" if take_screenshots else "")
     )
 
-    search_results = await perform_search(query=query, count=max_results)
+    search_results = await perform_search(query=query, count=5)
     web_results = search_results.get("web", [])
 
     if not web_results:
