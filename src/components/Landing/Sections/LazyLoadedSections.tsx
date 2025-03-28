@@ -13,6 +13,9 @@ const sections = {
   InternetSection: lazy(
     () => import("@/components/Landing/Sections/InternetSection"),
   ),
+  DeepSearchSection: lazy(
+    () => import("@/components/Landing/Sections/DeepSearchSection"),
+  ),
   GridSection: lazy(
     () => import("@/components/Landing/Sections/FeatureGridSection"),
   ),

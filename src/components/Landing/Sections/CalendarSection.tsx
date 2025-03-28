@@ -8,17 +8,40 @@ import {
   BubbleConversationChatIcon,
   Calendar01Icon,
   CalendarAdd01Icon,
-  GoogleCalendar,
+  GoogleCalendar as GoogleCalendarIcon,
 } from "@/components/Misc/icons";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
-import { CalendarEvent } from "@/types/calendarTypes";
+import { CalendarEvent, GoogleCalendar } from "@/types/calendarTypes";
 
 import CalendarMessages from "../Dummy/CalendarMessages";
+import { Chip } from "@heroui/chip";
 
 export default function Section_Calendar() {
   const [addedEvents, setAddedEvents] = useState<number[]>([]);
   const [openedCalendar, setOpenedCalendar] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("chat");
+
+  const dummyCalendars: GoogleCalendar[] = [
+    {
+      id: "work@heygaia.io",
+      summary: "Work",
+      backgroundColor: "#00bbff",
+      primary: true,
+    },
+    {
+      id: "personal@heygaia.io",
+      summary: "Personal",
+      backgroundColor: "#7c4dff",
+      primary: false,
+    },
+    {
+      id: "organizer@heygaia.io",
+      summary: "Added Events",
+      backgroundColor: "#00bbff",
+      primary: false,
+    },
+  ];
 
   const events: CalendarEvent[] = [
     {
@@ -65,18 +88,28 @@ export default function Section_Calendar() {
     },
   ];
 
+  const defaultEvents: CalendarEvent[] = [
+    {
+      summary: "Dentist Appointment",
+      description: "Regular checkup",
+      time: "March 30, 2:00 PM - 3:00 PM",
+      organizer: { email: "personal@heygaia.io" },
+    },
+    {
+      summary: "Mom's Birthday",
+      description: "Don't forget to buy a gift!",
+      time: "April 27, All day",
+      organizer: { email: "personal@heygaia.io" },
+    },
+  ];
+
   return (
     <AnimatedSection className="relative z-[1] flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
-          heading={"Manage your Calendar"}
-          icon={
-            <CalendarAdd01Icon
-              className="h-[40px] w-[35px] sm:h-[40px] sm:w-[40px]"
-              color="#9b9b9b"
-            />
-          }
+          heading={"Effortless Time Management"}
+          chipTitle={"Calendar"}
           subheading={
             <div>
               <div>
@@ -89,7 +122,7 @@ export default function Section_Calendar() {
                 disableRipple
                 className="mt-4 w-fit cursor-default text-foreground-600"
                 radius="full"
-                startContent={<GoogleCalendar width={23} />}
+                startContent={<GoogleCalendarIcon width={23} />}
                 variant="flat"
               >
                 Integrated with Google Calendar
@@ -99,13 +132,81 @@ export default function Section_Calendar() {
         />
 
         <div className="!m-0 !mt-0 w-full px-2 sm:px-10">
+          <Tabs
+            selectedKey={selectedTab}
+            onSelectionChange={(key) => setSelectedTab(key as string)}
+            className="mb-4"
+            color="primary"
+            fullWidth
+            variant="underlined"
+          >
+            <Tab
+              key="chat"
+              title={
+                <div className="flex items-center gap-2">
+                  <BubbleConversationChatIcon
+                    className="h-4 w-4"
+                    color={undefined}
+                  />
+                  <span>Chat</span>
+                </div>
+              }
+            />
+            <Tab
+              key="calendar"
+              title={
+                <div className="flex items-center gap-2">
+                  <Calendar01Icon className="h-4 w-4" color={undefined} />
+                  <span>Calendar</span>
+                  {addedEvents.length > 0 && (
+                    <Chip size="sm" color="primary" variant="flat">
+                      {addedEvents.length}
+                    </Chip>
+                  )}
+                </div>
+              }
+            />
+          </Tabs>
+
           <ScrollShadow className="h-[500px]">
             <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl sm:px-5">
-              <CalendarMessages
-                events={events}
-                addedEvents={addedEvents}
-                setAddedEvents={setAddedEvents}
-              />
+              {selectedTab === "chat" ? (
+                <CalendarMessages
+                  events={events}
+                  addedEvents={addedEvents}
+                  setAddedEvents={setAddedEvents}
+                />
+              ) : (
+                <div className="space-y-4 p-4">
+                  {defaultEvents.map((event, index) => (
+                    <CalendarCard
+                      key={`default-${index}`}
+                      event={event}
+                      onClick={() => {}}
+                      calendars={dummyCalendars}
+                    />
+                  ))}
+
+                  {addedEvents.map((eventIndex) => (
+                    <CalendarCard
+                      key={`added-${eventIndex}`}
+                      event={events[eventIndex]}
+                      onClick={() => {}}
+                      calendars={dummyCalendars}
+                    />
+                  ))}
+
+                  {addedEvents.length === 0 && defaultEvents.length === 0 && (
+                    <div className="flex h-40 flex-col items-center justify-center text-center text-gray-500">
+                      <Calendar01Icon className="mb-4 h-12 w-12 opacity-50" />
+                      <p className="text-lg font-medium">No events scheduled</p>
+                      <p className="mt-2">
+                        Add events using the chat interface
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </ScrollShadow>
         </div>

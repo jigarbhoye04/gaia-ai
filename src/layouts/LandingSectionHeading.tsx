@@ -1,3 +1,4 @@
+import { Chip } from "@heroui/chip";
 import { ReactNode } from "react";
 
 export function SectionHeading({
@@ -5,18 +6,26 @@ export function SectionHeading({
   subheading,
   icon,
   className,
+  chipTitle,
   smallHeading = false,
   headingClassName,
 }: {
   heading: string;
   subheading?: string | ReactNode;
-  icon: ReactNode;
+  icon?: ReactNode;
+  chipTitle?: string;
   smallHeading?: boolean;
   className?: string;
   headingClassName?: string;
 }) {
   return (
     <div className={`relative z-[1] p-7 sm:p-0 ${className}`}>
+      {chipTitle && (
+        <Chip variant="flat" color="primary" className="mb-2">
+          {chipTitle}
+        </Chip>
+      )}
+
       <div
         className={`${
           smallHeading ? "sm:text-3xl" : "sm:text-4xl"

@@ -1,35 +1,77 @@
 import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
+import {
+  BubbleConversationChatIcon,
+  Calendar01Icon,
+  InternetIcon,
+  Mail01Icon,
+  Target02Icon,
+} from "@/components/Misc/icons";
 
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import DummySearchbar from "../Dummy/DummySearchbar";
 
-const featureOptions = [
-  { name: "Chat", imageSrc: "/landing/hero_image_nosearchbar.webp" },
-  { name: "Goals", imageSrc: "/landing/screenshot_roadmaps.png" },
-  { name: "Calendar", imageSrc: "/landing/blur_goals.webp" },
-  { name: "Mail", imageSrc: "/landing/screenshot.webp" },
-  { name: "Internet", imageSrc: "/landing/screenshot_internet.png" },
+const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
+  {
+    name: "Chat",
+    imageSrc: "/landing/hero_image_nosearchbar.webp",
+    icon: (
+      <BubbleConversationChatIcon
+        className="h-5 w-5 focus:outline-none"
+        color={undefined}
+      />
+    ),
+  },
+  {
+    name: "Goals",
+    imageSrc: "/landing/screenshot_roadmaps.png",
+    icon: (
+      <Target02Icon className="h-5 w-5 focus:outline-none" color={undefined} />
+    ),
+  },
+  {
+    name: "Calendar",
+    imageSrc: "/landing/blur_goals.webp",
+    icon: (
+      <Calendar01Icon
+        className="h-5 w-5 focus:outline-none"
+        color={undefined}
+      />
+    ),
+  },
+  {
+    name: "Mail",
+    imageSrc: "/landing/screenshot.webp",
+    icon: (
+      <Mail01Icon className="h-5 w-5 focus:outline-none" color={undefined} />
+    ),
+  },
+  {
+    name: "Internet",
+    imageSrc: "/landing/screenshot_internet.png",
+    icon: (
+      <InternetIcon className="h-5 w-5 focus:outline-none" color={undefined} />
+    ),
+  },
 ];
 
 export default function HeroImage() {
   const [selectedFeature, setSelectedFeature] = useState(featureOptions[0]);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleFeatureChange = (feature: { name: string; imageSrc: string }) => {
+  const handleFeatureChange = (feature: {
+    name: string;
+    imageSrc: string;
+    icon: ReactNode;
+  }) => {
     if (feature.name === selectedFeature.name) return;
 
     setIsTransitioning(true);
-    // setTimeout(() => {
     setSelectedFeature(feature);
-    // setTimeout(() => {
     setIsTransitioning(false);
-    // }, 300);
-    // }, 50);
   };
 
   return (
@@ -103,14 +145,14 @@ export default function HeroImage() {
           {featureOptions.map((feature) => (
             <Button
               key={feature.name}
-              radius="full"
+              radius="md"
               variant={selectedFeature.name === feature.name ? "solid" : "flat"}
               className={
                 selectedFeature.name === feature.name ? "" : "text-primary"
               }
               color="primary"
-              size="sm"
               onPress={() => handleFeatureChange(feature)}
+              startContent={feature.icon}
             >
               {feature.name}
             </Button>

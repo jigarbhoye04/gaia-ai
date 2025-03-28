@@ -12,6 +12,7 @@ import {
 } from "@/components/Misc/icons";
 
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
+import { Chip } from "@heroui/chip";
 
 interface Step {
   icon: React.ReactNode;
@@ -34,7 +35,7 @@ export default function GoalSection() {
       },
       {
         icon: <FlowchartIcon1 color={undefined} height={30} width={30} />,
-        title: "Create a Flowchart",
+        title: "Create a Roadmap",
         description:
           "GAIA provides a step-by-step plan with resources to help you achieve your goal!",
         image: "/landing/goal_tracking.webp",
@@ -57,7 +58,6 @@ export default function GoalSection() {
   );
 
   useEffect(() => {
-    // Preload all step images.
     steps.forEach((step) => {
       new Image().src = step.image;
     });
@@ -80,14 +80,12 @@ export default function GoalSection() {
 function GoalHeader() {
   return (
     <div className="max-w-screen-md text-center">
-      <h2 className="mb-2 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
+      <Chip variant="flat" color="primary">
+        Goal Tracking
+      </Chip>
+      <h2 className="mb-2 mt-4 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
         Ever Felt Stuck Setting Goals?
       </h2>
-      {/* <p className="text-foreground-700 text-lg">
-        GAIA makes it easy by creating a step-by-step plan just for you. Enter
-        your goal, and GAIA will break it down into clear actions with timelines
-        and helpful resources to keep you on track.
-      </p> */}
     </div>
   );
 }
@@ -111,11 +109,9 @@ function GoalSteps({
   const [isVisible, setIsVisible] = useState(true);
   const goalSectionRef = useRef<HTMLDivElement>(null);
 
-  // Progress array for each step.
   const [progresses, setProgresses] = useState<number[]>(steps.map(() => 0));
 
   useEffect(() => {
-    // Update the displayed image.
     if (selectedStep === 2 && isComplete) {
       setSelectedImage("/landing/goal_checked.webp");
     } else {
@@ -134,16 +130,13 @@ function GoalSteps({
     if (goalSectionRef.current) observer.observe(goalSectionRef.current);
   }, []);
 
-  // Animate progress for the active step.
   useEffect(() => {
-    const progressDuration = 10000; // Duration for each step in ms.
-    const intervalTime = 50; // Update interval in ms.
+    const progressDuration = 10000;
+    const intervalTime = 50;
     const increment = 100 / (progressDuration / intervalTime);
 
-    // When the active step changes, set previous steps as complete (if moving forward) and reset current.
     setProgresses((_prev) => {
       if (selectedStep === 0) {
-        // Reset all on a cycle restart.
         return steps.map(() => 0);
       } else {
         return steps.map((_, index) =>
@@ -166,7 +159,6 @@ function GoalSteps({
     }, intervalTime);
 
     const timeout = setTimeout(() => {
-      // Mark the current step as complete.
       setProgresses((prev) => {
         const newProgresses = [...prev];
         newProgresses[selectedStep] = 100;
@@ -280,22 +272,12 @@ function GoalImage({ image }: GoalImageProps) {
             className="w-96"
             classNames={{ inputWrapper: "pr-2" }}
             endContent={
-              <Button
-                isIconOnly
-                className="font-medium"
-                color="primary"
-                // onPress={handleAddGoal}
-              >
+              <Button isIconOnly className="font-medium" color="primary">
                 <Send />
               </Button>
             }
             label="What goal do you want to achieve?"
             variant="faded"
-            // value={goalTitle}
-            // onChange={(e: { target: { value: SetStateAction<string> } }) =>
-            //   setGoalTitle(e.target.value)
-            // }
-            // onKeyDown={handleKeyPress}
           />
         </div>
       )}
