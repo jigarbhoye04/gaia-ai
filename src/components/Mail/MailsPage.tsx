@@ -2,51 +2,98 @@
 
 import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
-import { InfiniteData, useInfiniteQuery } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { Button } from "@heroui/button";
+import { useState, useCallback } from "react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
 import { EmailFrom } from "@/components/Mail/MailFrom";
 import ViewEmail from "@/components/Mail/ViewMail";
+import { useEmailReadStatus } from "@/components/Mail/hooks/useEmailReadStatus";
+import { useEmailActions } from "@/components/Mail/hooks/useEmailActions";
+import { useEmailSelection } from "@/components/Mail/hooks/useEmailSelection";
+import { useEmailGrouping, ListItem } from "@/components/Mail/hooks/useEmailGrouping";
+import { useInfiniteEmails } from "@/components/Mail/hooks/useInfiniteEmails";
+import { useEmailViewer } from "@/components/Mail/hooks/useEmailViewer";
 import { InboxIcon } from "@/components/Misc/icons";
-import { EmailData, EmailsResponse } from "@/types/mailTypes";
-import { fetchEmails, formatTime } from "@/utils/mailUtils";
+import { EmailData } from "@/types/mailTypes";
+import { formatTime } from "@/utils/mailUtils";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import {
+  ArchiveIcon,
+  Square,
+  SquareCheck,
+  StarIcon,
+  Timer,
+  Trash,
+  X,
+} from "lucide-react";
 
 export default function MailsPage() {
-  const { data, isLoading, fetchNextPage, hasNextPage } = useInfiniteQuery<
-    EmailsResponse,
-    Error,
-    InfiniteData<EmailsResponse>,
-    string[]
-  >({
-    queryKey: ["emails"],
-    queryFn: fetchEmails,
-    getNextPageParam: (lastPage) => lastPage.nextPageToken || undefined,
-    initialPageParam: undefined,
-  });
+  const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
+  const { toggleReadStatus: hookToggleReadStatus } = useEmailReadStatus();
+  const { toggleStarStatus, archiveEmail, trashEmail } = useEmailActions();
+  
+  // Get emails with infinite loading
+  const { 
+    emails, 
+    isLoading, 
+    isItemLoaded: isItemLoadedBase, 
+    loadMoreItems 
+  } = useInfiniteEmails();
 
-  const emails = data
-    ? data.pages.flatMap((page: EmailsResponse) => page.emails)
-    : [];
+  // Email selection and bulk actions
+  const {
+    selectedEmails,
+    toggleEmailSelection,
+    clearSelections,
+    bulkMarkAsRead,
+    bulkMarkAsUnread,
+    bulkStarEmails,
+    bulkUnstarEmails,
+    bulkArchiveEmails,
+    bulkTrashEmails
+  } = useEmailSelection();
 
-  const [selectedEmail, setSelectedEmail] = useState<EmailData | null>(null);
+  // Group emails by date
+  const groupedItems = useEmailGrouping(emails);
+  
+  // Email viewing functionality
+  const { selectedEmail, openEmail, closeEmail } = useEmailViewer();
 
-  const isItemLoaded = useCallback(
-    (index: number) => !hasNextPage || index < emails.length,
-    [emails.length, hasNextPage],
-  );
-
-  const loadMoreItems = useCallback(
-    async (_startIndex: number, _stopIndex: number) => {
-      if (hasNextPage) await fetchNextPage();
-    },
-    [hasNextPage, fetchNextPage],
-  );
-
-  const openEmail = (email: EmailData) => {
-    setSelectedEmail(email);
+  // Handlers for single email actions
+  const handleToggleReadStatus = (e: React.MouseEvent, email: EmailData) => {
+    e.stopPropagation(); // Prevent opening the email
+    hookToggleReadStatus(email);
   };
+
+  const handleToggleStarStatus = (e: React.MouseEvent, email: EmailData) => {
+    e.stopPropagation(); // Prevent opening the email
+    toggleStarStatus(email);
+  };
+
+  const handleArchiveEmail = (e: React.MouseEvent, email: EmailData) => {
+    e.stopPropagation(); // Prevent opening the email
+    archiveEmail(email.id);
+  };
+
+  const handleTrashEmail = (e: React.MouseEvent, email: EmailData) => {
+    e.stopPropagation(); // Prevent opening the email
+    trashEmail(email.id);
+  };
+
+  // Adapter for isItemLoaded to match the function signature expected by InfiniteLoader
+  const isItemLoaded = useCallback(
+    (index: number) => isItemLoadedBase(index, groupedItems.length),
+    [isItemLoadedBase, groupedItems.length],
+  );
+
+  if (isLoading)
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
 
   const Row = ({ index, style }: ListChildComponentProps) => {
     const [title, setTitle] = useState("");
@@ -59,18 +106,27 @@ export default function MailsPage() {
         </div>
       );
     }
-    
-    const email = emails[index];
-    if (!email) return null;
 
+    const item = groupedItems[index];
+    if (!item) return null;
+
+    if (item.type === "header")
+      return (
+        <div
+          style={style}
+          className="relative flex h-full w-full items-center px-4 text-sm text-foreground/70 backdrop-blur-sm sm:px-1"
+        >
+          {item.data as string}
+          <div className="absolute bottom-4 h-[1px] w-full border-none bg-white/20 outline-none sm:bottom-2"></div>
+        </div>
+      );
+
+    const email = item.data as EmailData;
 
     const fetchSummary = (isOpen: boolean) => {
       if (isOpen && !title && !subtitle) {
         setTitle(email.subject);
-        // email.snippet ? he.decode(email.snippet) : "No summary available"
-        setSubtitle(
-          "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dignissimos, commodi.",
-        );
+        setSubtitle("Lorem ipsum");
       }
     };
 
@@ -95,39 +151,205 @@ export default function MailsPage() {
         radius="sm"
       >
         <div
-          className={`flex cursor-pointer items-center gap-5 bg-black bg-opacity-45 p-3 px-6 transition-all duration-200 hover:bg-primary/20 hover:text-primary ${
+          className={`group relative grid w-full cursor-pointer gap-1 p-2 px-4 transition-all duration-200 hover:bg-primary/20 hover:text-primary sm:gap-2 sm:px-1 ${
             email?.labelIds?.includes("UNREAD")
               ? "font-medium"
               : "font-normal text-foreground-400"
-          }`}
+          } sm:grid-cols-[auto_0.3fr_1fr_auto] sm:items-center`}
           style={style}
           onClick={() => openEmail(email)}
         >
-          <div className="flex-[0.3] truncate">
-            <EmailFrom from={email.from} />
+          {/* Add selection checkbox */}
+          <div
+            className="flex items-center justify-center px-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleEmailSelection(e, email.id);
+            }}
+          >
+            {selectedEmails.has(email.id) ? (
+              <SquareCheck className="h-5 w-5 cursor-pointer text-primary" />
+            ) : (
+              <Square className="h-5 w-5 cursor-pointer opacity-60 hover:opacity-100" />
+            )}
           </div>
-          <div className="flex-1 truncate">{email.subject}</div>
-          <div className="text-sm opacity-50">{formatTime(email.time)}</div>
+
+          {isMobileScreen ? (
+            <>
+              <div className="col-span-1 min-h-fit truncate text-lg sm:block">
+                <EmailFrom from={email.from} />
+              </div>
+
+              <div className="col-span-1 mt-1 min-h-fit text-right text-sm opacity-50 sm:mt-0">
+                {formatTime(email.time)}
+              </div>
+
+              <div className="col-span-2 min-h-fit w-full truncate sm:col-span-1">
+                {email.subject}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="col-span-1 min-h-fit truncate pl-2 sm:block">
+                <EmailFrom from={email.from} />
+              </div>
+
+              <div className="col-span-2 min-h-fit w-full truncate sm:col-span-1">
+                {email.subject}
+              </div>
+
+              <div className="col-span-1 mt-1 min-h-fit text-right text-sm opacity-50 sm:mt-0">
+                {formatTime(email.time)}
+              </div>
+              <div className="absolute right-0 flex h-fit w-fit items-center gap-1 rounded-lg bg-zinc-900 p-2 text-sm text-zinc-300 opacity-0 group-hover:opacity-100">
+                {[
+                  {
+                    icon: StarIcon,
+                    label: "Star",
+                    iconProps: {
+                      color: "orange",
+                      fill: email?.labelIds?.includes("STARRED")
+                        ? "orange"
+                        : "transparent",
+                    },
+                    onClick: (e: React.MouseEvent) =>
+                      handleToggleStarStatus(e, email),
+                  },
+                  {
+                    icon: ArchiveIcon,
+                    label: "Archive",
+                    onClick: (e: React.MouseEvent) =>
+                      handleArchiveEmail(e, email),
+                  },
+                  {
+                    icon: Trash,
+                    label: "Move to Trash",
+                    iconProps: { color: "red" },
+                    onClick: (e: React.MouseEvent) =>
+                      handleTrashEmail(e, email),
+                  },
+                  {
+                    icon: email?.labelIds?.includes("UNREAD")
+                      ? SquareCheck
+                      : Square,
+                    label: email?.labelIds?.includes("UNREAD")
+                      ? "Mark as Read"
+                      : "Mark as Unread",
+                    onClick: (e: React.MouseEvent) =>
+                      handleToggleReadStatus(e, email),
+                  },
+                  {
+                    icon: Timer,
+                    label: "Set Reminder",
+                    onClick: (e: React.MouseEvent) => e.stopPropagation(),
+                  },
+                ].map(({ icon: Icon, label, iconProps, onClick }, index) => (
+                  <Tooltip
+                    key={index}
+                    content={label}
+                    placement="top"
+                    className="z-50"
+                    color="foreground"
+                  >
+                    <div
+                      className="flex h-6 w-6 cursor-pointer items-center justify-center"
+                      onClick={onClick}
+                    >
+                      <Icon size={19} {...iconProps} />
+                    </div>
+                  </Tooltip>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </Tooltip>
     );
   };
-  if (isLoading) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
 
-  const itemCount = hasNextPage ? emails.length + 1 : emails.length;
+  const itemCount = groupedItems.length + (emails.length > 0 ? 1 : 0);
 
   return (
-    <div className="h-full w-full pl-2">
-      <h1 className="flex w-full items-center justify-start gap-2 pb-5">
+    <div className="relative h-full w-full">
+      {/* Selection toolbar */}
+      {selectedEmails.size > 0 && (
+        <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between rounded-md bg-zinc-900 px-1 py-1 text-white backdrop-blur-xl">
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              color="default"
+              variant="flat"
+              onPress={clearSelections}
+              startContent={<X size={16} />}
+            >
+              Clear selection
+            </Button>
+            <span className="font-medium">{selectedEmails.size} selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Tooltip content="Mark as read">
+              <Button
+                size="sm"
+                color="default"
+                variant="light"
+                onPress={bulkMarkAsRead}
+                isIconOnly
+              >
+                <SquareCheck size={16} />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Mark as unread">
+              <Button
+                size="sm"
+                color="default"
+                variant="light"
+                onPress={bulkMarkAsUnread}
+                isIconOnly
+              >
+                <Square size={16} />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Star">
+              <Button
+                size="sm"
+                color="warning"
+                variant="light"
+                onPress={bulkStarEmails}
+                isIconOnly
+              >
+                <StarIcon size={16} />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Archive">
+              <Button
+                size="sm"
+                color="default"
+                variant="light"
+                onPress={bulkArchiveEmails}
+                isIconOnly
+              >
+                <ArchiveIcon size={16} />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Move to trash">
+              <Button
+                size="sm"
+                color="danger"
+                variant="light"
+                onPress={bulkTrashEmails}
+                isIconOnly
+              >
+                <Trash size={16} />
+              </Button>
+            </Tooltip>
+          </div>
+        </div>
+      )}
+
+      <div className="flex w-full items-center justify-start gap-2 pl-4 pt-3 sm:pb-0 sm:pl-1 sm:pt-0">
         <InboxIcon color={undefined} width={25} height={25} />
         Inbox
-      </h1>
+      </div>
       <InfiniteLoader
         isItemLoaded={isItemLoaded}
         itemCount={itemCount}
@@ -137,11 +359,11 @@ export default function MailsPage() {
           <List
             height={window.innerHeight - 100}
             itemCount={itemCount}
-            itemSize={55}
+            itemSize={isMobileScreen ? 70 : 55}
             onItemsRendered={onItemsRendered}
             ref={ref}
             width="100%"
-            className="rounded-xl"
+            className="!overflow-x-hidden rounded-xl"
           >
             {Row}
           </List>
@@ -150,7 +372,7 @@ export default function MailsPage() {
 
       <ViewEmail
         mail={selectedEmail}
-        onOpenChange={() => setSelectedEmail(null)}
+        onOpenChange={closeEmail}
       />
     </div>
   );

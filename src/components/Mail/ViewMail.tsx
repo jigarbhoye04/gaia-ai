@@ -5,12 +5,13 @@ import { Tooltip } from "@heroui/tooltip";
 import { User } from "@heroui/user";
 import he from "he";
 import { XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Drawer } from "vaul";
 
 import GmailBody from "@/components/Mail/GmailBody";
-import { EmailData } from "@/types/mailTypes";
+import { useEmailReadStatus } from "@/components/Mail/hooks/useEmailReadStatus";
+import { EmailData, EmailsResponse } from "@/types/mailTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { parseEmail } from "@/utils/mailUtils";
 
@@ -98,7 +99,7 @@ export default function ViewEmail({ mail, onOpenChange }: ViewEmailProps) {
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-md" />
         <Drawer.Content
-          className="fixed bottom-2 right-0 top-2 z-10 flex w-[50vw] outline-none"
+          className="fixed bottom-2 right-0 top-2 z-10 flex w-screen outline-none sm:w-[50vw]"
           style={
             { "--initial-transform": "calc(100% + 8px)" } as React.CSSProperties
           }
