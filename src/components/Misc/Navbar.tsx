@@ -30,7 +30,7 @@ export default function Navbar() {
       >
         <Button
           as={Link}
-          className="pl-2 pr-3 text-lg font-medium"
+          className="group pl-2 pr-3 text-lg font-medium"
           radius="lg"
           href={"/"}
           variant="light"
@@ -39,12 +39,14 @@ export default function Navbar() {
             <Image
               src="/branding/logo.webp"
               alt="GAIA Logo"
-              width={25}
-              height={25}
+              width={30}
+              height={30}
             />
           }
         >
-          {siteConfig.name}
+          <div className="-translate-x-7 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">
+            {siteConfig.name}
+          </div>
         </Button>
 
         <div className="flex items-center gap-1">

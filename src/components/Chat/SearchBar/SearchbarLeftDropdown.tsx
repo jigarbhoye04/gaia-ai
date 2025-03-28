@@ -12,6 +12,7 @@ import { useLoading } from "@/hooks/useLoading";
 import { cn } from "@/lib/utils";
 
 import {
+  AiBrowserIcon,
   AttachmentIcon,
   GlobalSearchIcon,
   Image02Icon,
@@ -53,13 +54,13 @@ export default function SearchbarLeftDropdown({
     {
       id: "deep_search",
       label: "Deep Search",
-      icon: <GlobalSearchIcon className="h-5 w-5 text-primary" />,
+      icon: <AiBrowserIcon className="h-5 w-5 text-primary" />,
       isMode: true,
     },
     {
       id: "web_search",
       label: "Web Search",
-      icon: <InternetIcon className="h-5 w-5 text-primary" />,
+      icon: <GlobalSearchIcon className="h-5 w-5 text-primary" />,
       isMode: true,
     },
     {

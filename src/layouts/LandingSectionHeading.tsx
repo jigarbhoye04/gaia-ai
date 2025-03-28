@@ -9,6 +9,7 @@ export function SectionHeading({
   chipTitle,
   smallHeading = false,
   headingClassName,
+  subheadingClassName = "max-w-screen-sm",
 }: {
   heading: string;
   subheading?: string | ReactNode;
@@ -17,6 +18,7 @@ export function SectionHeading({
   smallHeading?: boolean;
   className?: string;
   headingClassName?: string;
+  subheadingClassName?: string;
 }) {
   return (
     <div className={`relative z-[1] p-7 sm:p-0 ${className}`}>
@@ -36,7 +38,7 @@ export function SectionHeading({
       </div>
       {!!subheading && (
         <div
-          className={`max-w-screen-sm text-foreground-500 ${
+          className={`${subheadingClassName} text-foreground-500 ${
             smallHeading ? "text-md" : "text-lg"
           }`}
         >

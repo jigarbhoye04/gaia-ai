@@ -3,18 +3,15 @@ import { lazy, Suspense } from "react";
 import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 
 const sections = {
-  GoalSection: lazy(() => import("@/components/Landing/Sections/GoalSection")),
   CalendarSection: lazy(
     () => import("@/components/Landing/Sections/CalendarSection"),
   ),
-  MemoriesSection: lazy(
-    () => import("@/components/Landing/Sections/MemoriesSection"),
-  ),
-  InternetSection: lazy(
-    () => import("@/components/Landing/Sections/InternetSection"),
-  ),
   DeepSearchSection: lazy(
     () => import("@/components/Landing/Sections/DeepSearchSection"),
+  ),
+  GoalSection: lazy(() => import("@/components/Landing/Sections/GoalSection")),
+  InternetSection: lazy(
+    () => import("@/components/Landing/Sections/InternetSection"),
   ),
   GridSection: lazy(
     () => import("@/components/Landing/Sections/FeatureGridSection"),
@@ -27,6 +24,9 @@ const sections = {
   // ),
   FinalSection: lazy(
     () => import("@/components/Landing/Sections/FinalSection"),
+  ),
+  MemoriesSection: lazy(
+    () => import("@/components/Landing/Sections/MemoriesSection"),
   ),
 };
 

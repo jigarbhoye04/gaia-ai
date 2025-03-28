@@ -5,9 +5,9 @@ import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
 import {
-  AiBrowserIcon,
   CheckmarkCircle02Icon,
   GlobalSearchIcon,
+  InternetIcon,
 } from "../../Misc/icons";
 
 const webSearchImages = [
@@ -20,8 +20,8 @@ const webSearchImages = [
 const fetchWebpageImages = [
   { src: "/landing/web/fetch/0.png", alt: "Fetch Webpage Screenshot 4" },
   { src: "/landing/web/fetch/1.png", alt: "Fetch Webpage Screenshot 1" },
-  { src: "/landing/web/fetch/2.png", alt: "Fetch Webpage Screenshot 2" },
   { src: "/landing/web/fetch/3.png", alt: "Fetch Webpage Screenshot 3" },
+  { src: "/landing/web/fetch/2.png", alt: "Fetch Webpage Screenshot 2" },
 ];
 
 const ImageCarousel = ({
@@ -38,7 +38,7 @@ const ImageCarousel = ({
   useEffect(() => {
     const timer = setInterval(() => {
       nextIndex();
-    }, 3000);
+    }, 4000);
 
     return () => clearInterval(timer);
   }, [images.length]);
@@ -48,7 +48,7 @@ const ImageCarousel = ({
   }, []);
 
   return (
-    <div className="relative h-[35vw] w-[35vw]">
+    <div className="relative h-[37vw] w-[37vw]">
       <div
         className="relative h-full w-full overflow-hidden rounded-lg"
         onClick={nextIndex}
@@ -57,7 +57,7 @@ const ImageCarousel = ({
           <div
             key={index}
             className={cn(
-              "absolute h-full w-full transition-opacity duration-500 ease-in-out",
+              "absolute h-full w-full shadow-lg shadow-[#00bbff] transition-opacity duration-500 ease-in-out",
               index === currentIndex ? "opacity-100" : "opacity-0",
             )}
           >
@@ -95,10 +95,11 @@ export default function Internet() {
     <AnimatedSection className="flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
         <div className="relative flex w-screen max-w-screen-xl flex-col items-center justify-start gap-11">
-          <div className="flex min-h-[80vh] w-screen max-w-screen-xl flex-row items-center gap-10">
+          <div className="flex min-h-[90vh] w-screen max-w-screen-xl flex-row items-center gap-10">
             <div>
               <SectionHeading
-                heading="Web Search"
+                heading="Always Up-to-Date"
+                chipTitle="Web Search"
                 smallHeading
                 subheading="Most AI models have a knowledge cutoff, but GAIA can fetch real-time updates from the internet. Whether it's breaking news or the latest industry trends, you'll always have access to the most up-to-date insights."
                 icon={
@@ -139,14 +140,15 @@ export default function Internet() {
             <ImageCarousel images={webSearchImages} />
           </div>
 
-          <div className="flex min-h-[80vh] w-screen max-w-screen-xl flex-row items-center">
+          <div className="flex min-h-[90vh] w-screen max-w-screen-xl flex-row items-center">
             <div>
               <SectionHeading
-                heading="Fetch Webpages"
+                heading="Let AI Read for You"
+                chipTitle="Fetch Webpages"
                 smallHeading
-                subheading="Ever wished your AI assistant could read and summarize webpages for you? GAIA fetches and processes web content, so you get instant insights without endless scrolling."
+                subheading="Ever wished your AI assistant could read and understand content from webpages ? GAIA fetches and processes web content, so you get instant insights without endless scrolling."
                 icon={
-                  <AiBrowserIcon
+                  <InternetIcon
                     className="size-[35px] sm:size-[35px]"
                     color="#9b9b9b"
                   />

@@ -1,3 +1,4 @@
+import { withNextVideo } from "next-video/process";
 import bundleAnalyzer from "@next/bundle-analyzer";
 
 const withBundleAnalyzer = bundleAnalyzer({
@@ -36,4 +37,4 @@ const nextConfig = {
   // },
 };
 
-export default withBundleAnalyzer(nextConfig);
+export default withNextVideo(withBundleAnalyzer(nextConfig));
