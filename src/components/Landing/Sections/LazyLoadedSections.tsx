@@ -22,11 +22,11 @@ const sections = {
   // ComingSoonSection: lazy(
   //   () => import("@/components/Landing/Sections/ComingSoonSection")
   // ),
+  // MemoriesSection: lazy(
+  //   () => import("@/components/Landing/Sections/MemoriesSection"),
+  // ),
   FinalSection: lazy(
     () => import("@/components/Landing/Sections/FinalSection"),
-  ),
-  MemoriesSection: lazy(
-    () => import("@/components/Landing/Sections/MemoriesSection"),
   ),
 };
 

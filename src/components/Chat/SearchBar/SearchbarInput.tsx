@@ -1,7 +1,6 @@
 import { Textarea } from "@heroui/input";
 import React from "react";
 
-
 interface SearchbarInputProps {
   searchbarText: string;
   onSearchbarTextChange: (text: string) => void;
@@ -34,7 +33,7 @@ const SearchbarInput: React.FC<SearchbarInputProps> = ({
         isInvalid={searchbarText.length > 10_000}
         maxRows={13}
         minRows={1}
-        placeholder="Ask gaia something..."
+        placeholder="Message GAIA"
         size="lg"
         value={searchbarText}
         onHeightChange={onHeightChange}

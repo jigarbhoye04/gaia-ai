@@ -134,12 +134,13 @@ const FlowchartDemo = () => {
   return (
     <LandingSectionLayout
       heading={"Create flowcharts"}
+      logoInline
+      subheading={"Easily turn ideas into clear, interactive visuals instantly"}
       icon={
         <FlowchartIcon className="size-[30px] sm:size-[30px]" color="#9b9b9b" />
       }
-      subheading={"Easily turn ideas into clear, interactive visuals instantly"}
     >
-      <div className="w-100% flex justify-end">
+      <div className="w-100% flex justify-end pt-3">
         <div className="w-[95%]">
           <SimpleChatBubbleUser>
             How can I plan a product launch for my SaaS?

@@ -195,7 +195,7 @@ export default function SearchCommand({
           {results.messages.length > 0 && (
             <Chip
               // size="sm"
-              className="cursor-pointer"
+              className="cursor-pointer max-h-6"
               classNames={{ content: "font-medium" }}
               color={chipsVisibility.messages ? "primary" : "default"}
               endContent={
@@ -217,7 +217,7 @@ export default function SearchCommand({
           {results.conversations.length > 0 && (
             <Chip
               className="cursor-pointer"
-              classNames={{ content: "font-medium" }}
+              classNames={{ content: "font-medium min-h-3" }}
               color={chipsVisibility.conversations ? "primary" : "default"}
               endContent={
                 chipsVisibility.conversations ? (

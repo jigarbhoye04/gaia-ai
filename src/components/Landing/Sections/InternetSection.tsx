@@ -54,7 +54,7 @@ const ImageCarousel = ({
           <div
             key={index}
             className={cn(
-              "absolute h-full w-full shadow-lg shadow-[#00bbff] transition-opacity duration-500 ease-in-out",
+              "absolute h-full w-full cursor-pointer shadow-lg shadow-[#00bbff] transition-opacity duration-500 ease-in-out",
               index === currentIndex ? "opacity-100" : "opacity-0",
             )}
           >

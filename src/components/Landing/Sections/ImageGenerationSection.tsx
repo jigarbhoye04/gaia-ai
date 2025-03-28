@@ -92,10 +92,12 @@ export default function ImageGeneration() {
         </div>
       }
       heading="Generate Images"
+      subheading="Create stunning & realistic images for free"
+      className="h-full"
+      logoInline
       icon={
         <AiImageIcon className="size-[30px] sm:size-[30px]" color="#9b9b9b" />
       }
-      subheading="Create stunning & realistic images for free"
     >
       <div className="w-full rounded-3xl">
         <SimpleChatBubbleUser hideMobile={true}>

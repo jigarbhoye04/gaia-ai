@@ -1,6 +1,3 @@
-import { Button } from "@heroui/button";
-import { ReactNode, useState } from "react";
-
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
@@ -10,14 +7,13 @@ import {
 } from "@/components/Misc/icons";
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
-
+import { ReactNode } from "react";
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
-import DummySearchbar from "../Dummy/DummySearchbar";
 
 const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
   {
     name: "Chat",
-    imageSrc: "/landing/hero_image_nosearchbar.webp",
+    imageSrc: "/landing/screenshot.png",
     icon: (
       <BubbleConversationChatIcon
         className="h-5 w-5 focus:outline-none"
@@ -59,20 +55,20 @@ const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
 ];
 
 export default function HeroImage() {
-  const [selectedFeature, setSelectedFeature] = useState(featureOptions[0]);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  // const [selectedFeature, setSelectedFeature] = useState(featureOptions[0]);
+  // const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleFeatureChange = (feature: {
-    name: string;
-    imageSrc: string;
-    icon: ReactNode;
-  }) => {
-    if (feature.name === selectedFeature.name) return;
+  // const handleFeatureChange = (feature: {
+  //   name: string;
+  //   imageSrc: string;
+  //   icon: ReactNode;
+  // }) => {
+  //   if (feature.name === selectedFeature.name) return;
 
-    setIsTransitioning(true);
-    setSelectedFeature(feature);
-    setIsTransitioning(false);
-  };
+  //   setIsTransitioning(true);
+  //   setSelectedFeature(feature);
+  //   setIsTransitioning(false);
+  // };
 
   return (
     <div className="flex w-screen items-center justify-center">
@@ -85,21 +81,21 @@ export default function HeroImage() {
             color={["#00bbff", "#27272a"]}
             duration={7}
           >
-            <div
-              className={`transition-opacity duration-300 ${isTransitioning ? "opacity-0" : "opacity-100"}`}
-            >
+            {/* ${isTransitioning ? "opacity-0" : "opacity-100"} */}
+            <div className={`transition-opacity duration-300`}>
               <Safari
                 className="h-fit w-full"
-                imageSrc={selectedFeature.imageSrc}
+                // imageSrc={selectedFeature.imageSrc}
+                imageSrc={featureOptions[0].imageSrc}
                 mode="simple"
                 url="heygaia.io"
               />
             </div>
-            {selectedFeature.name === "Chat" && (
+            {/* {selectedFeature.name === "Chat" && (
               <div className="absolute bottom-[-15px] left-0 flex w-full scale-50 items-center justify-center text-white sm:bottom-4 sm:scale-100">
                 <DummySearchbar />
               </div>
-            )}
+            )} */}
           </ShineBorder>
 
           {/* <div className="max-w-screen-xl w-screen bg-gradient-to-b from-[#00bbff30] animate-pulse-shadow to-black bg-zinc-950 outline outline-zinc-700 min-h-[90vh] rounded-2xl z-20 flex justify-center p-10">
@@ -141,7 +137,7 @@ export default function HeroImage() {
             </div>
           </div> */}
         </div>
-        <div className="flex flex-wrap justify-center gap-2">
+        {/* <div className="flex flex-wrap justify-center gap-2">
           {featureOptions.map((feature) => (
             <Button
               key={feature.name}
@@ -157,7 +153,7 @@ export default function HeroImage() {
               {feature.name}
             </Button>
           ))}
-        </div>
+        </div> */}
       </AnimatedSection>
     </div>
   );

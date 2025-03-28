@@ -126,23 +126,23 @@ const badges = [
 export default function StarterText() {
   return (
     <>
-      <div className="my-4 inline-flex flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-4xl">
-        Hey!
+      <div className="my-4 inline-flex flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-3xl">
+        Hey, I'm GAIA, your personal AI assistant!
         <Image
           alt="Waving Hand"
-          className="mx-2 w-[35px] object-contain sm:mx-0 sm:w-[50px]"
+          className="mx-2 w-[35px] object-contain sm:mx-0 sm:w-[40px]"
           src="https://em-content.zobj.net/source/apple/391/waving-hand_1f44b.png"
-          height={50}
-          width={50}
-          unoptimized // Since this is an external emoji image
+          height={30}
+          width={30}
+          unoptimized
         />
-        What can I do for you today?
+        <div className="text-2xl">What can I do for you today?</div>
       </div>
-      <div className="flex max-w-[650px] flex-wrap justify-center gap-2">
+      {/* <div className="flex max-w-[650px] flex-wrap justify-center gap-2">
         {badges.map((badge, index) => (
           <div
             key={index}
-            className={`${badge.bgClass} cursor-pointer bg-opacity-20 text-sm hover:bg-opacity-80 ${badge.textClass} group rounded-full px-2 font-medium transition-all hover:text-white`}
+            className={`${badge.bgClass} bg-opacity-20 text-sm hover:bg-opacity-80 ${badge.textClass} group rounded-full px-2 font-medium transition-all hover:text-white`}
           >
             <div className="flex items-center gap-1">
               {badge.icon}
@@ -150,7 +150,7 @@ export default function StarterText() {
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
     </>
   );
 }

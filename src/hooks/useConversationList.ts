@@ -5,6 +5,7 @@ import {
   type PaginationMeta,
 } from "@/redux/slices/conversationsSlice";
 import type { AppDispatch, RootState } from "@/redux/store";
+import { useCallback } from "react";
 
 export const useConversationList = () => {
   const conversations = useSelector(
@@ -24,11 +25,14 @@ export const useConversationList = () => {
 export const useFetchConversations = () => {
   const dispatch: AppDispatch = useDispatch();
 
-  return async (
-    page: number = 1,
-    limit: number = 20,
-    append: boolean = true,
-  ) => {
-    return dispatch(fetchConversations({ page, limit, append }));
-  };
+  return useCallback(
+    async (
+      page: number = 1,
+      limit: number = 20,
+      append: boolean = true,
+    ) => {
+      return dispatch(fetchConversations({ page, limit, append }));
+    },
+    [dispatch]
+  );
 };

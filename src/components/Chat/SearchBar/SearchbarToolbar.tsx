@@ -22,7 +22,7 @@ const SearchbarToolbar: React.FC<SearchbarToolbarProps> = ({
   handleSelectionChange,
 }) => {
   return (
-    <div className="flex items-center justify-between px-2">
+    <div className="flex items-center justify-between px-2 pt-1">
       <div className="flex items-center justify-start gap-2">
         <SearchbarLeftDropdown
           selectedMode={selectedMode}

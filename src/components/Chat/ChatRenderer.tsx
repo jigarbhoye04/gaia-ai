@@ -64,12 +64,12 @@ export default function ChatRenderer() {
 
   if (!!convoMessages && convoMessages?.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2">
+      <div className="relative flex flex-1 flex-col items-center justify-center gap-2">
         <Image
           alt="GAIA Logo"
           src={"/branding/logo.webp"}
-          width={150}
-          height={150}
+          width={130}
+          height={130}
           className="bobbing hover:translate-y-3"
         />
         <StarterText />

@@ -1,13 +1,26 @@
-import { SearchIcon, Star } from "lucide-react";
-
 import {
   BubbleChatIcon,
   BubbleConversationChatIcon,
   PinIcon,
+  StickyNote01Icon,
+  Tick02Icon,
 } from "@/components/Misc/icons";
+import { PinCard } from "@/components/Pins/PinCard";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LandingSectionLayout from "@/layouts/LandingSectionLayout";
-
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { SearchIcon, Star } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
 const dummyMessages = [
   {
     searchWeb: true,
@@ -25,21 +38,6 @@ const dummyMessages = [
     message_id: "2",
   },
 ];
-
-import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { useState } from "react";
-
-import { StickyNote01Icon, Tick02Icon } from "@/components/Misc/icons";
-import { PinCard } from "@/components/Pins/PinCard";
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from "@/components/ui/command";
 
 const dummyResults = {
   conversations: [
@@ -258,16 +256,21 @@ export function SidebarComponent() {
 export default function Section_ConvoManagement() {
   return (
     <LandingSectionLayout
-      heading={"Advanced Conversation Management"}
+      heading={"Manage Conversations"}
+      logoInline
+      subheading={"Never lose track of anything. Ever."}
+      className="h-full"
       icon={
         <BubbleChatIcon
           className="size-[30px] sm:size-[30px]"
           color="#9b9b9b"
         />
       }
-      subheading={"Never lose track of anything. Ever."}
     >
-      <Tabs className="h-[430px] w-full overflow-hidden" defaultValue="starred">
+      <Tabs
+        className="mt-3 h-[430px] w-full overflow-hidden"
+        defaultValue="starred"
+      >
         <TabsList className="flex gap-4">
           <TabsTrigger className="flex items-center gap-2" value="starred">
             <Star height={20} width={20} /> Starred
@@ -283,9 +286,19 @@ export default function Section_ConvoManagement() {
         <TabsContent value="starred">
           <SidebarComponent />
         </TabsContent>
-        <TabsContent value="search">
-          <div className="space-y-5 pt-5">
-            <DummySearchCommand />
+        <TabsContent value="search" className="flex">
+          {/* <div className="space-y-5 pt-5"> */}
+          {/* <DummySearchCommand /> */}
+          {/*  */}
+          {/* </div> */}
+          <div className="relative p-1 pt-5">
+            <Image
+              src="/landing/search_command.png"
+              alt="Search Command"
+              width={500}
+              height={500}
+              className="rounded-lg object-cover outline outline-zinc-800"
+            />
           </div>
         </TabsContent>
         <TabsContent value="pins">

@@ -10,6 +10,7 @@ import AddGoalDialog from "@/components/Goals/AddGoalDialog";
 import { GoalCard } from "@/components/Goals/GoalCard";
 import { Target04Icon } from "@/components/Misc/icons";
 import { apiauth } from "@/utils/apiaxios";
+import { toast } from "sonner";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
@@ -22,7 +23,6 @@ export default function GoalsPage() {
     try {
       setLoading(true);
       const response = await apiauth.get("/goals");
-
       console.log("goals", response.data);
       setGoals(response.data);
     } catch (err) {
@@ -35,10 +35,11 @@ export default function GoalsPage() {
   const createGoal = async (goalTitle: string) => {
     try {
       const response = await apiauth.post("/goals", { title: goalTitle });
-
-      router.push(`/goals/${response.data.id}`); // Use router.push instead of navigate()
+      router.push(`/goals/${response.data.id}`);
+      toast.success("Goal created successfully!");
     } catch (err) {
       console.error(err);
+      toast.error("Failed to create goal. Please try again later.");
     }
   };
 

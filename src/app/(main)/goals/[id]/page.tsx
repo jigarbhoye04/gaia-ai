@@ -155,6 +155,11 @@ export default function GoalPage() {
             const jsonData = event.data.replace(/^data: /, "");
             const parsedData = JSON.parse(jsonData) || jsonData;
             console.log("Parsed WebSocket response:", parsedData);
+
+            if (parsedData.error)
+              return toast.error(
+                `Error generating roadmap. Please try again later. Error Message: ${parsedData.error}`,
+              );
           };
           ws.onerror = (error) => console.error("WebSocket error:", error);
           ws.onclose = () => {
@@ -167,6 +172,7 @@ export default function GoalPage() {
       }
     } catch (error) {
       console.error("Goal fetch error:", error);
+      toast.error("Error fetching goal data. Please try again later.");
       setGoalData(null);
     }
   }, [goalId]);
