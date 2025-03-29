@@ -80,30 +80,33 @@ const MainChat = React.memo(function MainChat() {
   }, []);
 
   // ! THIS DOESNT CAUSE AN INFINITE LOOP
-  // useEffect(() => {
-  //   if (convoIdParam) {
-  //     fetchMessages(convoIdParam, updateConvoMessages, router).then(() => {
-  //       setTimeout(scrollToBottom, 500);
-  //     });
-  //   } else if (pathname !== "/c") router.push("/c");
-
-  //   if (inputRef?.current) inputRef.current.focus();
-  // }, [convoIdParam]);
-
-  const fetchConvoMessages = useCallback(async () => {
+  useEffect(() => {
     if (convoIdParam) {
-      await fetchMessages(convoIdParam, updateConvoMessages, router);
-      setTimeout(scrollToBottom, 500);
-    } else if (pathname !== "/c") {
-      router.push("/c");
-    }
+      fetchMessages(convoIdParam, updateConvoMessages, router).then(() => {
+        setTimeout(scrollToBottom, 500);
+      });
+    } else if (pathname !== "/c") router.push("/c");
 
     if (inputRef?.current) inputRef.current.focus();
-  }, [convoIdParam, updateConvoMessages, router, pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [convoIdParam]);
 
-  useEffect(() => {
-    fetchConvoMessages();
-  }, [fetchConvoMessages]);
+  // ! THIS CAUSES AN INFINITE LOOP
+  // const fetchConvoMessages = useCallback(async () => {
+  //   if (convoIdParam) {
+  //     await fetchMessages(convoIdParam, updateConvoMessages, router);
+  //     setTimeout(scrollToBottom, 500);
+  //   } else if (pathname !== "/c") {
+  //     router.push("/c");
+  //   }
+
+  //   if (inputRef?.current) inputRef.current.focus();
+  // }, [convoIdParam, updateConvoMessages, router, pathname]);
+
+  // useEffect(() => {
+  //   fetchConvoMessages();
+  // }, [fetchConvoMessages]);
+
   // useEffect(() => {
   //   return () => {
   //     handleScroll.cancel();
