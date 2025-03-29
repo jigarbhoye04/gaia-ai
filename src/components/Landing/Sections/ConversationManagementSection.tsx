@@ -1,3 +1,9 @@
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { SearchIcon, Star } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
+
 import {
   BubbleChatIcon,
   BubbleConversationChatIcon,
@@ -16,11 +22,6 @@ import {
 } from "@/components/ui/command";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LandingSectionLayout from "@/layouts/LandingSectionLayout";
-import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { SearchIcon, Star } from "lucide-react";
-import Image from "next/image";
-import { useState } from "react";
 const dummyMessages = [
   {
     searchWeb: true,

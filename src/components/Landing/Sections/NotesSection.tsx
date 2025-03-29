@@ -1,5 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import React, { forwardRef, useRef } from "react";
+
 import { AnimatedBeam } from "@/components/magicui/animated-beam";
 import {
   Brain02Icon,
@@ -12,7 +15,6 @@ import {
 } from "@/components/Misc/icons";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
 import { cn } from "@/lib/utils";
-import React, { forwardRef, useRef } from "react";
 
 const Circle = forwardRef<
   HTMLDivElement,
@@ -140,7 +142,7 @@ export default function AnimatedBeamMultipleOutputDemo({
 
 const Icons = {
   gaia: () => (
-    <img
+    <Image
       src="/branding/logo.png"
       alt="GAIA Logo"
       width="80"

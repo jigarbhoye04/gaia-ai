@@ -1,6 +1,7 @@
+import Image from "next/image";
+
 import { FileUploadIcon } from "@/components/Misc/icons";
 import LandingSectionLayout from "@/layouts/LandingSectionLayout";
-import Image from "next/image";
 
 export default function Section_Document() {
   return (

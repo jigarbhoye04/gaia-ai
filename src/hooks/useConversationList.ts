@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -5,7 +6,6 @@ import {
   type PaginationMeta,
 } from "@/redux/slices/conversationsSlice";
 import type { AppDispatch, RootState } from "@/redux/store";
-import { useCallback } from "react";
 
 export const useConversationList = () => {
   const conversations = useSelector(

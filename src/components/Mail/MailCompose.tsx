@@ -52,7 +52,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
   const [writingStyle, setWritingStyle] = useState("formal");
   const [contentLength, setContentLength] = useState("none");
   const [clarityOption, setClarityOption] = useState("none");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   const editor = useEditor({
     extensions: [

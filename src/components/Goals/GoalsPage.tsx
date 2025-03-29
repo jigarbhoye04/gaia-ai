@@ -5,12 +5,12 @@ import { Chip } from "@heroui/chip";
 import { Spinner } from "@heroui/spinner";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import AddGoalDialog from "@/components/Goals/AddGoalDialog";
 import { GoalCard } from "@/components/Goals/GoalCard";
 import { Target04Icon } from "@/components/Misc/icons";
 import { apiauth } from "@/utils/apiaxios";
-import { toast } from "sonner";
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState([]);
