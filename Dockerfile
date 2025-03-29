@@ -22,8 +22,8 @@ RUN apt update && apt install -y \
 COPY pyproject.toml ./
 
 # Install dependencies efficiently using UV with caching
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system -e .
+# RUN --mount=type=cache,target=/root/.cache/uv \
+RUN uv pip install --system -e .
 
 # ---- Builder Stage: Download Additional Resources ----
 FROM base AS builder
