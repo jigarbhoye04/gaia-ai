@@ -33,6 +33,10 @@ const FetchPageModal: React.FC<FetchPageModalProps> = ({
   const [isCurrentURLValid, setIsCurrentURLValid] = useState(false);
 
   const validateURL = (url: string) => {
+    if (!url || url.trim() === "") {
+      return false;
+    }
+
     try {
       new URL(url);
       return true;

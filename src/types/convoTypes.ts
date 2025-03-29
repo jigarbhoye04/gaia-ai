@@ -79,9 +79,22 @@ export type WeatherData = {
   cod?: number;
   location: {
     city: string;
-    country: string;
-    region: string;
+    country: string | null;
+    region: string | null;
   };
+  // New field for forecast data
+  forecast?: Array<{
+    date: string;
+    timestamp: number;
+    temp_min: number;
+    temp_max: number;
+    humidity: number;
+    weather: {
+      main: string;
+      description: string;
+      icon: string;
+    };
+  }>;
 };
 
 // Define the structure for a single conversation
