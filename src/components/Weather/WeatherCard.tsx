@@ -1,14 +1,23 @@
-import { WeatherData } from "@/types/convoTypes";
+import { Accordion, AccordionItem, Switch } from "@heroui/react";
 import {
   CloudFog,
-  ExternalLinkIcon,
   HazeIcon,
   MapPinIcon,
   SunriseIcon,
   SunsetIcon,
-  ThermometerIcon,
+  ThermometerIcon
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { WeatherData } from "@/types/convoTypes";
+
 import {
   CloudAngledRainIcon,
   CloudAngledZapIcon,
@@ -24,7 +33,6 @@ import {
   VisionIcon,
 } from "../Misc/icons";
 import { WeatherDetailItem } from "./WeatherDetailItem";
-import { Accordion, AccordionItem, Switch } from "@heroui/react";
 
 interface WeatherCardProps {
   weatherData: WeatherData;
@@ -80,7 +88,7 @@ const getWeatherIcon = (main: string, className: string = "", fill = "") => {
     case "clear":
       return <Sun03Icon className={className} fill={fill} color={fill} />;
     case "clouds":
-      return <CloudIcon className={className} fill={fill} color={fill} />;
+      return <CloudIcon className={className} color={"#E5E7EB"} />;
     default:
       return <CloudIcon className={className} fill={fill} color={fill} />;
   }
@@ -332,15 +340,18 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
 
   return (
     <div
-      className={`w-screen max-w-screen-sm rounded-3xl ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
+      className={`w-screen max-w-md rounded-3xl ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
     >
       {/* Location Info */}
-      <div className="mb-4 flex items-start justify-between gap-10">
-        <div className="flex items-center">
-          <MapPinIcon className="mr-2 h-7 w-7" color={"white"} />
+      <div className="mb-3 flex items-start justify-between gap-10">
+        <div className="flex items-start">
+          <MapPinIcon className="relative top-1 mr-2 h-5 w-5" color={"white"} />
           <div>
             <h2 className="flex items-center text-xl font-bold text-white">
-              {weatherData.location.city}, {weatherData.location.region}
+              {weatherData.location.city}
+              {weatherData.location.region
+                ? `,${weatherData.location.region}`
+                : ""}
             </h2>
             <p className="text-xs" style={{ color: weatherTheme.colorCode }}>
               {weatherData.location.country}
@@ -348,53 +359,80 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={useFahrenheit}
-            onValueChange={setUseFahrenheit}
-            color="default"
-            endContent={<div> °C</div>}
-            startContent={<div>°F</div>}
-          />
+        <div className="flex items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 p-1 text-white hover:bg-white/20"
+                aria-label="Temperature settings"
+              >
+                <ThermometerIcon className="h-5 w-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-40 border-zinc-700 bg-zinc-800 text-white"
+            >
+              <DropdownMenuLabel>Temperature Unit</DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-zinc-700" />
+              <div className="px-2 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">°F</span>
+                  <Switch
+                    checked={useFahrenheit}
+                    onValueChange={setUseFahrenheit}
+                    color="default"
+                  />
+                  <span className="text-sm">°C</span>
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
       {/* Main Weather Display */}
-      <div className="mb-2 flex items-center justify-between">
-        <div>
-          <div className="flex items-center">
-            <ThermometerIcon className="mr-2 h-6 w-6" color={"white"} />
+      <div className="mb-2 flex items-center justify-between gap-5">
+        <div className="flex items-center justify-center">
+          {weatherTheme.icon}
+        </div>
 
-            <span className="text-5xl font-bold text-white">
+        <div>
+          <div className="flex items-baseline">
+            <span className="text-4xl font-bold text-white">
               {displayTemp}°
+            </span>
+            <span className="ml-1 text-sm font-medium text-white/80">
+              {useFahrenheit ? "F" : "C"}
             </span>
           </div>
           <p
-            className="mt-1 text-sm"
-            style={{ color: weatherTheme.colorCode, filter: "brightness(1.2)" }}
+            className="text-xs"
+            style={{
+              color: weatherTheme.colorCode,
+              filter: "brightness(1.3)",
+            }}
           >
-            Feels like: {displayFeelsLike}°{useFahrenheit ? "F" : "C"}
-          </p>
-          <p className="mt-1 font-medium capitalize text-white">
-            {weatherData.weather[0].description}
+            Feels like: {displayFeelsLike}°
           </p>
         </div>
-        <div className="flex flex-col items-center justify-center rounded-full p-4">
-          {weatherTheme.icon}
-        </div>
+
+        <p className="font-medium capitalize text-white">
+          {weatherData.weather[0].description}
+        </p>
       </div>
 
       {/* Weekly Forecast Accordion */}
 
       {/* Weather Details Accordion */}
       <Accordion className="mt-2" isCompact selectionMode="multiple">
-        {weatherData.forecast && weatherData.forecast.length > 0 && (
+        {weatherData.forecast && weatherData.forecast.length > 0 ? (
           <AccordionItem
             key="weekly-forecast"
             aria-label="Weekly Forecast"
             title={
               <div className="flex items-center">
-                <span className="text-sm font-medium text-white">
+                <span className="text-sm font-normal text-white">
                   Weekly Forecast
                 </span>
               </div>
@@ -412,7 +450,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
                 return (
                   <div
                     key={idx}
-                    className="flex items-center justify-start rounded-2xl bg-white/10 px-2 py-1 text-white transition-colors hover:bg-white/20"
+                    className="flex items-center justify-start rounded-2xl bg-black/10 px-2 py-1 text-white"
                   >
                     <div className="flex w-full flex-1 items-center justify-start gap-2">
                       <div className="flex items-center justify-center">
@@ -430,14 +468,14 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
                     </div>
 
                     <div className="flex w-24 justify-end">
-                      <div className="flex flex-row items-end gap-3">
+                      <div className="flex flex-row items-end gap-2">
                         <div className="flex items-center">
                           <Sun03Icon
                             className="mr-1.5 h-7 w-7"
                             color="#FCD34D"
                             fill="#FCD34D"
                           />
-                          <span className="font-medium text-white">
+                          <span className="w-8 font-medium text-white">
                             {dayTemp}°
                           </span>
                         </div>
@@ -447,7 +485,9 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
                             color="#93C5FD"
                             fill="#93C5FD"
                           />
-                          <span className="text-white/80">{nightTemp}°</span>
+                          <span className="w-8 text-white/80">
+                            {nightTemp}°
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -456,14 +496,14 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               })}
             </div>
           </AccordionItem>
-        )}
+        ) : null}
 
         <AccordionItem
           key="weather-details"
           aria-label="Weather Details"
           title={
             <div className="flex items-center">
-              <span className="text-sm font-medium text-white">
+              <span className="text-sm font-normal text-white">
                 Additional Information
               </span>
             </div>
@@ -554,7 +594,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           </div>
         </AccordionItem>
       </Accordion>
-
+      {/* 
       <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 text-[10px] text-white/80">
         <div>
           <span>Data sources: </span>
@@ -597,7 +637,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
             />
           </a>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

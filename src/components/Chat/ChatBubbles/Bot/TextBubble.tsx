@@ -1,10 +1,12 @@
 // TextBubble.tsx
+import { Chip } from "@heroui/chip";
+import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
+
 import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
 import { InternetIcon } from "@/components/Misc/icons";
 import { WeatherCard } from "@/components/Weather/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
-import { Chip } from "@heroui/chip";
-import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
+
 import MarkdownRenderer from "../../MarkdownRenderer";
 import CalendarEventSection from "./CalendarEventSection";
 import DeepSearchResultsTabs from "./SearchResults/DeepSearchResultsTabs";

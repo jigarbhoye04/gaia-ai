@@ -1,6 +1,8 @@
 import React from "react";
-import { WeatherCard } from "./WeatherCard";
+
 import { WeatherData } from "@/types/convoTypes";
+
+import { WeatherCard } from "./WeatherCard";
 
 // Sample weather data for demonstration
 const sampleWeatherData: WeatherData = {
