@@ -10,6 +10,9 @@ const sections = {
     () => import("@/components/Landing/Sections/DeepSearchSection"),
   ),
   GoalSection: lazy(() => import("@/components/Landing/Sections/GoalSection")),
+  NotesSection: lazy(
+    () => import("@/components/Landing/Sections/NotesSection"),
+  ),
   InternetSection: lazy(
     () => import("@/components/Landing/Sections/InternetSection"),
   ),

@@ -54,7 +54,9 @@ export default function DeepSearchSection() {
               >
                 <Player
                   src={video.src}
-                  autoPlay
+                  autoPlay={activeVideo === video.id}
+                  muted
+                  // controls={false}
                   className="w-full rounded-lg shadow-lg"
                 />
               </div>
