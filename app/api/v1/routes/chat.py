@@ -1,7 +1,8 @@
 # app/api/routers/chat_routes.py
-from fastapi import APIRouter, Depends, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, BackgroundTasks, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.config.settings import settings
 from app.services.chat_service import (
     chat_stream,
     chat,
@@ -37,6 +38,7 @@ router = APIRouter()
 async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
+    request: Request,
     user: dict = Depends(get_current_user),
     llm_model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ) -> StreamingResponse:
@@ -55,7 +57,14 @@ async def chat_stream_endpoint(
     results, converting it to markdown, and providing it to the LLM for a more
     comprehensive response.
     """
-    return await chat_stream(body, background_tasks, user, llm_model)
+
+    if settings.ENV == "development":
+        client_ip = settings.DUMMY_IP
+    else:
+        forwarded = request.headers.get("X-Forwarded-For")
+        client_ip = forwarded.split(",")[0] if forwarded else request.client.host
+
+    return await chat_stream(body, background_tasks, user, llm_model, client_ip)
 
 
 @router.post("/chat")

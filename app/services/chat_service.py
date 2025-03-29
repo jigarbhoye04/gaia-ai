@@ -19,12 +19,16 @@ from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.services.file_service import fetch_files
 from app.services.image_service import generate_image_stream
 from app.services.internet_service import do_deep_search, do_search, fetch_webpages
+from app.services.notes_service import fetch_notes
+from app.utils.chat_utils import (
+    classify_intent,
+    user_weather,
+    extract_location_from_message,
+)
 from app.utils.llm_utils import (
     do_prompt_no_stream,
     do_prompt_with_stream,
 )
-from app.services.notes_service import fetch_notes
-from app.utils.chat_utils import classify_intent
 from app.utils.notes_utils import store_note
 from app.utils.pipeline_utils import Pipeline
 
@@ -34,6 +38,7 @@ async def chat_stream(
     background_tasks: BackgroundTasks,
     user: dict,
     llm_model: str,
+    user_ip: str,
 ) -> StreamingResponse:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
@@ -76,6 +81,21 @@ async def chat_stream(
     if context["intent"] == "generate_image":
         return StreamingResponse(
             generate_image_stream(context["query_text"]),
+            media_type="text/event-stream",
+        )
+
+    print(f"{user_ip=}")
+    print(f"{context['intent']=}")
+
+    if context["intent"] == "weather":
+        # Extract location from the user's message if mentioned
+        query_text = context["query_text"]
+        location_name = await extract_location_from_message(query_text)
+
+        logger.info(f"Weather request detected. Extracted location: {location_name}")
+
+        return StreamingResponse(
+            user_weather(user_ip, location_name),
             media_type="text/event-stream",
         )
 

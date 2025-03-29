@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
+    OPENWEATHER_API_KEY: str
 
     # Hugging Face Configuration
     USE_HUGGINGFACE_API: bool = True
@@ -46,11 +47,13 @@ class Settings(BaseSettings):
     # Environment & Deployment
     ENV: str = "production"
     PORT: int = 80
+    DISABLE_PROFILING: bool = False
+    DUMMY_IP: str = "8.8.8.8"
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only in non-production environments."""
-        return self.ENV != "production"
+        return not self.DISABLE_PROFILING and self.ENV != "production"
 
     @computed_field
     def GOOGLE_REDIRECT_URI(self) -> str:
