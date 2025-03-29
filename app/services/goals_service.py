@@ -6,8 +6,9 @@ from fastapi import HTTPException
 
 from app.db.collections import goals_collection
 from app.db.db_redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
+from app.db.utils import serialize_document
 from app.models.goals_models import GoalCreate, UpdateNodeRequest, GoalResponse
-from app.utils.llm_utils import do_prompt_no_stream, do_prompt_with_stream
+from app.utils.llm_utils import do_prompt_no_stream, do_prompt_with_stream, do_prompt_with_stream_simple
 from app.utils.goals_utils import goal_helper
 from app.config.loggers import goals_logger as logger
 from app.prompts.user.goals_prompts import (
@@ -40,14 +41,14 @@ async def generate_roadmap_with_llm_stream(title: str):
     )
 
     try:
-        async for chunk in do_prompt_with_stream(
+        async for chunk in do_prompt_with_stream_simple(
             messages=[{"role": "user", "content": detailed_prompt}],
             max_tokens=4096,
         ):
             yield chunk
 
     except Exception as e:
-        print(f"LLM Generation Error: {e}")
+        logger.error(f"LLM Generation Error: {e}")
         yield json.dumps({"error": str(e)})
 
 
@@ -80,9 +81,11 @@ async def create_goal_service(goal: GoalCreate, user: dict) -> GoalResponse:
     try:
         result = await goals_collection.insert_one(goal_data)
         new_goal = await goals_collection.find_one({"_id": result.inserted_id})
-        return GoalResponse(**new_goal)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to create goal")
+
+        formatted_goal = goal_helper(new_goal)
+        return GoalResponse(**formatted_goal)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create goal {e}")
 
 
 async def get_goal_service(goal_id: str, user: dict) -> dict:
