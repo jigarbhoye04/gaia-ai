@@ -118,39 +118,39 @@ def merge_video_results(data: dict) -> list:
 
 
 # --- Main Coordinator ---
-async def perform_search(query: str, count: int) -> dict:
-    """
-    Call multiple Bing search APIs concurrently and merge their responses.
+async def perform_search(
+    query: str,
+    count: int,
+    web: bool = True,
+    images: bool = True,
+    news: bool = True,
+    videos: bool = True,
+) -> dict:
+    """Perform selected Bing searches concurrently and return merged results."""
 
-    The APIs called include:
-      - Web search
-      - Image search
-      - News search
-      - Video search
-
-    Returns:
-        A dictionary containing merged results from each API.
-    """
-    # Ensure the query does not exceed the max length.
     if len(query) > MAX_QUERY_LENGTH:
         query = query[:MAX_QUERY_LENGTH]
 
-    # Set up concurrent API calls.
-    tasks = [
-        fetch_endpoint(WEB_SEARCH_URL, query, count),
-        fetch_endpoint(IMAGE_SEARCH_URL, query, count),
-        fetch_endpoint(NEWS_SEARCH_URL, query, count),
-        fetch_endpoint(VIDEO_SEARCH_URL, query, count),
-    ]
-    web_data, image_data, news_data, video_data = await asyncio.gather(*tasks)
-
-    # Merge the results from each endpoint.
-    return {
-        "web": merge_web_results(web_data),
-        "images": merge_image_results(image_data),
-        "news": merge_news_results(news_data),
-        "videos": merge_video_results(video_data),
+    search_options = {
+        "web": (web, WEB_SEARCH_URL, merge_web_results),
+        "images": (images, IMAGE_SEARCH_URL, merge_image_results),
+        "news": (news, NEWS_SEARCH_URL, merge_news_results),
+        "videos": (videos, VIDEO_SEARCH_URL, merge_video_results),
     }
+
+    # Prepare tasks for enabled searches
+    tasks, keys, merge_funcs = [], [], []
+    for key, (enabled, url, merge_func) in search_options.items():
+        if enabled:
+            tasks.append(fetch_endpoint(url, query, count))
+            keys.append(key)
+            merge_funcs.append(merge_func)
+
+    # Execute API calls concurrently
+    results = await asyncio.gather(*tasks)
+
+    # Merge and return results
+    return {keys[i]: merge_funcs[i](results[i]) for i in range(len(results))}
 
 
 def format_results_for_llm(results, result_type="Search Results"):
@@ -182,19 +182,79 @@ def format_results_for_llm(results, result_type="Search Results"):
 
 
 def extract_urls_from_text(text: str) -> list[str]:
-    """Extracts valid URLs from text, even if missing http/https."""
+    """
+    Extracts valid URLs from text, with robust handling of various URL formats.
 
-    url_pattern = r"(?:https?://)?(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}(?:/[^\s]*)?"
-    possible_urls = re.findall(url_pattern, text)
+    This function handles:
+    - URLs with or without protocol (http://, https://)
+    - URLs with query parameters and fragments
+    - International domain names
+    - URLs containing special characters
+    - URLs with paths, including those with special characters
+
+    Args:
+        text: Text containing potential URLs
+
+    Returns:
+        List of normalized valid URLs with proper protocols
+    """
+    if not text:
+        return []
+
+    # More comprehensive URL pattern that handles more edge cases
+    url_pattern = r"""
+        (?:https?://)?                                # Optional protocol (http:// or https://)
+        (?:www\.)?                                    # Optional www subdomain
+        (?:                                          
+            [a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9]\.     # Domain name
+            |                                         
+            [a-zA-Z0-9]\.                             # Single-letter domain
+        )
+        [a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}        # TLD
+        (?::[0-9]+)?                                  # Optional port
+        (?:                                          
+            /(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]|          # Path with allowed chars
+            \([-a-zA-Z0-9()@:%_\+.~#?&/=]*\)|         # Balanced parentheses
+            \[[-a-zA-Z0-9()@:%_\+.~#?&/=]*\])*        # Balanced brackets
+        )?
+    """
+
+    # Use verbose mode for the regex to allow comments and spacing
+    possible_urls = re.findall(url_pattern, text, re.VERBOSE)
 
     valid_urls = []
+    seen_urls = set()  # To avoid duplicates
 
     for url in possible_urls:
-        extracted = tldextract.extract(url)
-        if extracted.suffix:
-            valid_urls.append(
-                url if url.startswith(("http://", "https://")) else f"http://{url}"
+        try:
+            # Clean up the URL
+            url = url.strip()
+
+            # Skip empty URLs
+            if not url:
+                continue
+
+            # Extract domain parts to validate
+            extracted = tldextract.extract(url)
+
+            # Validate that we have both a domain and suffix
+            if not (extracted.domain and extracted.suffix):
+                continue
+
+            # Normalize the URL by ensuring it has a protocol
+            normalized_url = (
+                url if url.startswith(("http://", "https://")) else f"https://{url}"
             )
+
+            # Avoid duplicates
+            if normalized_url not in seen_urls:
+                seen_urls.add(normalized_url)
+                valid_urls.append(normalized_url)
+
+        except Exception as e:
+            # Log the error without breaking the function
+            logger.error(f"Error processing URL candidate '{url}': {e}")
+            continue
 
     return valid_urls
 
@@ -224,7 +284,6 @@ async def fetch_with_playwright(
     url: str,
     wait_time: int = 3,
     wait_for_element: str = "body",
-    use_stealth: bool = True,
     take_screenshot: bool = False,
 ) -> dict:
     """Fetches webpage content using Playwright with optimizations.
@@ -233,7 +292,6 @@ async def fetch_with_playwright(
         url: URL to fetch
         wait_time: Time to wait after page load
         wait_for_element: Selector to wait for
-        use_stealth: Whether to use stealth mode
         take_screenshot: Whether to take a screenshot of the page
 
     Returns:
@@ -289,7 +347,7 @@ async def fetch_with_playwright(
             await page.close()
             await context.close()
             await browser.close()
-
+            print(f"{result=}")
             return result
 
     except Exception as e:
@@ -364,28 +422,24 @@ async def upload_screenshot_to_cloudinary(screenshot_bytes: bytes, url: str) -> 
 
 async def extract_text(html: str) -> str:
     """Extracts and cleans text from HTML content."""
+    print("extracting text")
     soup = BeautifulSoup(html, "html.parser")
+    print("extracting text 1")
+    for tag in ["script", "style", "nav", "footer", "iframe", "noscript"]:
+        print("extracting text tag", tag)
+        for element in soup.find_all(tag):
+            element.extract()
 
-    # Remove script & style tags
-    for script in soup(["script", "style"]):
-        script.decompose()
-
-    # Extract visible text
-    text = soup.get_text()
-
-    # Clean and process text
+    print("extracting text 2")
+    text = soup.get_text(separator="\n", strip=True)
+    print("extracting text 3")
     lines = (line.strip() for line in text.splitlines())
+    print("extracting text 4")
     chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    text = "\n".join(chunk for chunk in chunks if chunk)
-
-    # Optional: Remove special characters & tokenize
-    # text = re.sub(r"[^a-zA-Z\s]", "", text.lower())
-    # tokens = word_tokenize(text)
-    # stop_words = set(stopwords.words("english"))
-    # tokens = [word for word in tokens if word not in stop_words]
-
-    # return " ".join(tokens)
-    return text
+    print("extracting text 5")
+    content = "\n".join(chunk for chunk in chunks if chunk)
+    print(f"this is the extracted text: {content=}")
+    return content
 
 
 async def perform_fetch(url: str, use_playwright: bool = True) -> str:
@@ -394,9 +448,11 @@ async def perform_fetch(url: str, use_playwright: bool = True) -> str:
         html = await (
             fetch_with_playwright(url) if use_playwright else fetch_with_httpx(url)
         )
-        return await extract_text(html)
+        return await extract_text(
+            html.get("content", "Error: Could not fetch content.")
+        )
     except FetchError as e:
-        return f"[ERROR] {e}"  # This ensures errors are still captured but handled properly
+        return f"[ERROR] {e}"
 
 
 async def fetch_and_convert_to_markdown(url: str):

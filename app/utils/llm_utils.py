@@ -49,6 +49,43 @@ async def do_prompt_with_stream(
         yield f'data: {{"error": "An unexpected error occurred: {e}"}}\n\n'
 
 
+async def do_prompt_with_stream_simple(
+    messages: list,
+    temperature: float = 0.6,
+    max_tokens: int = 256,
+    model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
+):
+    json_data = {
+        "stream": "true",
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "messages": messages,
+        "model": model,
+    }
+
+    try:
+        async with http_async_client.stream(
+            "POST", settings.LLM_URL, json=json_data
+        ) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                line = line.strip()
+                if not line:
+                    continue
+
+                yield line + "\n\n"
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error {e.response.status_code}: {e}")
+        yield f'data: {{"error": "HTTP error: {e.response.status_code}"}}\n\n'
+    except httpx.StreamError as e:
+        logger.error(f"Stream error: {e}")
+        yield f'data: {{"error": "Stream error occurred: {e}"}}\n\n'
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        yield f'data: {{"error": "An unexpected error occurred: {e}"}}\n\n'
+
+
 async def process_streaming(
     response, user_message: str, context, intent: Optional[str] = None
 ):

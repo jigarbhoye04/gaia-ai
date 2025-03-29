@@ -59,17 +59,23 @@ async def search_email_endpoint(query: str):
         dict: A dictionary containing the extracted email addresses, combined text, and search data.
     """
     search_data = await perform_search(
-        query=f"Official contact e-mail address of {query}", count=50
+        query=f"Official contact e-mail address of {query}",
+        count=50,
+        images=False,
+        videos=False,
+        news=False,
     )
 
-    if not search_data or "results" not in search_data:
+    print(f"testing searchdata: {search_data=}")
+
+    if not search_data or "web" not in search_data:
         raise HTTPException(
             status_code=500, detail="Search failed or returned no results"
         )
 
     combined_text = " ".join(
         f"{item.get('title', '')} {item.get('snippet', '')}"
-        for item in search_data["results"]
+        for item in search_data["web"]
     )
 
     emails = list(set(extract_emails(combined_text)))

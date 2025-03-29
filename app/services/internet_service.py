@@ -62,7 +62,6 @@ async def do_deep_search(context: Dict[str, Any]) -> Dict[str, Any]:
                     formatted_content += f"### {i}. {title}\n"
                     formatted_content += f"**URL**: {url}\n\n"
 
-                    # Include screenshot if available
                     if screenshot_url:
                         formatted_content += f"**Screenshot**: ![Screenshot of {title}]({screenshot_url})\n\n"
 
@@ -135,26 +134,20 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     start_time = time.time()
 
-    # Only perform search if search_web flag is enabled, deep search is disabled and we have a message
     if context["search_web"] and context["last_message"] and not context["deep_search"]:
         query_text = context["query_text"]
         logger.info(f"Starting web search for query: {query_text}")
 
         try:
-            # Configure search parameters based on query characteristics
-            # For longer queries, we might want fewer results to keep context manageable
             result_count = 5
             if len(query_text) > 100:
                 result_count = 3
 
-            # Perform the search with error handling
             search_results = await perform_search(query=query_text, count=result_count)
 
-            # Extract different result types
             web_results = search_results.get("web", [])
             news_results = search_results.get("news", [])
 
-            # Format results with better structure
             formatted_results = ""
 
             if web_results:
@@ -168,16 +161,13 @@ async def do_search(context: Dict[str, Any]) -> Dict[str, Any]:
                     news_results, result_type="News Results"
                 )
 
-            # Handle case where no results were found
             if not formatted_results.strip():
                 formatted_results = "No relevant search results found for your query."
 
-            # Add the formatted search results to the context
             context["last_message"]["content"] += SEARCH_CONTEXT_TEMPLATE.format(
                 formatted_results=formatted_results
             )
 
-            # Store the raw results in context for potential later use
             context["search_results"] = search_results
 
             elapsed_time = time.time() - start_time
@@ -211,35 +201,49 @@ async def fetch_webpages(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fetch multiple webpages and append their content to the last message.
     """
-    # Get existing URLs
+
     urls: List[str] = context.get("pageFetchURLs", [])
 
-    # Extract URLs from user query text if available
     if "query_text" in context:
-        extracted_urls = extract_urls_from_text(context["query_text"])
-        if extracted_urls:
-            # Add any new URLs to the existing list (avoid duplicates)
-            for url in extracted_urls:
-                if url not in urls:
-                    urls.append(url)
-            # Update the context with the combined list
-            context["pageFetchURLs"] = urls
+        try:
+            extracted_urls = extract_urls_from_text(context["query_text"])
+            if extracted_urls:
+                for url in extracted_urls:
+                    if url not in urls:
+                        urls.append(url)
 
-    # Fetch content for all URLs
+                context["pageFetchURLs"] = urls
+        except Exception as e:
+            logger.error(f"Error extracting URLs from text: {e}", exc_info=True)
+
     if urls and context.get("last_message"):
         try:
-            fetched_pages = await asyncio.gather(
-                *[perform_fetch(url) for url in urls], return_exceptions=True
-            )
+            fetch_tasks = []
+            for url in urls:
+                try:
+                    fetch_tasks.append(perform_fetch(url))
+                except Exception as url_error:
+                    logger.error(
+                        f"Error creating fetch task for URL {url}: {url_error}"
+                    )
 
-            for i, page_content in enumerate(fetched_pages):
-                if isinstance(page_content, Exception):
-                    logger.error(f"Error fetching URL {urls[i]}: {page_content}")
-                    continue
-
-                context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
-                    page_content=page_content, urls=[urls[i]]
+            if fetch_tasks:
+                fetched_pages = await asyncio.gather(
+                    *fetch_tasks, return_exceptions=True
                 )
+                for i, page_content in enumerate(fetched_pages):
+                    if i >= len(urls):
+                        continue
+
+                    # if isinstance(page_content, Exception):
+                    #     logger.error(f"Error fetching URL {urls[i]}: {page_content}")
+                    #     continue
+
+                    print(f"{page_content=}")
+
+                    context["last_message"]["content"] += PAGE_CONTENT_TEMPLATE.format(
+                        page_content=page_content, urls=[urls[i]]
+                    )
         except Exception as e:
             logger.error(f"Error in fetch_webpages: {e}", exc_info=True)
 

@@ -21,8 +21,8 @@ from app.services.search_service import (
     URL_TIMEOUT,
 )
 from app.utils.search_utils import (
+    extract_text,
     fetch_with_playwright,
-    perform_fetch,
     perform_search,
     upload_screenshot_to_cloudinary,
 )
@@ -239,32 +239,13 @@ async def fetch_and_process_url(
                         "markdown_content": "",
                     }
 
-                soup = BeautifulSoup(response.text, "html.parser")
+                content = await extract_text(response.text)
 
-                # Remove script, style, and other non-content elements
-                for element in soup(
-                    ["script", "style", "nav", "footer", "iframe", "noscript"]
-                ):
-                    element.extract()
-
-                # Get text content
-                text = soup.get_text(separator="\n", strip=True)
-
-                # Process text
-                lines = (line.strip() for line in text.splitlines())
-                chunks = (
-                    phrase.strip() for line in lines for phrase in line.split("  ")
-                )
-                content = "\n".join(chunk for chunk in chunks if chunk)
-
-                # Truncate if needed
                 if len(content) > max_length:
                     content = content[:max_length] + "...[content truncated]"
 
-                # Convert to markdown
                 markdown_content = await convert_to_markdown(content)
 
-                # Cache the result
                 await save_webpage_cache(url, content, markdown_content)
 
                 return {
