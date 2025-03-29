@@ -62,4 +62,5 @@ EXPOSE 80
 USER appuser
 
 # Start the FastAPI application
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-80}
+# CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]

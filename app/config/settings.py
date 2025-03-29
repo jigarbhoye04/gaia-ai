@@ -45,6 +45,7 @@ class Settings(BaseSettings):
 
     # Environment & Deployment
     ENV: str = "production"
+    PORT: int = 80
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
