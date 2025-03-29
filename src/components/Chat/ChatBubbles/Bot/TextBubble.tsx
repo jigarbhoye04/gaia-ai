@@ -5,6 +5,7 @@ import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
 import CustomAnchor from "@/components/Chat/CodeBlock/CustomAnchor";
 import { InternetIcon } from "@/components/Misc/icons";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
+import WeatherSection from "@/components/Weather/WeatherSection";
 
 import MarkdownRenderer from "../../MarkdownRenderer";
 import CalendarEventSection from "./CalendarEventSection";
@@ -18,84 +19,92 @@ export default function TextBubble({
   pageFetchURLs,
   disclaimer,
   calendar_options,
+  weather_data,
   intent,
   search_results,
   deep_search_results,
 }: ChatBubbleBotProps) {
-  console.log("deep_search_results", deep_search_results);
+  console.log("weather_data", weather_data);
+  console.log("intent", intent);
   return (
     <>
       {!!search_results && (
         <SearchResultsTabs search_results={search_results} />
       )}
-
       {deep_search_results && (
         <DeepSearchResultsTabs deep_search_results={deep_search_results} />
       )}
-
-      <div className="chat_bubble bg-zinc-800">
-        <div className="flex flex-col gap-3">
-          {searchWeb && (
-            <Chip
-              color="primary"
-              startContent={<InternetIcon color="#00bbff" height={20} />}
-              variant="flat"
-            >
-              <div className="flex items-center gap-1 font-medium text-primary">
-                Live Search Results from the Web
-              </div>
-            </Chip>
-          )}
-
-          {deepSearchWeb && (
-            <Chip
-              color="primary"
-              startContent={<InternetIcon color="#00bbff" height={20} />}
-              variant="flat"
-            >
-              <div className="flex items-center gap-1 font-medium text-primary">
-                Enhanced Search Results from the Web
-              </div>
-            </Chip>
-          )}
-
-          {!!pageFetchURLs &&
-            pageFetchURLs.map((pageFetchURL, index) => (
+      {(!!searchWeb ||
+        !!deepSearchWeb ||
+        (!!pageFetchURLs && pageFetchURLs?.length > 0) ||
+        !!text.trim()) && (
+        <div className="chat_bubble bg-zinc-800">
+          <div className="flex flex-col gap-3">
+            {searchWeb && (
               <Chip
-                key={index}
                 color="primary"
-                startContent={<ArrowUpRight color="#00bbff" height={20} />}
+                startContent={<InternetIcon color="#00bbff" height={20} />}
                 variant="flat"
               >
                 <div className="flex items-center gap-1 font-medium text-primary">
-                  Fetched{" "}
-                  <CustomAnchor href={pageFetchURL}>
-                    {pageFetchURL.replace(/^https?:\/\//, "")}
-                  </CustomAnchor>
+                  Live Search Results from the Web
                 </div>
               </Chip>
-            ))}
+            )}
 
-          {!!text && <MarkdownRenderer content={text.toString()} />}
+            {deepSearchWeb && (
+              <Chip
+                color="primary"
+                startContent={<InternetIcon color="#00bbff" height={20} />}
+                variant="flat"
+              >
+                <div className="flex items-center gap-1 font-medium text-primary">
+                  Enhanced Search Results from the Web
+                </div>
+              </Chip>
+            )}
 
-          {!!disclaimer && (
-            <Chip
-              className="text-xs font-medium text-warning-500"
-              color="warning"
-              size="sm"
-              startContent={
-                <AlertTriangleIcon className="text-warning-500" height={17} />
-              }
-              variant="flat"
-            >
-              {disclaimer}
-            </Chip>
-          )}
+            {!!pageFetchURLs &&
+              pageFetchURLs.map((pageFetchURL, index) => (
+                <Chip
+                  key={index}
+                  color="primary"
+                  startContent={<ArrowUpRight color="#00bbff" height={20} />}
+                  variant="flat"
+                >
+                  <div className="flex items-center gap-1 font-medium text-primary">
+                    Fetched{" "}
+                    <CustomAnchor href={pageFetchURL}>
+                      {pageFetchURL.replace(/^https?:\/\//, "")}
+                    </CustomAnchor>
+                  </div>
+                </Chip>
+              ))}
+
+            {!!text && <MarkdownRenderer content={text.toString()} />}
+
+            {!!disclaimer && (
+              <Chip
+                className="text-xs font-medium text-warning-500"
+                color="warning"
+                size="sm"
+                startContent={
+                  <AlertTriangleIcon className="text-warning-500" height={17} />
+                }
+                variant="flat"
+              >
+                {disclaimer}
+              </Chip>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {intent === "calendar" && calendar_options && (
         <CalendarEventSection calendar_options={calendar_options} />
+      )}
+      {intent === "weather" && weather_data && (
+        <WeatherSection weather_data={weather_data} />
       )}
     </>
   );

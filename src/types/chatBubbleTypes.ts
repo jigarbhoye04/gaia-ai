@@ -2,7 +2,7 @@ import React, { Dispatch } from "react";
 
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
-import { CalendarOptions, DeepSearchResults, SearchResults } from "./convoTypes";
+import { CalendarOptions, DeepSearchResults, SearchResults, WeatherData } from "./convoTypes";
 
 
 export interface ChatBubbleUserProps {
@@ -49,6 +49,8 @@ export interface ChatBubbleBotProps {
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
+
 }

@@ -127,6 +127,7 @@ export const useChatStream = () => {
       botMessageRef.current = buildBotResponse({
         intent: parsedIntent.intent,
         calendar_options: parsedIntent.calendar_options,
+        weather_data: parsedIntent.weather_data,
         search_results: parsedIntent.search_results,
         deep_search_results: parsedIntent.deep_search_results,
       });

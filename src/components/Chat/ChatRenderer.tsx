@@ -124,6 +124,7 @@ export default function ChatRenderer() {
               date={message.date}
               search_results={message.search_results}
               deep_search_results={message.deep_search_results}
+              weather_data={message.weather_data}
             />
           </div>
         ) : (

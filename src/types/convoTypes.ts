@@ -23,6 +23,7 @@ export type MessageType = {
   fileData?: FileData[]
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
 };
@@ -32,6 +33,55 @@ export type CalendarOptions = {
   description: string | undefined;
   start: string | undefined;
   end: string | undefined;
+};
+
+// Weather data structure for weather intent
+export type WeatherData = {
+  coord: {
+    lon: number;
+    lat: number;
+  };
+  weather: Array<{
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }>;
+  base?: string;
+  main: {
+    temp: number;
+    feels_like: number;
+    temp_min: number;
+    temp_max: number;
+    pressure: number;
+    humidity: number;
+    sea_level?: number;
+    grnd_level?: number;
+  };
+  visibility?: number;
+  wind: {
+    speed: number;
+    deg: number;
+    gust?: number;
+  };
+  clouds?: {
+    all: number;
+  };
+  dt: number;
+  sys: {
+    country: string;
+    sunrise: number;
+    sunset: number;
+  };
+  timezone: number;
+  id?: number;
+  name: string;
+  cod?: number;
+  location: {
+    city: string;
+    country: string;
+    region: string;
+  };
 };
 
 // Define the structure for a single conversation
@@ -44,6 +94,7 @@ export type ConversationType = {
 export interface IntentType {
   intent: string | undefined;
   calendar_options?: CalendarOptions[] | null;
+  weather_data?: WeatherData | null;
 }
 
 export type WebResult = {
