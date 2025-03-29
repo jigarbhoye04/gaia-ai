@@ -7,15 +7,13 @@ routers, and other settings.
 
 import os
 
-import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.v1 import api_router, lifespan, logger
+from app.api.v1 import api_router, lifespan
 from app.middleware.profiling import ProfilingMiddleware
 
-# Set the TOKENIZERS_PARALLELISM environment variable to avoid warnings
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 
@@ -57,11 +55,3 @@ def main_route():
         dict: A simple greeting message.
     """
     return {"hello": "world"}
-
-
-if __name__ == "__main__":
-    logger.info("Launching the GAIA API server...")
-    try:
-        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
-    except Exception as e:
-        logger.error(f"Failed to start the server: {e}")
