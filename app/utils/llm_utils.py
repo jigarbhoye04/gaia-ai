@@ -176,12 +176,14 @@ async def do_prompt_with_stream(
     except Exception as e:
         logger.warning(f"Groq API error, falling back to default LLM: {e}")
 
-    # Fall back to original LLM
+    # Fall back to original LLM - use the same message format as Groq for consistency
+    # Only include system_prompt as a separate parameter if your API requires it
+    processed_messages = prepare_messages(messages, system_prompt)
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
         "temperature": temperature,
-        "messages": messages,
+        "messages": processed_messages,
         "model": model,
     }
 
@@ -219,11 +221,13 @@ async def do_prompt_with_stream_simple(
     except Exception as e:
         logger.warning(f"Groq API error in simple stream, falling back: {e}")
 
+    # Use processed messages for consistency with Groq
+    processed_messages = prepare_messages(messages, system_prompt)
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
         "temperature": temperature,
-        "messages": messages,
+        "messages": processed_messages,
         "model": model,
     }
 
@@ -260,15 +264,15 @@ async def do_prompt_no_stream(
     except Exception as e:
         logger.warning(f"Groq API error, falling back: {e}")
 
-    # Fall back to original LLM - add system_prompt to the payload for normal API call
+    # Use processed messages for consistency with Groq
+    processed_messages = prepare_messages(messages, system_prompt)
     return await make_llm_request(
         {
             "stream": "false",
             "temperature": temperature,
             "max_tokens": max_tokens,
             "model": model,
-            "messages": messages,
-            "system_prompt": system_prompt if system_prompt else None,
+            "messages": processed_messages,
         },
         http_async_client,
     )
@@ -290,15 +294,15 @@ def do_prompt_no_stream_sync(
     except Exception as e:
         logger.warning(f"Groq API error, falling back: {e}")
 
-    # Fall back to original LLM - add system_prompt to the payload
+    # Use processed messages for consistency with Groq
+    processed_messages = prepare_messages(messages, system_prompt)
     return make_llm_request_sync(
         {
             "stream": "false",
             "temperature": temperature,
             "max_tokens": max_tokens,
             "model": model,
-            "messages": messages,
-            "system_prompt": system_prompt if system_prompt else None,
+            "messages": processed_messages,
         },
         http_sync_client,
     )
