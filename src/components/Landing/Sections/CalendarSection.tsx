@@ -10,7 +10,6 @@ import {
   Calendar01Icon,
   GoogleCalendar as GoogleCalendarIcon,
 } from "@/components/Misc/icons";
-import { AnimatedSection } from "@/layouts/AnimatedSection";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
 import { CalendarEvent, GoogleCalendar } from "@/types/calendarTypes";
 
@@ -102,7 +101,7 @@ export default function Section_Calendar() {
   ];
 
   return (
-    <AnimatedSection className="relative z-[1] flex w-screen items-center justify-center">
+    <div className="relative z-[1] flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
@@ -167,7 +166,7 @@ export default function Section_Calendar() {
           </Tabs>
 
           <ScrollShadow className="h-[500px]">
-            <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl sm:px-5">
+            <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl px-1 sm:px-5">
               {selectedTab === "chat" ? (
                 <CalendarMessages
                   events={events}
@@ -209,6 +208,6 @@ export default function Section_Calendar() {
           </ScrollShadow>
         </div>
       </div>
-    </AnimatedSection>
+    </div>
   );
 }

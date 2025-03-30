@@ -7,9 +7,9 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { siteConfig } from "@/config/siteConfig";
+import { mainNavLinks } from "@/config/navigationConfig";
 import useMediaQuery from "@/hooks/useMediaQuery";
 
-import { BookOpen02Icon, GlobalIcon, Idea01Icon, MapsIcon } from "./icons";
 import { LinkButton } from "./LinkButton";
 import DesktopMenu from "./Navbar/DesktopMenu";
 import MobileMenu from "./Navbar/MobileMenu";
@@ -49,47 +49,26 @@ export default function Navbar() {
           </div>
         </Button>
 
-        <div className="flex items-center gap-1">
-          {[
-            {
-              href: "/about",
-              label: "About",
-              icon: <GlobalIcon width={19} color={undefined} />,
-            },
-            {
-              href: "/blog",
-              label: "Blog",
-              icon: <BookOpen02Icon width={19} color={undefined} />,
-            },
-            {
-              href: "https://gaia.featurebase.app",
-              label: "Feature Request",
-              icon: <Idea01Icon width={19} color={undefined} />,
-              external: true,
-            },
-            {
-              href: "https://gaia.featurebase.app/roadmap",
-              label: "Roadmap",
-              icon: <MapsIcon width={19} color={undefined} />,
-              external: true,
-            },
-          ].map(({ href, label, icon, external }) => (
-            <LinkButton
-              key={href}
-              size="sm"
-              className={`text-sm font-medium ${
-                pathname === href
-                  ? "text-primary"
-                  : "text-zinc-400 hover:text-zinc-300"
-              }`}
-              as={Link}
-              href={href}
-              startContent={icon}
-              external={external}
-            >
-              {label}
-            </LinkButton>
-          ))}
+        <div className="hidden items-center gap-1 sm:flex">
+          {mainNavLinks
+            .filter((link) => link.href !== "/") // Filter out Home link for desktop nav
+            .map(({ href, label, icon, external }) => (
+              <LinkButton
+                key={href}
+                size="sm"
+                className={`text-sm font-medium ${
+                  pathname === href
+                    ? "text-primary"
+                    : "text-zinc-400 hover:text-zinc-300"
+                }`}
+                as={Link}
+                href={href}
+                startContent={icon}
+                external={external}
+              >
+                {label}
+              </LinkButton>
+            ))}
         </div>
 
         {isMobileScreen ? <MobileMenu /> : <DesktopMenu scrolled={scrolled} />}

@@ -1,7 +1,6 @@
 import { Button } from "@heroui/button";
 
 import { CalendarAdd01Icon, Tick02Icon } from "@/components/Misc/icons";
-import { AnimatedSection } from "@/layouts/AnimatedSection";
 
 interface Task {
   title: string;
@@ -22,7 +21,7 @@ export function CalendarBotMessage({
 }: CalendarBotMessageProps) {
   return (
     <div>
-      <AnimatedSection className="flex w-fit flex-col gap-1 rounded-2xl rounded-bl-none bg-zinc-800 p-4 pt-3">
+      <div className="flex w-fit flex-col gap-1 rounded-2xl rounded-bl-none bg-zinc-800 p-4 pt-3">
         <div>Want to add these events to your Calendar?</div>
         {tasks.map((task, index) => (
           <div
@@ -51,7 +50,7 @@ export function CalendarBotMessage({
             </Button>
           </div>
         ))}
-      </AnimatedSection>
+      </div>
     </div>
   );
 }

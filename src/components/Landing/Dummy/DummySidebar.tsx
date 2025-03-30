@@ -4,6 +4,7 @@ import { Clock } from "lucide-react";
 import React from "react";
 
 import { BookIcon1 } from "../../Misc/icons";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 const StaticSidebar = ({
   // hover1,
@@ -16,6 +17,8 @@ const StaticSidebar = ({
   isComplete: boolean;
   setIsComplete: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
+
   const label = "Task Name";
   const details = [
     "When you click on a task after setting a goal, this sidebar appears. You can mark the task as complete and see the estimated time and resources needed to finish it!",
@@ -24,11 +27,14 @@ const StaticSidebar = ({
   const resources = ["Resource 1", "Resource 2", "Resource 3"];
 
   return (
+    // <div
+    //   className={`z-20 h-fit flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 ${isMobileScreen ? "relative" : "absolute sm:-bottom-14 sm:-right-14 sm:max-w-[350px]"} transition-all`}
+    // ></div>
     <div
-      className={`absolute -bottom-14 -right-14 z-20 h-fit max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 ${
+      className={`relative z-20 h-fit flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 sm:absolute sm:-bottom-14 sm:-right-14 sm:max-w-[350px] ${
         isVisible
-          ? `pointer-events-auto sm:opacity-100`
-          : "pointer-events-none sm:opacity-0"
+          ? `pointer-events-auto opacity-100`
+          : "pointer-events-none opacity-0"
       } transition-all`}
     >
       <div className="space-y-2 p-4">
@@ -61,9 +67,9 @@ const StaticSidebar = ({
                 color="success"
                 isSelected={isComplete}
                 radius="full"
-                onValueChange={setIsComplete}
-                // isSelected={isComplete}
-                // onValueChange={handleCheckboxClick} // No need for a function, as it's static
+                onValueChange={() => {
+                  isMobileScreen ? undefined : setIsComplete((prev) => !prev);
+                }}
               >
                 Mark as Complete
               </Checkbox>

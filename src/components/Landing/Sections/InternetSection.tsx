@@ -1,7 +1,5 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
 import {
@@ -45,7 +43,7 @@ const ImageCarousel = ({
   }, []);
 
   return (
-    <div className="relative h-[37vw] w-[37vw]">
+    <div className="relative h-[50vh] w-full sm:h-[37vw] sm:w-[37vw]">
       <div
         className="relative h-full w-full overflow-hidden rounded-lg"
         onClick={nextIndex}
@@ -89,10 +87,10 @@ const ImageCarousel = ({
 
 export default function Internet() {
   return (
-    <AnimatedSection className="flex w-screen items-center justify-center">
+    <div className="flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
         <div className="relative flex w-screen max-w-screen-xl flex-col items-center justify-start gap-11">
-          <div className="flex min-h-[90vh] w-screen max-w-screen-xl flex-row items-center gap-10">
+          <div className="flex min-h-[90vh] w-screen max-w-screen-xl flex-col items-center gap-10 sm:flex-row">
             <div>
               <SectionHeading
                 heading="Always Up-to-Date"
@@ -106,7 +104,7 @@ export default function Internet() {
                   />
                 }
               />
-              <div className="space-y-2 p-6">
+              <div className="space-y-2 px-10 py-0 sm:p-6 sm:px-6">
                 <div className="flex items-start gap-2">
                   <CheckmarkCircle02Icon
                     width={25}
@@ -137,7 +135,7 @@ export default function Internet() {
             <ImageCarousel images={webSearchImages} />
           </div>
 
-          <div className="flex min-h-[90vh] w-screen max-w-screen-xl flex-row items-center">
+          <div className="flex min-h-[90vh] w-screen max-w-screen-xl flex-col items-center sm:flex-row">
             <div>
               <SectionHeading
                 heading="Let AI Read for You"
@@ -151,7 +149,7 @@ export default function Internet() {
                   />
                 }
               />
-              <div className="space-y-2 p-6">
+              <div className="space-y-2 px-10 py-0 pb-6 sm:p-6 sm:px-6">
                 <div className="flex items-start gap-2">
                   <CheckmarkCircle02Icon
                     width={25}
@@ -183,6 +181,6 @@ export default function Internet() {
           </div>
         </div>
       </div>
-    </AnimatedSection>
+    </div>
   );
 }

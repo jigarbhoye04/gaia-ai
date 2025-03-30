@@ -69,7 +69,7 @@ export default function AnimatedBeamMultipleOutputDemo({
 
         <div
           className={cn(
-            "relative flex w-[40vw] items-center justify-center overflow-hidden",
+            "relative flex w-full items-center justify-center overflow-hidden pr-9 sm:w-[40vw] sm:pr-0",
             className,
           )}
           ref={containerRef}

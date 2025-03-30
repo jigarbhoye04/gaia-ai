@@ -49,7 +49,7 @@ export default function MailSection() {
     <div className="flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
         <SectionHeading
-          heading="The future of mail is here."
+          heading="The future of mail."
           chipTitle="Mail"
           chipTitle2="Coming Soon"
           icon={
@@ -63,7 +63,7 @@ export default function MailSection() {
 
         <div className="flex justify-center">
           <div className="relative w-full max-w-screen-xl">
-            <div className="relative aspect-video min-h-[70vh] w-screen max-w-screen-xl overflow-hidden rounded-lg shadow-lg">
+            <div className="relative aspect-video w-screen max-w-screen-xl overflow-hidden rounded-lg shadow-lg sm:min-h-[70vh]">
               {images.map((image) => (
                 <div
                   key={image.id}

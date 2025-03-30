@@ -31,7 +31,7 @@ const nextConfig = {
   },
   experimental: {
     turbo: {
-      moduleIdStrategy: "deterministic",
+      //   moduleIdStrategy: "deterministic",
     },
     // webpackMemoryOptimizations: true,
     // optimizePackageImports: ["@heroui/react"],

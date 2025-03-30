@@ -16,7 +16,7 @@ export default function HeroSection() {
       <div className="fixed left-0 top-0 w-screen">
         <Spotlight duration={15} />
       </div>
-      <AnimatedSection className="relative z-[2] flex h-full flex-col items-center justify-center gap-4">
+      <AnimatedSection className="relative z-[2] flex h-full flex-col items-center justify-center">
         {/* <div className="tracking-[1rem] text-transparent bg-gradient-to-r via-white  bg-clip-text to-zinc-400 from-zinc-400">
           {/* INTRODUCING{"  "}GAIA 
         </div> 

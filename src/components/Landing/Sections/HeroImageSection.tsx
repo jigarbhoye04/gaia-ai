@@ -1,5 +1,3 @@
-import { ReactNode } from "react";
-
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
@@ -9,7 +7,7 @@ import {
 } from "@/components/Misc/icons";
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
-
+import { ReactNode } from "react";
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 
 const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
@@ -74,7 +72,7 @@ export default function HeroImage() {
 
   return (
     <div className="flex w-screen items-center justify-center">
-      <AnimatedSection className="mb-[20vh] mt-14 flex h-fit w-screen max-w-screen-lg flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-screen-xl">
+      <AnimatedSection className="mb-[20vh] mt-20 flex h-fit w-screen max-w-screen-lg flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-screen-xl">
         <div className="relative scale-[175%] sm:scale-100">
           <ShineBorder
             borderRadius={10}

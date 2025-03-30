@@ -11,18 +11,19 @@ import {
   FlowchartIcon1,
   Target02Icon,
 } from "@/components/Misc/icons";
-
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
+import { AnimatedSection } from "@/layouts/AnimatedSection";
+import useMediaQuery from "@/hooks/useMediaQuery";
 
 interface Step {
   icon: React.ReactNode;
   title: string;
   description: string;
-  image: string;
+  image: string | null;
 }
 
 export default function GoalSection() {
   const [selectedStep, setSelectedStep] = useState<number>(0);
+  const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
 
   const steps = useMemo<Step[]>(
     () => [
@@ -47,24 +48,24 @@ export default function GoalSection() {
         title: "Keep Track",
         description:
           "Monitor your milestones and celebrate every step toward achieving your goal.",
-        image: "/landing/goal_cropped.webp",
+        image: isMobileScreen ? null : "/landing/goal_cropped.webp",
       },
     ],
-    [],
+    [isMobileScreen],
   );
 
-  const [selectedImage, setSelectedImage] = useState<string>(
+  const [selectedImage, setSelectedImage] = useState<string | null>(
     steps[selectedStep].image,
   );
 
   useEffect(() => {
     steps.forEach((step) => {
-      new Image().src = step.image;
+      if (step.image) new Image().src = step.image;
     });
   }, [steps]);
 
   return (
-    <AnimatedSection className="flex min-h-fit w-screen flex-col items-center gap-5 p-4 transition-all sm:mt-0">
+    <div className="flex min-h-fit w-screen flex-col items-center gap-5 p-4 transition-all sm:mt-0">
       <GoalHeader />
       <GoalSteps
         selectedStep={selectedStep}
@@ -73,7 +74,7 @@ export default function GoalSection() {
         steps={steps}
         image={selectedImage}
       />
-    </AnimatedSection>
+    </div>
   );
 }
 
@@ -83,7 +84,7 @@ function GoalHeader() {
       <Chip variant="flat" color="primary">
         Goal Tracking
       </Chip>
-      <h2 className="mb-2 mt-4 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
+      <h2 className="relative z-[2] mb-2 mt-4 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
         Ever Felt Stuck Setting Goals?
       </h2>
     </div>
@@ -94,8 +95,8 @@ interface GoalStepsProps {
   steps: Step[];
   selectedStep: number;
   setSelectedStep: React.Dispatch<React.SetStateAction<number>>;
-  setSelectedImage: (image: string) => void;
-  image: string;
+  setSelectedImage: (image: string | null) => void;
+  image: string | null;
 }
 
 function GoalSteps({
@@ -115,7 +116,7 @@ function GoalSteps({
     if (selectedStep === 2 && isComplete) {
       setSelectedImage("/landing/goal_checked.webp");
     } else {
-      setSelectedImage(steps[selectedStep].image);
+      setSelectedImage(steps[selectedStep].image || null);
     }
   }, [isComplete, selectedStep, steps, setSelectedImage]);
 
@@ -174,9 +175,9 @@ function GoalSteps({
   }, [selectedStep, steps, setSelectedStep]);
 
   return (
-    <div className="space-y-5">
+    <div className="relative flex flex-col items-center gap-5">
       <div ref={goalSectionRef} className="min-w-full">
-        <AnimatedSection className="grid w-screen max-w-screen-xl items-center justify-center sm:grid-cols-3 sm:gap-5">
+        <AnimatedSection className="grid w-full items-center justify-center px-2 sm:w-screen sm:max-w-screen-xl sm:grid-cols-3 sm:gap-5">
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -219,7 +220,7 @@ function GoalStep({
 }: GoalStepProps) {
   return (
     <div
-      className={`flex cursor-pointer flex-row items-start justify-start gap-1 rounded-3xl p-2 transition-all hover:opacity-100 sm:flex-col sm:p-5 ${
+      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-3xl p-2 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:p-5 ${
         isSelected ? "opacity-100" : "sm:opacity-60"
       }`}
       onClick={onClick}
@@ -254,12 +255,12 @@ function GoalStep({
 }
 
 interface GoalImageProps {
-  image: string;
+  image: string | null;
 }
 
 function GoalImage({ image }: GoalImageProps) {
-  return (
-    <div className="relative hidden h-[50vh] sm:flex">
+  return !!image ? (
+    <div className="relative h-[50vh] w-full">
       <NextImage
         fill={true}
         alt="Goal step illustration"
@@ -283,5 +284,5 @@ function GoalImage({ image }: GoalImageProps) {
         </div>
       )}
     </div>
-  );
+  ) : null;
 }

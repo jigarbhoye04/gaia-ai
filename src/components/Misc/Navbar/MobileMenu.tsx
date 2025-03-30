@@ -4,11 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import {
-  BubbleConversationChatIcon,
-  Home01Icon,
-  Menu01Icon,
-} from "@/components/Misc/icons";
+import { Menu01Icon } from "@/components/Misc/icons";
 import {
   Sheet,
   SheetContent,
@@ -18,10 +14,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useUser } from "@/hooks/useUser";
+import { mainNavLinks, authNavLinks } from "@/config/navigationConfig";
 
 export default function MobileMenu() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const user = useUser();
+  const isAuthenticated = user && user.email; // Check if user has email to determine auth status
   const router = useRouter();
 
   return (
@@ -37,59 +35,65 @@ export default function MobileMenu() {
             <VisuallyHidden.Root>Menu</VisuallyHidden.Root>
           </SheetTitle>
           <SheetDescription className="flex flex-col gap-3 pt-12">
-            <Button
-              className="flex w-full justify-between"
-              endContent={
-                <Home01Icon color="foreground" width="20" height="20" />
-              }
-              color="default"
-              onPress={() => {
-                router.push("/");
-                setSheetOpen(false);
-              }}
-            >
-              Home
-            </Button>
-
-            {user ? (
+            {/* Main navigation links */}
+            {mainNavLinks.map((link) => (
               <Button
-                className="font-medium"
-                color="primary"
-                endContent={
-                  <BubbleConversationChatIcon color="foreground" width="17" />
-                }
-                radius="full"
-                size="md"
-                variant="shadow"
+                key={link.href}
+                className="flex w-full justify-between"
+                endContent={link.icon}
+                color="default"
+                as={link.external ? Link : undefined}
+                href={link.external ? link.href : undefined}
                 onPress={() => {
-                  router.push("/c");
-                  setSheetOpen(false);
+                  if (!link.external) {
+                    router.push(link.href);
+                    setSheetOpen(false);
+                  }
                 }}
               >
-                Chat
+                {link.label}
               </Button>
+            ))}
+
+            {/* Authentication related links */}
+            {isAuthenticated ? (
+              // Show auth links that require login
+              authNavLinks
+                .filter((link) => link.requiresAuth)
+                .map((link) => (
+                  <Button
+                    key={link.href}
+                    className="font-medium"
+                    color="primary"
+                    endContent={link.icon}
+                    size="md"
+                    variant="shadow"
+                    onPress={() => {
+                      router.push(link.href);
+                      setSheetOpen(false);
+                    }}
+                  >
+                    {link.label}
+                  </Button>
+                ))
             ) : (
+              // Show auth links for guests only
               <>
-                <Button
-                  as={Link}
-                  className="p-0 px-4 font-semibold"
-                  color="primary"
-                  size="md"
-                  variant="shadow"
-                  href={"/login"}
-                >
-                  Login
-                </Button>
-                <Button
-                  as={Link}
-                  className="p-0 px-4 font-semibold"
-                  color="primary"
-                  size="md"
-                  href={"/get-started"}
-                  variant="shadow"
-                >
-                  Get Started
-                </Button>
+                {authNavLinks
+                  .filter((link) => link.guestOnly)
+                  .map((link) => (
+                    <Button
+                      key={link.href}
+                      as={Link}
+                      className="p-0 px-4 font-semibold"
+                      color="primary"
+                      size="md"
+                      variant="shadow"
+                      href={link.href}
+                    >
+                      {link.label}
+                    </Button>
+                  ))}
               </>
             )}
           </SheetDescription>

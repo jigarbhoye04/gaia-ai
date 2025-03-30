@@ -5,12 +5,9 @@ export interface IconProps extends React.SVGProps<SVGSVGElement> {
 }
 export interface IconProps extends React.SVGProps<SVGSVGElement> {}
 
-export const GlobalIcon: React.FC<IconProps> = ({
-  color = "#000000",
-  ...props
-}) => (
+export const GlobalIcon: React.FC<IconProps> = ({ ...props }) => (
   <svg
-    color={color}
+    color={"#000000"}
     fill={"none"}
     height={24}
     viewBox="0 0 24 24"

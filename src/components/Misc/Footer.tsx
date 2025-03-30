@@ -2,10 +2,14 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 
 import { siteConfig } from "@/config/siteConfig";
+import { useUser } from "@/hooks/useUser";
 
 import { LinkButton } from "./LinkButton";
 
 export default function Footer() {
+  const user = useUser();
+  const isAuthenticated = user && user.email;
+
   return (
     <div className="!m-0">
       <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20">
@@ -32,21 +36,26 @@ export default function Footer() {
               <div className="mb-1 pl-2 font-normal uppercase text-foreground-400">
                 {section.title}
               </div>
-              {section.links.map((link) => (
-                <div key={link.href}>
-                  <LinkButton
-                    href={link.href}
-                    className="group relative flex items-center justify-start text-white"
-                  >
-                    <span className="transition-colors group-hover:text-primary">
-                      {link.label}
-                    </span>
-                    <span className="ml-1 -translate-x-10 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
-                      <ArrowUpRight width={17} />
-                    </span>
-                  </LinkButton>
-                </div>
-              ))}
+              {section.links
+                .filter(
+                  (link) =>
+                    !link.isLoggedIn || (link.isLoggedIn && isAuthenticated),
+                )
+                .map((link) => (
+                  <div key={link.href}>
+                    <LinkButton
+                      href={link.href}
+                      className="group relative flex items-center justify-start text-white"
+                    >
+                      <span className="transition-colors group-hover:text-primary">
+                        {link.label}
+                      </span>
+                      <span className="ml-1 -translate-x-10 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
+                        <ArrowUpRight width={17} />
+                      </span>
+                    </LinkButton>
+                  </div>
+                ))}
             </div>
           ))}
         </div>

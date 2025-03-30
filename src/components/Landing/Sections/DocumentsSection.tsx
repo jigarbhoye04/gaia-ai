@@ -19,7 +19,7 @@ export default function Section_Document() {
           "Ask questions, get summaries, extract key insights, and more from uploaded documents and images"
         }
       >
-        <div className="relative flex h-[80vh] w-full">
+        <div className="relative flex h-[45vh] w-full sm:h-[80vh]">
           <Image
             alt={"File Upload Showcase"}
             className="my-2 w-full rounded-3xl object-cover"

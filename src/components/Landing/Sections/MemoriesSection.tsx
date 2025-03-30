@@ -11,7 +11,6 @@ import {
   StickyNote01Icon,
 } from "@/components/Misc/icons";
 
-import { AnimatedSection } from "../../../layouts/AnimatedSection";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 
 function LocalNotecard({ plaintext }: { plaintext: string }) {
@@ -30,7 +29,7 @@ function LocalNotecard({ plaintext }: { plaintext: string }) {
 export default function Section_Memories() {
   return (
     <div className="relative z-[1] flex w-screen items-center justify-center">
-      <AnimatedSection className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
+      <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
           heading={"An Assistant That Remembers"}
@@ -73,7 +72,7 @@ export default function Section_Memories() {
                 </div>
               }
             >
-              <AnimatedSection className="space-y-4">
+              <div className="space-y-4">
                 <SimpleChatBubbleUser>What is my name?</SimpleChatBubbleUser>
                 <SimpleChatBubbleBot>
                   Based on your saved notes, your name is Jake.
@@ -86,7 +85,7 @@ export default function Section_Memories() {
                   thought about pursuing a career in software engineering, data
                   science, or perhaps cybersecurity?
                 </SimpleChatBubbleBot>
-              </AnimatedSection>
+              </div>
             </Tab>
 
             <Tab
@@ -98,16 +97,16 @@ export default function Section_Memories() {
                 </div>
               }
             >
-              <AnimatedSection className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <LocalNotecard plaintext={"My name is Jake"} />
                 <LocalNotecard
                   plaintext={"Jake is a 3rd year Computer Science student"}
                 />
-              </AnimatedSection>
+              </div>
             </Tab>
           </Tabs>
         </div>
-      </AnimatedSection>
+      </div>
     </div>
   );
 }
