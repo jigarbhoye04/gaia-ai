@@ -237,7 +237,7 @@ def classify_event_type(
         # "send email",
         "generate image",
         # "search internet",
-        # "flowchart",
+        "flowchart",
         "weather",
         "other",
     ]

@@ -1,5 +1,4 @@
 import json
-import os
 import datetime
 import asyncio
 from typing import Any, AsyncGenerator, Dict, List, Tuple
@@ -38,7 +37,10 @@ async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
             context["intent"] = "generate_image"
         elif result["highest_label"] in ["weather"]:
             context["intent"] = "weather"
-            
+
+        # elif result["highest_label"] in ["flowchart"]:
+        # context["intent"] = "flowchart"
+
     print(f"{result=}")
 
     return context

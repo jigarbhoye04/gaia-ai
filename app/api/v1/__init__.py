@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routes import (
-    audio,
+    # audio,
     blog,
     calendar,
     chat,
@@ -42,7 +42,7 @@ api_router.include_router(calendar.router, tags=["Calendar"])
 api_router.include_router(notes.router, tags=["Notes/Memories"])
 api_router.include_router(goals.router, tags=["Goals"])
 api_router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
-api_router.include_router(audio.router, tags=["Audio"])
+# api_router.include_router(audio.router, tags=["Audio"])
 api_router.include_router(mail.router, tags=["Mail"])
 api_router.include_router(blog.router, tags=["Blog"])
 api_router.include_router(file.router, tags=["File"])

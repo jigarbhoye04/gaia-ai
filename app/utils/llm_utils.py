@@ -1,12 +1,13 @@
 import json
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Dict, AsyncGenerator
 
 import httpx
 
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 from app.prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
+from app.prompts.system.general import MAIN_SYSTEM_PROMPT
 
 http_async_client = httpx.AsyncClient(timeout=1000000)
 http_sync_client = httpx.Client(timeout=1000000)
@@ -20,6 +21,121 @@ GROQ_HEADERS = {
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
+def prepare_messages(messages: List[Dict], system_prompt: str = None) -> List[Dict]:
+    """Prepare messages for LLM API calls by standardizing roles and adding system prompt."""
+    prepared_messages = messages.copy()
+
+    # Convert 'bot' role to 'assistant' role
+    for msg in prepared_messages:
+        if msg.get("role") == "bot":
+            msg["role"] = "assistant"
+
+    # Add system prompt if it doesn't exist
+    if system_prompt and not any(
+        msg.get("role") == "system" for msg in prepared_messages
+    ):
+        prepared_messages.insert(0, {"role": "system", "content": system_prompt})
+
+    return prepared_messages
+
+
+async def call_groq_api_stream(
+    messages: List[Dict], temperature: float, max_tokens: int
+) -> AsyncGenerator[Dict, None]:
+    """Call Groq API with streaming enabled."""
+    async with http_async_client.stream(
+        "POST",
+        GROQ_API_URL,
+        headers=GROQ_HEADERS,
+        json={
+            "model": GROQ_MODEL,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "stream": True,
+        },
+    ) as response:
+        response.raise_for_status()
+
+        async for line in response.aiter_lines():
+            if not line or not line.startswith("data:"):
+                continue
+
+            json_str = line.removeprefix("data:").strip()
+            if json_str == "[DONE]":
+                break
+
+            try:
+                data = json.loads(json_str)
+                if "choices" in data and data["choices"]:
+                    choice = data["choices"][0]
+
+                    if choice.get("finish_reason") == "stop":
+                        break
+
+                    if "delta" in choice and "content" in choice["delta"]:
+                        content = choice["delta"]["content"]
+                        if content:
+                            data["response"] = content
+                            data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
+                            yield data
+            except Exception as e:
+                logger.warning(f"Error processing Groq response: {e}")
+                continue
+
+
+async def call_groq_api(
+    messages: List[Dict], temperature: float, max_tokens: int
+) -> Dict:
+    """Call Groq API without streaming."""
+    response = await http_async_client.post(
+        GROQ_API_URL,
+        headers=GROQ_HEADERS,
+        json={
+            "model": GROQ_MODEL,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        },
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    if "choices" in data and data["choices"]:
+        content = data["choices"][0]["message"]["content"]
+        # Add our expected format to Groq response
+        data["response"] = content
+        data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
+        return data
+    return {"error": "No choices in response"}
+
+
+def call_groq_api_sync(
+    messages: List[Dict], temperature: float, max_tokens: int
+) -> Dict:
+    """Call Groq API synchronously without streaming."""
+    response = http_sync_client.post(
+        GROQ_API_URL,
+        headers=GROQ_HEADERS,
+        json={
+            "model": GROQ_MODEL,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        },
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    if "choices" in data and data["choices"]:
+        content = data["choices"][0]["message"]["content"]
+        # Add our expected format to Groq response
+        data["response"] = content
+        data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
+        return data
+    return {"error": "No choices in response"}
+
+
 async def do_prompt_with_stream(
     messages: list,
     context: dict,
@@ -27,71 +143,35 @@ async def do_prompt_with_stream(
     max_tokens: int = 2048,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
     intent=None,
+    system_prompt: str = MAIN_SYSTEM_PROMPT,
 ):
     """Send a prompt to the LLM API with streaming enabled. Tries Groq first, falls back to original LLM."""
     user_message = await extract_last_user_message(messages)
     bot_message = ""
 
-    # Try Groq first
+    groq_messages = prepare_messages(messages, system_prompt)
+
     try:
-        async with http_async_client.stream(
-            "POST",
-            GROQ_API_URL,
-            headers=GROQ_HEADERS,
-            json={
-                "model": GROQ_MODEL,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "stream": True,
-            },
-        ) as response:
-            response.raise_for_status()
+        async for data in call_groq_api_stream(groq_messages, temperature, max_tokens):
+            content = data.get("response", "")
+            if content:
+                bot_message += content
+                yield f"data: {json.dumps(data)}\n\n"
 
-            async for line in response.aiter_lines():
-                if not line or not line.startswith("data:"):
-                    continue
+        # Send context data at the end
+        if context.get("search_results", None):
+            yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
 
-                json_str = line.removeprefix("data:").strip()
-                if json_str == "[DONE]":
-                    break
+        if context.get("deep_search_results", None):
+            yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
 
-                try:
-                    data = json.loads(json_str)
-                    if "choices" in data and data["choices"]:
-                        choice = data["choices"][0]
+        if intent == "calendar":
+            success, options = await process_calendar_event(user_message, bot_message)
+            if success:
+                yield f"data: {json.dumps({'intent': 'calendar', 'calendar_options': options})}\n\n"
 
-                        if choice.get("finish_reason") == "stop":
-                            break
-
-                        if "delta" in choice and "content" in choice["delta"]:
-                            content = choice["delta"]["content"]
-                            if content:
-                                bot_message += content
-                                # Keep original Groq data but add our expected format
-                                data["response"] = content
-                                data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-                                yield f"data: {json.dumps(data)}\n\n"
-                except Exception as e:
-                    logger.warning(f"Error processing Groq response: {e}")
-                    continue
-
-            # Send context data at the end
-            if context.get("search_results", None):
-                yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
-
-            if context.get("deep_search_results", None):
-                yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
-
-            if intent == "calendar":
-                success, options = await process_calendar_event(
-                    user_message, bot_message
-                )
-                if success:
-                    yield f"data: {json.dumps({'intent': 'calendar', 'calendar_options': options})}\n\n"
-
-            yield "data: [DONE]\n\n"
-            return
+        yield "data: [DONE]\n\n"
+        return
 
     except Exception as e:
         logger.warning(f"Groq API error, falling back to default LLM: {e}")
@@ -125,58 +205,20 @@ async def do_prompt_with_stream_simple(
     temperature: float = 0.6,
     max_tokens: int = 256,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
+    system_prompt: str = MAIN_SYSTEM_PROMPT,
 ):
     """Simple streaming prompt, with Groq fallback."""
-    # Try Groq first
+    groq_messages = prepare_messages(messages, system_prompt)
+
     try:
-        async with http_async_client.stream(
-            "POST",
-            GROQ_API_URL,
-            headers=GROQ_HEADERS,
-            json={
-                "model": GROQ_MODEL,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-                "stream": True,
-            },
-        ) as response:
-            response.raise_for_status()
+        async for data in call_groq_api_stream(groq_messages, temperature, max_tokens):
+            yield f"data: {json.dumps(data)}\n\n"
 
-            async for line in response.aiter_lines():
-                if not line or not line.startswith("data:"):
-                    continue
-
-                json_str = line.removeprefix("data:").strip()
-                if json_str == "[DONE]":
-                    yield "data: [DONE]\n\n"
-                    return
-
-                try:
-                    data = json.loads(json_str)
-                    if "choices" in data and data["choices"]:
-                        choice = data["choices"][0]
-
-                        if choice.get("finish_reason") == "stop":
-                            yield "data: [DONE]\n\n"
-                            return
-
-                        if "delta" in choice and "content" in choice["delta"]:
-                            content = choice["delta"]["content"]
-                            if content:
-                                # Keep original Groq data but add our expected format
-                                data["response"] = content
-                                data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-                                yield f"data: {json.dumps(data)}\n\n"
-                except Exception:
-                    continue
-
-            yield "data: [DONE]\n\n"
-            return
+        yield "data: [DONE]\n\n"
+        return
     except Exception as e:
         logger.warning(f"Groq API error in simple stream, falling back: {e}")
 
-    # Fall back to original LLM
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
@@ -206,42 +248,19 @@ async def do_prompt_no_stream(
     prompt: str,
     temperature: float = 0.6,
     max_tokens: int = 1024,
-    system_prompt: str = None,
+    system_prompt: str = MAIN_SYSTEM_PROMPT,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ) -> dict:
     """Send a prompt to the LLM API without streaming. Try Groq first, fall back to original LLM."""
-    messages = [
-        {
-            "role": "user",
-            "content": f"{f'System: {system_prompt}. User Prompt: ' if system_prompt else ''} {prompt}",
-        }
-    ]
+    messages = [{"role": "user", "content": prompt}]
+    groq_messages = prepare_messages(messages, system_prompt)
 
-    # Try Groq first
     try:
-        response = await http_async_client.post(
-            GROQ_API_URL,
-            headers=GROQ_HEADERS,
-            json={
-                "model": GROQ_MODEL,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            },
-        )
-        response.raise_for_status()
-
-        data = response.json()
-        if "choices" in data and data["choices"]:
-            content = data["choices"][0]["message"]["content"]
-            # Keep Groq data but add our expected format
-            data["response"] = content
-            data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-            return data
+        return await call_groq_api(groq_messages, temperature, max_tokens)
     except Exception as e:
         logger.warning(f"Groq API error, falling back: {e}")
 
-    # Fall back to original LLM
+    # Fall back to original LLM - add system_prompt to the payload for normal API call
     return await make_llm_request(
         {
             "stream": "false",
@@ -249,6 +268,7 @@ async def do_prompt_no_stream(
             "max_tokens": max_tokens,
             "model": model,
             "messages": messages,
+            "system_prompt": system_prompt if system_prompt else None,
         },
         http_async_client,
     )
@@ -262,38 +282,15 @@ def do_prompt_no_stream_sync(
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ) -> dict:
     """Send a prompt to the LLM API without streaming, using synchronous client. Try Groq first, fall back to original LLM."""
-    messages = [
-        {
-            "role": "user",
-            "content": f"{f'System: {system_prompt}. User Prompt: ' if system_prompt else ''} {prompt}",
-        }
-    ]
+    messages = [{"role": "user", "content": prompt}]
+    groq_messages = prepare_messages(messages, system_prompt)
 
-    # Try Groq first
     try:
-        response = http_sync_client.post(
-            GROQ_API_URL,
-            headers=GROQ_HEADERS,
-            json={
-                "model": GROQ_MODEL,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens,
-            },
-        )
-        response.raise_for_status()
-
-        data = response.json()
-        if "choices" in data and data["choices"]:
-            content = data["choices"][0]["message"]["content"]
-            # Keep Groq data but add our expected format
-            data["response"] = content
-            data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-            return data
+        return call_groq_api_sync(groq_messages, temperature, max_tokens)
     except Exception as e:
         logger.warning(f"Groq API error, falling back: {e}")
 
-    # Fall back to original LLM
+    # Fall back to original LLM - add system_prompt to the payload
     return make_llm_request_sync(
         {
             "stream": "false",
@@ -301,6 +298,7 @@ def do_prompt_no_stream_sync(
             "max_tokens": max_tokens,
             "model": model,
             "messages": messages,
+            "system_prompt": system_prompt if system_prompt else None,
         },
         http_sync_client,
     )
