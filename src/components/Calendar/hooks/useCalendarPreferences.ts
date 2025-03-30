@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useRef } from 'react';
 
 import { debounce } from '@/lib/utils';
 import { GoogleCalendar } from '@/types/calendarTypes';
@@ -7,6 +7,7 @@ import { apiauth } from '@/utils/apiaxios';
 export const useCalendarPreferences = (onCalendarsUpdate: (calendars: string[]) => void) => {
     const [calendars, setCalendars] = useState<GoogleCalendar[]>([]);
     const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
+    const isInitialFetchRef = useRef<boolean>(true);
 
     const stableOnCalendarsUpdate = useCallback(
         (updatedCalendars: string[]) => onCalendarsUpdate(updatedCalendars),
@@ -60,8 +61,14 @@ export const useCalendarPreferences = (onCalendarsUpdate: (calendars: string[]) 
                 return prev;
             });
 
+            // Only trigger calendar update if it's not the initial fetch
             if (!storedSelectedCalendars.length) return;
-            stableOnCalendarsUpdate(storedSelectedCalendars);
+
+            if (!isInitialFetchRef.current) {
+                stableOnCalendarsUpdate(storedSelectedCalendars);
+            } else {
+                isInitialFetchRef.current = false;
+            }
         } catch (error) {
             console.error("Error fetching calendars:", error);
         }

@@ -10,6 +10,7 @@ import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
+import { useLoadingText } from "./useLoadingText";
 
 /**
  * Custom hook to handle chat streaming via SSE (Server-Sent Events).
@@ -22,6 +23,7 @@ export const useChatStream = () => {
   const botMessageRef = useRef<MessageType | null>(null);
   const accumulatedResponseRef = useRef<string>("");
   const userPromptRef = useRef<string>("");
+  const { setLoadingText, resetLoadingText } = useLoadingText();
 
   useEffect(() => {
     latestConvoRef.current = convoMessages;
@@ -74,7 +76,10 @@ export const useChatStream = () => {
       const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
 
-      if (dataJson.status === "generate_image") {
+      if (dataJson.status === "generating_image") {
+        console.log("GENERATING IMAGE")
+        setLoadingText("Generating image...")
+
         botMessageRef.current = buildBotResponse({
           response: "",
           isImage: true,
@@ -172,20 +177,29 @@ export const useChatStream = () => {
         finalMessages = [...currentConvo, finalBotMessage];
       }
 
-      // Update UI
       updateConvoMessages(finalMessages);
 
-      // Save to database
+      const messagesForUpdate: MessageType[] = [];
+
+      const userMessageIndex = finalMessages.length - 2;
+      if (userMessageIndex >= 0 && finalMessages[userMessageIndex].type === "user") {
+        messagesForUpdate.push(finalMessages[userMessageIndex]);
+      }
+
+      messagesForUpdate.push(finalBotMessage);
+
       try {
-        await ApiService.updateConversation(conversationId, finalMessages);
+        await ApiService.updateConversation(conversationId, messagesForUpdate);
       } catch (error) {
         console.error("Failed to save conversation:", error);
         toast.error(
           "Failed to save the conversation. Some messages might not be preserved.",
         );
       }
-
-      setIsLoading(false);
+      finally {
+        setIsLoading(false);
+        resetLoadingText()
+      }
     };
 
     /**
@@ -193,6 +207,7 @@ export const useChatStream = () => {
      */
     const onError = (err: unknown) => {
       setIsLoading(false);
+      resetLoadingText()
       console.error("Error from server:", err);
       toast.error("Error fetching messages. Please try again later.");
     };

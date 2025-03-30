@@ -60,37 +60,37 @@ const getWeatherIcon = (main: string, className: string = "", fill = "") => {
   switch (main.toLowerCase()) {
     case "thunderstorm":
       return (
-        <CloudAngledZapIcon className={className} fill={fill} color={fill} />
+        <CloudAngledZapIcon className={className} color={fill} />
       );
     case "drizzle":
       return (
-        <CloudLittleRainIcon className={className} fill={fill} color={fill} />
+        <CloudLittleRainIcon className={className}  color={fill} />
       );
     case "rain":
       return (
-        <CloudAngledRainIcon className={className} fill={fill} color={fill} />
+        <CloudAngledRainIcon className={className} color={fill} />
       );
     case "snow":
-      return <CloudSnowIcon className={className} fill={fill} color={fill} />;
+      return <CloudSnowIcon className={className} color={fill} />;
     case "haze":
-      return <HazeIcon className={className} fill={fill} color={fill} />;
+      return <HazeIcon className={className}  color={fill} />;
     case "mist":
     case "smoke":
     case "dust":
     case "sand":
     case "ash":
     case "squall":
-      return <CloudFogIcon className={className} fill={fill} color={fill} />;
+      return <CloudFogIcon className={className}  color={fill} />;
     case "fog":
-      return <CloudFog className={className} fill={fill} color={fill} />;
+      return <CloudFog className={className} color={fill} />;
     case "tornado":
-      return <Tornado02Icon className={className} fill={fill} color={fill} />;
+      return <Tornado02Icon className={className}  color={fill} />;
     case "clear":
       return <Sun03Icon className={className} fill={fill} color={fill} />;
     case "clouds":
       return <CloudIcon className={className} color={"#E5E7EB"} />;
     default:
-      return <CloudIcon className={className} fill={fill} color={fill} />;
+      return <CloudIcon className={className} color={"#E5E7EB"} />;
   }
 };
 
@@ -340,7 +340,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
 
   return (
     <div
-      className={`w-screen max-w-md rounded-3xl ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
+      className={`sm:w-screen sm:max-w-md w-full rounded-3xl ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
     >
       {/* Location Info */}
       <div className="mb-3 flex items-start justify-between gap-10">
@@ -422,10 +422,11 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         </p>
       </div>
 
-      {/* Weekly Forecast Accordion */}
-
       {/* Weather Details Accordion */}
-      <Accordion className="mt-2" isCompact selectionMode="multiple">
+      <Accordion className="mt-2" isCompact selectionMode="multiple"
+    
+        defaultExpandedKeys={["weekly-forecast"]}
+      >
         {weatherData.forecast && weatherData.forecast.length > 0 ? (
           <AccordionItem
             key="weekly-forecast"
@@ -514,7 +515,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               {
                 icon: (
                   <FastWindIcon
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     color={weatherTheme.colorCode}
                   />
                 ),
@@ -525,7 +526,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               {
                 icon: (
                   <DropletIcon
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     color={weatherTheme.colorCode}
                   />
                 ),
@@ -538,7 +539,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
                     {
                       icon: (
                         <VisionIcon
-                          className="h-7 w-7"
+                          className="h-6 w-6"
                           color={weatherTheme.colorCode}
                         />
                       ),
@@ -551,7 +552,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               {
                 icon: (
                   <CloudIcon
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     color={weatherTheme.colorCode}
                   />
                 ),
@@ -562,7 +563,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               {
                 icon: (
                   <SunriseIcon
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     color={weatherTheme.colorCode}
                   />
                 ),
@@ -573,7 +574,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               {
                 icon: (
                   <SunsetIcon
-                    className="h-7 w-7"
+                    className="h-6 w-6"
                     color={weatherTheme.colorCode}
                   />
                 ),

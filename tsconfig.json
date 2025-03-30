@@ -1,9 +1,16 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
     "skipLibCheck": true,
+    "disableSourceOfProjectReferenceRedirect": true,
+    "disableSolutionSearching": true,
+    "disableReferencedProjectLoad": true,
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
@@ -19,17 +26,25 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@/src": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/src": [
+        "./src/*"
+      ]
     }
   },
   "include": [
-    "video.d.ts",
-    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    "next.config.mjs"
+    "next-env.d.ts",
+    "next.config.mjs",
+    // ".next/types/**/*.ts",
+    "video.d.ts",
+    ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
 }

@@ -24,23 +24,23 @@ export default function TextBubble({
   search_results,
   deep_search_results,
 }: ChatBubbleBotProps) {
-  console.log("weather_data", weather_data);
-  console.log("intent", intent);
   return (
     <>
       {!!search_results && (
         <SearchResultsTabs search_results={search_results} />
       )}
+
       {deep_search_results && (
         <DeepSearchResultsTabs deep_search_results={deep_search_results} />
       )}
+
       {(!!searchWeb ||
         !!deepSearchWeb ||
         (!!pageFetchURLs && pageFetchURLs?.length > 0) ||
         !!text.trim()) && (
         <div className="chat_bubble bg-zinc-800">
           <div className="flex flex-col gap-3">
-            {searchWeb && (
+            {(searchWeb || !!search_results) && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
@@ -52,14 +52,14 @@ export default function TextBubble({
               </Chip>
             )}
 
-            {deepSearchWeb && (
+            {(deepSearchWeb || !!deep_search_results) && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
                 variant="flat"
               >
                 <div className="flex items-center gap-1 font-medium text-primary">
-                  Enhanced Search Results from the Web
+                  Deep Search Results from the Web
                 </div>
               </Chip>
             )}

@@ -329,7 +329,7 @@ div,
 @media only screen and (max-width: 600px) {
   .chat_bubble,
   .chat_bubble.user div {
-    max-width: 70vw;
+    max-width: 90vw;
   }
   .chatbubblebot_parent {
     margin-left: -0.5em;

@@ -96,14 +96,16 @@ export default function ChatRenderer() {
 
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
-          <div key={index} className="relative flex items-end gap-2">
-            <Image
-              alt="GAIA Logo"
-              src={"/branding/logo.webp"}
-              width={30}
-              height={30}
-              className={`${isLoading ? "animate-spin" : ""} relative bottom-14`}
-            />
+          <div key={index} className="relative flex items-end gap-1 pl-1">
+            <div className="min-w-[40px]">
+              <Image
+                alt="GAIA Logo"
+                src={"/branding/logo.webp"}
+                width={30}
+                height={30}
+                className={`${isLoading ? "animate-spin" : ""} relative bottom-14`}
+              />
+            </div>
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
@@ -140,15 +142,15 @@ export default function ChatRenderer() {
         ),
       )}
       {isLoading && (
-        <div className="flex items-center gap-4 text-sm font-medium">
-          <Image
+        <div className="flex items-center gap-4 pl-[40px] pt-3 text-sm font-medium">
+          {/* <Image
             alt="GAIA Logo"
             src={"/branding/logo.webp"}
             width={30}
             height={30}
             className={`animate-spin`}
-          />
-          <div>{loadingText}</div>
+          /> */}
+          <span>{loadingText || "GAIA is thinking..."}</span>
           <Spinner
             variant="dots"
             color="primary"

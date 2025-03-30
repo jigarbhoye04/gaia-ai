@@ -115,7 +115,7 @@ export const ApiService = {
           }
         },
         onclose() {
-          onClose();
+          // onClose();
           controller.abort();
         },
         onerror: onError,

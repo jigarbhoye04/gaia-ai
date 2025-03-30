@@ -45,6 +45,18 @@ export default function Calendar() {
     useCalendarPreferences(handleCalendarUpdate);
 
   useEffect(() => {
+    fetchCalendars();
+    // fetchEvents will be triggered after calendars are loaded through the useEffect below
+  }, [fetchCalendars]);
+
+  // Add a new useEffect to trigger initial fetch of events once calendars are loaded
+  useEffect(() => {
+    if (selectedCalendars.length > 0) {
+      fetchEvents(null, selectedCalendars);
+    }
+  }, [selectedCalendars.length]); // Only run when the number of selected calendars changes
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (
@@ -65,10 +77,6 @@ export default function Calendar() {
       if (currentElement) observer.unobserve(currentElement);
     };
   }, [loading, nextPageToken, fetchEvents, selectedCalendars]);
-
-  useEffect(() => {
-    fetchCalendars();
-  }, [fetchCalendars]);
 
   const handleEventClick = (event: GoogleCalendarEvent) => {
     setSelectedEvent(event);

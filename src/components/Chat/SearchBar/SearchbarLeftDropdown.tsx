@@ -16,9 +16,11 @@ import {
   AttachmentIcon,
   GlobalSearchIcon,
   Image02Icon,
-  PlusSignIcon
+  PlusSignIcon,
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
+import { useLoadingText } from "@/hooks/useLoadingText";
+import { set } from "date-fns";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;
@@ -34,6 +36,7 @@ interface DropdownItemConfig {
   icon: React.ReactNode;
   action?: () => void;
   isMode?: boolean;
+  loadingText?: string;
 }
 
 export default function SearchbarLeftDropdown({
@@ -44,6 +47,8 @@ export default function SearchbarLeftDropdown({
   handleSelectionChange,
 }: SearchbarLeftDropdownProps) {
   const { isLoading } = useLoading();
+  const { setLoadingText } = useLoadingText();
+
   const currentMode = React.useMemo(
     () => Array.from(selectedMode)[0],
     [selectedMode],
@@ -55,12 +60,14 @@ export default function SearchbarLeftDropdown({
       label: "Deep Search",
       icon: <AiBrowserIcon className="h-5 w-5 text-primary" />,
       isMode: true,
+      loadingText: "Performing Deep Search...",
     },
     {
       id: "web_search",
       label: "Web Search",
       icon: <GlobalSearchIcon className="h-5 w-5 text-primary" />,
       isMode: true,
+      loadingText: "Performing Web Search...",
     },
     {
       id: "fetch_webpage",
@@ -68,6 +75,7 @@ export default function SearchbarLeftDropdown({
       icon: <ArrowUpRight className="h-5 w-5 text-primary" />,
       action: openPageFetchModal,
       isMode: false,
+      loadingText: "Fetching Webpage(s)...",
     },
     {
       id: "generate_image",
@@ -75,6 +83,7 @@ export default function SearchbarLeftDropdown({
       icon: <Image02Icon className="h-5 w-5 text-primary" />,
       action: openGenerateImageModal,
       isMode: false,
+      loadingText: "Generating Image...",
     },
     {
       id: "upload_file",
@@ -82,6 +91,7 @@ export default function SearchbarLeftDropdown({
       icon: <AttachmentIcon className="h-5 w-5 text-primary" />,
       action: openFileUploadModal,
       isMode: false,
+      loadingText: "Uploading File(s)...",
     },
   ];
 
@@ -113,6 +123,7 @@ export default function SearchbarLeftDropdown({
           <DropdownMenuItem
             key={item.id}
             onClick={() => {
+              setLoadingText(item.loadingText ?? ""); 
               if (item.isMode) handleSelectionChange(item.id as SearchMode);
               else if (item.action) item.action();
             }}
