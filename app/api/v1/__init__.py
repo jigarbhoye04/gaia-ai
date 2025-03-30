@@ -24,12 +24,10 @@ from app.api.v1.routes import (
     waitlist,
 )
 
-# from app.utils.nltk_utils import download_nltk_resources
 from app.config.loggers import app_logger as logger
+from app.db.db_chroma import init_chroma
 from app.utils.nltk_utils import download_nltk_resources
-
 from app.utils.text_utils import get_zero_shot_classifier
-
 
 api_router = APIRouter()
 
@@ -55,13 +53,9 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     try:
-        logger.info("Starting up GAIA API...")
-        logger.info("Initializing MongoDB...")
-
-        logger.info("Initializing NLTK for Natural Language Processing...")
+        logger.info("GAIA: Starting up GAIA API...")
+        await init_chroma()
         download_nltk_resources()
-
-        logger.info("Initializing Zero-Shot Classification Model...")
         get_zero_shot_classifier()
 
     except Exception as e:

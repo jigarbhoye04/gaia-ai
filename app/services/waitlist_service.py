@@ -42,11 +42,11 @@ async def waitlist_signup_service(
 ):
     """
     Sign up a new member to the waitlist and insert their information into the database.
+    Prevents duplicate emails from being added.
 
     Args:
         item (WaitlistItem): The waitlist item containing the member's information.
         request (Request, optional): The FastAPI request object for extracting client info.
-        ip_data (dict, optional): Pre-fetched IP data if available.
 
     Returns:
         dict: A message indicating the result of the signup operation.
@@ -55,6 +55,13 @@ async def waitlist_signup_service(
         HTTPException: If there is an error during the signup process.
     """
     try:
+        # Check if email already exists in the waitlist
+        email = item.email
+        existing_entry = await waitlist_collection.find_one({"email": email})
+
+        if existing_entry:
+            return {"message": "Email already registered in the waitlist"}
+
         item_dict = item.model_dump()
         item_dict.update({"ip": request.client.host if request.client else "Unknown"})
 

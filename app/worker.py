@@ -50,9 +50,7 @@ celery.conf.update(
 @worker_init.connect
 def startup_message(sender, **kwargs):
     logger.info("-------  Celery Worker is initializing...  -------")
-    logger.info("Initializing zero-shot classification model...")
     get_zero_shot_classifier()
-    logger.info("Model initialization completed.")
 
 
 @worker_ready.connect

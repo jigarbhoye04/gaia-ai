@@ -18,18 +18,18 @@ class RedisCache:
         if self.redis_url:
             try:
                 self.redis = redis.from_url(self.redis_url, decode_responses=True)
-                logger.info("Redis connection initialized.")
+                logger.info("REDIS: Redis connection initialized.")
             except Exception as e:
-                logger.error(f"Failed to connect to Redis: {e}")
+                logger.error(f"REDIS: Failed to connect to Redis: {e}")
         else:
-            logger.warning("REDIS_URL is not set. Caching will be disabled.")
+            logger.warning("REDIS: REDIS_URL is not set. Caching will be disabled.")
 
     async def get(self, key: str):
         """
         Get a cached value by key.
         """
         if not self.redis:
-            logger.warning("Redis is not initialized. Skipping get operation.")
+            logger.warning("REDIS: Redis is not initialized. Skipping get operation.")
             return None
 
         try:
@@ -48,7 +48,7 @@ class RedisCache:
         Set a cached value with an optional TTL.
         """
         if not self.redis:
-            logger.warning("Redis is not initialized. Skipping set operation.")
+            logger.warning("REDIS: Redis is not initialized. Skipping set operation.")
             return
 
         try:
@@ -63,7 +63,9 @@ class RedisCache:
         Delete a cached key.
         """
         if not self.redis:
-            logger.warning("Redis is not initialized. Skipping delete operation.")
+            logger.warning(
+                "REDIS: Redis is not initialized. Skipping delete operation."
+            )
             return
 
         try:

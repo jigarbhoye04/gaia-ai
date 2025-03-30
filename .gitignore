@@ -24,3 +24,12 @@ venv/
 
 .idea
 
+
+.terraform/
+.terraform
+*.tfstate
+*.tfvars
+
+.terraform.lock.hcl
+main.tf
+
