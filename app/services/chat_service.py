@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timezone
-import json
 from typing import AsyncGenerator
 
 from bson import ObjectId
