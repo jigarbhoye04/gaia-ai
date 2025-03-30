@@ -338,6 +338,7 @@ async def create_calendar_event(
     """
     Create a new calendar event using the Google Calendar API.
     The function normalizes the provided timezone and ensures the event datetimes are timezone-aware.
+    Supports full-day events and custom calendar selection.
 
     Args:
         event (EventCreateRequest): The event details.
@@ -350,33 +351,56 @@ async def create_calendar_event(
     Raises:
         HTTPException: If event creation fails.
     """
-    url = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
+    # Determine which calendar to use (default to primary if not specified)
+    calendar_id = event.calendar_id or "primary"
+    url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
+
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
     }
-    try:
-        canonical_timezone = resolve_timezone(event.timezone)
-        user_tz = ZoneInfo(canonical_timezone)
-        start_dt = event.start.replace(tzinfo=user_tz).astimezone(user_tz)
-        end_dt = event.end.replace(tzinfo=user_tz).astimezone(user_tz)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid timezone: {str(e)}")
 
+    # Create the basic event payload
     event_payload = {
         "summary": event.summary,
         "description": event.description,
-        "start": {
-            "dateTime": start_dt.isoformat(),
-            "timeZone": canonical_timezone,
-        },
-        "end": {
-            "dateTime": end_dt.isoformat(),
-            "timeZone": canonical_timezone,
-        },
     }
+
+    # Handle different event types (all-day vs. time-specific)
+    if event.is_all_day:
+        # For all-day events, use date format without time component
+        # Convert datetime to date string format "YYYY-MM-DD"
+        start_date = event.start.date().isoformat()
+        # For all-day events, end date is exclusive, so we don't need to add a day
+        # Google Calendar expects the end date to be the day AFTER the last day of the event
+        end_date = event.end.date().isoformat()
+
+        event_payload["start"] = {"date": start_date}
+        event_payload["end"] = {"date": end_date}
+    else:
+        # For time-specific events, use datetime with timezone
+        try:
+            canonical_timezone = resolve_timezone(event.timezone)
+            user_tz = ZoneInfo(canonical_timezone)
+            start_dt = event.start.replace(tzinfo=user_tz).astimezone(user_tz)
+            end_dt = event.end.replace(tzinfo=user_tz).astimezone(user_tz)
+
+            event_payload["start"] = {
+                "dateTime": start_dt.isoformat(),
+                "timeZone": canonical_timezone,
+            }
+            event_payload["end"] = {
+                "dateTime": end_dt.isoformat(),
+                "timeZone": canonical_timezone,
+            }
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Invalid timezone: {str(e)}")
+
+    # Send request to create the event
     async with httpx.AsyncClient() as client:
         response = await client.post(url, headers=headers, json=event_payload)
+
+    # Handle response
     if response.status_code in (200, 201):
         return response.json()
     elif response.status_code == 403:

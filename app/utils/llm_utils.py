@@ -166,7 +166,12 @@ async def do_prompt_with_stream(
             yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
 
         if intent == "calendar":
-            success, options = await process_calendar_event(user_message, bot_message)
+            # Extract user_id and access_token from context if available
+            user_id = context.get("user_id")
+            access_token = context.get("access_token")
+            success, options = await process_calendar_event(
+                user_message, bot_message, user_id, access_token
+            )
             if success:
                 yield f"data: {json.dumps({'intent': 'calendar', 'calendar_options': options})}\n\n"
 
@@ -356,8 +361,11 @@ async def process_streaming(
                 yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
 
             if intent == "calendar":
+                # Extract user_id and access_token from context if available
+                user_id = context.get("user_id")
+                access_token = context.get("access_token")
                 success, options = await process_calendar_event(
-                    user_message, bot_message
+                    user_message, bot_message, user_id, access_token
                 )
                 if success:
                     yield f"data: {json.dumps({'intent': 'calendar', 'calendar_options': options})}\n\n"
@@ -367,25 +375,68 @@ async def process_streaming(
         yield line + "\n\n"
 
 
-async def process_calendar_event(message: str, bot_message: str = ""):
+async def process_calendar_event(
+    message: str, bot_message: str = "", user_id: str = None, access_token: str = None
+):
     """Create a calendar event using the LLM."""
     now = datetime.now(timezone.utc)
+
+    # Base prompt with current date/time context
     prompt = (
         f"This is the user message: {message}. The current date and time is: {now.isoformat()}. "
         f"Today's day is {now.strftime('%A')}. This is the assistant's message: {bot_message}"
     )
 
+    # Add calendar information if available
+    calendar_info = ""
+    if user_id and access_token:
+        try:
+            from app.services.calendar_service import (
+                fetch_calendar_list,
+                get_user_calendar_preferences,
+            )
+
+            # Get list of calendars
+            calendar_data = await fetch_calendar_list(access_token)
+            calendars = calendar_data.get("items", [])
+
+            # Get user preferences for selected calendars
+            try:
+                preferences = await get_user_calendar_preferences(user_id)
+                selected_calendars = preferences.get("selectedCalendars", [])
+            except Exception:
+                # If no preferences, default to primary calendar
+                primary_calendar = next(
+                    (cal for cal in calendars if cal.get("primary")), None
+                )
+                selected_calendars = (
+                    [primary_calendar["id"]] if primary_calendar else []
+                )
+
+            # Format calendar information for the prompt
+            calendar_list = []
+            for cal in calendars:
+                is_selected = cal["id"] in selected_calendars
+                calendar_list.append(
+                    f"{cal['summary']} (ID: {cal['id']}, {'Selected' if is_selected else 'Not Selected'})"
+                )
+
+            if calendar_list:
+                calendar_info = f"\n\nAvailable calendars:\n" + "\n".join(calendar_list)
+        except Exception as e:
+            logger.error(f"Error fetching calendar information: {e}")
+
+    # Add calendar info to prompt if available
+    if calendar_info:
+        prompt += calendar_info
+
     result = await do_prompt_no_stream(
         prompt=prompt, system_prompt=CALENDAR_EVENT_CREATOR, max_tokens=4096
     )
 
-    print("result", result)
     if isinstance(result, dict) and result.get("response"):
-        print("if", isinstance(result, dict))
         try:
-            print("before parsed_result", result.get("response"))
             parsed_result = json.loads(result["response"])
-            print("parsed_result", parsed_result)
             if parsed_result.get("intent") == "calendar" and parsed_result.get(
                 "calendar_options"
             ):
