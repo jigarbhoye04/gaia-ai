@@ -5,7 +5,7 @@ import {
   MapPinIcon,
   SunriseIcon,
   SunsetIcon,
-  ThermometerIcon
+  ThermometerIcon,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
@@ -59,32 +59,26 @@ const getDayOfWeek = (dateStr: string): string => {
 const getWeatherIcon = (main: string, className: string = "", fill = "") => {
   switch (main.toLowerCase()) {
     case "thunderstorm":
-      return (
-        <CloudAngledZapIcon className={className} color={fill} />
-      );
+      return <CloudAngledZapIcon className={className} color={fill} />;
     case "drizzle":
-      return (
-        <CloudLittleRainIcon className={className}  color={fill} />
-      );
+      return <CloudLittleRainIcon className={className} color={fill} />;
     case "rain":
-      return (
-        <CloudAngledRainIcon className={className} color={fill} />
-      );
+      return <CloudAngledRainIcon className={className} color={fill} />;
     case "snow":
       return <CloudSnowIcon className={className} color={fill} />;
     case "haze":
-      return <HazeIcon className={className}  color={fill} />;
+      return <HazeIcon className={className} color={fill} />;
     case "mist":
     case "smoke":
     case "dust":
     case "sand":
     case "ash":
     case "squall":
-      return <CloudFogIcon className={className}  color={fill} />;
+      return <CloudFogIcon className={className} color={fill} />;
     case "fog":
       return <CloudFog className={className} color={fill} />;
     case "tornado":
-      return <Tornado02Icon className={className}  color={fill} />;
+      return <Tornado02Icon className={className} color={fill} />;
     case "clear":
       return <Sun03Icon className={className} fill={fill} color={fill} />;
     case "clouds":
@@ -340,7 +334,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
 
   return (
     <div
-      className={`sm:w-screen sm:max-w-md w-full rounded-3xl ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
+      className={`mb-2 w-full rounded-3xl sm:w-screen sm:max-w-md ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
     >
       {/* Location Info */}
       <div className="mb-3 flex items-start justify-between gap-10">
@@ -423,8 +417,10 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
       </div>
 
       {/* Weather Details Accordion */}
-      <Accordion className="mt-2" isCompact selectionMode="multiple"
-    
+      <Accordion
+        className="mt-2"
+        isCompact
+        selectionMode="multiple"
         defaultExpandedKeys={["weekly-forecast"]}
       >
         {weatherData.forecast && weatherData.forecast.length > 0 ? (

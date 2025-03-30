@@ -34,6 +34,8 @@ export default function TextBubble({
         <DeepSearchResultsTabs deep_search_results={deep_search_results} />
       )}
 
+      {weather_data && <WeatherCard weatherData={weather_data} />}
+
       {(!!searchWeb ||
         !!deepSearchWeb ||
         (!!pageFetchURLs && pageFetchURLs?.length > 0) ||
@@ -102,9 +104,6 @@ export default function TextBubble({
 
       {intent === "calendar" && calendar_options && (
         <CalendarEventSection calendar_options={calendar_options} />
-      )}
-      {intent === "weather" && weather_data && (
-        <WeatherCard weatherData={weather_data} />
       )}
     </>
   );
