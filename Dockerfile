@@ -22,8 +22,8 @@ RUN apt update && apt install -y \
 COPY pyproject.toml ./
 
 # Install dependencies efficiently using UV with caching
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system -e .
+# RUN --mount=type=cache,target=/root/.cache/uv \
+RUN uv pip install --system -e .
 
 # ---- Builder Stage: Download Additional Resources ----
 FROM base AS builder
@@ -57,10 +57,11 @@ COPY --from=playwright /ms-playwright /root/.cache/ms-playwright
 
 # Expose application port
 EXPOSE 80
+EXPOSE 8000
 
 # Switch to non-root user
 USER appuser
 
 # Start the FastAPI application
-CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-80}
-# CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+# CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
