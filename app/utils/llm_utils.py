@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict, AsyncGenerator
 
 import httpx
+from openai import AsyncOpenAI, OpenAI
 
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
@@ -12,12 +13,16 @@ from app.prompts.system.general import MAIN_SYSTEM_PROMPT
 http_async_client = httpx.AsyncClient(timeout=1000000)
 http_sync_client = httpx.Client(timeout=1000000)
 
-# Groq API configuration
-GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_HEADERS = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-}
+# Create OpenAI clients (configured to use Groq API)
+async_openai_client = AsyncOpenAI(
+    base_url="https://api.groq.com/openai/v1", api_key=settings.GROQ_API_KEY
+)
+
+sync_openai_client = OpenAI(
+    base_url="https://api.groq.com/openai/v1", api_key=settings.GROQ_API_KEY
+)
+
+# Default model to use with Groq
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
@@ -42,98 +47,86 @@ def prepare_messages(messages: List[Dict], system_prompt: str = None) -> List[Di
 async def call_groq_api_stream(
     messages: List[Dict], temperature: float, max_tokens: int
 ) -> AsyncGenerator[Dict, None]:
-    """Call Groq API with streaming enabled."""
-    async with http_async_client.stream(
-        "POST",
-        GROQ_API_URL,
-        headers=GROQ_HEADERS,
-        json={
-            "model": GROQ_MODEL,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "stream": True,
-        },
-    ) as response:
-        response.raise_for_status()
+    """Call Groq API with streaming enabled using OpenAI library."""
+    try:
+        stream = await async_openai_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            stream=True,
+        )
 
-        async for line in response.aiter_lines():
-            if not line or not line.startswith("data:"):
-                continue
+        async for chunk in stream:
+            if chunk.choices and len(chunk.choices) > 0:
+                choice = chunk.choices[0]
 
-            json_str = line.removeprefix("data:").strip()
-            if json_str == "[DONE]":
-                break
+                if choice.finish_reason == "stop":
+                    break
 
-            try:
-                data = json.loads(json_str)
-                if "choices" in data and data["choices"]:
-                    choice = data["choices"][0]
-
-                    if choice.get("finish_reason") == "stop":
-                        break
-
-                    if "delta" in choice and "content" in choice["delta"]:
-                        content = choice["delta"]["content"]
-                        if content:
-                            data["response"] = content
-                            data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-                            yield data
-            except Exception as e:
-                logger.warning(f"Error processing Groq response: {e}")
-                continue
+                if choice.delta.content:
+                    data = {
+                        "response": choice.delta.content,
+                        "p": "abcdefghijklmnopqrstuvwxyz01234",
+                    }
+                    yield data
+    except Exception as e:
+        logger.warning(f"Error in OpenAI streaming call to Groq: {e}")
+        raise
 
 
 async def call_groq_api(
     messages: List[Dict], temperature: float, max_tokens: int
 ) -> Dict:
-    """Call Groq API without streaming."""
-    response = await http_async_client.post(
-        GROQ_API_URL,
-        headers=GROQ_HEADERS,
-        json={
-            "model": GROQ_MODEL,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        },
-    )
-    response.raise_for_status()
+    """Call Groq API without streaming using OpenAI library."""
+    try:
+        response = await async_openai_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
 
-    data = response.json()
-    if "choices" in data and data["choices"]:
-        content = data["choices"][0]["message"]["content"]
-        # Add our expected format to Groq response
-        data["response"] = content
-        data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-        return data
-    return {"error": "No choices in response"}
+        if response.choices and len(response.choices) > 0:
+            content = response.choices[0].message.content
+            # Format the response to match the expected structure
+            data = {
+                "response": content,
+                "p": "abcdefghijklmnopqrstuvwxyz01234",
+                "choices": [{"message": {"content": content}}],
+            }
+            return data
+        return {"error": "No choices in response"}
+    except Exception as e:
+        logger.warning(f"Error in OpenAI call to Groq: {e}")
+        raise
 
 
 def call_groq_api_sync(
     messages: List[Dict], temperature: float, max_tokens: int
 ) -> Dict:
-    """Call Groq API synchronously without streaming."""
-    response = http_sync_client.post(
-        GROQ_API_URL,
-        headers=GROQ_HEADERS,
-        json={
-            "model": GROQ_MODEL,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        },
-    )
-    response.raise_for_status()
+    """Call Groq API synchronously without streaming using OpenAI library."""
+    try:
+        response = sync_openai_client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
 
-    data = response.json()
-    if "choices" in data and data["choices"]:
-        content = data["choices"][0]["message"]["content"]
-        # Add our expected format to Groq response
-        data["response"] = content
-        data["p"] = "abcdefghijklmnopqrstuvwxyz01234"
-        return data
-    return {"error": "No choices in response"}
+        if response.choices and len(response.choices) > 0:
+            content = response.choices[0].message.content
+            # Format the response to match the expected structure
+            data = {
+                "response": content,
+                "p": "abcdefghijklmnopqrstuvwxyz01234",
+                "choices": [{"message": {"content": content}}],
+            }
+            return data
+        return {"error": "No choices in response"}
+    except Exception as e:
+        logger.warning(f"Error in OpenAI sync call to Groq: {e}")
+        raise
 
 
 async def do_prompt_with_stream(
