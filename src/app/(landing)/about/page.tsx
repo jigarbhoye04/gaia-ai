@@ -111,7 +111,7 @@ export default function About() {
           </Avatar>
 
           <div>
-            <div className="">Aryan Randeriya</div>
+            <div>Aryan Randeriya</div>
             <div className="text-sm text-foreground-500">— Founder & CEO</div>
           </div>
         </div>

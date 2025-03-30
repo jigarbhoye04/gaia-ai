@@ -1,13 +1,9 @@
 import Image from "next/image";
 import React from "react";
-// import SuspenseLoader from "../Misc/SuspenseLoader";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
 import CodeBlock from "./CodeBlock/CodeBlock";
 import CustomAnchor from "./CodeBlock/CustomAnchor";
-// const ReactMarkdown = lazy(() => import("react-markdown"));
-// const CodeBlock = lazy(() => import("./CodeBlock/CodeBlock"));
 
 export interface MarkdownRendererProps {
   content: string;
@@ -19,11 +15,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
       <ReactMarkdown
         components={{
           code: ({ className, children, ...props }) => (
-            // <Suspense fallback={<SuspenseLoader />}>
             <CodeBlock className={className} {...props}>
               {children}
             </CodeBlock>
-            // {/* </Suspense> */}
           ),
           h1: ({ ...props }) => (
             <h1 className="mb-4 mt-6 text-3xl font-bold" {...props} />

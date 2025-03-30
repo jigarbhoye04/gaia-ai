@@ -24,7 +24,7 @@ export default function Section_Document() {
             alt={"File Upload Showcase"}
             className="my-2 w-full rounded-3xl object-cover"
             fill
-            src={"/landing/file_upload2.png"}
+            src={"/landing/file_upload2.webp"}
           />
         </div>
       </LandingSectionLayout>

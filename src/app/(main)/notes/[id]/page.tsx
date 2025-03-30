@@ -1,5 +1,17 @@
 "use client";
 
+import { SaveIcon } from "@/components/Misc/icons";
+import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
+import { MenuBar } from "@/components/Notes/NotesMenuBar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { truncateTitle } from "@/lib/utils";
+import { apiauth } from "@/utils/apiaxios";
 import { Spinner } from "@heroui/spinner";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -14,21 +26,8 @@ import { convert } from "html-to-text";
 import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-
-import { SaveIcon } from "@/components/Misc/icons";
-import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
-import { MenuBar } from "@/components/Notes/NotesMenuBar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { truncateTitle } from "@/lib/utils";
-import { apiauth } from "@/utils/apiaxios";
 
 interface Note {
   id: string;
@@ -226,31 +225,29 @@ export default function NotesAdd() {
             </Button>
           </Link>
 
-          <Suspense fallback={<Spinner />}>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="hover:bg-zinc-800 hover:text-white"
-                >
-                  <DotsVerticalIcon height={20} width={20} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="border-none bg-zinc-800 p-0 hover:!bg-zinc-900"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="hover:bg-zinc-800 hover:text-white"
               >
-                <DropdownMenuItem
-                  className="cursor-pointer p-3 text-red-500 hover:!bg-zinc-900 hover:!text-red-500"
-                  onClick={deleteNote}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete Note
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </Suspense>
+                <DotsVerticalIcon height={20} width={20} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="border-none bg-zinc-800 p-0 hover:!bg-zinc-900"
+            >
+              <DropdownMenuItem
+                className="cursor-pointer p-3 text-red-500 hover:!bg-zinc-900 hover:!text-red-500"
+                onClick={deleteNote}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Note
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {isLoading ? (

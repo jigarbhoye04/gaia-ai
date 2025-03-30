@@ -39,7 +39,7 @@ const ReadMoreText = ({
   }, [children, maxHeight]);
 
   return (
-    <div className="">
+    <div>
       <div
         ref={contentRef}
         style={{ maxHeight: expanded ? "100%" : `${maxHeight}px` }}

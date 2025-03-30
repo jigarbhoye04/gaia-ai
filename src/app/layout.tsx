@@ -5,7 +5,6 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 
-import CalendarModal from "@/components/Calendar/CalendarModal";
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 
 export const metadata: Metadata = {
@@ -91,10 +90,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${creato.variable} dark`}>
       <body className="dark">
-        <ProvidersLayout>
-          {children}
-          <CalendarModal />
-        </ProvidersLayout>
+        <ProvidersLayout>{children}</ProvidersLayout>
 
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />

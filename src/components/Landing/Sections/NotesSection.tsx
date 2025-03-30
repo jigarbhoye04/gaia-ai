@@ -143,7 +143,7 @@ export default function AnimatedBeamMultipleOutputDemo({
 const Icons = {
   gaia: () => (
     <Image
-      src="/branding/logo.png"
+      src="/branding/logo.webp"
       alt="GAIA Logo"
       width="80"
       height="80"

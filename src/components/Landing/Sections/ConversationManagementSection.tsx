@@ -294,7 +294,7 @@ export default function Section_ConvoManagement() {
           {/* </div> */}
           <div className="relative p-1 pt-5">
             <Image
-              src="/landing/search_command.png"
+              src="/landing/search_command.webp"
               alt="Search Command"
               width={500}
               height={500}

@@ -8,22 +8,22 @@ import { Mail01Icon } from "../../Misc/icons";
 const images = [
   {
     id: "3",
-    src: "/landing/mail/email3.png",
+    src: "/landing/mail/email3.webp",
     alt: "Mail Screenshot 3",
   },
   {
     id: "2",
-    src: "/landing/mail/email2.png",
+    src: "/landing/mail/email2.webp",
     alt: "Mail Screenshot 2",
   },
   {
     id: "4",
-    src: "/landing/mail/email4.png",
+    src: "/landing/mail/email4.webp",
     alt: "Mail Screenshot 4",
   },
   {
     id: "1",
-    src: "/landing/mail/email1.png",
+    src: "/landing/mail/email1.webp",
     alt: "Mail Screenshot 1",
   },
 ];

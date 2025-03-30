@@ -10,17 +10,17 @@ import {
 } from "../../Misc/icons";
 
 const webSearchImages = [
-  { src: "/landing/web/1.png", alt: "Web Search Screenshot 1" },
-  { src: "/landing/web/2.png", alt: "Web Search Screenshot 2" },
-  { src: "/landing/web/3.png", alt: "Web Search Screenshot 3" },
-  { src: "/landing/web/4.png", alt: "Web Search Screenshot 4" },
+  { src: "/landing/web/1.webp", alt: "Web Search Screenshot 1" },
+  { src: "/landing/web/2.webp", alt: "Web Search Screenshot 2" },
+  { src: "/landing/web/3.webp", alt: "Web Search Screenshot 3" },
+  { src: "/landing/web/4.webp", alt: "Web Search Screenshot 4" },
 ];
 
 const fetchWebpageImages = [
-  { src: "/landing/web/fetch/0.png", alt: "Fetch Webpage Screenshot 4" },
-  { src: "/landing/web/fetch/1.png", alt: "Fetch Webpage Screenshot 1" },
-  { src: "/landing/web/fetch/3.png", alt: "Fetch Webpage Screenshot 3" },
-  { src: "/landing/web/fetch/2.png", alt: "Fetch Webpage Screenshot 2" },
+  { src: "/landing/web/fetch/0.webp", alt: "Fetch Webpage Screenshot 4" },
+  { src: "/landing/web/fetch/1.webp", alt: "Fetch Webpage Screenshot 1" },
+  { src: "/landing/web/fetch/3.webp", alt: "Fetch Webpage Screenshot 3" },
+  { src: "/landing/web/fetch/2.webp", alt: "Fetch Webpage Screenshot 2" },
 ];
 
 const ImageCarousel = ({

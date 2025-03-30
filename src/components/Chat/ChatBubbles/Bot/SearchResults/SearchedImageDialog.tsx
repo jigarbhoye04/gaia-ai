@@ -44,7 +44,7 @@ export default function SearchedImageDialog() {
               )}
 
               {selectedImage.source && (
-                <div className="">
+                <div>
                   <ScrollArea className="max-h-[50px]">
                     <a
                       href={selectedImage.source}

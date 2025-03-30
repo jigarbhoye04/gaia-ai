@@ -15,7 +15,7 @@ import { AnimatedSection } from "../../../layouts/AnimatedSection";
 const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
   {
     name: "Chat",
-    imageSrc: "/landing/screenshot.png",
+    imageSrc: "/landing/screenshot.webp",
     icon: (
       <BubbleConversationChatIcon
         className="h-5 w-5 focus:outline-none"
@@ -25,31 +25,31 @@ const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
   },
   {
     name: "Goals",
-    imageSrc: "/landing/screenshot_roadmaps.png",
+    imageSrc: "/landing/goal_tracking.webp",
     icon: (
       <Target02Icon className="h-5 w-5 focus:outline-none" color={undefined} />
     ),
   },
-  {
-    name: "Calendar",
-    imageSrc: "/landing/blur_goals.webp",
-    icon: (
-      <Calendar01Icon
-        className="h-5 w-5 focus:outline-none"
-        color={undefined}
-      />
-    ),
-  },
+  // {
+  //   name: "Calendar",
+  //   imageSrc: "/landing/blur_goals.webp",
+  //   icon: (
+  //     <Calendar01Icon
+  //       className="h-5 w-5 focus:outline-none"
+  //       color={undefined}
+  //     />
+  //   ),
+  // },
   {
     name: "Mail",
-    imageSrc: "/landing/screenshot.webp",
+    imageSrc: "/landing/mail/email1.webp",
     icon: (
       <Mail01Icon className="h-5 w-5 focus:outline-none" color={undefined} />
     ),
   },
   {
     name: "Internet",
-    imageSrc: "/landing/screenshot_internet.png",
+    imageSrc: "/landing/screenshot_internet.webp",
     icon: (
       <InternetIcon className="h-5 w-5 focus:outline-none" color={undefined} />
     ),

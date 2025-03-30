@@ -30,7 +30,7 @@ export default function ChatBubble_Actions_Image({
       const sanitizedPrompt = imagePrompt
         ?.replace(/[^\w\s-]/g, "")
         .slice(0, 50);
-      const fileName = `G.A.I.A ${date} ${time} ${sanitizedPrompt}.png`;
+      const fileName = `GAIA ${date} ${time} ${sanitizedPrompt}.png`;
 
       // Fetch the image as a blob
       const response = await fetch(src);

@@ -34,12 +34,12 @@ export default function HeroSection() {
 
         <AnimatedSection
           className="max-w-screen-lg bg-gradient-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-5xl font-medium leading-none text-transparent sm:-my-2 sm:text-8xl"
-          childClassName="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent inline-block px-3"
+          childClassName="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent inline-block px-1"
         >
-          <span className="">Your </span>
-          <span className="">Personal </span>
-          <span className="">AI </span>
-          <span className="">Assistant awaits.</span>
+          <span>Your </span>
+          <span>Personal </span>
+          <span>AI </span>
+          <span>Assistant awaits.</span>
         </AnimatedSection>
 
         <div className="max-w-screen-sm px-4 py-0 text-center text-lg font-normal leading-7 text-white sm:px-0 sm:text-xl">
