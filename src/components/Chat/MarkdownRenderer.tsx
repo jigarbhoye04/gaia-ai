@@ -44,10 +44,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             />
           ),
           img: ({ ...props }) => (
-            <Image
-              fill={true}
+            <img
+              // fill={true}
               alt="image"
-              className="my-4 h-auto max-w-full"
+              className="my-4"
               src={props.src as string}
               // {...props}
             />

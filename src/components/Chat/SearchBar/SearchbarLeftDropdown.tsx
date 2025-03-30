@@ -36,6 +36,7 @@ interface DropdownItemConfig {
   action?: () => void;
   isMode?: boolean;
   loadingText?: string;
+  description?: string;
 }
 
 export default function SearchbarLeftDropdown({
@@ -60,6 +61,7 @@ export default function SearchbarLeftDropdown({
       icon: <AiBrowserIcon className="h-5 w-5 text-primary" />,
       isMode: true,
       loadingText: "Performing Deep Search...",
+      description: "Search multiple sources for comprehensive results",
     },
     {
       id: "web_search",
@@ -67,6 +69,7 @@ export default function SearchbarLeftDropdown({
       icon: <GlobalSearchIcon className="h-5 w-5 text-primary" />,
       isMode: true,
       loadingText: "Performing Web Search...",
+      description: "Search the web for the latest information",
     },
     {
       id: "fetch_webpage",
@@ -75,6 +78,7 @@ export default function SearchbarLeftDropdown({
       action: openPageFetchModal,
       isMode: false,
       loadingText: "Fetching Webpage(s)...",
+      description: "Retrieve and analyze content from specific URLs",
     },
     {
       id: "generate_image",
@@ -83,6 +87,7 @@ export default function SearchbarLeftDropdown({
       action: openGenerateImageModal,
       isMode: false,
       loadingText: "Generating Image...",
+      description: "Create AI-generated images from text descriptions",
     },
     {
       id: "upload_file",
@@ -91,6 +96,7 @@ export default function SearchbarLeftDropdown({
       action: openFileUploadModal,
       isMode: false,
       loadingText: "Uploading File(s)...",
+      description: "Upload and analyze documents, images or other files",
     },
   ];
 
@@ -122,7 +128,7 @@ export default function SearchbarLeftDropdown({
           <DropdownMenuItem
             key={item.id}
             onClick={() => {
-              setLoadingText(item.loadingText ?? ""); 
+              setLoadingText(item.loadingText ?? "");
               if (item.isMode) handleSelectionChange(item.id as SearchMode);
               else if (item.action) item.action();
             }}
@@ -134,9 +140,16 @@ export default function SearchbarLeftDropdown({
             )}
           >
             <div className="flex w-full items-center justify-between">
-              <div className="flex flex-row items-center gap-2">
-                {item.icon}
-                <span>{item.label}</span>
+              <div className="flex flex-col">
+                <div className="flex flex-row items-center gap-2">
+                  {item.icon}
+                  <span className="font-medium">{item.label}</span>
+                </div>
+                {item.description && (
+                  <span className="ml-7 text-xs text-zinc-400">
+                    {item.description}
+                  </span>
+                )}
               </div>
               <div>
                 {currentMode === item.id && (

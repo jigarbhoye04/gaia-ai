@@ -218,12 +218,12 @@ export const useChatStream = () => {
       enableSearch,
       enableDeepSearch,
       pageFetchURLs,
-      currentMessages,
+      [...latestConvoRef.current, ...currentMessages],
       conversationId,
       onMessage,
       onClose,
       onError,
-      fileData // Pass the complete fileData to the API service
+      fileData
     );
   };
 };

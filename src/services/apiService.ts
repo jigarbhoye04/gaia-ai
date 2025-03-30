@@ -98,7 +98,7 @@ export const ApiService = {
           fileIds, // For backward compatibility
           fileData, // Send complete file data
           messages: convoMessages
-            .slice(-10)
+            .slice(-30)
             .filter(({ response }) => response.trim().length > 0)
             .map(({ type, response }, _index, _array) => ({
               role: type === "bot" ? "assistant" : type,

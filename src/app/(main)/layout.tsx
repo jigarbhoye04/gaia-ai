@@ -47,7 +47,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   const bind = useDrag(
     ({ movement: [mx, my], last, tap }) => {
       // If this is just a tap, do nothing—allow click events to proceed.
-      if (tap) return;
+      if (tap || !isMobileScreen) return;
 
       if (last && Math.abs(mx) > Math.abs(my)) {
         if (mx > 0)

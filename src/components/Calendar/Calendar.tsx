@@ -46,7 +46,7 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchCalendars();
-  }, [fetchCalendars]);
+  }, []);
 
   useEffect(() => {
     if (selectedCalendars.length > 0) fetchEvents(null, selectedCalendars);
