@@ -1,11 +1,12 @@
 import { ReactElement } from "react";
+
 import {
   BookOpen02Icon,
+  BubbleConversationChatIcon,
   GlobalIcon,
   Home01Icon,
   Idea01Icon,
   MapsIcon,
-  BubbleConversationChatIcon,
 } from "@/components/Misc/icons";
 
 export interface NavLink {

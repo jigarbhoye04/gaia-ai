@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
 import {

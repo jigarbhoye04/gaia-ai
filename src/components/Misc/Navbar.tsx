@@ -6,8 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { siteConfig } from "@/config/siteConfig";
 import { mainNavLinks } from "@/config/navigationConfig";
+import { siteConfig } from "@/config/siteConfig";
 import useMediaQuery from "@/hooks/useMediaQuery";
 
 import { LinkButton } from "./LinkButton";

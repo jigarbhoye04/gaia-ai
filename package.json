@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:turbo": "next dev --turbopack",
+    "dev": "next dev --turbopack",
+    "dev:webpack": "next dev",
     "build": "next build",
     "start": "next start",
     "type": "npx tsc --noEmit",
@@ -110,6 +110,7 @@
     "dompurify": "^3.2.4",
     "embla-carousel-react": "^8.5.2",
     "emblor": "^1.4.8",
+    "eslint-config-next": "^15.2.4",
     "framer-motion": "^12.6.2",
     "he": "^1.2.0",
     "html-to-text": "^9.0.5",

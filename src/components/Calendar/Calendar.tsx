@@ -46,15 +46,13 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchCalendars();
-    // fetchEvents will be triggered after calendars are loaded through the useEffect below
   }, [fetchCalendars]);
 
-  // Add a new useEffect to trigger initial fetch of events once calendars are loaded
   useEffect(() => {
-    if (selectedCalendars.length > 0) {
-      fetchEvents(null, selectedCalendars);
-    }
-  }, [selectedCalendars.length]); // Only run when the number of selected calendars changes
+    if (selectedCalendars.length > 0) fetchEvents(null, selectedCalendars);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCalendars.length]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

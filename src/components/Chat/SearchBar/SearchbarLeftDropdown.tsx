@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLoading } from "@/hooks/useLoading";
+import { useLoadingText } from "@/hooks/useLoadingText";
 import { cn } from "@/lib/utils";
 
 import {
@@ -19,8 +20,6 @@ import {
   PlusSignIcon,
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
-import { useLoadingText } from "@/hooks/useLoadingText";
-import { set } from "date-fns";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;

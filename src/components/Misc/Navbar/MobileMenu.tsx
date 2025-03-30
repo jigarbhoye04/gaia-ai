@@ -13,8 +13,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { authNavLinks,mainNavLinks } from "@/config/navigationConfig";
 import { useUser } from "@/hooks/useUser";
-import { mainNavLinks, authNavLinks } from "@/config/navigationConfig";
 
 export default function MobileMenu() {
   const [sheetOpen, setSheetOpen] = useState(false);

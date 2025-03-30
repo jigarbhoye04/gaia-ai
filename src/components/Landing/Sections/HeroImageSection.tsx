@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
@@ -7,7 +9,7 @@ import {
 } from "@/components/Misc/icons";
 import { Safari } from "@/components/ui/safari";
 import { ShineBorder } from "@/components/ui/shine-border";
-import { ReactNode } from "react";
+
 import { AnimatedSection } from "../../../layouts/AnimatedSection";
 
 const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [

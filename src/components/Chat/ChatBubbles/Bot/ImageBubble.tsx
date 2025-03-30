@@ -1,5 +1,4 @@
 // ImageBubble.tsx
-import { Chip } from "@heroui/chip";
 import { Skeleton } from "@heroui/skeleton";
 import Image from "next/image";
 

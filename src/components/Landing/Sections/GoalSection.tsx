@@ -11,8 +11,8 @@ import {
   FlowchartIcon1,
   Target02Icon,
 } from "@/components/Misc/icons";
-import { AnimatedSection } from "@/layouts/AnimatedSection";
 import useMediaQuery from "@/hooks/useMediaQuery";
+import { AnimatedSection } from "@/layouts/AnimatedSection";
 
 interface Step {
   icon: React.ReactNode;

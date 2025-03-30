@@ -1,8 +1,8 @@
 import { Button } from "@heroui/button";
 import Link from "next/link";
 
-import { useUser } from "@/hooks/useUser";
 import { authNavLinks } from "@/config/navigationConfig";
+import { useUser } from "@/hooks/useUser";
 
 export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
   const user = useUser();

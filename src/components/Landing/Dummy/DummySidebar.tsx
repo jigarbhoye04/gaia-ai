@@ -3,8 +3,9 @@ import { Chip } from "@heroui/chip";
 import { Clock } from "lucide-react";
 import React from "react";
 
-import { BookIcon1 } from "../../Misc/icons";
 import useMediaQuery from "@/hooks/useMediaQuery";
+
+import { BookIcon1 } from "../../Misc/icons";
 
 const StaticSidebar = ({
   // hover1,
@@ -68,7 +69,7 @@ const StaticSidebar = ({
                 isSelected={isComplete}
                 radius="full"
                 onValueChange={() => {
-                  isMobileScreen ? undefined : setIsComplete((prev) => !prev);
+                  if (!isMobileScreen) setIsComplete((prev) => !prev);
                 }}
               >
                 Mark as Complete
