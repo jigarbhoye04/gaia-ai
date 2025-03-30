@@ -1,10 +1,11 @@
 import asyncio
 from datetime import datetime, timezone
+import json
+from typing import AsyncGenerator
 
 from bson import ObjectId
 from fastapi import BackgroundTasks, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import StreamingResponse
 
 from app.config.loggers import chat_logger as logger
 from app.db.collections import conversations_collection
@@ -19,12 +20,16 @@ from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.services.file_service import fetch_files
 from app.services.image_service import generate_image_stream
 from app.services.internet_service import do_deep_search, do_search, fetch_webpages
+from app.services.notes_service import fetch_notes
+from app.utils.chat_utils import (
+    classify_intent,
+    user_weather,
+    extract_location_from_message,
+)
 from app.utils.llm_utils import (
     do_prompt_no_stream,
     do_prompt_with_stream,
 )
-from app.services.notes_service import fetch_notes
-from app.utils.chat_utils import classify_intent
 from app.utils.notes_utils import store_note
 from app.utils.pipeline_utils import Pipeline
 
@@ -34,7 +39,8 @@ async def chat_stream(
     background_tasks: BackgroundTasks,
     user: dict,
     llm_model: str,
-) -> StreamingResponse:
+    user_ip: str,
+) -> AsyncGenerator:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
 
@@ -74,10 +80,15 @@ async def chat_stream(
     context = await classify_intent(context)
 
     if context["intent"] == "generate_image":
-        return StreamingResponse(
-            generate_image_stream(context["query_text"]),
-            media_type="text/event-stream",
-        )
+        async for chunk in generate_image_stream(context["query_text"]):
+            yield chunk
+        return
+
+    if context["intent"] == "weather":
+        location_name = await extract_location_from_message(context["query_text"])
+        async for chunk in user_weather(user_ip, location_name):
+            yield chunk
+        return
 
     pipeline_steps = [
         # choose_llm_model,
@@ -95,16 +106,15 @@ async def chat_stream(
 
     context["messages"][-1] = context["last_message"]
 
-    return StreamingResponse(
-        do_prompt_with_stream(
-            messages=context["messages"],
-            max_tokens=4096,
-            intent=context["intent"],
-            model=context["llm_model"],
-            context=context,
-        ),
-        media_type="text/event-stream",
-    )
+    # Stream the LLM response
+    async for chunk in do_prompt_with_stream(
+        messages=context["messages"],
+        max_tokens=4096,
+        intent=context["intent"],
+        model=context["llm_model"],
+        context=context,
+    ):
+        yield chunk
 
 
 async def chat(request: MessageRequest) -> dict:
@@ -275,7 +285,11 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
             detail="Conversation not found or does not belong to the user",
         )
 
-    return {"conversation_id": conversation_id, "message": "Messages updated"}
+    return {
+        "conversation_id": conversation_id,
+        "message": "Messages updated",
+        "modified_count": update_result.modified_count,
+    }
 
 
 async def update_conversation_description_llm(

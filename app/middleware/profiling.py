@@ -23,6 +23,8 @@ class ProfilingMiddleware(BaseHTTPMiddleware):
             "/api/v1/ping",
             "/api/v1/",
             "/api/v1",
+            "/api/v1/oauth/me",
+            "/api/v1/conversations",
             "/",
         }:
             return await call_next(request)

@@ -1,9 +1,79 @@
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel
 
 from app.models.general_models import FileData
 from app.models.search_models import SearchResults
+
+
+class WeatherLocation(BaseModel):
+    city: Optional[str] = None
+    country: Optional[str] = None
+    region: Optional[str] = None
+
+
+class WeatherMain(BaseModel):
+    temp: float
+    feels_like: float
+    temp_min: float
+    temp_max: float
+    pressure: int
+    humidity: int
+
+
+class WeatherWind(BaseModel):
+    speed: float
+    deg: int
+
+
+class WeatherClouds(BaseModel):
+    all: int
+
+
+class WeatherSys(BaseModel):
+    country: Optional[str] = None
+    sunrise: int
+    sunset: int
+
+
+class WeatherCondition(BaseModel):
+    id: int
+    main: str
+    description: str
+    icon: str
+
+
+class ForecastDayWeather(BaseModel):
+    main: str
+    description: str
+    icon: str
+
+
+class ForecastDay(BaseModel):
+    date: str
+    timestamp: int
+    temp_min: float
+    temp_max: float
+    humidity: int
+    weather: ForecastDayWeather
+
+
+class WeatherData(BaseModel):
+    id: Optional[int] = None
+    name: Optional[str] = None
+    cod: Optional[Union[int, str]] = None
+    coord: Optional[Dict[str, float]] = None
+    weather: Optional[List[WeatherCondition]] = None
+    base: Optional[str] = None
+    main: Optional[WeatherMain] = None
+    visibility: Optional[int] = None
+    wind: Optional[WeatherWind] = None
+    clouds: Optional[WeatherClouds] = None
+    dt: Optional[int] = None
+    sys: Optional[WeatherSys] = None
+    timezone: Optional[int] = None
+    location: Optional[WeatherLocation] = None
+    forecast: Optional[List[ForecastDay]] = None  # 5-day forecast data
 
 
 class CalIntentOptions(BaseModel):
@@ -61,11 +131,12 @@ class MessageModel(BaseModel):
     message_id: Optional[str] = None  # Message ID
     fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
     fileData: Optional[List[FileData]] = []  # Complete file metadata
-    intent: Optional[Literal["calendar", "generate_image"]] = None
+    intent: Optional[Literal["calendar", "generate_image", "weather"]] = None
     calendar_options: Optional[List[CalIntentOptions]] = None
     search_results: Optional[SearchResults] = None
     deep_search_results: Optional[DeepSearchResults] = None  # Results from deep search
     deep_search_error: Optional[str] = None  # Errors from deep search
+    weather_data: Optional[WeatherData] = None  # Weather data from OpenWeatherMap API
 
 
 class ConversationModel(BaseModel):

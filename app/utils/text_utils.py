@@ -10,6 +10,7 @@ from sumy.parsers.plaintext import PlaintextParser
 from sumy.summarizers.lsa import LsaSummarizer
 from app.config.loggers import general_logger as logger
 from app.config.settings import settings
+from transformers import pipeline
 
 
 http_async_client = httpx.AsyncClient()
@@ -35,8 +36,6 @@ def get_zero_shot_classifier():
 
     if _zero_shot_classifier is None:
         try:
-            from transformers import pipeline
-
             logger.info(
                 f"Loading zero-shot classification model: {settings.HUGGINGFACE_ZSC_MODEL}"
             )
@@ -81,28 +80,48 @@ async def _classify_text_core(
     """
     Core logic for classifying text asynchronously.
     Uses either Hugging Face API or local model based on settings.
+    Falls back to local model if the API returns a server error.
     """
     if not user_input or not candidate_labels:
         return {"error": "Invalid input or candidate labels."}
 
     try:
         if settings.USE_HUGGINGFACE_API:
-            api_url = (
-                f"{settings.HUGGINGFACE_ROUTER_URL}{settings.HUGGINGFACE_ZSC_MODEL}"
-            )
+            try:
+                api_url = (
+                    f"{settings.HUGGINGFACE_ROUTER_URL}{settings.HUGGINGFACE_ZSC_MODEL}"
+                )
 
-            response = await http_async_client.post(
-                api_url,
-                headers={"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"},
-                json={
-                    "inputs": user_input,
-                    "parameters": {"candidate_labels": candidate_labels},
-                },
-                timeout=30.0,
-            )
-            response.raise_for_status()
-            result = response.json()
-            label_scores = dict(zip(result["labels"], result["scores"]))
+                response = await http_async_client.post(
+                    api_url,
+                    headers={"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"},
+                    json={
+                        "inputs": user_input,
+                        "parameters": {"candidate_labels": candidate_labels},
+                    },
+                    timeout=30.0,
+                )
+                response.raise_for_status()
+                result = response.json()
+                label_scores = dict(zip(result["labels"], result["scores"]))
+            except httpx.HTTPStatusError as e:
+                # Check for server errors (5xx)
+                if e.response.status_code >= 500:
+                    logger.warning(
+                        f"Hugging Face API server error: {str(e)}. Falling back to local model."
+                    )
+                    classifier = get_zero_shot_classifier()
+
+                    # classifier = pipeline(
+                    #     "zero-shot-classification",
+                    #     model=settings.HUGGINGFACE_ZSC_MODEL,
+                    #     device=-1,
+                    # )
+                    result = classifier(user_input, candidate_labels, multi_label=False)
+                    label_scores = dict(zip(result["labels"], result["scores"]))
+                else:
+                    # Re-raise if it's not a server error
+                    raise
         else:
             classifier = get_zero_shot_classifier()
             if classifier is None:
@@ -215,10 +234,10 @@ def classify_event_type(
     """
     labels = [
         "add to calendar",
-        "send email",
+        # "send email",
         "generate image",
-        "search internet",
-        "flowchart",
+        # "search internet",
+        # "flowchart",
         "weather",
         "other",
     ]

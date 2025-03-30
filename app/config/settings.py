@@ -26,12 +26,15 @@ class Settings(BaseSettings):
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
+    OPENWEATHER_API_KEY: str
 
     # Hugging Face Configuration
-    USE_HUGGINGFACE_API: bool = True
+    # USE_HUGGINGFACE_API: bool = True
+    USE_HUGGINGFACE_API: bool = False
     HUGGINGFACE_API_KEY: str
     HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
-    HUGGINGFACE_ZSC_MODEL: str = "facebook/bart-large-mnli"
+    # Zero shot classification
+    HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
     HUGGINGFACE_API_URL: str = "https://api-inference.huggingface.co/models/"
     HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
 
@@ -46,11 +49,13 @@ class Settings(BaseSettings):
     # Environment & Deployment
     ENV: str = "production"
     PORT: int = 80
+    DISABLE_PROFILING: bool = False
+    DUMMY_IP: str = "8.8.8.8"
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only in non-production environments."""
-        return self.ENV != "production"
+        return not self.DISABLE_PROFILING and self.ENV != "production"
 
     @computed_field
     def GOOGLE_REDIRECT_URI(self) -> str:
