@@ -15,6 +15,7 @@ from app.models.general_models import (
     MessageRequest,
     MessageRequestWithHistory,
 )
+from app.prompts.system.general import WEATHER_PROMPT
 from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.services.file_service import fetch_files
 from app.services.image_service import generate_image_stream
@@ -73,7 +74,9 @@ async def chat_stream(
         "deep_search": body.deep_search,
         "pageFetchURLs": body.pageFetchURLs,
         "fileIds": body.fileIds,
+        "weather_data": "",
         "fileData": body.fileData if body.fileData else [],
+        "user_ip": user_ip,
     }
 
     context = await classify_intent(context)
@@ -83,14 +86,9 @@ async def chat_stream(
             yield chunk
         return
 
-    if context["intent"] == "weather":
-        location_name = await extract_location_from_message(context["query_text"])
-        async for chunk in user_weather(user_ip, location_name):
-            yield chunk
-        return
-
     pipeline_steps = [
         # choose_llm_model,
+        do_weather,
         fetch_webpages,
         do_deep_search,
         do_search,
@@ -105,7 +103,6 @@ async def chat_stream(
 
     context["messages"][-1] = context["last_message"]
 
-    # Stream the LLM response
     async for chunk in do_prompt_with_stream(
         messages=context["messages"],
         max_tokens=4096,
@@ -114,6 +111,29 @@ async def chat_stream(
         context=context,
     ):
         yield chunk
+
+
+async def do_weather(context: dict) -> dict:
+    if context["intent"] == "weather" and context["last_message"]:
+        logger.info(f"Starting weather lookup for query: {context['query_text']}")
+
+        try:
+            location = await extract_location_from_message(context["query_text"])
+            context["weather_data"] = await user_weather(context["user_ip"], location)
+
+            context["last_message"]["content"] += WEATHER_PROMPT.format(
+                weather_data=context["weather_data"]
+            )
+            print(f"{context['weather_data']=}")
+            logger.info(f"Weather data added to context for: {location}")
+        except Exception as e:
+            logger.error(f"Error in weather service: {e}", exc_info=True)
+            context["weather_error"] = str(e)
+            context["last_message"]["content"] += (
+                "\n\nSorry, I couldn't retrieve the weather information at this time."
+            )
+
+    return context
 
 
 async def chat(request: MessageRequest) -> dict:

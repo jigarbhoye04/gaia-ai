@@ -215,7 +215,7 @@ async def fetch_webpages(context: Dict[str, Any]) -> Dict[str, Any]:
                 context["pageFetchURLs"] = urls
         except Exception as e:
             logger.error(f"Error extracting URLs from text: {e}", exc_info=True)
-    print(f"{urls=}")
+
     if urls and context.get("last_message"):
         try:
             fetch_tasks = []

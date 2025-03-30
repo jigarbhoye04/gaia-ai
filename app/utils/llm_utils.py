@@ -146,31 +146,34 @@ async def do_prompt_with_stream(
     system_prompt: str = MAIN_SYSTEM_PROMPT,
 ):
     """Send a prompt to the LLM API with streaming enabled. Tries Groq first, falls back to original LLM."""
+    processed_messages = prepare_messages(messages, system_prompt)
     user_message = await extract_last_user_message(messages)
     bot_message = ""
 
-    groq_messages = prepare_messages(messages, system_prompt)
-
     try:
-        async for data in call_groq_api_stream(groq_messages, temperature, max_tokens):
+        async for data in call_groq_api_stream(
+            processed_messages, temperature, max_tokens
+        ):
             content = data.get("response", "")
             if content:
                 bot_message += content
                 yield f"data: {json.dumps(data)}\n\n"
 
-        # Send context data at the end
         if context.get("search_results", None):
             yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
 
-        if context.get("deep_search_results", None):
+        elif context.get("deep_search_results", None):
             yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
 
-        if intent == "calendar":
-            # Extract user_id and access_token from context if available
-            user_id = context.get("user_id")
-            access_token = context.get("access_token")
+        elif context.get("weather_data", None):
+            yield f"data: {json.dumps({'intent': 'weather', 'weather_data': context['weather_data']})}\n\n"
+
+        elif intent == "calendar":
             success, options = await process_calendar_event(
-                user_message, bot_message, user_id, access_token
+                user_message,
+                bot_message,
+                context.get("user_id"),
+                context.get("access_token"),
             )
             if success:
                 yield f"data: {json.dumps({'intent': 'calendar', 'calendar_options': options})}\n\n"
@@ -182,8 +185,6 @@ async def do_prompt_with_stream(
         logger.warning(f"Groq API error, falling back to default LLM: {e}")
 
     # Fall back to original LLM - use the same message format as Groq for consistency
-    # Only include system_prompt as a separate parameter if your API requires it
-    processed_messages = prepare_messages(messages, system_prompt)
     json_data = {
         "stream": "true",
         "max_tokens": max_tokens,
@@ -422,7 +423,7 @@ async def process_calendar_event(
                 )
 
             if calendar_list:
-                calendar_info = f"\n\nAvailable calendars:\n" + "\n".join(calendar_list)
+                calendar_info = "\n\nAvailable calendars:\n" + "\n".join(calendar_list)
         except Exception as e:
             logger.error(f"Error fetching calendar information: {e}")
 

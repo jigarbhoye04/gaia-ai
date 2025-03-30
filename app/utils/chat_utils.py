@@ -229,9 +229,7 @@ async def prepare_weather_data(
     return weather
 
 
-async def user_weather(
-    ip_address: str, location_name: str = None
-) -> AsyncGenerator[str, None]:
+async def user_weather(ip_address: str, location_name: str = None):
     """
     Fetch weather data either based on user's IP address or for a specified location.
 
@@ -249,7 +247,7 @@ async def user_weather(
         str: JSON-formatted weather data as server-sent events
     """
     try:
-        yield f"data: {json.dumps({'status': 'weather'})}\n\n"
+        # yield f"data: {json.dumps({'status': 'weather'})}\n\n"
 
         api_key = settings.OPENWEATHER_API_KEY
         if not api_key:
@@ -261,11 +259,8 @@ async def user_weather(
 
             cached_weather = await get_cache(cache_key)
             if cached_weather:
-                logger_msg = f"Using cached weather data for {'location: ' + location_name if location_name else 'IP: ' + ip_address}"
-                logger.info(logger_msg)
-                yield f"data: {json.dumps({'intent': 'weather', 'weather_data': cached_weather})}\n\n"
-                yield "data: [DONE]\n\n"
-                return
+                logger.info(f"Using cached weather data for location {cached_weather}")
+                return cached_weather
 
             weather = await prepare_weather_data(
                 location_data["lat"], location_data["lon"], location_data, api_key
@@ -274,8 +269,10 @@ async def user_weather(
             logger.info(f"Caching weather data with key: {cache_key}")
             await set_cache(cache_key, weather, ONE_HOUR_TTL)
 
-            yield f"data: {json.dumps({'intent': 'weather', 'weather_data': weather})}\n\n"
-            yield "data: [DONE]\n\n"
+            print(f"{weather=}")
+            return weather
+            # yield f"data: {json.dumps({'intent': 'weather', 'weather_data': weather})}\n\n"
+            # yield "data: [DONE]\n\n"
 
         except Exception as e:
             error_msg = (
@@ -284,14 +281,16 @@ async def user_weather(
                 else f"Failed to get location from IP: {ip_address}"
             )
             logger.error(f"Error getting location data: {str(e)}")
-            yield f"data: {json.dumps({'error': error_msg})}\n\n"
-            yield "data: [DONE]\n\n"
-            return
+            # yield f"data: {json.dumps({'error': error_msg})}\n\n"
+            # yield "data: [DONE]\n\n"
+
+            return error_msg
 
     except Exception as e:
         logger.error(f"Error fetching weather: {str(e)}")
-        yield f"data: {json.dumps({'error': f'Failed to fetch weather: {str(e)}'})}\n\n"
-        yield "data: [DONE]\n\n"
+        return f"Failed to fetch weather: {str(e)}"
+        # yield f"data: {json.dumps({'error': f'Failed to fetch weather: {str(e)}'})}\n\n"
+        # yield "data: [DONE]\n\n"
 
 
 def process_forecast_data(forecast_data: Dict) -> List[Dict]:
