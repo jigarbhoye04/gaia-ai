@@ -31,14 +31,15 @@ async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: Updated context with intent classification
     """
     result = await classify_event_type(context["query_text"])
-
-    if result.get("highest_label") and result.get("highest_score", 0) >= 0.5:
+    if result.get("highest_label") and result.get("highest_score", 0) > 0.6:
         if result["highest_label"] in ["add to calendar"]:
             context["intent"] = "calendar"
         elif result["highest_label"] in ["generate image"]:
             context["intent"] = "generate_image"
         elif result["highest_label"] in ["weather"]:
             context["intent"] = "weather"
+            
+    print(f"{result=}")
 
     return context
 

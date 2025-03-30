@@ -141,6 +141,7 @@ dependencies = [
     "transformers==4.47.1",
     "typer==0.15.1",
     "typing-extensions==4.12.2",
+    "urlextract>=1.9.0",
     "urllib3==2.3.0",
     "uvicorn==0.34.0",
     "vosk==0.3.45",

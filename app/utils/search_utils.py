@@ -9,22 +9,22 @@ from playwright.async_api import async_playwright
 
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
+from urlextract import URLExtract
 
 subscription_key = settings.BING_API_KEY_1
-search_url = settings.BING_SEARCH_URL
 
 if not subscription_key:
     raise EnvironmentError("Missing BING_SUBSCRIPTION_KEY environment variable.")
 
 
 http_async_client = httpx.AsyncClient()
-
+extractor = URLExtract()
+extractor.update()
 
 WEB_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
 IMAGE_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/search"
 NEWS_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/news/search"
 VIDEO_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/videos/search"
-
 MAX_QUERY_LENGTH = 1500
 
 
@@ -201,6 +201,9 @@ def extract_urls_from_text(text: str) -> list[str]:
     if not text:
         return []
 
+    urls = extractor.find_urls(text=text)
+    return urls
+
     # More comprehensive URL pattern that handles more edge cases
     url_pattern = r"""
         (?:https?://)?                                # Optional protocol (http:// or https://)
@@ -347,7 +350,6 @@ async def fetch_with_playwright(
             await page.close()
             await context.close()
             await browser.close()
-            print(f"{result=}")
             return result
 
     except Exception as e:

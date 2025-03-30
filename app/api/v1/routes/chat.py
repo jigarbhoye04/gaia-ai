@@ -64,7 +64,12 @@ async def chat_stream_endpoint(
         forwarded = request.headers.get("X-Forwarded-For")
         client_ip = forwarded.split(",")[0] if forwarded else request.client.host
 
-    return await chat_stream(body, background_tasks, user, llm_model, client_ip)
+    return StreamingResponse(
+        chat_stream(body, background_tasks, user, llm_model, client_ip),
+        media_type="text/event-stream",
+    )
+
+    # return await chat_stream(body, background_tasks, user, llm_model, client_ip)
 
 
 @router.post("/chat")

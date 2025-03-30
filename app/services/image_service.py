@@ -126,7 +126,6 @@ async def generate_image_stream(query_text: str) -> AsyncGenerator[str, None]:
         image_result = await api_generate_image(query_text)
 
         yield f"data: {json.dumps({'intent': 'generate_image', 'image_data': image_result})}\n\n"
-
         yield "data: [DONE]\n\n"
     except Exception as e:
         logger.error(f"Error generating image: {str(e)}")

@@ -29,10 +29,12 @@ class Settings(BaseSettings):
     OPENWEATHER_API_KEY: str
 
     # Hugging Face Configuration
-    USE_HUGGINGFACE_API: bool = True
+    # USE_HUGGINGFACE_API: bool = True
+    USE_HUGGINGFACE_API: bool = False
     HUGGINGFACE_API_KEY: str
     HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
-    HUGGINGFACE_ZSC_MODEL: str = "facebook/bart-large-mnli"
+    # Zero shot classification
+    HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
     HUGGINGFACE_API_URL: str = "https://api-inference.huggingface.co/models/"
     HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
 
