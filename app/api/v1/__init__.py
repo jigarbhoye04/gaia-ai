@@ -25,7 +25,7 @@ from app.api.v1.routes import (
 )
 
 from app.config.loggers import app_logger as logger
-from app.db.db_chroma import init_chroma
+from app.db.chromadb import init_chroma
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.text_utils import get_zero_shot_classifier
 
@@ -54,7 +54,7 @@ async def lifespan(app: FastAPI):
     """
     try:
         logger.info("GAIA: Starting up GAIA API...")
-        await init_chroma()
+        await init_chroma(app)
         download_nltk_resources()
         get_zero_shot_classifier()
 

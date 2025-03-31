@@ -7,7 +7,7 @@ from fastapi import Cookie, HTTPException
 
 from app.config.settings import settings
 from app.db.collections import users_collection
-from app.db.db_redis import get_cache, set_cache
+from app.db.redis import get_cache, set_cache
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ async def refresh_access_token(refresh_token: str) -> dict:
         )
 
     try:
-        logger.info(f"Refreshing token using refresh_token: {refresh_token}")
         response = await http_async_client.post(
             settings.GOOGLE_TOKEN_URL,
             data={

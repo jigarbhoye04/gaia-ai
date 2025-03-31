@@ -40,6 +40,7 @@ async def chat_stream(
     user: dict,
     llm_model: str,
     user_ip: str,
+    chromadb_client=None,
 ) -> AsyncGenerator:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
@@ -77,6 +78,7 @@ async def chat_stream(
         "weather_data": "",
         "fileData": body.fileData if body.fileData else [],
         "user_ip": user_ip,
+        "chromadb_client": chromadb_client,
     }
 
     context = await classify_intent(context)

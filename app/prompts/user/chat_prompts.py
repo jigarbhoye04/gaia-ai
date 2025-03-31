@@ -38,12 +38,14 @@ These pages were retrieved using GAIA Webpage Fetch. Stay neutral and factual.
 """
 
 NOTES_CONTEXT_TEMPLATE = """
+System: The user has the following relevant notes from the database:  
+{notes} .
+Only reference these notes if they add value to the conversation and are relevant.
+You have this information from your own database, so you can use it freely.  
+
+
 User: {message}  
 
-System: The user has the following relevant notes from the database:  
-{notes}  
-
-Only reference these notes if they add value to the conversation.  
 """
 
 DOCUMENTS_CONTEXT_TEMPLATE = "Question: {message}\n\nContext from document files uploaded by the user:\n{{'document_names': {titles}, 'content': {content}}}"

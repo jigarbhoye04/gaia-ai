@@ -10,7 +10,7 @@ from app.config.loggers import chat_logger as logger
 from app.utils.search_utils import extract_urls_from_text
 from app.utils.text_utils import classify_event_type
 from app.config.settings import settings
-from app.db.db_redis import get_cache, set_cache, ONE_HOUR_TTL
+from app.db.redis import get_cache, set_cache, ONE_HOUR_TTL
 
 
 async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
@@ -40,8 +40,6 @@ async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
 
         # elif result["highest_label"] in ["flowchart"]:
         # context["intent"] = "flowchart"
-
-    print(f"{result=}")
 
     return context
 
