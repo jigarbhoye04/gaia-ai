@@ -20,6 +20,7 @@ import {
   PlusSignIcon,
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
+import { Tooltip } from "@heroui/tooltip";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;
@@ -61,7 +62,9 @@ export default function SearchbarLeftDropdown({
       icon: <AiBrowserIcon className="h-5 w-5 text-primary" />,
       isMode: true,
       loadingText: "Performing Deep Search...",
-      description: "Search multiple sources for comprehensive results",
+      // description: "Search multiple sources for comprehensive results",
+      description:
+        "Search the web and fetch content from those pages, extracting key information",
     },
     {
       id: "web_search",
@@ -78,7 +81,7 @@ export default function SearchbarLeftDropdown({
       action: openPageFetchModal,
       isMode: false,
       loadingText: "Fetching Webpage(s)...",
-      description: "Retrieve and analyze content from specific URLs",
+      description: "Retrieve and understand content from specific webpages",
     },
     {
       id: "generate_image",
@@ -87,7 +90,7 @@ export default function SearchbarLeftDropdown({
       action: openGenerateImageModal,
       isMode: false,
       loadingText: "Generating Image...",
-      description: "Create AI-generated images from text descriptions",
+      description: "Create AI-generated images from text",
     },
     {
       id: "upload_file",
@@ -122,42 +125,44 @@ export default function SearchbarLeftDropdown({
       <DropdownMenuContent
         align="end"
         side="top"
-        className="w-[200px] rounded-xl border-none bg-zinc-900 p-1 text-white"
+        className="w-fit rounded-xl border-none bg-zinc-900 p-1 text-white"
       >
         {dropdownItems.map((item) => (
-          <DropdownMenuItem
+          <Tooltip
+            content={<div className="max-w-[250px]">{item.description}</div>}
             key={item.id}
-            onClick={() => {
-              setLoadingText(item.loadingText ?? "");
-              if (item.isMode) handleSelectionChange(item.id as SearchMode);
-              else if (item.action) item.action();
-            }}
-            className={cn(
-              "cursor-pointer rounded-lg px-3 py-2",
-              currentMode === item.id
-                ? "bg-[#00bbff50] text-primary focus:bg-[#00bbff50] focus:text-primary"
-                : "focus:bg-zinc-800 focus:text-white",
-            )}
+            color="foreground"
+            radius="sm"
           >
-            <div className="flex w-full items-center justify-between">
-              <div className="flex flex-col">
-                <div className="flex flex-row items-center gap-2">
-                  {item.icon}
-                  <span className="font-medium">{item.label}</span>
+            <DropdownMenuItem
+              key={item.id}
+              onClick={() => {
+                setLoadingText(item.loadingText ?? "");
+                if (item.isMode) handleSelectionChange(item.id as SearchMode);
+                else if (item.action) item.action();
+              }}
+              className={cn(
+                "cursor-pointer rounded-lg px-3 py-2",
+                currentMode === item.id
+                  ? "bg-[#00bbff50] text-primary focus:bg-[#00bbff50] focus:text-primary"
+                  : "focus:bg-zinc-800 focus:text-white",
+              )}
+            >
+              <div className="flex w-full items-center justify-between">
+                <div className="flex flex-col">
+                  <div className="flex flex-row items-center gap-2">
+                    {item.icon}
+                    <span className="">{item.label}</span>
+                  </div>
                 </div>
-                {item.description && (
-                  <span className="ml-7 text-xs text-zinc-400">
-                    {item.description}
-                  </span>
-                )}
+                <div>
+                  {currentMode === item.id && (
+                    <Check className="h-5 w-5 text-primary" />
+                  )}
+                </div>
               </div>
-              <div>
-                {currentMode === item.id && (
-                  <Check className="h-5 w-5 text-primary" />
-                )}
-              </div>
-            </div>
-          </DropdownMenuItem>
+            </DropdownMenuItem>
+          </Tooltip>
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
