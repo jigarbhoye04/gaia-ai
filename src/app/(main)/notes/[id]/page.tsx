@@ -1,17 +1,5 @@
 "use client";
 
-import { SaveIcon } from "@/components/Misc/icons";
-import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
-import { MenuBar } from "@/components/Notes/NotesMenuBar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { truncateTitle } from "@/lib/utils";
-import { apiauth } from "@/utils/apiaxios";
 import { Spinner } from "@heroui/spinner";
 import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -28,6 +16,19 @@ import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+
+import { SaveIcon } from "@/components/Misc/icons";
+import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
+import { MenuBar } from "@/components/Notes/NotesMenuBar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { truncateTitle } from "@/lib/utils";
+import { apiauth } from "@/utils/apiaxios";
 
 interface Note {
   id: string;
@@ -148,7 +149,7 @@ export default function NotesAdd() {
   }, [id, editor]);
 
   useEffect(() => {
-    if (pathname === "/notes/add") {
+    if (pathname === "/notes/new") {
       setIsLoading(false);
     } else {
       fetchNote();
@@ -158,18 +159,27 @@ export default function NotesAdd() {
   const saveNote = async () => {
     try {
       setIsSaving(true);
+      // if (pathname === "/notes/new") {
+      // }
       const method = id ? "PUT" : "POST";
-      const url = id ? `/notes/${id}` : `/notes`;
+      const url = !!id && id !== "new" ? `/notes/${id}` : `/notes`;
 
-      await apiauth[method.toLowerCase() as "put" | "post"](url, {
-        content: note.content,
-        plaintext: convert(note.content),
-      });
+      const response = await apiauth[method.toLowerCase() as "put" | "post"](
+        url,
+        {
+          content: note.content,
+          plaintext: convert(note.content),
+        },
+      );
 
       toast.success("Note has been saved");
       setOldNote(note);
-
       setHasUnsavedChanges(false);
+
+      // If this is a new note (POST request), navigate to the new note page
+      if (method === "POST" && response.data && response.data.id) {
+        router.push(`/notes/${response.data.id}`);
+      }
     } catch (error) {
       console.error("Error saving note:", error);
       toast.error("Uh oh! Something went wrong.", {
