@@ -13,21 +13,23 @@ from fastapi import HTTPException, UploadFile
 
 from app.config.loggers import app_logger as logger
 from app.db.collections import files_collection
+from app.db.utils import serialize_document
 from app.models.general_models import FileData
 from app.utils.file_utils import generate_file_description
 from app.utils.embedding_utils import generate_embedding
 
 
 async def upload_file_service(
-    file: UploadFile, user_id: str, conversation_id: str = None
+    file: UploadFile, user_id: str, conversation_id: str = None, chromadb_client=None
 ) -> dict:
     """
-    Upload a file to Cloudinary, generate embeddings if it's an image, and store metadata in MongoDB.
+    Upload a file to Cloudinary, generate embeddings, and store metadata in MongoDB and ChromaDB.
 
     Args:
         file (UploadFile): The file to upload
         user_id (str): The ID of the user uploading the file
-        conversation_id (str, optional): The conversation ID to associate with the file for vector search
+        conversation_id (str, optional): The conversation ID to associate with the file
+        chromadb_client: The ChromaDB client instance
 
     Returns:
         dict: File metadata including fileId and url
@@ -77,20 +79,51 @@ async def upload_file_service(
         if conversation_id:
             file_metadata["conversation_id"] = conversation_id
 
-        if not file.content_type.startswith("image/"):
-            try:
-                embedding = generate_embedding(file_description)
-                file_metadata["embedding"] = embedding
-                logger.info(f"Generated embedding for image file {file_id}")
-            except Exception as embed_err:
-                logger.error(
-                    f"Failed to generate embedding: {str(embed_err)}", exc_info=True
-                )
+        # Generate embedding for file description
+        embedding = None
+        try:
+            embedding = generate_embedding(file_description)
+            file_metadata["embedding"] = embedding
+            logger.info(f"Generated embedding for file {file_id}")
+        except Exception as embed_err:
+            logger.error(
+                f"Failed to generate embedding: {str(embed_err)}", exc_info=True
+            )
 
+        # Store in MongoDB
         result = await files_collection.insert_one(file_metadata)
-
         if not result.inserted_id:
             raise HTTPException(status_code=500, detail="Failed to store file metadata")
+
+        # Store in ChromaDB if client is provided and embedding was generated
+        if chromadb_client and embedding:
+            try:
+                chroma_documents_collection = await chromadb_client.get_collection(
+                    name="documents"
+                )
+
+                # Store document metadata in ChromaDB
+                await chroma_documents_collection.add(
+                    ids=[file_id],
+                    embeddings=[embedding],
+                    documents=[file_description],
+                    metadatas=[
+                        {
+                            "file_id": file_id,
+                            "user_id": user_id,
+                            "filename": file.filename,
+                            "type": file.content_type,
+                            "conversation_id": conversation_id or "",
+                        }
+                    ],
+                )
+                logger.info(f"File with id {file_id} indexed in ChromaDB")
+            except Exception as chroma_err:
+                # Log but don't fail if ChromaDB indexing fails
+                logger.error(
+                    f"Failed to index file in ChromaDB: {str(chroma_err)}",
+                    exc_info=True,
+                )
 
         logger.info(f"File uploaded successfully. ID: {file_id}, URL: {file_url}")
 
@@ -120,10 +153,13 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
 
     Args:
         context (Dict[str, Any]): The pipeline context containing request data
+        chromadb_client: The ChromaDB client instance for vector search
 
     Returns:
         Dict[str, Any]: Updated context with file data added
     """
+
+    chromadb_client = context["chromadb_client"]
     user_id = context.get("user_id")
     conversation_id = context.get("conversation_id")
     query_text = context.get("query_text", "")
@@ -145,8 +181,6 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
         file_data_map = {
             file_data.fileId: file_data.dict() for file_data in file_data_list
         }
-
-        print(file_data_map)
 
         if explicit_file_ids:
             logger.info(f"Fetching {len(explicit_file_ids)} files by ID")
@@ -186,42 +220,65 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
         # 2. Perform vector search for relevant files based on the query
         # Only perform the search if there's a meaningful query
         if len(query_text) > 3:
-            from app.utils.embedding_utils import query_files
+            relevant_files = []
 
-            # Only import locally to avoid circular imports
-            relevant_files = await query_files(
-                query_text=query_text,
-                user_id=user_id,
-                conversation_id=conversation_id,
-                top_k=3,
-            )
+            # Use ChromaDB for vector search
+            try:
+                from app.utils.embedding_utils import search_documents_by_similarity
+
+                # Search documents using ChromaDB
+                relevant_files = await search_documents_by_similarity(
+                    input_text=query_text,
+                    user_id=user_id,
+                    chromadb_client=chromadb_client,
+                    conversation_id=conversation_id,
+                    top_k=5,
+                )
+
+                # Format the results to match the expected structure
+                for file in relevant_files:
+                    file["score"] = file.get("similarity_score", 0)
+            except Exception as e:
+                logger.error(
+                    f"Error searching documents with ChromaDB: {str(e)}", exc_info=True
+                )
+                relevant_files = []
 
             if relevant_files:
                 logger.info(f"Found {len(relevant_files)} semantically relevant files")
 
                 # Add relevant files that weren't already included via explicit IDs
                 for file in relevant_files:
-                    if file.get("file_id") not in [
-                        f.get("file_id") for f in included_files
-                    ]:
-                        # Get complete file data from database
-                        complete_file = await files_collection.find_one(
-                            {"file_id": file["file_id"]}
-                        )
+                    file_id = file.get("file_id")
+                    if file_id not in [f.get("file_id") for f in included_files]:
+                        # Get complete file data or use the data we already have
+                        if (
+                            "url" in file
+                            and "filename" in file
+                            and "description" in file
+                        ):
+                            # Already has complete data
+                            complete_file = file
+                        else:
+                            # Get complete file data from database
+                            complete_file = await files_collection.find_one(
+                                {"file_id": file_id}
+                            )
+                            if complete_file:
+                                # Convert ObjectId to string
+                                if "_id" in complete_file:
+                                    complete_file["_id"] = str(complete_file["_id"])
+
+                                # Convert date fields to ISO format
+                                for date_field in ["created_at", "updated_at"]:
+                                    if date_field in complete_file and hasattr(
+                                        complete_file[date_field], "isoformat"
+                                    ):
+                                        complete_file[date_field] = complete_file[
+                                            date_field
+                                        ].isoformat()
+
                         if complete_file:
-                            # Convert ObjectId to string
-                            if "_id" in complete_file:
-                                complete_file["_id"] = str(complete_file["_id"])
-
-                            # Convert date fields to ISO format
-                            for date_field in ["created_at", "updated_at"]:
-                                if date_field in complete_file and hasattr(
-                                    complete_file[date_field], "isoformat"
-                                ):
-                                    complete_file[date_field] = complete_file[
-                                        date_field
-                                    ].isoformat()
-
                             # Include the similarity score from the search
                             complete_file["relevance_score"] = file.get("score", 0)
                             included_files.append(complete_file)
@@ -251,6 +308,7 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
                     formatted_files += f"{description}\n\n"
 
             if semantic_files:
+                formatted_files += "### Relevant Files\n\n"
                 for file in semantic_files:
                     filename = file.get("filename", "Unnamed file")
                     file_type = file.get("content_type", "Unknown type")
@@ -277,3 +335,186 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
         context["file_error"] = str(e)
 
     return context
+
+
+async def delete_file_service(file_id: str, user_id: str, chromadb_client=None) -> dict:
+    """
+    Delete a file by its ID for the specified user.
+    Removes the file from MongoDB, Cloudinary, and ChromaDB.
+
+    Args:
+        file_id (str): The ID of the file to delete
+        user_id (str): The ID of the authenticated user
+        chromadb_client: The ChromaDB client instance
+
+    Returns:
+        dict: Success message with deleted file information
+
+    Raises:
+        HTTPException: If the file is not found or deletion fails
+    """
+    logger.info(f"Deleting file with id: {file_id} for user: {user_id}")
+
+    # Retrieve file metadata before deletion
+    file_data = await files_collection.find_one(
+        {"file_id": file_id, "user_id": user_id}
+    )
+    if not file_data:
+        logger.error(f"File with id {file_id} not found for user {user_id}")
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Get the public_id for cloudinary deletion
+    public_id = file_data.get("public_id")
+    if not public_id:
+        logger.warning(f"File {file_id} has no public_id for Cloudinary deletion")
+
+    # Delete from MongoDB
+    result = await files_collection.delete_one({"file_id": file_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        logger.error("File not found for deletion in MongoDB")
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Delete from Cloudinary if public_id exists
+    if public_id:
+        try:
+            cloudinary_result = cloudinary.uploader.destroy(public_id)
+            if cloudinary_result.get("result") != "ok":
+                logger.warning(
+                    f"Failed to delete file from Cloudinary: {cloudinary_result}"
+                )
+        except Exception as e:
+            # Log but don't fail if Cloudinary deletion fails
+            logger.error(
+                f"Error deleting file from Cloudinary: {str(e)}", exc_info=True
+            )
+
+    # Delete from ChromaDB if client is provided
+    if chromadb_client:
+        try:
+            chroma_documents_collection = await chromadb_client.get_collection(
+                name="documents"
+            )
+            await chroma_documents_collection.delete(ids=[file_id])
+            logger.info(f"File with id {file_id} deleted from ChromaDB")
+        except Exception as e:
+            # Log the error but don't fail the request if ChromaDB deletion fails
+            logger.error(f"Failed to delete file from ChromaDB: {str(e)}")
+
+    logger.info(f"File {file_id} successfully deleted")
+
+    return {
+        "message": "File deleted successfully",
+        "file_id": file_id,
+        "filename": file_data.get("filename", "Unknown"),
+    }
+
+
+async def update_file_service(
+    file_id: str, user_id: str, update_data: dict, chromadb_client=None
+) -> dict:
+    """
+    Update file metadata and optionally refresh the ChromaDB embedding.
+
+    Args:
+        file_id (str): The ID of the file to update
+        user_id (str): The ID of the authenticated user
+        update_data (dict): The file data to update
+        chromadb_client: The ChromaDB client instance
+
+    Returns:
+        dict: Updated file metadata
+
+    Raises:
+        HTTPException: If the file is not found or update fails
+    """
+    logger.info(f"Updating file with id: {file_id} for user: {user_id}")
+
+    # Get the current file data
+    file_data = await files_collection.find_one(
+        {"file_id": file_id, "user_id": user_id}
+    )
+    if not file_data:
+        logger.error(f"File with id {file_id} not found for user {user_id}")
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Prepare update data
+    current_time = datetime.now(timezone.utc)
+    update_data["updated_at"] = current_time
+
+    # Check if description is being updated
+    description_updated = "description" in update_data
+
+    # Update in MongoDB
+    result = await files_collection.update_one(
+        {"file_id": file_id, "user_id": user_id}, {"$set": update_data}
+    )
+
+    if result.modified_count == 0:
+        logger.warning(f"No changes made to file {file_id}")
+
+    # Get the updated file data
+    updated_file = await files_collection.find_one(
+        {"file_id": file_id, "user_id": user_id}
+    )
+    if not updated_file:
+        logger.error(f"Updated file {file_id} not found")
+        raise HTTPException(status_code=404, detail="File not found after update")
+
+    # If description was updated and ChromaDB client is provided, update the embedding
+    if description_updated and chromadb_client:
+        try:
+            # Generate new embedding for the updated description
+            new_description = update_data["description"]
+            new_embedding = generate_embedding(new_description)
+
+            # Update embedding in MongoDB
+            await files_collection.update_one(
+                {"file_id": file_id, "user_id": user_id},
+                {"$set": {"embedding": new_embedding}},
+            )
+
+            # Update in ChromaDB
+            try:
+                chroma_documents_collection = await chromadb_client.get_collection(
+                    name="documents"
+                )
+
+                # Update the document in ChromaDB
+                await chroma_documents_collection.update(
+                    ids=[file_id],
+                    embeddings=[new_embedding],
+                    documents=[new_description],
+                    metadatas=[
+                        {
+                            "file_id": file_id,
+                            "user_id": user_id,
+                            "filename": updated_file.get("filename", ""),
+                            "type": updated_file.get("type", ""),
+                            "conversation_id": updated_file.get("conversation_id", ""),
+                        }
+                    ],
+                )
+                logger.info(f"File with id {file_id} updated in ChromaDB")
+            except Exception as chroma_err:
+                # Log but don't fail if ChromaDB update fails
+                logger.error(
+                    f"Failed to update file in ChromaDB: {str(chroma_err)}",
+                    exc_info=True,
+                )
+        except Exception as embed_err:
+            logger.error(
+                f"Failed to generate new embedding: {str(embed_err)}", exc_info=True
+            )
+
+    # Convert ObjectId to string for serialization
+    if "_id" in updated_file:
+        updated_file["_id"] = str(updated_file["_id"])
+
+    # Convert date fields to ISO format
+    for date_field in ["created_at", "updated_at"]:
+        if date_field in updated_file and hasattr(
+            updated_file[date_field], "isoformat"
+        ):
+            updated_file[date_field] = updated_file[date_field].isoformat()
+
+    return serialize_document(updated_file)
