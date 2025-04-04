@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";
+import { useHeader } from "@/hooks/useHeader";
+import NotesHeader from "@/components/Misc/Headers/NotesHeader";
 
 interface Note {
   id: string;
@@ -40,6 +42,7 @@ interface Note {
 export default function NotesAdd() {
   const { id } = useParams();
   const pathname = usePathname();
+  const { setHeader } = useHeader();
   const router = useRouter();
   const [note, setNote] = useState<Note>({
     id: "",
@@ -197,7 +200,7 @@ export default function NotesAdd() {
     }
   };
 
-  const deleteNote = async () => {
+  const deleteNote = useCallback(async () => {
     try {
       await apiauth.delete(`/notes/${id}`);
       toast.success("Note has been deleted");
@@ -216,7 +219,11 @@ export default function NotesAdd() {
           "There was a problem with deleting this Note. Please try again later.\n",
       });
     }
-  };
+  }, [id, router]);
+
+  useEffect(() => {
+    setHeader(<NotesHeader onDeleteNote={deleteNote} />);
+  }, [deleteNote, setHeader]);
 
   return (
     <>
@@ -224,42 +231,6 @@ export default function NotesAdd() {
         {`${truncateTitle(note.content || "New Note")} | GAIA`}
       </title>
       <div className="flex h-screen min-h-screen w-full flex-col justify-between">
-        <div className="flex w-full items-center justify-between dark">
-          <Link href="/notes">
-            <Button
-              className="w-fit gap-1 px-0 font-normal text-white"
-              variant={"link"}
-            >
-              <ArrowLeft width={17} />
-              All Notes
-            </Button>
-          </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="hover:bg-zinc-800 hover:text-white"
-              >
-                <DotsVerticalIcon height={20} width={20} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-none bg-zinc-800 p-0 hover:!bg-zinc-900"
-            >
-              <DropdownMenuItem
-                className="cursor-pointer p-3 text-red-500 hover:!bg-zinc-900 hover:!text-red-500"
-                onClick={deleteNote}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Note
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <Spinner />

@@ -44,20 +44,20 @@ const FlowchartDemo = () => {
   K -->L[Evaluate Launch Success]
   L -->M[Gather Feedback and Improve]
   M -->N[Repeat and Refine]
-  style A fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style B fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style C fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style D fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style E fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style F fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style G fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style H fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style I fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style J fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style K fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style L fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style M fill:#00bbff, stroke:#00bbff, stroke-width:3px
-  style N fill:#00bbff, stroke:#00bbff, stroke-width:3px`;
+  style A fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style B fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style C fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style D fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style E fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style F fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style G fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style H fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style I fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style J fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style K fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style L fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style M fill:#00bbff, stroke:#00bbff, strokeWidth:3px
+  style N fill:#00bbff, stroke:#00bbff, strokeWidth:3px`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(String(flowchartCode).replace(/\n$/, ""));

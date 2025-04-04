@@ -52,7 +52,7 @@ export default function SidebarLayout({
             <div className="flex items-center gap-1">
               <Button
                 aria-label="Create new chat"
-                className="group rounded-lg text-foreground-700 hover:bg-[#00bbff]"
+                className={`group rounded-lg hover:bg-[#00bbff]/20`}
                 size="icon"
                 variant={"ghost"}
                 onClick={() => {
@@ -60,10 +60,7 @@ export default function SidebarLayout({
                   clearMessages();
                 }}
               >
-                <ChatBubbleAddIcon
-                  className="transition-all group-hover:text-white"
-                  color={undefined}
-                />
+                <ChatBubbleAddIcon className="text-zinc-400 transition-all group-hover:text-primary" />
               </Button>
               <CloseOpenSidebarBtn toggleSidebar={toggleSidebar} />
             </div>
