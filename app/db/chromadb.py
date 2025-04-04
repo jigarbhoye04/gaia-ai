@@ -32,7 +32,16 @@ async def init_chroma(app=None):
                 name="notes", metadata={"hnsw:space": "cosine"}
             )
             logger.info("CHROMA: 'notes' collection created successfully.")
-        
+
+        # Initialize documents collection
+        if "documents" not in existing_collections:
+            logger.info(
+                "CHROMA: 'documents' collection not found. Creating new collection..."
+            )
+            await client.create_collection(
+                name="documents", metadata={"hnsw:space": "cosine"}
+            )
+            logger.info("CHROMA: 'documents' collection created successfully.")
 
         logger.info(f"CHROMA: ChromaDB heartbeat response: {response}")
         logger.info(

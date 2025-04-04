@@ -2,11 +2,16 @@
 Router module for file upload functionality with RAG integration.
 """
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status, Body
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
 from app.models.general_models import FileData
-from app.services.file_service import upload_file_service
+from app.services.file_service import (
+    upload_file_service,
+    delete_file_service,
+    update_file_service,
+)
 
 router = APIRouter()
 
@@ -16,6 +21,7 @@ async def upload_file_endpoint(
     file: UploadFile = File(...),
     conversation_id: str = Form(None),
     user: dict = Depends(get_current_user),
+    chromadb_client=Depends(get_chromadb),
 ):
     """
     Upload a file to the server and generate embeddings for image files.
@@ -27,12 +33,16 @@ async def upload_file_endpoint(
         file: The file to upload
         conversation_id: Optional ID of conversation to associate with the file
         user: The authenticated user information
+        chromadb_client: ChromaDB client for vector storage
 
     Returns:
         File metadata including ID, URL, and auto-generated description
     """
     result = await upload_file_service(
-        file=file, user_id=user.get("user_id"), conversation_id=conversation_id
+        file=file,
+        user_id=user.get("user_id"),
+        conversation_id=conversation_id,
+        chromadb_client=chromadb_client,
     )
 
     return FileData(
@@ -43,3 +53,61 @@ async def upload_file_endpoint(
         message="File uploaded successfully",
         type=result.get("type", "file"),
     )
+
+
+@router.put("/{file_id}", status_code=status.HTTP_200_OK)
+async def update_file_endpoint(
+    file_id: str,
+    update_data: dict = Body(...),
+    user: dict = Depends(get_current_user),
+    chromadb_client=Depends(get_chromadb),
+):
+    """
+    Update file metadata and refresh embeddings if needed.
+
+    This endpoint updates file metadata in MongoDB and ChromaDB.
+    If the description is updated, it regenerates the embedding.
+
+    Args:
+        file_id: The ID of the file to update
+        update_data: The file data to update
+        user: The authenticated user information
+        chromadb_client: ChromaDB client for vector storage
+
+    Returns:
+        Updated file metadata
+    """
+    result = await update_file_service(
+        file_id=file_id,
+        user_id=user.get("user_id"),
+        update_data=update_data,
+        chromadb_client=chromadb_client,
+    )
+
+    return result
+
+
+@router.delete("/{file_id}", status_code=status.HTTP_200_OK)
+async def delete_file_endpoint(
+    file_id: str,
+    user: dict = Depends(get_current_user),
+    chromadb_client=Depends(get_chromadb),
+):
+    """
+    Delete a file by its ID.
+
+    This endpoint removes a file from Cloudinary storage, MongoDB, and ChromaDB.
+
+    Args:
+        file_id: The ID of the file to delete
+        user: The authenticated user information
+        chromadb_client: ChromaDB client for vector storage
+
+    Returns:
+        Success message with deleted file information
+    """
+    result = await delete_file_service(
+        file_id=file_id, user_id=user.get("user_id"), chromadb_client=chromadb_client
+    )
+
+    return result

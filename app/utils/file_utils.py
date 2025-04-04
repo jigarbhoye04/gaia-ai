@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 
 import docx2txt
 import PyPDF2
+from groq import Groq
 import pytesseract
 from PIL import Image
 
@@ -90,6 +91,33 @@ def extract_text_from_image(image: Image.Image) -> str:
         return None
 
 
+def generate_image_description_groq(image_url: str) -> None:
+    client = Groq()
+
+    completion = client.chat.completions.create(
+        model="llama-3.2-11b-vision-preview",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What's in this image?"},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": image_url},
+                    },
+                ],
+            }
+        ],
+        temperature=1,
+        max_completion_tokens=1024,
+        top_p=1,
+        stream=False,
+        stop=None,
+    )
+
+    return completion.choices[0].message
+
+
 def generate_image_description(image_data: bytes, image_url: str) -> str:
     """
     Generate a description for an image using either local model or Hugging Face API.
@@ -102,6 +130,14 @@ def generate_image_description(image_data: bytes, image_url: str) -> str:
         str: Description of the image content combined with OCR results.
     """
     try:
+        try:
+            description = generate_image_description_groq(image_url)
+            if description:
+                logger.info(f"Generated image description via groq: {description}")
+                return f"Caption: {description}"
+        except Exception as e:
+            logger.error(f"Couldn't generate image description via Groq: {str(e)}")
+
         raw_image = Image.open(io.BytesIO(image_data)).convert("RGB")
 
         if settings.USE_HUGGINGFACE_API:
