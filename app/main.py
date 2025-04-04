@@ -29,8 +29,8 @@ app = FastAPI(
         "url": "http://aryanranderiya.com",
         "email": "aryan@heygaia.io",
     },
-    docs_url=None if settings.ENV == "production" else "/api/v1/docs",
-    redoc_url=None if settings.ENV == "production" else "/api/v1/redoc",
+    docs_url=None if settings.ENV == "production" else "/docs",
+    redoc_url=None if settings.ENV == "production" else "/redoc",
 )
 
 app.add_middleware(ProfilingMiddleware)

@@ -27,6 +27,14 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
+    GEMINI_API_KEY: str
+
+    # Default ChromaDB connection settings
+    CHROMADB_PRODUCTION_HOST: str = "34.58.50.92"
+    CHROMADB_DEVELOPMENT_HOST: str = "localhost"
+    CHROMADB_PRODUCTION_PORT: int = 8000
+    CHROMADB_DEVELOPMENT_PORT: int = 8080
+    CHROMADB_USE_PRODUCTION: bool = True
 
     # Hugging Face Configuration
     # USE_HUGGINGFACE_API: bool = True
@@ -43,18 +51,12 @@ class Settings(BaseSettings):
         """Construct the full Hugging Face API URL for zero-shot classification."""
         return f"{self.HUGGINGFACE_API_URL}{self.HUGGINGFACE_ZSC_MODEL}"
 
-    # Default ChromaDB connection settings
-    CHROMADB_PRODUCTION_HOST: str = "34.58.50.92"
-    CHROMADB_DEVELOPMENT_HOST: str = "localhost"
-    CHROMADB_PRODUCTION_PORT: int = 8000
-    CHROMADB_DEVELOPMENT_PORT: int = 8080
-
     @computed_field
     def CHROMADB_HOST(self) -> str:
         """Return the ChromaDB host based on the environment."""
         return (
             self.CHROMADB_PRODUCTION_HOST
-            if self.ENV == "production"
+            if self.ENV == "production" and self.CHROMADB_USE_PRODUCTION
             else self.CHROMADB_DEVELOPMENT_HOST
         )
 
@@ -63,7 +65,7 @@ class Settings(BaseSettings):
         """Return the ChromaDB port based on the environment."""
         return (
             self.CHROMADB_PRODUCTION_PORT
-            if self.ENV == "production"
+            if self.ENV == "production" and self.CHROMADB_USE_PRODUCTION
             else self.CHROMADB_DEVELOPMENT_PORT
         )
 

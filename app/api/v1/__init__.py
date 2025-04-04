@@ -11,6 +11,7 @@ from fastapi import APIRouter, FastAPI
 from app.api.v1.routes import (
     # audio,
     blog,
+    browser,
     calendar,
     chat,
     feedback,
@@ -44,6 +45,7 @@ api_router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
 api_router.include_router(mail.router, tags=["Mail"])
 api_router.include_router(blog.router, tags=["Blog"])
 api_router.include_router(file.router, tags=["File"])
+api_router.include_router(browser.router, tags=["Browser"])
 
 
 @asynccontextmanager
