@@ -380,11 +380,9 @@ async def upload_screenshot_to_cloudinary(screenshot_bytes: bytes, url: str) -> 
     import cloudinary
     import cloudinary.uploader
     from urllib.parse import urlparse
-    from app.config.cloudinary import init_cloudinary
 
     try:
         # Ensure Cloudinary is initialized
-        init_cloudinary()
 
         # Create a unique ID for the screenshot
         screenshot_id = str(uuid.uuid4())

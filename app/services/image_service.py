@@ -8,7 +8,6 @@ import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException, UploadFile
 
-from app.config.cloudinary import init_cloudinary
 from app.config.loggers import image_logger as logger
 from app.prompts.user.image_service_prompts import IMAGE_PROMPT_REFINER
 from app.utils.llm_utils import do_prompt_no_stream
@@ -131,6 +130,3 @@ async def generate_image_stream(query_text: str) -> AsyncGenerator[str, None]:
         logger.error(f"Error generating image: {str(e)}")
         yield f"data: {json.dumps({'error': f'Failed to generate image: {str(e)}'})}\n\n"
         yield "data: [DONE]\n\n"
-
-
-init_cloudinary()

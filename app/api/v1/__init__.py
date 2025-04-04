@@ -29,6 +29,10 @@ from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.text_utils import get_zero_shot_classifier
+from app.config.settings import settings
+from lmnr import Laminar
+from app.config.cloudinary import init_cloudinary
+
 
 api_router = APIRouter()
 
@@ -59,6 +63,8 @@ async def lifespan(app: FastAPI):
         await init_chroma(app)
         download_nltk_resources()
         get_zero_shot_classifier()
+        Laminar.initialize(project_api_key=settings.LAMINAR_API_KEY)
+        init_cloudinary()
 
     except Exception as e:
         logger.error(f"Error during startup: {e}")
