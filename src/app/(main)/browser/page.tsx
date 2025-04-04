@@ -1,37 +1,30 @@
 "use client";
 
 import { AiBrowserIcon } from "@/components/Misc/icons";
-import {
-  BubbleChatIcon,
-  BubbleConversationChatIcon,
-} from "@/components/Misc/icons";
+import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import { Avatar } from "@heroui/avatar";
 import { Tooltip } from "@heroui/tooltip";
 import { ResetIcon } from "@radix-ui/react-icons";
 import {
   AlertTriangle,
   ArrowUpRight,
   Brain,
-  Clock,
   Globe,
   Loader,
   Plug,
   SendIcon,
-  Terminal,
   Zap,
 } from "lucide-react";
-import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
-// Define types for browser automation
 interface Thoughts {
   evaluation?: string;
   memory?: string;
   next_goal?: string;
-  evaluation_previous_goal?: string; // Added to support backend format
+  evaluation_previous_goal?: string;
 }
 
 interface Action {
@@ -40,7 +33,7 @@ interface Action {
   done?: { text: string; success: boolean };
   search_google?: { query: string };
   go_to_url?: { url: string };
-  [key: string]: any; // For flexibility with unknown action types
+  [key: string]: any;
 }
 
 interface StepData {
@@ -49,14 +42,16 @@ interface StepData {
   actions?: Action[];
   url?: string;
   title?: string;
-  screenshot?: string; // Add screenshot support
-  // For step_update format
+  screenshot?: string;
+  screenshot_url?: string;
+
   data?: {
     step: number;
     thoughts: Thoughts;
     actions: Action[];
     url: string;
     title: string;
+    screenshot_url?: string;
   };
 }
 
@@ -129,7 +124,6 @@ const BrowserAutomationChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Establish a live websocket connection
   const connectToBrowser = () => {
     console.log("connecting");
 
@@ -139,7 +133,6 @@ const BrowserAutomationChat = () => {
     setIsConnecting(true);
     setError(null);
 
-    // Construct the WebSocket URL from env variable.
     const wsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/browser`;
     if (!wsUrl) {
       setError("WebSocket URL not defined");
@@ -147,13 +140,12 @@ const BrowserAutomationChat = () => {
       return;
     }
 
-    // Create a new WebSocket instance
     socketRef.current = new WebSocket(wsUrl);
 
     socketRef.current.onopen = () => {
       setIsConnected(true);
       setIsConnecting(false);
-      // Send initial "init" message with configuration (customize as needed)
+
       socketRef.current?.send(
         JSON.stringify({
           type: "init",
@@ -183,10 +175,8 @@ const BrowserAutomationChat = () => {
           });
           break;
         case "step_update":
-          // Handle both the original format and the new format
           const stepUpdateData = data.data;
 
-          // Create a properly formatted stepData object
           const stepData: StepData = {
             step: stepUpdateData.step,
             thoughts: stepUpdateData.thoughts,
@@ -195,19 +185,19 @@ const BrowserAutomationChat = () => {
               : [],
             url: stepUpdateData.url,
             title: stepUpdateData.title,
-            screenshot: stepUpdateData.screenshot, // Capture screenshot if available
+            screenshot: stepUpdateData.screenshot,
+            screenshot_url: stepUpdateData.screenshot_url,
           };
 
           addMessage({
             role: "assistant",
-            content: `Step ${stepData.step - 1}: ${stepData.thoughts?.evaluation || stepData.thoughts?.evaluation_previous_goal || ""}`,
+            content: `Step ${stepData.step}: ${stepData.thoughts?.evaluation || stepData.thoughts?.evaluation_previous_goal || ""}`,
             stepData,
           });
           break;
         case "task_completed":
           const result: TaskResult = data.result;
 
-          // Add a summary message for task completion
           addMessage({
             role: "assistant",
             content: `Task completed successfully.`,
@@ -216,15 +206,12 @@ const BrowserAutomationChat = () => {
             },
           });
 
-          // Process the complete task history if available
           if (result?.history?.length > 0) {
             const lastItem = result.history[result.history.length - 1];
 
-            // Extract the final action and result
             const lastAction = lastItem.model_output.action[0];
             const lastResult = lastItem.result[0];
 
-            // Only add the final result message if there's a successful action with content
             if (
               lastResult &&
               (lastResult.is_done || lastResult.success) &&
@@ -234,11 +221,11 @@ const BrowserAutomationChat = () => {
                 role: "assistant",
                 content: lastResult.extracted_content,
                 stepData: {
-                  step: -2, // Special marker for final result
+                  step: -2,
                   actions: lastItem.model_output.action,
                   url: lastItem.state.url,
                   title: lastItem.state.title,
-                  screenshot: lastItem.state.screenshot, // Include the screenshot
+                  screenshot: lastItem.state.screenshot,
                   thoughts: {
                     evaluation:
                       lastItem.model_output.current_state
@@ -286,7 +273,7 @@ const BrowserAutomationChat = () => {
     setSessionId(null);
     setError(null);
     setIsProcessing(false);
-    // Close socket if exists
+
     socketRef.current?.close();
     socketRef.current = null;
   };
@@ -298,11 +285,9 @@ const BrowserAutomationChat = () => {
   const handleSendMessage = () => {
     if (!input.trim() || !isConnected || isProcessing) return;
 
-    // Add user message
     addMessage({ role: "user", content: input });
     setIsProcessing(true);
 
-    // Send the task to the backend via WebSocket
     const taskPayload = {
       type: "task",
       task: input,
@@ -348,8 +333,8 @@ const BrowserAutomationChat = () => {
             <Button
               disabled={isConnecting}
               radius="full"
-              // variant="flat"
-              // variant={isConnecting ? "flat" : "solid"}
+              variant="flat"
+              size="sm"
               color={isConnecting ? "default" : "success"}
               onPress={connectToBrowser}
               startContent={<Plug className="h-4 w-4" />}
@@ -379,7 +364,6 @@ const BrowserAutomationChat = () => {
                 disabled={isConnecting}
                 radius="full"
                 variant="flat"
-                size="sm"
                 className="mt-3"
                 color={isConnecting ? "default" : "success"}
                 onPress={connectToBrowser}
@@ -427,33 +411,38 @@ const BrowserAutomationChat = () => {
                       (message.stepData.url ||
                         message.stepData.thoughts ||
                         message.stepData.actions) && (
-                        <div className="ml-10 w-fit border-l-2 border-primary">
-                          <div className="mt-1 max-w-4xl rounded-xl rounded-l-none bg-primary/15 p-3 text-sm text-zinc-300">
+                        <div className="ml-10 w-fit border-l-3 border-primary">
+                          <div className="mt-1 max-w-4xl rounded-xl rounded-l-none bg-primary/10 p-3 text-sm text-zinc-300">
                             {message.stepData.url && (
                               <div className="mb-2 flex items-center gap-1 rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-400">
                                 <Globe className="h-3.5 w-3.5 text-blue-400" />
                                 <span className="mr-1 font-medium">URL:</span>
-                                <span className="truncate">
+                                <span className="max-w-[300px] truncate">
                                   {message.stepData.url}
                                 </span>
                               </div>
                             )}
 
-                            {message.stepData.screenshot && (
-                              <div className="mb-4 max-w-full overflow-hidden rounded-md border border-zinc-700">
+                            {/* Display screenshot if available from either source */}
+                            {(message.stepData.screenshot_url ||
+                              message.stepData.screenshot) && (
+                              <div className="mb-4 mt-2 max-w-full overflow-hidden rounded-md">
                                 <Image
-                                  src={message.stepData.screenshot}
+                                  src={
+                                    message.stepData.screenshot_url ||
+                                    message.stepData.screenshot
+                                  }
                                   alt={`Screenshot of step ${message.stepData.step}`}
                                   width={700}
                                   height={400}
-                                  className="max-h-[500px] w-full object-contain"
+                                  className="max-h-[400px] w-full object-cover"
                                   unoptimized
                                 />
                               </div>
                             )}
 
                             {message.stepData.thoughts && (
-                              <div className="mt-2 space-y-2 rounded-md bg-zinc-900 p-2">
+                              <div className="mt-2 max-w-screen-sm space-y-2 rounded-md bg-zinc-900 p-2">
                                 <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
                                   <Brain className="h-3.5 w-3.5" />
                                   <span>AI Thoughts</span>
@@ -503,7 +492,7 @@ const BrowserAutomationChat = () => {
                               </div>
                             )}
 
-                            {!!message.stepData.actions &&
+                            {message.stepData.actions &&
                               message.stepData.actions.length > 0 && (
                                 <div className="mt-2 space-y-1">
                                   <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -515,7 +504,7 @@ const BrowserAutomationChat = () => {
                                       (action, i) => (
                                         <li
                                           key={i}
-                                          className="flex max-w-screen-sm items-center gap-2 rounded-md bg-zinc-900 px-2 py-1 text-sm"
+                                          className="flex max-w-[550px] items-center gap-2 rounded-md bg-zinc-900 px-2 py-1 text-sm"
                                         >
                                           {action.navigate && (
                                             <>
