@@ -23,7 +23,7 @@ import {
 } from "@/components/Misc/icons";
 
 export const siteConfig = {
-  name: "gaia",
+  name: "GAIA",
   copyright: "© 2024 GAIA",
   domain: "heygaia.io",
   pageSections: [

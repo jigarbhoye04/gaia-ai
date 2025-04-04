@@ -115,6 +115,13 @@ export default function RootLayout({
             url: "https://heygaia.io",
           })}
         </Script>
+
+        <Script
+          src="https://uptime.betterstack.com/widgets/announcement.js"
+          data-id="212836"
+          async
+          type="text/javascript"
+        />
       </body>
     </html>
   );
