@@ -9,10 +9,13 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1 import api_router, lifespan
 from app.middleware.profiling import ProfilingMiddleware
+from app.config.settings import settings
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -20,8 +23,14 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 app = FastAPI(
     lifespan=lifespan,
     title="GAIA API",
-    version="1.0.0",
-    description="The AI assistant backend",
+    description="Backend for General-purpose AI assistant (GAIA)",
+    contact={
+        "name": "Aryan Randeriya",
+        "url": "http://aryanranderiya.com",
+        "email": "aryan@heygaia.io",
+    },
+    docs_url=None if settings.ENV == "production" else "/api/v1/docs",
+    redoc_url=None if settings.ENV == "production" else "/api/v1/redoc",
 )
 
 app.add_middleware(ProfilingMiddleware)
@@ -50,8 +59,15 @@ app.include_router(api_router, prefix="/api/v1")
 @app.get("/api/v1/")
 @app.get("/api/v1/ping")
 def main_route():
-    """
-    Returns:
-        dict: A simple greeting message.
-    """
-    return {"hello": "world"}
+    return {
+        "status": "success",
+        "message": "Welcome to the GAIA API!",
+    }
+
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("app/static/favicon.ico")
