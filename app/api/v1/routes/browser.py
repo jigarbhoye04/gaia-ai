@@ -76,7 +76,6 @@ class EventAgent(Agent):
 
             step_data = {
                 "step": steps,
-                # "screenshot_path": img_path,
                 "thoughts": thoughts,
                 "actions": actions,
                 "url": state.url,
@@ -87,12 +86,22 @@ class EventAgent(Agent):
             self.current_step = steps
 
             # Save screenshot if available
-            # if state.screenshot:
-            #     self.screenshots.append(str(state.screenshot))
+            if state.screenshot:
+                self.screenshots.append(str(state.screenshot))
+
+                # Upload screenshot to Cloudinary
+                try:
+                    screenshot_result = await upload_base64_screenshot_to_cloudinary(
+                        str(state.screenshot), self.session_id, steps
+                    )
+
+                    if screenshot_result and screenshot_result.get("url"):
+                        # Add screenshot URL to step data
+                        step_data["screenshot_url"] = screenshot_result["url"]
+                except Exception as e:
+                    logger.error(f"Error uploading step screenshot: {str(e)}")
 
             # Send step data to websocket
-            # asyncio.create_task(
-
             await self.websocket.send_json(
                 {
                     "type": "step_update",
@@ -109,14 +118,6 @@ class EventAgent(Agent):
                     "session_id": self.session_id,
                 },
             )
-
-            # )
-
-            # Try to upload screenshot to Cloudinary if available
-            # if state.screenshot:
-            #     asyncio.create_task(
-            #         self._upload_and_send_screenshot(str(state.screenshot), steps)
-            #     )
 
         # async def _upload_and_send_screenshot(self, screenshot_base64: str, step: int):
         #     """Upload screenshot to Cloudinary and send URL to client"""
