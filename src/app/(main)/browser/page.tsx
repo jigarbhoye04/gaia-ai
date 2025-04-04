@@ -31,13 +31,16 @@ interface Thoughts {
   evaluation?: string;
   memory?: string;
   next_goal?: string;
+  evaluation_previous_goal?: string; // Added to support backend format
 }
 
 interface Action {
   navigate?: { url: string };
   click?: { selector: string };
   done?: { text: string; success: boolean };
-  [key: string]: any;
+  search_google?: { query: string };
+  go_to_url?: { url: string };
+  [key: string]: any; // For flexibility with unknown action types
 }
 
 interface StepData {
@@ -46,6 +49,53 @@ interface StepData {
   actions?: Action[];
   url?: string;
   title?: string;
+  screenshot?: string; // Add screenshot support
+  // For step_update format
+  data?: {
+    step: number;
+    thoughts: Thoughts;
+    actions: Action[];
+    url: string;
+    title: string;
+  };
+}
+
+interface TaskResult {
+  history: Array<{
+    model_output: {
+      current_state: {
+        evaluation_previous_goal?: string;
+        memory?: string;
+        next_goal?: string;
+      };
+      action: Action[];
+    };
+    result: Array<{
+      is_done: boolean;
+      success?: boolean;
+      extracted_content?: string;
+      include_in_memory?: boolean;
+    }>;
+    state: {
+      tabs: Array<{
+        page_id: number;
+        url: string;
+        title: string;
+      }>;
+      screenshot?: string;
+      interacted_element: any[];
+      url: string;
+      title: string;
+    };
+    metadata: {
+      step_start_time: number;
+      step_end_time: number;
+      input_tokens: number;
+      step_number: number;
+    };
+  }>;
+  session_id: string;
+  screenshots?: string[];
 }
 
 type MessageRole = "user" | "assistant" | "system";
@@ -79,24 +129,155 @@ const BrowserAutomationChat = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Establish a live websocket connection
   const connectToBrowser = () => {
+    console.log("connecting");
+
     if (isConnected || isConnecting) return;
 
+    console.log("connectin2");
     setIsConnecting(true);
     setError(null);
 
-    // Mock WebSocket for demo
-    setTimeout(() => {
+    // Construct the WebSocket URL from env variable.
+    const wsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/browser`;
+    if (!wsUrl) {
+      setError("WebSocket URL not defined");
+      setIsConnecting(false);
+      return;
+    }
+
+    // Create a new WebSocket instance
+    socketRef.current = new WebSocket(wsUrl);
+
+    socketRef.current.onopen = () => {
       setIsConnected(true);
       setIsConnecting(false);
-      setSessionId("sample-session-123");
+      // Send initial "init" message with configuration (customize as needed)
+      socketRef.current?.send(
+        JSON.stringify({
+          type: "init",
+          config: { headless: false, disable_security: true },
+        }),
+      );
       addMessage({
         role: "system",
-        content: "Successfully connected to browser session",
+        content: "Connecting to browser session...",
       });
-    }, 1500);
+    };
 
-    addMessage({ role: "system", content: "Connecting to browser session..." });
+    socketRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      switch (data.type) {
+        case "init_response":
+          setSessionId(data.session_id);
+          addMessage({
+            role: "system",
+            content: "Successfully connected to browser session",
+          });
+          break;
+        case "task_started":
+          addMessage({
+            role: "system",
+            content: `Task started: ${data.task}`,
+          });
+          break;
+        case "step_update":
+          // Handle both the original format and the new format
+          const stepUpdateData = data.data;
+
+          // Create a properly formatted stepData object
+          const stepData: StepData = {
+            step: stepUpdateData.step,
+            thoughts: stepUpdateData.thoughts,
+            actions: Array.isArray(stepUpdateData.actions)
+              ? stepUpdateData.actions
+              : [],
+            url: stepUpdateData.url,
+            title: stepUpdateData.title,
+            screenshot: stepUpdateData.screenshot, // Capture screenshot if available
+          };
+
+          addMessage({
+            role: "assistant",
+            content: `Step ${stepData.step - 1}: ${stepData.thoughts?.evaluation || stepData.thoughts?.evaluation_previous_goal || ""}`,
+            stepData,
+          });
+          break;
+        case "task_completed":
+          const result: TaskResult = data.result;
+
+          // Add a summary message for task completion
+          addMessage({
+            role: "assistant",
+            content: `Task completed successfully.`,
+            stepData: {
+              step: -1,
+            },
+          });
+
+          // Process the complete task history if available
+          if (result?.history?.length > 0) {
+            const lastItem = result.history[result.history.length - 1];
+
+            // Extract the final action and result
+            const lastAction = lastItem.model_output.action[0];
+            const lastResult = lastItem.result[0];
+
+            // Only add the final result message if there's a successful action with content
+            if (
+              lastResult &&
+              (lastResult.is_done || lastResult.success) &&
+              lastResult.extracted_content
+            ) {
+              addMessage({
+                role: "assistant",
+                content: lastResult.extracted_content,
+                stepData: {
+                  step: -2, // Special marker for final result
+                  actions: lastItem.model_output.action,
+                  url: lastItem.state.url,
+                  title: lastItem.state.title,
+                  screenshot: lastItem.state.screenshot, // Include the screenshot
+                  thoughts: {
+                    evaluation:
+                      lastItem.model_output.current_state
+                        .evaluation_previous_goal,
+                    memory: lastItem.model_output.current_state.memory,
+                    next_goal: lastItem.model_output.current_state.next_goal,
+                  },
+                },
+              });
+            }
+          }
+
+          setIsProcessing(false);
+          break;
+        case "task_error":
+          addMessage({
+            role: "system",
+            content: `Error: ${data.error}`,
+          });
+          setIsProcessing(false);
+          break;
+        default:
+          console.warn("Unhandled message type:", data.type);
+          break;
+      }
+    };
+
+    socketRef.current.onerror = (event) => {
+      setError("WebSocket error occurred.");
+      console.error("WebSocket error:", event);
+    };
+
+    socketRef.current.onclose = () => {
+      setIsConnected(false);
+      addMessage({
+        role: "system",
+        content: "Browser session disconnected.",
+      });
+    };
   };
 
   const resetSession = () => {
@@ -105,6 +286,9 @@ const BrowserAutomationChat = () => {
     setSessionId(null);
     setError(null);
     setIsProcessing(false);
+    // Close socket if exists
+    socketRef.current?.close();
+    socketRef.current = null;
   };
 
   const addMessage = (message: Message) => {
@@ -116,92 +300,16 @@ const BrowserAutomationChat = () => {
 
     // Add user message
     addMessage({ role: "user", content: input });
-
-    // Simulate processing
     setIsProcessing(true);
 
-    // Mock browser automation response
-    setTimeout(() => {
-      // Add system message that task started
-      addMessage({ role: "system", content: `Task started: ${input}` });
+    // Send the task to the backend via WebSocket
+    const taskPayload = {
+      type: "task",
+      task: input,
+      session_id: sessionId,
+    };
 
-      // Mock step updates
-      setTimeout(() => {
-        const stepData: StepData = {
-          step: 1,
-          thoughts: {
-            evaluation: "Starting the task",
-            memory: "I need to navigate to the website",
-            next_goal: "Open the website",
-          },
-          actions: [{ navigate: { url: "https://example.com" } }],
-          url: "about:blank",
-          title: "New Tab",
-        };
-
-        addMessage({
-          role: "assistant",
-          content: `Step ${stepData.step}: Navigating to https://example.com`,
-          stepData,
-        });
-
-        // Second step
-        setTimeout(() => {
-          const stepData2: StepData = {
-            step: 2,
-            thoughts: {
-              evaluation: "Successfully loaded the website",
-              memory: "I am now on example.com",
-              next_goal: "Search for information",
-            },
-            actions: [{ click: { selector: ".search-button" } }],
-            url: "https://example.com",
-            title: "Example Domain",
-          };
-
-          addMessage({
-            role: "assistant",
-            content: `Step ${stepData2.step}: Website loaded, searching for information`,
-            stepData: stepData2,
-          });
-
-          // Final step with completion
-          setTimeout(() => {
-            const stepData3: StepData = {
-              step: 3,
-              thoughts: {
-                evaluation: "Success - I found the information",
-                memory: "I have completed the task",
-                next_goal: "Report the findings",
-              },
-              actions: [
-                {
-                  done: {
-                    text: "I have found the requested information on example.com",
-                    success: true,
-                  },
-                },
-              ],
-              url: "https://example.com/search",
-              title: "Search Results - Example Domain",
-            };
-
-            addMessage({
-              role: "assistant",
-              content: `I have found the requested information on example.com`,
-              stepData: stepData3,
-            });
-
-            addMessage({
-              role: "system",
-              content: "Task completed successfully.",
-            });
-            setIsProcessing(false);
-          }, 1500);
-        }, 1500);
-      }, 1500);
-    }, 1000);
-
+    socketRef.current?.send(JSON.stringify(taskPayload));
     setInput("");
   };
 
@@ -212,18 +320,18 @@ const BrowserAutomationChat = () => {
   };
 
   return (
-    <div className="flex h-full w-full flex-col rounded-3xl">
+    <div className="flex h-[97%] w-full flex-col">
       {/* Header */}
-      <div className="flex items-center border-zinc-800 p-2 shadow-sm">
+      <div className="flex w-full items-center border-zinc-800 p-2 shadow-sm">
         <div className="flex items-center">
           <AiBrowserIcon className="mr-2 h-6 w-6 text-primary" />
           <h1 className="text-xl font-medium">Browser Automation</h1>
         </div>
         <div className="ml-auto flex items-center space-x-2">
           {isConnected ? (
-            <div className="flex items-center">
-              <span className="mr-2 inline-block h-2 w-2 rounded-full bg-green-500"></span>
-              <span className="text-sm text-zinc-400">Connected</span>
+            <div className="flex items-center rounded-full bg-zinc-800/70 px-3 py-0 pr-0">
+              <span className="mr-2 inline-block h-2 w-2 rounded-full bg-green-500" />
+              <span className="mr-3 text-sm text-zinc-400">Connected</span>
               <Tooltip content="Reset session">
                 <Button
                   isIconOnly
@@ -240,9 +348,9 @@ const BrowserAutomationChat = () => {
             <Button
               disabled={isConnecting}
               radius="full"
-              size="sm"
-              variant={isConnecting ? "flat" : "solid"}
-              color="primary"
+              // variant="flat"
+              // variant={isConnecting ? "flat" : "solid"}
+              color={isConnecting ? "default" : "success"}
               onPress={connectToBrowser}
               startContent={<Plug className="h-4 w-4" />}
             >
@@ -253,202 +361,268 @@ const BrowserAutomationChat = () => {
       </div>
 
       {/* Messages container */}
-      <div
-        ref={messagesContainerRef}
-        className="flex-1 space-y-4 overflow-y-auto rounded-3xl bg-zinc-900 p-4"
-      >
-        {messages.length === 0 && (
-          <div className="flex h-full flex-col items-center justify-center text-zinc-500">
-            <AiBrowserIcon className="mb-3 h-12 w-12 text-zinc-600" />
-            <p className="text-center">
-              {isConnected
-                ? "Enter a task for the browser to perform"
-                : "Connect to start automating web tasks"}
-            </p>
-          </div>
-        )}
+      <div className="flex flex-1 justify-center overflow-y-auto p-4">
+        <div
+          ref={messagesContainerRef}
+          className="mx-aut h-full w-full max-w-screen-lg justify-center space-y-4"
+        >
+          {messages.length === 0 && (
+            <div className="flex h-full flex-1 flex-col items-center justify-center text-zinc-500">
+              <AiBrowserIcon className="mb-3 h-12 w-12 text-zinc-600" />
+              <p className="text-center">
+                {isConnected
+                  ? "Enter a task for the browser to perform"
+                  : "Connect to start automating web tasks"}
+              </p>
 
-        {messages.map((message, idx) => {
-          switch (message.role) {
-            case "user":
-              return (
-                <div key={idx} className="group flex justify-end">
-                  <div className="flex items-end gap-2">
-                    <div className="max-w-md rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-2 text-white">
-                      {message.content}
-                    </div>
-                    <Avatar
-                      className="mb-1 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
-                      name="You"
-                      radius="full"
-                    />
-                  </div>
-                </div>
-              );
-            case "assistant":
-              return (
-                <div key={idx} className="group space-y-1">
-                  <div className="flex items-end gap-2">
-                    <Image
-                      alt="GAIA Logo"
-                      src={"/branding/logo.webp"}
-                      width={30}
-                      height={30}
-                    />
+              <Button
+                disabled={isConnecting}
+                radius="full"
+                variant="flat"
+                size="sm"
+                className="mt-3"
+                color={isConnecting ? "default" : "success"}
+                onPress={connectToBrowser}
+                startContent={<Plug className="h-4 w-4" />}
+              >
+                {isConnecting ? "Connecting..." : "Connect Browser"}
+              </Button>
+            </div>
+          )}
 
-                    <div className="relative my-2 max-w-md rounded-2xl rounded-bl-none bg-zinc-700 px-4 py-2 shadow-sm">
-                      <div className="text-white">{message.content}</div>
+          {messages.map((message, idx) => {
+            switch (message.role) {
+              case "user":
+                return (
+                  <div key={idx} className="group flex justify-end">
+                    <div className="flex items-end gap-2">
+                      <div className="max-w-md rounded-2xl rounded-tr-none bg-primary px-4 py-2 text-white">
+                        {message.content}
+                      </div>
+                      <Avatar
+                        className="mb-1 h-8 w-8 opacity-0 transition-opacity group-hover:opacity-100"
+                        name="You"
+                        radius="full"
+                      />
                     </div>
                   </div>
+                );
+              case "assistant":
+                return (
+                  <div key={idx} className="group space-y-1">
+                    <div className="flex items-end gap-2">
+                      <Image
+                        alt="GAIA Logo"
+                        src={"/branding/logo.webp"}
+                        width={30}
+                        height={30}
+                      />
 
-                  {message.stepData && (
-                    <div className="ml-10 border-l-2 border-primary pl-2">
-                      <div className="mt-1 rounded-md bg-zinc-800 p-3 text-sm text-zinc-300">
-                        <div className="mb-1 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>Step {message.stepData.step}</span>
-                        </div>
-
-                        {message.stepData.url && (
-                          <div className="mb-2 flex items-center gap-1 rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-400">
-                            <Globe className="h-3.5 w-3.5 text-blue-400" />
-                            <span className="mr-1 font-medium">URL:</span>
-                            <span className="truncate">
-                              {message.stepData.url}
-                            </span>
-                          </div>
-                        )}
-
-                        {message.stepData.thoughts && (
-                          <div className="mt-2 space-y-2 rounded-md bg-zinc-900 p-2">
-                            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                              <Brain className="h-3.5 w-3.5" />
-                              <span>AI Thoughts</span>
-                            </div>
-                            {message.stepData.thoughts.evaluation && (
-                              <div className="flex flex-col">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-sm font-medium text-primary">
-                                    Evaluation:
-                                  </span>
-                                </div>
-                                <div className="text-md">
-                                  {message.stepData.thoughts.evaluation}
-                                </div>
-                              </div>
-                            )}
-                            {message.stepData.thoughts.next_goal && (
-                              <div className="flex gap-2 text-sm">
-                                <span className="flex items-center gap-1">
-                                  <span className="font-medium text-green-400">
-                                    Next Goal:
-                                  </span>
-                                </span>
-                                <span>
-                                  {message.stepData.thoughts.next_goal}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {message.stepData.actions &&
-                          message.stepData.actions.length > 0 && (
-                            <div className="mt-2 space-y-1">
-                              <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
-                                <Zap className="h-3.5 w-3.5" />
-                                <span>Actions</span>
-                              </div>
-                              <ul className="space-y-1">
-                                {message.stepData.actions.map((action, i) => (
-                                  <li
-                                    key={i}
-                                    className="flex items-center gap-2 rounded-md bg-zinc-900 px-2 py-1 text-sm"
-                                  >
-                                    {action.navigate && (
-                                      <>
-                                        <ArrowUpRight className="h-3.5 w-3.5 text-blue-400" />
-                                        <span>Navigate to: </span>
-                                        <span className="text-blue-400 underline">
-                                          {action.navigate.url}
-                                        </span>
-                                      </>
-                                    )}
-                                    {action.click && (
-                                      <>
-                                        <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-600 text-[10px]">
-                                          C
-                                        </span>
-                                        <span>Click: </span>
-                                        <code className="rounded bg-zinc-700 px-1 py-0.5 text-xs">
-                                          {action.click.selector}
-                                        </code>
-                                      </>
-                                    )}
-                                    {action.done && (
-                                      <>
-                                        <span className="text-green-400">
-                                          ✓
-                                        </span>
-                                        <span>{action.done.text}</span>
-                                      </>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
+                      <div className="relative mb-1 max-w-md rounded-2xl rounded-bl-none bg-zinc-800 px-4 py-2 shadow-sm">
+                        <div className="text-white">{message.content}</div>
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            case "system":
-              return (
-                <div key={idx} className="flex justify-center">
-                  <Chip
-                    radius="full"
-                    variant="flat"
-                    startContent={
-                      message.content.toLowerCase().includes("successfully") ? (
-                        <span className="px-1 text-green-400">✓</span>
-                      ) : message.content.includes("error") ? (
-                        <AlertTriangle className="h-3 w-3 min-w-3 px-1 text-red-400" />
-                      ) : (
-                        <div className="px-1">
-                          <Loader className="h-3 w-3 min-w-3 animate-spin" />
+
+                    {message.stepData &&
+                      (message.stepData.url ||
+                        message.stepData.thoughts ||
+                        message.stepData.actions) && (
+                        <div className="ml-10 w-fit border-l-2 border-primary">
+                          <div className="mt-1 max-w-4xl rounded-xl rounded-l-none bg-primary/15 p-3 text-sm text-zinc-300">
+                            {message.stepData.url && (
+                              <div className="mb-2 flex items-center gap-1 rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-400">
+                                <Globe className="h-3.5 w-3.5 text-blue-400" />
+                                <span className="mr-1 font-medium">URL:</span>
+                                <span className="truncate">
+                                  {message.stepData.url}
+                                </span>
+                              </div>
+                            )}
+
+                            {message.stepData.screenshot && (
+                              <div className="mb-4 max-w-full overflow-hidden rounded-md border border-zinc-700">
+                                <Image
+                                  src={message.stepData.screenshot}
+                                  alt={`Screenshot of step ${message.stepData.step}`}
+                                  width={700}
+                                  height={400}
+                                  className="max-h-[500px] w-full object-contain"
+                                  unoptimized
+                                />
+                              </div>
+                            )}
+
+                            {message.stepData.thoughts && (
+                              <div className="mt-2 space-y-2 rounded-md bg-zinc-900 p-2">
+                                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                                  <Brain className="h-3.5 w-3.5" />
+                                  <span>AI Thoughts</span>
+                                </div>
+                                {/* Display evaluation from either format */}
+                                {(message.stepData.thoughts.evaluation ||
+                                  message.stepData.thoughts
+                                    .evaluation_previous_goal) && (
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-medium text-primary">
+                                        Evaluation:
+                                      </span>
+                                    </div>
+                                    <div className="text-md">
+                                      {message.stepData.thoughts.evaluation ||
+                                        message.stepData.thoughts
+                                          .evaluation_previous_goal}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Show memory if available */}
+                                {message.stepData.thoughts.memory && (
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-sm font-medium text-blue-400">
+                                        Memory:
+                                      </span>
+                                    </div>
+                                    <div className="text-md">
+                                      {message.stepData.thoughts.memory}
+                                    </div>
+                                  </div>
+                                )}
+                                {message.stepData.thoughts.next_goal && (
+                                  <div className="flex gap-2 text-sm">
+                                    <span className="flex items-center gap-1">
+                                      <span className="font-medium text-green-400">
+                                        Next Goal:
+                                      </span>
+                                    </span>
+                                    <span>
+                                      {message.stepData.thoughts.next_goal}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {!!message.stepData.actions &&
+                              message.stepData.actions.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                                    <Zap className="h-3.5 w-3.5" />
+                                    <span>Actions</span>
+                                  </div>
+                                  <ul className="space-y-1">
+                                    {message.stepData.actions.map(
+                                      (action, i) => (
+                                        <li
+                                          key={i}
+                                          className="flex max-w-screen-sm items-center gap-2 rounded-md bg-zinc-900 px-2 py-1 text-sm"
+                                        >
+                                          {action.navigate && (
+                                            <>
+                                              <ArrowUpRight className="h-3.5 w-3.5 text-blue-400" />
+                                              <span>Navigate to: </span>
+                                              <span className="text-blue-400 underline">
+                                                {action.navigate.url}
+                                              </span>
+                                            </>
+                                          )}
+                                          {action.click && (
+                                            <>
+                                              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-600 text-[10px]">
+                                                C
+                                              </span>
+                                              <span>Click: </span>
+                                              <code className="rounded bg-zinc-700 px-1 py-0.5 text-xs">
+                                                {action.click.selector}
+                                              </code>
+                                            </>
+                                          )}
+                                          {action.search_google && (
+                                            <>
+                                              <Globe className="h-3.5 w-3.5 text-blue-400" />
+                                              <span>Search Google: </span>
+                                              <span className="italic">
+                                                "{action.search_google.query}"
+                                              </span>
+                                            </>
+                                          )}
+                                          {action.go_to_url && (
+                                            <>
+                                              <ArrowUpRight className="h-3.5 w-3.5 text-blue-400" />
+                                              <span>Go to URL: </span>
+                                              <span className="text-blue-400 underline">
+                                                {action.go_to_url.url}
+                                              </span>
+                                            </>
+                                          )}
+                                          {action.done && (
+                                            <>
+                                              <span className="text-green-400">
+                                                ✓
+                                              </span>
+                                              <span>{action.done.text}</span>
+                                            </>
+                                          )}
+                                        </li>
+                                      ),
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                          </div>
                         </div>
-                      )
-                    }
-                    color={
-                      message.content.toLowerCase().includes("successfully")
-                        ? "success"
-                        : message.content.includes("error")
-                          ? "danger"
-                          : "default"
-                    }
-                  >
-                    {message.content}
-                  </Chip>
-                </div>
-              );
-            default:
-              return null;
-          }
-        })}
-        <div ref={chatEndRef} />
+                      )}
+                  </div>
+                );
+              case "system":
+                return (
+                  <div key={idx} className="flex justify-center">
+                    <Chip
+                      radius="full"
+                      variant="flat"
+                      startContent={
+                        message.content
+                          .toLowerCase()
+                          .includes("successfully") ? (
+                          <span className="px-1 text-green-400">✓</span>
+                        ) : message.content.includes("error") ? (
+                          <AlertTriangle className="h-3 w-3 min-w-3 px-1 text-red-400" />
+                        ) : (
+                          <div className="px-1">
+                            <Loader className="h-3 w-3 min-w-3 animate-spin" />
+                          </div>
+                        )
+                      }
+                      color={
+                        message.content.toLowerCase().includes("successfully")
+                          ? "success"
+                          : message.content.includes("error")
+                            ? "danger"
+                            : "default"
+                      }
+                    >
+                      {message.content}
+                    </Chip>
+                  </div>
+                );
+              default:
+                return null;
+            }
+          })}
+          <div ref={chatEndRef} />
+        </div>
       </div>
 
       {/* Input area */}
-      <div className="flex flex-col items-center p-4">
+      <div className="w-full p-4">
         {isProcessing && (
-          <div className="mt-2 flex items-center text-sm text-zinc-400">
+          <div className="mb-2 flex items-center justify-center text-sm text-zinc-400">
             <div className="mr-2 h-2 w-2 animate-pulse rounded-full bg-blue-500"></div>
             Processing your request...
           </div>
         )}
 
-        <div className="relative flex w-full max-w-screen-sm items-center">
+        <div className="mx-auto flex w-full max-w-screen-sm items-center">
           <Input
             type="text"
             size="lg"
@@ -461,7 +635,6 @@ const BrowserAutomationChat = () => {
             variant="faded"
             radius="full"
             classNames={{
-              // input: "text-zinc-100 placeholder:text-zinc-500",
               input: "pr-0",
             }}
             placeholder={
@@ -471,18 +644,19 @@ const BrowserAutomationChat = () => {
                   ? "Processing..."
                   : "Enter a task for the browser to perform..."
             }
+            endContent={
+              <Button
+                isIconOnly
+                onPress={handleSendMessage}
+                disabled={!isConnected || !input.trim() || isProcessing}
+                radius="full"
+                color={"primary"}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 transform"
+              >
+                <SendIcon className="h-5 w-5" />
+              </Button>
+            }
           />
-          <Button
-            isIconOnly
-            onPress={handleSendMessage}
-            disabled={!isConnected || !input.trim() || isProcessing}
-            radius="full"
-            color={"primary"}
-            // isConnected && input.trim() && !isProcessing
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 transform"
-          >
-            <SendIcon className="h-5 w-5" />
-          </Button>
         </div>
       </div>
     </div>
