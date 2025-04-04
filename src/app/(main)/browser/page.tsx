@@ -429,8 +429,9 @@ const BrowserAutomationChat = () => {
                               <div className="mb-4 mt-2 max-w-full overflow-hidden rounded-md">
                                 <Image
                                   src={
-                                    message.stepData.screenshot_url ||
-                                    message.stepData.screenshot
+                                    (message.stepData.screenshot_url ||
+                                      message.stepData.screenshot ||
+                                      "") as string
                                   }
                                   alt={`Screenshot of step ${message.stepData.step}`}
                                   width={700}
