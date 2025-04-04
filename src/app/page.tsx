@@ -7,6 +7,7 @@ import HeroSection from "@/components/Landing/Sections/HeroSection";
 import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 
 import LandingLayout from "./(landing)/layout";
+import MobileSection from "@/components/Landing/Sections/MobileSection";
 
 const CalendarSection = lazy(
   () => import("@/components/Landing/Sections/CalendarSection"),
@@ -67,6 +68,9 @@ export default function LandingPage() {
           </Suspense>
           <Suspense fallback={<SuspenseLoader />}>
             <MailSection />
+          </Suspense>
+          <Suspense fallback={<SuspenseLoader />}>
+            <MobileSection />
           </Suspense>
           {/* <Suspense fallback={<SuspenseLoader />}> */}
           {/* <FeatureGridSection /> */}

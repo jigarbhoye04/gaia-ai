@@ -1,9 +1,21 @@
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-
+import {
+  Mail,
+  Shield,
+  BellRing,
+  MessageSquare,
+  FileText,
+  Zap,
+  PenSquare,
+  Search,
+  FolderOpen,
+  PenLineIcon,
+} from "lucide-react";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
 import { Mail01Icon } from "../../Misc/icons";
+import { Card } from "@/components/ui/card";
 
 const images = [
   {
@@ -46,7 +58,7 @@ export default function MailSection() {
   }, [nextImage]);
 
   return (
-    <div className="flex w-screen items-center justify-center">
+    <div className="flex w-screen flex-col items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
         <SectionHeading
           heading="The future of mail."
@@ -101,6 +113,84 @@ export default function MailSection() {
           ))}
         </div>
       </div>
+
+      <div className="mt-10 grid w-screen max-w-screen-xl grid-cols-1 gap-2 p-3 sm:gap-6 sm:p-0 md:grid-cols-2 lg:grid-cols-5">
+        <BentoCard
+          icon={<PenLineIcon className="h-5 w-5" />}
+          title="Never write the same email twice"
+          description="Easily personalize and send similar emails to different people without accidentally sending the exact same message twice."
+        />
+
+        <BentoCard
+          icon={<BellRing className="h-5 w-5" />}
+          title="Never miss important emails"
+          description="Our smart system highlights important messages so they don't get lost in your busy inbox."
+        />
+
+        <BentoCard
+          icon={<MessageSquare className="h-5 w-5" />}
+          title="Chat to send emails"
+          description="Just chat with our AI assistant to create and send emails - as simple as texting a friend."
+        />
+
+        <BentoCard
+          icon={<FileText className="h-5 w-5" />}
+          title="Summarisation"
+          description="Turn long email threads into short, clear summaries with just one click."
+        />
+
+        <BentoCard
+          icon={<Zap className="h-5 w-5" />}
+          title="Built for speed"
+          description="Work faster with shortcuts, quick replies, and a lightning-fast platform designed to save you time."
+        />
+
+        <BentoCard
+          icon={<PenSquare className="h-5 w-5" />}
+          title="Write emails with AI"
+          description="Create perfect emails in seconds with our AI that learns your style and helps you write better messages."
+        />
+
+        <BentoCard
+          icon={<FolderOpen className="h-5 w-5" />}
+          title="Organize your inbox effortlessly"
+          description="Smart filters and automatic categorization help you maintain a clean, organized inbox without any manual effort."
+        />
+
+        <BentoCard
+          icon={<Search className="h-5 w-5" />}
+          title="Find any email address"
+          description="Quickly find anyone's email address with our built-in search tool - no more hunting for contact details."
+        />
+
+        <BentoCard
+          icon={<Mail className="h-5 w-5" />}
+          title="All your emails in one place"
+          description="Manage all your email accounts in one simple, clean interface that makes email easy."
+        />
+      </div>
     </div>
+  );
+}
+
+function BentoCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Card className="flex h-full flex-col rounded-2xl border-none bg-zinc-900 p-5 outline-none">
+      <div className="mb-2 text-primary">{icon}</div>
+      <h3 className="relative z-[1] text-[1rem] font-semibold text-white">
+        {title}
+      </h3>
+      <p className="relative z-[1] flex-grow text-sm text-white/80">
+        {description}
+      </p>
+    </Card>
   );
 }

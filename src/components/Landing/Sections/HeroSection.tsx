@@ -33,7 +33,7 @@ export default function HeroSection() {
         </div>
 
         <AnimatedSection
-          className="max-w-screen-lg bg-gradient-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-5xl font-medium leading-none text-transparent sm:-my-2 sm:text-8xl"
+          className="max-w-screen-lg bg-gradient-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-[2.8rem] font-medium leading-none text-transparent sm:-my-2 sm:text-8xl"
           childClassName="bg-gradient-to-b from-white to-zinc-400 bg-clip-text text-transparent inline-block px-1"
         >
           <span>Your </span>
