@@ -29,25 +29,28 @@ def get_zero_shot_classifier():
         The classifier object if using local model, None if using API.
     """
     global _zero_shot_classifier
+    logger.info("ZSC: Initializing zero-shot classification model...")
 
     if settings.USE_HUGGINGFACE_API:
-        logger.info("Using Hugging Face API for zero-shot classification")
+        logger.info("ZSC: Using Hugging Face API for zero-shot classification")
         return None
 
     if _zero_shot_classifier is None:
         try:
             logger.info(
-                f"Loading zero-shot classification model: {settings.HUGGINGFACE_ZSC_MODEL}"
+                f"ZSC: Loading zero-shot classification model: {settings.HUGGINGFACE_ZSC_MODEL}"
             )
             _zero_shot_classifier = pipeline(
                 "zero-shot-classification",
                 model=settings.HUGGINGFACE_ZSC_MODEL,
                 device=-1,
             )
-            logger.info("Zero-shot classification model loaded successfully")
+            logger.info("ZSC: Zero-shot classification model loaded successfully")
         except Exception as e:
-            logger.error(f"Error loading zero-shot classification model: {str(e)}")
-            raise RuntimeError(f"Failed to load model: {str(e)}")
+            logger.error(f"ZSC: Error loading zero-shot classification model: {str(e)}")
+            raise RuntimeError(f"ZSC: Failed to load model: {str(e)}")
+
+    logger.info("ZSC: Model initialization completed.")
 
     return _zero_shot_classifier
 

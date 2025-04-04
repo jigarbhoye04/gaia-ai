@@ -9,7 +9,7 @@ from fastapi import HTTPException
 from app.models.notes_models import NoteModel
 from app.utils.embedding_utils import generate_embedding
 from app.db.collections import notes_collection
-from app.db.db_redis import delete_cache
+from app.db.redis import delete_cache
 
 
 async def insert_note(note: NoteModel, user_id: str, auto_created=False) -> Dict:
@@ -49,8 +49,6 @@ async def should_create_memory(
             model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
             system_prompt=MEMORY_CREATOR,
         )
-
-        print(result, "result")
 
         if isinstance(result, str):
             try:

@@ -2,7 +2,9 @@
 Module to expose commonly used MongoDB collections.
 """
 
-from app.db.db_mongodb import mongodb_instance
+from app.db.mongodb import init_mongodb
+
+mongodb_instance = init_mongodb()
 
 users_collection = mongodb_instance.get_collection("users")
 conversations_collection = mongodb_instance.get_collection("conversations")

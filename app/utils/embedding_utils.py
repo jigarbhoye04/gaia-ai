@@ -1,7 +1,10 @@
 from functools import lru_cache
+from bson import ObjectId
 from fastapi import HTTPException
 from app.db.collections import documents_collection, notes_collection, files_collection
 from sentence_transformers import SentenceTransformer
+
+from app.db.utils import serialize_document
 
 
 @lru_cache(maxsize=1)
@@ -10,53 +13,70 @@ def get_embedding_model():
     return SentenceTransformer("all-MiniLM-L6-v2")
 
 
-async def search_notes_by_similarity(input_text: str, user_id: str):
+async def search_notes_by_similarity(input_text: str, user_id: str, chromadb_client):
     """
     Search for notes similar to the input text based on vector similarity.
+    Uses ChromaDB for similarity search and MongoDB to fetch complete note details.
+
+    Args:
+        input_text: The text to compare notes against
+        user_id: The user ID whose notes to search
+        chromadb_client: The ChromaDB client instance
+
+    Returns:
+        List of notes with their content and metadata
     """
-    # Step 1: Generate the embedding for the input text
-    input_vector = generate_embedding(input_text)
+    chroma_notes_collection = await chromadb_client.get_collection(name="notes")
 
-    # Step 2: Search for notes based on vector similarity
-    # This assumes you're using a vector index in MongoDB or a similar DB that supports vector search
-    pipeline = [
-        {
-            "$vectorSearch": {
-                "index": "notes_vector",  # Name of your vector index
-                "path": "vector",  # Path where vectors are stored
-                "queryVector": input_vector,  # The embedding of the input text
-                "numCandidates": 100,  # You can adjust the number of candidates
-                "limit": 5,  # Limit the number of results returned
-            }
-        },
-        {
-            "$match": {
-                "user_id": user_id  # Make sure to filter results by the user ID
-            }
-        },
-        {
-            "$project": {
-                "_id": 0,  # Don't include the MongoDB _id in the result
-                "id": "$_id",  # Add the ID to the result
-                "content": 1,  # Include the content of the note
-                "plaintext": 1,  # Include the content of the note
-                "user_id": 1,  # Include the user_id of the note
-                "score": {
-                    "$meta": "vectorSearchScore"
-                },  # Include the vector search score
-            }
-        },
-    ]
+    all_records = await chroma_notes_collection.get()
+    print(f"{all_records=}")
 
-    # Step 3: Run the aggregation pipeline to fetch similar notes
-    notes_result = await notes_collection.aggregate(pipeline).to_list(length=10)
-    notes = [note["content"] for note in notes_result if note["score"] >= 0.6]
+    chroma_results = await chroma_notes_collection.query(
+        query_texts=[input_text], n_results=5, where={"user_id": user_id}
+    )
 
-    # Step 4: Cache the result if needed (optional)
-    # cache_key = f"similar_notes:{user_id}:{input_text[:20]}"  # Use a shortened version of the text for caching
-    # await set_cache(cache_key, result)
-    # print(result)
-    return notes
+    print(f"{chroma_results=}")
+
+    if (
+        not chroma_results
+        or not chroma_results.get("ids")
+        or not chroma_results["ids"][0]
+    ):
+        return []
+
+    note_ids = chroma_results["ids"][0]
+    distances = chroma_results.get("distances", [[]])[0]
+
+    similarity_scores = (
+        {note_id: score for note_id, score in zip(note_ids, distances)}
+        if distances
+        else {}
+    )
+
+    # Step 3: Fetch complete note details from MongoDB using the IDs from ChromaDB
+    result_notes = []
+    if note_ids:
+        object_ids = [ObjectId(id) for id in note_ids]
+        mongo_query = {"_id": {"$in": object_ids}, "user_id": user_id}
+
+        mongo_results = await notes_collection.find(mongo_query).to_list(
+            length=len(note_ids)
+        )
+
+        for note in mongo_results:
+            note_id = str(note.get("_id"))
+            if note_id in similarity_scores:
+                note["similarity_score"] = similarity_scores[note_id]
+
+            serialized_note = serialize_document(note)
+            result_notes.append(serialized_note)
+
+        if result_notes:
+            result_notes.sort(
+                key=lambda x: x.get("similarity_score", 1.0), reverse=False
+            )
+    print(f"{result_notes=}")
+    return result_notes
 
 
 async def query_documents(query_text, conversation_id, user_id, top_k=5):

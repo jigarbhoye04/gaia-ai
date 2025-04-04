@@ -1,6 +1,7 @@
 # app/api/routers/chat_routes.py
 from fastapi import APIRouter, Depends, BackgroundTasks, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
+from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.settings import settings
 from app.services.chat_service import (
@@ -41,6 +42,7 @@ async def chat_stream_endpoint(
     request: Request,
     user: dict = Depends(get_current_user),
     llm_model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
+    chromadb_client=Depends(get_chromadb),
 ) -> StreamingResponse:
     """
     Stream chat messages in real time.
@@ -65,7 +67,9 @@ async def chat_stream_endpoint(
         client_ip = forwarded.split(",")[0] if forwarded else request.client.host
 
     return StreamingResponse(
-        chat_stream(body, background_tasks, user, llm_model, client_ip),
+        chat_stream(
+            body, background_tasks, user, llm_model, client_ip, chromadb_client
+        ),
         media_type="text/event-stream",
     )
 

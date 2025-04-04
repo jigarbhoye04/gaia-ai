@@ -1,3 +1,4 @@
+from functools import lru_cache
 import sys
 
 import pymongo
@@ -29,46 +30,44 @@ class MongoDB:
             self.client = AsyncIOMotorClient(uri, server_api=ServerApi("1"))
             self.database = self.client.get_database(db_name)
             self._initialize_indexes()
-            self._ping()
-            logger.info("Successfully connected to MongoDB.")
+
         except Exception as e:
             logger.error(f"An error occurred while connecting to MongoDB: {e}")
             sys.exit(1)
 
-    def _ping(self):
-        """
-        Ping the MongoDB server to confirm connection.
-        """
+    def ping(self):
         try:
             self.client.admin.command("ping")
-            logger.info("Pinged your MongoDB deployment!")
         except Exception as e:
             logger.error(f"Ping failed: {e}")
 
     def _initialize_indexes(self):
-        """
-        Create necessary indexes on collections.
-        """
         try:
             users_collection = self.database.get_collection("users")
             users_collection.create_index([("email", pymongo.ASCENDING)], unique=True)
 
             mail_collection = self.database.get_collection("mail")
             mail_collection.create_index([("email_id", pymongo.ASCENDING)], unique=True)
+            
         except Exception as e:
             logger.error(f"Error while initializing indexes: {e}")
 
     def get_collection(self, collection_name: str):
-        """
-        Get a specific collection from the database.
-
-        Args:
-            collection_name (str): The name of the collection.
-
-        Returns:
-            Collection: The MongoDB collection.
-        """
         return self.database.get_collection(collection_name)
 
 
-mongodb_instance = MongoDB(uri=settings.MONGO_DB, db_name="GAIA")
+@lru_cache(maxsize=1)
+def init_mongodb():
+    """
+    Initialize MongoDB connection and set it in the app state.
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+    """
+    logger.info("MONGODB: Initializing MongoDB...")
+
+    mongodb_instance = MongoDB(uri=settings.MONGO_DB, db_name="GAIA")
+    logger.info("MONGODB: Created MongoDB instance")
+    mongodb_instance.ping()
+    logger.info("MONGODB: Successfully connected to MongoDB.")
+    return mongodb_instance

@@ -24,6 +24,7 @@ dependencies = [
     "chardet==5.2.0",
     "charset-normalizer==3.4.0",
     "chroma>=0.2.0",
+    "chromadb>=0.6.3",
     "click==8.1.8",
     "cloudinary==1.41.0",
     "cloudpathlib==0.20.0",

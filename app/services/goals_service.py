@@ -5,7 +5,7 @@ from bson import ObjectId
 from fastapi import HTTPException
 
 from app.db.collections import goals_collection
-from app.db.db_redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
+from app.db.redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
 from app.models.goals_models import GoalCreate, UpdateNodeRequest, GoalResponse
 from app.utils.llm_utils import do_prompt_no_stream, do_prompt_with_stream_simple
 from app.utils.goals_utils import goal_helper

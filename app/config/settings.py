@@ -43,12 +43,35 @@ class Settings(BaseSettings):
         """Construct the full Hugging Face API URL for zero-shot classification."""
         return f"{self.HUGGINGFACE_API_URL}{self.HUGGINGFACE_ZSC_MODEL}"
 
+    # Default ChromaDB connection settings
+    CHROMADB_PRODUCTION_HOST: str = "34.58.50.92"
+    CHROMADB_DEVELOPMENT_HOST: str = "localhost"
+    CHROMADB_PRODUCTION_PORT: int = 8000
+    CHROMADB_DEVELOPMENT_PORT: int = 8080
+
+    @computed_field
+    def CHROMADB_HOST(self) -> str:
+        """Return the ChromaDB host based on the environment."""
+        return (
+            self.CHROMADB_PRODUCTION_HOST
+            if self.ENV == "production"
+            else self.CHROMADB_DEVELOPMENT_HOST
+        )
+
+    @computed_field
+    def CHROMADB_PORT(self) -> int:
+        """Return the ChromaDB port based on the environment."""
+        return (
+            self.CHROMADB_PRODUCTION_PORT
+            if self.ENV == "production"
+            else self.CHROMADB_DEVELOPMENT_PORT
+        )
+
     # LLM Service
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
 
     # Environment & Deployment
     ENV: str = "production"
-    PORT: int = 80
     DISABLE_PROFILING: bool = False
     DUMMY_IP: str = "8.8.8.8"
 

@@ -11,7 +11,7 @@ from app.config.loggers import search_logger as logger
 from app.db.collections import (
     search_urls_collection,
 )
-from app.db.db_redis import get_cache, set_cache
+from app.db.redis import get_cache, set_cache
 from app.db.utils import serialize_document
 from app.models.search_models import URLResponse
 from app.services.search_service import (
