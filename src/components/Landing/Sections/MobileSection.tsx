@@ -12,7 +12,7 @@ import Image from "next/image";
 export default function MobileSection() {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="flex w-screen max-w-screen-lg flex-col items-center justify-center space-y-5 dark sm:flex-row">
+      <div className="flex w-screen max-w-screen-xl flex-col items-center justify-center space-y-5 dark sm:flex-row">
         <div className="flex w-full flex-col">
           <SectionHeading
             heading="Move beyond Siri and Google Assistant"
@@ -53,7 +53,7 @@ export default function MobileSection() {
           </div>
 
           <div className="relative z-[1] flex justify-center gap-2 px-5 sm:justify-start sm:px-0">
-            <Button className="flex h-[60px] rounded-xl">
+            <Button className="flex h-[60px] rounded-xl border-1 border-white bg-black">
               <div className="flex flex-row items-center gap-4">
                 <Image
                   src="https://upload.wikimedia.org/wikipedia/commons/3/31/Apple_logo_white.svg"
@@ -73,7 +73,7 @@ export default function MobileSection() {
               </div>
             </Button>
 
-            <Button className="flex h-[60px] rounded-xl">
+            <Button className="flex h-[60px] rounded-xl border-1 border-white bg-black">
               <div className="flex flex-row items-center gap-4">
                 <Image
                   src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_Play_2022_icon.svg"

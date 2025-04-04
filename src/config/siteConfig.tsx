@@ -39,7 +39,7 @@ export const siteConfig = {
       title: "Sitemap",
       links: [
         { label: "About", href: "/about", icon: <GlobalIcon width={19} /> },
-        { label: "Blog", href: "/blog", icon: <BookOpen02Icon width={19} /> },
+        // { label: "Blog", href: "/blog", icon: <BookOpen02Icon width={19} /> },
         {
           label: "Feature Request",
           href: "https://gaia.featurebase.app",
@@ -52,11 +52,11 @@ export const siteConfig = {
           external: true,
           icon: <MapsIcon width={19} />,
         },
-        {
-          label: "Pricing",
-          href: "/pricing",
-          icon: <CreditCardPosIcon width={19} />,
-        },
+        // {
+        //   label: "Pricing",
+        //   href: "/pricing",
+        //   icon: <CreditCardPosIcon width={19} />,
+        // },
         {
           label: "Contact",
           href: "/contact",
