@@ -306,46 +306,6 @@ const BrowserAutomationChat = () => {
 
   return (
     <div className="flex h-[97%] w-full flex-col">
-      {/* Header */}
-      <div className="flex w-full items-center border-zinc-800 p-2 shadow-sm">
-        <div className="flex items-center">
-          <AiBrowserIcon className="mr-2 h-6 w-6 text-primary" />
-          <h1 className="text-xl font-medium">Browser Automation</h1>
-        </div>
-        <div className="ml-auto flex items-center space-x-2">
-          {isConnected ? (
-            <div className="flex items-center rounded-full bg-zinc-800/70 px-3 py-0 pr-0">
-              <span className="mr-2 inline-block h-2 w-2 rounded-full bg-green-500" />
-              <span className="mr-3 text-sm text-zinc-400">Connected</span>
-              <Tooltip content="Reset session">
-                <Button
-                  isIconOnly
-                  radius="full"
-                  size="sm"
-                  variant="light"
-                  onPress={resetSession}
-                >
-                  <ResetIcon className="h-4 w-4 text-zinc-400" />
-                </Button>
-              </Tooltip>
-            </div>
-          ) : (
-            <Button
-              disabled={isConnecting}
-              radius="full"
-              variant="flat"
-              size="sm"
-              color={isConnecting ? "default" : "success"}
-              onPress={connectToBrowser}
-              startContent={<Plug className="h-4 w-4" />}
-            >
-              {isConnecting ? "Connecting..." : "Connect Browser"}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Messages container */}
       <div className="flex flex-1 justify-center overflow-y-auto p-4">
         <div
           ref={messagesContainerRef}
