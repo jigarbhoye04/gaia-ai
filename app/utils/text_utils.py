@@ -133,7 +133,7 @@ async def _classify_text_core(
             result = classifier(user_input, candidate_labels, multi_label=False)
             label_scores = dict(zip(result["labels"], result["scores"]))
 
-        highest_label = max(label_scores, key=label_scores.get)
+        highest_label = max(label_scores, key=lambda k: label_scores[k])
         return {
             "label_scores": label_scores,
             "highest_label": highest_label,
@@ -205,7 +205,7 @@ async def _classify_email_core(email_text: str) -> Dict[str, Any]:
 
 def classify_email(
     email_text: str, *, async_mode: bool = True
-) -> Union[Dict[str, Any], asyncio.Future]:
+) -> Dict[str, Any] | asyncio.Future:
     """
     Classify an email and determine if it requires notification.
 

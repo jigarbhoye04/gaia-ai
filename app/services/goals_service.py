@@ -123,9 +123,10 @@ async def get_goal_service(goal_id: str, user: dict) -> dict:
             "title": goal["title"],
         }
 
-    await set_cache(cache_key, json.dumps(goal_helper(goal)), ONE_YEAR_TTL)
+    goal_helper_result = goal_helper(goal)
+    await set_cache(cache_key, goal_helper_result, ONE_YEAR_TTL)
     logger.info(f"Goal {goal_id} details fetched successfully.")
-    return goal_helper(goal)
+    return goal_helper_result
 
 
 async def get_user_goals_service(user: dict) -> list:
@@ -152,7 +153,8 @@ async def get_user_goals_service(user: dict) -> list:
     goals = await goals_collection.find({"user_id": user_id}).to_list(None)
     goals_list = [goal_helper(goal) for goal in goals]
 
-    await set_cache(cache_key, json.dumps(goals_list))
+    # Convert the list to a dictionary before caching
+    await set_cache(cache_key, {"goals": goals_list})
     logger.info(f"Listed all goals for user {user_id}.")
     return goals_list
 

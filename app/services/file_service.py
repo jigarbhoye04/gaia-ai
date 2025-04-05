@@ -3,7 +3,7 @@ Service module for file upload functionality with vector search capabilities.
 """
 
 import io
-from typing import Any, Dict, List
+from typing import Optional, Any, Dict, List
 import uuid
 from datetime import datetime, timezone
 
@@ -20,7 +20,10 @@ from app.utils.embedding_utils import generate_embedding
 
 
 async def upload_file_service(
-    file: UploadFile, user_id: str, conversation_id: str = None, chromadb_client=None
+    file: UploadFile,
+    user_id: str,
+    conversation_id: Optional[str] = None,
+    chromadb_client=None,
 ) -> dict:
     """
     Upload a file to Cloudinary, generate embeddings, and store metadata in MongoDB and ChromaDB.
@@ -159,8 +162,11 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
         Dict[str, Any]: Updated context with file data added
     """
 
-    chromadb_client = context["chromadb_client"]
     user_id = context.get("user_id")
+    if not user_id:
+        return context
+
+    chromadb_client = context["chromadb_client"]
     conversation_id = context.get("conversation_id")
     query_text = context.get("query_text", "")
     last_message = context.get("last_message")
@@ -337,14 +343,16 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
     return context
 
 
-async def delete_file_service(file_id: str, user_id: str, chromadb_client=None) -> dict:
+async def delete_file_service(
+    file_id: str, user_id: Optional[str], chromadb_client=None
+) -> dict:
     """
     Delete a file by its ID for the specified user.
     Removes the file from MongoDB, Cloudinary, and ChromaDB.
 
     Args:
         file_id (str): The ID of the file to delete
-        user_id (str): The ID of the authenticated user
+        user_id (Optional[str]): The ID of the authenticated user
         chromadb_client: The ChromaDB client instance
 
     Returns:
@@ -354,6 +362,10 @@ async def delete_file_service(file_id: str, user_id: str, chromadb_client=None) 
         HTTPException: If the file is not found or deletion fails
     """
     logger.info(f"Deleting file with id: {file_id} for user: {user_id}")
+
+    if user_id is None:
+        logger.error("User ID is required to delete a file")
+        raise HTTPException(status_code=400, detail="User ID is required")
 
     # Retrieve file metadata before deletion
     file_data = await files_collection.find_one(

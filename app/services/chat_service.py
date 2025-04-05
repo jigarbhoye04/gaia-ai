@@ -55,6 +55,8 @@ async def chat_stream(
         background_tasks (BackgroundTasks): FastAPI background tasks object for async operations
         user (dict): User information from authentication
         llm_model (str): Default LLM model identifier to use for generation
+        user_ip (str): User's IP address for location-specific features
+        chromadb_client: Optional ChromaDB client for vector search capabilities
 
     Returns:
         StreamingResponse: A streaming response containing the LLM's generated content
@@ -64,7 +66,9 @@ async def chat_stream(
     context = {
         "user_id": user.get("user_id"),
         "conversation_id": body.conversation_id,
-        "query_text": last_message.get("content", ""),
+        "query_text": last_message.get("content", "")
+        if last_message is not None
+        else "",
         "last_message": last_message,
         "body": body,
         "llm_model": llm_model,
@@ -97,6 +101,13 @@ async def chat_stream(
         fetch_notes,
         fetch_files,
     ]
+
+    # Using Sequence type to avoid invariance issues with Pipeline constructor
+    # from typing import Sequence, Callable, Coroutine, Dict, Any
+
+    # typed_pipeline_steps: Sequence[
+    #     Callable[[Dict[str, Any]], Coroutine[Any, Any, Dict[str, Any]]]
+    # ] = pipeline_steps
 
     pipeline = Pipeline(pipeline_steps)
     context = await pipeline.run(context)

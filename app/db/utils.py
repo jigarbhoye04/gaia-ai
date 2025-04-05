@@ -1,3 +1,7 @@
+from bson import ObjectId
+from typing import Any, Dict
+
+
 def serialize_document(document: dict) -> dict:
     """
     Serialize a MongoDB document by converting ObjectId fields to strings.
@@ -12,12 +16,11 @@ def serialize_document(document: dict) -> dict:
     Returns:
         dict: The serialized document with all ObjectId values converted to strings.
     """
-    from bson import ObjectId
 
     if not document:
         return document
 
-    result = {}
+    result: Dict[str, Any] = {}
     # Convert the primary _id to id and add to result
     if "_id" in document:
         result["id"] = str(document.pop("_id"))

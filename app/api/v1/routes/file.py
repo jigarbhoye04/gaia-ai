@@ -40,7 +40,7 @@ async def upload_file_endpoint(
     """
     result = await upload_file_service(
         file=file,
-        user_id=user.get("user_id"),
+        user_id=user.get("user_id", None),
         conversation_id=conversation_id,
         chromadb_client=chromadb_client,
     )
@@ -79,7 +79,7 @@ async def update_file_endpoint(
     """
     result = await update_file_service(
         file_id=file_id,
-        user_id=user.get("user_id"),
+        user_id=user.get("user_id", None),
         update_data=update_data,
         chromadb_client=chromadb_client,
     )
@@ -107,7 +107,9 @@ async def delete_file_endpoint(
         Success message with deleted file information
     """
     result = await delete_file_service(
-        file_id=file_id, user_id=user.get("user_id"), chromadb_client=chromadb_client
+        file_id=file_id,
+        user_id=user.get("user_id", None),
+        chromadb_client=chromadb_client,
     )
 
     return result

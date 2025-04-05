@@ -60,13 +60,18 @@ def process_email(email_data: dict, user_dict: dict):
             ),
             model="@cf/meta/llama-3.2-3b-instruct",
         )
-        summary = summary_response.get("response", None)
+
+        # Handle potential non-dict response
+        summary = None
+        if isinstance(summary_response, dict):
+            summary = summary_response.get("response", None)
 
         logger.info(f"{summary=}")
 
-        classification_result = classify_email(
-            email_text=filtered_text, async_mode=False
-        )
+        classified = classify_email(email_text=filtered_text, async_mode=False)
+
+        if isinstance(classified, dict):
+            classification_result = classified
 
         logger.info(f"{classification_result=}")
 
@@ -93,8 +98,11 @@ def process_email(email_data: dict, user_dict: dict):
                 "is_important": True,
                 "user_id": user_id,
                 "summary": summary,
-                **(classification_result or {}),
             }
+
+            # Add classification_result items if it's a dictionary
+            if isinstance(classification_result, dict):
+                email_record.update(classification_result)
 
             query = {"email_id": email_id, "user_id": user_id}
 
@@ -106,15 +114,20 @@ def process_email(email_data: dict, user_dict: dict):
                 f"Stored important email for user {user_id}: {subject} (ID: {email_id})"
             )
 
-        return {
+        result = {
             "email_id": email_id,
             "subject": subject,
             "processed_at": datetime.now(),
             "user_id": user_id,
             "summary": summary,
-            **classification_result,
             "is_important": is_important,
         }
+
+        # Add classification_result items if it's a dictionary
+        if isinstance(classification_result, dict):
+            result.update(classification_result)
+
+        return result
 
     except Exception as e:
         logger.error(f"Error processing email: {e}", exc_info=True)
@@ -149,15 +162,19 @@ def fetch_last_week_emails(user_dict: dict):
                     .execute()
                 )
 
-                messages = results.get("messages", [])
-                all_messages.extend(messages)
+                if isinstance(results, dict):
+                    messages = results.get("messages", [])
+                    all_messages.extend(messages)
 
-                logger.info(
-                    f"Fetched {len(messages)} messages (Total: {len(all_messages)})"
-                )
+                    logger.info(
+                        f"Fetched {len(messages)} messages (Total: {len(all_messages)})"
+                    )
 
-                next_page_token = results.get("nextPageToken")
-                if not next_page_token:
+                    next_page_token = results.get("nextPageToken")
+                    if not next_page_token:
+                        break
+                else:
+                    logger.error("Unexpected result type from Gmail API")
                     break
 
                 time.sleep(3)
