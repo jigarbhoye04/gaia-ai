@@ -274,11 +274,13 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
         chromadb_client=chromadb_client,
     )
 
+    logger.info(f"thesearethe {notes=}")
+
     if notes:
         formatted_notes = []
         for note in notes:
             formatted_notes.append(
-                f"- Title: {note.get('title', 'Untitled Note')}\n  Content: {note.get('plaintext', '')}\n"
+                f"- Title: {note.get('title', 'Untitled Note')}\n  Content: {note.get('content', '')}\n"
             )
 
         notes_text = "\n".join(formatted_notes)
