@@ -4,8 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   BubbleConversationChatIcon,
-  ChatBubbleAddIcon,
-  NotificationIcon,
+  ChatBubbleAddIcon
 } from "@/components/Misc/icons";
 import ChatOptionsDropdown from "@/components/Sidebar/ChatOptionsDropdown";
 import { Button } from "@/components/ui/button";

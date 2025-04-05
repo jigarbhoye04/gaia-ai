@@ -17,7 +17,7 @@ function CloseOpenSidebarBtn({
   return (
     <Button
       aria-label="Open Menu"
-      className={`group mr-3 rounded-lg hover:bg-[#00bbff]/20 ${
+      className={`group rounded-lg hover:bg-[#00bbff]/20 ${
         isSidebarVisible ? "sm:hidden sm:opacity-0" : "sm:flex sm:opacity-100"
       }`}
       size="icon"

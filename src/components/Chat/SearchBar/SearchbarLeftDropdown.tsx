@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 
 import {
   AiBrowserIcon,
+  AiWebBrowsingIcon,
   AttachmentIcon,
   GlobalSearchIcon,
   Image02Icon,
@@ -59,7 +60,7 @@ export default function SearchbarLeftDropdown({
     {
       id: "deep_search",
       label: "Deep Search",
-      icon: <AiBrowserIcon className="h-5 w-5 text-primary" />,
+      icon: <AiWebBrowsingIcon className="h-5 w-5 text-primary" />,
       isMode: true,
       loadingText: "Performing Deep Search...",
       // description: "Search multiple sources for comprehensive results",
@@ -125,11 +126,11 @@ export default function SearchbarLeftDropdown({
       <DropdownMenuContent
         align="end"
         side="top"
-        className="w-fit rounded-xl border-none bg-zinc-900 p-1 text-white"
+        className="w-fit gap-2 rounded-xl border-none bg-zinc-900 p-1 text-white"
       >
         {dropdownItems.map((item) => (
           <Tooltip
-            content={<div className="max-w-[250px]">{item.description}</div>}
+            content={<div className="max-w-[270px]">{item.description}</div>}
             key={item.id}
             color="foreground"
             radius="sm"
@@ -148,7 +149,7 @@ export default function SearchbarLeftDropdown({
                   : "focus:bg-zinc-800 focus:text-white",
               )}
             >
-              <div className="flex w-full items-center justify-between">
+              <div className="flex w-full items-center justify-between gap-3">
                 <div className="flex flex-col">
                   <div className="flex flex-row items-center gap-2">
                     {item.icon}

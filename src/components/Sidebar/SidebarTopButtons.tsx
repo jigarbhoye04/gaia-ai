@@ -19,13 +19,8 @@ import SearchCommand from "../Search/SearchCommand";
 export default function SidebarTopButtons() {
   const router = useRouter();
   const pathname = usePathname();
-  const [openSearchDialog, setOpenSearchDialog] = useState(false);
 
   const buttonData = [
-    {
-      icon: <SearchIcon height={26} width={26} />,
-      label: "Search",
-    },
     {
       route: "/calendar",
       icon: <CalendarIcon height={27} width={27} />,
@@ -59,40 +54,27 @@ export default function SidebarTopButtons() {
   ];
 
   return (
-    <>
-      <SearchCommand
-        openSearchDialog={openSearchDialog}
-        setOpenSearchDialog={setOpenSearchDialog}
-      />
-
-      <div className="grid grid-cols-3 grid-rows-2 items-start gap-1 rounded-2xl bg-[#141414] p-2">
-        {buttonData.map(({ route, icon, label }, index) => (
-          <Tooltip
-            key={index}
-            content={label}
-            showArrow={true}
-            placement="bottom"
+    <div className="grid grid-cols-3 grid-rows-2 items-start gap-1 rounded-2xl">
+      {buttonData.map(({ route, icon, label }, index) => (
+        <Tooltip
+          key={index}
+          content={label}
+          showArrow={true}
+          placement="bottom"
+        >
+          <Button
+            className="aspect-square w-full"
+            isIconOnly
+            color={pathname === route ? "primary" : "default"}
+            variant={pathname === route ? "solid" : "flat"}
+            onPress={() => router.push(route)}
           >
-            <Button
-              className="w-full"
-              isIconOnly
-              color={pathname === route ? "primary" : "default"}
-              variant={pathname === route ? "solid" : "flat"}
-              onPress={() =>
-                label === "Search"
-                  ? setOpenSearchDialog(true)
-                  : route
-                    ? router.push(route)
-                    : undefined
-              }
-            >
-              {React.cloneElement(icon, {
-                color: pathname === route ? "#000000AA" : "#FFFFFFAA",
-              })}
-            </Button>
-          </Tooltip>
-        ))}
-      </div>
-    </>
+            {React.cloneElement(icon, {
+              color: pathname === route ? "#000000AA" : "#FFFFFFAA",
+            })}
+          </Button>
+        </Tooltip>
+      ))}
+    </div>
   );
 }

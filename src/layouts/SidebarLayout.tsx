@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LegacyRef, ReactNode } from "react";
+import { LegacyRef, ReactNode, useState } from "react";
 
 import { ChatBubbleAddIcon } from "@/components/Misc/icons";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
@@ -8,6 +8,8 @@ import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
 import { useConversation } from "@/hooks/useConversation";
+import SearchCommand from "@/components/Search/SearchCommand";
+import { Search } from "lucide-react";
 
 export default function SidebarLayout({
   sidebarref,
@@ -24,6 +26,7 @@ export default function SidebarLayout({
 }) {
   const { clearMessages } = useConversation();
   const router = useRouter();
+  const [openSearchDialog, setOpenSearchDialog] = useState(false);
 
   return (
     <div
@@ -37,19 +40,36 @@ export default function SidebarLayout({
           "transform 200ms ease-in-out, min-width 200ms ease-in-out, max-width 200ms ease-in-out",
       }}
     >
+      <SearchCommand
+        openSearchDialog={openSearchDialog}
+        setOpenSearchDialog={setOpenSearchDialog}
+      />
+
       <div className="flex h-full flex-col">
-        <div className="flex-none px-2 pb-2 pt-3">
+        <div className="mr-2 flex-none px-2 pb-2 pt-3 sm:pt-1">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2 pl-1">
               <Image
                 alt="GAIA Logo"
                 src={"/branding/logo.webp"}
-                width={25}
-                height={25}
+                width={23}
+                height={23}
               />
-              <span className="text-2xl font-medium">gaia</span>
+              {/* <span className="text-lg font-medium">gaia</span> */}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center">
+              <Button
+                aria-label="Create new chat"
+                className={`group rounded-lg hover:bg-[#00bbff]/20`}
+                size="icon"
+                variant={"ghost"}
+                onClick={() => {
+                  setOpenSearchDialog(true);
+                }}
+              >
+                <Search className="text-zinc-400 transition-all group-hover:text-primary" />
+              </Button>
+
               <Button
                 aria-label="Create new chat"
                 className={`group rounded-lg hover:bg-[#00bbff]/20`}
@@ -62,6 +82,7 @@ export default function SidebarLayout({
               >
                 <ChatBubbleAddIcon className="text-zinc-400 transition-all group-hover:text-primary" />
               </Button>
+
               <CloseOpenSidebarBtn toggleSidebar={toggleSidebar} />
             </div>
           </div>
