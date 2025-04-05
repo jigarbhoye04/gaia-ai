@@ -175,8 +175,8 @@ def fetch_detailed_messages(service, messages, batch_size=20, delay=2):
 def modify_message_labels(
     service,
     message_ids: List[str],
-    add_labels: List[str] = None,
-    remove_labels: List[str] = None,
+    add_labels: Optional[List[str]] = None,
+    remove_labels: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Modify the labels of Gmail messages.

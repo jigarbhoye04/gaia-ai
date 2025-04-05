@@ -71,7 +71,11 @@ async def get_all_notes(user_id: str) -> list[NoteResponse]:
 
     notes = await notes_collection.find({"user_id": user_id}).to_list(length=None)
     serialized_notes = [serialize_document(note) for note in notes]
-    await set_cache(cache_key, serialized_notes)
+
+    # Convert the list to a dictionary for caching
+    notes_dict = {"notes": serialized_notes}
+    await set_cache(cache_key, notes_dict)
+
     logger.info("Notes retrieved from DB and cached.")
     return [NoteResponse(**note) for note in serialized_notes]
 

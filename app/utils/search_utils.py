@@ -1,15 +1,23 @@
 import asyncio
+import io
 import re
+import time
+import uuid
+from typing import Optional
+from urllib.parse import urlparse
 
+import cloudinary
+import cloudinary.uploader
 import html2text
 import httpx
 import tldextract
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
+from urlextract import URLExtract
 
+from app.config.cloudinary import init_cloudinary
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
-from urlextract import URLExtract
 
 subscription_key = settings.BING_API_KEY_1
 
@@ -29,7 +37,7 @@ MAX_QUERY_LENGTH = 1500
 
 
 async def fetch_endpoint(
-    url: str, query: str, count: int, extra_params: dict = None
+    url: str, query: str, count: int, extra_params: Optional[dict] = None
 ) -> dict:
     """
     Generic function to call a Bing API endpoint.
@@ -363,7 +371,9 @@ async def fetch_with_playwright(
         raise FetchError(f"Unexpected error: {type(e).__name__}") from e
 
 
-async def upload_screenshot_to_cloudinary(screenshot_bytes: bytes, url: str) -> str:
+async def upload_screenshot_to_cloudinary(
+    screenshot_bytes: bytes, url: str
+) -> str | None:
     """
     Upload a screenshot to Cloudinary and return the secure URL.
 
@@ -374,13 +384,6 @@ async def upload_screenshot_to_cloudinary(screenshot_bytes: bytes, url: str) -> 
     Returns:
         str: The secure URL of the uploaded image
     """
-    import io
-    import time
-    import uuid
-    import cloudinary
-    import cloudinary.uploader
-    from urllib.parse import urlparse
-    from app.config.cloudinary import init_cloudinary
 
     try:
         # Ensure Cloudinary is initialized
@@ -447,12 +450,15 @@ async def extract_text(html: str) -> str:
 async def perform_fetch(url: str, use_playwright: bool = True) -> str:
     """Fetches webpage content using either httpx or Playwright based on `use_playwright`."""
     try:
-        html = await (
+        result = await (
             fetch_with_playwright(url) if use_playwright else fetch_with_httpx(url)
         )
-        return await extract_text(
-            html.get("content", "Error: Could not fetch content.")
+
+        # Handle different return types from the fetch functions
+        content: str = str(
+            result.get("content") if isinstance(result, dict) else result
         )
+        return await extract_text(content or "Error: Could not fetch content.")
     except FetchError as e:
         return f"[ERROR] {e}"
 

@@ -1,6 +1,6 @@
 import datetime
 import asyncio
-from typing import Any, Dict, List, Tuple
+from typing import Optional, Any, Dict, List, Tuple
 
 import httpx
 from collections import defaultdict
@@ -28,7 +28,14 @@ async def classify_intent(context: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Updated context with intent classification
     """
-    result = await classify_event_type(context["query_text"])
+    # Get the result from classify_event_type, only await if it's a Future
+    result_or_future = classify_event_type(context["query_text"])
+
+    if isinstance(result_or_future, asyncio.Future):
+        result = await result_or_future
+    else:
+        result = result_or_future
+
     if result.get("highest_label") and result.get("highest_score", 0) > 0.6:
         if result["highest_label"] in ["add to calendar"]:
             context["intent"] = "calendar"
@@ -104,7 +111,7 @@ async def fetch_weather_data(lat: float, lon: float, api_key: str) -> Tuple[Dict
 
 
 async def get_location_data(
-    ip_address: str = None, location_name: str = None
+    ip_address: Optional[str] = None, location_name: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Get location data either from a location name (via geocoding) or an IP address.
@@ -226,7 +233,7 @@ async def prepare_weather_data(
     return weather
 
 
-async def user_weather(ip_address: str, location_name: str = None):
+async def user_weather(ip_address: str, location_name: Optional[str] = None):
     """
     Fetch weather data either based on user's IP address or for a specified location.
 
@@ -418,7 +425,7 @@ async def geocode_location(location_name: str) -> Dict[str, Any]:
         raise Exception(f"Failed to geocode location: {str(e)}")
 
 
-async def extract_location_from_message(message: str) -> str:
+async def extract_location_from_message(message: str) -> str | None:
     """
     Extract location names from a user message using simple heuristics.
 

@@ -26,7 +26,9 @@ sync_openai_client = OpenAI(
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 
-def prepare_messages(messages: List[Dict], system_prompt: str = None) -> List[Dict]:
+def prepare_messages(
+    messages: List[Dict], system_prompt: Optional[str] = None
+) -> List[Dict]:
     """Prepare messages for LLM API calls by standardizing roles and adding system prompt."""
     prepared_messages = messages.copy()
 
@@ -281,7 +283,7 @@ def do_prompt_no_stream_sync(
     prompt: str,
     temperature: float = 0.6,
     max_tokens: int = 1024,
-    system_prompt: str = None,
+    system_prompt: Optional[str] = None,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ) -> dict:
     """Send a prompt to the LLM API without streaming, using synchronous client. Try Groq first, fall back to original LLM."""
@@ -370,7 +372,10 @@ async def process_streaming(
 
 
 async def process_calendar_event(
-    message: str, bot_message: str = "", user_id: str = None, access_token: str = None
+    message: str,
+    bot_message: str = "",
+    user_id: Optional[str] = None,
+    access_token: Optional[str] = None,
 ):
     """Create a calendar event using the LLM."""
     now = datetime.now(timezone.utc)

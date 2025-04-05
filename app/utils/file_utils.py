@@ -76,7 +76,7 @@ def get_image_captioning_model() -> Tuple:
     return _processor, _model
 
 
-def extract_text_from_image(image: Image.Image) -> str:
+def extract_text_from_image(image: Image.Image) -> str | None:
     """
     Extract text from an image using OCR.
     Args:
@@ -92,31 +92,37 @@ def extract_text_from_image(image: Image.Image) -> str:
         return None
 
 
-def generate_image_description_groq(image_url: str) -> None:
-    client = Groq()
+def generate_image_description_groq(image_url: str) -> str:
+    try:
+        client = Groq()
 
-    completion = client.chat.completions.create(
-        model="llama-3.2-11b-vision-preview",
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "What's in this image?"},
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": image_url},
-                    },
-                ],
-            }
-        ],
-        temperature=1,
-        max_completion_tokens=1024,
-        top_p=1,
-        stream=False,
-        stop=None,
-    )
+        completion = client.chat.completions.create(
+            model="llama-3.2-11b-vision-preview",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "What's in this image?"},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": image_url},
+                        },
+                    ],
+                }
+            ],
+            temperature=1,
+            max_completion_tokens=1024,
+            top_p=1,
+            stream=False,
+            stop=None,
+        )
 
-    return completion.choices[0].message
+        return completion.choices[0].message
+    except Exception as e:
+        logger.error(
+            f"Failed to generate image description via Groq: {str(e)}", exc_info=True
+        )
+        return "Failed to generate image description via Groq."
 
 
 def generate_image_description(image_data: bytes, image_url: str) -> str:

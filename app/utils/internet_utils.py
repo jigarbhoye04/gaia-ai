@@ -315,7 +315,7 @@ async def scrape_url_metadata(url: str) -> dict:
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        def to_absolute(relative_url: str) -> str:
+        def to_absolute(relative_url: str) -> str | None:
             if not relative_url:
                 return None
             parsed = urlparse(relative_url)
