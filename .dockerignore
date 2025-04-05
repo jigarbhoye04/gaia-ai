@@ -1,5 +1,7 @@
 .venv
 .ruff_cache
+.mypy_cache
+.terraform
 .vscode
 __pycache__/
 __pycache__

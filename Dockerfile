@@ -1,39 +1,33 @@
 # ---- Base Stage: Setup Python & Install Dependencies ----
 FROM python:3.12-slim AS base
 
-# Install uv (Ultra-Fast Python Package Installer)
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Set working directory
-WORKDIR /app
-
-# Optimize Python performance
-ENV UV_COMPILE_BYTECODE=1 \
+ARG ENV=production
+ENV ENV=${ENV} \
+    UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-# Install system dependencies required for Playwright browsers and Tesseract
-RUN apt update && apt install -y \
-    libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
-    libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-    libgbm1 libasound2 curl unzip tesseract-ocr && \
+# Install uv (Ultra-Fast Python Package Installer) and system dependencies in one go
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+WORKDIR /app
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
+      libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
+      libgbm1 libasound2 curl unzip tesseract-ocr && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files first to leverage Docker caching
+# Copy dependency files and install Python dependencies using caching
 COPY pyproject.toml ./
-
-# Install dependencies efficiently using UV with caching
-# RUN --mount=type=cache,target=/root/.cache/uv \
-RUN uv pip install --system -e .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    if [ "$ENV" = "production" ]; then \
+      uv pip install --system --no-cache-dir . ; \
+    else \
+      uv pip install --system --no-cache-dir -e . ; \
+    fi
 
 # ---- Builder Stage: Download Additional Resources ----
 FROM base AS builder
-
-# Install the Playwright Python module and download browser binaries
-# RUN uv pip install --system playwright && \
-#     python -m playwright install --with-deps
-
-# Download necessary NLTK data
-RUN python -m nltk.downloader punkt stopwords punkt_tab
+RUN python -m nltk.downloader -d /root/nltk_data punkt stopwords punkt_tab
 
 # ---- Playwright Stage: Official Browser Assets ----
 FROM mcr.microsoft.com/playwright:v1.51.1-noble AS playwright
@@ -42,20 +36,16 @@ FROM mcr.microsoft.com/playwright:v1.51.1-noble AS playwright
 # ---- Final Stage: Build Minimal Runtime Image ----
 FROM base AS final
 
-# Create a non-root user for improved security
+# Create a non-root user and switch ownership in one layer
 RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser /app /root
+    chown -R appuser /app
 
-# Copy application code
-COPY . /app
-
-# Copy downloaded NLTK data from the builder stage
+# Copy application code and resources
+COPY --chown=appuser:appuser . /app
 COPY --from=builder /root/nltk_data /root/nltk_data
-
-# Copy Playwright browser assets from the official image stage
 COPY --from=playwright /ms-playwright /root/.cache/ms-playwright
 
-# Expose application port
+# Expose application ports
 EXPOSE 80
 EXPOSE 8000
 
@@ -63,5 +53,4 @@ EXPOSE 8000
 USER appuser
 
 # Start the FastAPI application
-# CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
