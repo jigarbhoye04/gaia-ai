@@ -29,7 +29,9 @@ export const useHeader = () => {
   const setHeader = useCallback(
     (
       headerTypeOrJSX: HeaderComponentType | ReactNode,
-      props?: Omit<HeaderProps, 'componentProps'> & { componentProps?: Record<string, unknown> },
+      props?: Omit<HeaderProps, "componentProps"> & {
+        componentProps?: Record<string, unknown>;
+      },
     ) => {
       // If the first argument is a string (header type)
       if (typeof headerTypeOrJSX === "string") {
