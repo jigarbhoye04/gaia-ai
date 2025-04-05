@@ -51,6 +51,7 @@ class EventAgent(Agent):
         self.loop = asyncio.get_event_loop()
         self.screenshots = []
         self.current_step = 0
+        self.step_history = []  # Store history of steps for final message
 
         async def new_step_callback(
             state: BrowserState,
@@ -109,6 +110,9 @@ class EventAgent(Agent):
                     "session_id": self.session_id,
                 },
             )
+            
+            # Store the step data for final message
+            self.step_history.append(step_data)
 
             logger.info(
                 "THIS IS A TEST 2",
@@ -146,6 +150,56 @@ class EventAgent(Agent):
             llm=llm,
             register_new_step_callback=new_step_callback,
         )
+
+    async def run(self):
+        """Override the run method to include step history in final processing."""
+        # Call the original run method from the parent class
+        result = await super().run()
+        
+        # If we have step history, add a summary using the step history
+        if self.step_history:
+            try:
+                # Create a summary based on the step history
+                summary = await self._generate_history_summary()
+                
+                # Add the summary to the result if possible
+                if hasattr(result, "add_summary"):
+                    result.add_summary(summary)
+                elif hasattr(result, "history") and result.history:
+                    # Try to add to the last history item
+                    last_item = result.history[-1]
+                    if hasattr(last_item, "model_output") and hasattr(last_item.model_output, "current_state"):
+                        last_item.model_output.current_state.memory += f"\n\nHistory Summary: {summary}"
+            except Exception as e:
+                logger.error(f"Error adding step history summary: {str(e)}", exc_info=True)
+        
+        return result
+    
+    async def _generate_history_summary(self):
+        """Generate a summary of the step history for the agent to use."""
+        try:
+            if not self.step_history:
+                return ""
+            
+            # Create a prompt for the LLM to summarize the history
+            history_text = "\n\n".join([
+                f"Step {step.get('step')}: "
+                f"URL: {step.get('url')} | "
+                f"Title: {step.get('title')} | "
+                f"Evaluation: {step.get('thoughts', {}).get('evaluation')} | "
+                f"Memory: {step.get('thoughts', {}).get('memory')} | "
+                f"Next Goal: {step.get('thoughts', {}).get('next_goal')}"
+                for step in self.step_history
+            ])
+            
+            prompt = f"Summarize the following browser navigation history to provide context for final task conclusion:\n\n{history_text}"
+            
+            # Use the LLM to generate a summary
+            response = await self.llm.apredict(prompt)
+            return response
+        except Exception as e:
+            logger.error(f"Error generating history summary: {str(e)}", exc_info=True)
+            return "Error generating summary from step history."
 
 
 async def upload_base64_screenshot_to_cloudinary(
@@ -336,6 +390,10 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                         processed_result = await process_result_screenshots(
                             serializable_result, session_id
                         )
+                        
+                        # Add step history to result for better context
+                        if not processed_result.get("step_history") and hasattr(agent, "step_history"):
+                            processed_result["step_history"] = agent.step_history
 
                         await websocket.send_json(
                             {
