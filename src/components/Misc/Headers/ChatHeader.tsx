@@ -19,8 +19,9 @@ export default function ChatHeader() {
   const { clearMessages } = useConversation();
 
   return (
-    <>
-      <div>
+    <div className="flex w-full justify-between">
+      <div />
+      <div className="flex">
         {convoIdParam && (
           <ChatOptionsDropdown
             btnChildren={
@@ -61,7 +62,7 @@ export default function ChatHeader() {
         >
           <ChatBubbleAddIcon className="text-zinc-400 transition-all group-hover:text-primary" />
         </Button>
-        <Button
+        {/* <Button
           aria-label="Notifications"
           className={`group rounded-lg hover:bg-[#00bbff]/20`}
           size="icon"
@@ -72,8 +73,8 @@ export default function ChatHeader() {
           }}
         >
           <NotificationIcon className="text-zinc-400 transition-all group-hover:text-primary" />
-        </Button>
+        </Button> */}
       </div>
-    </>
+    </div>
   );
 }

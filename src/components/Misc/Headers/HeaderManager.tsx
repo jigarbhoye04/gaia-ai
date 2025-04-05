@@ -1,17 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
-
-import { HeaderComponentType } from "@/redux/slices/headerSlice";
 import { useHeader } from "@/hooks/useHeader";
-
+import { HeaderComponentType } from "@/redux/slices/headerSlice";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import BrowserHeader from "./BrowserHeader";
 import ChatHeader from "./ChatHeader";
 import DefaultHeader from "./DefaultHeader";
-import GoalsHeader from "./GoalsHeader";
 import MailHeader from "./MailHeader";
-import NotesHeader from "./NotesHeader";
 
 // Declare the global window interface to include our custom property
 declare global {
@@ -23,19 +19,50 @@ declare global {
 export default function HeaderManager() {
   const pathname = usePathname();
   const { setHeader, currentHeaderType, headerProps } = useHeader();
+  const previousPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     let componentType: HeaderComponentType = "default";
+    const previousPath = previousPathRef.current;
+    previousPathRef.current = pathname;
+
+    // Check if we've navigated to a different section
+    const changedSection =
+      previousPath &&
+      ((previousPath.startsWith("/notes") && !pathname.startsWith("/notes")) ||
+        (previousPath.startsWith("/goals") && !pathname.startsWith("/goals")) ||
+        (previousPath.startsWith("/c/") && !pathname.startsWith("/c/")) ||
+        (previousPath.startsWith("/mail") && !pathname.startsWith("/mail")) ||
+        (previousPath.startsWith("/calendar") &&
+          !pathname.startsWith("/calendar")) ||
+        (previousPath.startsWith("/browser") &&
+          !pathname.startsWith("/browser")));
+
+    // Always reset custom headers when changing major sections
+    if (
+      changedSection &&
+      (currentHeaderType === "custom" || window.__customHeaderJSX)
+    ) {
+      window.__customHeaderJSX = undefined;
+    }
 
     if (pathname.startsWith("/c/")) componentType = "chat";
     else if (pathname.startsWith("/mail")) componentType = "mail";
-    else if (pathname.startsWith("/goals")) componentType = "goals";
     else if (pathname.startsWith("/calendar")) componentType = "calendar";
     else if (pathname.startsWith("/browser")) componentType = "browser";
-    // Don't override custom headers set by other components
-    else if (currentHeaderType === "notes" && pathname.startsWith("/notes"))
-      return;
+    else if (pathname === "/notes") componentType = "notes";
+    else if (pathname === "/goals") componentType = "goals";
+    // Don't override custom headers set by other components if still on the same section
+    // BUT don't skip setting header if we're coming from a different section
+    else if (
+      !changedSection &&
+      currentHeaderType === "custom" &&
+      (pathname.startsWith("/notes") || pathname.startsWith("/goals"))
+    ) {
+      return; // Keep the current custom header
+    }
 
+    // Set the header type based on the path or reset to default when changing sections
     setHeader(componentType);
   }, [pathname, setHeader, currentHeaderType]);
 
@@ -51,7 +78,10 @@ export default function HeaderManager() {
     case "mail":
       return <MailHeader {...headerProps} />;
     case "goals":
-      return <GoalsHeader {...headerProps} />;
+    case "notes":
+      return <></>;
+    //   return <GoalsHeader {...headerProps} />;
+    // return <NotesHeader {...headerProps} />;
     case "calendar":
       return <DefaultHeader {...headerProps} />;
     case "browser":

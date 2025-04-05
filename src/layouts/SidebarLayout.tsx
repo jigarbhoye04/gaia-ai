@@ -38,7 +38,7 @@ export default function SidebarLayout({
       }}
     >
       <div className="flex h-full flex-col">
-        <div className="flex-none p-2 pb-2">
+        <div className="flex-none px-2 pb-2 pt-3">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2 pl-1">
               <Image
