@@ -141,7 +141,7 @@ dependencies = [
     "tokenizers==0.21.0",
     "torch==2.5.1",
     "tqdm==4.67.1",
-    "transformers==4.47.1",
+    "transformers==4.48.0",
     "typer==0.15.1",
     "typing-extensions==4.12.2",
     "urlextract>=1.9.0",
