@@ -29,6 +29,7 @@ dependencies = [
     "pendulum>=3.0.0",
     "pillow==11.0.0",
     "playwright>=1.51.0",
+    "pre-commit>=4.2.0",
     "protobuf==5.29.3",
     "pydantic==2.10.4",
     "pydantic-settings>=2.8.1",

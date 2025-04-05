@@ -42,7 +42,7 @@ RUN adduser --disabled-password --gecos '' appuser && \
 
 # Copy application code and resources
 COPY --chown=appuser:appuser . /app
-COPY --from=builder /root/nltk_data /root/nltk_data
+COPY --from=builder /root/nltk_data /home/appuser/nltk_data
 COPY --from=playwright /ms-playwright /root/.cache/ms-playwright
 
 # Expose application ports
