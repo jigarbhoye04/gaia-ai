@@ -12,7 +12,7 @@ import Image from "next/image";
 export default function MobileSection() {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="flex w-screen max-w-screen-lg flex-col items-center justify-center space-y-5 dark sm:flex-row">
+      <div className="flex w-screen max-w-screen-xl flex-col items-center justify-center space-y-5 dark sm:flex-row">
         <div className="flex w-full flex-col">
           <SectionHeading
             heading="Move beyond Siri and Google Assistant"
