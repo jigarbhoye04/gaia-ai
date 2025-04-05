@@ -25,7 +25,7 @@ export default function useAxiosInterceptor() {
       "/pricing",
     ].includes(pathname);
 
-    console.log("Axios Interceptor Pathname:", pathname, onLandingRoutes);
+    // console.log("Axios Interceptor Pathname:", pathname, onLandingRoutes);
 
     const interceptor = apiauth.interceptors.response.use(
       (response) => response,

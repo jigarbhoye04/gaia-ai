@@ -5,6 +5,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import calendarModalReducer from "./slices/calendarModalSlice";
 import convoReducer from "./slices/conversationSlice";
 import conversationReducer from "./slices/conversationsSlice";
+import headerReducer from "./slices/headerSlice";
 import imageDialogReducer from "./slices/imageDialogSlice";
 import loadingReducer from "./slices/loadingSlice";
 import loadingTextReducer from "./slices/loadingTextSlice";
@@ -21,6 +22,7 @@ export const store = configureStore({
     conversations: conversationReducer,
     imageDialog: imageDialogReducer,
     calendarModal: calendarModalReducer,
+    header: headerReducer,
   },
 });
 

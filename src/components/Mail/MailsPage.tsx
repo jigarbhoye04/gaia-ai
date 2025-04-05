@@ -349,10 +349,6 @@ export default function MailsPage() {
         </div>
       )}
 
-      <div className="flex w-full items-center justify-start gap-2 pl-4 pt-3 sm:pb-0 sm:pl-1 sm:pt-0">
-        <InboxIcon color={undefined} width={25} height={25} />
-        Inbox
-      </div>
       <InfiniteLoader
         isItemLoaded={isItemLoaded}
         itemCount={itemCount}
@@ -360,7 +356,7 @@ export default function MailsPage() {
       >
         {({ onItemsRendered, ref }) => (
           <List
-            height={window.innerHeight - 100}
+            height={window.innerHeight - 50}
             itemCount={itemCount}
             itemSize={isMobileScreen ? 70 : 55}
             onItemsRendered={onItemsRendered}

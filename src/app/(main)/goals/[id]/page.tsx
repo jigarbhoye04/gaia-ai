@@ -26,6 +26,8 @@ import { Button } from "@/components/ui/button";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
 import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";
+import { useHeader } from "@/hooks/useHeader";
+import GoalHeader from "@/components/Misc/Headers/GoalHeader";
 export interface GoalData {
   id: string;
   created_at: Date;
@@ -63,6 +65,7 @@ export interface NodeData extends Record<string, unknown> {
 }
 
 export default function GoalPage() {
+  const { setHeader } = useHeader();
   const [goalData, setGoalData] = useState<GoalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [nodes, setNodes] = useState<Node<NodeData>[]>([]);
@@ -253,6 +256,17 @@ export default function GoalPage() {
     }
   };
 
+  // Create a memoized header component using useCallback for stability
+  const HeaderComponent = useCallback(() => {
+    return <GoalHeader goalData={goalData} />;
+  }, [goalData]);
+
+  // Set the header with proper loading and data checks
+  useEffect(() => {
+    // Only set custom header when we have data and loading is complete
+    if (goalData && !loading) setHeader(<HeaderComponent />);
+  }, [goalData, loading, HeaderComponent, setHeader]);
+
   const rawTitle = goalData?.roadmap?.title || goalData?.title || "New Goal";
 
   const truncatedTitle = useMemo(() => truncateTitle(rawTitle), [rawTitle]);
@@ -417,27 +431,6 @@ export default function GoalPage() {
               </div>
             ) : (
               <>
-                <div className="flex w-full flex-col items-center justify-center">
-                  <div className="flex w-full flex-row items-center justify-between">
-                    <Link href={"/goals"}>
-                      <Button
-                        className="w-fit gap-1 font-normal text-white"
-                        variant={"ghost"}
-                      >
-                        <ArrowLeft width={17} />
-                        All Goals
-                      </Button>
-                    </Link>
-                    <div className="mt-1 text-2xl font-bold text-white">
-                      {goalData?.roadmap?.title || goalData?.title}
-                    </div>
-                    <div></div>
-                  </div>
-                  <div className="text-md mt-1 text-foreground-500">
-                    {goalData?.roadmap?.description || goalData?.description}
-                  </div>
-                </div>
-
                 <div className="relative h-full w-full">
                   <ReactFlow
                     fitView

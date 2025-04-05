@@ -17,8 +17,8 @@ function CloseOpenSidebarBtn({
   return (
     <Button
       aria-label="Open Menu"
-      className={`group rounded-lg text-foreground-700 hover:bg-primary ${
-        isSidebarVisible ? "sm:opacity-0" : "sm:opacity-100"
+      className={`group mr-3 rounded-lg hover:bg-[#00bbff]/20 ${
+        isSidebarVisible ? "sm:hidden sm:opacity-0" : "sm:flex sm:opacity-100"
       }`}
       size="icon"
       variant={"ghost"}
@@ -26,13 +26,13 @@ function CloseOpenSidebarBtn({
     >
       {isMobileScreen ? (
         <Menu02Icon
-          className="transition-all group-hover:text-white"
+          className="text-zinc-400 transition-all group-hover:text-primary"
           height="24"
           color={undefined}
         />
       ) : (
         <SidebarLeftIcon
-          className="transition-all group-hover:text-white"
+          className="text-zinc-400 transition-all group-hover:text-primary"
           height="24"
           color={undefined}
         />
