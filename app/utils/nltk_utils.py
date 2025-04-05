@@ -10,6 +10,8 @@ def download_nltk_resources():
     """
     logger.info("NLTK: Initializing NLTK for Natural Language Processing...")
 
+    nltk.data.path.append("/home/appuser/nltk_data")
+
     resources = [
         ("tokenizers/punkt", "punkt"),
         ("corpora/stopwords", "stopwords"),
