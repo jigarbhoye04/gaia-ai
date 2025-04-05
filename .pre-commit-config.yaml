@@ -14,13 +14,31 @@ repos:
       - id: check-yaml
       - id: check-json
       - id: check-merge-conflict
-
-  # - repo: https://github.com/Yelp/detect-secrets
-  #   rev: v1.4.0
-  #   hooks:
-  #     - id: detect-secrets
+      - id: check-added-large-files
+      - id: check-ast
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.3
     hooks:
       - id: bandit
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.9.0
+    # If have error of no optional types allowed, run command:
+    # uvx no_implicit_optional app
+    hooks:
+      - id: mypy
+        # Install dependencies if you have issues of "Library stubs not installed"
+        additional_dependencies:
+          - types-redis
+          - types-requests
+
+  - repo: https://github.com/trailofbits/pip-audit
+    rev: v2.7.1
+    hooks:
+      - id: pip-audit
+
+  # - repo: https://github.com/Yelp/detect-secrets
+  #   rev: v1.4.0
+  #   hooks:
+  #     - id: detect-secrets
