@@ -51,11 +51,11 @@ async def search_notes_by_similarity(input_text: str, user_id: str, chromadb_cli
         metadatas = chroma_results.get("metadatas", [[]])[0]
 
         # Create a mapping of note IDs to similarity scores
-        similarity_scores = (
-            {note_id: score for note_id, score in zip(note_ids, distances)}
-            if distances
-            else {}
-        )
+        # similarity_scores = (
+        # {note_id: score for note_id, score in zip(note_ids, distances)}
+        # if distances
+        # else {}
+        # )
 
         # Create result notes with data from ChromaDB
         result_notes = []

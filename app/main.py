@@ -11,7 +11,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.v1 import api_router, lifespan
 from app.middleware.profiling import ProfilingMiddleware
@@ -34,7 +33,6 @@ app = FastAPI(
 )
 
 app.add_middleware(ProfilingMiddleware)
-app.add_middleware(SessionMiddleware, secret_key="SECRET_KEY")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

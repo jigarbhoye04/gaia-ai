@@ -208,14 +208,14 @@ def extract_urls_from_text(text: str) -> list[str]:
     url_pattern = r"""
         (?:https?://)?                                # Optional protocol (http:// or https://)
         (?:www\.)?                                    # Optional www subdomain
-        (?:                                          
+        (?:
             [a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9]\.     # Domain name
-            |                                         
+            |
             [a-zA-Z0-9]\.                             # Single-letter domain
         )
         [a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}        # TLD
         (?::[0-9]+)?                                  # Optional port
-        (?:                                          
+        (?:
             /(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]|          # Path with allowed chars
             \([-a-zA-Z0-9()@:%_\+.~#?&/=]*\)|         # Balanced parentheses
             \[[-a-zA-Z0-9()@:%_\+.~#?&/=]*\])*        # Balanced brackets

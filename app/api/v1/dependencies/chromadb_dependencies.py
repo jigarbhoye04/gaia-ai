@@ -17,5 +17,3 @@ async def get_chromadb(request: Request):
         The initialized ChromaDB client
     """
     return get_chroma_client(request)
-
-

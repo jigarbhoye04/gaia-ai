@@ -21,7 +21,7 @@ def get_gmail_service(current_user: dict):
     creds = Credentials(
         token=current_user.get("access_token"),
         refresh_token=current_user.get("refresh_token"),
-        token_uri="https://oauth2.googleapis.com/token",
+        token_uri=settings.GOOGLE_TOKEN_URL,
         client_id=settings.GOOGLE_CLIENT_ID,
         client_secret=settings.GOOGLE_CLIENT_SECRET,
     )
