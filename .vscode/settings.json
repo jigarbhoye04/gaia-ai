@@ -1,6 +1,6 @@
 {
-"typescript.tsserver.experimental.enableTelemetry": false,
-"typescript.tsserver.enable": true,
+  "typescript.tsserver.experimental.enableTelemetry": false,
+  "typescript.tsserver.enable": true,
   "javascript.tsserver.enable": true,
   "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   "typescript.tsserver.enableRegionDiagnostics": false,

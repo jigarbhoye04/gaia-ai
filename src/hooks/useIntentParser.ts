@@ -6,7 +6,7 @@ export function parseIntent(dataJson: MessageType) {
       ...dataJson,
       intent: undefined,
       calendar_options: null,
-      weather_data: null
+      weather_data: null,
     };
   }
 

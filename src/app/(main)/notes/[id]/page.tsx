@@ -1,7 +1,6 @@
 "use client";
 
 import { Spinner } from "@heroui/spinner";
-import { DotsVerticalIcon } from "@radix-ui/react-icons";
 import CharacterCount from "@tiptap/extension-character-count";
 import Highlight from "@tiptap/extension-highlight";
 import TipTapLink from "@tiptap/extension-link";
@@ -11,26 +10,19 @@ import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { convert } from "html-to-text";
-import { ArrowLeft, CircleX, Trash2, TriangleAlert } from "lucide-react";
-import Link from "next/link";
+import { CircleX, TriangleAlert } from "lucide-react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import NotesHeader from "@/components/Misc/Headers/NotesHeader";
 import { SaveIcon } from "@/components/Misc/icons";
 import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
 import { MenuBar } from "@/components/Notes/NotesMenuBar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useHeader } from "@/hooks/useHeader";
 import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";
-import { useHeader } from "@/hooks/useHeader";
-import NotesHeader from "@/components/Misc/Headers/NotesHeader";
 
 interface Note {
   id: string;

@@ -2,9 +2,8 @@
 
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import { SearchIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React from "react";
 
 import {
   CalendarIcon,
@@ -13,7 +12,6 @@ import {
   Route02Icon,
   StickyNote01Icon,
 } from "../Misc/icons";
-import SearchCommand from "../Search/SearchCommand";
 
 export default function SidebarTopButtons() {
   const router = useRouter();

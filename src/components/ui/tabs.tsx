@@ -53,4 +53,4 @@ const TabsContent = React.forwardRef<
 
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { Tabs, TabsContent,TabsList, TabsTrigger };
+export { Tabs, TabsContent, TabsList, TabsTrigger };

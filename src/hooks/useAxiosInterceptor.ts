@@ -12,7 +12,6 @@ export default function useAxiosInterceptor() {
   const pathname = usePathname();
 
   useEffect(() => {
-
     const onLandingRoutes = [
       "/",
       "/terms",
@@ -31,12 +30,14 @@ export default function useAxiosInterceptor() {
       (response) => response,
       (error) => {
         try {
-
           console.error("Axios Error:", error, "Pathname:", pathname);
 
           if (onLandingRoutes) return Promise.reject(error);
 
-          if (error.code === "ERR_CONNECTION_REFUSED" || error.code === "ERR_NETWORK")
+          if (
+            error.code === "ERR_CONNECTION_REFUSED" ||
+            error.code === "ERR_NETWORK"
+          )
             toast.error("Server unreachable. Try again later");
 
           if (error.response) {
@@ -45,22 +46,18 @@ export default function useAxiosInterceptor() {
             if (status === 401) {
               toast.error("Session expired. Please log in again.");
               setLoginModalOpen(true);
-            }
-            else if (status >= 500)
+            } else if (status >= 500)
               toast.error("Server error. Please try again later.");
             else if (status === 404)
               toast.error("Resource not found. Please check the URL.");
-
           }
-
         } catch (handlerError) {
           console.error("Error handling axios interceptor:", handlerError);
-          if (!onLandingRoutes)
-            toast.error("An unexpected error occurred.");
+          if (!onLandingRoutes) toast.error("An unexpected error occurred.");
         }
 
         return Promise.reject(error);
-      }
+      },
     );
 
     return () => {

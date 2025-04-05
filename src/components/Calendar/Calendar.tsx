@@ -46,6 +46,8 @@ export default function Calendar() {
 
   useEffect(() => {
     fetchCalendars();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

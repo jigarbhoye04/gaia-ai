@@ -4,10 +4,10 @@ import { lazy, Suspense, useEffect } from "react";
 
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
+import MobileSection from "@/components/Landing/Sections/MobileSection";
 import SuspenseLoader from "@/components/Misc/SuspenseLoader";
 
 import LandingLayout from "./(landing)/layout";
-import MobileSection from "@/components/Landing/Sections/MobileSection";
 
 const CalendarSection = lazy(
   () => import("@/components/Landing/Sections/CalendarSection"),

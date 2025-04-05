@@ -1,5 +1,5 @@
-import Notes from "@/components/Notes/NotesPage";
 import { Metadata } from "next";
+
 import NotesAdd from "../[id]/page";
 
 export const metadata: Metadata = {

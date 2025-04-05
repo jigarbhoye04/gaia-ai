@@ -100,7 +100,8 @@ export function getEventColor(event: GoogleCalendarEvent): string {
     case "outOfOffice":
       return "bg-teal-500 hover:bg-teal-600";
     default:
-      if (event.transparency === "transparent") return "bg-purple-500 hover:bg-purple-600";
+      if (event.transparency === "transparent")
+        return "bg-purple-500 hover:bg-purple-600";
       return "bg-blue-500 hover:bg-blue-600";
   }
 }

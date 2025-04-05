@@ -1,13 +1,13 @@
+import Image from "next/image";
+
 import Iphone15Pro from "@/components/magicui/iphone-15-pro";
 import {
   Call02Icon,
   ChatBotIcon,
-  SmartPhone01Icon,
   VoiceIcon,
 } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
-import Image from "next/image";
 
 export default function MobileSection() {
   return (

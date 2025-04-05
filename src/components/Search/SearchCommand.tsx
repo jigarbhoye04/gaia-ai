@@ -195,7 +195,7 @@ export default function SearchCommand({
           {results.messages.length > 0 && (
             <Chip
               // size="sm"
-              className="cursor-pointer max-h-6"
+              className="max-h-6 cursor-pointer"
               classNames={{ content: "font-medium" }}
               color={chipsVisibility.messages ? "primary" : "default"}
               endContent={

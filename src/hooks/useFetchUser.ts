@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback,useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { useUserActions } from "@/hooks/useUser";
 import { apiauth } from "@/utils/apiaxios";

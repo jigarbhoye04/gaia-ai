@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { authNavLinks,mainNavLinks } from "@/config/navigationConfig";
+import { authNavLinks, mainNavLinks } from "@/config/navigationConfig";
 import { useUser } from "@/hooks/useUser";
 
 export default function MobileMenu() {

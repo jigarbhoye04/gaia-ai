@@ -24,7 +24,6 @@ import { useEmailViewer } from "@/components/Mail/hooks/useEmailViewer";
 import { useInfiniteEmails } from "@/components/Mail/hooks/useInfiniteEmails";
 import { EmailFrom } from "@/components/Mail/MailFrom";
 import ViewEmail from "@/components/Mail/ViewMail";
-import { InboxIcon } from "@/components/Misc/icons";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { EmailData } from "@/types/mailTypes";
 import { formatTime } from "@/utils/mailUtils";

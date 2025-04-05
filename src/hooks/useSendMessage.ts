@@ -4,7 +4,10 @@ import ObjectID from "bson-objectid";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 
-import { FileData, SearchMode } from "@/components/Chat/SearchBar/MainSearchbar";
+import {
+  FileData,
+  SearchMode,
+} from "@/components/Chat/SearchBar/MainSearchbar";
 import { useChatStream } from "@/hooks/useChatStream";
 import { useFetchConversations } from "@/hooks/useConversationList";
 import { addMessage } from "@/redux/slices/conversationSlice";
@@ -26,16 +29,15 @@ export const useSendMessage = (convoIdParam: string | null) => {
     inputText: string,
     currentMode: SearchMode,
     pageFetchURLs: string[] = [],
-    fileData: FileData[] = [] // Update parameter to accept FileData objects
+    fileData: FileData[] = [], // Update parameter to accept FileData objects
   ) => {
-
-    const enableSearch = currentMode === "web_search"
-    const enableDeepSearch = currentMode === "deep_search"
+    const enableSearch = currentMode === "web_search";
+    const enableDeepSearch = currentMode === "deep_search";
 
     const botMessageId = String(ObjectID());
 
     // Extract just the file IDs for the message
-    const fileIds = fileData.map(file => file.fileId);
+    const fileIds = fileData.map((file) => file.fileId);
 
     const currentMessage: MessageType = {
       type: "user",
@@ -69,7 +71,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       enableDeepSearch,
       pageFetchURLs,
       botMessageId,
-      fileData // Pass complete file data to chat stream
+      fileData, // Pass complete file data to chat stream
     );
   };
 };

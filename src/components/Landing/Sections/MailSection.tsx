@@ -1,21 +1,22 @@
-import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
 import {
-  Mail,
-  Shield,
   BellRing,
-  MessageSquare,
   FileText,
-  Zap,
+  FolderOpen,
+  Mail,
+  MessageSquare,
+  PenLineIcon,
   PenSquare,
   Search,
-  FolderOpen,
-  PenLineIcon,
+  Zap,
 } from "lucide-react";
+import Image from "next/image";
+import { useCallback, useEffect, useState } from "react";
+
+import { Card } from "@/components/ui/card";
+
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
 import { Mail01Icon } from "../../Misc/icons";
-import { Card } from "@/components/ui/card";
 
 const images = [
   {

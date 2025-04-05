@@ -1,15 +1,15 @@
+import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { LegacyRef, ReactNode, useState } from "react";
 
 import { ChatBubbleAddIcon } from "@/components/Misc/icons";
+import SearchCommand from "@/components/Search/SearchCommand";
 import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
 import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
 import UserContainer from "@/components/Sidebar/UserContainer";
 import { Button } from "@/components/ui/button";
 import { useConversation } from "@/hooks/useConversation";
-import SearchCommand from "@/components/Search/SearchCommand";
-import { Search } from "lucide-react";
 
 export default function SidebarLayout({
   sidebarref,

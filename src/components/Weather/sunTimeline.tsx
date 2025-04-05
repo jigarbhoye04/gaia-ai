@@ -1,4 +1,4 @@
-import { MoonIcon,SunIcon, SunriseIcon, SunsetIcon } from "lucide-react";
+import { MoonIcon, SunIcon, SunriseIcon, SunsetIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface SunTimelineProps {

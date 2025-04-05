@@ -1,7 +1,8 @@
-import { GoalData } from "@/types/goalTypes";
 import { Button } from "@heroui/button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
+
+import { GoalData } from "@/types/goalTypes";
 
 export default function GoalHeader({
   goalData,

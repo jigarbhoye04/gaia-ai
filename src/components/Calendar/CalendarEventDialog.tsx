@@ -10,7 +10,7 @@ import {
   Repeat,
   User,
 } from "lucide-react";
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import Twemoji from "react-twemoji";
 import { toast } from "sonner";
 

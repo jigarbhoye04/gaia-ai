@@ -40,13 +40,13 @@ export const useChatStream = () => {
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
     botMessageId: string,
-    fileData: FileData[] = [] // Updated to accept FileData instead of fileIds
+    fileData: FileData[] = [], // Updated to accept FileData instead of fileIds
   ) => {
     accumulatedResponseRef.current = "";
     userPromptRef.current = inputText;
 
     // Extract fileIds from fileData for backward compatibility
-    const fileIds = fileData.map(file => file.fileId);
+    const fileIds = fileData.map((file) => file.fileId);
 
     /**
      * Builds a bot response object with optional overrides.
@@ -77,8 +77,8 @@ export const useChatStream = () => {
       if (dataJson.error) return toast.error(dataJson.error);
 
       if (dataJson.status === "generating_image") {
-        console.log("GENERATING IMAGE")
-        setLoadingText("Generating image...")
+        console.log("GENERATING IMAGE");
+        setLoadingText("Generating image...");
 
         botMessageRef.current = buildBotResponse({
           response: "",
@@ -182,7 +182,10 @@ export const useChatStream = () => {
       const messagesForUpdate: MessageType[] = [];
 
       const userMessageIndex = finalMessages.length - 2;
-      if (userMessageIndex >= 0 && finalMessages[userMessageIndex].type === "user") {
+      if (
+        userMessageIndex >= 0 &&
+        finalMessages[userMessageIndex].type === "user"
+      ) {
         messagesForUpdate.push(finalMessages[userMessageIndex]);
       }
 
@@ -195,10 +198,9 @@ export const useChatStream = () => {
         toast.error(
           "Failed to save the conversation. Some messages might not be preserved.",
         );
-      }
-      finally {
+      } finally {
         setIsLoading(false);
-        resetLoadingText()
+        resetLoadingText();
       }
     };
 
@@ -207,7 +209,7 @@ export const useChatStream = () => {
      */
     const onError = (err: unknown) => {
       setIsLoading(false);
-      resetLoadingText()
+      resetLoadingText();
       console.error("Error from server:", err);
       toast.error("Error fetching messages. Please try again later.");
     };
@@ -223,7 +225,7 @@ export const useChatStream = () => {
       onMessage,
       onClose,
       onError,
-      fileData
+      fileData,
     );
   };
 };

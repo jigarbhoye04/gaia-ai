@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 
 import {
   BubbleConversationChatIcon,
-  Calendar01Icon,
   InternetIcon,
   Mail01Icon,
   Target02Icon,

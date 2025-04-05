@@ -1,3 +1,4 @@
+import { Tooltip } from "@heroui/tooltip";
 import { ArrowUpRight, Check } from "lucide-react";
 import React from "react";
 
@@ -13,7 +14,6 @@ import { useLoadingText } from "@/hooks/useLoadingText";
 import { cn } from "@/lib/utils";
 
 import {
-  AiBrowserIcon,
   AiWebBrowsingIcon,
   AttachmentIcon,
   GlobalSearchIcon,
@@ -21,7 +21,6 @@ import {
   PlusSignIcon,
 } from "../../Misc/icons";
 import { SearchMode } from "./MainSearchbar";
-import { Tooltip } from "@heroui/tooltip";
 
 interface SearchbarLeftDropdownProps {
   selectedMode: Set<SearchMode>;

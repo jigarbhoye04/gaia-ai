@@ -20,7 +20,7 @@ export type MessageType = {
   disclaimer?: string; // Optional: Any disclaimer associated with the message (e.g., for AI-generated content)
   fileIds?: string[];
   pinned?: boolean;
-  fileData?: FileData[]
+  fileData?: FileData[];
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
   weather_data?: WeatherData | null;

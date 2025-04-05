@@ -72,12 +72,12 @@ export const ApiService = {
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: Error) => void,
-    fileData: FileData[] = [] // Updated to accept FileData instead of fileIds
+    fileData: FileData[] = [], // Updated to accept FileData instead of fileIds
   ) => {
     const controller = new AbortController();
 
     // Extract fileIds from fileData for backward compatibility
-    const fileIds = fileData.map(file => file.fileId);
+    const fileIds = fileData.map((file) => file.fileId);
 
     await fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,

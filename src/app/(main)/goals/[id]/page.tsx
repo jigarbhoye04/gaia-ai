@@ -15,19 +15,17 @@ import {
   ReactFlowProvider,
 } from "@xyflow/react";
 import dagre from "dagre";
-import { ArrowLeft, Clock, TriangleAlert } from "lucide-react";
-import Link from "next/link";
+import { Clock, TriangleAlert } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import GoalHeader from "@/components/Misc/Headers/GoalHeader";
 import { BookIcon1 } from "@/components/Misc/icons";
-import { Button } from "@/components/ui/button";
 import { MultiStepLoader } from "@/components/ui/multi-step-loader";
+import { useHeader } from "@/hooks/useHeader";
 import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";
-import { useHeader } from "@/hooks/useHeader";
-import GoalHeader from "@/components/Misc/Headers/GoalHeader";
 export interface GoalData {
   id: string;
   created_at: Date;

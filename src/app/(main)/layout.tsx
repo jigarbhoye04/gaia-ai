@@ -1,7 +1,7 @@
 "use client";
 
 import { useDrag } from "@use-gesture/react";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
 import HeaderManager from "@/components/Misc/Headers/HeaderManager";
@@ -14,7 +14,6 @@ import SidebarLayout from "@/layouts/SidebarLayout";
 
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const contentContainerRef = useRef<HTMLDivElement | null>(null);
   const [isSidebarVisible, setSidebarVisible] = useState(true);

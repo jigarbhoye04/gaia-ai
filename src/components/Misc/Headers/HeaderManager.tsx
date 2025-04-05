@@ -1,9 +1,11 @@
 "use client";
 
-import { useHeader } from "@/hooks/useHeader";
-import { HeaderComponentType } from "@/redux/slices/headerSlice";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+
+import { useHeader } from "@/hooks/useHeader";
+import { HeaderComponentType } from "@/redux/slices/headerSlice";
+
 import BrowserHeader from "./BrowserHeader";
 import ChatHeader from "./ChatHeader";
 import DefaultHeader from "./DefaultHeader";
@@ -71,23 +73,24 @@ export default function HeaderManager() {
     return <>{window.__customHeaderJSX}</>;
   }
 
+  // Get component-specific props if they exist
+  const componentSpecificProps = headerProps?.componentProps || {};
+
   // Render the appropriate component based on currentHeaderType
   switch (currentHeaderType) {
     case "chat":
-      return <ChatHeader {...headerProps} />;
+      return <ChatHeader {...componentSpecificProps} />;
     case "mail":
-      return <MailHeader {...headerProps} />;
+      return <MailHeader {...componentSpecificProps} />;
     case "goals":
     case "notes":
       return <></>;
-    //   return <GoalsHeader {...headerProps} />;
-    // return <NotesHeader {...headerProps} />;
     case "calendar":
-      return <DefaultHeader {...headerProps} />;
+      return <DefaultHeader />;
     case "browser":
-      return <BrowserHeader {...headerProps} />;
+      return <BrowserHeader {...componentSpecificProps} />;
     case "default":
     default:
-      return <DefaultHeader {...headerProps} />;
+      return <DefaultHeader />;
   }
 }

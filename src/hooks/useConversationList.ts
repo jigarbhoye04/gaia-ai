@@ -26,13 +26,9 @@ export const useFetchConversations = () => {
   const dispatch: AppDispatch = useDispatch();
 
   return useCallback(
-    async (
-      page: number = 1,
-      limit: number = 20,
-      append: boolean = true,
-    ) => {
+    async (page: number = 1, limit: number = 20, append: boolean = true) => {
       return dispatch(fetchConversations({ page, limit, append }));
     },
-    [dispatch]
+    [dispatch],
   );
 };
