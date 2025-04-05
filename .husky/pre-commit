@@ -1,0 +1,3 @@
+pnpm test
+pnpm type
+pnpm lint:fix

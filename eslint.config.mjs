@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import tseslint from "@typescript-eslint/eslint-plugin";
 import tsparser from "@typescript-eslint/parser";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
+import unusedImports from "eslint-plugin-unused-imports";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -45,8 +46,10 @@ export default [
     plugins: {
       "@typescript-eslint": tseslint,
       "simple-import-sort": simpleImportSort,
+      "unused-imports": unusedImports,
     },
     rules: {
+      "unused-imports/no-unused-imports": "error",
       "react/no-unescaped-entities": "off",
       "import/order": "off",
       "simple-import-sort/imports": "warn",
