@@ -312,25 +312,33 @@ const BrowserAutomationChat = () => {
           className="mx-aut h-full w-full max-w-screen-lg justify-center space-y-4"
         >
           {messages.length === 0 && (
-            <div className="flex h-full flex-1 flex-col items-center justify-center text-zinc-500">
-              <AiBrowserIcon className="mb-3 h-12 w-12 text-zinc-600" />
-              <p className="text-center">
-                {isConnected
-                  ? "Enter a task for the browser to perform"
-                  : "Connect to start automating web tasks"}
-              </p>
+            <div className="flex h-full flex-1 flex-col items-center justify-center rounded-3xl text-zinc-500">
+              {/* <AiBrowserIcon className="mb-3 h-12 w-12 text-zinc-600" /> */}
+
+              <Image
+                alt="Automate Browser Infographic"
+                src={"/media/automate_browser.png"}
+                width={450}
+                height={400}
+              />
 
               <Button
                 disabled={isConnecting}
                 radius="full"
                 variant="flat"
-                className="mt-3"
+                className="my-3"
                 color={isConnecting ? "default" : "success"}
                 onPress={connectToBrowser}
                 startContent={<Plug className="h-4 w-4" />}
               >
                 {isConnecting ? "Connecting..." : "Connect Browser"}
               </Button>
+
+              <p className="text-center">
+                {isConnected
+                  ? "Enter a task for the browser to perform"
+                  : "Connect to start automating web tasks"}
+              </p>
             </div>
           )}
 
