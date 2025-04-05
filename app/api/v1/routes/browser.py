@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Any
 from uuid import uuid4
 
 import cloudinary
@@ -13,7 +13,7 @@ from browser_use.browser.views import BrowserState
 from dotenv import load_dotenv
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from langchain_google_genai import ChatGoogleGenerativeAI
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
@@ -37,6 +37,19 @@ class BrowserConfigModel(BaseModel):
     disable_security: bool = True
 
 
+class ConversationMessage(BaseModel):
+    role: str
+    content: Any
+    timestamp: float = Field(default_factory=time.time)
+
+
+class ConversationState(BaseModel):
+    messages: List[ConversationMessage] = []
+    current_url: Optional[str] = None
+    page_title: Optional[str] = None
+    last_screenshot_url: Optional[str] = None
+
+
 class EventAgent(Agent):
     def __init__(
         self,
@@ -45,6 +58,7 @@ class EventAgent(Agent):
         llm,
         session_id=None,
         websocket=None,
+        conversation_history=None,
     ):
         self.session_id = session_id
         self.websocket = websocket
@@ -52,21 +66,16 @@ class EventAgent(Agent):
         self.screenshots = []
         self.current_step = 0
         self.step_history = []  # Store history of steps for final message
+        self.conversation_history = conversation_history or []
 
         async def new_step_callback(
             state: BrowserState,
             model_output: AgentOutput,
             steps: int,
         ):
-            logger.info("THIS IS A TEST 1")
-            # path = f"./screenshots/{steps}.png"
-            # last_screenshot = state.screenshot
-            # img_path = utils.base64_to_image(
-            #     base64_string=str(last_screenshot), output_filename=path
-            # )
+            logger.info("Processing browser step callback")
 
             thoughts = {
-                # "page_summary": model_output.current_state.page_summary,
                 "evaluation": model_output.current_state.evaluation_previous_goal,
                 "memory": model_output.current_state.memory,
                 "next_goal": model_output.current_state.next_goal,
@@ -114,35 +123,14 @@ class EventAgent(Agent):
             # Store the step data for final message
             self.step_history.append(step_data)
 
-            logger.info(
-                "THIS IS A TEST 2",
+            logger.debug(
+                "Step update sent",
                 {
                     "type": "step_update",
                     "data": step_data,
                     "session_id": self.session_id,
                 },
             )
-
-        # async def _upload_and_send_screenshot(self, screenshot_base64: str, step: int):
-        #     """Upload screenshot to Cloudinary and send URL to client"""
-        #     try:
-        #         result = await upload_base64_screenshot_to_cloudinary(
-        #             screenshot_base64, self.session_id, step
-        #         )
-        #         if result:
-        #             await self.safe_send_websocket_json(
-        #                 {
-        #                     "type": "screenshot",
-        #                     "data": {
-        #                         "step": step,
-        #                         "image_url": result["url"],
-        #                         "timestamp": time.time(),
-        #                     },
-        #                     "session_id": self.session_id,
-        #                 }
-        #             )
-        #     except Exception as e:
-        #         logger.error(f"Error uploading screenshot: {str(e)}")
 
         super().__init__(
             browser_context=browser_context,
@@ -152,14 +140,29 @@ class EventAgent(Agent):
         )
 
     async def run(self):
-        """Override the run method to include step history in final processing."""
+        """Override the run method to include conversation history in task context."""
+        # If we have conversation history, include it in the task context
+        if self.conversation_history:
+            # Create a summary of the conversation history to inform the current task
+            history_context = await self._generate_conversation_context()
+
+            # Enhance the task with the conversation context if it exists
+            if history_context:
+                enhanced_task = f"""Previous conversation context:
+{history_context}
+
+Current task: {self.task}
+
+Continue with the current task in the context of the previous conversation."""
+                self.task = enhanced_task
+                logger.info(f"Enhanced task with conversation history context")
+
         # Call the original run method from the parent class
         result = await super().run()
 
-        # If we have step history, add a summary using the step history
-        if self.step_history:
-            try:
-                # Create a summary based on the step history
+        # Generate and add summary of the current operation
+        try:
+            if self.step_history:
                 summary = await self._generate_history_summary()
 
                 # Add the summary to the result if possible
@@ -174,12 +177,45 @@ class EventAgent(Agent):
                         last_item.model_output.current_state.memory += (
                             f"\n\nHistory Summary: {summary}"
                         )
-            except Exception as e:
-                logger.error(
-                    f"Error adding step history summary: {str(e)}", exc_info=True
-                )
+        except Exception as e:
+            logger.error(f"Error adding step history summary: {str(e)}", exc_info=True)
 
         return result
+
+    async def _generate_conversation_context(self):
+        """Generate a summary of previous conversation to provide context for the current task."""
+        try:
+            if not self.conversation_history:
+                return ""
+
+            # Create a concise history representation for the LLM
+            history_text = "\n\n".join(
+                [
+                    f"{msg.get('role', 'unknown').capitalize()}: {msg.get('content', '')}"
+                    for msg in self.conversation_history[
+                        -5:
+                    ]  # Limit to last 5 exchanges
+                ]
+            )
+
+            prompt = f"""Summarize the following browser conversation history to provide context for the next task:
+
+{history_text}
+
+Provide a concise summary that captures key information the agent needs to remember, including:
+1. Important URLs visited
+2. Information collected or actions completed
+3. Context that's important for continuing the current process
+"""
+
+            # Use the LLM to generate a summary
+            response = await self.llm.apredict(prompt)
+            return response
+        except Exception as e:
+            logger.error(
+                f"Error generating conversation context: {str(e)}", exc_info=True
+            )
+            return ""
 
     async def _generate_history_summary(self):
         """Generate a summary of the step history for the agent to use."""
@@ -310,6 +346,54 @@ async def process_result_screenshots(result, session_id):
         return result
 
 
+async def get_conversation_examples(conversation_history: List[dict]) -> str:
+    """Generate example follow-up commands based on conversation history."""
+    if not conversation_history:
+        return "Examples: 'Go to google.com' or 'Search for latest news'"
+
+    try:
+        # Get the most recent exchange
+        if len(conversation_history) >= 2:
+            last_user_msg = next(
+                (
+                    msg
+                    for msg in reversed(conversation_history)
+                    if msg.get("role") == "user"
+                ),
+                None,
+            )
+            last_assistant_msg = next(
+                (
+                    msg
+                    for msg in reversed(conversation_history)
+                    if msg.get("role") == "assistant"
+                ),
+                None,
+            )
+
+            if last_user_msg and last_assistant_msg:
+                # Create a prompt for the LLM to generate examples
+                prompt = f"""Based on this recent browser conversation:
+
+User: {last_user_msg.get("content", "")}
+
+Agent completed the task.
+
+Generate 3 brief, natural follow-up commands the user might want to do next.
+Format each as a short, direct command (1-5 words), separated by newlines.
+"""
+
+                examples = await llm.apredict(prompt)
+                if examples:
+                    formatted_examples = examples.strip().split("\n")
+                    return f"Follow-up examples: {', '.join(formatted_examples[:3])}"
+
+        return "You can continue by sending another command like 'click on the first link' or 'go back'"
+    except Exception as e:
+        logger.error(f"Error generating conversation examples: {str(e)}", exc_info=True)
+        return "You can continue by sending another task to the browser agent"
+
+
 @router.websocket("/ws/browser")
 async def websocket_browser_endpoint(websocket: WebSocket):
     """Handle WebSocket connections for browser automation."""
@@ -328,6 +412,11 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                     "type": "init_response",
                     "session_id": session_id,
                     "status": "connected",
+                    "capabilities": {
+                        "multi_turn_conversation": True,
+                        "message_types": ["task", "get_conversation", "close"],
+                    },
+                    "usage_info": "You can send multiple commands in sequence by sending 'task' messages to this connection.",
                 }
             )
 
@@ -347,6 +436,7 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                 "websocket": websocket,
                 "history": [],
                 "screenshots": [],
+                "conversation_state": ConversationState(),
                 "created_at": time.time(),
             }
 
@@ -369,18 +459,26 @@ async def websocket_browser_endpoint(websocket: WebSocket):
 
                     session = active_browser_sessions[session_id]
 
+                    # Pass the conversation history to the agent
                     agent = EventAgent(
                         browser_context=session["context"],
                         task=task,
                         llm=llm,
                         session_id=session_id,
                         websocket=websocket,
+                        conversation_history=session["history"],
                     )
 
+                    # Add the user message to history
                     session["history"].append({"role": "user", "content": task})
 
                     await websocket.send_json(
-                        {"type": "task_started", "task": task, "session_id": session_id}
+                        {
+                            "type": "task_started",
+                            "task": task,
+                            "session_id": session_id,
+                            "conversation_turn": len(session["history"]),
+                        }
                     )
 
                     try:
@@ -390,9 +488,25 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                             session["screenshots"].extend(agent.screenshots)
 
                         serializable_result = result.dict()
+
+                        # Update conversation history with assistant response
                         session["history"].append(
                             {"role": "assistant", "content": serializable_result}
                         )
+
+                        # Update conversation state
+                        if agent.step_history and len(agent.step_history) > 0:
+                            last_step = agent.step_history[-1]
+                            session["conversation_state"].current_url = last_step.get(
+                                "url"
+                            )
+                            session["conversation_state"].page_title = last_step.get(
+                                "title"
+                            )
+                            if "screenshot_url" in last_step:
+                                session[
+                                    "conversation_state"
+                                ].last_screenshot_url = last_step.get("screenshot_url")
 
                         # Process screenshots before sending the response
                         processed_result = await process_result_screenshots(
@@ -405,12 +519,27 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                         ):
                             processed_result["step_history"] = agent.step_history
 
+                        # Get follow-up examples to suggest to the user
+                        follow_up_examples = await get_conversation_examples(
+                            session["history"]
+                        )
+
                         await websocket.send_json(
                             {
                                 "type": "task_completed",
                                 "result": processed_result,
                                 "session_id": session_id,
-                                "screenshots": [],  # No need to send raw screenshots anymore
+                                "conversation_turn": len(session["history"]),
+                                "current_state": {
+                                    "url": session["conversation_state"].current_url,
+                                    "title": session["conversation_state"].page_title,
+                                    "screenshot": session[
+                                        "conversation_state"
+                                    ].last_screenshot_url,
+                                },
+                                "conversation_length": len(session["history"]),
+                                "follow_up_suggestions": follow_up_examples,
+                                "waiting_for_next_command": True,
                             }
                         )
                     except Exception as e:
@@ -420,6 +549,44 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                                 "type": "task_error",
                                 "error": str(e),
                                 "session_id": session_id,
+                            }
+                        )
+
+                elif message_type == "get_conversation":
+                    # Return the current conversation history
+                    if session_id in active_browser_sessions:
+                        session = active_browser_sessions[session_id]
+
+                        # Filter out large data like screenshots from the response
+                        filtered_history = []
+                        for msg in session["history"]:
+                            if msg["role"] == "assistant" and isinstance(
+                                msg["content"], dict
+                            ):
+                                # For assistant messages, filter large content
+                                filtered_content = {
+                                    k: v
+                                    for k, v in msg["content"].items()
+                                    if k not in ["raw_screenshots", "full_html"]
+                                }
+                                filtered_history.append(
+                                    {"role": msg["role"], "content": filtered_content}
+                                )
+                            else:
+                                filtered_history.append(msg)
+
+                        await websocket.send_json(
+                            {
+                                "type": "conversation_history",
+                                "history": filtered_history,
+                                "session_id": session_id,
+                                "current_state": {
+                                    "url": session["conversation_state"].current_url,
+                                    "title": session["conversation_state"].page_title,
+                                    "screenshot": session[
+                                        "conversation_state"
+                                    ].last_screenshot_url,
+                                },
                             }
                         )
 
