@@ -184,7 +184,7 @@ function BentoCard({
   description: string;
 }) {
   return (
-    <Card className="flex h-full flex-col rounded-2xl border-none bg-zinc-900 p-5 outline-none">
+    <Card className="flex h-full flex-col rounded-2xl border-none bg-gradient-to-br from-primary/20 to-black p-5 outline-none">
       <div className="mb-2 text-primary">{icon}</div>
       <h3 className="relative z-[1] text-[1rem] font-semibold text-white">
         {title}

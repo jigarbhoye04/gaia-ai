@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 import {
+  AiBrowserIcon,
   CalendarIcon,
   Mail01Icon,
   PinIcon,
@@ -42,6 +43,11 @@ export default function SidebarTopButtons() {
       route: "/pins",
       icon: <PinIcon height={27} width={27} />,
       label: "Pins",
+    },
+    {
+      route: "/browser",
+      icon: <AiBrowserIcon height={27} width={27} />,
+      label: "Use Browser",
     },
   ];
 

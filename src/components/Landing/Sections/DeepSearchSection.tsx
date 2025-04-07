@@ -27,7 +27,8 @@ export default function DeepSearchSection() {
     <div className="flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
         <SectionHeading
-          heading="Automated Web Browsing"
+          // heading="Automated Web Browsing"
+          heading="Go Beyond Google Search"
           chipTitle="Deep Search"
           icon={
             <AiBrowserIcon

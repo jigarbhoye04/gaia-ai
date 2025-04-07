@@ -114,7 +114,7 @@ const MainChat = React.memo(function MainChat() {
   // }, [handleScroll]);
 
   return (
-    <React.Fragment>
+    <>
       <div
         className={`relative flex h-full w-full justify-center overflow-y-auto ${isDragging ? "bg-zinc-800/30" : ""}`}
         onDragEnter={handleDragEnter}
@@ -138,7 +138,7 @@ const MainChat = React.memo(function MainChat() {
         droppedFiles={droppedFiles}
         onDroppedFilesProcessed={() => setDroppedFiles([])}
       />
-    </React.Fragment>
+    </>
   );
 });
 
