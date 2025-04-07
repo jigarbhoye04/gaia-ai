@@ -6,8 +6,6 @@ import uuid
 from typing import Optional
 from urllib.parse import urlparse
 
-import cloudinary
-import cloudinary.uploader
 import html2text
 import httpx
 import tldextract
@@ -15,7 +13,6 @@ from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 from urlextract import URLExtract
 
-from app.config.cloudinary import init_cloudinary
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
 
@@ -384,10 +381,10 @@ async def upload_screenshot_to_cloudinary(
     Returns:
         str: The secure URL of the uploaded image
     """
+    import cloudinary.uploader
 
     try:
         # Ensure Cloudinary is initialized
-        init_cloudinary()
 
         # Create a unique ID for the screenshot
         screenshot_id = str(uuid.uuid4())
