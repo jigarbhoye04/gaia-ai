@@ -13,6 +13,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Brain,
+  CircleArrowRight,
   Globe,
   Layout,
   Loader,
@@ -477,7 +478,7 @@ const BrowserAutomationChat = () => {
 
           addMessage({
             role: "assistant",
-            content: `Step ${stepData.step}: ${stepData.thoughts?.evaluation || stepData.thoughts?.evaluation_previous_goal || ""}`,
+            content: `Step ${stepData.step}: ${stepData.thoughts?.evaluation || ""}`,
             stepData,
           });
 
@@ -703,14 +704,42 @@ const BrowserAutomationChat = () => {
                           height={30}
                         />
 
-                        <div className="relative mb-1 max-w-md rounded-2xl rounded-bl-none bg-zinc-800 px-4 py-2 shadow-sm">
+                        <div className="relative mb-1 flex max-w-md flex-col rounded-2xl rounded-bl-none bg-zinc-800 px-4 py-2 shadow-sm">
                           <div className="text-white">{message.content}</div>
+
+                          {message?.stepData?.thoughts && (
+                            <div className="text-white">
+                              {message.stepData.thoughts.memory}
+                            </div>
+                          )}
+
+                          {message?.stepData?.thoughts?.next_goal && (
+                            <Chip
+                              className="mt-3 max-w-[200px] text-white"
+                              variant="flat"
+                              size="sm"
+                              startContent={
+                                <div className="flex items-center gap-1 px-1 font-medium">
+                                  Next Step:
+                                </div>
+                              }
+                              color="success"
+                              endContent={
+                                <CircleArrowRight
+                                  className="text-[12px] text-success opacity-80"
+                                  width={16}
+                                />
+                              }
+                            >
+                              {message.stepData.thoughts?.next_goal}
+                            </Chip>
+                          )}
 
                           <Button
                             size="sm"
                             variant="flat"
                             color="primary"
-                            className="mt-2"
+                            className="mt-2 w-fit"
                             startContent={<Layout size={14} />}
                             onPress={() => {
                               const stepIndex = getStepMessages().findIndex(
@@ -957,21 +986,38 @@ const BrowserAutomationChat = () => {
             </div>
           )}
 
-          {messages.length > 0 && isConnected && (
+          {messages.length > 0 && (
             <div className="flex items-center justify-center gap-2 py-2">
-              <Button
-                size="sm"
-                variant="flat"
-                radius="full"
-                color="default"
-                startContent={<Layout size={14} />}
-                onPress={() => {
-                  setCurrentStepIndex(0);
-                  setIsSidebarOpen(true);
-                }}
-              >
-                Explore Steps
-              </Button>
+              {!isConnected && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  radius="full"
+                  color="success"
+                  startContent={<Plug size={14} />}
+                  onPress={connectToBrowser}
+                  disabled={isConnecting}
+                >
+                  {isConnecting ? "Connecting..." : "Connect Browser"}
+                </Button>
+              )}
+
+              {isConnected && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  radius="full"
+                  color="default"
+                  startContent={<Layout size={14} />}
+                  onPress={() => {
+                    setCurrentStepIndex(0);
+                    setIsSidebarOpen(true);
+                  }}
+                >
+                  Explore Steps
+                </Button>
+              )}
+
               <Button
                 size="sm"
                 variant="flat"
