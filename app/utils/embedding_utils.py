@@ -4,6 +4,7 @@ from app.db.collections import notes_collection, files_collection
 from sentence_transformers import SentenceTransformer
 from app.config.loggers import chat_logger as logger
 from app.db.utils import serialize_document
+from typing import Optional
 
 
 @lru_cache(maxsize=1)
@@ -51,11 +52,11 @@ async def search_notes_by_similarity(input_text: str, user_id: str, chromadb_cli
         metadatas = chroma_results.get("metadatas", [[]])[0]
 
         # Create a mapping of note IDs to similarity scores
-        similarity_scores = (
-            {note_id: score for note_id, score in zip(note_ids, distances)}
-            if distances
-            else {}
-        )
+        # similarity_scores = (
+        # {note_id: score for note_id, score in zip(note_ids, distances)}
+        # if distances
+        # else {}
+        # )
 
         # Create result notes with data from ChromaDB
         result_notes = []
@@ -189,7 +190,7 @@ async def search_documents_by_similarity(
     input_text: str,
     user_id: str,
     chromadb_client,
-    conversation_id: str = None,
+    conversation_id: Optional[str] = None,
     top_k: int = 5,
 ):
     """
@@ -229,23 +230,9 @@ async def search_documents_by_similarity(
             )
             return []
 
-        # Prepare where filter with proper operator structure for ChromaDB
-        # Use $and operator to combine multiple conditions
-        where_conditions = []
-
-        # Add user_id condition
-        where_conditions.append({"user_id": {"$eq": user_id}})
-
-        # Add conversation_id condition if provided
+        where_filter = {"user_id": str(user_id)}
         if conversation_id:
-            where_conditions.append({"conversation_id": {"$eq": conversation_id}})
-
-        # Use $and to combine conditions if we have more than one
-        where_filter = (
-            where_conditions[0]
-            if len(where_conditions) == 1
-            else {"$and": where_conditions}
-        )
+            where_filter["conversation_id"] = conversation_id
 
         # Query ChromaDB for similar documents
         chroma_results = await chroma_documents_collection.query(
@@ -284,7 +271,7 @@ async def search_documents_by_similarity(
                 # since ChromaDB doesn't store all metadata
                 try:
                     mongo_doc = await files_collection.find_one(
-                        {"file_id": doc_id, "user_id": user_id}
+                        {"file_id": doc_id, "user_id": str(user_id)}
                     )
                     if mongo_doc:
                         # Add additional fields from MongoDB

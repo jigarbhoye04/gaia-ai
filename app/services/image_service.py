@@ -58,7 +58,22 @@ async def api_generate_image(message: str) -> dict:
                 "Failed to generate an improved prompt or fallback to the original prompt."
             )
 
-        image_bytes: bytes = await generate_image(refined_text)
+        # Handle the case when generate_image returns a dict or bytes
+        image_data = await generate_image(refined_text)
+
+        # Ensure we're working with bytes for the upload
+        if isinstance(image_data, dict):
+            # Handle the case when it returns a dict
+            # You might need to adjust this based on your actual implementation
+            if "image" in image_data and isinstance(image_data["image"], bytes):
+                image_bytes = image_data["image"]
+            else:
+                raise ValueError("Invalid image data returned from generate_image")
+        elif isinstance(image_data, bytes):
+            # Already bytes, use as is
+            image_bytes = image_data
+        else:
+            raise ValueError(f"Unexpected type from generate_image: {type(image_data)}")
 
         upload_result = cloudinary.uploader.upload(
             io.BytesIO(image_bytes),

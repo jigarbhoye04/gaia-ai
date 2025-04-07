@@ -29,7 +29,7 @@ llm = ChatGoogleGenerativeAI(
 )
 
 
-active_browser_sessions = {}
+active_browser_sessions: Dict[str, Dict[str, Any]] = {}
 
 
 class BrowserConfigModel(BaseModel):
@@ -155,7 +155,7 @@ Current task: {self.task}
 
 Continue with the current task in the context of the previous conversation."""
                 self.task = enhanced_task
-                logger.info(f"Enhanced task with conversation history context")
+                logger.info("Enhanced task with conversation history context")
 
         # Call the original run method from the parent class
         result = await super().run()

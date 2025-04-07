@@ -21,7 +21,7 @@ def get_gmail_service(current_user: dict):
     creds = Credentials(
         token=current_user.get("access_token"),
         refresh_token=current_user.get("refresh_token"),
-        token_uri="https://oauth2.googleapis.com/token",
+        token_uri=settings.GOOGLE_TOKEN_URL,
         client_id=settings.GOOGLE_CLIENT_ID,
         client_secret=settings.GOOGLE_CLIENT_SECRET,
     )
@@ -175,8 +175,8 @@ def fetch_detailed_messages(service, messages, batch_size=20, delay=2):
 def modify_message_labels(
     service,
     message_ids: List[str],
-    add_labels: List[str] = None,
-    remove_labels: List[str] = None,
+    add_labels: Optional[List[str]] = None,
+    remove_labels: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Modify the labels of Gmail messages.

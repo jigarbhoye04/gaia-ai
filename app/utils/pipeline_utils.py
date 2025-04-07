@@ -1,10 +1,10 @@
-from typing import Any, Callable, Dict, List, AsyncGenerator, Union, TypeVar
+from typing import Any, Callable, Dict, AsyncGenerator, Sequence, Union, TypeVar
 
 T = TypeVar("T")
 
 
 class Pipeline:
-    def __init__(self, steps: List[Callable[[Dict[str, Any]], Any]]):
+    def __init__(self, steps: Sequence[Callable[[Dict[str, Any]], Any]]):
         """
         Initialize the pipeline with a list of async step functions.
 

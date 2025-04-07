@@ -3,6 +3,7 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
+from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import (
     EmailRequest,
@@ -76,10 +77,17 @@ def list_messages(
 async def process_email(
     request: EmailRequest,
     current_user: dict = Depends(get_current_user),
+    chromadb_client=Depends(get_chromadb),
 ) -> Any:
     try:
+        user_id = current_user.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="User ID is required")
+
         notes = await search_notes_by_similarity(
-            input_text=request.prompt, user_id=current_user.get("user_id")
+            input_text=request.prompt,
+            user_id=str(user_id),
+            chromadb_client=chromadb_client,
         )
 
         prompt = EMAIL_COMPOSER.format(

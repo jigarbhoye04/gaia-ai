@@ -43,7 +43,7 @@ ROADMAP_INSTRUCTIONS = """
     4. **Estimated Time**: A time estimate for completing the milestone (e.g., "2 weeks", "1 month").
     5. **Resources**: A list of at least 2-4 high-quality resources (books, courses, tools, or tutorials) to assist with the milestone.
 
-    
+
     ### Requirements:
     1. The roadmap must cover a progression from beginner to expert levels, with logically ordered steps.
     2. The Roadmap should be in a vertical tree like structure.
@@ -55,7 +55,7 @@ ROADMAP_INSTRUCTIONS = """
 
 # Prompt template for roadmap generation
 ROADMAP_GENERATOR = """
-    You are an expert roadmap planner. Your task is to generate a highly detailed roadmap in the form of a JSON object. 
+    You are an expert roadmap planner. Your task is to generate a highly detailed roadmap in the form of a JSON object.
 
     The roadmap is for the following title: **{title}**.
 

@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -69,12 +69,13 @@ async def fetch_calendar_list(access_token: str) -> Dict[str, Any]:
         response.raise_for_status()
         return response.json()
     except httpx.HTTPStatusError as exc:
-        try:
-            error_detail = (
-                exc.response.json().get("error", {}).get("message", "Unknown error")
-            )
-        except Exception:
-            error_detail = "Unknown error"
+        error_detail = "Unknown error"
+        error_json = exc.response.json()
+        if isinstance(error_json, dict):
+            error_message = error_json.get("error", {})
+            if isinstance(error_message, dict):
+                error_detail = error_message.get("message", "Unknown error")
+
         raise HTTPException(
             status_code=exc.response.status_code,
             detail=f"Error fetching list of calendars: {error_detail}",
@@ -155,7 +156,7 @@ async def fetch_calendar_events(
 
 async def list_calendars(
     access_token: str, refresh_token: Optional[str] = None
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     """
     Retrieve the user's calendar list. If the access token is invalid and a refresh token is provided,
     the token is refreshed automatically.
@@ -165,7 +166,7 @@ async def list_calendars(
         refresh_token (Optional[str]): Refresh token.
 
     Returns:
-        dict: Calendar list data.
+        Optional[Dict[str, Any]]: Calendar list data or None if retrieval fails.
     """
     try:
         return await fetch_calendar_list(access_token)
@@ -173,7 +174,9 @@ async def list_calendars(
         if e.status_code == 401 and refresh_token:
             token_data = await refresh_access_token(refresh_token)
             new_access_token = token_data.get("access_token")
-            return await fetch_calendar_list(new_access_token)
+            if new_access_token:
+                return await fetch_calendar_list(new_access_token)
+            return None
         raise e
 
 
@@ -211,7 +214,10 @@ async def get_calendar_events(
         if e.status_code == 401 and refresh_token:
             token_data = await refresh_access_token(refresh_token)
             new_access_token = token_data.get("access_token")
-            calendar_data = await fetch_calendar_list(new_access_token)
+            if new_access_token:
+                calendar_data = await fetch_calendar_list(new_access_token)
+            else:
+                raise e
             access_token = new_access_token
         else:
             raise e
@@ -220,29 +226,34 @@ async def get_calendar_events(
 
     # Determine selected calendars: update preferences if provided,
     # otherwise load from the database or default to the primary calendar.
-    if selected_calendars:
+    user_selected_calendars: List[str] = []
+    if selected_calendars is not None:
+        user_selected_calendars = selected_calendars
         await calendars_collection.update_one(
             {"user_id": user_id},
-            {"$set": {"selected_calendars": selected_calendars}},
+            {"$set": {"selected_calendars": user_selected_calendars}},
             upsert=True,
         )
     else:
         preferences = await calendars_collection.find_one({"user_id": user_id})
         if preferences and preferences.get("selected_calendars"):
-            selected_calendars = preferences["selected_calendars"]
+            user_selected_calendars = preferences["selected_calendars"]
         else:
             primary_calendar = next(
                 (cal for cal in calendars if cal.get("primary")), None
             )
-            selected_calendars = [primary_calendar["id"]] if primary_calendar else []
+            if primary_calendar:
+                user_selected_calendars = [primary_calendar["id"]]
             await calendars_collection.update_one(
                 {"user_id": user_id},
-                {"$set": {"selected_calendars": selected_calendars}},
+                {"$set": {"selected_calendars": user_selected_calendars}},
                 upsert=True,
             )
 
     # Filter the calendars to only those that are selected.
-    selected_cal_objs = [cal for cal in calendars if cal["id"] in selected_calendars]
+    selected_cal_objs = [
+        cal for cal in calendars if cal["id"] in user_selected_calendars
+    ]
 
     # Create tasks for fetching events concurrently.
     tasks = [
@@ -257,17 +268,21 @@ async def get_calendar_events(
     # Process results from all tasks.
     for cal, result in zip(selected_cal_objs, results):
         if isinstance(result, Exception):
-            # Optionally log the error for this calendar
             logger.error(f"Error fetching events for calendar {cal['id']}: {result}")
             continue
-        events = result.get("items", [])
+
+        # Cast result to a dictionary explicitly
+        result_dict = cast(Dict[str, Any], result)
+
+        events = result_dict.get("items", [])
         for event in events:
             event["calendarId"] = cal["id"]
             event["calendarTitle"] = cal.get("summary", "")
         all_events.extend(filter_events(events))
+
         # Use the first encountered nextPageToken (or handle it as needed)
-        if result.get("nextPageToken") and not next_page_token:
-            next_page_token = result["nextPageToken"]
+        if not next_page_token and result_dict.get("nextPageToken"):
+            next_page_token = result_dict["nextPageToken"]
 
     # Optionally sort events here if needed.
     all_events.sort(
@@ -280,7 +295,7 @@ async def get_calendar_events(
     return {
         "events": all_events,
         "nextPageToken": next_page_token,
-        "selectedCalendars": selected_calendars,
+        "selectedCalendars": user_selected_calendars,
     }
 
 
@@ -317,9 +332,12 @@ async def get_calendar_events_by_id(
         if e.status_code == 401 and refresh_token:
             token_data = await refresh_access_token(refresh_token)
             new_access_token = token_data.get("access_token")
-            events_data = await fetch_calendar_events(
-                calendar_id, new_access_token, page_token, time_min, time_max
-            )
+            if new_access_token:
+                events_data = await fetch_calendar_events(
+                    calendar_id, new_access_token, page_token, time_min, time_max
+                )
+            else:
+                raise e
         else:
             raise e
 
@@ -328,6 +346,73 @@ async def get_calendar_events_by_id(
         "events": events,
         "nextPageToken": events_data.get("nextPageToken"),
     }
+
+
+async def get_all_calendar_events(
+    access_token: str,
+    refresh_token: Optional[str] = None,
+    time_min: Optional[str] = None,
+    time_max: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Fetch events from all calendars associated with the user concurrently.
+
+    Args:
+        access_token (str): Access token.
+        refresh_token (Optional[str]): Refresh token.
+        time_min (Optional[str]): Start time filter.
+        time_max (Optional[str]): End time filter.
+
+    Returns:
+        dict: A mapping of calendar IDs to their respective events.
+    """
+    try:
+        calendar_list_data = await fetch_calendar_list(access_token)
+        valid_token = access_token
+    except HTTPException as e:
+        if e.status_code == 401 and refresh_token:
+            token_data = await refresh_access_token(refresh_token)
+            if isinstance(token_data, dict):
+                new_access_token = token_data.get("access_token")
+                if new_access_token:
+                    valid_token = new_access_token
+                    calendar_list_data = await fetch_calendar_list(valid_token)
+                else:
+                    raise e
+            else:
+                raise e
+        else:
+            raise e
+
+    calendars = calendar_list_data.get("items", [])
+    if not calendars:
+        return {"calendars": {}}
+    if not time_min:
+        time_min = datetime.now(timezone.utc).isoformat()
+
+    tasks = {
+        cal["id"]: asyncio.create_task(
+            get_calendar_events_by_id(
+                calendar_id=cal["id"],
+                access_token=valid_token,
+                refresh_token=refresh_token,
+                time_min=time_min,
+                time_max=time_max,
+            )
+        )
+        for cal in calendars
+        if "id" in cal
+    }
+
+    events_by_calendar = {}
+    for cal_id, task in tasks.items():
+        try:
+            result = await task
+            events_by_calendar[cal_id] = result
+        except Exception as e:
+            events_by_calendar[cal_id] = {"error": str(e)}
+
+    return {"calendars": events_by_calendar}
 
 
 async def create_calendar_event(
@@ -361,7 +446,7 @@ async def create_calendar_event(
     }
 
     # Create the basic event payload
-    event_payload = {
+    event_payload: dict[str, str | dict] = {
         "summary": event.summary,
         "description": event.description,
     }
@@ -397,83 +482,62 @@ async def create_calendar_event(
             raise HTTPException(status_code=400, detail=f"Invalid timezone: {str(e)}")
 
     # Send request to create the event
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=event_payload)
-
-    # Handle response
-    if response.status_code in (200, 201):
-        return response.json()
-    elif response.status_code == 403:
-        raise HTTPException(
-            status_code=403,
-            detail="Insufficient authentication scopes. Please ensure your token includes the required scopes.",
-        )
-    elif response.status_code == 401:
-        if refresh_token:
-            raise HTTPException(
-                status_code=401,
-                detail="Token expired. Please refresh and try again.",
-            )
-        raise HTTPException(status_code=401, detail="Invalid access token")
-    else:
-        error_detail = response.json().get("error", {}).get("message", "Unknown error")
-        raise HTTPException(status_code=response.status_code, detail=error_detail)
-
-
-async def get_all_calendar_events(
-    access_token: str,
-    refresh_token: Optional[str] = None,
-    time_min: Optional[str] = None,
-    time_max: Optional[str] = None,
-) -> Dict[str, Any]:
-    """
-    Fetch events from all calendars associated with the user concurrently.
-
-    Args:
-        access_token (str): Access token.
-        refresh_token (Optional[str]): Refresh token.
-        time_min (Optional[str]): Start time filter.
-        time_max (Optional[str]): End time filter.
-
-    Returns:
-        dict: A mapping of calendar IDs to their respective events.
-    """
     try:
-        calendar_list_data = await fetch_calendar_list(access_token)
-        valid_token = access_token
-    except HTTPException as e:
-        if e.status_code == 401 and refresh_token:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(url, headers=headers, json=event_payload)
+
+        # Handle response
+        if response.status_code in (200, 201):
+            return response.json()
+        elif response.status_code == 403:
+            raise HTTPException(
+                status_code=403,
+                detail="Insufficient authentication scopes. Please ensure your token includes the required scopes.",
+            )
+        elif response.status_code == 401 and refresh_token:
+            # Try refreshing the token and retrying
             token_data = await refresh_access_token(refresh_token)
-            valid_token = token_data.get("access_token")
-            calendar_list_data = await fetch_calendar_list(valid_token)
+            if isinstance(token_data, dict):
+                new_access_token = token_data.get("access_token")
+                if new_access_token:
+                    headers = {
+                        "Authorization": f"Bearer {new_access_token}",
+                        "Content-Type": "application/json",
+                    }
+                    async with httpx.AsyncClient() as client:
+                        retry_response = await client.post(
+                            url, headers=headers, json=event_payload
+                        )
+                    if retry_response.status_code in (200, 201):
+                        return retry_response.json()
+                    else:
+                        error_json = retry_response.json()
+                        if isinstance(error_json, dict):
+                            error_msg = error_json.get("error", {}).get(
+                                "message", "Unknown error"
+                            )
+                        else:
+                            error_msg = "Unknown error"
+                        raise HTTPException(
+                            status_code=retry_response.status_code, detail=error_msg
+                        )
+                else:
+                    raise HTTPException(
+                        status_code=401, detail="Failed to refresh token"
+                    )
+            else:
+                raise HTTPException(status_code=401, detail="Failed to refresh token")
         else:
-            raise e
-
-    calendars = calendar_list_data.get("items", [])
-    if not calendars:
-        return {"calendars": {}}
-    if not time_min:
-        time_min = datetime.now(timezone.utc).isoformat()
-
-    tasks = {
-        cal["id"]: get_calendar_events_by_id(
-            calendar_id=cal["id"],
-            access_token=valid_token,
-            refresh_token=refresh_token,
-            time_min=time_min,
-            time_max=time_max,
-        )
-        for cal in calendars
-        if "id" in cal
-    }
-    results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-    events_by_calendar = {}
-    for cal_id, result in zip(tasks.keys(), results):
-        if isinstance(result, Exception):
-            events_by_calendar[cal_id] = {"error": str(result)}
-        else:
-            events_by_calendar[cal_id] = result
-    return {"calendars": events_by_calendar}
+            response_json = response.json()
+            if isinstance(response_json, dict):
+                error_detail = response_json.get("error", {}).get(
+                    "message", "Unknown error"
+                )
+            else:
+                error_detail = "Unknown error"
+            raise HTTPException(status_code=response.status_code, detail=error_detail)
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create event: {str(e)}")
 
 
 async def get_user_calendar_preferences(user_id: str) -> Dict[str, List[str]]:

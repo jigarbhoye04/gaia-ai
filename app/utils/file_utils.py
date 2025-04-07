@@ -4,10 +4,11 @@ Utility functions for file processing including content description generation.
 
 import io
 import os
+import tempfile
 from typing import Optional, Tuple
 
-import docx2txt
 import PyPDF2
+import docx2txt
 from groq import Groq
 import pytesseract
 from PIL import Image
@@ -75,7 +76,7 @@ def get_image_captioning_model() -> Tuple:
     return _processor, _model
 
 
-def extract_text_from_image(image: Image.Image) -> str:
+def extract_text_from_image(image: Image.Image) -> str | None:
     """
     Extract text from an image using OCR.
     Args:
@@ -91,31 +92,37 @@ def extract_text_from_image(image: Image.Image) -> str:
         return None
 
 
-def generate_image_description_groq(image_url: str) -> None:
-    client = Groq()
+def generate_image_description_groq(image_url: str) -> str:
+    try:
+        client = Groq()
 
-    completion = client.chat.completions.create(
-        model="llama-3.2-11b-vision-preview",
-        messages=[
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": "What's in this image?"},
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": image_url},
-                    },
-                ],
-            }
-        ],
-        temperature=1,
-        max_completion_tokens=1024,
-        top_p=1,
-        stream=False,
-        stop=None,
-    )
+        completion = client.chat.completions.create(
+            model="llama-3.2-11b-vision-preview",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "What's in this image?"},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": image_url},
+                        },
+                    ],
+                }
+            ],
+            temperature=1,
+            max_completion_tokens=1024,
+            top_p=1,
+            stream=False,
+            stop=None,
+        )
 
-    return completion.choices[0].message
+        return completion.choices[0].message
+    except Exception as e:
+        logger.error(
+            f"Failed to generate image description via Groq: {str(e)}", exc_info=True
+        )
+        return "Failed to generate image description via Groq."
 
 
 def generate_image_description(image_data: bytes, image_url: str) -> str:
@@ -210,15 +217,15 @@ def extract_text_from_docx(docx_data: bytes) -> str:
         str: Extracted text content, truncated if necessary
     """
     try:
-        # Save to a temporary file since docx2txt requires a file path
-        temp_path = "/tmp/temp_doc.docx"
+        # Create a secure temporary file using the tempfile module
+        temp_fd, temp_path = tempfile.mkstemp(suffix=".docx")
+        os.close(temp_fd)  # Close the file descriptor
+
+        # Write data to the temporary file
         with open(temp_path, "wb") as f:
             f.write(docx_data)
 
         text = docx2txt.process(temp_path)
-
-        # Clean up
-        os.remove(temp_path)
 
         # Truncate if too long
         text = text.strip()
@@ -228,10 +235,11 @@ def extract_text_from_docx(docx_data: bytes) -> str:
         return text if text else "No text content could be extracted from document"
     except Exception as e:
         logger.error(f"Failed to extract text from DOCX: {str(e)}", exc_info=True)
-        # Clean up if exception
-        if os.path.exists("/tmp/temp_doc.docx"):
-            os.remove("/tmp/temp_doc.docx")
         return "Document text content could not be extracted"
+    finally:
+        # Ensure cleanup happens even if there's an exception
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 
 def extract_text_from_txt(txt_data: bytes) -> str:

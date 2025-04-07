@@ -8,6 +8,7 @@ from app.db.collections import waitlist_collection
 from app.db.utils import serialize_document
 from app.models.general_models import WaitlistItem
 from fastapi import HTTPException, Request
+from typing import Optional
 
 
 async def get_waitlist_members_service():
@@ -38,7 +39,7 @@ async def get_waitlist_members_service():
 
 async def waitlist_signup_service(
     item: WaitlistItem,
-    request: Request = None,
+    request: Optional[Request] = None,
 ):
     """
     Sign up a new member to the waitlist and insert their information into the database.
@@ -63,7 +64,10 @@ async def waitlist_signup_service(
             return {"message": "Email already registered in the waitlist"}
 
         item_dict = item.model_dump()
-        item_dict.update({"ip": request.client.host if request.client else "Unknown"})
+        if request:
+            item_dict.update(
+                {"ip": request.client.host if request.client else "Unknown"}
+            )
 
         result = await waitlist_collection.insert_one(item_dict)
 

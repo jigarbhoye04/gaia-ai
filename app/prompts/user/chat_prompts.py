@@ -13,7 +13,7 @@ Below is the relevant context retrieved from the search:
 {formatted_results}
 
 You MUST include citations for all sourced content. Citations should be formatted with the link in markdown format, e.g., [1](https://example.com).
-Ensure that every factual statement derived from the search results is properly cited. 
+Ensure that every factual statement derived from the search results is properly cited.
 Maintain accuracy, neutrality, and coherence when integrating this information.
 """
 
@@ -29,22 +29,22 @@ Maintain accuracy, detail, and coherence when integrating this information. Do n
 """
 
 PAGE_CONTENT_TEMPLATE = """
-Relevant information from the fetched URLs ({urls}):  
-{page_content}  
-**End of fetched content.**  
+Relevant information from the fetched URLs ({urls}):
+{page_content}
+**End of fetched content.**
 
-These pages were retrieved using GAIA Webpage Fetch. Stay neutral and factual.  
-**You MUST cite all sources** in markdown format, e.g., [1](https://example.com).  
+These pages were retrieved using GAIA Webpage Fetch. Stay neutral and factual.
+**You MUST cite all sources** in markdown format, e.g., [1](https://example.com).
 """
 
 NOTES_CONTEXT_TEMPLATE = """
-System: The user has the following relevant notes from the database:  
+System: The user has the following relevant notes from the database:
 {notes} .
 Only reference these notes if they add value to the conversation and are relevant.
-You have this information from your own database, so you can use it freely.  
+You have this information from your own database, so you can use it freely.
 
 
-User: {message}  
+User: {message}
 
 """
 

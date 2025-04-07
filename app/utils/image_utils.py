@@ -5,8 +5,9 @@ import httpx
 import requests
 from fastapi import File, Form, HTTPException, UploadFile
 from PIL import Image
-from app.utils.llm_utils import do_prompt_no_stream
+
 from app.prompts.user.image_prompts import IMAGE_CAPTION_FORMATTER
+from app.utils.llm_utils import do_prompt_no_stream
 
 http_async_client = httpx.AsyncClient(timeout=100000)
 
@@ -52,11 +53,9 @@ async def convert_image_to_text(
 
     try:
         if 1 * 1024 * 1024 <= len(contents) <= 2 * 1024 * 1024:
-            compressed_image = compress_image(contents, sizing=0.9, quality=95)
-            contents = compressed_image
+            contents = compress_image(contents, sizing=0.9, quality=95)
         elif 2 * 1024 * 1024 <= len(contents) <= 6 * 1024 * 1024:
-            compressed_image = compress_image(contents)
-            contents = compressed_image
+            contents = compress_image(contents)
 
         if len(contents) > 1 * 1024 * 1024:
             return "File too large"
@@ -65,12 +64,16 @@ async def convert_image_to_text(
             prompt=IMAGE_CAPTION_FORMATTER.format(message=message)
         )
 
-        response = requests.post(
-            url, files={"image": contents}, data={"prompt": improved_prompt["response"]}
-        )
-        response.raise_for_status()
-        return response.json()
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url,
+                files={"image": ("image.jpg", contents, image.content_type)},
+                data={"prompt": improved_prompt["response"]},
+                timeout=1000.0,
+            )
+            response.raise_for_status()
+            return response.json()
 
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
+    except httpx.RequestError as e:
+        print(f"HTTPX request error: {e}")
         return {"error": str(e)}
