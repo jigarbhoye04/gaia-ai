@@ -10,6 +10,7 @@ import {
 } from "../../Misc/icons";
 
 const webSearchImages = [
+  { src: "/landing/web/weather.png", alt: "Web Search Screenshot Weather" },
   { src: "/landing/web/1.webp", alt: "Web Search Screenshot 1" },
   { src: "/landing/web/2.webp", alt: "Web Search Screenshot 2" },
   { src: "/landing/web/3.webp", alt: "Web Search Screenshot 3" },
@@ -35,7 +36,7 @@ const ImageCarousel = ({
   }, [images.length]);
 
   useEffect(() => {
-    const timer = setInterval(nextIndex, 5000);
+    const timer = setInterval(nextIndex, 10000);
     return () => clearInterval(timer);
   }, [nextIndex]);
 
