@@ -125,7 +125,8 @@ async def do_weather(context: dict) -> dict:
 
         try:
             location = await extract_location_from_message(context["query_text"])
-            context["weather_data"] = await user_weather(context["user_ip"], location)
+            # context["weather_data"] = await user_weather(context["user_ip"], location)
+            context["weather_data"] = await user_weather(location)
 
             context["last_message"]["content"] += WEATHER_PROMPT.format(
                 weather_data=context["weather_data"]

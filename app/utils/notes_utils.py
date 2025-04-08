@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Optional
+from typing import Optional
 
 from langchain.chat_models import init_chat_model
 from langchain_core.prompts import ChatPromptTemplate
@@ -27,7 +27,8 @@ class Memory(BaseModel):
     )
 
 
-chat_model = init_chat_model("@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+# chat_model = init_chat_model("@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+chat_model = init_chat_model("llama-3.1-8b-instant", model_provider="groq")
 chat_model.with_structured_output(Memory)
 
 
@@ -35,7 +36,7 @@ async def insert_note(
     note: NoteModel,
     user_id: str,
     auto_created=False,
-) -> Dict:
+) -> NoteResponse:
     logger.info(f"Creating new note for user: {user_id}")
     chromadb_client = ChromaClient.get_client()
 

@@ -233,9 +233,9 @@ async def prepare_weather_data(
     return weather
 
 
-async def user_weather(ip_address: str, location_name: Optional[str] = None):
+async def user_weather(location_name: Optional[str] = None):
     """
-    Fetch weather data either based on user's IP address or for a specified location.
+    Fetch weather data for a specified location.
 
     This function has been modularized to separate concerns:
     1. Get location data (either from IP or location name)
@@ -244,21 +244,19 @@ async def user_weather(ip_address: str, location_name: Optional[str] = None):
     4. Return the formatted response
 
     Args:
-        ip_address (str): The user's IP address (used if location_name is None)
         location_name (str, optional): Name of a specific location to get weather for
 
     Yields:
         str: JSON-formatted weather data as server-sent events
     """
     try:
-        # yield f"data: {json.dumps({'status': 'weather'})}\n\n"
-
         api_key = settings.OPENWEATHER_API_KEY
         if not api_key:
             raise Exception("OpenWeatherMap API key is not configured")
 
         try:
-            location_data = await get_location_data(ip_address, location_name)
+            # location_data = await get_location_data(ip_address, location_name)
+            location_data = await get_location_data(location_name=location_name)
             cache_key = location_data["cache_key"]
 
             cached_weather = await get_cache(cache_key)
@@ -273,28 +271,16 @@ async def user_weather(ip_address: str, location_name: Optional[str] = None):
             logger.info(f"Caching weather data with key: {cache_key}")
             await set_cache(cache_key, weather, ONE_HOUR_TTL)
 
-            print(f"{weather=}")
             return weather
-            # yield f"data: {json.dumps({'intent': 'weather', 'weather_data': weather})}\n\n"
-            # yield "data: [DONE]\n\n"
 
         except Exception as e:
-            error_msg = (
-                f"Could not find location: {location_name}"
-                if location_name
-                else f"Failed to get location from IP: {ip_address}"
-            )
+            error_msg = f"Could not find location: {location_name}"
             logger.error(f"Error getting location data: {str(e)}")
-            # yield f"data: {json.dumps({'error': error_msg})}\n\n"
-            # yield "data: [DONE]\n\n"
-
             return error_msg
 
     except Exception as e:
         logger.error(f"Error fetching weather: {str(e)}")
         return f"Failed to fetch weather: {str(e)}"
-        # yield f"data: {json.dumps({'error': f'Failed to fetch weather: {str(e)}'})}\n\n"
-        # yield "data: [DONE]\n\n"
 
 
 def process_forecast_data(forecast_data: Dict) -> List[Dict]:

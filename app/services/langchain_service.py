@@ -5,33 +5,38 @@ This file is not intended to be used in production and is for development purpos
 
 """
 
-from langchain_groq import ChatGroq
+import json
+from typing import AsyncGenerator
+
+from langgraph.prebuilt import create_react_agent
+from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage, AIMessage
+
+from app.langchain.tools.weather import get_weather
 from app.models.general_models import MessageRequestWithHistory
-from langchain.agents import initialize_agent, AgentType
-from langchain.agents import load_tools
 
 
 async def chat_stream_langchain(
     body: MessageRequestWithHistory,
-    user: dict,
-    user_ip: str,
-):
-    llm = ChatGroq(
-        model="llama-3.1-8b-instant",
-        temperature=0,
-        max_tokens=None,
-        timeout=None,
-        max_retries=2,
-    )
+) -> AsyncGenerator[str, None]:
+    model = init_chat_model("llama-3.1-8b-instant", model_provider="groq")
+    tools = [get_weather]  # append more tools as needed
+    agent_executor = create_react_agent(model, tools=tools)  # create lang graph agent
 
-    tools = load_tools(["openweathermap-api"], llm)
+    final_message = ""
 
-    agent_chain = initialize_agent(
-        tools=tools,
-        llm=llm,
-        agent=AgentType.OPENAI_FUNCTIONS,
-        verbose=True,
-    )
+    async for event in agent_executor.astream_events(
+        {"messages": [HumanMessage(content=body.message)]}, version="v1"
+    ):
+        event_type = event.get("event")
 
-    response = agent_chain.run(body.message)
-    return response
+        # Possible event types:
+        # on_chat_model_stream | on_tool_start | on_tool_end | on_chain_end | on_chat_model_stream
+        if event_type == "on_chat_model_stream":
+            chunk = event["data"]["chunk"]
+            if isinstance(chunk, AIMessage) or hasattr(chunk, "content"):
+                final_message += chunk.content
+                yield f"data: {json.dumps({'type': 'token', 'message': chunk.content})}\n\n"
+
+    yield f"data: {json.dumps({'type': 'final_message', 'message': final_message})}\n\n"
+    yield "data: [DONE]\n\n"

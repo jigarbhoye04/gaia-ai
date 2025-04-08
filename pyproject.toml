@@ -27,7 +27,6 @@ dependencies = [
     "langchain>=0.3.23",
     "langchain-community>=0.3.21",
     "langchain-groq>=0.3.2",
-    "langchain-openai>=0.3.12",
     "hyperframe==6.1.0",
     "idna==3.10",
     "itsdangerous>=2.2.0",
@@ -72,4 +71,7 @@ dependencies = [
     "transformers==4.48.0",
     "typing-extensions==4.12.2",
     "urlextract>=1.9.0",
+    "langchain-openai>=0.3.1",
+    "pyowm>=3.3.0",
+    "langgraph>=0.3.26",
 ]

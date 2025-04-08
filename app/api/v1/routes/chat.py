@@ -31,8 +31,19 @@ from app.models.general_models import (
     DescriptionUpdateRequestLLM,
     DescriptionUpdateRequest,
 )
+from app.services.langchain_service import chat_stream_langchain
 
 router = APIRouter()
+
+
+@router.post("/chat-langchain")
+async def chat_langchain(
+    body: MessageRequestWithHistory,
+):
+    return StreamingResponse(
+        chat_stream_langchain(body=body),
+        media_type="text/event-stream",
+    )
 
 
 @router.post("/chat-stream")

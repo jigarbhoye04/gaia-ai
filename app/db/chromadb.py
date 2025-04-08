@@ -73,7 +73,7 @@ class ChromaClient:
         )  # prevents init from running again
 
     @staticmethod
-    def get_client(request: Request | None):
+    def get_client(request: Request | None = None) -> chromadb.Client:
         """
         Get the ChromaDB client from the application state.
 
