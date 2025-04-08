@@ -3,7 +3,8 @@ API dependencies for the GAIA API.
 """
 
 from fastapi import Request
-from app.db.chromadb import get_chroma_client
+
+from app.db.chromadb import ChromaClient
 
 
 async def get_chromadb(request: Request):
@@ -16,4 +17,4 @@ async def get_chromadb(request: Request):
     Returns:
         The initialized ChromaDB client
     """
-    return get_chroma_client(request)
+    return ChromaClient.get_client(request)
