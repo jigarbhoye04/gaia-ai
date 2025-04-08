@@ -2,6 +2,7 @@ from typing import Annotated
 from langchain_core.tools import tool
 from app.langchain.templates.weather_template import WEATHER_PROMPT_TEMPLATE
 from app.utils.chat_utils import user_weather
+import json
 
 
 @tool
@@ -19,8 +20,20 @@ async def get_weather(
         location (str): The location for which to retrieve the weather report.
 
     Returns:
-        str: A natural language weather summary.
+        str: A JSON string containing both the formatted weather text and raw weather data.
     """
+    # Get the raw weather data
     weather_data = await user_weather(location)
+
+    # Format for LLM consumption
     formatted_output = WEATHER_PROMPT_TEMPLATE.format(weather_data=weather_data)
-    return formatted_output
+
+    # Create a response object with both the formatted text and the raw data
+    response = {
+        "formatted_text": formatted_output,  # For the LLM to use
+        "raw_weather_data": weather_data,  # For the frontend to use
+        "location": location,  # The requested location
+    }
+
+    # Return as JSON string that can be parsed both by LLM and the frontend
+    return json.dumps(response)

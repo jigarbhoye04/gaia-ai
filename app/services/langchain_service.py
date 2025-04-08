@@ -42,13 +42,40 @@ async def chat_stream_langchain(
         event_type = event.get("event")
 
         if event_type == "on_chat_model_stream":
-            # Possible event types:
-            # on_chat_model_stream | on_tool_start | on_tool_end | on_chain_end | on_chat_model_stream
+            # Handle AI model streaming responses
             chunk = event["data"]["chunk"]
 
             if isinstance(chunk, AIMessage) or hasattr(chunk, "content"):
                 final_message += chunk.content
                 yield f"data: {json.dumps({'type': 'token', 'message': chunk.content})}\n\n"
+
+        elif event_type == "on_tool_end":
+            # When a tool finishes executing, send the result to frontend
+            tool_name = event["name"]
+            content = event["data"]["output"].content
+            data = json.loads(content)
+
+            # Send weather-specific data to frontend
+            if tool_name == "get_weather":
+                yield f"""data: {
+                    json.dumps(
+                        {
+                            "type": "weather_data",
+                            "data": data.get("raw_weather_data", ""),
+                        }
+                    )
+                }\n\n"""
+
+            # Send search-specific data to frontend
+            elif tool_name == "web_search":
+                yield f"""data: {
+                    json.dumps(
+                        {
+                            "type": "search_data",
+                            "data": data.get("raw_search_data", ""),
+                        }
+                    )
+                }\n\n"""
 
     yield f"data: {json.dumps({'type': 'final_message', 'message': final_message})}\n\n"
     yield "data: [DONE]\n\n"

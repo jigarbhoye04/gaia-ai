@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from typing import Annotated
 from langchain_core.tools import tool
@@ -28,7 +29,7 @@ async def web_search(
         query_text: The search query to look up on the web.
 
     Returns:
-        A formatted string containing search results with titles, snippets, sources, and URLs.
+        A JSON string containing formatted search results for LLM and structured data for the frontend.
     """
     start_time = time.time()
 
@@ -57,14 +58,41 @@ async def web_search(
         logger.info(
             f"Web search completed in {elapsed_time:.2f} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
         )
-        return SEARCH_CONTEXT_TEMPLATE.format(formatted_results=formatted_results)
+
+        # Create a response with both formatted text for the LLM and structured data for the frontend
+        response = {
+            "formatted_text": SEARCH_CONTEXT_TEMPLATE.format(
+                formatted_results=formatted_results
+            ),
+            "raw_search_data": {
+                "web_results": web_results,
+                "news_results": news_results,
+                "query": query_text,
+                "elapsed_time": elapsed_time,
+                "result_count": {"web": len(web_results), "news": len(news_results)},
+            },
+        }
+
+        return json.dumps(response)
 
     except (asyncio.TimeoutError, ConnectionError) as e:
         logger.error(f"Network error in web search: {e}", exc_info=True)
-        return "\n\nConnection timed out during web search. Please try again later."
+        error_response = {
+            "formatted_text": "\n\nConnection timed out during web search. Please try again later.",
+            "error": str(e),
+        }
+        return json.dumps(error_response)
     except ValueError as e:
         logger.error(f"Value error in web search: {e}", exc_info=True)
-        return "\n\nInvalid search parameters. Please try a different query."
+        error_response = {
+            "formatted_text": "\n\nInvalid search parameters. Please try a different query.",
+            "error": str(e),
+        }
+        return json.dumps(error_response)
     except Exception as e:
         logger.error(f"Unexpected error in web search: {e}", exc_info=True)
-        return "\n\nError performing web search. Please try again later."
+        error_response = {
+            "formatted_text": "\n\nError performing web search. Please try again later.",
+            "error": str(e),
+        }
+        return json.dumps(error_response)
