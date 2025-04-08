@@ -12,6 +12,8 @@ from langgraph.prebuilt import create_react_agent
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, AIMessage
 
+from app.langchain.templates.agent_template import create_agent_prompt
+from app.langchain.tools.search import web_search
 from app.langchain.tools.weather import get_weather
 from app.models.general_models import MessageRequestWithHistory
 
@@ -19,10 +21,19 @@ from app.models.general_models import MessageRequestWithHistory
 async def chat_stream_langchain(
     body: MessageRequestWithHistory,
 ) -> AsyncGenerator[str, None]:
-    model = init_chat_model("llama-3.1-8b-instant", model_provider="groq")
-    tools = [get_weather]  # append more tools as needed
-    agent_executor = create_react_agent(model, tools=tools)  # create lang graph agent
+    """
+    Stream chat responses using LangChain and LangGraph.
 
+    Args:
+        body (MessageRequestWithHistory): The user message and conversation history
+
+    Returns:
+        AsyncGenerator[str, None]: A stream of SSE-formatted response chunks
+    """
+    model = init_chat_model("llama-3.1-8b-instant", model_provider="groq")
+    prompt = create_agent_prompt()
+    tools = [get_weather, web_search]
+    agent_executor = create_react_agent(model=model, tools=tools, prompt=prompt)
     final_message = ""
 
     async for event in agent_executor.astream_events(
@@ -30,10 +41,11 @@ async def chat_stream_langchain(
     ):
         event_type = event.get("event")
 
-        # Possible event types:
-        # on_chat_model_stream | on_tool_start | on_tool_end | on_chain_end | on_chat_model_stream
         if event_type == "on_chat_model_stream":
+            # Possible event types:
+            # on_chat_model_stream | on_tool_start | on_tool_end | on_chain_end | on_chat_model_stream
             chunk = event["data"]["chunk"]
+
             if isinstance(chunk, AIMessage) or hasattr(chunk, "content"):
                 final_message += chunk.content
                 yield f"data: {json.dumps({'type': 'token', 'message': chunk.content})}\n\n"
