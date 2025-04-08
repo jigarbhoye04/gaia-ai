@@ -14,8 +14,6 @@ export interface Section {
 import { ReactElement } from "react";
 
 import {
-  BookOpen02Icon,
-  CreditCardPosIcon,
   CustomerService01Icon,
   GlobalIcon,
   Idea01Icon,

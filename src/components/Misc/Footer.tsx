@@ -1,7 +1,9 @@
-import { siteConfig } from "@/config/siteConfig";
-import { useUser } from "@/hooks/useUser";
 import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
+
+import { siteConfig } from "@/config/siteConfig";
+import { useUser } from "@/hooks/useUser";
+
 import { LinkButton } from "./LinkButton";
 
 export default function Footer() {

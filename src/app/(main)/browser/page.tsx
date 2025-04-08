@@ -1,11 +1,9 @@
 "use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import { Tooltip } from "@heroui/tooltip";
 import { ResetIcon } from "@radix-ui/react-icons";
 import {
   AlertTriangle,
@@ -18,13 +16,15 @@ import {
   Layout,
   Loader,
   Plug,
-  RefreshCw,
   SendIcon,
   X,
   Zap,
 } from "lucide-react";
 import Image from "next/image";
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Thoughts {
   evaluation?: string;
@@ -39,7 +39,7 @@ interface Action {
   done?: { text: string; success: boolean };
   search_google?: { query: string };
   go_to_url?: { url: string };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface StepData {
@@ -84,7 +84,12 @@ interface TaskResult {
         title: string;
       }>;
       screenshot?: string;
-      interacted_element: any[];
+      interacted_element: {
+        selector?: string;
+        text?: string;
+        tagName?: string;
+        attributes?: Record<string, string>;
+      }[];
       url: string;
       title: string;
     };
@@ -393,7 +398,6 @@ const BrowserAutomationChat = () => {
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
 
@@ -418,11 +422,11 @@ const BrowserAutomationChat = () => {
 
     console.log("connectin2");
     setIsConnecting(true);
-    setError(null);
+    toast.dismiss(); // Clear any existing toast notifications
 
     const wsUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}ws/browser`;
     if (!wsUrl) {
-      setError("WebSocket URL not defined");
+      toast.error("WebSocket URL not defined");
       setIsConnecting(false);
       return;
     }
@@ -512,7 +516,7 @@ const BrowserAutomationChat = () => {
           if (result?.history?.length > 0) {
             const lastItem = result.history[result.history.length - 1];
 
-            const lastAction = lastItem.model_output.action[0];
+            // const lastAction = lastItem.model_output.action[0];
             const lastResult = lastItem.result[0];
 
             if (
@@ -557,7 +561,7 @@ const BrowserAutomationChat = () => {
     };
 
     socketRef.current.onerror = (event) => {
-      setError("WebSocket error occurred.");
+      toast.error("WebSocket error occurred.");
       console.error("WebSocket error:", event);
     };
 
@@ -574,7 +578,7 @@ const BrowserAutomationChat = () => {
     setMessages([]);
     setIsConnected(false);
     setSessionId(null);
-    setError(null);
+    toast.dismiss(); // Clearing any existing toasts
     setIsProcessing(false);
     setCurrentStepIndex(0);
 

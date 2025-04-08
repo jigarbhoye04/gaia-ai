@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useEffect } from "react";
 
+import FeatureGridSection from "@/components/Landing/Sections/FeatureGridSection";
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
 import MobileSection from "@/components/Landing/Sections/MobileSection";
@@ -70,11 +71,12 @@ export default function LandingPage() {
             <MailSection />
           </Suspense>
           <Suspense fallback={<SuspenseLoader />}>
+            <FeatureGridSection />
+          </Suspense>
+          DF
+          <Suspense fallback={<SuspenseLoader />}>
             <MobileSection />
           </Suspense>
-          {/* <Suspense fallback={<SuspenseLoader />}> */}
-          {/* <FeatureGridSection /> */}
-          {/* </Suspense> */}
           <Suspense fallback={<SuspenseLoader />}>
             <FinalSection />
           </Suspense>
