@@ -1,76 +1,121 @@
 import json
-from typing import Any
-from app.utils.llm_utils import do_prompt_no_stream
+from typing import Dict, Optional
+
+from langchain.chat_models import init_chat_model
+from langchain_core.prompts import ChatPromptTemplate
+from pydantic import BaseModel, Field
+
+from app.config.loggers import notes_logger as logger
+from app.db.chromadb import ChromaClient
+from app.db.collections import notes_collection
+from app.db.redis import delete_cache, set_cache
+from app.models.notes_models import NoteModel, NoteResponse
 from app.prompts.system.notes_prompts import MEMORY_CREATOR
 
 
-from typing import Dict
-from fastapi import HTTPException
-from app.models.notes_models import NoteModel
-from app.utils.embedding_utils import generate_embedding
-from app.db.collections import notes_collection
-from app.db.redis import delete_cache
+class Memory(BaseModel):
+    """Important details to remember"""
+
+    plaintext: Optional[str] = Field(
+        description="A description of the main content of the note of the user in HTML format with proper formatting (only use the html tags where necessary for specific elements). In first person perspective of the user."
+    )
+    content: Optional[str] = Field(
+        description="A description of the main content of the user's note of the user in plaintext. In first person perspective of the user. This will be the same as the content but with the html tags parsed and converted to a normal string"
+    )
+    is_memory: bool = Field(
+        description="A boolean value indicating is note passed query requirements, if true generate plaintext and content."
+    )
 
 
-async def insert_note(note: NoteModel, user_id: str, auto_created=False) -> Dict:
-    """
-    Insert a new note into the database and handle related actions like embedding and cache invalidation.
-    """
-    # Generate embedding for the note content
-    embedding = generate_embedding(note.content)
+chat_model = init_chat_model("@cf/meta/llama-3.3-70b-instruct-fp8-fast")
+chat_model.with_structured_output(Memory)
 
-    # Prepare the note data to insert into the database
-    new_note = {
-        **note.model_dump(),
-        "vector": embedding,
+
+async def insert_note(
+    note: NoteModel,
+    user_id: str,
+    auto_created=False,
+) -> Dict:
+    logger.info(f"Creating new note for user: {user_id}")
+    chromadb_client = ChromaClient.get_client()
+
+    note_data = note.model_dump()
+    note_data["user_id"] = user_id
+    note_data["auto_created"] = auto_created
+    result = await notes_collection.insert_one(note_data)
+    note_id = str(result.inserted_id)
+
+    # Add note to ChromaDB for vector search
+    if chromadb_client:
+        chroma_notes_collection = await chromadb_client.get_collection(name="notes")
+
+        await chroma_notes_collection.add(
+            documents=[note.plaintext],
+            metadatas=[
+                {
+                    "note_id": note_id,
+                    "user_id": user_id,
+                }
+            ],
+            ids=[note_id],
+        )
+        logger.info(f"Note with id {note_id} indexed in ChromaDB")
+
+    response_data = {
+        "id": note_id,
+        "content": note_data["content"],
+        "plaintext": note_data["plaintext"],
         "user_id": user_id,
-        "auto_created": auto_created,
+        "auto_created": note_data.get("auto_created", False),
+        "title": note_data.get("title"),
+        "description": note_data.get("description"),
     }
 
-    # Insert the note into the collection
-    try:
-        result = await notes_collection.insert_one(new_note)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error inserting note: {str(e)}")
-
-    # Invalidate cache for all notes
     await delete_cache(f"notes:{user_id}")
 
-    # Return the inserted note with its ID
-    return {"id": str(result.inserted_id), **note.model_dump()}
+    await set_cache(f"note:{user_id}:{note_id}", response_data)
+    logger.info(f"Note created with ID: {note_id} and cache updated")
+
+    return NoteResponse(**response_data)
 
 
 async def should_create_memory(
     message: str,
-) -> tuple[bool, None, None] | tuple[bool, Any, Any]:
+) -> tuple[bool, None, None] | tuple[bool, str, str]:
     try:
-        result = await do_prompt_no_stream(
-            prompt=f"This is the message: {message}",
-            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-            system_prompt=MEMORY_CREATOR,
+        prompt_template = ChatPromptTemplate.from_messages(
+            [("system", MEMORY_CREATOR), ("user", "This is the message: {message}")]
         )
 
-        if isinstance(result, str):
-            try:
-                result = json.loads(result.strip())
-            except json.JSONDecodeError:
-                return False, None, None
+        prompt = prompt_template.invoke({"message": message})
 
-        elif isinstance(result, dict) and "response" in result:
-            try:
-                result = json.loads(result["response"].strip())
-            except json.JSONDecodeError:
-                return False, None, None
+        response = chat_model.invoke(prompt)
+        response_dict = json.loads(response.to_json())
+
+        memory = Memory.model_validate(response_dict)
+        is_memory = memory.is_memory
+        plaintext = memory.plaintext
+        content = memory.content
+
+        if is_memory and plaintext and content:
+            return (is_memory, plaintext, content)
         else:
-            return False, None, None
-
-        is_memory = result.get("is_memory")
-
-        if isinstance(is_memory, bool):
-            return is_memory, result.get("plaintext"), result.get("content")
-
-        return False, None, None
-
+            return (False, None, None)
+    except json.JSONDecodeError:
+        logger.error("Failed to decode JSON response from LLM")
+        return (False, None, None)
+    except ValueError:
+        logger.error("Failed to validate response from LLM")
+        return (False, None, None)
+    except TypeError:
+        logger.error("Type error in response from LLM")
+        return (False, None, None)
+    except KeyError:
+        logger.error("Key error in response from LLM")
+        return (False, None, None)
+    except RuntimeError:
+        logger.error("Runtime error in response from LLM")
+        return (False, None, None)
     except Exception:
         return (False, None, None)
 

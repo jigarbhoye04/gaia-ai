@@ -14,6 +14,7 @@ from app.db.utils import serialize_document
 from app.models.notes_models import NoteModel, NoteResponse
 from app.prompts.user.chat_prompts import NOTES_CONTEXT_TEMPLATE
 from app.utils.embedding_utils import search_notes_by_similarity
+from app.utils.notes_utils import insert_note
 
 
 async def get_note(note_id: str, user_id: str) -> NoteResponse:
@@ -212,45 +213,8 @@ async def create_note_service(
     Raises:
         HTTPException: If note creation fails.
     """
-    logger.info(f"Creating new note for user: {user_id}")
-    note_data = note.model_dump()
-    note_data["user_id"] = user_id
     try:
-        result = await notes_collection.insert_one(note_data)
-        note_id = str(result.inserted_id)
-
-        # Add note to ChromaDB for vector search
-        if chromadb_client:
-            chroma_notes_collection = await chromadb_client.get_collection(name="notes")
-
-            await chroma_notes_collection.add(
-                documents=[note.plaintext],
-                metadatas=[
-                    {
-                        "note_id": note_id,
-                        "user_id": user_id,
-                    }
-                ],
-                ids=[note_id],
-            )
-            logger.info(f"Note with id {note_id} indexed in ChromaDB")
-
-        response_data = {
-            "id": note_id,
-            "content": note_data["content"],
-            "plaintext": note_data["plaintext"],
-            "user_id": user_id,
-            "auto_created": note_data.get("auto_created", False),
-            "title": note_data.get("title"),
-            "description": note_data.get("description"),
-        }
-
-        await delete_cache(f"notes:{user_id}")
-
-        await set_cache(f"note:{user_id}:{note_id}", response_data)
-        logger.info(f"Note created with ID: {note_id} and cache updated")
-
-        return NoteResponse(**response_data)
+        return await insert_note(note, user_id)
     except Exception as e:
         logger.error(f"Failed to create note: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to create note")

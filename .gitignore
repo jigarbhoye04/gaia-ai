@@ -9,6 +9,8 @@ api/.env
 *.pyc
 .vercel
 
+uv.lock
+
 venv/
 .venv/
 .venv311/
@@ -32,3 +34,5 @@ venv/
 
 .terraform.lock.hcl
 main.tf
+
+chroma-data/
