@@ -102,13 +102,6 @@ async def chat_stream(
         fetch_files,
     ]
 
-    # Using Sequence type to avoid invariance issues with Pipeline constructor
-    # from typing import Sequence, Callable, Coroutine, Dict, Any
-
-    # typed_pipeline_steps: Sequence[
-    #     Callable[[Dict[str, Any]], Coroutine[Any, Any, Dict[str, Any]]]
-    # ] = pipeline_steps
-
     pipeline = Pipeline(pipeline_steps)
     context = await pipeline.run(context)
 
