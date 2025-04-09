@@ -13,9 +13,11 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import HumanMessage, AIMessage
 
 from app.langchain.templates.agent_template import create_agent_prompt
+from app.langchain.tools.fetch import fetch_webpages
 from app.langchain.tools.search import web_search
 from app.langchain.tools.weather import get_weather
 from app.models.general_models import MessageRequestWithHistory
+from app.utils.sse_utils import format_tool_response
 
 
 async def chat_stream_langchain(
@@ -32,7 +34,7 @@ async def chat_stream_langchain(
     """
     model = init_chat_model("llama-3.1-8b-instant", model_provider="groq")
     prompt = create_agent_prompt()
-    tools = [get_weather, web_search]
+    tools = [get_weather, web_search, fetch_webpages]
     agent_executor = create_react_agent(model=model, tools=tools, prompt=prompt)
     final_message = ""
 
@@ -42,7 +44,6 @@ async def chat_stream_langchain(
         event_type = event.get("event")
 
         if event_type == "on_chat_model_stream":
-            # Handle AI model streaming responses
             chunk = event["data"]["chunk"]
 
             if isinstance(chunk, AIMessage) or hasattr(chunk, "content"):
@@ -50,32 +51,7 @@ async def chat_stream_langchain(
                 yield f"data: {json.dumps({'type': 'token', 'message': chunk.content})}\n\n"
 
         elif event_type == "on_tool_end":
-            # When a tool finishes executing, send the result to frontend
-            tool_name = event["name"]
-            content = event["data"]["output"].content
-            data = json.loads(content)
-
-            # Send weather-specific data to frontend
-            if tool_name == "get_weather":
-                yield f"""data: {
-                    json.dumps(
-                        {
-                            "type": "weather_data",
-                            "data": data.get("raw_weather_data", ""),
-                        }
-                    )
-                }\n\n"""
-
-            # Send search-specific data to frontend
-            elif tool_name == "web_search":
-                yield f"""data: {
-                    json.dumps(
-                        {
-                            "type": "search_data",
-                            "data": data.get("raw_search_data", ""),
-                        }
-                    )
-                }\n\n"""
+            yield format_tool_response(event["name"], event["data"]["output"].content)
 
     yield f"data: {json.dumps({'type': 'final_message', 'message': final_message})}\n\n"
     yield "data: [DONE]\n\n"

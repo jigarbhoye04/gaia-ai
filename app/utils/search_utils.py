@@ -424,23 +424,15 @@ async def upload_screenshot_to_cloudinary(
 
 async def extract_text(html: str) -> str:
     """Extracts and cleans text from HTML content."""
-    print("extracting text")
     soup = BeautifulSoup(html, "html.parser")
-    print("extracting text 1")
     for tag in ["script", "style", "nav", "footer", "iframe", "noscript"]:
-        print("extracting text tag", tag)
         for element in soup.find_all(tag):
             element.extract()
 
-    print("extracting text 2")
     text = soup.get_text(separator="\n", strip=True)
-    print("extracting text 3")
     lines = (line.strip() for line in text.splitlines())
-    print("extracting text 4")
     chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    print("extracting text 5")
     content = "\n".join(chunk for chunk in chunks if chunk)
-    print(f"this is the extracted text: {content=}")
     return content
 
 
