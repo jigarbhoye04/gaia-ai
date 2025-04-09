@@ -27,13 +27,21 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
+    GEMINI_API_KEY: str
+    LAMINAR_API_KEY: str
+
+    # LLM Service
+    LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
+
+    # Environment & Deployment
+    ENV: str = "production"
+    DISABLE_PROFILING: bool = False
+    DUMMY_IP: str = "8.8.8.8"
 
     # Hugging Face Configuration
-    # USE_HUGGINGFACE_API: bool = True
     USE_HUGGINGFACE_API: bool = False
     HUGGINGFACE_API_KEY: str
     HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
-    # Zero shot classification
     HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
     HUGGINGFACE_API_URL: str = "https://api-inference.huggingface.co/models/"
     HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
@@ -67,14 +75,6 @@ class Settings(BaseSettings):
             if self.ENV == "production" or self.CHROMADB_USE_PRODUCTION
             else self.CHROMADB_DEVELOPMENT_PORT
         )
-
-    # LLM Service
-    LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
-
-    # Environment & Deployment
-    ENV: str = "production"
-    DISABLE_PROFILING: bool = False
-    DUMMY_IP: str = "8.8.8.8"
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:

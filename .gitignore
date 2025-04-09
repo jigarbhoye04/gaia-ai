@@ -32,3 +32,5 @@ venv/
 
 .terraform.lock.hcl
 main.tf
+
+chroma-data/
