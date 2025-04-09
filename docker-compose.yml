@@ -45,7 +45,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-    
+
   # RabbitMQ Service
   rabbitmq:
     profiles: ["celery"]
@@ -132,7 +132,7 @@ services:
       retries: 5
     networks:
       - gaia_network
-  
+
   # MongoDB Service
   mongo:
     image: mongo:latest
