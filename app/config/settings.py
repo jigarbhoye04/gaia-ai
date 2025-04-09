@@ -1,5 +1,25 @@
-from pydantic_settings import BaseSettings
+import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import computed_field
+from dotenv import load_dotenv
+
+# Load environment variables from a .env file
+load_dotenv('.env')
+
+# Determine which environment file to load
+env = os.getenv("ENV", "production")
+print(f"Environment variable ENV is set to: {env}")
+
+env_file_name = f".env.{env}" if env != "production" else ".env"
+env_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", env_file_name))
+
+# Explicitly load the environment file with python-dotenv
+if os.path.exists(env_file_path):
+    print(f"Environment file exists, loading it: {env_file_path}")
+    load_dotenv(env_file_path, override=True)
+    os.environ["ENV_FILE"] = env_file_path
+else:
+    print(f"Warning: Environment file '{env_file_path}' does not exist. Using default settings.")
 
 
 class Settings(BaseSettings):
@@ -52,29 +72,8 @@ class Settings(BaseSettings):
         return f"{self.HUGGINGFACE_API_URL}{self.HUGGINGFACE_ZSC_MODEL}"
 
     # Default ChromaDB connection settings
-    CHROMADB_PRODUCTION_HOST: str
-    CHROMADB_PRODUCTION_PORT: int
-    CHROMADB_DEVELOPMENT_HOST: str = "localhost"
-    CHROMADB_DEVELOPMENT_PORT: int = 8080
-    CHROMADB_USE_PRODUCTION: bool = False
-
-    @computed_field
-    def CHROMADB_HOST(self) -> str:
-        """Return the ChromaDB host based on the environment."""
-        return (
-            self.CHROMADB_PRODUCTION_HOST
-            if self.ENV == "production" or self.CHROMADB_USE_PRODUCTION
-            else self.CHROMADB_DEVELOPMENT_HOST
-        )
-
-    @computed_field
-    def CHROMADB_PORT(self) -> int:
-        """Return the ChromaDB port based on the environment."""
-        return (
-            self.CHROMADB_PRODUCTION_PORT
-            if self.ENV == "production" or self.CHROMADB_USE_PRODUCTION
-            else self.CHROMADB_DEVELOPMENT_PORT
-        )
+    CHROMADB_HOST: str
+    CHROMADB_PORT: int
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
@@ -113,12 +112,7 @@ class Settings(BaseSettings):
         """Google OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/google/callback"
 
-    class Config:
-        """Configuration for environment file settings."""
-
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "allow"
+    model_config = SettingsConfigDict(env_file=env_file_path, env_file_encoding="utf-8", extra="allow")
 
 
 settings = Settings()
