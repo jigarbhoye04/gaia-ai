@@ -1,25 +1,90 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import computed_field
-from dotenv import load_dotenv
+from infisical_sdk import InfisicalSDKClient
+from app.config.loggers import app_logger as logger
 
-# Load environment variables from a .env file
-load_dotenv('.env')
+# # Load environment variables from a .env file
+# load_dotenv(".env")
 
-# Determine which environment file to load
-env = os.getenv("ENV", "production")
-print(f"Environment variable ENV is set to: {env}")
+# # Determine which environment file to load
+# env = os.getenv("ENV", "production")
+# print(f"Environment variable ENV is set to: {env}")
 
-env_file_name = f".env.{env}" if env != "production" else ".env"
-env_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", env_file_name))
+# env_file_name = f".env.{env}" if env != "production" else ".env"
+# env_file_path = os.path.abspath(
+#     os.path.join(os.path.dirname(__file__), "..", "..", env_file_name)
+# )
 
-# Explicitly load the environment file with python-dotenv
-if os.path.exists(env_file_path):
-    print(f"Environment file exists, loading it: {env_file_path}")
-    load_dotenv(env_file_path, override=True)
-    os.environ["ENV_FILE"] = env_file_path
-else:
-    print(f"Warning: Environment file '{env_file_path}' does not exist. Using default settings.")
+# # Explicitly load the environment file with python-dotenv
+# if os.path.exists(env_file_path):
+#     print(f"Environment file exists, loading it: {env_file_path}")
+#     load_dotenv(env_file_path, override=True)
+#     os.environ["ENV_FILE"] = env_file_path
+# else:
+#     print(
+#         f"Warning: Environment file '{env_file_path}' does not exist. Using default settings."
+#     )
+
+
+class InfisicalConfigError(Exception):
+    """Exception raised for errors related to Infisical configuration."""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+def inject_infisical_secrets():
+    INFISICAL_TOKEN = os.getenv("INFISICAL_TOKEN")
+    INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
+    ENV = os.getenv("ENV", "production")
+    INFISICAL_MACHINE_INDENTITY_CLIENT_ID = os.getenv(
+        "INFISICAL_MACHINE_INDENTITY_CLIENT_ID"
+    )
+    INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET = os.getenv(
+        "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET"
+    )
+
+    if not INFISICAL_TOKEN or not INFISICAL_PROJECT_ID:
+        error_message = (
+            "Infisical token and project ID are required for secrets management."
+        )
+        if not INFISICAL_TOKEN and not INFISICAL_PROJECT_ID:
+            error_message = "Both Infisical token and project ID are missing. These are required for secrets management."
+        elif not INFISICAL_TOKEN:
+            error_message = (
+                "Infisical token is missing. This is required for secrets management."
+            )
+        elif not INFISICAL_PROJECT_ID:
+            error_message = "Infisical project ID is missing. This is required for secrets management."
+
+        raise InfisicalConfigError(error_message)
+
+    try:
+        client = InfisicalSDKClient(host="https://app.infisical.com")
+        client.auth.universal_auth.login(
+            client_id=INFISICAL_MACHINE_INDENTITY_CLIENT_ID,
+            client_secret=INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET,
+        )
+        secrets = client.secrets.list_secrets(
+            project_id=INFISICAL_PROJECT_ID,
+            environment_slug=ENV,
+            expand_secret_references=True,  # Optional
+            view_secret_value=True,  # Optional
+            recursive=False,  # Optional
+            include_imports=True,  # Optional
+        )
+        logger.INFO(
+            f"Injecting {len(secrets)} secrets from Infisical into environment..."
+        )
+        for secret in secrets:
+            os.environ[secret.secret_name] = secret.secret_value
+
+    except Exception as e:
+        raise InfisicalConfigError(
+            f"Failed to fetch secrets from Infisical: {e}"
+        ) from e
 
 
 class Settings(BaseSettings):
@@ -30,8 +95,6 @@ class Settings(BaseSettings):
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
-    CLOUDFLARE_ACCOUNTID: str
-    CLOUDFLARE_AUTH_TOKEN: str
     REDIS_URL: str
 
     # OAuth & Authentication
@@ -41,14 +104,13 @@ class Settings(BaseSettings):
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
     # External API Keys
-    BING_API_KEY_1: str
+    BING_API_KEY: str
     BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
     GEMINI_API_KEY: str
-    LAMINAR_API_KEY: str
 
     # LLM Service
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
@@ -112,7 +174,12 @@ class Settings(BaseSettings):
         """Google OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/google/callback"
 
-    model_config = SettingsConfigDict(env_file=env_file_path, env_file_encoding="utf-8", extra="allow")
+    model_config = SettingsConfigDict(
+        # env_file=env_file_path,
+        env_file_encoding="utf-8",
+        extra="allow",
+    )
 
 
+inject_infisical_secrets()
 settings = Settings()

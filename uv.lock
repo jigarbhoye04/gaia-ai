@@ -315,25 +315,6 @@ wheels = [
 ]
 
 [[package]]
-name = "boto3-stubs"
-version = "1.37.28"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "botocore-stubs" },
-    { name = "types-s3transfer" },
-    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/39/2500b02987d17c7ed0a17630ac026021b9629f3de42e2598be648e47dee5/boto3_stubs-1.37.28.tar.gz", hash = "sha256:f859263ce76cb33a4c79dea545cd447588ca23a1fd09083c16f8e58605f89515", size = 99130 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/34/5c/b398522f8f5751a2421bcbcecf2f63724728d405cb783ef03fa663845d62/boto3_stubs-1.37.28-py3-none-any.whl", hash = "sha256:a27cb833f4cfb1795acf04c6106297a552e66cd612c208618542d4abe5ce26bd", size = 68644 },
-]
-
-[package.optional-dependencies]
-batch = [
-    { name = "mypy-boto3-batch" },
-]
-
-[[package]]
 name = "botocore"
 version = "1.37.28"
 source = { registry = "https://pypi.org/simple" }
@@ -345,18 +326,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/92/90/557082a8379ece106b37eb00766efc7a32cbfcdaa0d1d78f38f99eefd218/botocore-1.37.28.tar.gz", hash = "sha256:69ea327f70f0607d174c4c2b1dcc87327b9c48e413c9d322179172b614b28e03", size = 13799915 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ea/c3/29ffcb4c90492bcfcff1b7e5ddb5529846acc0e627569432db9842c47675/botocore-1.37.28-py3-none-any.whl", hash = "sha256:c26b645d7b125bf42ffc1671b862b47500ee658e3a1c95d2438cb689fc85df15", size = 13467675 },
-]
-
-[[package]]
-name = "botocore-stubs"
-version = "1.37.28"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "types-awscrt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/2e/fcc90b0dd4303c65c6125375b89c32afbcadbe7de71902b1a9b0c2479af5/botocore_stubs-1.37.28.tar.gz", hash = "sha256:16c4e5976cb83b863884720350e245ddde73bd39cfe2c948d5ac57c70aaec89e", size = 42236 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/92/98/8f7d8d9f87af25ce3c7008349f796b56717325c8a7fea005ba16021e3c02/botocore_stubs-1.37.28-py3-none-any.whl", hash = "sha256:adb5376af3f142b01f0f5dd39aa1a155ecc38fd0a0fd070db96ac1c7b8cc16e9", size = 65569 },
 ]
 
 [[package]]
@@ -687,15 +656,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/df/ca/2e47a67a08ef44860d0c69d4b4126c281333979c169645f4ebb08fa6631a/cloudinary-1.41.0.tar.gz", hash = "sha256:e189739a796a7d2ad15c19971741d33a9300816b16c0282b4b14ccf1dd2948c0", size = 177501 }
 
 [[package]]
-name = "cloudpickle"
-version = "3.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/52/39/069100b84d7418bc358d81669d5748efb14b9cceacd2f9c75f550424132f/cloudpickle-3.1.1.tar.gz", hash = "sha256:b216fa8ae4019d5482a8ac3c95d8f6346115d8835911fd4aefd1a445e4242c64", size = 22113 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7e/e8/64c37fadfc2816a7701fa8a6ed8d87327c7d54eacfbfb6edab14a2f2be75/cloudpickle-3.1.1-py3-none-any.whl", hash = "sha256:c8c5a44295039331ee9dad40ba100a9c7297b6f988e50e87ccdf3765a668350e", size = 20992 },
-]
-
-[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -1003,11 +963,11 @@ dependencies = [
     { name = "huggingface-hub" },
     { name = "hyperframe" },
     { name = "idna" },
+    { name = "infisicalsdk" },
     { name = "itsdangerous" },
     { name = "jieba" },
     { name = "jinja2" },
     { name = "joblib" },
-    { name = "laminar" },
     { name = "langchain-google-genai" },
     { name = "langcodes" },
     { name = "language-data" },
@@ -1067,11 +1027,11 @@ requires-dist = [
     { name = "huggingface-hub", specifier = "==0.27.0" },
     { name = "hyperframe", specifier = "==6.1.0" },
     { name = "idna", specifier = "==3.10" },
+    { name = "infisicalsdk", specifier = ">=1.0.7" },
     { name = "itsdangerous", specifier = ">=2.2.0" },
     { name = "jieba", specifier = "==0.42.1" },
     { name = "jinja2", specifier = "==3.1.5" },
     { name = "joblib", specifier = "==1.4.2" },
-    { name = "laminar", extras = ["all"], specifier = ">=2022.5a1" },
     { name = "langchain-google-genai", specifier = ">=2.1.2" },
     { name = "langcodes", specifier = "==3.5.0" },
     { name = "language-data", specifier = "==1.3.0" },
@@ -1472,6 +1432,22 @@ wheels = [
 ]
 
 [[package]]
+name = "infisicalsdk"
+version = "1.0.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aenum" },
+    { name = "boto3" },
+    { name = "botocore" },
+    { name = "python-dateutil" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/a2/5219da58f96847e6e48a66b9520aaef983c8ebaf406088e93925d4577395/infisicalsdk-1.0.7.tar.gz", hash = "sha256:b1ff21271a970ab3c8252de348e8ba4616691acc1fb270a55d2a81b589a8eeb2", size = 13153 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/06/e2ffbba1666fa773be0bf3432b979c383e38b5f017007a344370c162fffb/infisicalsdk-1.0.7-py3-none-any.whl", hash = "sha256:0de10b917c82fa6c27f002bb2bef83e7549dba8f89fb44714d07beea1095ebe3", size = 12930 },
+]
+
+[[package]]
 name = "inflection"
 version = "0.5.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1627,22 +1603,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b7/e8/0598f0e8b4af37cd9b10d8b87386cf3173cb8045d834ab5f6ec347a758b3/kubernetes-32.0.1.tar.gz", hash = "sha256:42f43d49abd437ada79a79a16bd48a604d3471a117a8347e87db693f2ba0ba28", size = 946691 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/08/10/9f8af3e6f569685ce3af7faab51c8dd9d93b9c38eba339ca31c746119447/kubernetes-32.0.1-py2.py3-none-any.whl", hash = "sha256:35282ab8493b938b08ab5526c7ce66588232df00ef5e1dbe88a419107dc10998", size = 1988070 },
-]
-
-[[package]]
-name = "laminar"
-version = "2022.5a1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "boto3" },
-    { name = "boto3-stubs", extra = ["batch"] },
-    { name = "cloudpickle" },
-    { name = "smart-open" },
-    { name = "svix-ksuid" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/aa/bb/abdc95b09829df8e40b4910862caa5a15788ca75edf5f650ca4d839df0f3/laminar-2022.5a1.tar.gz", hash = "sha256:c27cbc298949c516ddb6417c5ad665ebc946d0ddbc7e25ebd29b3767a9b3f6ff", size = 29386 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c9/1f/c7cf8d46343f463a6533e369f9370317ba71cb5e7b3039b8227ffdc9c2d9/laminar-2022.5a1-py3-none-any.whl", hash = "sha256:ae591723ff7ef7e7add9f14911d7fadd3b585351887835ce1bcbe2d3becc99ae", size = 33350 },
 ]
 
 [[package]]
@@ -2200,18 +2160,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/86/cc42cfa9b85b7d174948a17f828ebcacb0247e727fbedf06506ba93387ef/multidict-6.3.2-cp313-cp313t-win32.whl", hash = "sha256:420e5144a5f598dad8db3128f1695cd42a38a0026c2991091dab91697832f8cc", size = 41908 },
     { url = "https://files.pythonhosted.org/packages/2a/36/5c015523a7650fb5c55380d1c779b938379bd091968ee822d719e4264ab7/multidict-6.3.2-cp313-cp313t-win_amd64.whl", hash = "sha256:875faded2861c7af2682c67088e6313fec35ede811e071c96d36b081873cea14", size = 45635 },
     { url = "https://files.pythonhosted.org/packages/aa/c1/7832c95a50641148b567b5366dd3354489950dcfd01c8fc28472bec63b9a/multidict-6.3.2-py3-none-any.whl", hash = "sha256:71409d4579f716217f23be2f5e7afca5ca926aaeb398aa11b72d793bff637a1f", size = 10347 },
-]
-
-[[package]]
-name = "mypy-boto3-batch"
-version = "1.37.22"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/aa/75/8090f52424b207659f5b1346eaa0ef5dd2447b8ae8f15323b0f05d1497aa/mypy_boto3_batch-1.37.22.tar.gz", hash = "sha256:0f62d2948712802ccee790c7308f7fabbcd4326ba32fa374bfde2a88480fca46", size = 32448 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/af/cf983ebe131d87545cb5351811f0ffb5928adc60f1bc91cf2c8cb766e1c1/mypy_boto3_batch-1.37.22-py3-none-any.whl", hash = "sha256:2fdc7d6afc268616d4a684bd539a23bb09fa0639db4fb277ae3171fe565617d8", size = 38593 },
 ]
 
 [[package]]
@@ -3666,12 +3614,6 @@ wheels = [
 ]
 
 [[package]]
-name = "python-baseconv"
-version = "1.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/33/d0/9297d7d8dd74767b4d5560d834b30b2fff17d39987c23ed8656f476e0d9b/python-baseconv-1.2.2.tar.gz", hash = "sha256:0539f8bd0464013b05ad62e0a1673f0ac9086c76b43ebf9f833053527cd9931b", size = 4929 }
-
-[[package]]
 name = "python-dateutil"
 version = "2.9.0.post0"
 source = { registry = "https://pypi.org/simple" }
@@ -4052,18 +3994,6 @@ wheels = [
 ]
 
 [[package]]
-name = "smart-open"
-version = "7.1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/21/30/1f41c3d3b8cec82024b4b277bfd4e5b18b765ae7279eb9871fa25c503778/smart_open-7.1.0.tar.gz", hash = "sha256:a4f09f84f0f6d3637c6543aca7b5487438877a21360e7368ccf1f704789752ba", size = 72044 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/7a/18/9a8d9f01957aa1f8bbc5676d54c2e33102d247e146c1a3679d3bd5cc2e3a/smart_open-7.1.0-py3-none-any.whl", hash = "sha256:4b8489bb6058196258bafe901730c7db0dcf4f083f316e97269c66f45502055b", size = 61746 },
-]
-
-[[package]]
 name = "sniffio"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4108,15 +4038,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/df/fd/59098f716c39422d5
 wheels = [
     { url = "https://files.pythonhosted.org/packages/19/46/77859104e7c3e12dfa2e5c0e27b5dd1e14cb2409b50f9c936a48f29ceaee/sumy-0.11.0-py2.py3-none-any.whl", hash = "sha256:e74323ef95f42be8c76464a758a003597729b60cceb918f4806fdadad3eeb1a8", size = 97327 },
 ]
-
-[[package]]
-name = "svix-ksuid"
-version = "0.6.2"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "python-baseconv" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/7a/0c98b77ca01d64f13143607b88273a13110d659780b93cb1333abebf8039/svix-ksuid-0.6.2.tar.gz", hash = "sha256:beb95bd6284bdbd526834e233846653d2bd26eb162b3233513d8f2c853c78964", size = 6957 }
 
 [[package]]
 name = "sympy"
@@ -4360,24 +4281,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8b/6f/3991f0f1c7fcb2df31aef28e0594d8d54b05393a0e4e34c65e475c2a5d41/typer-0.15.2.tar.gz", hash = "sha256:ab2fab47533a813c49fe1f16b1a370fd5819099c00b119e0633df65f22144ba5", size = 100711 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/fc/5b29fea8cee020515ca82cc68e3b8e1e34bb19a3535ad854cac9257b414c/typer-0.15.2-py3-none-any.whl", hash = "sha256:46a499c6107d645a9c13f7ee46c5d5096cae6f5fc57dd11eccbbb9ae3e44ddfc", size = 45061 },
-]
-
-[[package]]
-name = "types-awscrt"
-version = "0.25.7"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fc/29/29cfb4acd07571e49a1781cd89a65846f6854913dfc8e91ca21b25209ceb/types_awscrt-0.25.7.tar.gz", hash = "sha256:e11298750c99647f7f3b98d6d6d648790096cd32d445fd0d49a6041a63336c9a", size = 15576 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/5b/9358ec92f9cd7ad865be76e346170a40e877af524f3718c02fb8fe182166/types_awscrt-0.25.7-py3-none-any.whl", hash = "sha256:7bcd649aedca3c41007ca5757096d3b3bdb454b73ca66970ddae6c2c2f541c8c", size = 19577 },
-]
-
-[[package]]
-name = "types-s3transfer"
-version = "0.11.4"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/93/a9/440d8ba72a81bcf2cc5a56ef63f23b58ce93e7b9b62409697553bdcdd181/types_s3transfer-0.11.4.tar.gz", hash = "sha256:05fde593c84270f19fd053f0b1e08f5a057d7c5f036b9884e68fb8cd3041ac30", size = 14074 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/69/0b5ae42c3c33d31a32f7dcb9f35a3e327365360a6e4a2a7b491904bd38aa/types_s3transfer-0.11.4-py3-none-any.whl", hash = "sha256:2a76d92c07d4a3cb469e5343b2e7560e0b8078b2e03696a65407b8c44c861b61", size = 19516 },
 ]
 
 [[package]]
