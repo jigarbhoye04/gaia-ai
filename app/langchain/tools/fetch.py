@@ -3,7 +3,7 @@ from typing import List, Annotated
 from langchain_core.tools import tool
 import re
 
-from app.langchain.templates.fetch_template import PAGE_CONTENT_TEMPLATE
+from app.langchain.templates.fetch_template import FETCH_TEMPLATE
 from app.utils.search_utils import perform_fetch
 
 
@@ -42,8 +42,9 @@ async def fetch_webpages(
             if isinstance(page_content, Exception):
                 continue
 
-            combined_content += PAGE_CONTENT_TEMPLATE.format(
-                page_content=page_content, urls=processed_urls[i]
+            combined_content += FETCH_TEMPLATE.format(
+                page_content=page_content,
+                urls=[processed_urls[i]],
             )
 
         return combined_content or "Failed to fetch content from the provided URLs."

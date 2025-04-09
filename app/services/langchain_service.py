@@ -1,8 +1,6 @@
 """
-
 This file is a temporary service file to make it easy to implement the chat_service functionality with langchain. The file will be merged with chat_service and other files in the future.
 This file is not intended to be used in production and is for development purposes only.
-
 """
 
 import json
@@ -14,7 +12,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 from app.langchain.templates.agent_template import create_agent_prompt
 from app.langchain.tools.fetch import fetch_webpages
-from app.langchain.tools.search import web_search
+from app.langchain.tools.search import deep_search, web_search
 from app.langchain.tools.weather import get_weather
 from app.models.general_models import MessageRequestWithHistory
 from app.utils.sse_utils import format_tool_response
@@ -34,7 +32,7 @@ async def chat_stream_langchain(
     """
     model = init_chat_model("llama-3.1-8b-instant", model_provider="groq")
     prompt = create_agent_prompt()
-    tools = [get_weather, web_search, fetch_webpages]
+    tools = [get_weather, web_search, deep_search, fetch_webpages]
     agent_executor = create_react_agent(model=model, tools=tools, prompt=prompt)
     final_message = ""
 

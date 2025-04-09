@@ -1,6 +1,6 @@
 from langchain.prompts import PromptTemplate
 
-PAGE_CONTENT_TEMPLATE = PromptTemplate.from_template(
+FETCH_TEMPLATE = PromptTemplate.from_template(
     template="""
     You have been provided with information extracted from the following URLs:
     {urls}

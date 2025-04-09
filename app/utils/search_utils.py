@@ -1,25 +1,15 @@
 import asyncio
-import io
-import re
-import time
-import uuid
 from typing import Optional
-from urllib.parse import urlparse
 
-import html2text
 import httpx
-import tldextract
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 from urlextract import URLExtract
 
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
-
-subscription_key = settings.BING_API_KEY_1
-
-if not subscription_key:
-    raise EnvironmentError("Missing BING_SUBSCRIPTION_KEY environment variable.")
+from app.db.redis import get_cache, set_cache, ONE_HOUR_TTL
+from app.exceptions import FetchError
 
 
 http_async_client = httpx.AsyncClient()
@@ -37,19 +27,28 @@ async def fetch_endpoint(
     url: str, query: str, count: int, extra_params: Optional[dict] = None
 ) -> dict:
     """
-    Generic function to call a Bing API endpoint.
+    Generic function to call a Bing API endpoint with Redis caching.
 
     Args:
         url: The API endpoint.
         query: The search query.
         count: Number of results to return.
-        subscription_key: API subscription key.
         extra_params: Additional query parameters, if needed.
 
     Returns:
         The JSON response as a dictionary, or an empty dict on error.
     """
-    headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+    # Create a cache key using the endpoint URL, query, count, and extra parameters
+    cache_key = f"bing:{url}:{query}:{count}:{str(extra_params)}"
+
+    # Try to get cached result first
+    cached_result = await get_cache(cache_key)
+    if cached_result:
+        logger.info(f"Cache hit for query: {query}")
+        return cached_result
+
+    # If not in cache, make the API request
+    headers = {"Ocp-Apim-Subscription-Key": settings.BING_API_KEY_1}
     params = {"q": query, "count": count}
     if extra_params:
         params.update(extra_params)
@@ -57,7 +56,13 @@ async def fetch_endpoint(
     try:
         response = await http_async_client.get(url, headers=headers, params=params)
         response.raise_for_status()
-        return response.json()
+        result = response.json()
+
+        # Cache the result (expires in 1 hour)
+        await set_cache(cache_key, result, ONE_HOUR_TTL)
+        logger.info(f"Cached search results for query: {query}")
+
+        return result
     except httpx.HTTPStatusError as http_err:
         logger.error(f"HTTP error from {url}: {http_err}")
     except httpx.RequestError as req_err:
@@ -67,7 +72,6 @@ async def fetch_endpoint(
     return {}
 
 
-# --- Merge Modules ---
 def merge_web_results(data: dict) -> list:
     """Extract and merge web search results."""
     return [
@@ -122,7 +126,6 @@ def merge_video_results(data: dict) -> list:
     ]
 
 
-# --- Main Coordinator ---
 async def perform_search(
     query: str,
     count: int,
@@ -132,9 +135,6 @@ async def perform_search(
     videos: bool = True,
 ) -> dict:
     """Perform selected Bing searches concurrently and return merged results."""
-
-    if len(query) > MAX_QUERY_LENGTH:
-        query = query[:MAX_QUERY_LENGTH]
 
     search_options = {
         "web": (web, WEB_SEARCH_URL, merge_web_results),
@@ -209,69 +209,6 @@ def extract_urls_from_text(text: str) -> list[str]:
     urls = extractor.find_urls(text=text)
     return urls
 
-    # More comprehensive URL pattern that handles more edge cases
-    url_pattern = r"""
-        (?:https?://)?                                # Optional protocol (http:// or https://)
-        (?:www\.)?                                    # Optional www subdomain
-        (?:
-            [a-zA-Z0-9][-a-zA-Z0-9]*[a-zA-Z0-9]\.     # Domain name
-            |
-            [a-zA-Z0-9]\.                             # Single-letter domain
-        )
-        [a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}        # TLD
-        (?::[0-9]+)?                                  # Optional port
-        (?:
-            /(?:[-a-zA-Z0-9()@:%_\+.~#?&/=]|          # Path with allowed chars
-            \([-a-zA-Z0-9()@:%_\+.~#?&/=]*\)|         # Balanced parentheses
-            \[[-a-zA-Z0-9()@:%_\+.~#?&/=]*\])*        # Balanced brackets
-        )?
-    """
-
-    # Use verbose mode for the regex to allow comments and spacing
-    possible_urls = re.findall(url_pattern, text, re.VERBOSE)
-
-    valid_urls = []
-    seen_urls = set()  # To avoid duplicates
-
-    for url in possible_urls:
-        try:
-            # Clean up the URL
-            url = url.strip()
-
-            # Skip empty URLs
-            if not url:
-                continue
-
-            # Extract domain parts to validate
-            extracted = tldextract.extract(url)
-
-            # Validate that we have both a domain and suffix
-            if not (extracted.domain and extracted.suffix):
-                continue
-
-            # Normalize the URL by ensuring it has a protocol
-            normalized_url = (
-                url if url.startswith(("http://", "https://")) else f"https://{url}"
-            )
-
-            # Avoid duplicates
-            if normalized_url not in seen_urls:
-                seen_urls.add(normalized_url)
-                valid_urls.append(normalized_url)
-
-        except Exception as e:
-            # Log the error without breaking the function
-            logger.error(f"Error processing URL candidate '{url}': {e}")
-            continue
-
-    return valid_urls
-
-
-class FetchError(Exception):
-    """Custom exception for fetch-related errors."""
-
-    pass
-
 
 async def fetch_with_httpx(url: str) -> str:
     """Fetches webpage content using httpx (fast for static pages)."""
@@ -281,11 +218,15 @@ async def fetch_with_httpx(url: str) -> str:
             response.raise_for_status()
             return response.text
     except httpx.HTTPStatusError as http_err:
-        raise FetchError(f"HTTP error: {http_err}") from http_err
+        raise FetchError(
+            f"HTTP error: {http_err}",
+            status_code=http_err.response.status_code,
+            url=url,
+        ) from http_err
     except httpx.RequestError as req_err:
-        raise FetchError(f"Request error: {req_err}") from req_err
+        raise FetchError(f"Request error: {req_err}", url=url) from req_err
     except Exception as e:
-        raise FetchError(f"Unexpected error: {type(e).__name__}: {e}") from e
+        raise FetchError(f"Unexpected error: {type(e).__name__}: {e}", url=url) from e
 
 
 async def fetch_with_playwright(
@@ -368,60 +309,6 @@ async def fetch_with_playwright(
         raise FetchError(f"Unexpected error: {type(e).__name__}") from e
 
 
-async def upload_screenshot_to_cloudinary(
-    screenshot_bytes: bytes, url: str
-) -> str | None:
-    """
-    Upload a screenshot to Cloudinary and return the secure URL.
-
-    Args:
-        screenshot_bytes: The raw bytes of the screenshot
-        url: The URL that was screenshotted (for naming purposes)
-
-    Returns:
-        str: The secure URL of the uploaded image
-    """
-    import cloudinary.uploader
-
-    try:
-        # Ensure Cloudinary is initialized
-
-        # Create a unique ID for the screenshot
-        screenshot_id = str(uuid.uuid4())
-
-        # Get the hostname for the public_id
-        parsed_url = urlparse(url)
-        hostname = parsed_url.netloc
-
-        # Create public_id with timestamp, hostname, and UUID to ensure uniqueness
-        timestamp = int(time.time())
-        public_id = (
-            f"screenshots/{hostname.replace('.', '_')}/{timestamp}_{screenshot_id}"
-        )
-
-        # Upload the screenshot to Cloudinary
-        upload_result = cloudinary.uploader.upload(
-            io.BytesIO(screenshot_bytes),
-            resource_type="image",
-            public_id=public_id,
-            overwrite=True,
-        )
-
-        image_url = upload_result.get("secure_url")
-        if not image_url:
-            logger.error("Missing secure_url in Cloudinary upload response")
-            return None
-
-        logger.info(f"Screenshot uploaded successfully. URL: {image_url}")
-        return image_url
-
-    except Exception as e:
-        logger.error(
-            f"Failed to upload screenshot to Cloudinary: {str(e)}", exc_info=True
-        )
-        return None
-
-
 async def extract_text(html: str) -> str:
     """Extracts and cleans text from HTML content."""
     soup = BeautifulSoup(html, "html.parser")
@@ -450,47 +337,3 @@ async def perform_fetch(url: str, use_playwright: bool = True) -> str:
         return await extract_text(content or "Error: Could not fetch content.")
     except FetchError as e:
         return f"[ERROR] {e}"
-
-
-async def fetch_and_convert_to_markdown(url: str):
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-            response.raise_for_status()
-
-        # Parse HTML with BeautifulSoup
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-
-        # Convert cleaned HTML to Markdown
-        markdown_text = html2text.html2text(str(soup))
-
-        return markdown_text
-
-    except httpx.HTTPStatusError as http_err:
-        return f"HTTP error occurred: {http_err}"
-    except httpx.RequestError as req_err:
-        return f"HTTP Request error occurred: {req_err}"
-    except Exception as e:
-        return f"An unexpected error occurred: {e}"
-
-
-if __name__ == "__main__":
-
-    async def main():
-        url = input("Enter the URL to fetch: ")
-
-        print("Fetching and converting to Markdown...")
-        markdown_result = await fetch_and_convert_to_markdown(url)
-        print("\nMarkdown Result:\n")
-        print(markdown_result)
-
-        print("\nFetching and preprocessing text...")
-        preprocessed_text = await perform_fetch(url)
-        print("\nPreprocessed Text:\n")
-        print(preprocessed_text)
-
-    asyncio.run(main())

@@ -24,8 +24,8 @@ from app.utils.search_utils import (
     extract_text,
     fetch_with_playwright,
     perform_search,
-    upload_screenshot_to_cloudinary,
 )
+from app.utils.storage_utils import upload_screenshot_to_cloudinary
 
 
 def is_valid_url(url: str) -> bool:

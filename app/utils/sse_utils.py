@@ -23,4 +23,10 @@ def format_tool_response(tool_name: str, content: str) -> str:
     elif tool_name == "web_search":
         return f"data: {json.dumps({'type': 'search_data', 'data': data.get('raw_search_data', '')})}\n\n"
 
+    elif tool_name == "deep_search":
+        return f"data: {json.dumps({'type': 'deep_search_data', 'data': data.get('raw_deep_search_data', '')})}\n\n"
+
+    elif tool_name == "fetch_webpages":
+        return f"data: {json.dumps({'type': 'webpage_data', 'data': data.get('raw_webpage_data', '')})}\n\n"
+
     return ""

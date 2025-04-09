@@ -4,9 +4,12 @@ import time
 from typing import Annotated
 from langchain_core.tools import tool
 
-from app.prompts.user.chat_prompts import SEARCH_CONTEXT_TEMPLATE
+from app.langchain.templates.search_templates import SEARCH_TEMPLATE
 from app.utils.search_utils import format_results_for_llm, perform_search
 from app.config.loggers import chat_logger as logger
+
+from app.prompts.user.chat_prompts import DEEP_SEARCH_CONTEXT_TEMPLATE
+from app.utils.internet_utils import perform_deep_search
 
 
 @tool
@@ -16,20 +19,29 @@ async def web_search(
         "The search query to look up on the web. Be specific and concise for better results.",
     ],
 ) -> str:
-    """Searches the web for recent information on a given query and returns formatted results.
+    """Performs a QUICK search for information with summarized results from multiple sources.
 
-    This tool performs a comprehensive web search using Bing Search API and returns both regular web results
-    and news results. Use this tool when you need to find up-to-date information about:
-    - Current events, news, or recent developments
-    - Facts, statistics or information not in your training data
-    - Information that changes frequently (weather, prices, schedules)
-    - Latest product releases, updates, or technology trends
+    This tool conducts a standard web search that returns brief snippets and summaries from
+    multiple web sources. It's optimized for SPEED and BREADTH of information.
+
+    BEST FOR:
+    - Getting a quick overview of a topic from multiple sources
+    - Finding basic facts, definitions, or general information
+    - Discovering different perspectives on a topic
+    - Identifying top sources without reading their full content
+    - Quick answers to straightforward questions
+
+    DO NOT USE FOR:
+    - Detailed analysis of specific web pages
+    - Complete article content or in-depth information
+    - When you need extensive context from a single source
+    - Visual content like screenshots of websites
 
     Args:
-        query_text: The search query to look up on the web.
+        query_text: The search query to find quick information about.
 
     Returns:
-        A JSON string containing formatted search results for LLM and structured data for the frontend.
+        A JSON string containing formatted search results (titles, URLs, snippets) and structured data.
     """
     start_time = time.time()
 
@@ -59,9 +71,8 @@ async def web_search(
             f"Web search completed in {elapsed_time:.2f} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
         )
 
-        # Create a response with both formatted text for the LLM and structured data for the frontend
         response = {
-            "formatted_text": SEARCH_CONTEXT_TEMPLATE.format(
+            "formatted_text": SEARCH_TEMPLATE.format(
                 formatted_results=formatted_results
             ),
             "raw_search_data": {
@@ -93,6 +104,120 @@ async def web_search(
         logger.error(f"Unexpected error in web search: {e}", exc_info=True)
         error_response = {
             "formatted_text": "\n\nError performing web search. Please try again later.",
+            "error": str(e),
+        }
+        return json.dumps(error_response)
+
+
+@tool
+async def deep_search(
+    query_text: Annotated[
+        str,
+        "The search query for in-depth research. Be specific to get thorough and comprehensive results.",
+    ],
+) -> str:
+    """Performs an IN-DEPTH analysis by retrieving and processing FULL CONTENT from web pages.
+
+    This tool conducts comprehensive research by not only finding relevant pages but also
+    retrieving their complete content, analyzing it, and even capturing visual representations.
+    It's optimized for DEPTH and THOROUGHNESS at the cost of additional processing time.
+
+    BEST FOR:
+    - Detailed research requiring full page content analysis
+    - When you need to understand complex topics with extensive context
+    - Extracting specific information buried deep in web pages
+    - When visual context from screenshots would be helpful
+    - Technical topics where complete documentation is needed
+
+    DO NOT USE FOR:
+    - Simple factual questions that need quick answers
+    - When breadth of information is more important than depth
+    - Topics where a brief overview would suffice
+    - When speed is more important than comprehensiveness
+
+    Args:
+        query_text: The search query to research in depth.
+
+    Returns:
+        A JSON string containing complete page content, screenshots, and comprehensive analysis.
+    """
+    start_time = time.time()
+
+    try:
+        deep_search_results = await perform_deep_search(
+            query=query_text, max_results=3, take_screenshots=True
+        )
+
+        enhanced_results = deep_search_results.get("enhanced_results", [])
+        formatted_content = ""
+
+        if enhanced_results:
+            formatted_content = "## Deep Search Results\n\n"
+
+            for i, result in enumerate(enhanced_results, 1):
+                title = result.get("title", "No Title")
+                url = result.get("url", "#")
+                snippet = result.get("snippet", "No snippet available")
+                full_content = result.get("full_content", "")
+                fetch_error = result.get("fetch_error", None)
+                screenshot_url = result.get("screenshot_url", None)
+
+                formatted_content += f"### {i}. {title}\n"
+                formatted_content += f"**URL**: {url}\n\n"
+
+                if screenshot_url:
+                    formatted_content += f"**Screenshot**: ![Screenshot of {title}]({screenshot_url})\n\n"
+
+                if fetch_error:
+                    formatted_content += (
+                        f"**Note**: Could not fetch full content: {fetch_error}\n\n"
+                    )
+                    formatted_content += f"**Summary**: {snippet}\n\n"
+                else:
+                    formatted_content += f"**Summary**: {snippet}\n\n"
+                    formatted_content += "**Content**:\n"
+                    formatted_content += full_content + "\n\n"
+
+                formatted_content += "---\n\n"
+        else:
+            formatted_content = "No detailed information found from deep search."
+
+        elapsed_time = time.time() - start_time
+        logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
+
+        # Create a response with both formatted text for the LLM and structured data for the frontend
+        response = {
+            "formatted_text": DEEP_SEARCH_CONTEXT_TEMPLATE.format(
+                formatted_content=formatted_content
+            ),
+            "raw_deep_search_data": {
+                "enhanced_results": enhanced_results,
+                "query": query_text,
+                "elapsed_time": elapsed_time,
+                "result_count": len(enhanced_results),
+            },
+        }
+
+        return json.dumps(response)
+
+    except (asyncio.TimeoutError, ConnectionError) as e:
+        logger.error(f"Network error in deep search: {e}", exc_info=True)
+        error_response = {
+            "formatted_text": "\n\nConnection timed out during deep search, falling back to standard results.",
+            "error": str(e),
+        }
+        return json.dumps(error_response)
+    except ValueError as e:
+        logger.error(f"Value error in deep search: {e}", exc_info=True)
+        error_response = {
+            "formatted_text": "\n\nInvalid search parameters, falling back to standard results.",
+            "error": str(e),
+        }
+        return json.dumps(error_response)
+    except Exception as e:
+        logger.error(f"Unexpected error in deep search: {e}", exc_info=True)
+        error_response = {
+            "formatted_text": "\n\nError performing deep search, falling back to standard results.",
             "error": str(e),
         }
         return json.dumps(error_response)
