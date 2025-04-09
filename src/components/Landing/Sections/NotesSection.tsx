@@ -3,7 +3,7 @@
 import Image from "next/image";
 import React, { forwardRef, useRef } from "react";
 
-import { AnimatedBeam } from "@/components/magicui/animated-beam";
+import { AnimatedBeam } from "@/components/MagicUI/animated-beam";
 import {
   Brain02Icon,
   FileUploadIcon,

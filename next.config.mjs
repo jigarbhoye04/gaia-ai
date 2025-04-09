@@ -51,6 +51,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   },
+  distDir: "dist",
   // modularizeImports: {
   //   "@radix-ui/react-icons": {
   //     transform: "@radix-ui/react-icons/dist/{{member}}",

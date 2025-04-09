@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-import Iphone15Pro from "@/components/magicui/iphone-15-pro";
+import Iphone15Pro from "@/components/MagicUI/iphone-15-pro";
 import { Call02Icon, ChatBotIcon, VoiceIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
