@@ -1,18 +1,76 @@
-from pydantic_settings import BaseSettings
+import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import computed_field
+from infisical_sdk import InfisicalSDKClient
+
+
+class InfisicalConfigError(Exception):
+    """Exception raised for errors related to Infisical configuration."""
+
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
+def inject_infisical_secrets():
+    INFISICAL_TOKEN = os.getenv("INFISICAL_TOKEN")
+    INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
+    ENV = os.getenv("ENV", "production")
+    CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
+    CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
+
+    if not INFISICAL_TOKEN:
+        raise InfisicalConfigError(
+            "INFISICAL_TOKEN is missing. This is required for secrets management."
+        )
+    elif not INFISICAL_PROJECT_ID:
+        raise InfisicalConfigError(
+            "INFISICAL_PROJECT_ID is missing. This is required for secrets management."
+        )
+
+    elif not CLIENT_ID:
+        raise InfisicalConfigError(
+            "INFISICAL_MACHINE_INDENTITY_CLIENT_ID is missing. This is required for secrets management."
+        )
+
+    elif not CLIENT_SECRET:
+        raise InfisicalConfigError(
+            "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET is missing. This is required for secrets management."
+        )
+
+    try:
+        client = InfisicalSDKClient(host="https://app.infisical.com")
+        client.auth.universal_auth.login(
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
+        )
+        secrets = client.secrets.list_secrets(
+            project_id=INFISICAL_PROJECT_ID,  # The unique identifier for your Infisical project
+            environment_slug=ENV,  # Environment name (e.g., "development", "production")
+            # Root path for secrets in the project
+            secret_path="/",  # nosec B322 - Bandit in pre-commit flags as unsafe.
+            expand_secret_references=True,  # Resolves any referenced secrets (e.g., ${SECRET})
+            view_secret_value=True,  # Returns decrypted secret values, not just keys
+            recursive=False,  # Does not fetch secrets from nested paths
+            include_imports=True,  # Includes secrets imported from other projects/paths
+        )
+        for secret in secrets.secrets:
+            os.environ[secret.secretKey] = secret.secretValue
+
+    except Exception as e:
+        raise InfisicalConfigError(
+            f"Failed to fetch secrets from Infisical: {e}"
+        ) from e
 
 
 class Settings(BaseSettings):
     """Configuration settings for the application."""
 
-    # Cloud Services
+    # Databases
     MONGO_DB: str
-    CLOUDINARY_CLOUD_NAME: str
-    CLOUDINARY_API_KEY: str
-    CLOUDINARY_API_SECRET: str
-    CLOUDFLARE_ACCOUNTID: str
-    CLOUDFLARE_AUTH_TOKEN: str
     REDIS_URL: str
+    CHROMADB_HOST: str
+    CHROMADB_PORT: int
 
     # OAuth & Authentication
     GOOGLE_CLIENT_ID: str
@@ -21,104 +79,49 @@ class Settings(BaseSettings):
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
     # External API Keys
-    BING_API_KEY_1: str
-    BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
+    BING_API_KEY: str
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
     GEMINI_API_KEY: str
-    LAMINAR_API_KEY: str
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
 
-    # LLM Service
+    # Service URL's
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
+    BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
 
     # Environment & Deployment
     ENV: str = "production"
-    DISABLE_PROFILING: bool = False
+    HOST: str = "https://api.heygaia.io"
+    FRONTEND_URL: str = "https://heygaia.io"
     DUMMY_IP: str = "8.8.8.8"
+    DISABLE_PROFILING: bool = False
 
     # Hugging Face Configuration
     USE_HUGGINGFACE_API: bool = False
     HUGGINGFACE_API_KEY: str
     HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
     HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
-    HUGGINGFACE_API_URL: str = "https://api-inference.huggingface.co/models/"
     HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
 
     @computed_field
-    def huggingface_api_url(self) -> str:
-        """Construct the full Hugging Face API URL for zero-shot classification."""
-        return f"{self.HUGGINGFACE_API_URL}{self.HUGGINGFACE_ZSC_MODEL}"
-
-    # Default ChromaDB connection settings
-    CHROMADB_PRODUCTION_HOST: str
-    CHROMADB_PRODUCTION_PORT: int
-    CHROMADB_DEVELOPMENT_HOST: str = "localhost"
-    CHROMADB_DEVELOPMENT_PORT: int = 8080
-    CHROMADB_USE_PRODUCTION: bool = False
-
-    @computed_field
-    def CHROMADB_HOST(self) -> str:
-        """Return the ChromaDB host based on the environment."""
-        return (
-            self.CHROMADB_PRODUCTION_HOST
-            if self.ENV == "production" or self.CHROMADB_USE_PRODUCTION
-            else self.CHROMADB_DEVELOPMENT_HOST
-        )
-
-    @computed_field
-    def CHROMADB_PORT(self) -> int:
-        """Return the ChromaDB port based on the environment."""
-        return (
-            self.CHROMADB_PRODUCTION_PORT
-            if self.ENV == "production" or self.CHROMADB_USE_PRODUCTION
-            else self.CHROMADB_DEVELOPMENT_PORT
-        )
-
-    @computed_field
     def ENABLE_PROFILING(self) -> bool:
-        """Enable profiling only in non-production environments."""
-        return not self.DISABLE_PROFILING and self.ENV != "production"
-
-    @computed_field
-    def GOOGLE_REDIRECT_URI(self) -> str:
-        """Redirect URI for Google OAuth based on environment."""
-        return (
-            "https://heygaia.io"
-            if self.ENV == "production"
-            else "http://localhost:3000"
-        )
-
-    @computed_field
-    def HOST(self) -> str:
-        """API Host URL based on environment."""
-        return (
-            "https://api.heygaia.io"
-            if self.ENV == "production"
-            else "http://localhost:8000"
-        )
-
-    @computed_field
-    def FRONTEND_URL(self) -> str:
-        """Frontend base URL based on environment."""
-        return (
-            "https://heygaia.io"
-            if self.ENV == "production"
-            else "http://localhost:3000"
-        )
+        """Enable profiling only if explicitly enabled in production."""
+        return self.ENV == "production" and not self.DISABLE_PROFILING
 
     @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
         """Google OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/google/callback"
 
-    class Config:
-        """Configuration for environment file settings."""
-
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        extra = "allow"
+    model_config = SettingsConfigDict(
+        env_file_encoding="utf-8",
+        extra="allow",
+    )
 
 
+inject_infisical_secrets()
 settings = Settings()
