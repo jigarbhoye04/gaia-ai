@@ -11,13 +11,12 @@ repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: check-yaml
-      - id: check-json
-      - id: check-merge-conflict
-      - id: check-added-large-files
-      - id: check-ast
+      - id: trailing-whitespace # Removes trailing whitespace on all lines
+      - id: check-yaml # Validates that YAML files are correctly formatted
+      - id: check-json # Validates that JSON files are parseable and valid
+      - id: check-merge-conflict # Prevents committing unresolved merge conflicts
+      - id: check-added-large-files # Blocks large files from being added to commits (defaults to 500KB)
+      - id: check-ast # Checks that Python files are syntactically correct (AST parseable)
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.3
@@ -40,7 +39,7 @@ repos:
     hooks:
       - id: pip-audit
 
-  # - repo: https://github.com/Yelp/detect-secrets
-  #   rev: v1.4.0
-  #   hooks:
-  #     - id: detect-secrets
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets

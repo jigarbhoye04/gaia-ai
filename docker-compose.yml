@@ -19,12 +19,10 @@ services:
       ]
     environment:
       DEBUG: 1
-      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
-      CELERY_RESULT_BACKEND: "rpc://"
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
-      CHROMADB_DEVELOPMENT_HOST: "chromadb"
-      CHROMADB_DEVELOPMENT_PORT: "8000"
+    env_file:
+      - .env
     volumes:
       - .:/app
     ports:
@@ -34,6 +32,13 @@ services:
     stdin_open: true
     depends_on:
       - chromadb
+    networks:
+      - gaia_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   # RabbitMQ Service
   rabbitmq:
@@ -51,6 +56,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - gaia_network
 
   # Celery Worker
   celery_worker:
@@ -58,6 +65,8 @@ services:
     container_name: celery_worker
     image: gaia-image
     working_dir: /app
+    env_file:
+      - .env
     command:
       [
         "python",
@@ -68,17 +77,14 @@ services:
         "worker",
         "--loglevel=info",
       ]
-    environment:
-      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
-      CELERY_RESULT_BACKEND: "rpc://"
-      CHROMADB_DEVELOPMENT_HOST: "chromadb"
-      CHROMADB_DEVELOPMENT_PORT: "8000"
     restart: on-failure
     volumes:
       - .:/app
     depends_on:
       - rabbitmq
       - chromadb
+    networks:
+      - gaia_network
 
   # ChromaDB Service
   chromadb:
@@ -90,15 +96,76 @@ services:
       - PERSIST_DIRECTORY=/chroma/chroma
       - CHROMA_SERVER_HOST=0.0.0.0
       - CHROMA_SERVER_PORT=8000
-    ports:
-      - "8080:8000"
+    # ports:
+    #   - "8080:8000"
     restart: on-failure
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v2/heartbeat"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - gaia_network
+
+  # Redis Service
+  redis:
+    profiles: ["dev"]
+    image: redis:alpine
+    container_name: redis
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # MongoDB Service
+  mongo:
+    profiles: ["dev"]
+    image: mongo:latest
+    container_name: mongo
+    # ports:
+    #   - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # Mongo Express Service
+  mongo_express:
+    profiles: ["dev"]
+    image: mongo-express:latest
+    container_name: mongo_express
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
+    networks:
+      - gaia_network
 
 volumes:
   rabbitmq_data:
   chroma_data:
+  redis_data:
+  mongo_data:
+
+networks:
+  gaia_network:
+    driver: bridge

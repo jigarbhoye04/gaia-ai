@@ -8,9 +8,8 @@ from urlextract import URLExtract
 
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
-from app.db.redis import get_cache, set_cache, ONE_HOUR_TTL
+from app.db.redis import ONE_HOUR_TTL, get_cache, set_cache
 from app.exceptions import FetchError
-
 
 http_async_client = httpx.AsyncClient()
 extractor = URLExtract()
