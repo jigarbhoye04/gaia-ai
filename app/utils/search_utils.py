@@ -16,7 +16,7 @@ from urlextract import URLExtract
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
 
-subscription_key = settings.BING_API_KEY_1
+subscription_key = settings.BING_API_KEY
 
 if not subscription_key:
     raise EnvironmentError("Missing BING_SUBSCRIPTION_KEY environment variable.")
