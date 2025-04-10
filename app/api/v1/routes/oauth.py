@@ -64,7 +64,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
         await store_user_info(user_name, user_email, user_picture)
 
         # Redirect URL can include tokens if needed
-        redirect_url = f"{settings.GOOGLE_REDIRECT_URI}?access_token={access_token}&refresh_token={refresh_token}"
+        redirect_url = f"{settings.FRONTEND_URL}?access_token={access_token}&refresh_token={refresh_token}"
         response = RedirectResponse(url=redirect_url)
 
         # Set cookie expiration: access token (1 hour), refresh token (30 days)

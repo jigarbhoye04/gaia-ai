@@ -2,29 +2,6 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import computed_field
 from infisical_sdk import InfisicalSDKClient
-from app.config.loggers import app_logger as logger
-
-# # Load environment variables from a .env file
-# load_dotenv(".env")
-
-# # Determine which environment file to load
-# env = os.getenv("ENV", "production")
-# print(f"Environment variable ENV is set to: {env}")
-
-# env_file_name = f".env.{env}" if env != "production" else ".env"
-# env_file_path = os.path.abspath(
-#     os.path.join(os.path.dirname(__file__), "..", "..", env_file_name)
-# )
-
-# # Explicitly load the environment file with python-dotenv
-# if os.path.exists(env_file_path):
-#     print(f"Environment file exists, loading it: {env_file_path}")
-#     load_dotenv(env_file_path, override=True)
-#     os.environ["ENV_FILE"] = env_file_path
-# else:
-#     print(
-#         f"Warning: Environment file '{env_file_path}' does not exist. Using default settings."
-#     )
 
 
 class InfisicalConfigError(Exception):
@@ -39,47 +16,46 @@ def inject_infisical_secrets():
     INFISICAL_TOKEN = os.getenv("INFISICAL_TOKEN")
     INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
     ENV = os.getenv("ENV", "production")
-    INFISICAL_MACHINE_INDENTITY_CLIENT_ID = os.getenv(
-        "INFISICAL_MACHINE_INDENTITY_CLIENT_ID"
-    )
-    INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET = os.getenv(
-        "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET"
-    )
+    CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
+    CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
 
-    if not INFISICAL_TOKEN or not INFISICAL_PROJECT_ID:
-        error_message = (
-            "Infisical token and project ID are required for secrets management."
+    if not INFISICAL_TOKEN:
+        raise InfisicalConfigError(
+            "INFISICAL_TOKEN is missing. This is required for secrets management."
         )
-        if not INFISICAL_TOKEN and not INFISICAL_PROJECT_ID:
-            error_message = "Both Infisical token and project ID are missing. These are required for secrets management."
-        elif not INFISICAL_TOKEN:
-            error_message = (
-                "Infisical token is missing. This is required for secrets management."
-            )
-        elif not INFISICAL_PROJECT_ID:
-            error_message = "Infisical project ID is missing. This is required for secrets management."
+    elif not INFISICAL_PROJECT_ID:
+        raise InfisicalConfigError(
+            "INFISICAL_PROJECT_ID is missing. This is required for secrets management."
+        )
 
-        raise InfisicalConfigError(error_message)
+    elif not CLIENT_ID:
+        raise InfisicalConfigError(
+            "INFISICAL_MACHINE_INDENTITY_CLIENT_ID is missing. This is required for secrets management."
+        )
+
+    elif not CLIENT_SECRET:
+        raise InfisicalConfigError(
+            "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET is missing. This is required for secrets management."
+        )
 
     try:
         client = InfisicalSDKClient(host="https://app.infisical.com")
         client.auth.universal_auth.login(
-            client_id=INFISICAL_MACHINE_INDENTITY_CLIENT_ID,
-            client_secret=INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET,
+            client_id=CLIENT_ID,
+            client_secret=CLIENT_SECRET,
         )
         secrets = client.secrets.list_secrets(
-            project_id=INFISICAL_PROJECT_ID,
-            environment_slug=ENV,
-            expand_secret_references=True,  # Optional
-            view_secret_value=True,  # Optional
-            recursive=False,  # Optional
-            include_imports=True,  # Optional
+            project_id=INFISICAL_PROJECT_ID,  # The unique identifier for your Infisical project
+            environment_slug=ENV,  # Environment name (e.g., "development", "production")
+            # Root path for secrets in the project
+            secret_path="/",  # nosec B322 - Bandit in pre-commit flags as unsafe.
+            expand_secret_references=True,  # Resolves any referenced secrets (e.g., ${SECRET})
+            view_secret_value=True,  # Returns decrypted secret values, not just keys
+            recursive=False,  # Does not fetch secrets from nested paths
+            include_imports=True,  # Includes secrets imported from other projects/paths
         )
-        logger.INFO(
-            f"Injecting {len(secrets)} secrets from Infisical into environment..."
-        )
-        for secret in secrets:
-            os.environ[secret.secret_name] = secret.secret_value
+        for secret in secrets.secrets:
+            os.environ[secret.secretKey] = secret.secretValue
 
     except Exception as e:
         raise InfisicalConfigError(
@@ -90,12 +66,11 @@ def inject_infisical_secrets():
 class Settings(BaseSettings):
     """Configuration settings for the application."""
 
-    # Cloud Services
+    # Databases
     MONGO_DB: str
-    CLOUDINARY_CLOUD_NAME: str
-    CLOUDINARY_API_KEY: str
-    CLOUDINARY_API_SECRET: str
     REDIS_URL: str
+    CHROMADB_HOST: str
+    CHROMADB_PORT: int
 
     # OAuth & Authentication
     GOOGLE_CLIENT_ID: str
@@ -105,69 +80,37 @@ class Settings(BaseSettings):
 
     # External API Keys
     BING_API_KEY: str
-    BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
     GEMINI_API_KEY: str
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
 
-    # LLM Service
+    # Service URL's
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
+    BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
 
     # Environment & Deployment
     ENV: str = "production"
-    DISABLE_PROFILING: bool = False
+    HOST: str = "https://api.heygaia.io"
+    FRONTEND_URL: str = "https://heygaia.io"
     DUMMY_IP: str = "8.8.8.8"
+    DISABLE_PROFILING: bool = False
 
     # Hugging Face Configuration
     USE_HUGGINGFACE_API: bool = False
     HUGGINGFACE_API_KEY: str
     HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
     HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
-    HUGGINGFACE_API_URL: str = "https://api-inference.huggingface.co/models/"
     HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
 
     @computed_field
-    def huggingface_api_url(self) -> str:
-        """Construct the full Hugging Face API URL for zero-shot classification."""
-        return f"{self.HUGGINGFACE_API_URL}{self.HUGGINGFACE_ZSC_MODEL}"
-
-    # Default ChromaDB connection settings
-    CHROMADB_HOST: str
-    CHROMADB_PORT: int
-
-    @computed_field
     def ENABLE_PROFILING(self) -> bool:
-        """Enable profiling only in non-production environments."""
-        return not self.DISABLE_PROFILING and self.ENV != "production"
-
-    @computed_field
-    def GOOGLE_REDIRECT_URI(self) -> str:
-        """Redirect URI for Google OAuth based on environment."""
-        return (
-            "https://heygaia.io"
-            if self.ENV == "production"
-            else "http://localhost:3000"
-        )
-
-    @computed_field
-    def HOST(self) -> str:
-        """API Host URL based on environment."""
-        return (
-            "https://api.heygaia.io"
-            if self.ENV == "production"
-            else "http://localhost:8000"
-        )
-
-    @computed_field
-    def FRONTEND_URL(self) -> str:
-        """Frontend base URL based on environment."""
-        return (
-            "https://heygaia.io"
-            if self.ENV == "production"
-            else "http://localhost:3000"
-        )
+        """Enable profiling only in production environments."""
+        return not self.DISABLE_PROFILING and self.ENV == "production"
 
     @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
@@ -175,7 +118,6 @@ class Settings(BaseSettings):
         return f"{self.HOST}/api/v1/oauth/google/callback"
 
     model_config = SettingsConfigDict(
-        # env_file=env_file_path,
         env_file_encoding="utf-8",
         extra="allow",
     )
