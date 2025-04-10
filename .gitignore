@@ -26,6 +26,8 @@ venv/
 .idea
 
 
+uv.lock
+
 .terraform/
 .terraform
 *.tfstate

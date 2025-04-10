@@ -109,8 +109,8 @@ class Settings(BaseSettings):
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
-        """Enable profiling only in production environments."""
-        return not self.DISABLE_PROFILING and self.ENV == "production"
+        """Enable profiling only if explicitly enabled in production."""
+        return self.ENV == "production" and not self.DISABLE_PROFILING
 
     @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
