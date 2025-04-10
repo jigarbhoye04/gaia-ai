@@ -36,8 +36,6 @@ services:
     stdin_open: true
     depends_on:
       - chromadb
-      - redis
-      - mongo
     networks:
       - gaia_network
     healthcheck:
@@ -118,6 +116,7 @@ services:
 
   # Redis Service
   redis:
+    profiles: ["dev"]
     image: redis:alpine
     container_name: redis
     # ports:
@@ -135,6 +134,7 @@ services:
 
   # MongoDB Service
   mongo:
+    profiles: ["dev"]
     image: mongo:latest
     container_name: mongo
     # ports:
@@ -147,6 +147,23 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - gaia_network
+
+  # Mongo Express Service
+  mongo_express:
+    profiles: ["dev"]
+    image: mongo-express:latest
+    container_name: mongo_express
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mongo
     networks:
       - gaia_network
 
