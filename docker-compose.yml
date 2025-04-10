@@ -21,10 +21,6 @@ services:
       DEBUG: 1
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
-      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
-      CELERY_RESULT_BACKEND: "rpc://"
-      CHROMADB_DEVELOPMENT_HOST: "chromadb"
-      CHROMADB_DEVELOPMENT_PORT: "8000"
     env_file:
       - .env
     volumes:
@@ -69,6 +65,8 @@ services:
     container_name: celery_worker
     image: gaia-image
     working_dir: /app
+    env_file:
+      - .env
     command:
       [
         "python",
@@ -79,11 +77,6 @@ services:
         "worker",
         "--loglevel=info",
       ]
-    environment:
-      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
-      CELERY_RESULT_BACKEND: "rpc://"
-      CHROMADB_DEVELOPMENT_HOST: "chromadb"
-      CHROMADB_DEVELOPMENT_PORT: "8000"
     restart: on-failure
     volumes:
       - .:/app
