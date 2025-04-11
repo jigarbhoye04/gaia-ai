@@ -15,9 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 
-import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
-import { Mail01Icon } from "../../Misc/icons";
 import LargeHeader from "./LargeHeader";
 
 const images = [

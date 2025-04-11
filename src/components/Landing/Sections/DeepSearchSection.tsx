@@ -1,9 +1,8 @@
 import Player from "next-video/player";
 import { useState } from "react";
 
-import { AiBrowserIcon } from "@/components/Misc/icons";
-import { SectionHeading } from "@/layouts/LandingSectionHeading";
 import { cn } from "@/lib/utils";
+
 import LargeHeader from "./LargeHeader";
 
 const videos = [

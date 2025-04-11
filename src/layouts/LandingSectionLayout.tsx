@@ -26,7 +26,7 @@ export default function LandingSectionLayout({
   return (
     <div
       className={cn(
-        "p-6 flex w-full flex-col items-center justify-start rounded-3xl bg-zinc-900 transition-all hover:outline-primary sm:h-full sm:min-h-fit sm:gap-7",
+        "flex w-full flex-col items-center justify-start rounded-3xl bg-zinc-900 p-6 transition-all hover:outline-primary sm:h-full sm:min-h-fit sm:gap-7",
         className,
       )}
     >

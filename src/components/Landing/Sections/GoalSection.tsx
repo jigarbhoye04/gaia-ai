@@ -12,6 +12,7 @@ import {
 } from "@/components/Misc/icons";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
+
 import LargeHeader from "./LargeHeader";
 
 interface Step {

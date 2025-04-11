@@ -19,9 +19,9 @@ const DeepSearchSection = lazy(
 const GoalSection = lazy(
   () => import("@/components/Landing/Sections/GoalSection"),
 );
-const NotesSection = lazy(
-  () => import("@/components/Landing/Sections/NotesSection"),
-);
+// const NotesSection = lazy(
+// () => import("@/components/Landing/Sections/NotesSection"),
+// );
 const InternetSection = lazy(
   () => import("@/components/Landing/Sections/InternetSection"),
 );

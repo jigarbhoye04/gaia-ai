@@ -8,11 +8,12 @@ import { SectionHeading } from "@/layouts/LandingSectionHeading";
 export default function MobileSection() {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col items-center justify-center space-y-5 dark sm:flex-row">
-        <div className="flex w-full flex-col">
+      <div className="relative z-[1] flex max-h-[430px] w-screen max-w-fit flex-col items-start justify-center space-y-5 overflow-hidden rounded-3xl bg-zinc-900 pl-12 sm:flex-row">
+        <div className="flex flex-col">
           <SectionHeading
             heading="Move beyond Siri and Google Assistant"
             // heading="The Personal Assistant That Truly Works"
+            className="mt-10"
             chipTitle="Mobile App"
             chipTitle2="Coming Soon"
             smallHeading
@@ -90,7 +91,7 @@ export default function MobileSection() {
           </div>
         </div>
         <Iphone15Pro
-          className="relative z-[2] h-fit w-screen max-w-screen-sm px-5 sm:max-h-[70vh]"
+          className="relative z-[2] h-fit px-5 sm:max-h-[70vh]"
           src="/landing/mobile_screenshot.png"
         />
       </div>
