@@ -1,5 +1,4 @@
 import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Send } from "lucide-react";
 import NextImage from "next/image";
@@ -13,6 +12,7 @@ import {
 } from "@/components/Misc/icons";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { AnimatedSection } from "@/layouts/AnimatedSection";
+import LargeHeader from "./LargeHeader";
 
 interface Step {
   icon: React.ReactNode;
@@ -28,14 +28,14 @@ export default function GoalSection() {
   const steps = useMemo<Step[]>(
     () => [
       {
-        icon: <Target02Icon color={undefined} height={30} width={30} />,
+        icon: <Target02Icon color={undefined} height={25} width={25} />,
         title: "Enter your goal",
         description:
           "Define your objective clearly so we can create a personalized plan for you.",
         image: "/landing/blur_goals.webp",
       },
       {
-        icon: <FlowchartIcon1 color={undefined} height={30} width={30} />,
+        icon: <FlowchartIcon1 color={undefined} height={25} width={25} />,
         title: "Create a Roadmap",
         description:
           "GAIA provides a step-by-step plan with resources to help you achieve your goal!",
@@ -43,7 +43,7 @@ export default function GoalSection() {
       },
       {
         icon: (
-          <CheckmarkSquare03Icon color={undefined} height={30} width={30} />
+          <CheckmarkSquare03Icon color={undefined} height={25} width={25} />
         ),
         title: "Keep Track",
         description:
@@ -66,7 +66,10 @@ export default function GoalSection() {
 
   return (
     <div className="flex min-h-fit w-screen flex-col items-center gap-5 p-4 transition-all sm:mt-0">
-      <GoalHeader />
+      <LargeHeader
+        headingText="Ever Felt Stuck Setting Goals?"
+        chipText="Goal Tracking"
+      />
       <GoalSteps
         selectedStep={selectedStep}
         setSelectedImage={setSelectedImage}
@@ -74,19 +77,6 @@ export default function GoalSection() {
         steps={steps}
         image={selectedImage}
       />
-    </div>
-  );
-}
-
-function GoalHeader() {
-  return (
-    <div className="max-w-screen-md text-center">
-      <Chip variant="flat" color="primary">
-        Goal Tracking
-      </Chip>
-      <h2 className="relative z-[2] mb-2 mt-4 flex items-center justify-center gap-4 text-4xl font-bold sm:text-5xl">
-        Ever Felt Stuck Setting Goals?
-      </h2>
     </div>
   );
 }
@@ -177,7 +167,7 @@ function GoalSteps({
   return (
     <div className="relative flex flex-col items-center gap-5">
       <div ref={goalSectionRef} className="min-w-full">
-        <AnimatedSection className="grid w-full items-center justify-center px-2 sm:w-screen sm:max-w-screen-xl sm:grid-cols-3 sm:gap-5">
+        <AnimatedSection className="grid w-full items-center justify-center px-2 sm:w-screen sm:max-w-screen-xl sm:grid-cols-3 sm:gap-5 sm:px-0">
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -220,8 +210,8 @@ function GoalStep({
 }: GoalStepProps) {
   return (
     <div
-      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-3xl p-2 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:p-5 ${
-        isSelected ? "opacity-100" : "sm:opacity-60"
+      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-3xl bg-zinc-900 p-2 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:p-6 ${
+        isSelected ? "opacity-100" : "sm:opacity-45"
       }`}
       onClick={onClick}
     >
@@ -230,7 +220,7 @@ function GoalStep({
           isSelected
             ? "bg-primary text-black/90 outline-black/90"
             : "bg-zinc-800 text-white outline-zinc-700"
-        } relative mb-5 flex min-h-[50px] min-w-[50px] items-center justify-center rounded-xl`}
+        } relative mb-4 flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl`}
       >
         {icon}
         <div className="absolute -bottom-1 -right-1 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary text-sm font-bold text-black">

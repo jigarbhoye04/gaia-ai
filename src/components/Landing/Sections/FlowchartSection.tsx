@@ -140,7 +140,7 @@ const FlowchartDemo = () => {
         <FlowchartIcon className="size-[30px] sm:size-[30px]" color="#9b9b9b" />
       }
     >
-      <div className="w-100% flex justify-end pt-3">
+      <div className="w-100% flex justify-end pt-1">
         <div className="w-[95%]">
           <SimpleChatBubbleUser>
             How can I plan a product launch for my SaaS?
@@ -148,10 +148,8 @@ const FlowchartDemo = () => {
         </div>
       </div>
 
-      <SimpleChatBubbleBot className={"!rounded-2xl"}>
-        <div className="mb-3">
-          Here is a flowchart to help you plan a product launch:
-        </div>
+      <SimpleChatBubbleBot className={"w-full !rounded-2xl"}>
+        <div className="mb-3">Here is a flowchart to help you:</div>
         <div className="relative flex flex-col gap-0 overflow-hidden !rounded-[15px] bg-zinc-950">
           <Tabs
             className="px-3"
@@ -165,12 +163,12 @@ const FlowchartDemo = () => {
             }}
           >
             <Tab key="code" className="p-0" title="Code">
-              <div className="h-[320px] overflow-y-auto whitespace-pre-wrap px-5 py-2 !font-mono">
+              <div className="h-[280px] overflow-y-auto whitespace-pre-wrap px-5 py-2 !font-mono">
                 {flowchartCode}
               </div>
             </Tab>
             <Tab key="preview" className="p-0" title="Flowchart">
-              <div className="relative h-[320px] overflow-hidden bg-zinc-950 p-4">
+              <div className="relative h-[280px] overflow-hidden bg-zinc-950 p-4">
                 <div
                   ref={mermaidRef}
                   className="mermaid absolute select-none"

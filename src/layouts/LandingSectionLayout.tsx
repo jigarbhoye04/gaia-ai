@@ -26,7 +26,7 @@ export default function LandingSectionLayout({
   return (
     <div
       className={cn(
-        "flex w-full flex-col items-center justify-start rounded-3xl bg-zinc-900 p-4 transition-all hover:outline-primary sm:h-full sm:min-h-fit sm:gap-7",
+        "p-6 flex w-full flex-col items-center justify-start rounded-3xl bg-zinc-900 transition-all hover:outline-primary sm:h-full sm:min-h-fit sm:gap-7",
         className,
       )}
     >
@@ -35,7 +35,7 @@ export default function LandingSectionLayout({
           <div className="mb-1 flex flex-col items-start gap-1">
             <div className="flex items-center gap-3">
               {icon}
-              <h2 className="text-3xl font-semibold text-white">{heading}</h2>
+              <h2 className="text-2xl font-semibold text-white">{heading}</h2>
             </div>
             <p className="text-md mb-2 text-gray-400">{subheading}</p>
             {extraHeading}

@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHeading } from "../../../layouts/LandingSectionHeading";
 import { cn } from "../../../lib/utils";
 import { Mail01Icon } from "../../Misc/icons";
+import LargeHeader from "./LargeHeader";
 
 const images = [
   {
@@ -124,23 +125,29 @@ export default function MailSection() {
 
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
-        <SectionHeading
-          heading="The future of mail."
-          chipTitle="Mail"
-          chipTitle2="Coming Soon"
-          icon={
-            <Mail01Icon
-              className="size-[35px] sm:size-[35px]"
-              color="#9b9b9b"
-            />
-          }
-          subheading="GAIA summarizes emails, drafts with AI, adapts writing style, fetches recipient emails, supports multi-drafts, and auto-labels—ensuring you never miss important messages."
+      <div className="flex w-screen max-w-screen-xl flex-col items-center space-y-10">
+        <LargeHeader
+          headingText="The Future of Mail"
+          chipText="Mail"
+          chipText2="Coming Soon"
+          // subHeadingText="An AI-native inbox that writes, replies, and thinks for you."
+          subHeadingText="An intelligent inbox assistant that helps you write better emails, reply instantly, surface important messages, and stay organized — all in one place."
         />
+
+        <div className="mt-10 grid w-screen max-w-screen-xl grid-cols-1 gap-2 p-3 sm:gap-6 sm:p-0 md:grid-cols-2 lg:grid-cols-5">
+          {bentoCards.map((card, index) => (
+            <BentoCard
+              key={index}
+              icon={card.icon}
+              title={card.title}
+              description={card.description}
+            />
+          ))}
+        </div>
 
         <div className="flex justify-center">
           <div className="relative w-full max-w-screen-xl">
-            <div className="relative aspect-video w-screen max-w-screen-xl overflow-hidden rounded-lg shadow-lg sm:min-h-[70vh]">
+            <div className="relative aspect-video w-screen max-w-screen-xl overflow-hidden rounded-xl shadow-[0_4px_150px_#00bbff90] sm:min-h-[70vh]">
               {images.map((image) => (
                 <div
                   key={image.id}
@@ -177,17 +184,6 @@ export default function MailSection() {
             />
           ))}
         </div>
-      </div>
-
-      <div className="mt-10 grid w-screen max-w-screen-xl grid-cols-1 gap-2 p-3 sm:gap-6 sm:p-0 md:grid-cols-2 lg:grid-cols-5">
-        {bentoCards.map((card, index) => (
-          <BentoCard
-            key={index}
-            icon={card.icon}
-            title={card.title}
-            description={card.description}
-          />
-        ))}
       </div>
     </div>
   );

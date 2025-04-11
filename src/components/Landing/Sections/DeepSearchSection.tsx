@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AiBrowserIcon } from "@/components/Misc/icons";
 import { SectionHeading } from "@/layouts/LandingSectionHeading";
 import { cn } from "@/lib/utils";
+import LargeHeader from "./LargeHeader";
 
 const videos = [
   {
@@ -25,8 +26,8 @@ export default function DeepSearchSection() {
 
   return (
     <div className="flex w-screen items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
-        <SectionHeading
+      <div className="flex w-screen max-w-screen-xl flex-col items-center justify-center space-y-5">
+        {/* <SectionHeading
           // heading="Automated Web Browsing"
           heading="Go Beyond Google Search"
           chipTitle="Deep Search"
@@ -36,10 +37,15 @@ export default function DeepSearchSection() {
               color="#9b9b9b"
             />
           }
-          subheading="GAIA Deep Search goes beyond traditional search engines. Instead of just giving you links, GAIA scans the web, retrieves full content from multiple sources, and extracts key insights—so you get instant, in-depth answers."
+          subheading="Fetch smarter results as GAIA scans the web, dives into each page, and brings back meaningful insights — not just links."
+        /> */}
+        <LargeHeader
+          headingText="Go Beyond Google Search"
+          chipText="Deep Search"
+          subHeadingText="Fetch smarter results as GAIA scans the web, dives into each page, and brings back meaningful insights — not just links."
         />
 
-        <div className="flex justify-center">
+        <div className="flex h-full w-full justify-center">
           <div className="relative w-full max-w-screen-xl">
             {videos.map((video) => (
               <div

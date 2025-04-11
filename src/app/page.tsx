@@ -61,9 +61,9 @@ export default function LandingPage() {
           <Suspense fallback={<SuspenseLoader />}>
             <GoalSection />
           </Suspense>
-          <Suspense fallback={<SuspenseLoader />}>
+          {/* <Suspense fallback={<SuspenseLoader />}>
             <NotesSection />
-          </Suspense>
+          </Suspense> */}
           <Suspense fallback={<SuspenseLoader />}>
             <InternetSection />
           </Suspense>
@@ -73,7 +73,7 @@ export default function LandingPage() {
           <Suspense fallback={<SuspenseLoader />}>
             <FeatureGridSection />
           </Suspense>
-          DF
+
           <Suspense fallback={<SuspenseLoader />}>
             <MobileSection />
           </Suspense>
