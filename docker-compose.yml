@@ -151,8 +151,8 @@ services:
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo
       ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: password
+      ME_CONFIG_BASICAUTH_USERNAME: admin #pragma: allowlist secret
+      ME_CONFIG_BASICAUTH_PASSWORD: password #pragma: allowlist secret
     ports:
       - "8081:8081"
     depends_on:

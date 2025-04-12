@@ -6,8 +6,10 @@ from typing import Any, Dict
 
 from bson import ObjectId
 from fastapi import HTTPException, status
+from langchain_core.documents import Document
 
 from app.config.loggers import notes_logger as logger
+from app.db.chromadb import ChromaClient
 from app.db.collections import notes_collection
 from app.db.redis import delete_cache, get_cache, set_cache
 from app.db.utils import serialize_document
@@ -66,7 +68,8 @@ async def get_all_notes(user_id: str) -> list[NoteResponse]:
     logger.info(f"Retrieving all notes for user: {user_id}")
     cache_key = f"notes:{user_id}"
     cached_notes = await get_cache(cache_key)
-    if cached_notes:
+    if cached_notes and "notes" in cached_notes:
+        cached_notes = cached_notes["notes"]
         logger.info("All notes found in cache.")
         return [NoteResponse(**note) for note in cached_notes]
 
@@ -81,9 +84,7 @@ async def get_all_notes(user_id: str) -> list[NoteResponse]:
     return [NoteResponse(**note) for note in serialized_notes]
 
 
-async def update_note(
-    note_id: str, note: NoteModel, user_id: str, chromadb_client=None
-) -> NoteResponse:
+async def update_note(note_id: str, note: NoteModel, user_id: str) -> NoteResponse:
     """
     Update an existing note by its ID for the specified user.
 
@@ -91,7 +92,6 @@ async def update_note(
         note_id (str): The ID of the note to update.
         note (NoteModel): The updated note data.
         user_id (str): The ID of the authenticated user.
-        chromadb_client: The ChromaDB client instance.
 
     Returns:
         NoteResponse: The updated note.
@@ -100,6 +100,7 @@ async def update_note(
         HTTPException: If the note is not found.
     """
     logger.info(f"Updating note with id: {note_id} for user: {user_id}")
+
     update_data = {k: v for k, v in note.model_dump().items() if v is not None}
 
     result = await notes_collection.update_one(
@@ -118,26 +119,18 @@ async def update_note(
     serialized_note = serialize_document(updated_note)
 
     # Update ChromaDB with the new content if client is provided
-    if chromadb_client and "plaintext" in update_data:
+    if "plaintext" in update_data:
         try:
-            chroma_notes_collection = await chromadb_client.get_collection(name="notes")
+            chroma_notes_collection = await ChromaClient.get_langchain_client(
+                collection_name="notes"
+            )
 
             # Update the existing document in ChromaDB
-            await chroma_notes_collection.update(
-                ids=[note_id],
-                documents=[note.plaintext],
-                metadatas=[
-                    {
-                        "note_id": note_id,
-                        "user_id": user_id,
-                        "title": update_data.get(
-                            "title", serialized_note.get("title", "")
-                        ),
-                        "description": update_data.get(
-                            "description", serialized_note.get("description", "")
-                        ),
-                    }
-                ],
+            await chroma_notes_collection.update_document(
+                document_id=note_id,
+                document=Document(
+                    page_content=update_data["plaintext"],
+                ),
             )
             logger.info(f"Note with id {note_id} updated in ChromaDB")
         except Exception as e:
@@ -155,14 +148,13 @@ async def update_note(
     return NoteResponse(**serialized_note)
 
 
-async def delete_note(note_id: str, user_id: str, chromadb_client=None) -> None:
+async def delete_note(note_id: str, user_id: str) -> None:
     """
     Delete a note by its ID for the specified user.
 
     Args:
         note_id (str): The ID of the note to delete.
         user_id (str): The ID of the authenticated user.
-        chromadb_client: The ChromaDB client instance.
 
     Raises:
         HTTPException: If the note is not found.
@@ -184,28 +176,26 @@ async def delete_note(note_id: str, user_id: str, chromadb_client=None) -> None:
     await delete_cache(f"notes:{user_id}")
 
     # Delete from ChromaDB if client is provided
-    if chromadb_client:
-        try:
-            chroma_notes_collection = await chromadb_client.get_collection(name="notes")
-            await chroma_notes_collection.delete(ids=[note_id])
-            logger.info(f"Note with id {note_id} deleted from ChromaDB")
-        except Exception as e:
-            # Log the error but don't fail the request if ChromaDB deletion fails
-            logger.error(f"Failed to delete note from ChromaDB: {str(e)}")
+    try:
+        chroma_notes_collection = await ChromaClient.get_langchain_client(
+            collection_name="notes"
+        )
+        await chroma_notes_collection.adelete(ids=[note_id])
+        logger.info(f"Note with id {note_id} deleted from ChromaDB")
+    except Exception as e:
+        # Log the error but don't fail the request if ChromaDB deletion fails
+        logger.error(f"Failed to delete note from ChromaDB: {str(e)}")
 
     logger.info("Note successfully deleted from MongoDB and cache invalidated.")
 
 
-async def create_note_service(
-    note: NoteModel, user_id: str, chromadb_client=None
-) -> NoteResponse:
+async def create_note_service(note: NoteModel, user_id: str) -> NoteResponse:
     """
     Create a new note for the authenticated user.
 
     Args:
         note (NoteModel): The note data.
         user_id (str): The ID of the authenticated user.
-        chromadb_client: The ChromaDB client instance.
 
     Returns:
         NoteResponse: The created note.
@@ -226,12 +216,10 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
 
     Args:
         context: The context containing message data.
-        chromadb_client: The ChromaDB client instance.
 
     Returns:
         Updated context with notes data if found.
     """
-    chromadb_client = context["chromadb_client"]
     last_message = context["last_message"]
     query_text = context["query_text"]
     user = context["user"]
@@ -239,10 +227,7 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
     notes = await search_notes_by_similarity(
         input_text=query_text,
         user_id=user.get("user_id"),
-        chromadb_client=chromadb_client,
     )
-
-    logger.info(f"thesearethe {notes=}")
 
     if notes:
         formatted_notes = []
@@ -253,7 +238,6 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
 
         notes_text = "\n".join(formatted_notes)
 
-        print(f"{notes_text=}")
         last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
             message=last_message["content"], notes=notes_text
         )

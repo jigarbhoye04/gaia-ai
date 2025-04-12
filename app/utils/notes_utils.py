@@ -2,6 +2,7 @@ import json
 from typing import Optional
 
 from langchain.chat_models import init_chat_model
+from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 
@@ -38,29 +39,35 @@ async def insert_note(
     auto_created=False,
 ) -> NoteResponse:
     logger.info(f"Creating new note for user: {user_id}")
-    chromadb_client = ChromaClient.get_client()
+
+    langchain_chroma_client = await ChromaClient.get_langchain_client(
+        collection_name="notes"
+    )
 
     note_data = note.model_dump()
     note_data["user_id"] = user_id
     note_data["auto_created"] = auto_created
+
     result = await notes_collection.insert_one(note_data)
+
     note_id = str(result.inserted_id)
 
-    # Add note to ChromaDB for vector search
-    if chromadb_client:
-        chroma_notes_collection = await chromadb_client.get_collection(name="notes")
+    logger.info(f"Note created with ID: {note_id}")
 
-        await chroma_notes_collection.add(
-            documents=[note.plaintext],
-            metadatas=[
-                {
+    # Add note to ChromaDB for vector search
+    await langchain_chroma_client.aadd_documents(
+        documents=[
+            Document(
+                page_content=note_data.get("plaintext"),
+                metadata={
                     "note_id": note_id,
                     "user_id": user_id,
-                }
-            ],
-            ids=[note_id],
-        )
-        logger.info(f"Note with id {note_id} indexed in ChromaDB")
+                },
+            )
+        ],
+        ids=[note_id],
+    )
+    logger.info(f"Note with id {note_id} indexed in ChromaDB")
 
     response_data = {
         "id": note_id,

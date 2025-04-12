@@ -85,9 +85,7 @@ async def process_email(
             raise HTTPException(status_code=401, detail="User ID is required")
 
         notes = await search_notes_by_similarity(
-            input_text=request.prompt,
-            user_id=str(user_id),
-            chromadb_client=chromadb_client,
+            input_text=request.prompt, user_id=str(user_id)
         )
 
         prompt = EMAIL_COMPOSER.format(
