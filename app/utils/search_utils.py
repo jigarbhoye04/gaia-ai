@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
 from bs4 import BeautifulSoup
@@ -10,6 +10,7 @@ from app.config.loggers import search_logger as logger
 from app.config.settings import settings
 from app.db.redis import ONE_HOUR_TTL, get_cache, set_cache
 from app.exceptions import FetchError
+from app.utils.storage_utils import upload_bytes_to_cloudinary
 
 http_async_client = httpx.AsyncClient()
 extractor = URLExtract()
@@ -47,7 +48,7 @@ async def fetch_endpoint(
         return cached_result
 
     # If not in cache, make the API request
-    headers = {"Ocp-Apim-Subscription-Key": settings.BING_API_KEY_1}
+    headers = {"Ocp-Apim-Subscription-Key": settings.BING_API_KEY}
     params = {"q": query, "count": count}
     if extra_params:
         params.update(extra_params)
@@ -185,7 +186,7 @@ def format_results_for_llm(results, result_type="Search Results"):
     return formatted_output
 
 
-def extract_urls_from_text(text: str) -> list[str]:
+def extract_urls_from_text(text: str) -> list[Any]:
     """
     Extracts valid URLs from text, with robust handling of various URL formats.
 
@@ -205,8 +206,20 @@ def extract_urls_from_text(text: str) -> list[str]:
     if not text:
         return []
 
-    urls = extractor.find_urls(text=text)
-    return urls
+    # # Get the raw results from the extractor
+    # # URLExtract.find_urls can return either List[str] or List[Tuple[str, Tuple[int, int]]]
+    # # Cast to ensure the type checker understands our handle both cases
+    # raw_urls = cast(
+    #     Union[List[str], List[Tuple[str, Tuple[int, int]]]],
+    # )
+
+    # # Handle the case where find_urls returns tuples with position information
+    # if raw_urls and isinstance(raw_urls[0], tuple):
+    #     return [url for url, _ in raw_urls]  # Extract just the URL strings
+
+    # # Otherwise it's already a list of strings
+    # return cast(List[str], raw_urls)
+    return extractor.find_urls(text=text, only_unique=True)
 
 
 async def fetch_with_httpx(url: str) -> str:
@@ -290,7 +303,10 @@ async def fetch_with_playwright(
                 screenshot_bytes = await page.screenshot(
                     type="jpeg", quality=80, full_page=True
                 )
-                result["screenshot"] = screenshot_bytes
+                screenshot_url = await upload_bytes_to_cloudinary(
+                    bytes_data=screenshot_bytes, file_type="image", folder="screenshots"
+                )
+                result["screenshot"] = screenshot_url
 
             await page.close()
             await context.close()
@@ -303,8 +319,8 @@ async def fetch_with_playwright(
             await page.close()
         if context:
             await context.close()
-        if browser and not browser.is_closed():
-            await browser.close()
+        # if browser and not browser.is_closed():
+        # await browser.close()
         raise FetchError(f"Unexpected error: {type(e).__name__}") from e
 
 
