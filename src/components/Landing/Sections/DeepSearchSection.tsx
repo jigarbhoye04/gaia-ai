@@ -7,15 +7,15 @@ import LargeHeader from "./LargeHeader";
 
 const videos = [
   {
-    id: "finance",
-    src: "https://res.cloudinary.com/dwhuiazdn/video/upload/v1743186298/deepsearch-finance_zmkqca.mp4",
-    // label: "Finance",
-    label: "Example 1",
-  },
-  {
     id: "headphones",
     src: "https://res.cloudinary.com/dwhuiazdn/video/upload/v1743186939/deep-search-headphones-1743186723080_wsslru.mp4",
     // label: "Headphones",
+    label: "Example 1",
+  },
+  {
+    id: "finance",
+    src: "https://res.cloudinary.com/dwhuiazdn/video/upload/v1743186298/deepsearch-finance_zmkqca.mp4",
+    // label: "Finance",
     label: "Example 2",
   },
 ];

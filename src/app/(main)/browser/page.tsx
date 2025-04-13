@@ -655,7 +655,7 @@ const BrowserAutomationChat = () => {
 
                 <Image
                   alt="Automate Browser Infographic"
-                  src={"/media/automate_browser.png"}
+                  src={"/media/automate_browser.webp"}
                   width={450}
                   height={400}
                 />

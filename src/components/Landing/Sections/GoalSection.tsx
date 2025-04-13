@@ -168,7 +168,7 @@ function GoalSteps({
   return (
     <div className="relative flex flex-col items-center gap-5">
       <div ref={goalSectionRef} className="min-w-full">
-        <AnimatedSection className="grid w-full items-center justify-center px-2 sm:w-screen sm:max-w-screen-xl sm:grid-cols-3 sm:gap-5 sm:px-0">
+        <AnimatedSection className="grid w-full items-center justify-center gap-5 px-2 sm:w-screen sm:max-w-screen-xl sm:grid-cols-3 sm:px-0">
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -211,7 +211,7 @@ function GoalStep({
 }: GoalStepProps) {
   return (
     <div
-      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-3xl bg-zinc-900 p-2 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:p-6 ${
+      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-2xl bg-zinc-900 p-6 py-4 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:rounded-3xl sm:py-6 ${
         isSelected ? "opacity-100" : "sm:opacity-45"
       }`}
       onClick={onClick}

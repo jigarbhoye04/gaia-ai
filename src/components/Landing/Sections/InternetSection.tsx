@@ -10,7 +10,7 @@ import {
 } from "../../Misc/icons";
 
 const webSearchImages = [
-  { src: "/landing/web/weather.png", alt: "Web Search Screenshot Weather" },
+  { src: "/landing/web/0.webp", alt: "Web Search Screenshot Weather" },
   { src: "/landing/web/1.webp", alt: "Web Search Screenshot 1" },
   { src: "/landing/web/2.webp", alt: "Web Search Screenshot 2" },
   { src: "/landing/web/3.webp", alt: "Web Search Screenshot 3" },
@@ -18,10 +18,10 @@ const webSearchImages = [
 ];
 
 const fetchWebpageImages = [
-  { src: "/landing/web/fetch/0.png", alt: "Fetch Webpage Screenshot 4" },
-  { src: "/landing/web/fetch/1.png", alt: "Fetch Webpage Screenshot 1" },
-  { src: "/landing/web/fetch/3.png", alt: "Fetch Webpage Screenshot 3" },
-  { src: "/landing/web/fetch/2.png", alt: "Fetch Webpage Screenshot 2" },
+  { src: "/landing/web/fetch/0.webp", alt: "Fetch Webpage Screenshot 4" },
+  { src: "/landing/web/fetch/1.webp", alt: "Fetch Webpage Screenshot 1" },
+  { src: "/landing/web/fetch/3.webp", alt: "Fetch Webpage Screenshot 3" },
+  { src: "/landing/web/fetch/2.webp", alt: "Fetch Webpage Screenshot 2" },
 ];
 
 const ImageCarousel = ({
@@ -91,8 +91,8 @@ export default function Internet() {
   return (
     <div className="flex w-screen items-center justify-center">
       <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
-        <div className="relative flex w-screen max-w-screen-xl flex-row items-start justify-start gap-11">
-          <div className="flex h-full w-full flex-col items-center justify-between rounded-3xl bg-zinc-900 p-7">
+        <div className="relative flex w-screen max-w-screen-xl flex-col items-start justify-start gap-11 p-3 sm:flex-row">
+          <div className="flex h-full w-full flex-col items-center justify-between gap-5 rounded-3xl bg-zinc-900 p-0 pb-10 sm:gap-0 sm:p-7 sm:pb-7">
             <div className="min-h-[300px]">
               <SectionHeading
                 heading="Always Up-to-Date"
@@ -106,7 +106,7 @@ export default function Internet() {
                   />
                 }
               />
-              <div className="space-y-2 px-10 py-0 sm:p-6 sm:px-6">
+              <div className="space-y-2 px-7 py-0 sm:p-6 sm:px-6">
                 <div className="flex items-start gap-2">
                   <CheckmarkCircle02Icon
                     width={25}
@@ -137,7 +137,7 @@ export default function Internet() {
             <ImageCarousel images={webSearchImages} />
           </div>
 
-          <div className="flex h-full w-full flex-col items-center justify-between rounded-3xl bg-zinc-900 p-7">
+          <div className="flex h-full w-full flex-col items-center justify-between gap-5 rounded-3xl bg-zinc-900 p-0 pb-10 sm:gap-0 sm:p-7 sm:pb-7">
             <div className="min-h-[300px]">
               <SectionHeading
                 heading="Let AI Read for You"
@@ -151,7 +151,7 @@ export default function Internet() {
                   />
                 }
               />
-              <div className="space-y-2 px-10 py-0 pb-6 sm:p-6 sm:px-6">
+              <div className="space-y-2 px-7 py-0 pb-6 sm:p-6 sm:px-6">
                 <div className="flex items-start gap-2">
                   <CheckmarkCircle02Icon
                     width={25}

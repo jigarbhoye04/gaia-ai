@@ -8,12 +8,10 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 import { BookIcon1 } from "../../Misc/icons";
 
 const StaticSidebar = ({
-  // hover1,
   isVisible,
   isComplete,
   setIsComplete,
 }: {
-  // hover1: boolean;
   isVisible: boolean;
   isComplete: boolean;
   setIsComplete: React.Dispatch<React.SetStateAction<boolean>>;
@@ -34,8 +32,8 @@ const StaticSidebar = ({
     <div
       className={`relative z-20 h-fit flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 sm:absolute sm:-bottom-14 sm:-right-14 sm:max-w-[350px] ${
         isVisible
-          ? `pointer-events-auto opacity-100`
-          : "pointer-events-none opacity-0"
+          ? `pointer-events-auto flex opacity-100`
+          : "pointer-events-none hidden opacity-0"
       } transition-all`}
     >
       <div className="space-y-2 p-4">
