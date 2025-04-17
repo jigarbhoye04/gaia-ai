@@ -1,12 +1,20 @@
 import json
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, AsyncGenerator
+from typing import Annotated, AsyncGenerator, Dict, List, Optional, TypedDict
 
 import httpx
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_groq import ChatGroq
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.message import add_messages
+from langgraph.prebuilt import ToolNode, tools_condition
 from openai import AsyncOpenAI, OpenAI
 
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
+from app.langchain.chat_models.default_chat_model import DefaultChatAgent
+from app.langchain.tools import fetch, memory, search, weather
 from app.prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
 from app.prompts.system.general import MAIN_SYSTEM_PROMPT
 
@@ -19,11 +27,90 @@ async_openai_client = AsyncOpenAI(
 )
 
 sync_openai_client = OpenAI(
-    base_url="https://api.groq.com/openai/v1", api_key=settings.GROQ_API_KEY
+    base_url="https://api.groq.com/openai/v1",
+    api_key=settings.GROQ_API_KEY,
 )
 
 # Default model to use with Groq
 GROQ_MODEL = "llama-3.3-70b-versatile"
+
+
+tools = [
+    fetch.fetch_webpages,
+    search.deep_search,
+    search.web_search,
+    memory.create_memory,
+    weather.get_weather,
+]
+
+# Creating the chat model and binding the tools
+groq_llm = ChatGroq(
+    model=GROQ_MODEL,
+    api_key=settings.GROQ_API_KEY,
+    temperature=0.6,
+    max_tokens=2048,
+)
+groq_llm = groq_llm.bind_tools(
+    tools=tools,
+)
+
+# Default chat model
+default_llm = DefaultChatAgent(
+    # model="@cf/meta/llama-3.1-8b-instruct-fast",
+    model="@cf/meta/llama-3.3-70b-versatile",
+    temperature=0.6,
+    max_tokens=2048,
+)
+default_llm = default_llm.bind_tools(
+    tools=tools,
+)
+
+
+# Define the state for the StateGraph
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+    force_web_search: bool
+    force_deep_search: bool
+
+
+# Create the state graph builder
+graph_builder = StateGraph(State)
+
+
+async def chatbot(
+    state: State,
+):
+    """Chatbot function that uses the state graph and model."""
+    try:
+        # Try to call the Groq API with the provided messages
+        response = await groq_llm.ainvoke(state["messages"])
+        return {"messages": [response]}
+    except Exception as e:
+        logger.error(f"Error in Groq API call: {e}")
+        logger.info(f"Falling back to default LLM: {e}")
+
+    try:
+        response = await default_llm.ainvoke(state["messages"])
+        return {"messages": [response]}
+    except Exception as e:
+        logger.error(f"Error in default LLM call: {e}")
+        raise e
+
+
+graph_builder.add_node("chatbot", chatbot)
+graph_builder.add_node("tools", ToolNode(tools=tools))
+
+graph_builder.add_edge(START, "chatbot")
+graph_builder.add_edge("chatbot", END)
+graph_builder.add_edge("tools", "chatbot")
+
+graph_builder.add_conditional_edges(
+    "chatbot",
+    tools_condition,
+)
+
+# TODO: Use sqlite to store the state graph instead of in-memory
+graph = graph_builder.compile(checkpointer=MemorySaver())
 
 
 def prepare_messages(
@@ -131,6 +218,52 @@ def call_groq_api_sync(
         raise
 
 
+few_shot_tool_calling_examples = [
+    HumanMessage(content="What is the weather like in New York today?"),
+    AIMessage(
+        content="",
+        tool_calls=[
+            {
+                "name": "get_weather",
+                "args": {
+                    "location": "New York",
+                },
+                "id": "1",
+            }
+        ],
+    ),
+    HumanMessage(content="Can you fetch the latest news articles about AI?"),
+    AIMessage(
+        content="",
+        tool_calls=[
+            {
+                "name": "web_search",
+                "args": {
+                    "query_text": "latest news about AI",
+                },
+                "id": "2",
+            }
+        ],
+    ),
+    HumanMessage(
+        content="Hey, I am a computer science student currently studying computer science degree."
+    ),
+    AIMessage(
+        content="",
+        tool_calls=[
+            {
+                "name": "create_memory",
+                "args": {
+                    "plaintext": "I am a student pursuing a degree in Computer Science.",  # Plaintext content
+                    "content": "# I am a student pursuing a degree in Computer Science.",  # Markdown content
+                },
+                "id": "3",
+            }
+        ],
+    ),
+]
+
+
 async def do_prompt_with_stream(
     messages: list,
     context: dict,
@@ -144,6 +277,29 @@ async def do_prompt_with_stream(
     processed_messages = prepare_messages(messages, system_prompt)
     user_message = await extract_last_user_message(messages)
     bot_message = ""
+
+    # Trying the graph model first
+    try:
+        async for event in graph.astream(
+            {
+                "messages": [
+                    SystemMessage("You are a helpful assistant."),
+                    *few_shot_tool_calling_examples,
+                    HumanMessage(context.get("query_text", "")),
+                ],
+            },
+            config={
+                "configurable": {
+                    "thread_id": context.get("conversation_id"),
+                    "user_id": context.get("user", {}).get("user_id"),
+                },
+                "recursion_limit": 10,
+            },
+        ):
+            for value in event.values():
+                print("Assistant:", value["messages"][-1].content)
+    except Exception as e:
+        logger.warning(f"Graph model error: {e}")
 
     try:
         async for data in call_groq_api_stream(

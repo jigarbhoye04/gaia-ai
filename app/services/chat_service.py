@@ -23,14 +23,13 @@ from app.services.internet_service import do_deep_search, do_search, fetch_webpa
 from app.services.notes_service import fetch_notes
 from app.utils.chat_utils import (
     classify_intent,
-    user_weather,
     extract_location_from_message,
+    user_weather,
 )
 from app.utils.llm_utils import (
     do_prompt_no_stream,
     do_prompt_with_stream,
 )
-from app.utils.notes_utils import store_note
 from app.utils.pipeline_utils import Pipeline
 
 
@@ -105,7 +104,7 @@ async def chat_stream(
     pipeline = Pipeline(pipeline_steps)
     context = await pipeline.run(context)
 
-    background_tasks.add_task(store_note, context["query_text"], context["user_id"])
+    # background_tasks.add_task(store_note, context["query_text"], context["user_id"])
 
     context["messages"][-1] = context["last_message"]
 

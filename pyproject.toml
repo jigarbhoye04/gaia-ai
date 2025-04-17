@@ -75,4 +75,5 @@ dependencies = [
     "langchain-openai>=0.3.1",
     "pyowm>=3.3.0",
     "langgraph>=0.3.26",
+    "ipython>=9.1.0",
 ]
