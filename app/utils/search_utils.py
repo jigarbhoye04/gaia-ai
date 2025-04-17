@@ -134,8 +134,23 @@ async def perform_search(
     news: bool = True,
     videos: bool = True,
 ) -> dict:
-    """Perform selected Bing searches concurrently and return merged results."""
+    """
+    Perform concurrent Bing searches across multiple categories (web, images, news, videos).
 
+    Args:
+        query (str): The search query string.
+        count (int): Number of results to fetch per category.
+        web (bool, optional): Whether to perform a web search. Defaults to True.
+        images (bool, optional): Whether to perform an image search. Defaults to True.
+        news (bool, optional): Whether to perform a news search. Defaults to True.
+        videos (bool, optional): Whether to perform a video search. Defaults to True.
+
+    Returns:
+        dict: A dictionary with keys as enabled search types ('web', 'images', 'news', 'videos')
+              and values as merged results from corresponding search category.
+    """
+
+    # Mapping of search type to its enable flag, URL, and merging function
     search_options = {
         "web": (web, WEB_SEARCH_URL, merge_web_results),
         "images": (images, IMAGE_SEARCH_URL, merge_image_results),
@@ -143,18 +158,19 @@ async def perform_search(
         "videos": (videos, VIDEO_SEARCH_URL, merge_video_results),
     }
 
-    # Prepare tasks for enabled searches
     tasks, keys, merge_funcs = [], [], []
+
+    # Prepare async tasks for all enabled search types
     for key, (enabled, url, merge_func) in search_options.items():
         if enabled:
-            tasks.append(fetch_endpoint(url, query, count))
-            keys.append(key)
-            merge_funcs.append(merge_func)
+            tasks.append(fetch_endpoint(url, query, count))  # async API request
+            keys.append(key)  # search type name
+            merge_funcs.append(merge_func)  # corresponding result merge function
 
-    # Execute API calls concurrently
+    # Execute all API requests concurrently
     results = await asyncio.gather(*tasks)
 
-    # Merge and return results
+    # Merge results using their corresponding merge functions and return them in a dictionary
     return {keys[i]: merge_funcs[i](results[i]) for i in range(len(results))}
 
 

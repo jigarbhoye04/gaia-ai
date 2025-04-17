@@ -48,9 +48,12 @@ async def web_search(
     try:
         # Perform the search with 5 results
         search_results = await perform_search(query=query_text, count=5)
+        print(f"{search_results=}")
 
         web_results = search_results.get("web", [])
         news_results = search_results.get("news", [])
+        image_results = search_results.get("images", [])
+        video_results = search_results.get("videos", [])
         formatted_results = ""
 
         if web_results:
@@ -76,8 +79,10 @@ async def web_search(
                 formatted_results=formatted_results
             ),
             "raw_search_data": {
-                "web_results": web_results,
-                "news_results": news_results,
+                "web": web_results,
+                "news": news_results,
+                "images": image_results,
+                "videos": video_results,
                 "query": query_text,
                 "elapsed_time": elapsed_time,
                 "result_count": {"web": len(web_results), "news": len(news_results)},

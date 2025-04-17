@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from typing_extensions import TypedDict
 
 
@@ -52,7 +52,7 @@ class MessageRequestWithHistory(BaseModel):
     pageFetchURLs: Optional[List] = []
     fileIds: Optional[List[str]] = []
     fileData: Optional[List[FileData]] = []
-    deep_search_results: Optional[Dict[str, Any]] = None
+    # deep_search_results: Optional[Dict[str, Any]] = None
 
 
 class MessageRequest(BaseModel):

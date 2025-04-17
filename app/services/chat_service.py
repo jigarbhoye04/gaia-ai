@@ -2,10 +2,6 @@ import asyncio
 from datetime import datetime, timezone
 from typing import AsyncGenerator
 
-from bson import ObjectId
-from fastapi import BackgroundTasks, HTTPException, status
-from fastapi.encoders import jsonable_encoder
-
 from app.config.loggers import chat_logger as logger
 from app.db.collections import conversations_collection
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
@@ -17,29 +13,25 @@ from app.models.general_models import (
 )
 from app.prompts.system.general import WEATHER_PROMPT
 from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
-from app.services.file_service import fetch_files
-from app.services.image_service import generate_image_stream
-from app.services.internet_service import do_deep_search, do_search, fetch_webpages
-from app.services.notes_service import fetch_notes
 from app.utils.chat_utils import (
-    classify_intent,
     extract_location_from_message,
     user_weather,
 )
+from app.utils.langchain_utils_temp import do_prompt_with_stream
 from app.utils.llm_utils import (
     do_prompt_no_stream,
-    do_prompt_with_stream,
 )
-from app.utils.pipeline_utils import Pipeline
+from bson import ObjectId
+from fastapi import HTTPException, status
+from fastapi.encoders import jsonable_encoder
 
 
 async def chat_stream(
     body: MessageRequestWithHistory,
-    background_tasks: BackgroundTasks,
     user: dict,
-    llm_model: str,
-    user_ip: str,
-    chromadb_client=None,
+    # background_tasks: BackgroundTasks,
+    # user_ip: str,
+    # chromadb_client=None,
 ) -> AsyncGenerator:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
@@ -70,39 +62,36 @@ async def chat_stream(
         else "",
         "last_message": last_message,
         "body": body,
-        "llm_model": llm_model,
         "user": user,
-        "intent": None,
         "messages": jsonable_encoder(body.messages),
         "search_web": body.search_web,
         "deep_search": body.deep_search,
         "pageFetchURLs": body.pageFetchURLs,
         "fileIds": body.fileIds,
-        "weather_data": "",
-        "fileData": body.fileData if body.fileData else [],
-        "user_ip": user_ip,
-        "chromadb_client": chromadb_client,
+        # "fileData": body.fileData if body.fileData else [],
+        # "user_ip": user_ip,
+        # "chromadb_client": chromadb_client,
     }
 
-    context = await classify_intent(context)
+    # context = await classify_intent(context)
 
-    if context["intent"] == "generate_image":
-        async for chunk in generate_image_stream(context["query_text"]):
-            yield chunk
-        return
+    # if context["intent"] == "generate_image":
+    #     async for chunk in generate_image_stream(context["query_text"]):
+    #         yield chunk
+    #     return
 
-    pipeline_steps = [
-        # choose_llm_model,
-        do_weather,
-        fetch_webpages,
-        do_deep_search,
-        do_search,
-        fetch_notes,
-        fetch_files,
-    ]
+    # pipeline_steps = [
+    #     # choose_llm_model,
+    #     do_weather,
+    #     fetch_webpages,
+    #     do_deep_search,
+    #     do_search,
+    #     fetch_notes,
+    #     fetch_files,
+    # ]
 
-    pipeline = Pipeline(pipeline_steps)
-    context = await pipeline.run(context)
+    # pipeline = Pipeline(pipeline_steps)
+    # context = await pipeline.run(context)
 
     # background_tasks.add_task(store_note, context["query_text"], context["user_id"])
 
@@ -110,10 +99,9 @@ async def chat_stream(
 
     async for chunk in do_prompt_with_stream(
         messages=context["messages"],
-        max_tokens=4096,
-        intent=context["intent"],
-        model=context["llm_model"],
-        context=context,
+        query_text=context["query_text"],
+        user_id=context["user_id"],
+        conversation_id=context["conversation_id"],
     ):
         yield chunk
 

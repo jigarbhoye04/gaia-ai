@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, BackgroundTasks, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.config.settings import settings
 from app.services.chat_service import (
     chat_stream,
     chat,
@@ -71,16 +70,14 @@ async def chat_stream_endpoint(
     comprehensive response.
     """
 
-    if settings.ENV == "development":
-        client_ip = settings.DUMMY_IP
-    else:
-        forwarded = request.headers.get("X-Forwarded-For")
-        client_ip = forwarded.split(",")[0] if forwarded else request.client.host
+    # if settings.ENV == "development":
+    #     client_ip = settings.DUMMY_IP
+    # else:
+    #     forwarded = request.headers.get("X-Forwarded-For")
+    #     client_ip = forwarded.split(",")[0] if forwarded else request.client.host
 
     return StreamingResponse(
-        chat_stream(
-            body, background_tasks, user, llm_model, client_ip, chromadb_client
-        ),
+        chat_stream(body=body, user=user),
         media_type="text/event-stream",
     )
 
