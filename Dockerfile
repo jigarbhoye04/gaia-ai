@@ -21,10 +21,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Setup non-root user, cache directories, and permissions in one step
 RUN adduser --disabled-password --gecos '' appuser \
-    && mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data /home/appuser/.cache/ms-playwright \
+    && mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data \
     && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
     && chown -R appuser:appuser /home/appuser
-    # && cp -R /root/.cache/ms-playwright/* /home/appuser/.cache/ms-playwright/ \
 
 # Copy application code with proper ownership
 COPY --chown=appuser:appuser . .

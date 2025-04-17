@@ -15,8 +15,8 @@ RUN apt-get update && \
 
 # Install only heavy optional dependencies
 COPY pyproject.toml ./
-  RUN uv pip install --system --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-  RUN uv pip install --system --no-cache-dir --group heavy && \
+  RUN uv pip install --system --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    uv pip install --system --no-cache-dir --group heavy && \
     rm -rf /root/.cache
 
 # Playwright and NLTK setup
