@@ -1,4 +1,4 @@
-# ---- Base Image: Contains heavy dependencies like playwright, nltk, tesseract, etc. ----
+# ---- Base Image: Contains heavy dependencies  ----
 FROM aryanranderiya/gaia-base:latest
 
 # Set environment variables
@@ -23,8 +23,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 RUN adduser --disabled-password --gecos '' appuser \
     && mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data /home/appuser/.cache/ms-playwright \
     && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
-    && cp -R /root/.cache/ms-playwright/* /home/appuser/.cache/ms-playwright/ \
     && chown -R appuser:appuser /home/appuser
+    # && cp -R /root/.cache/ms-playwright/* /home/appuser/.cache/ms-playwright/ \
 
 # Copy application code with proper ownership
 COPY --chown=appuser:appuser . .
