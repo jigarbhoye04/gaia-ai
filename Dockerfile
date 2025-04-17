@@ -1,55 +1,41 @@
 # ---- Base Stage: Setup Python & Install Dependencies ----
-FROM python:3.12-slim AS base
+FROM aryanranderiya/gaia-base:latest AS base
 
 ARG ENV=production
 ENV ENV=${ENV} \
     UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    UV_SYSTEM_PYTHON=1
 
-# Install uv (Ultra-Fast Python Package Installer) and system dependencies in one go
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
-      libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-      libgbm1 libasound2 curl unzip tesseract-ocr && \
-    rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files and install Python dependencies using caching
+# Copy dependency manifest and install Python dependencies via UV
 COPY pyproject.toml ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     if [ "$ENV" = "production" ]; then \
-      uv pip install --system --no-cache-dir . ; \
+      uv sync --no-cache --group core ; \
     else \
-      uv pip install --system --no-cache-dir -e . ; \
+      uv sync --no-cache --group core --editable . ; \
     fi
-
-# ---- Builder Stage: Download Additional Resources ----
-FROM base AS builder
-RUN python -m nltk.downloader -d /root/nltk_data punkt stopwords punkt_tab
-
-# ---- Playwright Stage: Official Browser Assets ----
-FROM mcr.microsoft.com/playwright:v1.51.1-noble AS playwright
-# This stage is used solely to source the official browser assets
 
 # ---- Final Stage: Build Minimal Runtime Image ----
 FROM base AS final
 
-# Create a non-root user and switch ownership in one layer
+# Set up user, directories, ownerships, and cleanup in one go
 RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser /app
+    mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data /home/appuser/.cache/ms-playwright && \
+    chown -R appuser:appuser /home/appuser && \
+    rm -rf /tmp/*
 
-# Copy application code and resources
-COPY --chown=appuser:appuser . /app
-COPY --from=builder /root/nltk_data /home/appuser/nltk_data
-COPY --from=playwright /ms-playwright /root/.cache/ms-playwright
+WORKDIR /app
 
-# Expose application ports
-EXPOSE 80
+# Copy app and required data with correct ownership
+COPY --chown=appuser:appuser . .
+COPY --from=base /root/nltk_data /home/appuser/nltk_data
+COPY --from=base /root/.cache/ms-playwright /home/appuser/.cache/ms-playwright
+
+# Expose ports and switch to non-root
 EXPOSE 8000
-
-# Switch to non-root user
 USER appuser
 
 # Start the FastAPI application
