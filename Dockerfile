@@ -55,19 +55,13 @@ COPY pyproject.toml ./
 # Install dependencies with uv
 RUN --mount=type=cache,target=/root/.cache/uv \
   if [ "$ENV" = "production" ]; then \
-    uv pip install --system --no-cache-dir --group core ; \
+    uv pip install --no-cache-dir --group core ; \
   else \
-    uv pip install --system --no-cache-dir --group core --editable . ; \
+    uv pip install --no-cache-dir --group core --editable . ; \
   fi
 
-# Install additional system dependencies if needed
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      libnss3 libatk1.0-0 libxcb-dri3-0 \
-      libdrm2 libxcomposite1 libxdamage1 \
-      libgbm1 libasound2 libdbus-1-3 && \
-    rm -rf /var/lib/apt/lists/* && \
-    adduser --disabled-password --gecos '' appuser && \
+# Setup non-root user and directories
+RUN adduser --disabled-password --gecos '' appuser && \
     mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data /home/appuser/.cache/ms-playwright && \
     chown -R appuser:appuser /home/appuser
 
