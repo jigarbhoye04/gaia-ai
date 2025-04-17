@@ -16,12 +16,17 @@ RUN apt-get update && \
 # Install only heavy optional dependencies
 COPY pyproject.toml ./
   RUN uv pip install --system --no-cache-dir --group heavy  && rm -rf /root/.cache
-# ENV UV_SYSTEM_PYTHON=1
-# RUN uv sync --no-cache --only-group heavy && rm -rf /root/.cache
 
 # Playwright and NLTK setup
-RUN python -m playwright install --with-deps && \
-    python -m nltk.downloader -d /root/nltk_data punkt stopwords punkt_tab
+RUN python -m playwright install --with-deps chromium
+RUN python -m nltk.downloader punkt stopwords punkt_tab && \
+    rm -rf /root/.cache
+
+# Build:
+# docker build -t aryanranderiya/gaia-base:latest -f first-stage.Dockerfile .
+
+# Tag and Push:
+# docker push aryanranderiya/gaia-base:latest
 
 # Tag and push this image in one shot:
 # docker build -t aryanranderiya/gaia-base:latest -f first-stage.Dockerfile . && docker push aryanranderiya/gaia-base:latest

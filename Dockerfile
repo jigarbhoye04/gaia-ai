@@ -1,42 +1,85 @@
-# ---- Base Stage: Setup Python & Install Dependencies ----
-FROM aryanranderiya/gaia-base:latest AS base
+# # ---- Base Stage: Setup Python & Install Dependencies ----
+# FROM aryanranderiya/gaia-base:latest AS base
 
-ARG ENV=production
-ENV ENV=${ENV} \
+# ARG ENV=production
+# ENV ENV=${ENV} \
+#     UV_COMPILE_BYTECODE=1 \
+#     UV_LINK_MODE=copy \
+#     UV_SYSTEM_PYTHON=1
+
+# # Copy dependency manifest and install Python dependencies via UV
+# COPY pyproject.toml ./
+# RUN --mount=type=cache,target=/root/.cache/uv \
+#     if [ "$ENV" = "production" ]; then \
+#       uv sync --no-cache --group core ; \
+#     else \
+#       uv sync --no-cache --group core --editable . ; \
+#     fi
+
+# # ---- Final Stage: Build Minimal Runtime Image ----
+# FROM base AS final
+
+# # Set up user, directories, ownerships, and cleanup in one go
+# RUN adduser --disabled-password --gecos '' appuser && \
+#     mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data /home/appuser/.cache/ms-playwright && \
+#     chown -R appuser:appuser /home/appuser && \
+#     rm -rf /tmp/*
+
+# # Copy app and required data with correct ownership
+# COPY --chown=appuser:appuser . .
+# COPY --from=base /root/nltk_data /home/appuser/nltk_data
+# COPY --from=base /root/.cache/ms-playwright /home/appuser/.cache/ms-playwright
+
+# # Expose ports and switch to non-root
+# EXPOSE 8000
+# USER appuser
+
+# # Start the FastAPI application
+# CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# ---- Base Image: Contains heavy dependencies like playwright, nltk, tesseract, etc. ----
+FROM aryanranderiya/gaia-base:latest
+
+# Set environment variables
+ENV ENV=production \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
-    UV_SYSTEM_PYTHON=1
+    UV_SYSTEM_PYTHON=1 \
+    UV_LOGGING=1
 
 WORKDIR /app
 
-# Copy dependency manifest and install Python dependencies via UV
+# Copy pyproject.toml and install dependencies
 COPY pyproject.toml ./
+
+# Install dependencies with uv
 RUN --mount=type=cache,target=/root/.cache/uv \
-    if [ "$ENV" = "production" ]; then \
-      uv sync --no-cache --group core ; \
-    else \
-      uv sync --no-cache --group core --editable . ; \
-    fi
+  if [ "$ENV" = "production" ]; then \
+    uv pip install --system --no-cache-dir --group core ; \
+  else \
+    uv pip install --system --no-cache-dir --group core --editable . ; \
+  fi
 
-# ---- Final Stage: Build Minimal Runtime Image ----
-FROM base AS final
-
-# Set up user, directories, ownerships, and cleanup in one go
-RUN adduser --disabled-password --gecos '' appuser && \
+# Install additional system dependencies if needed
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      libnss3 libatk1.0-0 libxcb-dri3-0 \
+      libdrm2 libxcomposite1 libxdamage1 \
+      libgbm1 libasound2 libdbus-1-3 && \
+    rm -rf /var/lib/apt/lists/* && \
+    adduser --disabled-password --gecos '' appuser && \
     mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data /home/appuser/.cache/ms-playwright && \
-    chown -R appuser:appuser /home/appuser && \
-    rm -rf /tmp/*
+    chown -R appuser:appuser /home/appuser
 
-WORKDIR /app
-
-# Copy app and required data with correct ownership
+# Copy application code with proper ownership
 COPY --chown=appuser:appuser . .
-COPY --from=base /root/nltk_data /home/appuser/nltk_data
-COPY --from=base /root/.cache/ms-playwright /home/appuser/.cache/ms-playwright
 
-# Expose ports and switch to non-root
-EXPOSE 8000
+# Setup cache directories for the appuser
+RUN cp -r /root/nltk_data/* /home/appuser/nltk_data/ && \
+    cp -r /root/.cache/ms-playwright/* /home/appuser/.cache/ms-playwright/ && \
+    chown -R appuser:appuser /home/appuser
+
 USER appuser
+EXPOSE 8000
 
-# Start the FastAPI application
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
