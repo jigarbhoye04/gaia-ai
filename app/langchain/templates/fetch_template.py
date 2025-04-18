@@ -20,5 +20,5 @@ FETCH_TEMPLATE = PromptTemplate.from_template(
     7. If the fetched content is insufficient or irrelevant, explicitly mention that more information is needed.
 
     Use this information responsibly to generate an informed, clear, and source-backed response to the user.
-    """
+    """,
 )

@@ -18,7 +18,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.langchain.tools import calendar, fetch, memory, search, weather
+from app.langchain.tools import calendar, fetch, flowchart, memory, search, weather
 from app.utils.sse_utils import format_tool_response
 
 # GROQ_MODEL = "llama-3.3-70b-versatile"
@@ -34,6 +34,7 @@ tools = [
     weather.get_weather,
     calendar.fetch_calendar_list,
     calendar.calendar_event,
+    flowchart.create_flowchart,
 ]
 
 # Creating the chat model and binding the tools
@@ -164,14 +165,13 @@ async def do_prompt_with_stream(
             # Unpack the properties from the event
             _, (chunk, metadata) = event
 
-            print(f"{event=}")
-
             # If the chunk is a message from the agent
             if isinstance(chunk, AIMessageChunk):
                 yield f"data: {json.dumps({'response': chunk.content})}\n\n"
 
             # If the chunk is output of a tool
             if isinstance(chunk, ToolMessage):
+                print(f"{event=}")
                 try:
                     yield format_tool_response(
                         tool_name=chunk.name,
