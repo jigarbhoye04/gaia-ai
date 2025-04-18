@@ -129,13 +129,21 @@ export const useChatStream = () => {
       accumulatedResponseRef.current += dataJson.response || "\n";
       const currentConvo = latestConvoRef.current;
       const parsedIntent = parseIntent(dataJson);
+
+      // Create a new bot response that preserves existing intent data
       botMessageRef.current = buildBotResponse({
         intent: parsedIntent.intent,
-        calendar_options: parsedIntent.calendar_options,
-        weather_data: parsedIntent.weather_data,
-        search_results: parsedIntent.search_results,
-        deep_search_results: parsedIntent.deep_search_results,
+        // Preserve special data once it's available
+        calendar_options: parsedIntent.calendar_options ||
+          (botMessageRef.current?.calendar_options || null),
+        weather_data: parsedIntent.weather_data ||
+          (botMessageRef.current?.weather_data || null),
+        search_results: parsedIntent.search_results ||
+          (botMessageRef.current?.search_results || null),
+        deep_search_results: parsedIntent.deep_search_results ||
+          (botMessageRef.current?.deep_search_results || null)
       });
+
       // Always ensure we have the most recent messages
       if (
         currentConvo.length > 0 &&
@@ -157,6 +165,7 @@ export const useChatStream = () => {
       if (!botMessageRef?.current) return;
 
       // Finalize the bot message by setting loading to false
+      // Clear weather_data if the final intent is not weather
       const finalBotMessage = {
         ...botMessageRef.current,
         loading: false,
@@ -201,6 +210,7 @@ export const useChatStream = () => {
       } finally {
         setIsLoading(false);
         resetLoadingText();
+        botMessageRef.current = null;
       }
     };
 
