@@ -186,12 +186,14 @@ async def fetch_and_process_url(
             # Convert to markdown
             markdown_content = await convert_to_markdown(content)
 
-            # Upload screenshot to Cloudinary if available
+            # Upload screenshot to Cloudinary if available and is bytes
             screenshot_url = None
-            if screenshot_bytes:
+            if screenshot_bytes and isinstance(screenshot_bytes, bytes):
                 screenshot_url = await upload_screenshot_to_cloudinary(
                     screenshot_bytes, url
                 )
+            else:
+                logger.info("No screenshot bytes available for upload")
 
             # Cache the result with screenshot URL
             cache_data = {

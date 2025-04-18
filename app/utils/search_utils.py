@@ -10,7 +10,6 @@ from app.config.loggers import search_logger as logger
 from app.config.settings import settings
 from app.db.redis import ONE_HOUR_TTL, get_cache, set_cache
 from app.exceptions import FetchError
-from app.utils.storage_utils import upload_bytes_to_cloudinary
 
 http_async_client = httpx.AsyncClient()
 extractor = URLExtract()
@@ -308,21 +307,28 @@ async def fetch_with_playwright(
             await page.wait_for_timeout(wait_time * 1000)
             content = await page.content()
 
-            result = {"content": content}
+            result = {"content": content, "screenshot": None}
 
             # Take screenshot if requested
             if take_screenshot:
-                # Set viewport to a reasonable size
-                await page.set_viewport_size({"width": 1280, "height": 1024})
-                # Wait extra time for visuals to load when taking screenshots
-                await page.wait_for_timeout(2000)
-                screenshot_bytes = await page.screenshot(
-                    type="jpeg", quality=80, full_page=True
-                )
-                screenshot_url = await upload_bytes_to_cloudinary(
-                    bytes_data=screenshot_bytes, file_type="image", folder="screenshots"
-                )
-                result["screenshot"] = screenshot_url
+                try:
+                    # Set viewport to a reasonable size
+                    await page.set_viewport_size({"width": 1280, "height": 1024})
+                    # Wait extra time for visuals to load when taking screenshots
+                    await page.wait_for_timeout(2000)
+
+                    # Make sure we get bytes data from the screenshot
+                    screenshot_bytes = await page.screenshot(
+                        type="jpeg", quality=90, full_page=True
+                    )
+
+                    # Verify it's actually bytes before setting in result
+                    if screenshot_bytes and isinstance(screenshot_bytes, bytes):
+                        result["screenshot"] = screenshot_bytes
+
+                except Exception as screenshot_error:
+                    logger.error(f"Error taking screenshot: {screenshot_error}")
+                    # Don't add screenshot to result if there was an error
 
             await page.close()
             await context.close()
