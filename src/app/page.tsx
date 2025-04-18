@@ -32,14 +32,14 @@ export default function LandingPage() {
         <HeroImage />
 
         <div className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]">
-          <CalendarSection />
+          {/* <CalendarSection />
           <DeepSearchSection />
           <GoalSection />
           <InternetSection />
           <MailSection />
           <FeatureGridSection />
           <MobileSection />
-          <FinalSection />
+          <FinalSection /> */}
         </div>
       </div>
     </LandingLayout>

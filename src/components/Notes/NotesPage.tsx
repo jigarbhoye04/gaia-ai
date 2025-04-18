@@ -87,7 +87,7 @@ export default function Notes() {
               color="primary"
               radius="full"
               size="lg"
-              variant="shadow-sm"
+              variant="shadow"
             >
               <StickyNote01Icon color="black" height={27} width={27} />
               Add Note

@@ -7,35 +7,33 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig = {
   reactStrictMode: false,
-  webpack: (config, { dev, isServer }) => {
-    if (dev) {
-      // Reduce parallel processing during development
-      config.parallelism = 1;
+  // webpack: (config, { dev, isServer }) => {
+  //   if (dev) {
+  //     // Reduce parallel processing during development
+  //     config.parallelism = 1;
 
-      config.cache = false;
+  //     config.cache = false;
 
-      // Reduce chunk sizes
-      config.optimization.splitChunks = {
-        chunks: "all",
-        maxInitialRequests: 3,
-        cacheGroups: {
-          commons: {
-            test: /[\\/]node_modules[\\/]/,
-            name: "vendor",
-            chunks: "all",
-          },
-        },
-      };
-    }
-    return config;
-  },
-  experimental: {
-    turbo: {
-      //   moduleIdStrategy: "deterministic",
-    },
-    // webpackMemoryOptimizations: true,
-    // optimizePackageImports: ["@heroui/react"],
-  },
+  //     // Reduce chunk sizes
+  //     config.optimization.splitChunks = {
+  //       chunks: "all",
+  //       maxInitialRequests: 3,
+  //       cacheGroups: {
+  //         commons: {
+  //           test: /[\\/]node_modules[\\/]/,
+  //           name: "vendor",
+  //           chunks: "all",
+  //         },
+  //       },
+  //     };
+  //   }
+  //   return config;
+  // },
+  // turbopack: {},
+  // experimental: {
+  // webpackMemoryOptimizations: true,
+  // optimizePackageImports: ["@heroui/react"],
+  // },
   images: {
     remotePatterns: [
       {

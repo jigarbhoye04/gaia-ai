@@ -67,7 +67,7 @@ export default function MobileMenu() {
                     color="primary"
                     endContent={link.icon}
                     size="md"
-                    variant="shadow-sm"
+                    variant="shadow"
                     onPress={() => {
                       router.push(link.href);
                       setSheetOpen(false);
@@ -88,7 +88,7 @@ export default function MobileMenu() {
                       className="p-0 px-4 font-semibold"
                       color="primary"
                       size="md"
-                      variant="shadow-sm"
+                      variant="shadow"
                       href={link.href}
                     >
                       {link.label}

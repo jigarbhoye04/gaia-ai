@@ -117,21 +117,6 @@ const config = {
       defaultExtendTheme: "dark",
       defaultTheme: "dark",
       themes: {
-        // dark: {
-
-        // },
-        // light: {
-        //   colors: {
-        //     primary: {
-        //       DEFAULT: "#00bbff",
-        //       foreground: "#000000",
-        //     },
-        //     white: {
-        //       DEFAULT: "#ffffff",
-        //       foreground: "#000000",
-        //     },
-        //   },
-        // },
         dark: {
           colors: {
             primary: {

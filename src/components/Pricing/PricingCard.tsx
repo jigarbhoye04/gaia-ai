@@ -40,7 +40,7 @@ export function PricingCard({
       <div
         className={`relative w-full rounded-2xl ${className} ${
           type === "main"
-            ? "bg-zinc-900 outline outline-2 outline-primary"
+            ? "bg-zinc-900 outline-2 outline-primary"
             : "bg-zinc-900"
         } `}
       >
@@ -99,7 +99,7 @@ export function PricingCard({
           <Button
             className="w-full font-medium"
             color="primary"
-            variant={type === "main" ? "shadow-sm" : "flat"}
+            variant={type === "main" ? "shadow" : "flat"}
           >
             Get started
           </Button>

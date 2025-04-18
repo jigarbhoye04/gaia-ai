@@ -105,7 +105,7 @@ export default function SettingsMenu() {
 
       <Modal
         isOpen={modalAction !== null}
-        backdrop="blur-sm"
+        backdrop="blur"
         onOpenChange={() => setModalAction(null)}
       >
         <ModalContent>

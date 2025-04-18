@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { Tab, Tabs } from "@heroui/tabs";
 import { Download, ZoomIn, ZoomOut } from "lucide-react";

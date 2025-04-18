@@ -108,7 +108,7 @@ export default function GoalsPage() {
             color="primary"
             radius="full"
             size="lg"
-            variant="shadow-sm"
+            variant="shadow"
             onPress={() => setOpenDialog(true)}
           >
             <Target04Icon height={23} width={23} />

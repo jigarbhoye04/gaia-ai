@@ -44,7 +44,7 @@ export default function AddGoalDialog({
 
   return (
     <Modal
-      backdrop="blur-sm"
+      backdrop="blur"
       className="text-foreground dark"
       isOpen={openDialog}
       onOpenChange={setOpenDialog}
