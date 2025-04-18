@@ -1,7 +1,13 @@
 import json
 from typing import Annotated, TypedDict
 
-from langchain_core.messages import AIMessage, ToolMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from langchain_groq import ChatGroq
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -12,9 +18,9 @@ from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 from app.langchain.chat_models.default_chat_model import DefaultChatAgent
 from app.langchain.tools import fetch, memory, search, weather
-from app.utils.sse_utils import format_tool_response
 from app.langchain.prompts.agent_prompt import AGENT_SYSTEM_PROMPT
 from app.langchain.templates.agent_template import create_agent_prompt
+from app.utils.sse_utils import format_tool_response
 
 # GROQ_MODEL = "llama-3.3-70b-versatile"
 GROQ_MODEL = "llama-3.1-8b-instant"
@@ -33,6 +39,7 @@ groq_llm = ChatGroq(
     api_key=settings.GROQ_API_KEY,
     temperature=0.6,
     max_tokens=2048,
+    streaming=True,
 )
 groq_llm = groq_llm.bind_tools(
     tools=tools,
@@ -125,27 +132,39 @@ async def do_prompt_with_stream(
     message_history = process_message_history(messages)
 
     try:
+        # Stream events from the graph
         async for event in graph.astream(
             {"messages": message_history},
+            stream_mode=["messages"],
             config={
                 "configurable": {"thread_id": conversation_id, "user_id": user_id},
                 "recursion_limit": 10,
                 "metadata": {"user_id": user_id},
             },
         ):
-            for value in event.values():
-                print(f"{value=}")
-                last_msg = value["messages"][-1]
+            _, (chunk, metadata) = event
+            if isinstance(chunk, AIMessageChunk):
+                yield f"data: {json.dumps({'response': chunk.content})}\n\n"
 
-                if isinstance(last_msg, ToolMessage):
-                    yield format_tool_response(
-                        tool_name=last_msg.name, content=str(last_msg.content)
-                    )
-                    continue
+            # for value in event.values():
+            #     print("chunk?", value)
+            #     last_msg = value["messages"][-1]
 
-                if isinstance(last_msg, AIMessage):
-                    yield f"data: {json.dumps({'response': last_msg.content})}\n\n"
+            #     # Handle tool message
+            if isinstance(chunk, ToolMessage):
+                yield format_tool_response(
+                    tool_name=chunk.name,
+                    content=str(chunk.content),
+                )
 
+            #     # Handle AI message (regular text responses)
+            #     if isinstance(last_msg, AIMessage):
+            #         yield f"data: {json.dumps({'response': last_msg.content})}\n\n"
+
+        # Signal completion of the stream
         yield "data: [DONE]\n\n"
+
     except Exception as e:
-        logger.warning(f"Graph model error: {e}")
+        logger.error(f"Graph model error: {e}")
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        yield "data: [DONE]\n\n"

@@ -19,30 +19,39 @@ async def web_search(
         "The search query to look up on the web. Be specific and concise for better results.",
     ],
 ) -> str:
-    """Performs a QUICK search for information with summarized results from multiple sources.
+    """
+    Perform a quick, high-level web search to gather brief and relevant information from multiple sources.
 
-    This tool conducts a standard web search that returns brief snippets and summaries from
-    multiple web sources. It's optimized for SPEED and BREADTH of information.
+    This tool is designed for fast, general-purpose lookups — returning summarized snippets and titles
+    from various web and news sources. It prioritizes speed and topical variety over detail.
 
-    BEST FOR:
-    - Getting a quick overview of a topic from multiple sources
-    - Finding basic facts, definitions, or general information
-    - Discovering different perspectives on a topic
-    - Identifying top sources without reading their full content
-    - Quick answers to straightforward questions
+    ✅ USE THIS TOOL WHEN:
+    - The user asks a general question requiring current or public knowledge.
+    - You need a quick overview, definition, or summary from external sources.
+    - The topic is trending, news-based, or time-sensitive.
+    - You need to cite multiple perspectives quickly.
 
-    DO NOT USE FOR:
-    - Detailed analysis of specific web pages
-    - Complete article content or in-depth information
-    - When you need extensive context from a single source
-    - Visual content like screenshots of websites
+    ❌ DO NOT USE FOR:
+    - Detailed, in-depth research or full content analysis → Use `deep_search` instead.
+    - Visuals or screenshots of websites.
+    - Internal knowledge that the assistant should already know.
+    - Personal or conversational responses unrelated to external facts.
+
+    Examples:
+    ✅ "What's the latest news on the Ethereum ETF?"
+    ✅ "Summarize key facts about the Mars 2025 mission."
+    ✅ "What do experts say about intermittent fasting?"
+    ❌ "Summarize this PDF." (Not a web search)
+    ❌ "Who am I?" (Relies on memory, not web)
+    ❌ "Give me the full content of this article." (Use deep search)
 
     Args:
-        query_text: The search query to find quick information about.
+        query_text: A clear and concise search query for finding high-level web results.
 
     Returns:
-        A JSON string containing formatted search results (titles, URLs, snippets) and structured data.
+        A JSON string with summarized search data, formatted text, and raw result structure.
     """
+
     start_time = time.time()
 
     try:
@@ -121,31 +130,38 @@ async def deep_search(
         "The search query for in-depth research. Be specific to get thorough and comprehensive results.",
     ],
 ) -> str:
-    """Performs an IN-DEPTH analysis by retrieving and processing FULL CONTENT from web pages.
+    """
+    Conduct an in-depth search by retrieving and analyzing the full content of web pages.
 
-    This tool conducts comprehensive research by not only finding relevant pages but also
-    retrieving their complete content, analyzing it, and even capturing visual representations.
-    It's optimized for DEPTH and THOROUGHNESS at the cost of additional processing time.
+    This tool should only be used when a user specifically requests:
+    - A deep dive into a topic
+    - Thorough research or full article content
+    - Technical documentation or context-rich explanations
+    - Screenshots or visual representations of websites
 
-    BEST FOR:
-    - Detailed research requiring full page content analysis
-    - When you need to understand complex topics with extensive context
-    - Extracting specific information buried deep in web pages
-    - When visual context from screenshots would be helpful
-    - Technical topics where complete documentation is needed
+    Do NOT use this tool for:
+    - Simple questions or fact lookups
+    - Quick overviews or general summaries
+    - Casual or exploratory queries
+    - Speed-sensitive responses
 
-    DO NOT USE FOR:
-    - Simple factual questions that need quick answers
-    - When breadth of information is more important than depth
-    - Topics where a brief overview would suffice
-    - When speed is more important than comprehensiveness
+    It consumes more time and resources than a standard web search, so use it only when depth and detail
+    are explicitly needed.
+
+    Examples:
+    ✅ "Can you analyze the full content of this article?"
+    ✅ "I need detailed technical documentation about Kubernetes networking."
+    ✅ "Give me the complete breakdown from credible sources on how the 2024 AI Act works."
+    ❌ "What’s the capital of Sweden?"
+    ❌ "Tell me a bit about quantum computing."
 
     Args:
-        query_text: The search query to research in depth.
+        query_text: The search query intended for comprehensive exploration.
 
     Returns:
-        A JSON string containing complete page content, screenshots, and comprehensive analysis.
+        A JSON string with full content, summaries, screenshots, and structured data for deep understanding.
     """
+
     start_time = time.time()
 
     try:
@@ -166,7 +182,7 @@ async def deep_search(
                 full_content = result.get("full_content", "")
                 fetch_error = result.get("fetch_error", None)
                 screenshot_url = result.get("screenshot_url", None)
-
+                print(f"{screenshot_url=}")
                 formatted_content += f"### {i}. {title}\n"
                 formatted_content += f"**URL**: {url}\n\n"
 
@@ -190,16 +206,18 @@ async def deep_search(
         elapsed_time = time.time() - start_time
         logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
 
+        # print(f"{deep_search_results=}")
         # Create a response with both formatted text for the LLM and structured data for the frontend
         response = {
             "formatted_text": DEEP_SEARCH_CONTEXT_TEMPLATE.format(
                 formatted_content=formatted_content
             ),
             "raw_deep_search_data": {
-                "enhanced_results": enhanced_results,
-                "query": query_text,
-                "elapsed_time": elapsed_time,
-                "result_count": len(enhanced_results),
+                # "enhanced_results": enhanced_results,
+                # "query": query_text,
+                # "elapsed_time": elapsed_time,
+                # "result_count": len(enhanced_results),
+                **deep_search_results,
             },
         }
 
