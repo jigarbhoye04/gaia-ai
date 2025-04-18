@@ -270,7 +270,7 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
   return (
     <>
       <div className="searchbar_container relative">
-        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pb-2 pt-1">
+        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
           <SearchbarInput
             searchbarText={searchbarText}

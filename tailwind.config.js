@@ -129,18 +129,6 @@ const config = {
             },
           },
         },
-        light: {
-          colors: {
-            primary: {
-              DEFAULT: "#00bbff",
-              foreground: "#000000",
-            },
-            white: {
-              DEFAULT: "#ffffff",
-              foreground: "#000000",
-            },
-          },
-        },
       },
     }),
   ],

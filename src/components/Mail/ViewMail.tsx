@@ -53,7 +53,7 @@ function AISummary({ summary }: { summary: string | null }) {
           <Chip
             classNames={{
               content:
-                "text-sm relative !flex flex-row text-primary items-center gap-1 pl-3 font-medium",
+                "text-sm relative flex! flex-row text-primary items-center gap-1 pl-3 font-medium",
             }}
             variant="flat"
             color="primary"
@@ -198,7 +198,7 @@ export default function ViewEmail({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-md" />
         <Drawer.Content
-          className="fixed bottom-2 right-0 top-2 z-10 flex w-screen outline-none sm:w-[50vw]"
+          className="fixed top-2 right-0 bottom-2 z-10 flex w-screen outline-hidden sm:w-[50vw]"
           style={
             { "--initial-transform": "calc(100% + 8px)" } as React.CSSProperties
           }
@@ -206,7 +206,7 @@ export default function ViewEmail({
           <div className="relative flex h-full w-full grow flex-col overflow-y-auto rounded-l-2xl bg-zinc-900 p-6 pt-4">
             <div className="relative w-full">
               <Tooltip content="Close" color="foreground">
-                <div className="absolute right-0 top-0 cursor-pointer">
+                <div className="absolute top-0 right-0 cursor-pointer">
                   <XIcon width={18} onClick={onOpenChange} />
                 </div>
               </Tooltip>

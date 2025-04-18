@@ -21,7 +21,7 @@ interface PdfComponentProps {
 export function PdfContainer({ file }: PdfContainerProps) {
   return (
     <div
-      className={`my-1 flex w-full flex-col items-center justify-center rounded-2xl bg-black bg-opacity-70 p-2 text-white`}
+      className={`bg-opacity-70 my-1 flex w-full flex-col items-center justify-center rounded-2xl bg-black p-2 text-white`}
     >
       {!!file && (
         <div className="pdf_container">
@@ -32,7 +32,7 @@ export function PdfContainer({ file }: PdfContainerProps) {
       <div className="flex h-[50px] w-full items-center gap-2 px-2">
         <Pdf02Icon color="zinc-600" height="25" width="25" />
         <div className="flex flex-col">
-          <span className="w-[270px] overflow-hidden text-ellipsis whitespace-nowrap text-small font-[500]">
+          <span className="w-[270px] overflow-hidden text-small font-[500] text-ellipsis whitespace-nowrap">
             {file?.name}
           </span>
           <span className="text-xs">{file?.type}</span>

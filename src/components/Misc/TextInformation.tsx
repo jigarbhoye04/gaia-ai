@@ -45,12 +45,12 @@ export default function TextInformation({
         }`}
       >
         <WordPullUp
-          className={`z-1 relative text-4xl font-medium md:text-6xl ${
+          className={`relative z-1 text-4xl font-medium md:text-6xl ${
             alignleft ? "text-left" : "text-right"
           }`}
           words={title}
         />
-        <div className="text-md display z-2 relative flex flex-col gap-2 text-zinc-400 md:text-2xl">
+        <div className="text-md display relative z-2 flex flex-col gap-2 text-zinc-400 md:text-2xl">
           {description.map((entry, index) => (
             <span key={index}>{entry}</span>
           ))}

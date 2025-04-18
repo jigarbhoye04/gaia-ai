@@ -8,7 +8,7 @@ import { SectionHeading } from "@/layouts/LandingSectionHeading";
 export default function MobileSection() {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="relative z-[1] flex max-h-[430px] w-screen max-w-fit flex-col items-start justify-center space-y-5 overflow-hidden rounded-3xl bg-zinc-900 pl-12 sm:flex-row">
+      <div className="relative z-1 flex max-h-[430px] w-screen max-w-fit flex-col items-start justify-center space-y-5 overflow-hidden rounded-3xl bg-zinc-900 pl-12 sm:flex-row">
         <div className="flex flex-col">
           <SectionHeading
             heading="Move beyond Siri and Google Assistant"
@@ -26,7 +26,7 @@ export default function MobileSection() {
             // }
           />
 
-          <div className="relative z-[1] flex w-full flex-col gap-2 px-8 py-8 pt-0 sm:pt-8">
+          <div className="relative z-1 flex w-full flex-col gap-2 px-8 py-8 pt-0 sm:pt-8">
             <div className="flex flex-row gap-2">
               <ChatBotIcon className="text-primary" />
               <span className="text-zinc-300">
@@ -49,7 +49,7 @@ export default function MobileSection() {
             </div>
           </div>
 
-          <div className="relative z-[1] flex justify-center gap-2 px-5 sm:justify-start sm:px-0">
+          <div className="relative z-1 flex justify-center gap-2 px-5 sm:justify-start sm:px-0">
             <Button className="flex h-[60px] rounded-xl border-2 border-white/30 bg-black">
               <div className="flex flex-row items-center gap-4">
                 <Image
@@ -91,7 +91,7 @@ export default function MobileSection() {
           </div>
         </div>
         <Iphone15Pro
-          className="relative z-[2] h-fit px-5 sm:max-h-[70vh]"
+          className="relative z-2 h-fit px-5 sm:max-h-[70vh]"
           src="/landing/mobile_screenshot.webp"
         />
       </div>

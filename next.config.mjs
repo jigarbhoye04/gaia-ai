@@ -7,35 +7,33 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig = {
   reactStrictMode: false,
-  webpack: (config, { dev, isServer }) => {
-    if (dev) {
-      // Reduce parallel processing during development
-      config.parallelism = 1;
+  // webpack: (config, { dev, isServer }) => {
+  //   if (dev) {
+  //     // Reduce parallel processing during development
+  //     config.parallelism = 1;
 
-      config.cache = false;
+  //     config.cache = false;
 
-      // Reduce chunk sizes
-      config.optimization.splitChunks = {
-        chunks: "all",
-        maxInitialRequests: 3,
-        cacheGroups: {
-          commons: {
-            test: /[\\/]node_modules[\\/]/,
-            name: "vendor",
-            chunks: "all",
-          },
-        },
-      };
-    }
-    return config;
-  },
-  experimental: {
-    turbo: {
-      //   moduleIdStrategy: "deterministic",
-    },
-    // webpackMemoryOptimizations: true,
-    // optimizePackageImports: ["@heroui/react"],
-  },
+  //     // Reduce chunk sizes
+  //     config.optimization.splitChunks = {
+  //       chunks: "all",
+  //       maxInitialRequests: 3,
+  //       cacheGroups: {
+  //         commons: {
+  //           test: /[\\/]node_modules[\\/]/,
+  //           name: "vendor",
+  //           chunks: "all",
+  //         },
+  //       },
+  //     };
+  //   }
+  //   return config;
+  // },
+  // turbopack: {},
+  // experimental: {
+  // webpackMemoryOptimizations: true,
+  // optimizePackageImports: ["@heroui/react"],
+  // },
   images: {
     remotePatterns: [
       {
@@ -51,7 +49,6 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   },
-  distDir: "dist",
   // modularizeImports: {
   //   "@radix-ui/react-icons": {
   //     transform: "@radix-ui/react-icons/dist/{{member}}",

@@ -101,8 +101,8 @@ export default function Section_Calendar() {
   ];
 
   return (
-    <div className="relative z-[1] flex w-screen items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
+    <div className="relative z-1 flex w-screen items-center justify-center">
+      <div className="flex w-screen max-w-(--breakpoint-xl) flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
           heading={"Effortless Time Management"}
@@ -128,7 +128,7 @@ export default function Section_Calendar() {
           }
         />
 
-        <div className="!m-0 !mt-0 w-full px-2 sm:px-10">
+        <div className="m-0! mt-0! w-full px-2 sm:px-10">
           <Tabs
             selectedKey={selectedTab}
             onSelectionChange={(key) => setSelectedTab(key as string)}
@@ -166,7 +166,7 @@ export default function Section_Calendar() {
           </Tabs>
 
           <ScrollShadow className="h-[500px]">
-            <div className="z-[1] w-full overflow-hidden rounded-3xl bg-gradient-to-bl px-1 sm:px-5">
+            <div className="z-1 w-full overflow-hidden rounded-3xl bg-linear-to-bl px-1 sm:px-5">
               {selectedTab === "chat" ? (
                 <CalendarMessages
                   events={events}

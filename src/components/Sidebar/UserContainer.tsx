@@ -8,7 +8,7 @@ export default function UserContainer() {
   const user = useUser();
 
   return (
-    <div className="relative z-[2] flex w-full flex-col justify-center gap-3 bg-black px-2 py-2">
+    <div className="relative z-2 flex w-full flex-col justify-center gap-3 bg-black px-2 py-2">
       {/* <div className="flex relative py-3 px-3 justify-between items-center hover:bg-zinc-900 rounded-xl transition-all bg-black">
       Syncing...
       <Spinner size="sm" />

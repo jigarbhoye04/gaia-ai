@@ -85,15 +85,15 @@ export default function TargetAudience() {
   const [current, setCurrent] = useState<TargetData>(targetData[0]);
 
   return (
-    <div className="relative z-[1] flex min-h-screen w-screen flex-col items-center justify-center p-5 pt-32 sm:p-0">
-      <div className="w-full max-w-screen-xl space-y-2 py-5 text-center sm:text-start">
+    <div className="relative z-1 flex min-h-screen w-screen flex-col items-center justify-center p-5 pt-32 sm:p-0">
+      <div className="w-full max-w-(--breakpoint-xl) space-y-2 py-5 text-center sm:text-start">
         <div className="text-5xl font-medium">For Everyone</div>
         <div className="text-md font-normal text-foreground-500 sm:w-[30%]">
           Lorem ipsum dolor sit, amet consectetur adipisicing elit. Laborum,
           assumenda.
         </div>
       </div>
-      <div className="flex min-h-[80vh] w-full max-w-screen-xl flex-col items-center overflow-hidden rounded-3xl bg-zinc-900 p-0 outline outline-zinc-900 sm:p-10">
+      <div className="flex min-h-[80vh] w-full max-w-(--breakpoint-xl) flex-col items-center overflow-hidden rounded-3xl bg-zinc-900 p-0 outline outline-zinc-900 sm:p-10">
         <div className="grid w-full justify-start gap-10 p-5 sm:grid-cols-4 sm:p-0">
           {targetData.map((item, index) => (
             <TargetCard
@@ -110,7 +110,7 @@ export default function TargetAudience() {
         <Image
           fill={true}
           alt="GAIA Screenshot"
-          className="relative mb-3 min-w-[95%] max-w-[95%] overflow-hidden rounded-2xl outline outline-[4px] outline-zinc-700 sm:top-[10vh] sm:mb-0"
+          className="relative mb-3 max-w-[95%] min-w-[95%] overflow-hidden rounded-2xl outline outline-[4px] outline-zinc-700 sm:top-[10vh] sm:mb-0"
           src={current.img}
         />
       </div>

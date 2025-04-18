@@ -116,10 +116,10 @@ export default function MailsPage() {
       return (
         <div
           style={style}
-          className="relative flex h-full w-full items-center px-4 text-sm text-foreground/70 backdrop-blur-sm sm:px-1"
+          className="relative flex h-full w-full items-center px-4 text-sm text-foreground/70 backdrop-blur-xs sm:px-1"
         >
           {item.data as string}
-          <div className="absolute bottom-4 h-[1px] w-full border-none bg-white/20 outline-none sm:bottom-2"></div>
+          <div className="absolute bottom-4 h-[1px] w-full border-none bg-white/20 outline-hidden sm:bottom-2"></div>
         </div>
       );
 
@@ -142,7 +142,7 @@ export default function MailsPage() {
         onOpenChange={fetchSummary}
         content={
           <div className="flex w-[300px] flex-col p-1">
-            <div className="text-lg font-medium leading-tight">{title}</div>
+            <div className="text-lg leading-tight font-medium">{title}</div>
             {/* <div>{subtitle}</div> */}
           </div>
         }
@@ -275,7 +275,7 @@ export default function MailsPage() {
     <div className="relative h-full w-full">
       {/* Selection toolbar */}
       {selectedEmails.size > 0 && (
-        <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between rounded-md bg-zinc-900 px-1 py-1 text-white backdrop-blur-xl">
+        <div className="absolute top-0 right-0 left-0 z-10 flex items-center justify-between rounded-md bg-zinc-900 px-1 py-1 text-white backdrop-blur-xl">
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -361,7 +361,7 @@ export default function MailsPage() {
             onItemsRendered={onItemsRendered}
             ref={ref}
             width="100%"
-            className="!overflow-x-hidden rounded-xl"
+            className="overflow-x-hidden! rounded-xl"
           >
             {Row}
           </List>

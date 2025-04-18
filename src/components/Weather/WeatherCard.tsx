@@ -119,7 +119,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
             color="#FCD34D"
           />
         ),
-        gradient: "bg-gradient-to-br from-slate-800/80 to-purple-900/80",
+        gradient: "bg-linear-to-br from-slate-800/80 to-purple-900/80",
         colorCode: "#FCD34D", // yellow-300
       };
     } else if (weatherId >= 300 && weatherId < 400) {
@@ -132,7 +132,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
             color="#93C5FD"
           />
         ),
-        gradient: "bg-gradient-to-br from-slate-700/80 to-blue-800/80",
+        gradient: "bg-linear-to-br from-slate-700/80 to-blue-800/80",
         colorCode: "#93C5FD", // blue-300
       };
     } else if (weatherId >= 500 && weatherId < 600) {
@@ -145,7 +145,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
             color="#60A5FA"
           />
         ),
-        gradient: "bg-gradient-to-br from-slate-800/80 to-blue-900/80",
+        gradient: "bg-linear-to-br from-slate-800/80 to-blue-900/80",
         colorCode: "#60A5FA", // blue-400
       };
     } else if (weatherId >= 600 && weatherId < 700) {
@@ -154,7 +154,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         icon: (
           <CloudSnowIcon className="h-16 w-16" fill="#E0F2FE" color="#E0F2FE" />
         ),
-        gradient: "bg-gradient-to-br from-blue-100/80 to-indigo-300/80",
+        gradient: "bg-linear-to-br from-blue-100/80 to-indigo-300/80",
         colorCode: "#E0F2FE", // blue-100
       };
     } else if (weatherId >= 700 && weatherId < 800) {
@@ -170,7 +170,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#D1D5DB"
             />
           ),
-          gradient: "bg-gradient-to-br from-slate-400/80 to-slate-500/80",
+          gradient: "bg-linear-to-br from-slate-400/80 to-slate-500/80",
           colorCode: "#D1D5DB", // gray-300
         };
       } else if (weatherId === 711) {
@@ -184,7 +184,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#9CA3AF"
             />
           ),
-          gradient: "bg-gradient-to-br from-gray-500/80 to-gray-700/80",
+          gradient: "bg-linear-to-br from-gray-500/80 to-gray-700/80",
           colorCode: "#9CA3AF", // gray-400
         };
       } else if (weatherId === 721) {
@@ -194,7 +194,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           icon: (
             <HazeIcon className="h-16 w-16" fill="#FDE68A" color="#FDE68A" />
           ),
-          gradient: "bg-gradient-to-br from-amber-300/80 to-amber-500/80",
+          gradient: "bg-linear-to-br from-amber-300/80 to-amber-500/80",
           colorCode: "#FDE68A", // amber-200
         };
       } else if (weatherId === 731 || weatherId === 761) {
@@ -208,7 +208,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#FEF08A"
             />
           ),
-          gradient: "bg-gradient-to-br from-yellow-400/80 to-yellow-600/80",
+          gradient: "bg-linear-to-br from-yellow-400/80 to-yellow-600/80",
           colorCode: "#FEF08A", // yellow-200
         };
       } else if (weatherId === 741) {
@@ -218,7 +218,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           icon: (
             <CloudFog className="h-16 w-16" fill="#D1D5DB" color="#D1D5DB" />
           ),
-          gradient: "bg-gradient-to-br from-gray-400/80 to-gray-600/80",
+          gradient: "bg-linear-to-br from-gray-400/80 to-gray-600/80",
           colorCode: "#D1D5DB", // gray-300
         };
       } else if (weatherId === 751) {
@@ -232,7 +232,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#FDBA74"
             />
           ),
-          gradient: "bg-gradient-to-br from-orange-300/80 to-orange-500/80",
+          gradient: "bg-linear-to-br from-orange-300/80 to-orange-500/80",
           colorCode: "#FDBA74", // orange-300
         };
       } else if (weatherId === 762) {
@@ -246,7 +246,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#D4D4D8"
             />
           ),
-          gradient: "bg-gradient-to-br from-zinc-600/80 to-zinc-800/80",
+          gradient: "bg-linear-to-br from-zinc-600/80 to-zinc-800/80",
           colorCode: "#D4D4D8", // zinc-300
         };
       } else if (weatherId === 771) {
@@ -260,7 +260,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#93C5FD"
             />
           ),
-          gradient: "bg-gradient-to-br from-blue-500/80 to-blue-700/80",
+          gradient: "bg-linear-to-br from-blue-500/80 to-blue-700/80",
           colorCode: "#93C5FD", // blue-300
         };
       } else if (weatherId === 781) {
@@ -274,7 +274,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#CBD5E1"
             />
           ),
-          gradient: "bg-gradient-to-br from-slate-600/80 to-slate-900/80",
+          gradient: "bg-linear-to-br from-slate-600/80 to-slate-900/80",
           colorCode: "#CBD5E1", // slate-300
         };
       } else {
@@ -287,7 +287,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
               color="#D1D5DB"
             />
           ),
-          gradient: "bg-gradient-to-br from-slate-400/80 to-slate-600/80",
+          gradient: "bg-linear-to-br from-slate-400/80 to-slate-600/80",
           colorCode: "#D1D5DB", // gray-300
         };
       }
@@ -297,7 +297,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         icon: (
           <Sun03Icon className="h-16 w-16" fill="#FBBF24" color="#FBBF24" />
         ),
-        gradient: "bg-gradient-to-br from-yellow-500/80 to-orange-500/80",
+        gradient: "bg-linear-to-br from-yellow-500/80 to-orange-500/80",
         colorCode: "#FBBF24", // yellow-400
       };
     } else if (weatherId >= 801 && weatherId <= 802) {
@@ -307,7 +307,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         icon: (
           <CloudIcon className="h-16 w-16" fill="#E5E7EB" color="#E5E7EB" />
         ),
-        gradient: "bg-gradient-to-br from-blue-400/80 to-blue-600/80",
+        gradient: "bg-linear-to-br from-blue-400/80 to-blue-600/80",
         colorCode: "#E5E7EB", // gray-200
       };
     } else if (weatherId >= 803 && weatherId <= 804) {
@@ -317,7 +317,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         icon: (
           <CloudIcon className="h-16 w-16" fill="#E5E7EB" color="#E5E7EB" />
         ),
-        gradient: "bg-gradient-to-br from-slate-500/80 to-slate-700/80",
+        gradient: "bg-linear-to-br from-slate-500/80 to-slate-700/80",
         colorCode: "#E5E7EB", // gray-200
       };
     } else {
@@ -326,7 +326,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         icon: (
           <CloudIcon className="h-16 w-16" fill="#E5E7EB" color="#E5E7EB" />
         ),
-        gradient: "bg-gradient-to-br from-slate-500/80 to-slate-700/80",
+        gradient: "bg-linear-to-br from-slate-500/80 to-slate-700/80",
         colorCode: "#E5E7EB", // gray-200
       };
     }
@@ -334,7 +334,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
 
   return (
     <div
-      className={`mb-2 w-full rounded-3xl sm:w-screen sm:max-w-md ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-sm`}
+      className={`mb-2 w-full rounded-3xl sm:w-screen sm:max-w-md ${weatherTheme.gradient} relative overflow-hidden p-6 shadow-lg backdrop-blur-xs`}
     >
       {/* Location Info */}
       <div className="mb-3 flex items-start justify-between gap-10">
@@ -411,7 +411,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           </p>
         </div>
 
-        <p className="font-medium capitalize text-white">
+        <p className="font-medium text-white capitalize">
           {weatherData.weather[0].description}
         </p>
       </div>

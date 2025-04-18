@@ -24,13 +24,13 @@ export default function Navbar() {
       <div
         className={`navbar_content w-full min-w-fit rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all duration-1000 ${
           (!isMobileScreen && scrolled) || pathname !== "/"
-            ? "sm:max-w-screen-xl"
+            ? "sm:max-w-(--breakpoint-xl)"
             : "sm:max-w-[50px]"
         }`}
       >
         <Button
           as={Link}
-          className="group pl-2 pr-3 text-lg font-medium"
+          className="group pr-3 pl-2 text-lg font-medium"
           radius="lg"
           href={"/"}
           variant="light"

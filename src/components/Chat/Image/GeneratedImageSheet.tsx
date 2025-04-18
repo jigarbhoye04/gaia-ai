@@ -19,8 +19,8 @@ export default function GeneratedImageSheet({
 }: GeneratedImageSheetProps) {
   return (
     <Sheet open={openImage} onOpenChange={setOpenImage}>
-      <SheetContent className="flex min-w-fit max-w-screen-sm flex-col items-center !rounded-3xl border-none bg-zinc-900 px-5 py-3 text-white">
-        <div className="relative mt-3 flex aspect-square w-full sm:w-screen sm:max-w-screen-sm">
+      <SheetContent className="flex max-w-(--breakpoint-sm) min-w-fit flex-col items-center rounded-3xl! border-none bg-zinc-900 px-5 py-3 text-white">
+        <div className="relative mt-3 flex aspect-square w-full sm:w-screen sm:max-w-(--breakpoint-sm)">
           {imageData?.src && (
             <Image
               alt={"Generated Image"}
@@ -32,7 +32,7 @@ export default function GeneratedImageSheet({
           )}
         </div>
 
-        <div className="mt-3 flex w-screen max-w-screen-sm flex-col justify-evenly gap-3">
+        <div className="mt-3 flex w-screen max-w-(--breakpoint-sm) flex-col justify-evenly gap-3">
           {imageData?.prompt && (
             <div className="w-full">
               <ScrollArea className="max-h-[50px]">

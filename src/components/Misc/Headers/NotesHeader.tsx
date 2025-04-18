@@ -42,10 +42,10 @@ export default function NotesHeader({ onDeleteNote }: NotesHeaderProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="border-none bg-zinc-800 p-0 hover:!bg-zinc-900"
+            className="border-none bg-zinc-800 p-0 hover:bg-zinc-900!"
           >
             <DropdownMenuItem
-              className="cursor-pointer p-3 text-red-500 hover:!bg-zinc-900 hover:!text-red-500"
+              className="cursor-pointer p-3 text-red-500 hover:bg-zinc-900! hover:text-red-500!"
               onClick={onDeleteNote}
             >
               <Trash2 className="mr-2 h-4 w-4" />

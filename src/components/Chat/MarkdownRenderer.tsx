@@ -21,13 +21,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             </CodeBlock>
           ),
           h1: ({ ...props }) => (
-            <h1 className="mb-4 mt-6 text-3xl font-bold" {...props} />
+            <h1 className="mt-6 mb-4 text-3xl font-bold" {...props} />
           ),
           h2: ({ ...props }) => (
-            <h2 className="mb-3 mt-5 text-2xl font-bold" {...props} />
+            <h2 className="mt-5 mb-3 text-2xl font-bold" {...props} />
           ),
           h3: ({ ...props }) => (
-            <h3 className="mb-2 mt-4 text-xl font-bold" {...props} />
+            <h3 className="mt-4 mb-2 text-xl font-bold" {...props} />
           ),
           ul: ({ ...props }) => (
             <ul className="mb-4 list-disc pl-6" {...props} />
@@ -63,7 +63,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
             </div>
           ),
           thead: ({ ...props }) => (
-            <thead className="bg-gray-200 bg-opacity-20" {...props} />
+            <thead className="bg-opacity-20 bg-gray-200" {...props} />
           ),
           tbody: ({ ...props }) => <tbody {...props} />,
           tr: ({ ...props }) => (

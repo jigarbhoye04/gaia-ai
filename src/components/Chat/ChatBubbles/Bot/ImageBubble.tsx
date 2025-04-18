@@ -18,13 +18,13 @@ export default function ImageBubble({
   return (
     <>
       <Skeleton
-        className="mb-4 aspect-square max-h-[350px] min-h-[350px] min-w-[350px] max-w-[350px] overflow-hidden rounded-3xl"
+        className="mb-4 aspect-square max-h-[350px] min-h-[350px] max-w-[350px] min-w-[350px] overflow-hidden rounded-3xl"
         isLoaded={!loading && Boolean(imageSrc)}
       >
         {imageSrc && (
           <Image
             alt="Generated Image"
-            className="my-2 !cursor-pointer rounded-3xl"
+            className="my-2 cursor-pointer! rounded-3xl"
             height={500}
             width={500}
             src={imageSrc}

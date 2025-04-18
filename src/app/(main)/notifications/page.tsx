@@ -91,13 +91,13 @@ export default function NotificationsPage() {
                   } transition-colors hover:bg-[#122334]`}
                 >
                   <div
-                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
                       notification.read ? "bg-[#1e2a35]" : "bg-[#1a91da]"
                     }`}
                   >
                     <span className="text-lg">{notification.icon}</span>
                   </div>
-                  <div className="flex-grow">
+                  <div className="grow">
                     <div className="flex items-start justify-between">
                       <h3 className="font-medium">{notification.title}</h3>
                       <span className="text-xs text-[#8b9aa8]">
@@ -138,10 +138,10 @@ export default function NotificationsPage() {
                   } transition-colors hover:bg-[#122334]`}
                 >
                   <div className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#1a91da]">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1a91da]">
                       <Clock size={20} />
                     </div>
-                    <div className="flex-grow">
+                    <div className="grow">
                       <div className="flex items-start justify-between">
                         <h3
                           className={`font-medium ${

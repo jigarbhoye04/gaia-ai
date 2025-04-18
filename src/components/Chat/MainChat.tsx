@@ -126,7 +126,7 @@ const MainChat = React.memo(function MainChat() {
 
         <div
           ref={chatRef}
-          className="conversation_history w-full max-w-screen-md"
+          className="conversation_history w-full max-w-(--breakpoint-md)"
         >
           <ChatRenderer />
         </div>

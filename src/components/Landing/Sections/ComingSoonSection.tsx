@@ -112,11 +112,11 @@ export function Feature({
 
 export default function ComingSoonSection() {
   return (
-    <div className="relative z-[1] flex h-fit min-h-fit items-center justify-center">
+    <div className="relative z-1 flex h-fit min-h-fit items-center justify-center">
       <div className="flex flex-col items-center justify-center gap-1 p-2 sm:p-5">
         <span className="text-3xl font-medium">Coming Soon!</span>
         <span>What are we working on next?</span>
-        <AnimatedSection className="my-6 grid h-fit max-w-screen-xl items-center justify-center gap-2 gap-y-2 rounded-2xl bg-zinc-900 px-2 py-3 sm:grid-cols-3 sm:gap-2 sm:gap-y-5 sm:rounded-3xl sm:p-10">
+        <AnimatedSection className="my-6 grid h-fit max-w-(--breakpoint-xl) items-center justify-center gap-2 gap-y-2 rounded-2xl bg-zinc-900 px-2 py-3 sm:grid-cols-3 sm:gap-2 sm:gap-y-5 sm:rounded-3xl sm:p-10">
           {list.map((item, index) => (
             <Feature
               key={index}

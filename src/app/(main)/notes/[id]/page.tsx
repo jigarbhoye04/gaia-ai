@@ -80,7 +80,7 @@ export default function NotesAdd() {
 
       if (noteContent.length === 9500) {
         toast.custom(() => (
-          <div className="flex w-full list-none flex-row items-center justify-evenly gap-3 text-nowrap rounded-md bg-[#ffecd8] px-4 py-2 font-medium text-[#dc7609]">
+          <div className="flex w-full list-none flex-row items-center justify-evenly gap-3 rounded-md bg-[#ffecd8] px-4 py-2 font-medium text-nowrap text-[#dc7609]">
             <TriangleAlert
               className="min-w-[30px]"
               color="#ffecd8"
@@ -96,7 +96,7 @@ export default function NotesAdd() {
         ));
       } else if (noteContent.length === 10_000) {
         toast.custom(() => (
-          <div className="flex w-full list-none flex-row items-center justify-evenly gap-3 text-nowrap rounded-md bg-[#ffe1e1] px-4 py-2 font-medium text-[#e60000]">
+          <div className="flex w-full list-none flex-row items-center justify-evenly gap-3 rounded-md bg-[#ffe1e1] px-4 py-2 font-medium text-nowrap text-[#e60000]">
             <CircleX
               className="min-w-[30px]"
               color="#ffe1e1"
@@ -241,7 +241,7 @@ export default function NotesAdd() {
         )}
 
         <div
-          className={`fixed bottom-4 right-4 rounded-lg bg-zinc-800 p-5 shadow-lg transition-all duration-200 ${
+          className={`fixed right-4 bottom-4 rounded-lg bg-zinc-800 p-5 shadow-lg transition-all duration-200 ${
             hasUnsavedChanges
               ? "pointer-events-auto scale-100 opacity-100"
               : "pointer-events-none scale-80 opacity-0"

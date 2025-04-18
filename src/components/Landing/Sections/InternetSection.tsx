@@ -74,7 +74,7 @@ const ImageCarousel = ({
             key={index}
             onClick={() => handleDotClick(index)}
             className={cn(
-              "max-h-[10px] min-h-[10px] min-w-[10px] max-w-[10px] rounded-full transition",
+              "max-h-[10px] min-h-[10px] max-w-[10px] min-w-[10px] rounded-full transition",
               index === currentIndex
                 ? "bg-primary"
                 : "bg-gray-600 hover:bg-gray-400",
@@ -90,8 +90,8 @@ const ImageCarousel = ({
 export default function Internet() {
   return (
     <div className="flex w-screen items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col space-y-5">
-        <div className="relative flex w-screen max-w-screen-xl flex-col items-start justify-start gap-11 p-3 sm:flex-row">
+      <div className="flex w-screen max-w-(--breakpoint-xl) flex-col space-y-5">
+        <div className="relative flex w-screen max-w-(--breakpoint-xl) flex-col items-start justify-start gap-11 p-3 sm:flex-row">
           <div className="flex h-full w-full flex-col items-center justify-between gap-5 rounded-3xl bg-zinc-900 p-0 pb-10 sm:gap-0 sm:p-7 sm:pb-7">
             <div className="min-h-[300px]">
               <SectionHeading

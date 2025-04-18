@@ -155,8 +155,8 @@ const FilePreview: React.FC<FilePreviewProps> = ({ files, onRemove }) => {
             key={file.id}
             className={`group relative flex ${
               file.type.startsWith("image/")
-                ? "h-14 max-h-14 min-h-14 w-14 min-w-14 max-w-14 justify-center"
-                : "min-w-[180px] max-w-[220px] p-2 pr-8"
+                ? "h-14 max-h-14 min-h-14 w-14 max-w-14 min-w-14 justify-center"
+                : "max-w-[220px] min-w-[180px] p-2 pr-8"
             } items-center rounded-xl bg-zinc-700 transition-all hover:bg-zinc-900`}
           >
             {file.isUploading && (
@@ -169,7 +169,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ files, onRemove }) => {
               isIconOnly
               size="sm"
               variant="faded"
-              className="absolute right-0 top-0 z-10 h-6 w-6 min-w-0 scale-90 rounded-full opacity-0 transition-all group-hover:opacity-100"
+              className="absolute top-0 right-0 z-10 h-6 w-6 min-w-0 scale-90 rounded-full opacity-0 transition-all group-hover:opacity-100"
               onPress={() => onRemove(file.id)}
             >
               <X size={14} />
