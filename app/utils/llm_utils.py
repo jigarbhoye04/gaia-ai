@@ -9,7 +9,7 @@ from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 from app.prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
 from app.prompts.system.general import MAIN_SYSTEM_PROMPT
-from app.utils.langchain_utils_temp import GROQ_MODEL, prepare_messages
+from app.utils.langchain_utils_temp import GROQ_MODEL
 
 http_async_client = httpx.AsyncClient(timeout=1000000)
 http_sync_client = httpx.Client(timeout=1000000)
@@ -23,6 +23,26 @@ sync_openai_client = OpenAI(
     base_url="https://api.groq.com/openai/v1",
     api_key=settings.GROQ_API_KEY,
 )
+
+
+def prepare_messages(
+    messages: List[Dict], system_prompt: Optional[str] = None
+) -> List[Dict]:
+    """Prepare messages for LLM API calls by standardizing roles and adding system prompt."""
+    prepared_messages = messages.copy()
+
+    # Convert 'bot' role to 'assistant' role
+    for msg in prepared_messages:
+        if msg.get("role") == "bot":
+            msg["role"] = "assistant"
+
+    # Add system prompt if it doesn't exist
+    if system_prompt and not any(
+        msg.get("role") == "system" for msg in prepared_messages
+    ):
+        prepared_messages.insert(0, {"role": "system", "content": system_prompt})
+
+    return prepared_messages
 
 
 async def call_groq_api_stream(

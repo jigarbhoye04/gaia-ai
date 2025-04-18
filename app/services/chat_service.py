@@ -99,7 +99,6 @@ async def chat_stream(
 
     async for chunk in do_prompt_with_stream(
         messages=context["messages"],
-        query_text=context["query_text"],
         user_id=context["user_id"],
         conversation_id=context["conversation_id"],
     ):
