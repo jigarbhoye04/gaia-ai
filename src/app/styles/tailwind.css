@@ -21,9 +21,7 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
   }
-}
 
-@layer base {
   h1,
   h2,
   h3,
@@ -85,6 +83,12 @@
   }
 
   :root {
+    /* HeroUI theme variables */
+    --heroui-primary: #00bbff;
+    --heroui-primary-foreground: #000000;
+    --heroui-white: #ffffff;
+    --heroui-white-foreground: #000000;
+
     --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;
 
@@ -118,6 +122,12 @@
   }
 
   .dark {
+    /* HeroUI theme variables */
+    --heroui-primary: #00bbff;
+    --heroui-primary-foreground: #000000;
+    --heroui-white: #ffffff;
+    --heroui-white-foreground: #000000;
+
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
 
