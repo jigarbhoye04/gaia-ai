@@ -49,7 +49,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
 
   if (isMermaid) {
     return (
-      <div className="relative flex w-[40vw] max-w-[30vw] flex-col gap-0 overflow-x-visible !rounded-t-[10px] bg-zinc-900 !pb-0">
+      <div className="relative flex w-[40vw] max-w-[30vw] flex-col gap-0 overflow-x-visible rounded-t-[10px]! bg-zinc-900 pb-0!">
         <MermaidTabs
           activeTab={activeTab}
           onTabChange={(key) => {
@@ -66,7 +66,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         >
           {children}
         </MermaidTabs>
-        <div className="absolute right-2 top-2">
+        <div className="absolute top-2 right-2">
           <CopyButton copied={copied} onPress={handleCopy} />
         </div>
       </div>
@@ -85,7 +85,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         </StandardCodeBlock>
       ) : (
         <code
-          className={`${className} rounded-sm bg-black bg-opacity-40`}
+          className={`${className} bg-opacity-40 rounded-sm bg-black`}
           {...props}
         >
           {children}

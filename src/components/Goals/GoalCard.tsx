@@ -85,14 +85,14 @@ export function GoalCard({
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <div className="group flex w-full flex-col rounded-lg bg-black bg-opacity-50 p-4">
+      <div className="group bg-opacity-50 flex w-full flex-col rounded-lg bg-black p-4">
         <div className="relative flex w-full items-center gap-2 text-lg font-medium">
           <Target04Icon height={20} width={20} color="#9b9b9b" />
           <span className="w-[85%] truncate">
             {goal?.roadmap?.title || goal.title}
           </span>
 
-          <div className="absolute -right-2 opacity-0 transition-opacity dark group-hover:opacity-100">
+          <div className="absolute -right-2 dark opacity-0 transition-opacity group-hover:opacity-100">
             <Dropdown
               classNames={{
                 content: "bg-zinc-900",
@@ -143,12 +143,12 @@ export function GoalCard({
         <div className="my-3 flex items-center justify-between gap-2">
           <div className="relative h-3 w-[100%] rounded-full bg-black">
             <div
-              className={`absolute left-0 top-0 h-3 rounded-full bg-[#00bbff]`}
+              className={`absolute top-0 left-0 h-3 rounded-full bg-[#00bbff]`}
               style={{ width: `${goal?.progress || 0}%` }}
             />
 
             <div
-              className={`absolute left-0 top-0 h-3 w-full rounded-full bg-[#00bbff40]`}
+              className={`absolute top-0 left-0 h-3 w-full rounded-full bg-[#00bbff40]`}
               // style={{ width: `${goal?.progress || 0}%` }}
             />
           </div>

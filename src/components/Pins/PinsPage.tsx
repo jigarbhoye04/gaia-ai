@@ -50,7 +50,7 @@ export default function Pins() {
         <h1 className="pb-6 text-center text-4xl font-bold sm:text-5xl">
           Pinned Messages
         </h1>
-        {/* <div className="text-center text-md pb-6 max-w-screen-md">
+        {/* <div className="text-center text-md pb-6 max-w-(--breakpoint-md)">
             Lorem, ipsum dolor sit amet consectetur adipisicing elit. Facilis,
             sed!
           </div> */}
@@ -63,7 +63,7 @@ export default function Pins() {
         ) : (
           <div className="flex flex-wrap justify-center gap-4 pb-8">
             <div className="flex flex-wrap justify-center gap-4 pb-8 sm:px-[10vw]">
-              {/* // <div className="grid gap-3 px-1 sm:px-[10%] sm:grid-cols-[repeat(auto-fill,_minmax(15vw,_1fr))] grid-cols-[repeat(auto-fill,_minmax(1fr,_1fr))] pb-24 sm:pb-20"> */}
+              {/* // <div className="grid gap-3 px-1 sm:px-[10%] sm:grid-cols-[repeat(auto-fill,minmax(15vw,1fr))] grid-cols-[repeat(auto-fill,minmax(1fr,1fr))] pb-24 sm:pb-20"> */}
               {!!filteredResults && filteredResults.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 pb-24 sm:grid-cols-3 sm:pb-20">
                   {filteredResults.map((result) => (
@@ -83,9 +83,9 @@ export default function Pins() {
       </div>
 
       <div className="absolute bottom-4 left-0 z-10 flex w-full flex-col items-center justify-center px-3 sm:bottom-5">
-        <div className="relative flex w-full max-w-screen-sm items-center gap-3">
+        <div className="relative flex w-full max-w-(--breakpoint-sm) items-center gap-3">
           {searchQuery.trim().length > 0 && (
-            <div className="div absolute bottom-14 right-2 flex w-full justify-end text-sm">
+            <div className="div absolute right-2 bottom-14 flex w-full justify-end text-sm">
               <div
                 className="flex w-fit cursor-pointer flex-row items-center gap-1 rounded-full bg-foreground-100 px-4 py-1 text-foreground-600"
                 onClick={() => {
@@ -116,7 +116,7 @@ export default function Pins() {
           />
         </div>
       </div>
-      <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
+      <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-1 h-[100px] w-full" />
     </div>
   );
 }

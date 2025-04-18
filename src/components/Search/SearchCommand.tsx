@@ -264,7 +264,7 @@ export default function SearchCommand({
           {filteredCommands.map((command) => (
             <CommandItem
               key={command.name}
-              className="group !my-3 cursor-pointer"
+              className="group my-3! cursor-pointer"
               onSelect={() => {
                 setOpenSearchDialog(false);
                 command.action();
@@ -354,7 +354,7 @@ export default function SearchCommand({
       <div className="inline-flex items-center justify-center gap-2 bg-zinc-900 p-2 text-center text-sm text-foreground-500">
         <Lightbulb className="relative left-1 size-[20px] text-white" />
         Tip: Hit
-        <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded bg-zinc-600 px-1.5 font-mono text-[10px] font-medium text-white opacity-100">
+        <kbd className="bg-muted text-muted-foreground pointer-events-none inline-flex h-5 items-center gap-1 rounded bg-zinc-600 px-1.5 font-mono text-[10px] font-medium text-white opacity-100 select-none">
           <span className="text-xs">⌘</span>K
         </kbd>
         to open this Command Menu

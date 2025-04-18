@@ -58,7 +58,7 @@ export default function ChatBubbleUser({
               <div className="flex items-center gap-1 text-white">
                 Fetching
                 <a
-                  className="font-medium !text-white transition-colors hover:!text-black"
+                  className="font-medium text-white! transition-colors hover:text-black!"
                   href={url}
                   rel="noreferrer"
                   target="_blank"
@@ -70,7 +70,7 @@ export default function ChatBubbleUser({
           ))}
 
           {!!text && (
-            <div className="flex max-w-[30vw] select-text whitespace-pre-wrap text-wrap">
+            <div className="flex max-w-[30vw] text-wrap whitespace-pre-wrap select-text">
               {text}
             </div>
           )}
@@ -78,7 +78,7 @@ export default function ChatBubbleUser({
 
         <div className="flex justify-end opacity-0 transition-all group-hover:opacity-100">
           {date && (
-            <span className="flex select-text flex-col pt-[2px] text-xs text-white text-opacity-45">
+            <span className="text-opacity-45 flex flex-col pt-[2px] text-xs text-white select-text">
               {parseDate(date)}
             </span>
           )}

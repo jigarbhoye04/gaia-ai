@@ -90,7 +90,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="border-none bg-zinc-900 outline-none"
+        className="border-none bg-zinc-900 outline-hidden"
         aria-description="Dialog box to search the internet for email suggestions."
       >
         <DialogHeader>
@@ -108,7 +108,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
             variant="faded"
             isClearable
             startContent={
-              <div className="text-nowrap text-sm font-medium text-foreground-500">
+              <div className="text-sm font-medium text-nowrap text-foreground-500">
                 Find email of
               </div>
             }

@@ -5,7 +5,7 @@ export default function GetStartedButton() {
   return (
     <Button
       as={Link}
-      className="group relative mt-12 overflow-hidden border-none font-medium outline outline-4 outline-[#9ae4ff] transition-all duration-300 hover:-translate-y-1 hover:scale-110 hover:outline-[#00bbff] sm:mt-14"
+      className="group relative mt-12 overflow-hidden border-none font-medium outline-4 outline-[#9ae4ff] transition-all duration-300 hover:-translate-y-1 hover:scale-110 hover:outline-[#00bbff] sm:mt-14"
       color="primary"
       radius="full"
       size="lg"

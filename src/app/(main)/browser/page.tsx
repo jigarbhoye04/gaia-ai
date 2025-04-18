@@ -159,14 +159,14 @@ const BrowserSidebar = ({
 
   return (
     <div
-      className={`relative h-full flex-shrink-0 overflow-hidden rounded-2xl border-l border-zinc-800 bg-zinc-900 shadow-xl transition-all duration-300 ease-in-out ${
+      className={`relative h-full shrink-0 overflow-hidden rounded-2xl border-l border-zinc-800 bg-zinc-900 shadow-xl transition-all duration-300 ease-in-out ${
         isOpen ? "w-[40vw]" : "w-0"
       }`}
     >
       {/* Toggle button for sidebar */}
       <button
         onClick={onToggle}
-        className="absolute -left-12 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-l-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+        className="absolute top-1/2 -left-12 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-l-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
       >
         {isOpen ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
       </button>
@@ -227,7 +227,7 @@ const BrowserSidebar = ({
             {(currentStep.stepData?.screenshot_url ||
               currentStep.stepData?.screenshot) && (
               <div className="relative overflow-hidden rounded-lg border border-zinc-700">
-                <div className="absolute right-2 top-2 z-10">
+                <div className="absolute top-2 right-2 z-10">
                   <Chip size="sm" color="primary" variant="flat" radius="full">
                     Screenshot
                   </Chip>
@@ -310,7 +310,7 @@ const BrowserSidebar = ({
                       >
                         {action.navigate && (
                           <>
-                            <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-blue-400" />
                             <span>Navigate to: </span>
                             <span className="truncate text-blue-400 underline">
                               {action.navigate.url}
@@ -319,7 +319,7 @@ const BrowserSidebar = ({
                         )}
                         {action.click && (
                           <>
-                            <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border border-zinc-500 text-[10px]">
+                            <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-zinc-500 text-[10px]">
                               C
                             </div>
                             <span>Click: </span>
@@ -330,7 +330,7 @@ const BrowserSidebar = ({
                         )}
                         {action.search_google && (
                           <>
-                            <Globe className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                            <Globe className="h-4 w-4 shrink-0 text-blue-400" />
                             <span>Search: </span>
                             <span className="italic">
                               "{action.search_google.query}"
@@ -339,7 +339,7 @@ const BrowserSidebar = ({
                         )}
                         {action.go_to_url && (
                           <>
-                            <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                            <ArrowUpRight className="h-4 w-4 shrink-0 text-blue-400" />
                             <span>Go to URL: </span>
                             <span className="truncate text-blue-400 underline">
                               {action.go_to_url.url}
@@ -348,9 +348,7 @@ const BrowserSidebar = ({
                         )}
                         {action.done && (
                           <>
-                            <span className="flex-shrink-0 text-green-400">
-                              ✓
-                            </span>
+                            <span className="shrink-0 text-green-400">✓</span>
                             <span>{action.done.text}</span>
                           </>
                         )}
@@ -647,7 +645,7 @@ const BrowserAutomationChat = () => {
         <div className="flex flex-1 justify-center overflow-y-auto p-4">
           <div
             ref={messagesContainerRef}
-            className="mx-auto h-full w-full max-w-screen-lg justify-center space-y-4"
+            className="mx-auto h-full w-full max-w-(--breakpoint-lg) justify-center space-y-4"
           >
             {messages.length === 0 && (
               <div className="flex h-full flex-1 flex-col items-center justify-center rounded-3xl text-zinc-500">
@@ -708,7 +706,7 @@ const BrowserAutomationChat = () => {
                           height={30}
                         />
 
-                        <div className="relative mb-1 flex max-w-md flex-col rounded-2xl rounded-bl-none bg-zinc-800 px-4 py-2 shadow-sm">
+                        <div className="relative mb-1 flex max-w-md flex-col rounded-2xl rounded-bl-none bg-zinc-800 px-4 py-2 shadow-xs">
                           <div className="text-white">{message.content}</div>
 
                           {message?.stepData?.thoughts && (
@@ -821,7 +819,7 @@ const BrowserAutomationChat = () => {
                               )} 
                             
                               {message.stepData.thoughts && (
-                                <div className="mt-2 max-w-screen-sm space-y-2 rounded-md bg-zinc-900 p-2">
+                                <div className="mt-2 max-w-(--breakpoint-sm) space-y-2 rounded-md bg-zinc-900 p-2">
                                   <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
                                     <Brain className="h-3.5 w-3.5" />
                                     <span>AI Thoughts</span>
@@ -1035,7 +1033,7 @@ const BrowserAutomationChat = () => {
             </div>
           )}
 
-          <div className="mx-auto flex w-full max-w-screen-sm items-center">
+          <div className="mx-auto flex w-full max-w-(--breakpoint-sm) items-center">
             <Input
               type="text"
               size="lg"
@@ -1064,7 +1062,7 @@ const BrowserAutomationChat = () => {
                   disabled={!isConnected || !input.trim() || isProcessing}
                   radius="full"
                   color={"primary"}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 transform"
+                  className="absolute top-1/2 right-1.5 -translate-y-1/2 transform"
                 >
                   <SendIcon className="h-5 w-5" />
                 </Button>

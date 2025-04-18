@@ -11,9 +11,9 @@ export default function Footer() {
   const isAuthenticated = user && user.email;
 
   return (
-    <div className="!m-0">
+    <div className="m-0!">
       <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20">
-        <div className="grid w-full max-w-screen-lg grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid w-full max-w-(--breakpoint-lg) grid-cols-2 gap-8 sm:grid-cols-4">
           <div className="flex h-full w-fit flex-col gap-1 text-foreground-600">
             <Image
               src="/branding/logo.webp"
@@ -42,7 +42,7 @@ export default function Footer() {
               key={section.title}
               className="flex h-full w-fit flex-col text-foreground-500"
             >
-              <div className="mb-1 pl-2 font-normal uppercase text-foreground-400">
+              <div className="mb-1 pl-2 font-normal text-foreground-400 uppercase">
                 {section.title}
               </div>
               {section.links

@@ -19,7 +19,7 @@ export default function PrivacySection() {
           disabled={true}
           isSelected={false}
         >
-          <div className="!text-foreground-400">
+          <div className="text-foreground-400!">
             Switch on end-to-end Encryption for all chats?
           </div>
         </Switch>

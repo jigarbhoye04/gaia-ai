@@ -88,7 +88,7 @@ const messageConfig: SearchCardConfig<SearchMessageResult> = {
           </Chip>
         )}
       </div>
-      <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
+      <CommandItem className="w-full cursor-pointer truncate px-0! py-1! data-[selected='true']:bg-transparent!">
         {result.snippet}
       </CommandItem>
     </>
@@ -105,7 +105,7 @@ const conversationConfig: SearchCardConfig<SearchConversationResult> = {
   ),
   linkTo: (result) => `/c/${result.conversation_id}`,
   bodyContent: (result) => (
-    <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
+    <CommandItem className="w-full cursor-pointer truncate px-0! py-1! data-[selected='true']:bg-transparent!">
       {result.description}
     </CommandItem>
   ),
@@ -117,7 +117,7 @@ const noteConfig: SearchCardConfig<SearchNoteResult> = {
   ),
   linkTo: (result) => `/notes/${result.id}`,
   bodyContent: (result) => (
-    <CommandItem className="w-full cursor-pointer truncate !px-0 !py-1 data-[selected='true']:!bg-transparent">
+    <CommandItem className="w-full cursor-pointer truncate px-0! py-1! data-[selected='true']:bg-transparent!">
       {result.snippet}
     </CommandItem>
   ),

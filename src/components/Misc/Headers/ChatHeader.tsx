@@ -24,7 +24,7 @@ export default function ChatHeader() {
         {convoIdParam && (
           <ChatOptionsDropdown
             btnChildren={
-              <div className="flex max-w-[250px] items-center gap-2 truncate !text-sm">
+              <div className="flex max-w-[250px] items-center gap-2 truncate text-sm!">
                 <BubbleConversationChatIcon height={18} width={18} />
 
                 {conversations.find(

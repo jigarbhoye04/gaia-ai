@@ -57,7 +57,7 @@ export default function Notes() {
         <ScrollArea>
           <div className="flex flex-col items-center gap-2">
             <h1 className="text-center text-5xl font-bold">Notes</h1>
-            <div className="text-md max-w-screen-md pb-6 text-center">
+            <div className="text-md max-w-(--breakpoint-md) pb-6 text-center">
               Add and store custom notes as memories for your AI assistant,
               enabling it to recall important details and provide more
               personalized interactions over time.
@@ -94,7 +94,7 @@ export default function Notes() {
             </Button>
           </Link>
         </div>
-        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
+        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-1 h-[100px] w-full" />
       </div>
       {/* <AddNoteDialog
         openDialog={openDialog}

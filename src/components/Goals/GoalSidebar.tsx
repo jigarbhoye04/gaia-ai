@@ -23,7 +23,7 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
   );
 
   return (
-    <div className="fixed bottom-3 right-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950">
+    <div className="fixed right-3 bottom-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950">
       <div className="space-y-2 p-4">
         <div className="text-xl font-medium">{selectedNode?.data.label}</div>
         <div className="text-md -mt-2 pb-4 text-foreground-600">
@@ -68,7 +68,7 @@ const GoalSidebar: React.FC<GoalSidebarProps> = ({
       </div>
       {selectedNode?.data?.resources &&
         selectedNode.data.resources.length > 0 && (
-          <div className="rounded-xl bg-black bg-opacity-40 p-5">
+          <div className="bg-opacity-40 rounded-xl bg-black p-5">
             <div className="text-md flex items-center gap-2 pb-2 font-medium">
               <BookIcon1 width={18} />
               Resources

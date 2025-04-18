@@ -24,7 +24,7 @@ export const WeatherDetailItem: React.FC<WeatherDetailItemProps> = ({
 }) => {
   return (
     <div
-      className={`flex flex-col items-start rounded-2xl bg-black/10 p-2 px-3 backdrop-blur-sm`}
+      className={`flex flex-col items-start rounded-2xl bg-black/10 p-2 px-3 backdrop-blur-xs`}
     >
       <TooltipProvider>
         <Tooltip>

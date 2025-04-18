@@ -85,7 +85,7 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
   return (
     <div className="relative h-[50vh] overflow-hidden bg-white p-4">
       <div
-        className={`absolute left-0 top-0 h-full w-full ${
+        className={`absolute top-0 left-0 h-full w-full ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         }`}
         onMouseDown={handleMouseDown}
@@ -105,7 +105,7 @@ const FlowchartPreview: React.FC<FlowchartPreviewProps> = ({ children }) => {
           {String(children).replace(/\n$/, "")}
         </div>
       </div>
-      <div className="absolute bottom-2 right-2 flex flex-col items-center gap-1">
+      <div className="absolute right-2 bottom-2 flex flex-col items-center gap-1">
         <Tooltip content="Zoom Out">
           <Button size="sm" onPress={handleZoomOut} isIconOnly>
             <ZoomOut size={18} />

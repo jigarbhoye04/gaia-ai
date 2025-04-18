@@ -41,7 +41,7 @@ export const Spotlight = ({
         animate={{
           x: [0, xOffset, 0],
         }}
-        className="pointer-events-none absolute left-0 top-0 z-40 h-screen w-screen"
+        className="pointer-events-none absolute top-0 left-0 z-40 h-screen w-screen"
         transition={{
           duration,
           repeat: Infinity,
@@ -50,7 +50,7 @@ export const Spotlight = ({
         }}
       >
         <div
-          className={`absolute left-0 top-0`}
+          className={`absolute top-0 left-0`}
           style={{
             transform: `translateY(${translateY}px) rotate(-45deg)`,
             background: gradientFirst,
@@ -60,7 +60,7 @@ export const Spotlight = ({
         />
 
         <div
-          className={`absolute left-0 top-0 origin-top-left`}
+          className={`absolute top-0 left-0 origin-top-left`}
           style={{
             transform: "rotate(-45deg) translate(5%, -50%)",
             background: gradientSecond,
@@ -70,7 +70,7 @@ export const Spotlight = ({
         />
 
         <div
-          className={`absolute left-0 top-0 origin-top-left`}
+          className={`absolute top-0 left-0 origin-top-left`}
           style={{
             transform: "rotate(-45deg) translate(-180%, -70%)",
             background: gradientThird,
@@ -84,7 +84,7 @@ export const Spotlight = ({
         animate={{
           x: [0, -xOffset, 0],
         }}
-        className="pointer-events-none absolute right-0 top-0 z-40 h-screen w-screen"
+        className="pointer-events-none absolute top-0 right-0 z-40 h-screen w-screen"
         transition={{
           duration,
           repeat: Infinity,
@@ -93,7 +93,7 @@ export const Spotlight = ({
         }}
       >
         <div
-          className={`absolute right-0 top-0`}
+          className={`absolute top-0 right-0`}
           style={{
             transform: `translateY(${translateY}px) rotate(45deg)`,
             background: gradientFirst,
@@ -103,7 +103,7 @@ export const Spotlight = ({
         />
 
         <div
-          className={`absolute right-0 top-0 origin-top-right`}
+          className={`absolute top-0 right-0 origin-top-right`}
           style={{
             transform: "rotate(45deg) translate(-5%, -50%)",
             background: gradientSecond,
@@ -113,7 +113,7 @@ export const Spotlight = ({
         />
 
         <div
-          className={`absolute right-0 top-0 origin-top-right`}
+          className={`absolute top-0 right-0 origin-top-right`}
           style={{
             transform: "rotate(45deg) translate(180%, -70%)",
             background: gradientThird,

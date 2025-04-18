@@ -415,7 +415,7 @@ export default function FileUpload({
                   </div>
                 </div>
 
-                <div className="max-h-[180px] space-y-2 overflow-y-auto overflow-x-hidden pr-2 pt-3">
+                <div className="max-h-[180px] space-y-2 overflow-x-hidden overflow-y-auto pt-3 pr-2">
                   {files.map((fileWithPreview, index) => (
                     <div
                       key={index}
@@ -427,7 +427,7 @@ export default function FileUpload({
                         isIconOnly
                         size="sm"
                         variant="faded"
-                        className="absolute -right-0 -top-0 max-h-7 min-h-7 min-w-7 max-w-7 rounded-full"
+                        className="absolute -top-0 -right-0 max-h-7 min-h-7 max-w-7 min-w-7 rounded-full"
                         onPress={() => removeFile(index)}
                         isDisabled={isUploading}
                       >
@@ -458,7 +458,7 @@ export default function FileUpload({
                           {fileWithPreview.error && (
                             <AlertCircle
                               size={14}
-                              className="ml-1 flex-shrink-0 text-red-500"
+                              className="ml-1 shrink-0 text-red-500"
                             />
                           )}
                         </div>

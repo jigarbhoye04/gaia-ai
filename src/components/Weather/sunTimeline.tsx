@@ -60,7 +60,7 @@ export const SunTimeline: React.FC<SunTimelineProps> = ({
   const { percent, isDaytime } = calculateProgress();
 
   return (
-    <div className="rounded-2xl bg-black/35 p-4 backdrop-blur-sm">
+    <div className="rounded-2xl bg-black/35 p-4 backdrop-blur-xs">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex flex-col items-start">
           <SunsetIcon className={`h-7 w-7 ${weatherTheme.highlight}`} />

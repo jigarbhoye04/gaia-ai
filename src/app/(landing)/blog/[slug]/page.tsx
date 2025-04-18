@@ -39,7 +39,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
     return (
       <div className="flex h-fit min-h-screen w-screen justify-center overflow-y-auto pt-28">
-        <div className="mx-auto w-full max-w-screen-md">
+        <div className="mx-auto w-full max-w-(--breakpoint-md)">
           <div className="mb-8">
             <Button
               variant="light"

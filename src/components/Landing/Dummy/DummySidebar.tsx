@@ -30,7 +30,7 @@ const StaticSidebar = ({
     //   className={`z-20 h-fit flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 ${isMobileScreen ? "relative" : "absolute sm:-bottom-14 sm:-right-14 sm:max-w-[350px]"} transition-all`}
     // ></div>
     <div
-      className={`relative z-20 h-fit flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 sm:absolute sm:-bottom-14 sm:-right-14 sm:max-w-[350px] ${
+      className={`relative z-20 h-fit flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950 sm:absolute sm:-right-14 sm:-bottom-14 sm:max-w-[350px] ${
         isVisible
           ? `pointer-events-auto flex opacity-100`
           : "pointer-events-none hidden opacity-0"
@@ -79,7 +79,7 @@ const StaticSidebar = ({
       </div>
 
       {resources && resources.length > 0 && (
-        <div className="rounded-xl bg-black bg-opacity-40 p-5">
+        <div className="bg-opacity-40 rounded-xl bg-black p-5">
           <div className="text-md flex items-center gap-2 pb-2 font-medium">
             <BookIcon1 width={18} />
             Resources

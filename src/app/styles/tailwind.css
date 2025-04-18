@@ -1,6 +1,27 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin '../../lib/heroui.ts';
+
+@config '../../../tailwind.config.js';
+@source '../../../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
+@custom-variant dark (&:is(.dark *));
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 @layer base {
   h1,
@@ -31,7 +52,7 @@
   }
   .editor ol,
   .editor ul {
-    padding-left: theme("spacing.10");
+    padding-left: --spacing(10);
   }
   .editor ol {
     list-style-type: decimal;
@@ -136,45 +157,47 @@
   }
 }
 
-.pingspinner {
-  --uib-size: 50px;
-  --uib-color: #00bbff;
-  --uib-speed: 1.5s;
-  position: relative;
-  height: var(--uib-size);
-  min-height: var(--uib-size);
-  min-width: var(--uib-size);
-  width: var(--uib-size);
-}
-.pingspinner_large {
-  --uib-size: 200px !important;
-}
-.pingspinner::before,
-.pingspinner::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 100%;
-  border-radius: 50%;
-  background-color: var(--uib-color);
-  animation: pulse var(--uib-speed) linear infinite;
-  transform: scale(0);
-  opacity: 0;
-  transition: background-color 0.3s ease;
-}
-.pingspinner::after {
-  animation-delay: calc(var(--uib-speed) / -2);
-}
-@keyframes pulse {
-  0% {
-    transform: scale(0);
-    opacity: 1;
+@layer utilities {
+  .pingspinner {
+    --uib-size: 50px;
+    --uib-color: #00bbff;
+    --uib-speed: 1.5s;
+    position: relative;
+    height: var(--uib-size);
+    min-height: var(--uib-size);
+    min-width: var(--uib-size);
+    width: var(--uib-size);
   }
-  100% {
-    transform: scale(1);
+  .pingspinner_large {
+    --uib-size: 200px !important;
+  }
+  .pingspinner::before,
+  .pingspinner::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    background-color: var(--uib-color);
+    animation: pulse var(--uib-speed) linear infinite;
+    transform: scale(0);
     opacity: 0;
+    transition: background-color 0.3s ease;
+  }
+  .pingspinner::after {
+    animation-delay: calc(var(--uib-speed) / -2);
+  }
+  @keyframes pulse {
+    0% {
+      transform: scale(0);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0;
+    }
   }
 }
 
@@ -182,10 +205,10 @@
   /* * {
     @apply border-border;
   } */
-  body {
+  /* body {
     @apply bg-background text-foreground;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
-  }
+  } */
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { Tab, Tabs } from "@heroui/tabs";
 import { Download, ZoomIn, ZoomOut } from "lucide-react";
@@ -148,9 +150,9 @@ const FlowchartDemo = () => {
         </div>
       </div>
 
-      <SimpleChatBubbleBot className={"w-full !rounded-2xl"}>
+      <SimpleChatBubbleBot className={"w-full rounded-2xl!"}>
         <div className="mb-3">Here is a flowchart to help you:</div>
-        <div className="relative flex flex-col gap-0 overflow-hidden !rounded-[15px] bg-zinc-950">
+        <div className="relative flex flex-col gap-0 overflow-hidden rounded-[15px]! bg-zinc-950">
           <Tabs
             className="px-3"
             selectedKey={activeTab}
@@ -163,7 +165,7 @@ const FlowchartDemo = () => {
             }}
           >
             <Tab key="code" className="p-0" title="Code">
-              <div className="h-[280px] overflow-y-auto whitespace-pre-wrap px-5 py-2 !font-mono">
+              <div className="h-[280px] overflow-y-auto px-5 py-2 font-mono! whitespace-pre-wrap">
                 {flowchartCode}
               </div>
             </Tab>
@@ -186,7 +188,7 @@ const FlowchartDemo = () => {
                 >
                   {String(flowchartCode).replace(/\n$/, "")}
                 </div>
-                <div className="absolute bottom-2 right-2 flex gap-2">
+                <div className="absolute right-2 bottom-2 flex gap-2">
                   <Button size="sm" onPress={handleZoomIn}>
                     <ZoomIn size={16} />
                   </Button>
@@ -201,7 +203,7 @@ const FlowchartDemo = () => {
             </Tab>
           </Tabs>
           <Button
-            className="absolute right-2 top-2 text-xs text-foreground hover:text-gray-300"
+            className="absolute top-2 right-2 text-xs text-foreground hover:text-gray-300"
             size="sm"
             variant="light"
             onPress={handleCopy}

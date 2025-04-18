@@ -142,7 +142,7 @@ export default function ChatRenderer() {
         ),
       )}
       {isLoading && (
-        <div className="flex items-center gap-4 pl-[40px] pt-3 text-sm font-medium">
+        <div className="flex items-center gap-4 pt-3 pl-[40px] text-sm font-medium">
           {/* <Image
             alt="GAIA Logo"
             src={"/branding/logo.webp"}

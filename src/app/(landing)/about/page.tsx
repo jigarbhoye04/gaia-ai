@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default function About() {
   return (
     <div className="flex min-h-screen w-screen justify-center pt-28">
-      <div className="max-w-screen-md space-y-2">
+      <div className="max-w-(--breakpoint-md) space-y-2">
         <h1 className="text-center">
           GAIA Lorem, ipsum dolor sit amet consectetur
         </h1>

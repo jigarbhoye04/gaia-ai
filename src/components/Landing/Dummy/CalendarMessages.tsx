@@ -50,7 +50,7 @@ const ReadMoreText = ({
       {needsTruncation && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="relative z-[2] mt-1 text-sm font-medium text-primary hover:underline"
+          className="relative z-2 mt-1 text-sm font-medium text-primary hover:underline"
         >
           {expanded ? "Read Less" : "Read More"}...
         </button>
