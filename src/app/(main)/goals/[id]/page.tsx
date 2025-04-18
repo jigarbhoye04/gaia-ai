@@ -82,13 +82,13 @@ export default function GoalPage() {
         <div
           className={`${
             currentlySelectedNodeId === data.id
-              ? "shadow-lg !outline-[#00bbff]!"
+              ? "!outline-[#00bbff]! shadow-lg"
               : "outline-zinc-700"
           } ${
             data.isComplete
               ? "bg-[#00bbff73] line-through outline-[#00bbff30]"
               : "bg-zinc-800"
-          } flex min-w-[250px] max-w-[250px] flex-row items-center justify-center gap-1 rounded-lg p-4 text-center text-white outline outline-[3px] transition-all`}
+          } flex max-w-[250px] min-w-[250px] flex-row items-center justify-center gap-1 rounded-lg p-4 text-center text-white outline outline-[3px] transition-all`}
           onClick={() => {
             setCurrentlySelectedNodeId(data.id);
             setOpenSidebar(true);
@@ -278,7 +278,7 @@ export default function GoalPage() {
           <div
             className={`${
               openSidebar ? "visible" : "hidden"
-            } fixed bottom-3 right-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950`}
+            } fixed right-3 bottom-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950`}
           >
             <div className="space-y-2 p-4">
               <div className="text-xl font-medium">
@@ -354,7 +354,7 @@ export default function GoalPage() {
                     return (
                       selectedNode?.data?.resources &&
                       selectedNode?.data?.resources?.length > 0 && (
-                        <div className="rounded-xl bg-black bg-opacity-40 p-5">
+                        <div className="bg-opacity-40 rounded-xl bg-black p-5">
                           <div className="text-md flex items-center gap-2 pb-2 font-medium">
                             <BookIcon1 width={18} />
                             Resources
@@ -390,7 +390,7 @@ export default function GoalPage() {
             }`}
           >
             {loading ? (
-              <div className="relative flex h-fit w-fit flex-col items-center justify-center gap-10 overflow-hidden rounded-xl bg-black bg-opacity-50 pb-0 pt-9">
+              <div className="bg-opacity-50 relative flex h-fit w-fit flex-col items-center justify-center gap-10 overflow-hidden rounded-xl bg-black pt-9 pb-0">
                 <div className="space-y-2 text-center">
                   <div className="text-xl font-medium text-foreground">
                     Creating your detailed Roadmap.

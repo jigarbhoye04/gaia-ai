@@ -216,7 +216,7 @@ export const MenuBar = ({
         <Unlink />
       </Button>
 
-      <div className="ml-auto mr-5 flex items-center">
+      <div className="mr-5 ml-auto flex items-center">
         <Button
           disabled={!editor.can().undo()}
           size="icon"

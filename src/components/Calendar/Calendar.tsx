@@ -113,7 +113,7 @@ export default function Calendar() {
                 </div>
                 {Object.entries(days).map(([day, events]) => (
                   <div key={day} className="my-2 flex gap-7">
-                    <div className="flex max-h-[60px] min-h-[60px] min-w-[60px] max-w-[60px] flex-col items-center justify-center rounded-full bg-zinc-900 text-center text-lg font-bold leading-none text-foreground-500">
+                    <div className="flex max-h-[60px] min-h-[60px] max-w-[60px] min-w-[60px] flex-col items-center justify-center rounded-full bg-zinc-900 text-center text-lg leading-none font-bold text-foreground-500">
                       <div className="text-md font-normal">
                         {day.split(" ")[1]}
                       </div>

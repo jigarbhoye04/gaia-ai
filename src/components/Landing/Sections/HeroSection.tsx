@@ -13,7 +13,7 @@ import GetStartedButton from "../GetStartedButton";
 export default function HeroSection() {
   return (
     <div className="flex h-fit min-h-[55vh] w-screen flex-col items-center justify-center gap-8 pt-16 sm:pt-28">
-      <div className="fixed left-0 top-0 w-screen">
+      <div className="fixed top-0 left-0 w-screen">
         <Spotlight duration={15} />
       </div>
       <AnimatedSection className="relative z-2 flex h-full flex-col items-center justify-center">
@@ -33,7 +33,7 @@ export default function HeroSection() {
         </div>
 
         <AnimatedSection
-          className="max-w-(--breakpoint-lg) bg-linear-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-[2.8rem] font-medium leading-none text-transparent sm:-my-2 sm:text-8xl"
+          className="max-w-(--breakpoint-lg) bg-linear-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-[2.8rem] leading-none font-medium text-transparent sm:-my-2 sm:text-8xl"
           childClassName="bg-linear-to-b from-white to-zinc-400 bg-clip-text text-transparent inline-block px-1"
         >
           <span>Your </span>
@@ -42,7 +42,7 @@ export default function HeroSection() {
           <span>Assistant awaits.</span>
         </AnimatedSection>
 
-        <div className="max-w-(--breakpoint-sm) px-4 py-0 text-center text-lg font-normal leading-7 text-white sm:px-0 sm:text-xl">
+        <div className="max-w-(--breakpoint-sm) px-4 py-0 text-center text-lg leading-7 font-normal text-white sm:px-0 sm:text-xl">
           GAIA is your all-in-one personal assistant to help organise your life.
         </div>
 

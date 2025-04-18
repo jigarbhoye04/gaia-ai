@@ -22,7 +22,7 @@ const StandardCodeBlock: React.FC<StandardCodeBlockProps> = ({
 
   return (
     <div className="relative flex flex-col gap-0">
-      <div className="sticky! top-0 mb-[-0.5em] flex items-center justify-between rounded-b-none! rounded-t-[10px]! bg-zinc-900 px-4 py-1 text-white">
+      <div className="sticky! top-0 mb-[-0.5em] flex items-center justify-between rounded-t-[10px]! rounded-b-none! bg-zinc-900 px-4 py-1 text-white">
         <span className="monospace font-mono text-sm">
           {match ? match[1] : ""}
         </span>

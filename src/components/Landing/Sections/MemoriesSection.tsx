@@ -19,7 +19,7 @@ function LocalNotecard({ plaintext }: { plaintext: string }) {
       <Chip className="mb-1" color="primary" size="sm" variant="flat">
         Auto Created by GAIA
       </Chip>
-      <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden text-ellipsis font-normal">
+      <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden font-normal text-ellipsis">
         {plaintext}
       </div>
     </div>

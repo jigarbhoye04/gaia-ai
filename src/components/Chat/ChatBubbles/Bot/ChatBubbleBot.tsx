@@ -61,7 +61,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
             style={{ opacity: 0, visibility: "hidden" }}
           >
             {date && (
-              <span className="flex select-text flex-col p-1 text-xs text-white text-opacity-40">
+              <span className="text-opacity-40 flex flex-col p-1 text-xs text-white select-text">
                 {parseDate(date)}
               </span>
             )}

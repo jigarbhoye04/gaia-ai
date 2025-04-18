@@ -19,7 +19,7 @@ export default function GeneratedImageSheet({
 }: GeneratedImageSheetProps) {
   return (
     <Sheet open={openImage} onOpenChange={setOpenImage}>
-      <SheetContent className="flex min-w-fit max-w-(--breakpoint-sm) flex-col items-center rounded-3xl! border-none bg-zinc-900 px-5 py-3 text-white">
+      <SheetContent className="flex max-w-(--breakpoint-sm) min-w-fit flex-col items-center rounded-3xl! border-none bg-zinc-900 px-5 py-3 text-white">
         <div className="relative mt-3 flex aspect-square w-full sm:w-screen sm:max-w-(--breakpoint-sm)">
           {imageData?.src && (
             <Image

@@ -46,7 +46,7 @@ export default function SidebarLayout({
       />
 
       <div className="flex h-full flex-col">
-        <div className="mr-2 flex-none px-2 pb-2 pt-3 sm:pt-1">
+        <div className="mr-2 flex-none px-2 pt-3 pb-2 sm:pt-1">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2 pl-1">
               <Image
@@ -93,7 +93,7 @@ export default function SidebarLayout({
           {children}
         </div>
       </div>
-      <div className="absolute bottom-0 right-0 w-full">
+      <div className="absolute right-0 bottom-0 w-full">
         <UserContainer />
       </div>
     </div>

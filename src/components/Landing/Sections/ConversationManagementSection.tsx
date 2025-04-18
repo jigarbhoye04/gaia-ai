@@ -215,7 +215,7 @@ export function SidebarComponent() {
           key={index}
           className={`${
             section.starred ? "bg-zinc-800" : ""
-          } flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg pb-1 pt-3`}
+          } flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg pt-3 pb-1`}
         >
           <div className="flex items-center gap-1 px-3 pb-1 text-xs font-medium">
             {section.title}
@@ -224,7 +224,7 @@ export function SidebarComponent() {
             {section.conversations.map((chat, chatIndex) => (
               <Button
                 key={chatIndex}
-                className="flex h-[35px] min-h-[35px] w-full justify-start pl-2 pr-0"
+                className="flex h-[35px] min-h-[35px] w-full justify-start pr-0 pl-2"
                 color={chat?.active ? "primary" : "default"}
                 radius="sm"
                 startContent={

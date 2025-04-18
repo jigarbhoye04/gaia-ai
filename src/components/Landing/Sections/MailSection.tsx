@@ -173,7 +173,7 @@ export default function MailSection() {
               key={image.id}
               onClick={() => setActiveImage(image.id)}
               className={cn(
-                "max-h-[10px] min-h-[10px] min-w-[10px] max-w-[10px] rounded-full transition",
+                "max-h-[10px] min-h-[10px] max-w-[10px] min-w-[10px] rounded-full transition",
                 activeImage === image.id
                   ? "bg-primary"
                   : "bg-gray-600 hover:bg-gray-400",
@@ -202,9 +202,7 @@ function BentoCard({
       <h3 className="relative z-1 text-[1rem] font-semibold text-white">
         {title}
       </h3>
-      <p className="relative z-1 grow text-sm text-white/80">
-        {description}
-      </p>
+      <p className="relative z-1 grow text-sm text-white/80">{description}</p>
     </Card>
   );
 }

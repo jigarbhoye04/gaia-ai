@@ -69,7 +69,7 @@ export default function CalendarSelector({
     <>
       {/* Filters Button (Opens the calendar selector) */}
       <Button
-        className="fixed bottom-2 right-2 z-40 flex size-[50px] items-center gap-2 rounded-full bg-primary text-black shadow-md transition-all hover:bg-primary sm:hover:bg-[#0075a1]"
+        className="fixed right-2 bottom-2 z-40 flex size-[50px] items-center gap-2 rounded-full bg-primary text-black shadow-md transition-all hover:bg-primary sm:hover:bg-[#0075a1]"
         size={"icon"}
         onClick={() => setIsOpen((prev) => !prev)}
       >
@@ -81,7 +81,7 @@ export default function CalendarSelector({
       </Button>
 
       <div
-        className={`fixed bottom-4 right-8 z-30 flex max-h-[70vh] min-w-[250px] flex-col flex-nowrap justify-center gap-1 overflow-y-auto rounded-xl bg-zinc-800 px-3 py-3 pb-4 shadow-lg transition-all ${
+        className={`fixed right-8 bottom-4 z-30 flex max-h-[70vh] min-w-[250px] flex-col flex-nowrap justify-center gap-1 overflow-y-auto rounded-xl bg-zinc-800 px-3 py-3 pb-4 shadow-lg transition-all ${
           isOpen
             ? "pointer-events-auto opacity-100"
             : "pointer-events-none opacity-0!"

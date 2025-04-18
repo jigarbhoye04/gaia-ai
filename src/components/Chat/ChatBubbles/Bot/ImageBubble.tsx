@@ -18,7 +18,7 @@ export default function ImageBubble({
   return (
     <>
       <Skeleton
-        className="mb-4 aspect-square max-h-[350px] min-h-[350px] min-w-[350px] max-w-[350px] overflow-hidden rounded-3xl"
+        className="mb-4 aspect-square max-h-[350px] min-h-[350px] max-w-[350px] min-w-[350px] overflow-hidden rounded-3xl"
         isLoaded={!loading && Boolean(imageSrc)}
       >
         {imageSrc && (

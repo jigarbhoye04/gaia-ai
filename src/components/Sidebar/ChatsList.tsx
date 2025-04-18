@@ -172,9 +172,9 @@ export default function ChatsList() {
           >
             <AccordionItem
               value="item-1"
-              className="mt-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 pb-1 pt-0"
+              className="mt-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 pt-0 pb-1"
             >
-              <AccordionTrigger className="w-full px-3 pb-2 pt-3 text-xs">
+              <AccordionTrigger className="w-full px-3 pt-3 pb-2 text-xs">
                 Starred Chats
               </AccordionTrigger>
               <AccordionContent className="w-full p-0!">
@@ -195,7 +195,7 @@ export default function ChatsList() {
                       ),
                     )
                   ) : (
-                    <div className="w-full text-nowrap pb-3 pt-2 text-center text-xs text-foreground-500">
+                    <div className="w-full pt-2 pb-3 text-center text-xs text-nowrap text-foreground-500">
                       No Starred Chats yet.
                     </div>
                   )}
@@ -213,7 +213,7 @@ export default function ChatsList() {
           {/* Grouped Conversations by Time Frame */}
           {sortedTimeFrames.map(([timeFrame, conversationsGroup]) => (
             <div key={timeFrame}>
-              <div className="sticky top-0 z-1 bg-black px-2 pb-1 pt-3 text-xs font-medium text-foreground-500">
+              <div className="sticky top-0 z-1 bg-black px-2 pt-3 pb-1 text-xs font-medium text-foreground-500">
                 {timeFrame}
               </div>
               {conversationsGroup

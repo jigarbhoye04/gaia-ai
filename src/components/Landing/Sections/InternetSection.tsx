@@ -74,7 +74,7 @@ const ImageCarousel = ({
             key={index}
             onClick={() => handleDotClick(index)}
             className={cn(
-              "max-h-[10px] min-h-[10px] min-w-[10px] max-w-[10px] rounded-full transition",
+              "max-h-[10px] min-h-[10px] max-w-[10px] min-w-[10px] rounded-full transition",
               index === currentIndex
                 ? "bg-primary"
                 : "bg-gray-600 hover:bg-gray-400",

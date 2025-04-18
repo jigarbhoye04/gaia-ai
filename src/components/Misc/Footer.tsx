@@ -42,7 +42,7 @@ export default function Footer() {
               key={section.title}
               className="flex h-full w-fit flex-col text-foreground-500"
             >
-              <div className="mb-1 pl-2 font-normal uppercase text-foreground-400">
+              <div className="mb-1 pl-2 font-normal text-foreground-400 uppercase">
                 {section.title}
               </div>
               {section.links

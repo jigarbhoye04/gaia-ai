@@ -31,7 +31,7 @@ export function CalendarBotMessage({
             <div className="relative flex w-full flex-row items-start gap-3 overflow-hidden rounded-lg bg-primary/20 p-3">
               <div className="absolute inset-0 h-full w-1 bg-primary"></div>
               <div className="flex flex-1 flex-col gap-1 pl-1">
-                <div className="font-medium leading-none">{task.title}</div>
+                <div className="leading-none font-medium">{task.title}</div>
                 <div className="text-xs text-primary">{task.time}</div>
               </div>
             </div>

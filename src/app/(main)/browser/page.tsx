@@ -166,7 +166,7 @@ const BrowserSidebar = ({
       {/* Toggle button for sidebar */}
       <button
         onClick={onToggle}
-        className="absolute -left-12 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-l-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+        className="absolute top-1/2 -left-12 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-l-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
       >
         {isOpen ? <ArrowRight size={20} /> : <ArrowLeft size={20} />}
       </button>
@@ -227,7 +227,7 @@ const BrowserSidebar = ({
             {(currentStep.stepData?.screenshot_url ||
               currentStep.stepData?.screenshot) && (
               <div className="relative overflow-hidden rounded-lg border border-zinc-700">
-                <div className="absolute right-2 top-2 z-10">
+                <div className="absolute top-2 right-2 z-10">
                   <Chip size="sm" color="primary" variant="flat" radius="full">
                     Screenshot
                   </Chip>
@@ -348,9 +348,7 @@ const BrowserSidebar = ({
                         )}
                         {action.done && (
                           <>
-                            <span className="shrink-0 text-green-400">
-                              ✓
-                            </span>
+                            <span className="shrink-0 text-green-400">✓</span>
                             <span>{action.done.text}</span>
                           </>
                         )}
@@ -1064,7 +1062,7 @@ const BrowserAutomationChat = () => {
                   disabled={!isConnected || !input.trim() || isProcessing}
                   radius="full"
                   color={"primary"}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 transform"
+                  className="absolute top-1/2 right-1.5 -translate-y-1/2 transform"
                 >
                   <SendIcon className="h-5 w-5" />
                 </Button>

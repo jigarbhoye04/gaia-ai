@@ -46,7 +46,7 @@ export function ShineBorder({
       }
     >
       <div
-        className={`before:bg-shine-size pointer-events-none before:absolute before:inset-0 before:size-full before:rounded-(--border-radius) before:p-(--border-width) before:will-change-[background-position] before:content-[""] before:[-webkit-mask-composite:xor]! before:[background-image:var(--background-radial-gradient)] before:[background-size:300%_300%] before:[mask-composite:exclude]! before:[mask:var(--mask-linear-gradient)] motion-safe:before:animate-shine`}
+        className={`before:bg-shine-size pointer-events-none before:absolute before:inset-0 before:size-full before:rounded-(--border-radius) before:[background-image:var(--background-radial-gradient)] before:[background-size:300%_300%] before:[mask-composite:exclude]! before:p-(--border-width) before:will-change-[background-position] before:content-[""] before:[-webkit-mask-composite:xor]! before:[mask:var(--mask-linear-gradient)] motion-safe:before:animate-shine`}
         style={
           {
             "--border-width": `${borderWidth}px`,

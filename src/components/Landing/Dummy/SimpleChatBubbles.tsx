@@ -15,7 +15,7 @@ export function SimpleChatBubbleUser({
 
   return (
     <div className={`chat_bubble_container user ${className}`}>
-      <div className="chat_bubble user select-none! whitespace-pre-wrap">
+      <div className="chat_bubble user whitespace-pre-wrap select-none!">
         {/* <div className="flex select-text text-wrap max-w-[30vw]"> */}
         {children}
         {/* </div> */}
@@ -36,7 +36,7 @@ export function SimpleChatBubbleBot({
   return (
     <div className={`relative flex items-end gap-3 ${parentClassName}`}>
       {/* <div className="pingspinner relative" /> */}
-      <div className={cn("chat_bubble select-none! bg-zinc-800", className)}>
+      <div className={cn("chat_bubble bg-zinc-800 select-none!", className)}>
         {children}
       </div>
     </div>

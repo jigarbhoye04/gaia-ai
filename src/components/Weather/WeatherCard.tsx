@@ -411,7 +411,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           </p>
         </div>
 
-        <p className="font-medium capitalize text-white">
+        <p className="font-medium text-white capitalize">
           {weatherData.weather[0].description}
         </p>
       </div>

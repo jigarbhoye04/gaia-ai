@@ -20,7 +20,7 @@ export default function FreePricing() {
       <div className="relative flex w-full max-w-(--breakpoint-lg) justify-center">
         {/* <div className="w-[300px]"> */}
         <PricingCard
-          className="rounded-2xl bg-zinc-900! !bg-opacity-[100%] backdrop-blur-none!"
+          className="!bg-opacity-[100%] rounded-2xl bg-zinc-900! backdrop-blur-none!"
           durationIsMonth={true}
           features={["Feature 1", "Feature 2", "Feature 3", "Feature 4"]}
           featurestitle={

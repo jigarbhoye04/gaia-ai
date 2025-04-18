@@ -108,7 +108,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
             variant="faded"
             isClearable
             startContent={
-              <div className="text-nowrap text-sm font-medium text-foreground-500">
+              <div className="text-sm font-medium text-nowrap text-foreground-500">
                 Find email of
               </div>
             }

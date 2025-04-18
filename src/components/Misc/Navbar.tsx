@@ -30,7 +30,7 @@ export default function Navbar() {
       >
         <Button
           as={Link}
-          className="group pl-2 pr-3 text-lg font-medium"
+          className="group pr-3 pl-2 text-lg font-medium"
           radius="lg"
           href={"/"}
           variant="light"

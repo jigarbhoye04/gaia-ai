@@ -72,7 +72,7 @@ export function PricingCard({
               <span className="text-2xl">USD</span>
             </div>
 
-            <span className="text-sm font-normal text-white text-opacity-70">
+            <span className="text-opacity-70 text-sm font-normal text-white">
               {durationIsMonth ? "/ per month" : "/ per year"}
             </span>
           </div>

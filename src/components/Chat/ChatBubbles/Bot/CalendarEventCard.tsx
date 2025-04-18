@@ -76,7 +76,7 @@ export function CalendarEventCard({
 
   return (
     <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-900 p-2">
-      <div className="relative flex w-full flex-row gap-3 rounded-xl rounded-l-none bg-primary/20 p-3 pr-1 pt-1">
+      <div className="relative flex w-full flex-row gap-3 rounded-xl rounded-l-none bg-primary/20 p-3 pt-1 pr-1">
         <div className="absolute inset-0 w-1 rounded-full bg-primary" />
         <div className="flex flex-1 flex-col pl-1">
           <div className="flex w-full items-center justify-between">

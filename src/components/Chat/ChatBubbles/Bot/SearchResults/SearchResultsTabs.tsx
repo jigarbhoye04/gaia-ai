@@ -171,10 +171,10 @@ function VideoResults({ videos }: VideoResultsProps) {
             alt={video.title}
             className="h-full w-full rounded-lg object-cover"
           />
-          <p className="relative z-2 mt-1 truncate text-nowrap text-start text-sm">
+          <p className="relative z-2 mt-1 truncate text-start text-sm text-nowrap">
             {video.title}
           </p>
-          <div className="relative z-2 mt-1 w-full truncate text-nowrap text-start text-xs">
+          <div className="relative z-2 mt-1 w-full truncate text-start text-xs text-nowrap">
             {video.source}
           </div>
         </a>

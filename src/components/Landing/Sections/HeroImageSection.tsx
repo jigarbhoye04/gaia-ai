@@ -26,7 +26,10 @@ const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
     name: "Goals",
     imageSrc: "/landing/goal_tracking.webp",
     icon: (
-      <Target02Icon className="h-5 w-5 focus:outline-hidden" color={undefined} />
+      <Target02Icon
+        className="h-5 w-5 focus:outline-hidden"
+        color={undefined}
+      />
     ),
   },
   // {
@@ -50,7 +53,10 @@ const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
     name: "Internet",
     imageSrc: "/landing/screenshot_internet.webp",
     icon: (
-      <InternetIcon className="h-5 w-5 focus:outline-hidden" color={undefined} />
+      <InternetIcon
+        className="h-5 w-5 focus:outline-hidden"
+        color={undefined}
+      />
     ),
   },
 ];
@@ -73,7 +79,7 @@ export default function HeroImage() {
 
   return (
     <div className="flex w-screen items-center justify-center">
-      <AnimatedSection className="mb-[20vh] mt-20 flex h-fit w-screen max-w-(--breakpoint-lg) flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-(--breakpoint-xl)">
+      <AnimatedSection className="mt-20 mb-[20vh] flex h-fit w-screen max-w-(--breakpoint-lg) flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-(--breakpoint-xl)">
         <div className="relative scale-[175%] sm:scale-100">
           <ShineBorder
             borderRadius={10}

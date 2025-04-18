@@ -31,7 +31,7 @@ export default function NoteCard({
             color="transparent"
           />
         </div> */}
-        <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden text-ellipsis font-normal">
+        <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden font-normal text-ellipsis">
           {note.plaintext}
         </div>
 

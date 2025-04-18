@@ -85,7 +85,7 @@ export default function Pins() {
       <div className="absolute bottom-4 left-0 z-10 flex w-full flex-col items-center justify-center px-3 sm:bottom-5">
         <div className="relative flex w-full max-w-(--breakpoint-sm) items-center gap-3">
           {searchQuery.trim().length > 0 && (
-            <div className="div absolute bottom-14 right-2 flex w-full justify-end text-sm">
+            <div className="div absolute right-2 bottom-14 flex w-full justify-end text-sm">
               <div
                 className="flex w-fit cursor-pointer flex-row items-center gap-1 rounded-full bg-foreground-100 px-4 py-1 text-foreground-600"
                 onClick={() => {

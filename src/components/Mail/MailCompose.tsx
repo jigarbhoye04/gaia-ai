@@ -160,7 +160,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
             }`}
           />
           <Drawer.Content
-            className="fixed bottom-0 right-0 z-10 flex min-h-[60vh] w-[50vw] flex-col gap-2 rounded-tl-xl bg-zinc-900 p-4"
+            className="fixed right-0 bottom-0 z-10 flex min-h-[60vh] w-[50vw] flex-col gap-2 rounded-tl-xl bg-zinc-900 p-4"
             aria-describedby="Drawer to Compose a new email"
           >
             <Drawer.Title className="text-xl">New Message</Drawer.Title>
@@ -202,7 +202,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
               />
               <Button
                 isIconOnly
-                className="absolute right-[3px] top-[3px]"
+                className="absolute top-[3px] right-[3px]"
                 size="sm"
                 color="primary"
                 onPress={() => setIsAiModalOpen(true)}
@@ -227,7 +227,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
-                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] outline-hidden ring-0 hover:bg-[#00bbff20]"
+                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] ring-0 outline-hidden hover:bg-[#00bbff20]"
                         size="sm"
                       >
                         <div className="flex flex-row gap-1">
@@ -273,7 +273,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
-                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] outline-hidden ring-0 hover:bg-[#00bbff20]"
+                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] ring-0 outline-hidden hover:bg-[#00bbff20]"
                         size="sm"
                       >
                         <div className="flex flex-row gap-1">
@@ -317,7 +317,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <ShadcnButton
-                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] outline-hidden ring-0 hover:bg-[#00bbff20]"
+                        className="border-none bg-[#00bbff40] text-sm font-normal text-[#00bbff] ring-0 outline-hidden hover:bg-[#00bbff20]"
                         size="sm"
                       >
                         <div className="flex flex-row gap-1">

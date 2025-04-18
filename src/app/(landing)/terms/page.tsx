@@ -42,7 +42,7 @@ const TermsOfService = () => {
           Terms of Service. Please read them carefully.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           1. Acceptance of Terms
         </h2>
         <p className="mb-4">
@@ -51,13 +51,13 @@ const TermsOfService = () => {
           you do not agree, do not use the Service.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">2. Eligibility</h2>
+        <h2 className="mt-6 mb-2 text-xl font-semibold">2. Eligibility</h2>
         <p className="mb-4">
           By using the Service, you confirm that you have the legal capacity to
           enter into agreements in your jurisdiction.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           3. Account Responsibilities
         </h2>
         <ul className="mb-4 ml-6 list-disc">
@@ -74,7 +74,7 @@ const TermsOfService = () => {
           </li>
         </ul>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           4. Prohibited Activities
         </h2>
         <p className="mb-4">When using the Service, you agree not to:</p>
@@ -88,7 +88,7 @@ const TermsOfService = () => {
           </li>
         </ul>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           5. Features and Payments
         </h2>
         <ul className="mb-4 ml-6 list-disc">
@@ -107,7 +107,7 @@ const TermsOfService = () => {
           <li>Refunds are subject to our discretion unless required by law.</li>
         </ul>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           6. Intellectual Property
         </h2>
         <p className="mb-4">
@@ -116,7 +116,7 @@ const TermsOfService = () => {
           derivative works without our written consent.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           7. User Data and Input
         </h2>
         <p className="mb-4">
@@ -125,14 +125,14 @@ const TermsOfService = () => {
           providing the Service. You retain ownership of your data.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">8. Termination</h2>
+        <h2 className="mt-6 mb-2 text-xl font-semibold">8. Termination</h2>
         <p className="mb-4">
           We reserve the right to suspend or terminate your access to the
           Service at our sole discretion, without prior notice, if you violate
           these Terms or misuse the Service.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">9. Disclaimers</h2>
+        <h2 className="mt-6 mb-2 text-xl font-semibold">9. Disclaimers</h2>
         <ul className="mb-4 ml-6 list-disc">
           <li>
             The Service is provided "as is" and "as available," without
@@ -148,7 +148,7 @@ const TermsOfService = () => {
           </li>
         </ul>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           10. Limitation of Liability
         </h2>
         <p className="mb-4">
@@ -157,7 +157,7 @@ const TermsOfService = () => {
           data, revenue, or profits, arising from the use of the Service.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">
+        <h2 className="mt-6 mb-2 text-xl font-semibold">
           11. Modifications to the Terms
         </h2>
         <p className="mb-4">
@@ -167,14 +167,14 @@ const TermsOfService = () => {
           updated Terms.
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">12. Governing Law</h2>
+        <h2 className="mt-6 mb-2 text-xl font-semibold">12. Governing Law</h2>
         <p className="mb-4">
           These Terms are governed by the laws of [Insert Jurisdiction]. Any
           disputes will be resolved exclusively in the courts of [Insert
           Jurisdiction].
         </p>
 
-        <h2 className="mb-2 mt-6 text-xl font-semibold">13. Contact Us</h2>
+        <h2 className="mt-6 mb-2 text-xl font-semibold">13. Contact Us</h2>
         <p>
           If you have any questions about these Terms, please contact us:
           <br />
