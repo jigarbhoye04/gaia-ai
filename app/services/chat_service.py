@@ -101,6 +101,7 @@ async def chat_stream(
         messages=context["messages"],
         user_id=context["user_id"],
         conversation_id=context["conversation_id"],
+        access_token=user.get("access_token"),
     ):
         yield chunk
 

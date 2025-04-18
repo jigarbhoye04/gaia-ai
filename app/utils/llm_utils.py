@@ -72,7 +72,15 @@ async def call_groq_api_stream(
                     }
                     yield data
     except Exception as e:
-        logger.warning(f"Error in OpenAI streaming call to Groq: {e}")
+        error_message = str(e)
+        # Log detailed error information
+        logger.error(f"Error in OpenAI streaming call to Groq: {error_message}")
+
+        # Check for function calling errors specifically
+        if "function" in error_message and "failed" in error_message:
+            logger.error(f"Function call error detected: {error_message}")
+
+        # Re-raise the exception to be handled by the caller
         raise
 
 
@@ -99,7 +107,14 @@ async def call_groq_api(
             return data
         return {"error": "No choices in response"}
     except Exception as e:
-        logger.warning(f"Error in OpenAI call to Groq: {e}")
+        error_message = str(e)
+        logger.error(f"Error in OpenAI call to Groq: {error_message}")
+
+        # Check for function calling errors specifically
+        if "function" in error_message and "failed" in error_message:
+            logger.error(f"Function call error detected: {error_message}")
+            # You could add specific handling for function call errors here
+
         raise
 
 
@@ -126,7 +141,14 @@ def call_groq_api_sync(
             return data
         return {"error": "No choices in response"}
     except Exception as e:
-        logger.warning(f"Error in OpenAI sync call to Groq: {e}")
+        error_message = str(e)
+        logger.error(f"Error in OpenAI sync call to Groq: {error_message}")
+
+        # Check for function calling errors specifically
+        if "function" in error_message and "failed" in error_message:
+            logger.error(f"Function call error detected: {error_message}")
+            # You could add specific handling for function call errors here
+
         raise
 
 

@@ -81,7 +81,6 @@ async def get_valid_access_token(refresh_token: str) -> tuple[str, int]:
     Returns a tuple of the new access token and its expires_in value.
     """
     try:
-        logger.info("Refreshing access token")
         token_data = await refresh_access_token(refresh_token)
         new_access_token = token_data["access_token"]
         expires_in = token_data.get("expires_in", 3600)
@@ -116,7 +115,6 @@ async def get_current_user(
         if not user_email:
             if not refresh_token:
                 raise HTTPException(status_code=401, detail="Authentication required")
-            logger.info("Using refresh token to fetch new access token")
             new_access_token, expires_in = await get_valid_access_token(refresh_token)
             access_token = new_access_token
             user_info = await get_user_info(access_token)
@@ -138,7 +136,6 @@ async def get_current_user(
         cache_key = f"user_cache:{user_email}"
         cached_user_data = await get_cache(cache_key)
         if cached_user_data:
-            logger.info(f"Cache hit for user: {user_email}")
             return cached_user_data
 
         user_data = await users_collection.find_one({"email": user_email})
@@ -154,7 +151,6 @@ async def get_current_user(
             "cached_at": int(time.time()),
         }
         await set_cache(cache_key, user_info_to_cache, USER_CACHE_EXPIRY)
-        logger.info(f"User data cached for {user_email}")
 
         return user_info_to_cache
 

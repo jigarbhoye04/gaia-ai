@@ -16,10 +16,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
-from app.langchain.chat_models.default_chat_model import DefaultChatAgent
-from app.langchain.tools import fetch, memory, search, weather
 from app.langchain.prompts.agent_prompt import AGENT_SYSTEM_PROMPT
-from app.langchain.templates.agent_template import create_agent_prompt
+from app.langchain.tools import calendar, fetch, memory, search, weather
 from app.utils.sse_utils import format_tool_response
 
 # GROQ_MODEL = "llama-3.3-70b-versatile"
@@ -31,6 +29,8 @@ tools = [
     search.web_search,
     memory.create_memory,
     weather.get_weather,
+    calendar.fetch_calendar_list,
+    calendar.calendar_event,
 ]
 
 # Creating the chat model and binding the tools
@@ -46,15 +46,15 @@ groq_llm = groq_llm.bind_tools(
 )
 
 # Default chat model
-default_llm = DefaultChatAgent(
-    # model="@cf/meta/llama-3.1-8b-instruct-fast",
-    model="@cf/meta/llama-3.3-70b-versatile",
-    temperature=0.6,
-    max_tokens=2048,
-)
-default_llm = default_llm.bind_tools(
-    tools=tools,
-)
+# default_llm = DefaultChatAgent(
+#     # model="@cf/meta/llama-3.1-8b-instruct-fast",
+#     model="@cf/meta/llama-3.3-70b-versatile",
+#     temperature=0.6,
+#     max_tokens=2048,
+# )
+# default_llm = default_llm.bind_tools(
+#     tools=tools,
+# )
 
 
 # Define the state for the StateGraph
@@ -77,15 +77,15 @@ async def chatbot(
         response = await groq_llm.ainvoke(state["messages"])
         return {"messages": [response]}
     except Exception as e:
-        logger.error(f"Error in Groq API call: {e}")
-        logger.info(f"Falling back to default LLM: {e}")
+        logger.error(f"Error in Groq API call: {str(e)}")
 
-    try:
-        response = await default_llm.ainvoke(state["messages"])
-        return {"messages": [response]}
-    except Exception as e:
-        logger.error(f"Error in default LLM call: {e}")
-        raise e
+        return {
+            "messages": [
+                AIMessage(
+                    content="I'm having trouble processing your request. Please try again with a simpler query."
+                )
+            ]
+        }
 
 
 graph_builder.add_node("chatbot", chatbot)
@@ -104,10 +104,6 @@ graph_builder.add_conditional_edges(
 graph = graph_builder.compile(checkpointer=MemorySaver())
 
 
-# Create the agent prompt template that instructs the model how to use tools
-agent_prompt_template = create_agent_prompt()
-
-
 def process_message_history(messages):
     langchain_messages = []
 
@@ -122,11 +118,7 @@ def process_message_history(messages):
     return langchain_messages
 
 
-async def do_prompt_with_stream(
-    messages: list,
-    conversation_id,
-    user_id,
-):
+async def do_prompt_with_stream(messages: list, conversation_id, user_id, access_token):
     """Send a prompt to the LLM API with streaming enabled."""
 
     message_history = process_message_history(messages)
@@ -137,29 +129,28 @@ async def do_prompt_with_stream(
             {"messages": message_history},
             stream_mode=["messages"],
             config={
-                "configurable": {"thread_id": conversation_id, "user_id": user_id},
+                "configurable": {
+                    "thread_id": conversation_id,
+                    "user_id": user_id,
+                    "access_token": access_token,
+                },
                 "recursion_limit": 10,
                 "metadata": {"user_id": user_id},
             },
         ):
+            # Unpack the properties from the event
             _, (chunk, metadata) = event
+
+            # If the chunk is a message from the agent
             if isinstance(chunk, AIMessageChunk):
                 yield f"data: {json.dumps({'response': chunk.content})}\n\n"
 
-            # for value in event.values():
-            #     print("chunk?", value)
-            #     last_msg = value["messages"][-1]
-
-            #     # Handle tool message
+            # If the chunk is output of a tool
             if isinstance(chunk, ToolMessage):
                 yield format_tool_response(
                     tool_name=chunk.name,
                     content=str(chunk.content),
                 )
-
-            #     # Handle AI message (regular text responses)
-            #     if isinstance(last_msg, AIMessage):
-            #         yield f"data: {json.dumps({'response': last_msg.content})}\n\n"
 
         # Signal completion of the stream
         yield "data: [DONE]\n\n"

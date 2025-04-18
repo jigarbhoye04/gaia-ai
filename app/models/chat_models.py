@@ -77,10 +77,14 @@ class WeatherData(BaseModel):
 
 
 class CalIntentOptions(BaseModel):
-    summary: Optional[str] = None
+    summary: str  # Making this required
     description: Optional[str] = None
-    start: Optional[str] = None
-    end: Optional[str] = None
+    start: str  # Making this required
+    end: str  # Making this required
+    is_all_day: bool = False  # Adding this field as mentioned in the tool docstring
+    calendar_id: Optional[str] = (
+        None  # Adding this field as mentioned in the tool docstring
+    )
 
 
 class DeepSearchResult(BaseModel):

@@ -43,7 +43,6 @@ async def fetch_endpoint(
     # Try to get cached result first
     cached_result = await get_cache(cache_key)
     if cached_result:
-        logger.info(f"Cache hit for query: {query}")
         return cached_result
 
     # If not in cache, make the API request

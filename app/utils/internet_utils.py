@@ -69,7 +69,6 @@ async def get_cached_webpage_content(url: str) -> Optional[Dict[str, Any]]:
     try:
         cached_data = await get_cache(cache_key)
         if cached_data:
-            logger.info(f"Cache hit for URL: {url}")
             return cached_data
     except Exception as e:
         logger.error(f"Error checking cache for {url}: {e}")
