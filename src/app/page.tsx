@@ -2,16 +2,8 @@
 
 import { useEffect } from "react";
 
-import CalendarSection from "@/components/Landing/Sections/CalendarSection";
-import DeepSearchSection from "@/components/Landing/Sections/DeepSearchSection";
-import FeatureGridSection from "@/components/Landing/Sections/FeatureGridSection";
-import FinalSection from "@/components/Landing/Sections/FinalSection";
-import GoalSection from "@/components/Landing/Sections/GoalSection";
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
-import InternetSection from "@/components/Landing/Sections/InternetSection";
-import MailSection from "@/components/Landing/Sections/MailSection";
-import MobileSection from "@/components/Landing/Sections/MobileSection";
 
 import LandingLayout from "./(landing)/layout";
 
