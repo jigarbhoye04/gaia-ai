@@ -16,13 +16,13 @@ RUN apt-get update && \
 # Install only heavy optional dependencies
 COPY pyproject.toml ./
   RUN uv pip install --system --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
-    uv pip install --system --no-cache-dir --group heavy && \
-    rm -rf /root/.cache
+    uv pip install --system --no-cache-dir --group heavy \
+    && rm -rf /root/.cache/pip
 
 # Playwright and NLTK setup
 RUN python -m playwright install --with-deps chromium
 RUN python -m nltk.downloader punkt stopwords punkt_tab && \
-    rm -rf /root/.cache
+    rm -rf /root/.cache/nltk
 
 # Build:
 # docker build -t aryanranderiya/gaia-base:latest -f first-stage.Dockerfile .

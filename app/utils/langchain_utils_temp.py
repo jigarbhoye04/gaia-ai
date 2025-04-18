@@ -14,6 +14,8 @@ from app.langchain.chat_models.default_chat_model import DefaultChatAgent
 from app.langchain.tools import fetch, memory, search, weather
 from app.prompts.system.general import MAIN_SYSTEM_PROMPT
 from app.utils.sse_utils import format_tool_response
+from app.langchain.prompts.agent_prompt import AGENT_SYSTEM_PROMPT
+from app.langchain.templates.agent_template import create_agent_prompt
 
 
 # Default model to use with Groq
@@ -118,50 +120,8 @@ def prepare_messages(
     return prepared_messages
 
 
-few_shot_tool_calling_examples = [
-    HumanMessage(content="What is the weather in New York?"),
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "get_weather",
-                "args": {
-                    "location": "New York",
-                },
-                "id": "1",
-            }
-        ],
-    ),
-    HumanMessage(content="Can you fetch the latest news articles about AI?"),
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "web_search",
-                "args": {
-                    "query_text": "latest news about AI",
-                },
-                "id": "2",
-            }
-        ],
-    ),
-    HumanMessage(
-        content="Hey, I am a computer science student currently studying computer science degree."
-    ),
-    AIMessage(
-        content="",
-        tool_calls=[
-            {
-                "name": "create_memory",
-                "args": {
-                    "plaintext": "I am a student pursuing a degree in Computer Science.",
-                    "content": "# I am a student pursuing a degree in Computer Science.",
-                },
-                "id": "3",
-            }
-        ],
-    ),
-]
+# Create the agent prompt template that instructs the model how to use tools
+agent_prompt_template = create_agent_prompt()
 
 
 async def process_tool_output(): ...
@@ -185,8 +145,7 @@ async def do_prompt_with_stream(
         async for event in graph.astream(
             {
                 "messages": [
-                    SystemMessage("You are a helpful assistant."),
-                    *few_shot_tool_calling_examples,
+                    SystemMessage(AGENT_SYSTEM_PROMPT),
                     HumanMessage(query_text),
                 ],
             },
@@ -213,59 +172,4 @@ async def do_prompt_with_stream(
     except Exception as e:
         logger.warning(f"Graph model error: {e}")
 
-    # try:
-    #     async for data in call_groq_api_stream(
-    #         processed_messages, temperature, max_tokens
-    #     ):
-    #         content = data.get("response", "")
-    #         if content:
-    #             bot_message += content
-    #             yield f"data: {json.dumps(data)}\n\n"
-
-    #     if context.get("search_results", None):
-    #         yield f"data: {json.dumps({'search_results': context['search_results']})}\n\n"
-
-    #     elif context.get("deep_search_results", None):
-    #         yield f"data: {json.dumps({'deep_search_results': context['deep_search_results']})}\n\n"
-
-    #     elif context.get("weather_data", None):
-    #         yield f"data: {json.dumps({'intent': 'weather', 'weather_data': context['weather_data']})}\n\n"
-
-    #     elif intent == "calendar":
-    #         success, options = await process_calendar_event(
-    #             user_message,
-    #             bot_message,
-    #             context.get("user_id"),
-    #             context.get("access_token"),
-    #         )
-    #         if success:
-    #             yield f"data: {json.dumps({'intent': 'calendar', 'calendar_options': options})}\n\n"
-
-    #     yield "data: [DONE]\n\n"
-    #     return
-
-    # except Exception as e:
-    #     logger.warning(f"Groq API error, falling back to default LLM: {e}")
-
-    # # Fall back to original LLM - use the same message format as Groq for consistency
-    # json_data = {
-    #     "stream": "true",
-    #     "max_tokens": max_tokens,
-    #     "temperature": temperature,
-    #     "messages": processed_messages,
-    #     "model": model,
-    # }
-
-    # async with http_async_client.stream(
-    #     "POST",
-    #     settings.LLM_URL,
-    #     json=json_data,
-    # ) as response:
-    #     response.raise_for_status()
-    #     async for line in process_streaming(
-    #         response=response,
-    #         user_message=user_message,
-    #         context=context,
-    #         intent=intent,
-    #     ):
-    #         yield line
+    # Remaining fallback code here...
