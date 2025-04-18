@@ -134,14 +134,22 @@ export const useChatStream = () => {
       botMessageRef.current = buildBotResponse({
         intent: parsedIntent.intent,
         // Preserve special data once it's available
-        calendar_options: parsedIntent.calendar_options ||
-          (botMessageRef.current?.calendar_options || null),
-        weather_data: parsedIntent.weather_data ||
-          (botMessageRef.current?.weather_data || null),
-        search_results: parsedIntent.search_results ||
-          (botMessageRef.current?.search_results || null),
-        deep_search_results: parsedIntent.deep_search_results ||
-          (botMessageRef.current?.deep_search_results || null)
+        calendar_options:
+          parsedIntent.calendar_options ||
+          botMessageRef.current?.calendar_options ||
+          null,
+        weather_data:
+          parsedIntent.weather_data ||
+          botMessageRef.current?.weather_data ||
+          null,
+        search_results:
+          parsedIntent.search_results ||
+          botMessageRef.current?.search_results ||
+          null,
+        deep_search_results:
+          parsedIntent.deep_search_results ||
+          botMessageRef.current?.deep_search_results ||
+          null,
       });
 
       // Always ensure we have the most recent messages
