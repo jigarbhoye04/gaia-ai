@@ -49,25 +49,39 @@ http_async_client = httpx.AsyncClient()
 #         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
-async def fetch_calendar_list(access_token: str) -> Dict[str, Any]:
+async def fetch_calendar_list(access_token: str, short: bool = False) -> Any:
     """
     Fetch the list of calendars for the authenticated user.
 
     Args:
         access_token (str): The access token.
+        short (bool): If True, returns only key fields per calendar.
 
     Returns:
-        dict: The calendar list data.
-
-    Raises:
-        HTTPException: If the request fails.
+        Any: Full or filtered calendar data.
     """
     url = "https://www.googleapis.com/calendar/v3/users/me/calendarList"
     headers = {"Authorization": f"Bearer {access_token}"}
+
     try:
-        response = await http_async_client.get(url, headers=headers)
+        response = await httpx.AsyncClient().get(url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+
+        if short:
+            return [
+                {
+                    "id": c.get("id"),
+                    "summary": c.get("summary"),
+                    "description": c.get("description"),
+                    "timeZone": c.get("timeZone"),
+                    "backgroundColor": c.get("backgroundColor"),
+                }
+                for c in data.get("items", [])
+            ]
+
+        return data
+
     except httpx.HTTPStatusError as exc:
         error_detail = "Unknown error"
         error_json = exc.response.json()
@@ -155,7 +169,7 @@ async def fetch_calendar_events(
 
 
 async def list_calendars(
-    access_token: str, refresh_token: Optional[str] = None
+    access_token: str, refresh_token: Optional[str] = None, short=False
 ) -> Optional[Dict[str, Any]]:
     """
     Retrieve the user's calendar list. If the access token is invalid and a refresh token is provided,
@@ -164,12 +178,13 @@ async def list_calendars(
     Args:
         access_token (str): Current access token.
         refresh_token (Optional[str]): Refresh token.
+        short (bool): If True, returns only key fields per calendar.
 
     Returns:
         Optional[Dict[str, Any]]: Calendar list data or None if retrieval fails.
     """
     try:
-        return await fetch_calendar_list(access_token)
+        return await fetch_calendar_list(access_token, short)
     except HTTPException as e:
         if e.status_code == 401 and refresh_token:
             token_data = await refresh_access_token(refresh_token)

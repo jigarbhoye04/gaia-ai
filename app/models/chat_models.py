@@ -81,10 +81,10 @@ class CalIntentOptions(BaseModel):
     description: Optional[str] = None
     start: str  # Making this required
     end: str  # Making this required
-    is_all_day: bool = False  # Adding this field as mentioned in the tool docstring
-    calendar_id: Optional[str] = (
-        None  # Adding this field as mentioned in the tool docstring
-    )
+    is_all_day: bool = False
+    calendar_id: Optional[str] = None
+    calendar_name: Optional[str] = None  # Name of the calendar for display purposes
+    calendar_color: Optional[str] = "#00bbff"
 
 
 class DeepSearchResult(BaseModel):

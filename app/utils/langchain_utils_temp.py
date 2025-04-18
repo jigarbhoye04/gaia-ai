@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import json
 from typing import Annotated, TypedDict
 
@@ -16,12 +17,14 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
-from app.langchain.prompts.agent_prompt import AGENT_SYSTEM_PROMPT
+from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
 from app.langchain.tools import calendar, fetch, memory, search, weather
 from app.utils.sse_utils import format_tool_response
 
 # GROQ_MODEL = "llama-3.3-70b-versatile"
-GROQ_MODEL = "llama-3.1-8b-instant"
+# GROQ_MODEL = "meta-llama/llama-4-maverick-17b-128e-instruct"
+GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+# GROQ_MODEL = "llama-3.1-8b-instant"
 
 tools = [
     fetch.fetch_webpages,
@@ -62,6 +65,7 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
     force_web_search: bool
     force_deep_search: bool
+    current_datetime: str  # Store current date and time
 
 
 # Create the state graph builder
@@ -107,7 +111,13 @@ graph = graph_builder.compile(checkpointer=MemorySaver())
 def process_message_history(messages):
     langchain_messages = []
 
-    langchain_messages.append(SystemMessage(AGENT_SYSTEM_PROMPT))
+    # Format current datetime for the template
+    current_time = datetime.now(timezone.utc)
+    formatted_time = current_time.strftime("%A, %B %d, %Y, %H:%M:%S UTC")
+
+    # Apply the template with the current datetime
+    system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
+    langchain_messages.append(SystemMessage(system_prompt))
 
     for msg in messages:
         if msg.get("role") == "user":
@@ -118,21 +128,34 @@ def process_message_history(messages):
     return langchain_messages
 
 
-async def do_prompt_with_stream(messages: list, conversation_id, user_id, access_token):
+async def do_prompt_with_stream(
+    messages: list,
+    conversation_id,
+    user_id,
+    access_token=None,
+):
     """Send a prompt to the LLM API with streaming enabled."""
 
     message_history = process_message_history(messages)
 
+    # Create initial state with current date and time
+    initial_state = {
+        "messages": message_history,
+        "force_web_search": False,
+        "force_deep_search": False,
+        "current_datetime": datetime.now(timezone.utc).isoformat(),
+    }
+
     try:
         # Stream events from the graph
         async for event in graph.astream(
-            {"messages": message_history},
+            initial_state,
             stream_mode=["messages"],
             config={
                 "configurable": {
                     "thread_id": conversation_id,
                     "user_id": user_id,
-                    "access_token": access_token,
+                    "access_token": access_token if access_token else None,
                 },
                 "recursion_limit": 10,
                 "metadata": {"user_id": user_id},
@@ -141,16 +164,22 @@ async def do_prompt_with_stream(messages: list, conversation_id, user_id, access
             # Unpack the properties from the event
             _, (chunk, metadata) = event
 
+            print(f"{event=}")
+
             # If the chunk is a message from the agent
             if isinstance(chunk, AIMessageChunk):
                 yield f"data: {json.dumps({'response': chunk.content})}\n\n"
 
             # If the chunk is output of a tool
             if isinstance(chunk, ToolMessage):
-                yield format_tool_response(
-                    tool_name=chunk.name,
-                    content=str(chunk.content),
-                )
+                try:
+                    yield format_tool_response(
+                        tool_name=chunk.name,
+                        content=str(chunk.content),
+                    )
+                except Exception as tool_error:
+                    logger.error(f"Error formatting tool response: {tool_error}")
+                    yield f"data: {json.dumps({'error': f'Error processing {chunk.name} response'})}\n\n"
 
         # Signal completion of the stream
         yield "data: [DONE]\n\n"

@@ -268,7 +268,6 @@ async def user_weather(location_name: Optional[str] = None):
                 location_data["lat"], location_data["lon"], location_data, api_key
             )
 
-            logger.info(f"Caching weather data with key: {cache_key}")
             await set_cache(cache_key, weather, ONE_HOUR_TTL)
 
             return weather
