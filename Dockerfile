@@ -1,32 +1,85 @@
-# ---- Base Image: Contains heavy dependencies  ----
-FROM aryanranderiya/gaia-base:latest
+# ---- Base Stage: Contains system dependencies ----
+FROM python:3.12-slim AS base
+WORKDIR /app
+
+# Copy uv installer
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Install system dependencies
+RUN apt-get update && \
+  apt-get install -y --no-install-recommends \
+  build-essential \
+  libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
+  libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
+  libgbm1 libasound2 curl unzip tesseract-ocr \
+  libdbus-1-3 && \
+  rm -rf /var/lib/apt/lists/*
+
+# ---- Extraction Stage: Extract heavy dependencies ----
+FROM base AS extract
+WORKDIR /app
+
+# Install tomli for parsing
+RUN pip install tomli
+
+# Copy only pyproject.toml for extraction
+COPY pyproject.toml ./
+COPY scripts/extract_heavy_deps.py ./
+
+# Run script to extract heavy dependencies
+RUN python extract_heavy_deps.py && \
+  rm -rf /root/.cache/pip
+
+# ---- Heavy Dependencies Stage ----
+FROM base AS heavy-dependencies
+WORKDIR /app
+
+# Copy only the extracted dependencies file, not pyproject.toml
+COPY --from=extract /app/heavy-deps.txt ./
+
+# Run script to extract and install heavy dependencies
+RUN uv pip install --system --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+  uv pip install --system --no-cache-dir -r heavy-deps.txt && \
+  rm -rf /root/.cache/pip
+
+# Setup Playwright and NLTK
+RUN python -m playwright install --with-deps chromium
+RUN python -m nltk.downloader punkt stopwords punkt_tab && \
+  rm -rf /root/.cache/nltk
+
+# ---- Core Dependencies Stage: Install core application dependencies ----
+FROM heavy-dependencies AS core-dependencies
+WORKDIR /app
+
+# Copy only the pyproject.toml for core dependencies
+COPY pyproject.toml ./
 
 # Set environment variables
 ENV ENV=production \
-    UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    UV_SYSTEM_PYTHON=1 \
-    UV_LOGGING=1
+  UV_COMPILE_BYTECODE=1 \
+  UV_LINK_MODE=copy \
+  UV_SYSTEM_PYTHON=1 \
+  UV_LOGGING=1
 
-WORKDIR /app
-
-# Install dependencies with uv
-COPY pyproject.toml ./
+# Install core dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   if [ "$ENV" = "production" ]; then \
-    uv pip install --no-cache-dir --group core ; \
+  uv pip install --no-cache-dir --group core ; \
   else \
-    uv pip install --no-cache-dir --group core --editable . ; \
+  uv pip install --no-cache-dir --group core --editable . ; \
   fi
 
-# Setup non-root user, cache directories, and permissions in one step
-RUN adduser --disabled-password --gecos '' appuser \
-    && mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data  \
-    && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
-    && chown -R appuser:appuser /home/appuser \
-    && cp -R /root/.cache/ms-playwright /home/appuser/.cache/ \
-    && chown -R appuser:appuser /home/appuser/.cache/ms-playwright
+# ---- Final Stage: Setup application for production ----
+FROM core-dependencies AS final
+WORKDIR /app
 
+# Setup non-root user and permissions
+RUN adduser --disabled-password --gecos '' appuser \
+  && mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data  \
+  && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
+  && chown -R appuser:appuser /home/appuser \
+  && cp -R /root/.cache/ms-playwright /home/appuser/.cache/ \
+  && chown -R appuser:appuser /home/appuser/.cache/ms-playwright
 
 # Copy application code with proper ownership
 COPY --chown=appuser:appuser . .
