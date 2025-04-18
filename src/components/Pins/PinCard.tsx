@@ -66,7 +66,7 @@ export const PinCard: React.FC<PinCardProps> = ({
             <div className="flex items-center gap-1 font-medium text-primary">
               Fetched
               <a
-                className="font-medium !text-[#00bbff] transition-colors hover:!text-white"
+                className="font-medium text-[#00bbff]! transition-colors hover:text-white!"
                 href={message.pageFetchURL}
                 rel="noreferrer"
                 target="_blank"

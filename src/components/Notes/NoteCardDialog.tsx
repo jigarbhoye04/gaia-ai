@@ -28,7 +28,7 @@ export function NoteDialog({
 }) {
   return (
     <Modal
-      backdrop="blur"
+      backdrop="blur-sm"
       className="text-foreground dark"
       isDismissable={false}
       isOpen={openDialog}

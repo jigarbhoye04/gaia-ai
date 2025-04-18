@@ -104,7 +104,7 @@ export default function Calendar() {
           />
         </div>
 
-        <div className="mx-auto max-w-screen-sm">
+        <div className="mx-auto max-w-(--breakpoint-sm)">
           {groupedEventsByMonth &&
             Object.entries(groupedEventsByMonth).map(([month, days]) => (
               <div key={month}>

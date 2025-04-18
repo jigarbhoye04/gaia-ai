@@ -50,7 +50,7 @@ export default function Search() {
         <ScrollArea>
           <div className="flex flex-col items-center gap-2">
             <h1 className="text-center text-5xl font-bold">Search</h1>
-            <div className="text-md max-w-screen-md pb-6 text-center">
+            <div className="text-md max-w-(--breakpoint-md) pb-6 text-center">
               Lorem, ipsum dolor sit amet consectetur adipisicing elit. Facilis,
               sed!
             </div>
@@ -64,7 +64,7 @@ export default function Search() {
             <div className="flex flex-wrap justify-center gap-4 pb-8">
               <div>
                 {!!fetchedResults && fetchedResults?.length > 0 ? (
-                  <div className="grid grid-cols-[repeat(auto-fill,_minmax(15vw,_1fr))] gap-3 px-[10%]">
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(15vw,1fr))] gap-3 px-[10%]">
                     {fetchedResults.map((result) => (
                       <Link
                         key={result.message.message_id}
@@ -113,7 +113,7 @@ export default function Search() {
                               <div className="flex items-center gap-1 font-medium text-primary">
                                 Fetched
                                 <a
-                                  className="font-medium !text-[#00bbff] transition-colors hover:!text-white"
+                                  className="font-medium text-[#00bbff]! transition-colors hover:text-white!"
                                   href={result.message.pageFetchURL}
                                   rel="noreferrer"
                                   target="_blank"
@@ -146,7 +146,7 @@ export default function Search() {
         </ScrollArea>
 
         <div className="absolute bottom-5 left-0 z-10 flex w-full items-center justify-center">
-          <div className="flex w-full max-w-screen-sm items-center gap-3">
+          <div className="flex w-full max-w-(--breakpoint-sm) items-center gap-3">
             <Input
               autoFocus
               className="w-full"
@@ -173,7 +173,7 @@ export default function Search() {
             />
           </div>
         </div>
-        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
+        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-1 h-[100px] w-full" />
       </div>
     </>
   );

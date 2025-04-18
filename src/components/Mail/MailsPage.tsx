@@ -116,10 +116,10 @@ export default function MailsPage() {
       return (
         <div
           style={style}
-          className="relative flex h-full w-full items-center px-4 text-sm text-foreground/70 backdrop-blur-sm sm:px-1"
+          className="relative flex h-full w-full items-center px-4 text-sm text-foreground/70 backdrop-blur-xs sm:px-1"
         >
           {item.data as string}
-          <div className="absolute bottom-4 h-[1px] w-full border-none bg-white/20 outline-none sm:bottom-2"></div>
+          <div className="absolute bottom-4 h-[1px] w-full border-none bg-white/20 outline-hidden sm:bottom-2"></div>
         </div>
       );
 
@@ -361,7 +361,7 @@ export default function MailsPage() {
             onItemsRendered={onItemsRendered}
             ref={ref}
             width="100%"
-            className="!overflow-x-hidden rounded-xl"
+            className="overflow-x-hidden! rounded-xl"
           >
             {Row}
           </List>

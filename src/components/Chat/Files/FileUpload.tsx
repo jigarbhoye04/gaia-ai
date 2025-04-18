@@ -458,7 +458,7 @@ export default function FileUpload({
                           {fileWithPreview.error && (
                             <AlertCircle
                               size={14}
-                              className="ml-1 flex-shrink-0 text-red-500"
+                              className="ml-1 shrink-0 text-red-500"
                             />
                           )}
                         </div>

@@ -48,7 +48,7 @@ export default function Pricing() {
           <span className="w-full px-6 text-center text-5xl font-medium">
             GAIA - Your Personal AI Assistant
           </span>
-          <span className="text-md text-center text-foreground-500">
+          <span className="text-md text-foreground-500 text-center">
             Compare plans & features
           </span>
         </div>

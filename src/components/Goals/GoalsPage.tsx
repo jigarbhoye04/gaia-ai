@@ -59,7 +59,7 @@ export default function GoalsPage() {
             <div className="text-center text-3xl font-bold sm:text-5xl">
               Roadmaps
             </div>
-            <div className="text-md max-w-screen-md pb-6 text-center">
+            <div className="text-md max-w-(--breakpoint-md) pb-6 text-center">
               A tool that instantly generates personalized goal roadmaps from a
               single prompt, helping you plan and track your objectives
               efficiently.
@@ -79,7 +79,7 @@ export default function GoalsPage() {
           )}
         </div>
         <div className="absolute bottom-6 left-0 z-10 flex w-full flex-col items-center justify-center gap-4">
-          <div className="flex max-w-screen-lg flex-wrap justify-center gap-2">
+          <div className="flex max-w-(--breakpoint-lg) flex-wrap justify-center gap-2">
             {[
               "Build a strong morning routine",
               "Read 12 books this year",
@@ -108,14 +108,14 @@ export default function GoalsPage() {
             color="primary"
             radius="full"
             size="lg"
-            variant="shadow"
+            variant="shadow-sm"
             onPress={() => setOpenDialog(true)}
           >
             <Target04Icon height={23} width={23} />
             Create a new Goal
           </Button>
         </div>
-        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
+        <div className="bg-custom-gradient2 absolute bottom-0 left-0 z-1 h-[100px] w-full" />
       </div>
       <AddGoalDialog
         addGoal={handleAddGoal}

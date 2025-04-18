@@ -25,7 +25,7 @@ export default function LoginSignup({
 
   return (
     <form className="flex h-screen w-screen select-none flex-col items-center justify-center overflow-auto">
-      <div className="relative z-[1] flex w-full max-w-screen-sm flex-col items-center justify-center gap-5 rounded-3xl bg-zinc-900 p-10">
+      <div className="relative z-1 flex w-full max-w-(--breakpoint-sm) flex-col items-center justify-center gap-5 rounded-3xl bg-zinc-900 p-10">
         <div className="mb-3 space-y-2 text-center">
           <div className="text-5xl font-medium">
             {isLogin ? "Login" : "Sign Up"}

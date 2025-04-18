@@ -27,7 +27,7 @@ export default function LandingPage() {
   return (
     <LandingLayout>
       <div className="relative min-h-screen overflow-hidden">
-        <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-gradient-to-b" />
+        <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-linear-to-b" />
         <HeroSection />
         <HeroImage />
 

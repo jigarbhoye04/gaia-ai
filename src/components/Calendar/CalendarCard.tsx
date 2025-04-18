@@ -43,14 +43,14 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
 
   return (
     <div
-      className="relative z-[1] w-full cursor-pointer overflow-hidden rounded-lg p-4 text-white shadow-md transition-colors duration-200 hover:bg-opacity-100"
+      className="relative z-1 w-full cursor-pointer overflow-hidden rounded-lg p-4 text-white shadow-md transition-colors duration-200 hover:bg-opacity-100"
       onClick={onClick}
     >
       <div
-        className="absolute inset-0 z-[2] border-l-5"
+        className="absolute inset-0 z-2 border-l-5"
         style={{ borderColor: backgroundColor }}
       />
-      <div className="relative z-[1] flex items-center gap-2">
+      <div className="relative z-1 flex items-center gap-2">
         <Twemoji options={{ className: "twemoji max-w-[20px]" }}>
           <span className="text-xl">{icon}</span>
         </Twemoji>
@@ -58,7 +58,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
       </div>
       {dateDisplay && (
         <div
-          className="relative z-[1] mt-2 flex items-center gap-1 text-sm"
+          className="relative z-1 mt-2 flex items-center gap-1 text-sm"
           style={{ color: backgroundColor }}
         >
           <Clock height={17} width={17} />
@@ -66,7 +66,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         </div>
       )}
       <div
-        className="absolute inset-0 z-[0] w-full rounded-lg opacity-20"
+        className="absolute inset-0 z-0 w-full rounded-lg opacity-20"
         style={{ backgroundColor }}
       />
     </div>

@@ -10,7 +10,7 @@ export default function GetStartedButton() {
       radius="full"
       size="lg"
       href={"/get-started"}
-      variant="shadow"
+      variant="shadow-sm"
     >
       {/* <span className="absolute inset-0 bg-[#9ae4ff] translate-x-full group-hover:translate-x-0 transition-all duration-200 ease-out rounded-full flex items-center justify-center group-hover:opacity-100 opacity-0">
         Try GAIA now

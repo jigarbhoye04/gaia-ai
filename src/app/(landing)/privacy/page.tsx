@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const PrivacyPolicy = () => {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="privacy-policy max-w-screen-xl p-6 pt-24">
+      <div className="privacy-policy max-w-(--breakpoint-xl) p-6 pt-24">
         <h1 className="mb-4 text-2xl font-bold">Privacy Policy</h1>
         <p className="mb-4">
           <strong>Effective Date:</strong> 1st Feb 2025

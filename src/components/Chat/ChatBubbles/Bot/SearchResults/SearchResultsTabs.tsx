@@ -32,7 +32,7 @@ export default function SearchResultsTabs({
   return (
     <div className="w-full">
       <Accordion
-        className="w-full max-w-screen-sm px-0"
+        className="w-full max-w-(--breakpoint-sm) px-0"
         defaultExpandedKeys={["1"]}
       >
         <AccordionItem
@@ -45,7 +45,7 @@ export default function SearchResultsTabs({
             </div>
           }
           onPress={() => setIsExpanded((prev) => !prev)}
-          className="w-screen max-w-screen-sm px-0"
+          className="w-screen max-w-(--breakpoint-sm) px-0"
           isCompact
         >
           <Tabs
@@ -124,7 +124,7 @@ function ImageResults({ images }: ImageResultsProps) {
   const dispatch = useDispatch();
 
   return (
-    <div className="grid w-full max-w-screen-sm grid-cols-2 gap-4 pr-2 md:grid-cols-3 lg:grid-cols-4">
+    <div className="grid w-full max-w-(--breakpoint-sm) grid-cols-2 gap-4 pr-2 md:grid-cols-3 lg:grid-cols-4">
       {images.map((image, index) => (
         <div
           key={index}
@@ -171,10 +171,10 @@ function VideoResults({ videos }: VideoResultsProps) {
             alt={video.title}
             className="h-full w-full rounded-lg object-cover"
           />
-          <p className="relative z-[2] mt-1 truncate text-nowrap text-start text-sm">
+          <p className="relative z-2 mt-1 truncate text-nowrap text-start text-sm">
             {video.title}
           </p>
-          <div className="relative z-[2] mt-1 w-full truncate text-nowrap text-start text-xs">
+          <div className="relative z-2 mt-1 w-full truncate text-nowrap text-start text-xs">
             {video.source}
           </div>
         </a>
@@ -193,7 +193,7 @@ function NewsResults({ news }: NewsResultsProps) {
       {news.map((article, index) => (
         <div
           key={index}
-          className="max-w-screen-sm overflow-hidden rounded-lg bg-zinc-800 p-4 shadow-md transition-all hover:shadow-lg"
+          className="max-w-(--breakpoint-sm) overflow-hidden rounded-lg bg-zinc-800 p-4 shadow-md transition-all hover:shadow-lg"
         >
           <div className="flex flex-row items-center gap-2 text-primary transition-all hover:text-white">
             <NewsIcon

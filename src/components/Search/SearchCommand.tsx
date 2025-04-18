@@ -264,7 +264,7 @@ export default function SearchCommand({
           {filteredCommands.map((command) => (
             <CommandItem
               key={command.name}
-              className="group !my-3 cursor-pointer"
+              className="group my-3! cursor-pointer"
               onSelect={() => {
                 setOpenSearchDialog(false);
                 command.action();

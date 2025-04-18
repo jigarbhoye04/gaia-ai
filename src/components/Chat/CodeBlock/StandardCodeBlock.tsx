@@ -22,7 +22,7 @@ const StandardCodeBlock: React.FC<StandardCodeBlockProps> = ({
 
   return (
     <div className="relative flex flex-col gap-0">
-      <div className="!sticky top-0 mb-[-0.5em] flex items-center justify-between !rounded-b-none !rounded-t-[10px] bg-zinc-900 px-4 py-1 text-white">
+      <div className="sticky! top-0 mb-[-0.5em] flex items-center justify-between rounded-b-none! rounded-t-[10px]! bg-zinc-900 px-4 py-1 text-white">
         <span className="monospace font-mono text-sm">
           {match ? match[1] : ""}
         </span>
@@ -48,7 +48,7 @@ const StandardCodeBlock: React.FC<StandardCodeBlockProps> = ({
       <PrismAsyncLight
         showLineNumbers
         PreTag="div"
-        className="m-0 max-w-[35vw] overflow-x-visible !bg-black !text-[10px]"
+        className="m-0 max-w-[35vw] overflow-x-visible bg-black! text-[10px]!"
         language={match ? match[1] : undefined}
         style={vscDarkPlus}
       >

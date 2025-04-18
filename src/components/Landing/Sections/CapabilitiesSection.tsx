@@ -22,14 +22,14 @@ interface FeatureType {
 function FeatureCard({ feature }: { feature: FeatureType }) {
   return (
     <MagicCard
-      className="!w-full !rounded-none !bg-transparent p-5"
+      className="w-full! rounded-none! bg-transparent! p-5"
       gradientColor="#00bbff30"
       gradientFrom="#00bbff"
       gradientTo="#00bbff"
       noRadius={true}
     >
       <AnimatedSection className="flex w-full min-w-full flex-col items-center justify-center p-3">
-        <div className="!rounded-none bg-transparent py-2 sm:py-3">
+        <div className="rounded-none! bg-transparent py-2 sm:py-3">
           {feature.icon}
         </div>
         <div className="text-center text-lg font-medium">{feature.title}</div>
@@ -88,11 +88,11 @@ export default function WhatCanYouDo() {
   ];
 
   return (
-    <AnimatedSection className="relative z-[1] flex min-h-fit w-screen flex-col items-center justify-center">
+    <AnimatedSection className="relative z-1 flex min-h-fit w-screen flex-col items-center justify-center">
       <div className="text-center text-4xl font-medium">
         What can GAIA do for you?
       </div>
-      <div className="relative grid min-h-fit w-full max-w-screen-xl grid-cols-1 items-center rounded-3xl p-10 sm:grid-cols-4">
+      <div className="relative grid min-h-fit w-full max-w-(--breakpoint-xl) grid-cols-1 items-center rounded-3xl p-10 sm:grid-cols-4">
         <div className="pointer-events-none absolute top-0 flex h-full w-full flex-col items-center justify-start">
           <div className="relative top-[40px] z-[-1] size-[250px] bg-[#00bbff] blur-[100px]" />
         </div>

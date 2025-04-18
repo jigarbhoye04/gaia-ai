@@ -25,7 +25,7 @@ const CustomNode: React.FC<CustomNodeProps> = React.memo(
         <div
           className={`${
             currentlySelectedNodeId === data.id
-              ? "shadow-lg !outline-[#00bbff]"
+              ? "shadow-lg outline-[#00bbff]!"
               : "outline-zinc-700"
           } ${
             data.isComplete

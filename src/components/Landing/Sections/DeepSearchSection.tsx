@@ -25,7 +25,7 @@ export default function DeepSearchSection() {
 
   return (
     <div className="flex w-screen items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col items-center justify-center space-y-5">
+      <div className="flex w-screen max-w-(--breakpoint-xl) flex-col items-center justify-center space-y-5">
         {/* <SectionHeading
           // heading="Automated Web Browsing"
           heading="Go Beyond Google Search"
@@ -45,7 +45,7 @@ export default function DeepSearchSection() {
         />
 
         <div className="flex h-full w-full justify-center">
-          <div className="relative w-full max-w-screen-xl">
+          <div className="relative w-full max-w-(--breakpoint-xl)">
             {videos.map((video) => (
               <div
                 key={video.id}

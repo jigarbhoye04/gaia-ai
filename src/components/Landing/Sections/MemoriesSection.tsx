@@ -19,7 +19,7 @@ function LocalNotecard({ plaintext }: { plaintext: string }) {
       <Chip className="mb-1" color="primary" size="sm" variant="flat">
         Auto Created by GAIA
       </Chip>
-      <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden overflow-ellipsis font-normal">
+      <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden text-ellipsis font-normal">
         {plaintext}
       </div>
     </div>
@@ -28,8 +28,8 @@ function LocalNotecard({ plaintext }: { plaintext: string }) {
 
 export default function Section_Memories() {
   return (
-    <div className="relative z-[1] flex w-screen items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
+    <div className="relative z-1 flex w-screen items-center justify-center">
+      <div className="flex w-screen max-w-(--breakpoint-xl) flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <SectionHeading
           className="w-full"
           heading={"An Assistant That Remembers"}
@@ -52,7 +52,7 @@ export default function Section_Memories() {
           }
         />
 
-        <div className="!m-0 !mt-0 h-[300px] w-full px-2 sm:px-10">
+        <div className="m-0! mt-0! h-[300px] w-full px-2 sm:px-10">
           <Tabs
             aria-label="GAIA Notes Options"
             className="w-full overflow-hidden"

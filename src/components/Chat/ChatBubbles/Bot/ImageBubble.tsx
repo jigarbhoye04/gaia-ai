@@ -24,7 +24,7 @@ export default function ImageBubble({
         {imageSrc && (
           <Image
             alt="Generated Image"
-            className="my-2 !cursor-pointer rounded-3xl"
+            className="my-2 cursor-pointer! rounded-3xl"
             height={500}
             width={500}
             src={imageSrc}

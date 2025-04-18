@@ -23,7 +23,7 @@ export default function NoteCard({
             Auto Created by GAIA
           </Chip>
         )}
-        {/* <div className="absolute rotate-[-90deg] top-[-3px] -right-2 shadow-sm">
+        {/* <div className="absolute rotate-[-90deg] top-[-3px] -right-2 shadow-xs">
           <TriangleRight
             height={45}
             width={45}
@@ -31,7 +31,7 @@ export default function NoteCard({
             color="transparent"
           />
         </div> */}
-        <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden overflow-ellipsis font-normal">
+        <div className="text-md whitespace-wrap max-h-[100px] min-h-7 overflow-hidden text-ellipsis font-normal">
           {note.plaintext}
         </div>
 

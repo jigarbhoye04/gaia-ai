@@ -168,7 +168,7 @@ function GoalSteps({
   return (
     <div className="relative flex flex-col items-center gap-5">
       <div ref={goalSectionRef} className="min-w-full">
-        <AnimatedSection className="grid w-full items-center justify-center gap-5 px-2 sm:w-screen sm:max-w-screen-xl sm:grid-cols-3 sm:px-0">
+        <AnimatedSection className="grid w-full items-center justify-center gap-5 px-2 sm:w-screen sm:max-w-(--breakpoint-xl) sm:grid-cols-3 sm:px-0">
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -256,11 +256,11 @@ function GoalImage({ image }: GoalImageProps) {
         fill={true}
         alt="Goal step illustration"
         // outline outline-4 outline-zinc-800
-        className="min-h-[50vh] max-w-screen-sm rounded-3xl object-cover object-center transition-all sm:w-screen sm:max-w-screen-xl"
+        className="min-h-[50vh] max-w-(--breakpoint-sm) rounded-3xl object-cover object-center transition-all sm:w-screen sm:max-w-(--breakpoint-xl)"
         src={image}
       />
       {image === "/landing/blur_goals.webp" && (
-        <div className="absolute left-0 top-0 z-[2] flex h-full w-full items-center justify-center">
+        <div className="absolute left-0 top-0 z-2 flex h-full w-full items-center justify-center">
           <Input
             className="w-96"
             classNames={{ inputWrapper: "pr-2" }}

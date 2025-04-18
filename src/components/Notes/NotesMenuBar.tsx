@@ -89,7 +89,7 @@ export const MenuBar = ({
         defaultValue={currentTextType.toLowerCase().replace(" ", "-")}
         onValueChange={handleSelect}
       >
-        <SelectTrigger className="w-fit space-x-3 border-none outline-none hover:bg-black/30 focus:!border-none focus:bg-black/30">
+        <SelectTrigger className="w-fit space-x-3 border-none outline-hidden hover:bg-black/30 focus:border-none! focus:bg-black/30">
           <ALargeSmall />
         </SelectTrigger>
         <SelectContent className="border-none bg-zinc-900 text-foreground-300 active:bg-zinc-800">
@@ -104,7 +104,7 @@ export const MenuBar = ({
           ].map((type) => (
             <SelectItem
               key={type}
-              className="bg-zinc-900 transition-all hover:!bg-zinc-800 hover:!text-white focus:!bg-zinc-800 focus:!text-white"
+              className="bg-zinc-900 transition-all hover:bg-zinc-800! hover:text-white! focus:bg-zinc-800! focus:text-white!"
               value={type.toLowerCase().replace(" ", "-")}
             >
               {type === "Paragraph" ? (

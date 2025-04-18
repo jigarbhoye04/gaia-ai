@@ -50,8 +50,8 @@ export default function AnimatedBeamMultipleOutputDemo({
   const div7Ref = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative z-[1] flex w-screen items-center justify-center">
-      <div className="flex w-screen max-w-screen-xl flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
+    <div className="relative z-1 flex w-screen items-center justify-center">
+      <div className="flex w-screen max-w-(--breakpoint-xl) flex-col items-start justify-evenly space-x-5 sm:flex-row sm:space-x-10">
         <div>
           <SectionHeading
             chipTitle="Multi-Context"

@@ -126,7 +126,7 @@ export default function CalendarEventDialog({
 
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none !bg-zinc-900">
+        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none bg-zinc-900!">
           <DialogHeader className="border-b border-zinc-800 pb-4">
             <DialogTitle className="flex items-center gap-3">
               <CalendarIcon size={20} className="text-zinc-100" />
@@ -271,7 +271,7 @@ export default function CalendarEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none !bg-zinc-900">
+      <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none bg-zinc-900!">
         <DialogHeader className="border-b border-zinc-800 pb-4">
           <DialogTitle className="flex items-center gap-3">
             <Twemoji options={{ className: "twemoji max-w-[20px]" }}>

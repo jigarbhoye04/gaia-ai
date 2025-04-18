@@ -47,7 +47,7 @@ export default async function BlogList() {
 
   return (
     <div className="flex min-h-screen w-screen justify-center px-6 pt-28">
-      <div className="w-full max-w-screen-lg">
+      <div className="w-full max-w-(--breakpoint-lg)">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold">Blog Posts</h1>
           <p className="text-zinc-400">

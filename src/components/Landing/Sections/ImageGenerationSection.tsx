@@ -38,7 +38,7 @@ export function GeneratedImageChatBubble({
   };
 }) {
   return (
-    <div className="!w-full !rounded-2xl p-1">
+    <div className="w-full! rounded-2xl! p-1">
       <div className="flex min-w-full flex-col gap-1 text-sm font-medium">
         <NextImage
           alt={selectedOption?.prompt || "Generated image"}

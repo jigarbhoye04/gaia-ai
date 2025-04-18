@@ -18,14 +18,14 @@ export function FileDropModal({
     <AnimatePresence>
       {isDragging && (
         <motion.div
-          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
         >
           <motion.div
-            className="w-full max-w-md rounded-2xl border-2 border-dashed border-primary/70 bg-gradient-to-b from-[#092a36] to-black p-8 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border-2 border-dashed border-primary/70 bg-linear-to-b from-[#092a36] to-black p-8 shadow-2xl"
             initial={{ scale: 0.9, y: 10 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 10 }}

@@ -24,7 +24,7 @@ export default function Navbar() {
       <div
         className={`navbar_content w-full min-w-fit rounded-2xl bg-zinc-950/60 backdrop-blur-lg !transition-all duration-1000 ${
           (!isMobileScreen && scrolled) || pathname !== "/"
-            ? "sm:max-w-screen-xl"
+            ? "sm:max-w-(--breakpoint-xl)"
             : "sm:max-w-[50px]"
         }`}
       >

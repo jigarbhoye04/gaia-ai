@@ -53,7 +53,7 @@ function AISummary({ summary }: { summary: string | null }) {
           <Chip
             classNames={{
               content:
-                "text-sm relative !flex flex-row text-primary items-center gap-1 pl-3 font-medium",
+                "text-sm relative flex! flex-row text-primary items-center gap-1 pl-3 font-medium",
             }}
             variant="flat"
             color="primary"
@@ -198,7 +198,7 @@ export default function ViewEmail({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-md" />
         <Drawer.Content
-          className="fixed bottom-2 right-0 top-2 z-10 flex w-screen outline-none sm:w-[50vw]"
+          className="fixed bottom-2 right-0 top-2 z-10 flex w-screen outline-hidden sm:w-[50vw]"
           style={
             { "--initial-transform": "calc(100% + 8px)" } as React.CSSProperties
           }

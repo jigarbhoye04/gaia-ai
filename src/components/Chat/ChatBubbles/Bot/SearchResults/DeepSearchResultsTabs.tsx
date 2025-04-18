@@ -23,7 +23,7 @@ export default function DeepSearchResultsTabs({
   return (
     <div className="w-full">
       <Accordion
-        className="w-full max-w-screen-sm px-0"
+        className="w-full max-w-(--breakpoint-sm) px-0"
         defaultExpandedKeys={["1"]}
       >
         <AccordionItem
@@ -38,7 +38,7 @@ export default function DeepSearchResultsTabs({
             </div>
           }
           onPress={() => setIsExpanded((prev) => !prev)}
-          className="w-screen max-w-screen-sm px-0"
+          className="w-screen max-w-(--breakpoint-sm) px-0"
           isCompact
         >
           <Tabs

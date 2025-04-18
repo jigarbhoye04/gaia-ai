@@ -82,7 +82,7 @@ export default function GoalPage() {
         <div
           className={`${
             currentlySelectedNodeId === data.id
-              ? "shadow-lg !outline-[#00bbff]"
+              ? "shadow-lg !outline-[#00bbff]!"
               : "outline-zinc-700"
           } ${
             data.isComplete
@@ -445,13 +445,13 @@ export default function GoalPage() {
                     style={{ background: "transparent" }}
                     onInit={handleInit}
                   >
-                    {/* <ZoomSlider className="fixed bottom-[25px] !right-[150px]  !left-auto h-fit !top-auto z-30 dark" /> */}
+                    {/* <ZoomSlider className="fixed bottom-[25px] right-[150px]!  left-auto! h-fit top-auto! z-30 dark" /> */}
                   </ReactFlow>
                 </div>
               </>
             )}
           </div>
-          <div className="bg-custom-gradient2 pointer-events-none absolute bottom-0 left-0 z-[1] h-[100px] w-full" />
+          <div className="bg-custom-gradient2 pointer-events-none absolute bottom-0 left-0 z-1 h-[100px] w-full" />
         </div>
       </ReactFlowProvider>
     </>

@@ -148,9 +148,9 @@ const FlowchartDemo = () => {
         </div>
       </div>
 
-      <SimpleChatBubbleBot className={"w-full !rounded-2xl"}>
+      <SimpleChatBubbleBot className={"w-full rounded-2xl!"}>
         <div className="mb-3">Here is a flowchart to help you:</div>
-        <div className="relative flex flex-col gap-0 overflow-hidden !rounded-[15px] bg-zinc-950">
+        <div className="relative flex flex-col gap-0 overflow-hidden rounded-[15px]! bg-zinc-950">
           <Tabs
             className="px-3"
             selectedKey={activeTab}
@@ -163,7 +163,7 @@ const FlowchartDemo = () => {
             }}
           >
             <Tab key="code" className="p-0" title="Code">
-              <div className="h-[280px] overflow-y-auto whitespace-pre-wrap px-5 py-2 !font-mono">
+              <div className="h-[280px] overflow-y-auto whitespace-pre-wrap px-5 py-2 font-mono!">
                 {flowchartCode}
               </div>
             </Tab>

@@ -49,7 +49,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
 
   if (isMermaid) {
     return (
-      <div className="relative flex w-[40vw] max-w-[30vw] flex-col gap-0 overflow-x-visible !rounded-t-[10px] bg-zinc-900 !pb-0">
+      <div className="relative flex w-[40vw] max-w-[30vw] flex-col gap-0 overflow-x-visible rounded-t-[10px]! bg-zinc-900 pb-0!">
         <MermaidTabs
           activeTab={activeTab}
           onTabChange={(key) => {

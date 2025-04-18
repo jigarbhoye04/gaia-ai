@@ -177,7 +177,7 @@ export default function ChatsList() {
               <AccordionTrigger className="w-full px-3 pb-2 pt-3 text-xs">
                 Starred Chats
               </AccordionTrigger>
-              <AccordionContent className="w-full !p-0">
+              <AccordionContent className="w-full p-0!">
                 <div className="-mr-4 flex w-full flex-col">
                   {starredConversations.length > 0 ? (
                     starredConversations.map(
@@ -213,7 +213,7 @@ export default function ChatsList() {
           {/* Grouped Conversations by Time Frame */}
           {sortedTimeFrames.map(([timeFrame, conversationsGroup]) => (
             <div key={timeFrame}>
-              <div className="sticky top-0 z-[1] bg-black px-2 pb-1 pt-3 text-xs font-medium text-foreground-500">
+              <div className="sticky top-0 z-1 bg-black px-2 pb-1 pt-3 text-xs font-medium text-foreground-500">
                 {timeFrame}
               </div>
               {conversationsGroup

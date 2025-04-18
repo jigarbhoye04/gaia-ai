@@ -58,7 +58,7 @@ export default function ChatBubbleUser({
               <div className="flex items-center gap-1 text-white">
                 Fetching
                 <a
-                  className="font-medium !text-white transition-colors hover:!text-black"
+                  className="font-medium text-white! transition-colors hover:text-black!"
                   href={url}
                   rel="noreferrer"
                   target="_blank"

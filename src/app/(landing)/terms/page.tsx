@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const TermsOfService = () => {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="privacy-policy max-w-screen-xl p-6 pt-24">
+      <div className="privacy-policy max-w-(--breakpoint-xl) p-6 pt-24">
         <h1 className="mb-4 text-3xl font-bold">Terms of Service</h1>
         <p className="mb-4 text-sm">Effective Date: 1st Feb 2025</p>
         <p className="mb-4">

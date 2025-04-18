@@ -1,0 +1,29 @@
+Date : 2025-04-18 15:41:41
+Directory : /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/layouts
+Total : 5 files,  308 codes, 1 comments, 31 blanks, all 340 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| TypeScript JSX |          5 |        308 |          1 |         31 |        340 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                       |          5 |        308 |          1 |         31 |        340 |
++-----------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                | language       | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/layouts/AnimatedSection.tsx       | TypeScript JSX |         75 |          0 |          9 |         84 |
+| /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/layouts/LandingSectionHeading.tsx | TypeScript JSX |         59 |          0 |          3 |         62 |
+| /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/layouts/LandingSectionLayout.tsx  | TypeScript JSX |         53 |          0 |          5 |         58 |
+| /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/layouts/ProvidersLayout.tsx       | TypeScript JSX |         28 |          0 |          6 |         34 |
+| /home/aryan/Downloads/Projects/GAIA/gaia-frontend/src/layouts/SidebarLayout.tsx         | TypeScript JSX |         93 |          1 |          8 |        102 |
+| Total                                                                                   |                |        308 |          1 |         31 |        340 |
++-----------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

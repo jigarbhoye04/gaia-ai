@@ -25,7 +25,7 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
                 radius="lg"
                 size="md"
                 href={link.href}
-                variant="shadow"
+                variant="shadow-sm"
               >
                 {link.label}
               </Button>
@@ -44,7 +44,7 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
                   radius="lg"
                   size="md"
                   href={link.href}
-                  variant={link.href === "/get-started" ? "shadow" : "light"}
+                  variant={link.href === "/get-started" ? "shadow-sm" : "light"}
                 >
                   {link.label}
                 </Button>
