@@ -1,8 +1,5 @@
-from typing import List
-
 import httpx
 
-from app.prompts.system.general import MAIN_SYSTEM_PROMPT
 
 GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 
@@ -12,9 +9,9 @@ http_sync_client = httpx.Client(timeout=1000000)
 
 async def do_prompt_no_stream(
     prompt: str,
+    system_prompt: str,
     temperature: float = 0.6,
     max_tokens: int = 1024,
-    system_prompt: str = MAIN_SYSTEM_PROMPT,
     model: str = "@cf/meta/llama-3.1-8b-instruct-fast",
 ):
     """Send a prompt to the LLM API without streaming. Try Groq first, fall back to original LLM."""
@@ -38,10 +35,3 @@ async def do_prompt_no_stream(
     #     },
     #     http_async_client,
     # )
-
-
-async def extract_last_user_message(messages: List[dict]) -> str:
-    """Extract the last user message."""
-    return next(
-        (msg["content"] for msg in reversed(messages) if msg.get("role") == "user"), ""
-    )

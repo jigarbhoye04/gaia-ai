@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Optional
+from typing import Optional
 
 import httpx
 from bs4 import BeautifulSoup
@@ -19,7 +19,6 @@ WEB_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
 IMAGE_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/search"
 NEWS_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/news/search"
 VIDEO_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/videos/search"
-MAX_QUERY_LENGTH = 1500
 
 
 async def fetch_endpoint(
@@ -198,42 +197,6 @@ def format_results_for_llm(results, result_type="Search Results"):
         )
 
     return formatted_output
-
-
-def extract_urls_from_text(text: str) -> list[Any]:
-    """
-    Extracts valid URLs from text, with robust handling of various URL formats.
-
-    This function handles:
-    - URLs with or without protocol (http://, https://)
-    - URLs with query parameters and fragments
-    - International domain names
-    - URLs containing special characters
-    - URLs with paths, including those with special characters
-
-    Args:
-        text: Text containing potential URLs
-
-    Returns:
-        List of normalized valid URLs with proper protocols
-    """
-    if not text:
-        return []
-
-    # # Get the raw results from the extractor
-    # # URLExtract.find_urls can return either List[str] or List[Tuple[str, Tuple[int, int]]]
-    # # Cast to ensure the type checker understands our handle both cases
-    # raw_urls = cast(
-    #     Union[List[str], List[Tuple[str, Tuple[int, int]]]],
-    # )
-
-    # # Handle the case where find_urls returns tuples with position information
-    # if raw_urls and isinstance(raw_urls[0], tuple):
-    #     return [url for url, _ in raw_urls]  # Extract just the URL strings
-
-    # # Otherwise it's already a list of strings
-    # return cast(List[str], raw_urls)
-    return extractor.find_urls(text=text, only_unique=True)
 
 
 async def fetch_with_httpx(url: str) -> str:

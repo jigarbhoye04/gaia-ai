@@ -1,1 +1,0 @@
-"""User prompts for GAIA."""
