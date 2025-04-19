@@ -3,10 +3,12 @@ from typing import AsyncGenerator
 from fastapi.encoders import jsonable_encoder
 
 from app.db.collections import conversations_collection
+from app.langchain.agent import call_agent
 from app.models.general_models import (
     MessageRequestWithHistory,
 )
-from app.services.langchain_service import do_prompt_with_stream
+
+# from app.services.langchain_service import do_prompt_with_stream
 from fastapi import HTTPException
 
 
@@ -48,7 +50,7 @@ async def chat_stream(
 
     # TODO: FETCH NOTES AND FILES AND USE THEM
 
-    async for chunk in do_prompt_with_stream(
+    async for chunk in call_agent(
         messages=jsonable_encoder(body.messages),
         user_id=user.get("user_id"),
         conversation_id=body.conversation_id,

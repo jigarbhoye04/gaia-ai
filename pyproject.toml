@@ -33,7 +33,6 @@ core = [
   "jieba==0.42.1",
   "jinja2==3.1.5",
   "joblib==1.4.2",
-  "laminar[all]>=2022.5a1",
   "langchain-chroma>=0.2.2",
   "langchain-google-genai>=2.1.2",
   "langcodes==3.5.0",
@@ -71,6 +70,7 @@ core = [
   "ipython>=9.1.0",
   "uvicorn>=0.34.1",
   "hf-xet>=1.0.3",
+  "langchain-huggingface>=0.1.2",
 ]
 
 heavy = [

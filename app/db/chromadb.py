@@ -5,9 +5,8 @@ import chromadb
 from fastapi import Request
 from langchain.embeddings.base import Embeddings
 from langchain_chroma import Chroma
-from langchain_community.embeddings.sentence_transformer import (
-    SentenceTransformerEmbeddings,
-)
+from langchain_huggingface import HuggingFaceEmbeddings
+from chromadb.api import AsyncClientAPI, ClientAPI
 
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
@@ -16,12 +15,12 @@ from app.config.settings import settings
 @lru_cache(maxsize=1)
 def get_langchain_embedding_model() -> Embeddings:
     """
-    Lazy-load the SentenceTransformer model and cache it.
+    Lazy-load the HuggingFace embedding model and cache it.
 
     Returns:
-        SentenceTransformerEmbeddings: The embedding model
+        HuggingFaceEmbeddings: The embedding model
     """
-    return SentenceTransformerEmbeddings(
+    return HuggingFaceEmbeddings(
         model_name="all-MiniLM-L6-v2",
     )
 
@@ -37,9 +36,9 @@ class ChromaClient:
 
     def __init__(
         self,
-        chroma_client: chromadb.AsyncClientAPI,
+        chroma_client: AsyncClientAPI,
         langchain_chroma_client: Chroma,
-        constructor_client: chromadb.ClientAPI | None = None,
+        constructor_client: ClientAPI | None = None,
     ):
         # Only initialize once
         if not hasattr(self, "_initialized") or not self._initialized:
@@ -50,7 +49,7 @@ class ChromaClient:
             self._initialized: bool = True
 
     @staticmethod
-    def get_client(request: Request | None = None) -> chromadb.Client:
+    def get_client(request: Request | None = None):
         """
         Get the ChromaDB client from the application state.
 
@@ -81,7 +80,7 @@ class ChromaClient:
     @staticmethod
     async def get_langchain_client(
         collection_name: Optional[str] = None,
-        embedding_function: Optional[Embeddings] = get_langchain_embedding_model(),
+        embedding_function: Optional[Embeddings] = None,
         create_if_not_exists: bool = True,
     ) -> Chroma:
         """
@@ -90,6 +89,8 @@ class ChromaClient:
         Args:
             collection_name: The name of the collection to connect to. If None, returns the default client.
             embedding_function: Optional embedding function to use with the client.
+                               If None, the default embedding model will be used.
+            create_if_not_exists: Whether to create the collection if it doesn't exist.
 
         Returns:
             The langchain Chroma client for the specified collection
@@ -97,6 +98,9 @@ class ChromaClient:
         Raises:
             RuntimeError: If langchain Chroma client is not available
         """
+        if embedding_function is None:
+            embedding_function = get_langchain_embedding_model()
+
         if ChromaClient.__instance is None:
             logger.error("CHROMA: ChromaClient instance not initialized")
             raise RuntimeError("CHROMA: ChromaClient instance not initialized")

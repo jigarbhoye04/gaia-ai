@@ -4,16 +4,16 @@ from typing import Annotated, List
 
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
+from app.models.calendar_models import EventCreateRequest
 
 from app.config.loggers import chat_logger as logger
-from app.models.chat_models import CalIntentOptions
 from app.services.calendar_service import list_calendars
 
 
 @tool
 async def calendar_event(
     event_data: Annotated[
-        List[CalIntentOptions],
+        List[EventCreateRequest],
         "Array of calendar event data with fields: summary, description, start, end, is_all_day, calendar_id, calendar_name, calendar_color",
     ],
 ) -> str:
@@ -37,7 +37,7 @@ async def calendar_event(
     Always provide event data as an array, even if there's only one event.
 
     Args:
-        event_data (List[CalIntentOptions]): Array of dictionaries containing calendar event details with fields:
+        event_data (List[EventCreateRequest]): Array of dictionaries containing calendar event details with fields:
             - summary (str): Event title or name (required)
             - description (str): Detailed description of the event (optional)
             - start (str): Start time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required)
