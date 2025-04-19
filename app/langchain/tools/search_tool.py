@@ -4,11 +4,13 @@ import time
 from typing import Annotated
 from langchain_core.tools import tool
 
-from app.langchain.templates.search_templates import SEARCH_TEMPLATE
+from app.langchain.templates.search_templates import (
+    SEARCH_TEMPLATE,
+    DEEP_SEARCH_TEMPLATE,
+)
 from app.utils.search_utils import format_results_for_llm, perform_search
 from app.config.loggers import chat_logger as logger
 
-from app.prompts.user.chat_prompts import DEEP_SEARCH_CONTEXT_TEMPLATE
 from app.utils.internet_utils import perform_deep_search
 
 
@@ -206,17 +208,12 @@ async def deep_search(
         elapsed_time = time.time() - start_time
         logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
 
-        # print(f"{deep_search_results=}")
         # Create a response with both formatted text for the LLM and structured data for the frontend
         response = {
-            "formatted_text": DEEP_SEARCH_CONTEXT_TEMPLATE.format(
-                formatted_content=formatted_content
+            "formatted_text": DEEP_SEARCH_TEMPLATE.format(
+                formatted_results=formatted_content
             ),
             "raw_deep_search_data": {
-                # "enhanced_results": enhanced_results,
-                # "query": query_text,
-                # "elapsed_time": elapsed_time,
-                # "result_count": len(enhanced_results),
                 **deep_search_results,
             },
         }

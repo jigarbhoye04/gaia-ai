@@ -1,24 +1,13 @@
 from langchain.prompts import PromptTemplate
+from app.langchain.prompts.search_prompt import SEARCH_PROMPT, DEEP_SEARCH_PROMPT
 
 SEARCH_TEMPLATE = PromptTemplate(
     input_variables=["formatted_results"],
-    template="""
-    You have access to the following trusted and up-to-date information:
+    template=SEARCH_PROMPT,
+)
 
-    --- Begin Web Search Results ---
-    {formatted_results}
-    --- End Web Search Results ---
 
-    Use this information to respond to the user's query with **high factual accuracy and clarity**.
-
-    Instructions:
-    1. **Use only the given search results** as your knowledge base. Do not make up facts or introduce unrelated content.
-    2. **Cite all factual claims** using markdown-style links, e.g., [1](https://example.com). If multiple sources are used, number them ([1], [2], etc.) and cite accordingly.
-    3. **Every factual statement must be traceable** to the search content. Do not include unverifiable opinions or generalizations.
-    4. **Maintain a neutral, objective tone**. Avoid speculation, bias, or overstatements.
-    5. **Do NOT add any notes, disclaimers, or mentions of tools, sources, or limitations**. Just answer the query based strictly on the provided search content.
-    6. If the content is insufficient to answer the query, clearly say so without guessing or assuming anything.
-
-    Only include information that is directly supported by the search results. Prioritize clarity, transparency, and citation integrity.
-""",
+DEEP_SEARCH_TEMPLATE = PromptTemplate(
+    input_variables=["formatted_results"],
+    template=DEEP_SEARCH_PROMPT,
 )

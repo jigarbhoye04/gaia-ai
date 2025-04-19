@@ -1,7 +1,7 @@
 from typing import Annotated
 from langchain_core.tools import tool
 from app.langchain.templates.weather_template import WEATHER_PROMPT_TEMPLATE
-from app.utils.chat_utils import user_weather
+from app.utils.weather_utils import user_weather
 import json
 
 

@@ -9,7 +9,6 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routes import (
-    # audio,
     blog,
     browser,
     calendar,
@@ -23,6 +22,7 @@ from app.api.v1.routes import (
     oauth,
     search,
     waitlist,
+    conversations,
 )
 
 from app.config.loggers import app_logger as logger
@@ -34,9 +34,10 @@ from app.config.cloudinary import init_cloudinary
 
 api_router = APIRouter()
 
+api_router.include_router(chat.router, tags=["Chat"])
+api_router.include_router(conversations.router, tags=["Conversations"])
 api_router.include_router(waitlist.router, tags=["Waitlist"])
 api_router.include_router(feedback.router, tags=["Feedback"])
-api_router.include_router(chat.router, tags=["Chat"])
 api_router.include_router(image.router, tags=["Image"])
 api_router.include_router(search.router, tags=["Search"])
 api_router.include_router(calendar.router, tags=["Calendar"])

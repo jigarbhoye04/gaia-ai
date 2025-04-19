@@ -3,7 +3,6 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import (
     EmailRequest,
@@ -77,7 +76,6 @@ def list_messages(
 async def process_email(
     request: EmailRequest,
     current_user: dict = Depends(get_current_user),
-    chromadb_client=Depends(get_chromadb),
 ) -> Any:
     try:
         user_id = current_user.get("user_id")
