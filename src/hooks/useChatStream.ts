@@ -6,7 +6,7 @@ import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
-import { MessageType } from "@/types/convoTypes";
+import { ImageData, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
@@ -77,14 +77,18 @@ export const useChatStream = () => {
       if (dataJson.error) return toast.error(dataJson.error);
 
       if (dataJson.status === "generating_image") {
-        console.log("GENERATING IMAGE");
         setLoadingText("Generating image...");
+
+        // Create initial image data object
+        const initialImageData: ImageData = {
+          url: "", // Will be filled later
+          prompt: userPromptRef.current,
+        };
 
         botMessageRef.current = buildBotResponse({
           response: "",
-          isImage: true,
-          imagePrompt: userPromptRef.current,
           loading: true,
+          image_data: initialImageData,
         });
 
         const currentConvo = latestConvoRef.current;
@@ -104,10 +108,7 @@ export const useChatStream = () => {
       if (dataJson.intent === "generate_image" && dataJson.image_data) {
         botMessageRef.current = buildBotResponse({
           response: "Here is your generated image",
-          imageUrl: dataJson.image_data.url,
-          imagePrompt: userPromptRef.current,
-          improvedImagePrompt: dataJson.image_data.improved_prompt,
-          isImage: true,
+          image_data: dataJson.image_data,
           loading: false,
         });
 
@@ -132,7 +133,7 @@ export const useChatStream = () => {
 
       // Create a new bot response that preserves existing intent data
       botMessageRef.current = buildBotResponse({
-        intent: parsedIntent.intent,
+        intent: parsedIntent.intent || botMessageRef.current?.intent,
         // Preserve special data once it's available
         calendar_options:
           parsedIntent.calendar_options ||
@@ -150,6 +151,7 @@ export const useChatStream = () => {
           parsedIntent.deep_search_results ||
           botMessageRef.current?.deep_search_results ||
           null,
+        image_data: parsedIntent.image_data || botMessageRef.current?.image_data || null,
       });
 
       // Always ensure we have the most recent messages

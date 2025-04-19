@@ -109,11 +109,7 @@ export default function ChatRenderer() {
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
-              imagePrompt={message.imagePrompt}
-              imageSrc={message.imageUrl}
-              improvedImagePrompt={message.improvedImagePrompt}
               intent={message.intent}
-              isImage={message.isImage}
               loading={message.loading}
               message_id={message.message_id}
               pageFetchURLs={message.pageFetchURLs}
@@ -127,6 +123,7 @@ export default function ChatRenderer() {
               search_results={message.search_results}
               deep_search_results={message.deep_search_results}
               weather_data={message.weather_data}
+              image_data={message.image_data}
             />
           </div>
         ) : (

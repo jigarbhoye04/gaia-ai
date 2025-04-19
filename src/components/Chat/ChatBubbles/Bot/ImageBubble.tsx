@@ -7,43 +7,39 @@ import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 export default function ImageBubble({
   text,
   loading,
-  imageSrc,
-  imagePrompt,
-  improvedImagePrompt,
+  image_data,
   setOpenImage,
   setImageData,
 }: ChatBubbleBotProps) {
-  if (!imageSrc && !loading) return null;
+  // Only use image_data for image information
+  if (!image_data?.url && !loading) return null;
 
   return (
     <>
       <Skeleton
         className="mb-4 aspect-square max-h-[350px] min-h-[350px] max-w-[350px] min-w-[350px] overflow-hidden rounded-3xl"
-        isLoaded={!loading && Boolean(imageSrc)}
+        isLoaded={!loading && Boolean(image_data?.url)}
       >
-        {imageSrc && (
+        {image_data?.url && (
           <Image
             alt="Generated Image"
             className="my-2 cursor-pointer! rounded-3xl"
             height={500}
             width={500}
-            src={imageSrc}
+            src={image_data.url}
             onClick={() => {
               setOpenImage(true);
               setImageData({
-                prompt: imagePrompt ?? "",
-                src: imageSrc,
-                improvedPrompt: improvedImagePrompt ?? "",
+                src: image_data.url,
+                prompt: image_data.prompt || "",
+                improvedPrompt: image_data.improved_prompt || "",
               });
             }}
           />
         )}
       </Skeleton>
       <div className="chat_bubble bg-zinc-800">
-        {/* <div className="my-1 flex w-full max-w-[400px] flex-col flex-wrap gap-1 text-sm font-medium"> */}
         <span>{text}</span>
-
-        {/* </div> */}
       </div>
     </>
   );

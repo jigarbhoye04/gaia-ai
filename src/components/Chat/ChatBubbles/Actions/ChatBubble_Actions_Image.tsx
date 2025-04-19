@@ -5,19 +5,18 @@ import React from "react";
 import { toast } from "sonner";
 
 import { DownloadSquare01Icon } from "@/components/Misc/icons";
+import { ImageData } from "@/types/convoTypes";
 
 interface ChatBubbleActionsImageProps {
-  src: string;
-  imagePrompt: string | undefined;
   fullWidth?: boolean;
   setOpenImage?: React.Dispatch<React.SetStateAction<boolean>>;
+  image_data: ImageData; // Required image_data with no fallbacks
 }
 
 export default function ChatBubble_Actions_Image({
-  src,
-  imagePrompt,
   fullWidth = false,
   setOpenImage,
+  image_data,
 }: ChatBubbleActionsImageProps) {
   const downloadFromSrc = async () => {
     try {
@@ -27,13 +26,13 @@ export default function ChatBubble_Actions_Image({
       const time = now.toTimeString().split(" ")[0].replace(/:/g, "-");
 
       // Sanitize and truncate the prompt
-      const sanitizedPrompt = imagePrompt
+      const sanitizedPrompt = image_data.prompt
         ?.replace(/[^\w\s-]/g, "")
         .slice(0, 50);
       const fileName = `GAIA ${date} ${time} ${sanitizedPrompt}.png`;
 
       // Fetch the image as a blob
-      const response = await fetch(src);
+      const response = await fetch(image_data.url);
       const blob = await response.blob();
 
       // Create URL from blob
@@ -41,7 +40,6 @@ export default function ChatBubble_Actions_Image({
 
       // Create download link
       const downloadLink = document.createElement("a");
-
       downloadLink.href = blobUrl;
       downloadLink.download = fileName;
 
@@ -54,7 +52,6 @@ export default function ChatBubble_Actions_Image({
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error("Error downloading image:", error);
-      // You might want to show a toast notification here
       toast.error("Failed to download image", {
         description: "Please try again later",
       });

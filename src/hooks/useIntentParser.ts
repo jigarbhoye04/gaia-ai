@@ -13,13 +13,10 @@ export function parseIntent(dataJson: MessageType) {
   return {
     ...dataJson,
     intent: dataJson.intent,
-    calendar_options: Array.isArray(dataJson.calendar_options)
-      ? dataJson.calendar_options
-      : dataJson.calendar_options
-        ? [dataJson.calendar_options]
-        : null,
+    calendar_options: dataJson.calendar_options || null,
     weather_data: dataJson.weather_data || null,
     search_results: dataJson.search_results || null,
     deep_search_results: dataJson.deep_search_results || null,
+    image_data: dataJson.image_data || null,
   };
 }

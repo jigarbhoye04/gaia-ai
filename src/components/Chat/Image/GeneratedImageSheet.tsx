@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { SetImageDataType } from "@/types/chatBubbleTypes";
+import { ImageData } from "@/types/convoTypes";
 
 import ChatBubble_Actions_Image from "../ChatBubbles/Actions/ChatBubble_Actions_Image";
 
@@ -17,6 +18,15 @@ export default function GeneratedImageSheet({
   setOpenImage,
   imageData,
 }: GeneratedImageSheetProps) {
+  // Create a standard image_data object from imageData
+  const image_data: ImageData = imageData
+    ? {
+        url: imageData.src,
+        prompt: imageData.prompt,
+        improved_prompt: imageData.improvedPrompt,
+      }
+    : { url: "" };
+
   return (
     <Sheet open={openImage} onOpenChange={setOpenImage}>
       <SheetContent className="flex max-w-(--breakpoint-sm) min-w-fit flex-col items-center rounded-3xl! border-none bg-zinc-900 px-5 py-3 text-white">
@@ -59,9 +69,8 @@ export default function GeneratedImageSheet({
         {imageData?.src && (
           <ChatBubble_Actions_Image
             fullWidth
-            imagePrompt={imageData?.prompt}
             setOpenImage={setOpenImage}
-            src={imageData.src}
+            image_data={image_data}
           />
         )}
       </SheetContent>

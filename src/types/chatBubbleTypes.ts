@@ -5,6 +5,7 @@ import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import {
   CalendarOptions,
   DeepSearchResults,
+  ImageData,
   SearchResults,
   WeatherData,
 } from "./convoTypes";
@@ -24,36 +25,29 @@ export interface ChatBubbleUserProps {
 }
 
 export interface SetImageDataType {
-  src: string;
+  src: string; // corresponds to url in ImageData
   prompt: string;
-  improvedPrompt: string;
+  improvedPrompt: string; // corresponds to improved_prompt in ImageData
 }
 
 export interface ChatBubbleBotProps {
-  // index: number;
   message_id: string;
   text: string;
   loading?: boolean;
-  isImage?: boolean;
   searchWeb?: boolean;
   deepSearchWeb?: boolean;
-  imageSrc?: string | null;
-  imagePrompt?: string;
-  improvedImagePrompt?: string;
   disclaimer?: string;
   date?: string;
-  // userinputType?: string;
   setOpenImage: React.Dispatch<React.SetStateAction<boolean>>;
   setImageData: Dispatch<React.SetStateAction<SetImageDataType>>;
   pageFetchURLs?: string[];
   filename?: string;
   pinned?: boolean;
-  // setImageSrc: React.Dispatch<React.SetStateAction<string>>;
-  // setImagePrompt: React.Dispatch<React.SetStateAction<string>>;
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
+  image_data?: ImageData | null;
 }
