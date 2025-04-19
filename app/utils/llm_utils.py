@@ -9,7 +9,9 @@ from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 from app.prompts.system.calendar_prompts import CALENDAR_EVENT_CREATOR
 from app.prompts.system.general import MAIN_SYSTEM_PROMPT
-from app.utils.langchain_utils_temp import GROQ_MODEL
+# from app.utils.langchain_utils_temp import GROQ_MODEL
+
+GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 
 http_async_client = httpx.AsyncClient(timeout=1000000)
 http_sync_client = httpx.Client(timeout=1000000)

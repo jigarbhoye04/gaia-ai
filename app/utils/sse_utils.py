@@ -22,18 +22,23 @@ def format_tool_response(tool_name: str | None, content: str) -> str:
         return f"data: {json.dumps({'error': 'Invalid JSON from tool response'})}\n\n"
 
     if tool_name == "get_weather":
-        return f"data: {json.dumps({'intent': 'weather', 'weather_data': data.get('raw_weather_data', '')})}\n\n"
+        return f"data: {json.dumps({'intent': 'weather', 'weather_data': data.get('raw_weather_data')})}\n\n"
 
     elif tool_name == "web_search":
-        return f"data: {json.dumps({'search_results': data.get('raw_search_data', '')})}\n\n"
+        return (
+            f"data: {json.dumps({'search_results': data.get('raw_search_data')})}\n\n"
+        )
 
     elif tool_name == "deep_search":
-        return f"data: {json.dumps({'deep_search_results': data.get('raw_deep_search_data', '')})}\n\n"
+        return f"data: {json.dumps({'deep_search_results': data.get('raw_deep_search_data')})}\n\n"
 
     elif tool_name == "fetch_webpages":
-        return f"data: {json.dumps({'type': 'webpage_data', 'data': data.get('raw_webpage_data', '')})}\n\n"
+        return f"data: {json.dumps({'type': 'webpage_data', 'data': data.get('raw_webpage_data')})}\n\n"
 
     elif tool_name == "calendar_event":
         return f"data: {json.dumps({'intent': 'calendar', 'calendar_options': data.get('calendar_options')})}\n\n"
+
+    elif tool_name == "generate_image":
+        return f"data: {json.dumps({'intent': 'generate_image', 'image_data': data.get('image_data')})}\n\n"
 
     return ""

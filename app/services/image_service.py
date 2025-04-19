@@ -22,7 +22,7 @@ def generate_public_id(refined_text: str, max_length: int = 50) -> str:
     return f"generated_image_{slug}_{unique_suffix}"
 
 
-async def api_generate_image(message: str) -> dict:
+async def api_generate_image(message: str, improve_prompt=True) -> dict:
     """
     Generate an image based on the provided message prompt and upload it to Cloudinary.
 
@@ -36,35 +36,35 @@ async def api_generate_image(message: str) -> dict:
         HTTPException: If an error occurs during image generation or upload.
     """
     try:
-        logger.info(f"Received image generation request: {message}")
-
-        improved_prompt = await do_prompt_no_stream(
-            prompt=IMAGE_PROMPT_REFINER.format(message=message),
-            temperature=1,
-            max_tokens=50,
-        )
-        refined_text = ", ".join(
-            part.strip()
-            for part in [
-                message or "",
-                improved_prompt.get("response", "") or "",
-            ]
-            if part.strip()
-        )
-
-        if not refined_text:
-            logger.error("Failed to generate an improved prompt.")
-            raise ValueError(
-                "Failed to generate an improved prompt or fallback to the original prompt."
+        if improve_prompt:
+            improved_prompt = await do_prompt_no_stream(
+                prompt=IMAGE_PROMPT_REFINER.format(message=message),
+                temperature=1,
+                max_tokens=50,
+            )
+            refined_text = ", ".join(
+                part.strip()
+                for part in [
+                    message or "",
+                    improved_prompt.get("response", "") or "",
+                ]
+                if part.strip()
             )
 
+            if not refined_text:
+                logger.error("Failed to generate an improved prompt.")
+                raise ValueError(
+                    "Failed to generate an improved prompt or fallback to the original prompt."
+                )
+
+            message = refined_text
+
         # Handle the case when generate_image returns a dict or bytes
-        image_data = await generate_image(refined_text)
+        image_data = await generate_image(message)
 
         # Ensure we're working with bytes for the upload
         if isinstance(image_data, dict):
             # Handle the case when it returns a dict
-            # You might need to adjust this based on your actual implementation
             if "image" in image_data and isinstance(image_data["image"], bytes):
                 image_bytes = image_data["image"]
             else:
@@ -78,7 +78,7 @@ async def api_generate_image(message: str) -> dict:
         upload_result = cloudinary.uploader.upload(
             io.BytesIO(image_bytes),
             resource_type="image",
-            public_id=generate_public_id(refined_text),
+            public_id=generate_public_id(message),
             overwrite=True,
         )
 
@@ -87,7 +87,8 @@ async def api_generate_image(message: str) -> dict:
 
         return {
             "url": image_url,
-            "improved_prompt": improved_prompt.get("response", improved_prompt),
+            "improved_prompt": message if improve_prompt else None,
+            "prompt": message,
         }
 
     except Exception as e:
