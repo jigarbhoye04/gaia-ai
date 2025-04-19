@@ -9,8 +9,8 @@ import cloudinary.uploader
 from fastapi import HTTPException, UploadFile
 
 from app.config.loggers import image_logger as logger
-from app.prompts.user.image_service_prompts import IMAGE_PROMPT_REFINER
-from app.utils.llm_utils import do_prompt_no_stream
+from app.langchain.prompts.image_prompts import IMAGE_PROMPT_REFINER
+from app.utils.chat_utils import do_prompt_no_stream
 from app.utils.image_utils import convert_image_to_text, generate_image
 
 
@@ -39,8 +39,6 @@ async def api_generate_image(message: str, improve_prompt=True) -> dict:
         if improve_prompt:
             improved_prompt = await do_prompt_no_stream(
                 prompt=IMAGE_PROMPT_REFINER.format(message=message),
-                temperature=1,
-                max_tokens=50,
             )
             refined_text = ", ".join(
                 part.strip()

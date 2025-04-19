@@ -92,7 +92,9 @@ async def update_conversation_description_llm_endpoint(
     Update the conversation description using an LLM.
     """
     response = await update_conversation_description_llm(
-        conversation_id=conversation_id, data=data, user=user, model=data.model
+        conversation_id=conversation_id,
+        data=data,
+        user=user,
     )
     return JSONResponse(content=response)
 

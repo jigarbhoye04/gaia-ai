@@ -14,7 +14,7 @@ from app.db.collections import notes_collection
 from app.db.redis import delete_cache, get_cache, set_cache
 from app.db.utils import serialize_document
 from app.models.notes_models import NoteModel, NoteResponse
-from app.prompts.user.chat_prompts import NOTES_CONTEXT_TEMPLATE
+from app.langchain.prompts.convo_prompts import NOTES_PROMPT
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.notes_utils import insert_note
 
@@ -238,7 +238,7 @@ async def fetch_notes(context: Dict[str, Any]) -> Dict[str, Any]:
 
         notes_text = "\n".join(formatted_notes)
 
-        last_message["content"] = NOTES_CONTEXT_TEMPLATE.format(
+        last_message["content"] = NOTES_PROMPT.format(
             message=last_message["content"], notes=notes_text
         )
         context["notes_added"] = True

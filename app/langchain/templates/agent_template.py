@@ -1,5 +1,5 @@
 from langchain.prompts import PromptTemplate
-from app.langchain.prompts.agent_prompt import AGENT_SYSTEM_PROMPT
+from app.langchain.prompts.agent_prompts import AGENT_SYSTEM_PROMPT
 
 AGENT_PROMPT_TEMPLATE = PromptTemplate(
     input_variables=["current_datetime"],

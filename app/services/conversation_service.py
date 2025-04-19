@@ -1,23 +1,18 @@
 import asyncio
 from datetime import datetime, timezone
 
-
-from app.db.collections import conversations_collection
-from app.models.chat_models import UpdateMessagesRequest
 from bson import ObjectId
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 
 from app.config.loggers import chat_logger as logger
-from app.models.chat_models import ConversationModel
+from app.db.collections import conversations_collection
+from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.models.general_models import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
 )
-from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
-from app.utils.llm_utils import (
-    do_prompt_no_stream,
-)
-from fastapi import status
+from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
+from app.utils.chat_utils import do_prompt_no_stream
 
 
 async def create_conversation(conversation: ConversationModel, user: dict) -> dict:
@@ -152,7 +147,7 @@ async def get_conversation(conversation_id: str, user: dict) -> dict:
 
 
 async def update_conversation_description_llm(
-    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict, model: str
+    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict
 ) -> dict:
     """
     Update the conversation description using an LLM-generated summary.
@@ -165,8 +160,6 @@ async def update_conversation_description_llm(
             prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(
                 user_message=data.userFirstMessage
             ),
-            max_tokens=5,
-            model=model,
         )
         description = (response.get("response", "New Chat")).replace('"', "")
     except Exception as e:

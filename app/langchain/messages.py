@@ -3,7 +3,7 @@ from typing import List, TypeAlias, Union
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
 
-LangChainMessage: TypeAlias = Union[SystemMessage, HumanMessage, AIMessage]
+LangChainMessageType: TypeAlias = Union[SystemMessage, HumanMessage, AIMessage]
 
 
 def construct_langchain_messages(messages):
@@ -11,7 +11,7 @@ def construct_langchain_messages(messages):
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
 
     system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
-    chain_msgs: List[LangChainMessage] = [SystemMessage(system_prompt)]
+    chain_msgs: List[LangChainMessageType] = [SystemMessage(system_prompt)]
 
     for msg in messages:
         role = msg.get("role")

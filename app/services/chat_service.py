@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from app.db.collections import conversations_collection
@@ -7,9 +8,6 @@ from app.langchain.agent import call_agent
 from app.models.general_models import (
     MessageRequestWithHistory,
 )
-
-# from app.services.langchain_service import do_prompt_with_stream
-from fastapi import HTTPException
 
 
 async def chat_stream(
