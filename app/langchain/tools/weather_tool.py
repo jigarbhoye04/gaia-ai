@@ -1,5 +1,6 @@
 from typing import Annotated
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 from app.langchain.templates.weather_template import WEATHER_PROMPT_TEMPLATE
 from app.utils.weather_utils import user_weather
 import json
@@ -22,6 +23,9 @@ async def get_weather(
     Returns:
         str: A JSON string containing both the formatted weather text and raw weather data.
     """
+    writer = get_stream_writer()
+    writer({"progress": f"Fetching weather information for {location}..."})
+
     # Get the raw weather data
     weather_data = await user_weather(location)
 

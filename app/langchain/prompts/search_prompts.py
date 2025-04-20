@@ -22,7 +22,7 @@ DEEP_SEARCH_PROMPT = """
 You have access to in-depth web search results with full page content using GAIA Deep Search.
 Below is the detailed context retrieved from the deep search:
 
-{formatted_content}
+{formatted_results}
 
 You MUST include citations for all sourced content. Citations should be formatted with the link in markdown format, e.g., [1](https://example.com).
 Each source should be cited appropriately when used, and ensure proper attribution of quoted content.

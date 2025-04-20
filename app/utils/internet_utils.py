@@ -6,6 +6,7 @@ from urllib.parse import urljoin, urlparse
 
 import httpx
 from bs4 import BeautifulSoup
+from langgraph.config import get_stream_writer
 
 from app.config.loggers import search_logger as logger
 from app.db.collections import (
@@ -122,6 +123,10 @@ async def fetch_and_process_url(
             "markdown_content": "",
         }
 
+    writer = get_stream_writer()
+
+    writer({"progress": f"Deep Search: Fetching url {url:20}..."})
+
     # Try to get cached content
     cached_content = await get_cached_webpage_content(url)
     if cached_content:
@@ -138,6 +143,9 @@ async def fetch_and_process_url(
         if take_screenshot:
             logger.info(f"Fetching {url} with screenshot")
             result = await fetch_with_playwright(url=url, take_screenshot=True)
+
+            writer({"progress": f"Deep Search: Processing page {url:20}..."})
+
             html_content = result.get("content", "")
             screenshot_bytes = result.get("screenshot")
 
@@ -188,11 +196,15 @@ async def fetch_and_process_url(
             # Upload screenshot to Cloudinary if available and is bytes
             screenshot_url = None
             if screenshot_bytes and isinstance(screenshot_bytes, bytes):
+                writer({"progress": "Deep Search: Uploading Screenshot..."})
+
                 screenshot_url = await upload_screenshot_to_cloudinary(
                     screenshot_bytes, url
                 )
             else:
                 logger.info("No screenshot bytes available for upload")
+
+            writer({"progress": "Deep Search Completed!"})
 
             # Cache the result with screenshot URL
             cache_data = {
@@ -435,35 +447,71 @@ async def perform_deep_search(
         query (str): The search query
         max_results (int): Maximum number of results to process in depth
         take_screenshots (bool): Whether to take screenshots of the webpages
+        writer: Optional writer for output of the tool
 
     Returns:
         Dict[str, Any]: A dictionary containing search results with fetched content and optional screenshots
     """
     start_time = time.time()
-    logger.info(
-        f"Starting deep search for query: {query}"
-        + (" with screenshots" if take_screenshots else "")
-    )
+    writer = get_stream_writer()
+
+    writer({"progress": "Deep Search: Searching the web..."})
 
     search_results = await perform_search(query=query, count=5)
     web_results = search_results.get("web", [])
 
     if not web_results:
         logger.info("No web results found for deep search")
+        writer({"progress": "Deep Search: No web results found."})
         return {"original_search": search_results, "enhanced_results": []}
 
-    # Use the new fetch_and_process_url function for more robust processing
-    # and to handle screenshots if requested
-    fetch_tasks = []
+    # Create a list of URLs to process with domain information for better reporting
+    urls_to_process = []
     for result in web_results[:max_results]:
         url = result.get("url")
         if url and is_valid_url(url):
-            fetch_tasks.append(
-                fetch_and_process_url(url, take_screenshot=take_screenshots)
-            )
+            # Extract domain for more readable progress updates
+            domain = urlparse(url).netloc
+            urls_to_process.append((url, domain))
 
-    if fetch_tasks:
-        fetched_contents = await asyncio.gather(*fetch_tasks)
+    writer(
+        {
+            "progress": f"Deep Search: Starting concurrent processing of {len(urls_to_process)} URLs..."
+        }
+    )
+
+    # Create a shared counter for tracking progress across async tasks
+    completed_urls = 0
+
+    # Custom wrapper for fetch_and_process_url that updates progress
+    async def fetch_with_progress(url_info):
+        nonlocal completed_urls
+        url, domain = url_info
+
+        writer({"progress": f"Deep Search: Fetching content from {domain}..."})
+        result = await fetch_and_process_url(url, take_screenshot=take_screenshots)
+
+        # Update progress after each URL is processed
+        completed_urls += 1
+        progress_pct = int((completed_urls / len(urls_to_process)) * 100)
+        writer(
+            {
+                "progress": f"Deep Search: {progress_pct}% complete. Processed {completed_urls}/{len(urls_to_process)} URLs. Completed: {domain}"
+            }
+        )
+
+        return result
+
+    # Use gather to process URLs concurrently with progress updates
+    if urls_to_process:
+        writer(
+            {
+                "progress": f"Deep Search: Processing {len(urls_to_process)} URLs concurrently..."
+            }
+        )
+        fetched_contents = await asyncio.gather(
+            *[fetch_with_progress(url_info) for url_info in urls_to_process]
+        )
     else:
         fetched_contents = []
 
@@ -477,6 +525,7 @@ async def perform_deep_search(
 
         # Get the corresponding search result
         result = web_results[i]
+        domain = urlparse(result.get("url", "#")).netloc
 
         # Check if there was an error during fetching
         if "error" in content_data:
@@ -513,14 +562,18 @@ async def perform_deep_search(
                 and content_data["screenshot_url"]
             ):
                 enhanced_result["screenshot_url"] = content_data["screenshot_url"]
+                writer({"progress": f"Deep Search: Screenshot available for {domain}"})
 
         enhanced_results.append(enhanced_result)
 
     elapsed_time = time.time() - start_time
-    logger.info(
-        f"Deep search completed in {elapsed_time:.2f} seconds. Processed {len(enhanced_results)} results."
+    final_status = (
+        f"Deep Search completed in {elapsed_time:.2f} seconds. Processed {len(enhanced_results)} results"
         + (" with screenshots" if take_screenshots else "")
     )
+
+    writer({"progress": final_status})
+    logger.info(final_status)
 
     return {
         "original_search": search_results,

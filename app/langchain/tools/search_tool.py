@@ -2,16 +2,17 @@ import asyncio
 import json
 import time
 from typing import Annotated
+
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
-from app.langchain.templates.search_templates import (
-    SEARCH_TEMPLATE,
-    DEEP_SEARCH_TEMPLATE,
-)
-from app.utils.search_utils import format_results_for_llm, perform_search
 from app.config.loggers import chat_logger as logger
-
+from app.langchain.templates.search_templates import (
+    DEEP_SEARCH_TEMPLATE,
+    SEARCH_TEMPLATE,
+)
 from app.utils.internet_utils import perform_deep_search
+from app.utils.search_utils import format_results_for_llm, perform_search
 
 
 @tool
@@ -57,9 +58,13 @@ async def web_search(
     start_time = time.time()
 
     try:
+        # Get the langchain stream writer for progress updates
+        writer = get_stream_writer()
+
+        writer({"progress": f"Performing web search for '{query_text}'..."})
+
         # Perform the search with 5 results
         search_results = await perform_search(query=query_text, count=5)
-        print(f"{search_results=}")
 
         web_results = search_results.get("web", [])
         news_results = search_results.get("news", [])
@@ -81,9 +86,10 @@ async def web_search(
             formatted_results = "No relevant search results found for your query."
 
         elapsed_time = time.time() - start_time
-        logger.info(
-            f"Web search completed in {elapsed_time:.2f} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
-        )
+        formatted_text = f"Web search completed in {elapsed_time:.2f} seconds. Found {len(web_results)} web results and {len(news_results)} news results."
+
+        logger.info(formatted_text)
+        writer({"progress": formatted_text})
 
         response = {
             "formatted_text": SEARCH_TEMPLATE.format(
@@ -167,15 +173,18 @@ async def deep_search(
     start_time = time.time()
 
     try:
+        writer = get_stream_writer()
+        writer({"progress": f"Performing deep search for '{query_text}'..."})
+
         deep_search_results = await perform_deep_search(
-            query=query_text, max_results=3, take_screenshots=True
+            query=query_text, max_results=5, take_screenshots=True
         )
 
         enhanced_results = deep_search_results.get("enhanced_results", [])
-        formatted_content = ""
+        formatted_results = ""
 
         if enhanced_results:
-            formatted_content = "## Deep Search Results\n\n"
+            formatted_results = "## Deep Search Results\n\n"
 
             for i, result in enumerate(enhanced_results, 1):
                 title = result.get("title", "No Title")
@@ -184,26 +193,25 @@ async def deep_search(
                 full_content = result.get("full_content", "")
                 fetch_error = result.get("fetch_error", None)
                 screenshot_url = result.get("screenshot_url", None)
-                print(f"{screenshot_url=}")
-                formatted_content += f"### {i}. {title}\n"
-                formatted_content += f"**URL**: {url}\n\n"
+                formatted_results += f"### {i}. {title}\n"
+                formatted_results += f"**URL**: {url}\n\n"
 
                 if screenshot_url:
-                    formatted_content += f"**Screenshot**: ![Screenshot of {title}]({screenshot_url})\n\n"
+                    formatted_results += f"**Screenshot**: ![Screenshot of {title}]({screenshot_url})\n\n"
 
                 if fetch_error:
-                    formatted_content += (
+                    formatted_results += (
                         f"**Note**: Could not fetch full content: {fetch_error}\n\n"
                     )
-                    formatted_content += f"**Summary**: {snippet}\n\n"
+                    formatted_results += f"**Summary**: {snippet}\n\n"
                 else:
-                    formatted_content += f"**Summary**: {snippet}\n\n"
-                    formatted_content += "**Content**:\n"
-                    formatted_content += full_content + "\n\n"
+                    formatted_results += f"**Summary**: {snippet}\n\n"
+                    formatted_results += "**Content**:\n"
+                    formatted_results += full_content + "\n\n"
 
-                formatted_content += "---\n\n"
+                formatted_results += "---\n\n"
         else:
-            formatted_content = "No detailed information found from deep search."
+            formatted_results = "No detailed information found from deep search."
 
         elapsed_time = time.time() - start_time
         logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
@@ -211,7 +219,7 @@ async def deep_search(
         # Create a response with both formatted text for the LLM and structured data for the frontend
         response = {
             "formatted_text": DEEP_SEARCH_TEMPLATE.format(
-                formatted_results=formatted_content
+                formatted_results=formatted_results
             ),
             "raw_deep_search_data": {
                 **deep_search_results,

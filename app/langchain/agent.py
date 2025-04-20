@@ -23,7 +23,7 @@ async def call_agent(messages, conversation_id, user_id, access_token=None):
     try:
         async for event in graph.astream(
             initial_state,
-            stream_mode=["messages"],
+            stream_mode=["messages", "custom"],
             config={
                 "configurable": {
                     "thread_id": conversation_id,
@@ -34,27 +34,29 @@ async def call_agent(messages, conversation_id, user_id, access_token=None):
                 "metadata": {"user_id": user_id},
             },
         ):
-            # Unpack the properties from the event
-            _, (chunk, _metadata) = event
+            stream_mode, payload = event
 
-            # If the chunk is a message from the agent
-            if isinstance(chunk, AIMessageChunk):
-                yield f"data: {json.dumps({'response': chunk.content})}\n\n"
+            if stream_mode == "messages":
+                chunk, metadata = payload  # now safe to unpack
+                if chunk is None:
+                    continue
 
-            # If the chunk is output of a tool
-            elif isinstance(chunk, ToolMessage):
-                try:
+                if isinstance(chunk, AIMessageChunk):
+                    if str(chunk.content).strip():
+                        yield f"data: {json.dumps({'response': chunk.content})}\n\n"
+
+                elif isinstance(chunk, ToolMessage):
                     yield format_tool_response(
                         tool_name=chunk.name,
                         content=str(chunk.content),
                     )
-                except Exception as e:
-                    logger.error(f"Tool formatting error: {e}")
-                    yield f"data: {{'error': 'Error processing {chunk.name}'}}\n\n"
 
-        # Signal completion of the stream
+            elif stream_mode == "custom":
+                yield f"data: {json.dumps(payload)}\n\n"
+
         yield "data: [DONE]\n\n"
+
     except Exception as e:
         logger.error(f"Stream error: {e}")
-        yield f"data: {{'error': '{e}'}}\n\n"
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
         yield "data: [DONE]\n\n"

@@ -3,6 +3,7 @@ from typing import Optional
 
 import httpx
 from bs4 import BeautifulSoup
+from langgraph.config import get_stream_writer
 from playwright.async_api import async_playwright
 from urlextract import URLExtract
 
@@ -274,6 +275,14 @@ async def fetch_with_playwright(
             # Take screenshot if requested
             if take_screenshot:
                 try:
+                    writer = get_stream_writer()
+
+                    writer(
+                        {
+                            "progress": f"Deep Search: Taking screenshot of page {url:20}..."
+                        }
+                    )
+
                     # Set viewport to a reasonable size
                     await page.set_viewport_size({"width": 1280, "height": 1024})
                     # Wait extra time for visuals to load when taking screenshots
