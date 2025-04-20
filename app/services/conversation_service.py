@@ -8,7 +8,9 @@ from app.db.collections import conversations_collection
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 
 
-async def create_conversation(conversation: ConversationModel, user: dict) -> dict:
+async def create_conversation_service(
+    conversation: ConversationModel, user: dict
+) -> dict:
     """
     Create a new conversation.
     """

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.conversation_service import (
-    create_conversation,
+    create_conversation_service,
     get_conversations,
     update_messages,
     pin_message,
@@ -29,7 +29,7 @@ async def create_conversation_endpoint(
     """
     Create a new conversation.
     """
-    response = await create_conversation(conversation, user)
+    response = await create_conversation_service(conversation, user)
     return JSONResponse(content=response)
 
 
