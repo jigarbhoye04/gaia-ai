@@ -334,9 +334,14 @@ async def extract_text(html: str) -> str:
 async def perform_fetch(url: str, use_playwright: bool = True) -> str:
     """Fetches webpage content using either httpx or Playwright based on `use_playwright`."""
     try:
+        writer = get_stream_writer()
+        writer({"progress": f"Fetching URL: '{url:20}'..."})
+
         result = await (
             fetch_with_playwright(url) if use_playwright else fetch_with_httpx(url)
         )
+
+        writer({"progress": f"Successfully fetched URL '{url:20}'!"})
 
         # Handle different return types from the fetch functions
         content: str = str(

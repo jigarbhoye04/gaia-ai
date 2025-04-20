@@ -3,6 +3,8 @@ from typing import List, Annotated
 from langchain_core.tools import tool
 import re
 
+from langgraph.config import get_stream_writer
+
 from app.langchain.templates.fetch_template import FETCH_TEMPLATE
 from app.utils.search_utils import perform_fetch
 
@@ -10,7 +12,7 @@ from app.utils.search_utils import perform_fetch
 @tool
 async def fetch_webpages(
     urls: Annotated[List[str], "List of URLs to fetch content from"],
-) -> str:
+) -> dict:
     """
     Fetch the content from a list of URLs and return a formatted summary.
     Automatically adds 'https://' prefix to URLs that don't have a scheme.
@@ -20,15 +22,19 @@ async def fetch_webpages(
                          automatically have 'https://' prepended.
 
     Returns:
-        str: Combined and formatted content of all fetched pages.
+        dict: A dictionary containing the combined and formatted content of all fetched pages
+              with key "webpage_content", or an error message string in case of failure.
     """
     if not urls:
-        return "No URLs were provided."
+        return {"error": "No URLs were provided."}
 
     processed_urls = []
     combined_content = ""
+    writer = get_stream_writer()
 
     for url in urls:
+        writer({"progress": f"Processing URL: '{url:20}'..."})
+
         if not re.match(r"^https?://", url):
             processed_urls.append(f"https://{url}")
         else:
@@ -47,7 +53,11 @@ async def fetch_webpages(
                 urls=[processed_urls[i]],
             )
 
-        return combined_content or "Failed to fetch content from the provided URLs."
+            writer({"progress": f"Processing Page {i + 1}/{len(fetched_pages)}..."})
+
+        writer({"progress": "Fetching Complete!"})
+
+        return {"webpage_content": combined_content}
 
     except Exception as e:
-        return f"An error occurred while fetching webpages: {str(e)}"
+        return {"error": f"An error occurred while fetching webpages: {str(e)}"}
