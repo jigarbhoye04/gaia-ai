@@ -12,6 +12,11 @@ from app.langchain.tools import (
     weather_tool,
 )
 
+# GROQ_MODEL = "llama-3.1-8b-instant"
+# GROQ_MODEL = "llama-3.3-70b-versatile"
+# GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+
 tools = [
     fetch_tool.fetch_webpages,
     search_tool.deep_search,
@@ -24,19 +29,18 @@ tools = [
     image_tool.generate_image,
 ]
 
-# GROQ_MODEL = "llama-3.1-8b-instant"
-# GROQ_MODEL = "llama-3.3-70b-versatile"
-# GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
-GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
-
 
 def init_groq_client():
-    llm = ChatGroq(
-        model=GROQ_MODEL,
-        api_key=SecretStr(settings.GROQ_API_KEY),
-        temperature=0.6,
-        max_tokens=2048,
-        streaming=True,
-    )
+    def create_llm():
+        return ChatGroq(
+            model=GROQ_MODEL,
+            api_key=SecretStr(settings.GROQ_API_KEY),
+            temperature=0.6,
+            max_tokens=2048,
+            streaming=True,
+        )
 
-    return llm.bind_tools(tools=tools)
+    llm_with_tools = create_llm().bind_tools(tools=tools)
+    llm_without_tools = create_llm()
+
+    return llm_with_tools, llm_without_tools, tools

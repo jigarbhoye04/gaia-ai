@@ -8,20 +8,14 @@ from app.models.chat_models import (
     StarredUpdate,
     UpdateMessagesRequest,
 )
-from app.models.general_models import (
-    DescriptionUpdateRequest,
-    DescriptionUpdateRequestLLM,
-)
 from app.services.conversation_service import (
-    create_conversation,
+    create_conversation_service,
     delete_all_conversations,
     delete_conversation,
     get_conversation,
     get_conversations,
     pin_message,
     star_conversation,
-    update_conversation_description,
-    update_conversation_description_llm,
     update_messages,
 )
 
@@ -35,7 +29,7 @@ async def create_conversation_endpoint(
     """
     Create a new conversation.
     """
-    response = await create_conversation(conversation, user)
+    response = await create_conversation_service(conversation, user)
     return JSONResponse(content=response)
 
 
@@ -79,36 +73,6 @@ async def update_messages_endpoint(
     Update the messages of a conversation.
     """
     response = await update_messages(request, user)
-    return JSONResponse(content=response)
-
-
-@router.put("/conversations/{conversation_id}/description/llm")
-async def update_conversation_description_llm_endpoint(
-    conversation_id: str,
-    data: DescriptionUpdateRequestLLM,
-    user: dict = Depends(get_current_user),
-) -> JSONResponse:
-    """
-    Update the conversation description using an LLM.
-    """
-    response = await update_conversation_description_llm(
-        conversation_id=conversation_id,
-        data=data,
-        user=user,
-    )
-    return JSONResponse(content=response)
-
-
-@router.put("/conversations/{conversation_id}/description")
-async def update_conversation_description_endpoint(
-    conversation_id: str,
-    data: DescriptionUpdateRequest,
-    user: dict = Depends(get_current_user),
-) -> JSONResponse:
-    """
-    Update the conversation description.
-    """
-    response = await update_conversation_description(conversation_id, data, user)
     return JSONResponse(content=response)
 
 

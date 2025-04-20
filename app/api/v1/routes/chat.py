@@ -21,18 +21,6 @@ async def chat_stream_endpoint(
 ) -> StreamingResponse:
     """
     Stream chat messages in real time.
-
-    This endpoint processes user messages through a pipeline that can:
-    - Fetch relevant notes and documents
-    - Perform web searches when search_web=True
-    - Perform deep internet search when deep_search=True, which fetches and
-      processes full webpage content from search results
-    - Stream AI responses back to the client
-
-    The deep_search feature enhances the search_web functionality by not only
-    returning search results but also fetching the actual content from the top
-    results, converting it to markdown, and providing it to the LLM for a more
-    comprehensive response.
     """
 
     # TODO: Figure out a better way to get the user's IP address

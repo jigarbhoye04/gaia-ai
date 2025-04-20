@@ -1,3 +1,4 @@
+import json
 from typing import AsyncGenerator
 
 from fastapi import HTTPException
@@ -7,6 +8,7 @@ from app.langchain.agent import call_agent
 from app.models.general_models import (
     MessageRequestWithHistory,
 )
+from app.utils.chat_utils import create_conversation
 
 
 async def chat_stream(
@@ -27,7 +29,6 @@ async def chat_stream(
     Returns:
         StreamingResponse: A streaming response containing the LLM's generated content
     """
-    # last_message = body.messages[-1] if body.messages else None
     # context = {
     #     "user_id": user.get("user_id"),
     #     "conversation_id": body.conversation_id,
@@ -44,6 +45,22 @@ async def chat_stream(
     #     "fileIds": body.fileIds,
     # }
     # context["messages"][-1] = context["last_message"]
+
+    if body.conversation_id is None:
+        last_message = body.messages[-1] if body.messages else None
+
+        conversation = await create_conversation(last_message=last_message, user=user)
+
+        yield f"""data: {
+            json.dumps(
+                {
+                    "conversation_id": conversation.get("conversation_id"),
+                    "conversation_description": conversation.get(
+                        "description", "New Chat"
+                    ),
+                }
+            )
+        }\n\n"""
 
     # TODO: FETCH NOTES AND FILES AND USE THEM
 

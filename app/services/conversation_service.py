@@ -4,18 +4,13 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import HTTPException, status
 
-from app.config.loggers import chat_logger as logger
 from app.db.collections import conversations_collection
-from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
-from app.models.general_models import (
-    DescriptionUpdateRequest,
-    DescriptionUpdateRequestLLM,
-)
-from app.utils.chat_utils import do_prompt_no_stream
 
 
-async def create_conversation(conversation: ConversationModel, user: dict) -> dict:
+async def create_conversation_service(
+    conversation: ConversationModel, user: dict
+) -> dict:
     """
     Create a new conversation.
     """
@@ -144,69 +139,6 @@ async def get_conversation(conversation_id: str, user: dict) -> dict:
 
     conversation["_id"] = str(conversation["_id"])
     return conversation
-
-
-async def update_conversation_description_llm(
-    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict
-) -> dict:
-    """
-    Update the conversation description using an LLM-generated summary.
-    """
-    user_id = user.get("user_id")
-    description = "New Chat"
-
-    try:
-        response = await do_prompt_no_stream(
-            prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(
-                user_message=data.userFirstMessage
-            ),
-        )
-        description = (response.get("response", "New Chat")).replace('"', "")
-    except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-
-    try:
-        update_result = await conversations_collection.update_one(
-            {"user_id": user_id, "conversation_id": conversation_id},
-            {"$set": {"description": description}},
-        )
-
-        if update_result.modified_count == 0:
-            raise HTTPException(
-                status_code=404, detail="Conversation not found or update failed"
-            )
-    except Exception as e:
-        logger.error(f"Update conversation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Update failed {e}")
-
-    return {
-        "message": "Conversation updated successfully",
-        "description": description,
-    }
-
-
-async def update_conversation_description(
-    conversation_id: str, data: DescriptionUpdateRequest, user: dict
-) -> dict:
-    """
-    Update the conversation description.
-    """
-    user_id = user.get("user_id")
-
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$set": {"description": data.description}},
-    )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Conversation not found or update failed"
-        )
-
-    return {
-        "message": "Conversation updated successfully",
-        "description": data.description,
-    }
 
 
 async def star_conversation(conversation_id: str, starred: bool, user: dict) -> dict:
