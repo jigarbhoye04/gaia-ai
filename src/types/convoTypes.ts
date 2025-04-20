@@ -18,7 +18,7 @@ export type MessageType = {
   date?: string | ""; // The date when the message was sent, formatted as DateType, or an empty string
   loading?: boolean; // Optional: Indicates whether the message is still loading (e.g., for bot responses)
   // Removed legacy image properties:
-  // imageUrl?: string; 
+  // imageUrl?: string;
   // imagePrompt?: string;
   // improvedImagePrompt?: string;
   searchWeb?: boolean | false;

@@ -12,7 +12,6 @@ import { useChatStream } from "@/hooks/useChatStream";
 import { useFetchConversations } from "@/hooks/useConversationList";
 import { addMessage } from "@/redux/slices/conversationSlice";
 import { MessageType } from "@/types/convoTypes";
-import { createNewConversation } from "@/utils/chatUtils";
 import fetchDate from "@/utils/fetchDate";
 
 import { useLoading } from "./useLoading";
@@ -53,16 +52,12 @@ export const useSendMessage = (convoIdParam: string | null) => {
 
     dispatch(addMessage(currentMessage));
 
-    const conversationId =
-      convoIdParam ||
-      (await createNewConversation(
-        [currentMessage],
-        router,
-        fetchConversations,
-      ));
+    // For new conversations, we'll let the backend create the conversation
+    // No need to call createNewConversation explicitly
+    const conversationId = convoIdParam || null;
 
-    if (!conversationId) return setIsLoading(false);
-
+    // If this is a new conversation (null conversationId),
+    // the backend will create it and return the ID
     await fetchChatStream(
       inputText,
       [currentMessage],
@@ -71,7 +66,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       enableDeepSearch,
       pageFetchURLs,
       botMessageId,
-      fileData, // Pass complete file data to chat stream
+      fileData,
     );
   };
 };

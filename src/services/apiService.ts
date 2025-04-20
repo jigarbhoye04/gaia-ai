@@ -24,17 +24,6 @@ export const ApiService = {
     }
   },
 
-  createConversation: async (convoID: string) => {
-    try {
-      await apiauth.post("/conversations", {
-        conversation_id: convoID,
-      });
-    } catch (error) {
-      console.error(`Error creating conversation with id ${convoID}:`, error);
-      toast.error("Error creating conversation. Please try again later.");
-      throw error;
-    }
-  },
 
   deleteAllConversations: async () => {
     try {
@@ -68,7 +57,7 @@ export const ApiService = {
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
     convoMessages: MessageType[],
-    conversationId: string,
+    conversationId: string | null,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: Error) => void,
@@ -123,22 +112,5 @@ export const ApiService = {
     );
   },
 
-  updateConversationDescription: async (
-    conversationId: string,
-    userFirstMessage: string,
-    fetchConversations: () => void,
-    llm: boolean = true,
-  ) => {
-    const response = await apiauth.put(
-      `/conversations/${conversationId}/description${llm ? "/llm" : ""}`,
-      {
-        userFirstMessage,
-      },
-    );
 
-    // To update in the sidebar
-    fetchConversations();
-
-    return response.data;
-  },
 };

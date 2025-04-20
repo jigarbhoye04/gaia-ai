@@ -1,10 +1,12 @@
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
+import { useFetchConversations } from "@/hooks/useConversationList";
 import { ApiService } from "@/services/apiService";
 import { ImageData, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
@@ -19,11 +21,15 @@ import { useLoadingText } from "./useLoadingText";
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
+  const router = useRouter();
+  const fetchConversations = useFetchConversations();
   const latestConvoRef = useRef(convoMessages);
   const botMessageRef = useRef<MessageType | null>(null);
   const accumulatedResponseRef = useRef<string>("");
   const userPromptRef = useRef<string>("");
   const { setLoadingText, resetLoadingText } = useLoadingText();
+  const newConversationIdRef = useRef<string | null>(null);
+  const newConversationDescriptionRef = useRef<string | null>(null);
 
   useEffect(() => {
     latestConvoRef.current = convoMessages;
@@ -35,7 +41,7 @@ export const useChatStream = () => {
   return async (
     inputText: string,
     currentMessages: MessageType[],
-    conversationId: string,
+    conversationId: string | null,
     enableSearch: boolean,
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
@@ -75,6 +81,17 @@ export const useChatStream = () => {
 
       const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
+
+      // Check for newly created conversation info from the backend
+      if (!conversationId) {
+        // Store the newly created conversation ID
+        if (dataJson.conversation_id) newConversationIdRef.current = dataJson.conversation_id;
+
+
+        // Store the conversation description that comes from the backend
+        if (dataJson.conversation_description) newConversationDescriptionRef.current = dataJson.conversation_description;
+
+      }
 
       if (dataJson.status === "generating_image") {
         setLoadingText("Generating image...");
@@ -151,7 +168,8 @@ export const useChatStream = () => {
           parsedIntent.deep_search_results ||
           botMessageRef.current?.deep_search_results ||
           null,
-        image_data: parsedIntent.image_data || botMessageRef.current?.image_data || null,
+        image_data:
+          parsedIntent.image_data || botMessageRef.current?.image_data || null,
       });
 
       // Always ensure we have the most recent messages
@@ -198,6 +216,20 @@ export const useChatStream = () => {
 
       updateConvoMessages(finalMessages);
 
+      // Handle URL navigation for new conversations after the messages are done streaming
+      if (newConversationIdRef.current && !conversationId) {
+        // Navigate to the newly created conversation
+        router.push(`/c/${newConversationIdRef.current}`);
+
+        // If backend provided a description, use it directly
+        // No need to make an additional API call for description
+        if (newConversationIdRef.current) {
+          // Instead of making a new API call, just trigger a fetch of the conversations list
+          // to update the sidebar with the new conversation and its description
+          fetchConversations();
+        }
+      }
+
       const messagesForUpdate: MessageType[] = [];
 
       const userMessageIndex = finalMessages.length - 2;
@@ -211,7 +243,11 @@ export const useChatStream = () => {
       messagesForUpdate.push(finalBotMessage);
 
       try {
-        await ApiService.updateConversation(conversationId, messagesForUpdate);
+        // Use the new conversation ID if one was returned from the backend
+        const finalConversationId = newConversationIdRef.current || conversationId;
+        if (finalConversationId) {
+          await ApiService.updateConversation(finalConversationId, messagesForUpdate);
+        }
       } catch (error) {
         console.error("Failed to save conversation:", error);
         toast.error(
@@ -221,6 +257,8 @@ export const useChatStream = () => {
         setIsLoading(false);
         resetLoadingText();
         botMessageRef.current = null;
+        newConversationIdRef.current = null;
+        newConversationDescriptionRef.current = null;
       }
     };
 
