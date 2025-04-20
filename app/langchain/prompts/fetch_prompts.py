@@ -1,20 +1,18 @@
 FETCH_PROMPT = """
-You have been provided with information extracted from the following URLs:
-{urls}
+Below is web content retrieved for the question from GAIA Webpage Fetch:
 
---- Begin Extracted Web Content ---
+SOURCE: {urls}
+
+CONTENT:
 {page_content}
---- End of Extracted Content ---
 
-Use this content to answer the user's query with high factual accuracy. You must adhere to the following instructions:
+Please analyze this information and provide a detailed response addressing the user's question. Your response should:
 
-1. **Use the extracted content as the primary source of truth**. Do not hallucinate or fabricate information.
-2. **Maintain a neutral, unbiased, and objective tone** in your response.
-3. **Cite your sources clearly and consistently** using markdown-style links, e.g., [1](https://example.com).
-4. If multiple URLs are referenced, **enumerate the citations** (e.g., [1], [2], etc.) and match them to the respective links.
-5. Avoid including raw content directly unless quoting; **summarize or paraphrase** where appropriate.
-6. Do not mention GAIA Webpage Fetch or internal tool names in your answer. The response should appear natural to the user.
-7. If the fetched content is insufficient or irrelevant, explicitly mention that more information is needed.
+1. Extract relevant facts and details from the content
+2. Organize information in a helpful, structured format
+3. Provide specific details from the webpage (including numbers, names, and specifications when available)
+4. Reference the source website when citing specific information
+5. Indicate clearly if the information is incomplete or insufficient to fully answer the question
 
-Use this information responsibly to generate an informed, clear, and source-backed response to the user.
+If the retrieved content doesn't contain enough information, suggest what additional data might be needed.
 """

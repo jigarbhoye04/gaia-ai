@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Annotated
+from typing import List, Annotated, Dict, Union
 from langchain_core.tools import tool
 import re
 
@@ -12,18 +12,17 @@ from app.utils.search_utils import perform_fetch
 @tool
 async def fetch_webpages(
     urls: Annotated[List[str], "List of URLs to fetch content from"],
-) -> dict:
-    """
-    Fetch the content from a list of URLs and return a formatted summary.
-    Automatically adds 'https://' prefix to URLs that don't have a scheme.
+) -> Dict[str, Union[str, List[str]]]:
+    """Fetch content from provided URLs and return a formatted summary.
+
+    This tool retrieves web content from multiple URLs concurrently.
+    It automatically adds 'https://' to URLs missing a protocol prefix.
 
     Args:
-        urls (List[str]): URLs to fetch content from. URLs without 'http://' or 'https://' will
-                         automatically have 'https://' prepended.
+        urls: A list of website URLs to fetch content from
 
     Returns:
-        dict: A dictionary containing the combined and formatted content of all fetched pages
-              with key "webpage_content", or an error message string in case of failure.
+        A dictionary with either successful webpage data or an error message
     """
     if not urls:
         return {"error": "No URLs were provided."}
@@ -57,7 +56,7 @@ async def fetch_webpages(
 
         writer({"progress": "Fetching Complete!"})
 
-        return {"webpage_content": combined_content}
+        return {"webpage_data": combined_content}
 
     except Exception as e:
         return {"error": f"An error occurred while fetching webpages: {str(e)}"}
