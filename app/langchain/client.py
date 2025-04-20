@@ -19,13 +19,15 @@ GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 
 def init_groq_client():
-    llm = ChatGroq(
-        model=GROQ_MODEL,
-        api_key=SecretStr(settings.GROQ_API_KEY),
-        temperature=0.6,
-        max_tokens=2048,
-        streaming=True,
-    )
+    def create_llm():
+        return ChatGroq(
+            model=GROQ_MODEL,
+            api_key=SecretStr(settings.GROQ_API_KEY),
+            temperature=0.6,
+            max_tokens=2048,
+            streaming=True,
+        )
+
     tools = [
         fetch_tool.fetch_webpages,
         search_tool.deep_search,
@@ -38,4 +40,7 @@ def init_groq_client():
         image_tool.generate_image,
     ]
 
-    return llm.bind_tools(tools=tools), tools
+    llm_with_tools = create_llm().bind_tools(tools=tools)
+    llm_without_tools = create_llm()
+
+    return llm_with_tools, llm_without_tools, tools

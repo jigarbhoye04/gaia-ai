@@ -6,7 +6,7 @@ from langchain_core.messages import (
 
 from app.langchain.state import State
 from app.langchain.messages import LangChainMessageType
-
+from app.config.loggers import chat_logger as logger
 # # GROQ_MODEL = "llama-3.1-8b-instant"
 # # GROQ_MODEL = "llama-3.3-70b-versatile"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
@@ -179,6 +179,7 @@ from app.langchain.messages import LangChainMessageType
 async def do_prompt_no_stream(
     prompt: str,
     system_prompt: str | None = None,
+    use_tools: bool = False,
 ) -> dict:
     # Import the chatbot function only when needed to prevent circular imports
     from app.langchain.chatbot import chatbot
@@ -190,9 +191,9 @@ async def do_prompt_no_stream(
 
     state = State({"messages": messages})
 
-    response = await chatbot(state)
+    response = await chatbot(state, use_tools)
 
     # Extract the AI's response content
     ai_message = response["messages"][0]
-
+    logger.info(f"this is the ai message {ai_message}")
     return {"response": ai_message.content}

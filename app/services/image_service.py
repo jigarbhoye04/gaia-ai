@@ -28,14 +28,17 @@ async def api_generate_image(message: str, improve_prompt=True) -> dict:
 
     Args:
         message (str): The user's input prompt for image generation.
+        improve_prompt (bool): Whether to improve the prompt using AI.
 
     Returns:
-        dict: A dictionary containing the URL of the uploaded image and the improved prompt.
+        dict: A dictionary containing the URL of the uploaded image and prompt information.
 
     Raises:
         HTTPException: If an error occurs during image generation or upload.
     """
     try:
+        original_message = message
+
         if improve_prompt:
             improved_prompt = await do_prompt_no_stream(
                 prompt=IMAGE_PROMPT_REFINER.format(message=message),
@@ -83,10 +86,13 @@ async def api_generate_image(message: str, improve_prompt=True) -> dict:
         image_url = upload_result.get("secure_url")
         logger.info(f"Image uploaded successfully. URL: {image_url}")
 
+        # Format the response in the new structure
         return {
             "url": image_url,
-            "improved_prompt": message if improve_prompt else None,
-            "prompt": message,
+            "prompt": original_message,
+            "improved_prompt": message
+            if improve_prompt and original_message != message
+            else None,
         }
 
     except Exception as e:
@@ -136,8 +142,10 @@ async def generate_image_stream(query_text: str) -> AsyncGenerator[str, None]:
     try:
         yield f"data: {json.dumps({'status': 'generating_image'})}\n\n"
 
+        # Get image result with the new structure
         image_result = await api_generate_image(query_text)
 
+        # Format the response to match the expected frontend format
         yield f"data: {json.dumps({'intent': 'generate_image', 'image_data': image_result})}\n\n"
         yield "data: [DONE]\n\n"
     except Exception as e:

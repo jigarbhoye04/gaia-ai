@@ -45,14 +45,13 @@ class FileData(BaseModel):
 
 class MessageRequestWithHistory(BaseModel):
     message: str
-    conversation_id: str
+    conversation_id: Optional[str] = None
     messages: List[MessageDict]
     search_web: Optional[bool] = False
     deep_search: Optional[bool] = False
     pageFetchURLs: Optional[List] = []
     fileIds: Optional[List[str]] = []
     fileData: Optional[List[FileData]] = []
-    # deep_search_results: Optional[Dict[str, Any]] = None
 
 
 class MessageRequest(BaseModel):
@@ -62,12 +61,3 @@ class MessageRequest(BaseModel):
 class MessageRequestPrimary(BaseModel):
     message: str
     conversation_id: str
-
-
-class DescriptionUpdateRequestLLM(BaseModel):
-    userFirstMessage: str
-    model: str = "@cf/meta/llama-3.2-3b-instruct"
-
-
-class DescriptionUpdateRequest(BaseModel):
-    description: str

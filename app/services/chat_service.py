@@ -1,3 +1,5 @@
+import json
+import uuid
 from typing import AsyncGenerator
 
 from fastapi import HTTPException
@@ -5,8 +7,15 @@ from fastapi.encoders import jsonable_encoder
 
 from app.db.collections import conversations_collection
 from app.langchain.agent import call_agent
+from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.models.general_models import (
     MessageRequestWithHistory,
+)
+from app.utils.chat_utils import do_prompt_no_stream
+from app.config.loggers import chat_logger as logger
+from app.services.conversation_service import (
+    ConversationModel,
+    create_conversation,
 )
 
 
@@ -28,7 +37,7 @@ async def chat_stream(
     Returns:
         StreamingResponse: A streaming response containing the LLM's generated content
     """
-    # last_message = body.messages[-1] if body.messages else None
+    last_message = body.messages[-1] if body.messages else None
     # context = {
     #     "user_id": user.get("user_id"),
     #     "conversation_id": body.conversation_id,
@@ -45,6 +54,33 @@ async def chat_stream(
     #     "fileIds": body.fileIds,
     # }
     # context["messages"][-1] = context["last_message"]
+
+    if body.conversation_id is None:
+        # Generate Conversation ID
+        uuid_value = uuid.uuid4()
+
+        # Generate Conversation Description with LLM
+        response = await do_prompt_no_stream(
+            prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(user_message=last_message),
+        )
+        logger.info(f"Generated conversation description: {response}")
+        # Pre process the description
+        description = (response.get("response", "New Chat")).replace('"', "")
+
+        conversation = ConversationModel(
+            conversation_id=str(uuid_value), description=description
+        )
+
+        await create_conversation(conversation, user)
+
+        yield f"""data: {
+            json.dumps(
+                {
+                    "conversation_id": conversation.conversation_id,
+                    "conversation_description": conversation.description,
+                }
+            )
+        }\n\n"""
 
     # TODO: FETCH NOTES AND FILES AND USE THEM
 
