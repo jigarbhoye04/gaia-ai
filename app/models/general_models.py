@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr
 from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr
 from typing_extensions import TypedDict
 
 
@@ -51,7 +52,9 @@ class MessageRequestWithHistory(BaseModel):
     deep_search: Optional[bool] = False
     pageFetchURLs: Optional[List] = []
     fileIds: Optional[List[str]] = []
-    fileData: Optional[List[FileData]] = []
+    fileData: Optional[
+        List[FileData]
+    ] = []  # TODO: Remove this field, we should not request it from the frontend
     # deep_search_results: Optional[Dict[str, Any]] = None
 
 

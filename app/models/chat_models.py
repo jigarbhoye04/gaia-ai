@@ -2,10 +2,10 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel
 
+from app.models.calendar_models import EventCreateRequest
 from app.models.general_models import FileData
 from app.models.search_models import DeepSearchResults, SearchResults
 from app.models.weather_models import WeatherData
-from app.models.calendar_models import EventCreateRequest
 
 
 class MessageModel(BaseModel):
@@ -43,6 +43,7 @@ class ConversationModel(BaseModel):
 class UpdateMessagesRequest(BaseModel):
     conversation_id: str
     messages: List[MessageModel]
+    # new_messages: List[MessageModel]
 
 
 class StarredUpdate(BaseModel):

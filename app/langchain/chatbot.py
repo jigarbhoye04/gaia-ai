@@ -1,10 +1,10 @@
 from langchain_core.messages import AIMessage
 
 from app.config.loggers import chat_logger as logger
-from app.langchain.state import State
 from app.langchain.client import init_groq_client
+from app.langchain.state import State
 
-llm, tools = init_groq_client()
+llm = init_groq_client()
 
 
 async def chatbot(

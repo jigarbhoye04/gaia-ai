@@ -6,12 +6,12 @@ from fastapi import HTTPException, status
 
 from app.config.loggers import chat_logger as logger
 from app.db.collections import conversations_collection
+from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 from app.models.general_models import (
     DescriptionUpdateRequest,
     DescriptionUpdateRequestLLM,
 )
-from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.utils.chat_utils import do_prompt_no_stream
 
 
@@ -264,6 +264,7 @@ async def delete_conversation(conversation_id: str, user: dict) -> dict:
     }
 
 
+# TODO: only accept messages that are not already in the conversation
 async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
     """
     Add messages to an existing conversation, including any file IDs attached to the messages.

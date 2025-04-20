@@ -63,7 +63,7 @@ async def upload_file_service(
         file_description = generate_file_description(
             content, file_url, file.content_type, file.filename
         )
-        logger.info(f"Generated description for file {file_id}: {file_description}")
+        logger.info(f"Generated description for file {file_id}")
 
         current_time = datetime.now(timezone.utc)
         file_metadata = {
