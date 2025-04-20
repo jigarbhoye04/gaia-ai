@@ -1,22 +1,22 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
-from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.services.conversation_service import (
-    create_conversation_service,
-    get_conversations,
-    update_messages,
-    pin_message,
-    get_conversation,
-    star_conversation,
-    delete_all_conversations,
-    delete_conversation,
-)
 
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.chat_models import (
     ConversationModel,
-    UpdateMessagesRequest,
-    StarredUpdate,
     PinnedUpdate,
+    StarredUpdate,
+    UpdateMessagesRequest,
+)
+from app.services.conversation_service import (
+    create_conversation_service,
+    delete_all_conversations,
+    delete_conversation,
+    get_conversation,
+    get_conversations,
+    pin_message,
+    star_conversation,
+    update_messages,
 )
 
 router = APIRouter()

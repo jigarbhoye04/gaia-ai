@@ -17,6 +17,18 @@ from app.langchain.tools import (
 # GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
+tools = [
+    fetch_tool.fetch_webpages,
+    search_tool.deep_search,
+    search_tool.web_search,
+    memory_tool.create_memory,
+    weather_tool.get_weather,
+    calendar_tool.fetch_calendar_list,
+    calendar_tool.calendar_event,
+    flowchart_tool.create_flowchart,
+    image_tool.generate_image,
+]
+
 
 def init_groq_client():
     def create_llm():
@@ -27,18 +39,6 @@ def init_groq_client():
             max_tokens=2048,
             streaming=True,
         )
-
-    tools = [
-        fetch_tool.fetch_webpages,
-        search_tool.deep_search,
-        search_tool.web_search,
-        memory_tool.create_memory,
-        weather_tool.get_weather,
-        calendar_tool.fetch_calendar_list,
-        calendar_tool.calendar_event,
-        flowchart_tool.create_flowchart,
-        image_tool.generate_image,
-    ]
 
     llm_with_tools = create_llm().bind_tools(tools=tools)
     llm_without_tools = create_llm()

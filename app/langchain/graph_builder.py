@@ -1,7 +1,9 @@
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from app.langchain.chatbot import chatbot, tools
+
+from app.langchain.chatbot import chatbot
+from app.langchain.client import tools
 from app.langchain.state import State
 from app.config.loggers import llm_logger as logger
 

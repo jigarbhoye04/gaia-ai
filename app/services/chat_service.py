@@ -2,7 +2,6 @@ import json
 from typing import AsyncGenerator
 
 from fastapi import HTTPException
-from fastapi.encoders import jsonable_encoder
 
 from app.db.collections import conversations_collection
 from app.langchain.agent import call_agent
@@ -66,12 +65,27 @@ async def chat_stream(
     # TODO: FETCH NOTES AND FILES AND USE THEM
 
     async for chunk in call_agent(
-        messages=jsonable_encoder(body.messages),
-        user_id=user.get("user_id"),
+        message_request=body,
+        user=user,
         conversation_id=body.conversation_id,
         access_token=user.get("access_token"),
     ):
         yield chunk
+
+    # TODO: Update the conversation with the new messages here instead of from the frontend
+    # background_tasks.add_task(
+    #     update_messages,
+    #     UpdateMessagesRequest(
+    #         conversation_id=body.conversation_id,
+    #         new_messages=[
+    #             ConversationModel(
+    #                 conversation_id=body.conversation_id,
+    #                 description="New Chat",
+    #             )
+    #         ],
+    #     ),
+    #     user=user,
+    # )
 
 
 async def get_starred_messages(user: dict) -> dict:

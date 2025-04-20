@@ -196,6 +196,7 @@ async def delete_conversation(conversation_id: str, user: dict) -> dict:
     }
 
 
+# TODO: only accept messages that are not already in the conversation
 async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
     """
     Add messages to an existing conversation, including any file IDs attached to the messages.

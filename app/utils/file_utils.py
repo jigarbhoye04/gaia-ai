@@ -7,10 +7,10 @@ import os
 import tempfile
 from typing import Optional, Tuple
 
-import PyPDF2
 import docx2txt
-from groq import Groq
+import PyPDF2
 import pytesseract
+from groq import Groq
 from PIL import Image
 
 from app.config.loggers import app_logger as logger
@@ -199,7 +199,7 @@ def extract_text_from_pdf(pdf_data: bytes) -> str:
 
         # Truncate if too long
         text = text.strip()
-        if len(text) > 500:
+        if len(text) > 500:  # TODO: optimize this to match our max token limit
             text = text[:497] + "..."
 
         return text if text else "No text content could be extracted from PDF"
