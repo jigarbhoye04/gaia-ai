@@ -26,13 +26,13 @@ graph = build_graph()
 
 @traceable
 async def call_agent(
-    message_request: MessageRequestWithHistory,
+    request: MessageRequestWithHistory,
     conversation_id,
     user,
     access_token=None,
 ):
     user_id = user.get("user_id")
-    messages = message_request.messages
+    messages = request.messages
 
     # messages[-1] = await add_file_content_to_message(
     #     messages[-1], message_request.fileIds, user_id
@@ -43,7 +43,7 @@ async def call_agent(
         "messages": history,
         # "force_web_search": message_request.search_web,
         "force_web_search": True,
-        "force_deep_search": message_request.deep_search,
+        "force_deep_search": request.deep_search,
         "current_datetime": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -64,7 +64,7 @@ async def call_agent(
         ):
             stream_mode, payload = event
             if stream_mode == "messages":
-                chunk, metadata = payload  # now safe to unpack
+                chunk, metadata = payload
                 if chunk is None:
                     continue
 

@@ -11,16 +11,16 @@ from app.config.loggers import llm_logger as logger
 # web_search_tool = ToolNode([search_tool.web_search_tool], name="web_search_tool")
 
 
-def should_call_tool(state: State):
-    logger.info(f"force web search in state is: {state.get('force_web_search')}")
-    logger.info(f"current_datetime in state is: {state.get('current_datetime')}")
+# def should_call_tool(state: State):
+#     logger.info(f"force web search in state is: {state.get('force_web_search')}")
+#     logger.info(f"current_datetime in state is: {state.get('current_datetime')}")
 
-    if state.get("force_web_search", False):
-        return "web_search_tool"
-    # elif state.get("force_deep_search", False):
-    #     return "call_2"
-    else:
-        return END
+#     if state.get("force_web_search", False):
+#         return "web_search_tool"
+#     # elif state.get("force_deep_search", False):
+#     #     return "call_2"
+#     else:
+#         return END
 
 
 def build_graph():

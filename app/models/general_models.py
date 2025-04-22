@@ -50,7 +50,7 @@ class MessageRequestWithHistory(BaseModel):
     messages: List[MessageDict]
     search_web: Optional[bool] = False
     deep_search: Optional[bool] = False
-    pageFetchURLs: Optional[List] = []
+    pageFetchURLs: Optional[List[str]] = []
     fileIds: Optional[List[str]] = []
     fileData: Optional[
         List[FileData]
