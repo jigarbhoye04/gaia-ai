@@ -60,7 +60,7 @@ async def upload_file_service(
                 status_code=500, detail="Invalid response from file upload service"
             )
 
-        file_description = generate_file_description(
+        file_description = await generate_file_description(
             content, file_url, file.content_type, file.filename
         )
         logger.info(f"Generated description for file {file_id}")

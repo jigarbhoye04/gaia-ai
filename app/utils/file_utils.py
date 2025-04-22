@@ -2,12 +2,14 @@
 Utility functions for file processing including content description generation.
 """
 
+import base64
 import io
 import os
 import tempfile
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import docx2txt
+import pymupdf
 import PyPDF2
 import pytesseract
 from groq import Groq
@@ -15,6 +17,7 @@ from PIL import Image
 
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
+from app.models.files_models import DocumentPageModel, DocumentSummaryModel
 
 if not settings.USE_HUGGINGFACE_API:
     from transformers import BlipForConditionalGeneration, BlipProcessor
@@ -264,9 +267,13 @@ def extract_text_from_txt(txt_data: bytes) -> str:
         return "Text content could not be extracted"
 
 
-def generate_file_description(
+async def generate_file_description(
     file_content: bytes, file_url: str, content_type: str, filename: str
-) -> Optional[str]:
+) -> (
+    Optional[str]
+    | Optional[DocumentSummaryModel]
+    | Optional[List[DocumentSummaryModel]]
+):
     """
     Generate a description for a file based on its content type.
     Args:
@@ -282,7 +289,8 @@ def generate_file_description(
             return generate_image_description(file_content, file_url)
 
         elif content_type == "application/pdf":
-            return f"PDF content: {extract_text_from_pdf(file_content)}"
+            # return f"PDF content: {extract_text_from_pdf(file_content)}"
+            return await generate_pdf_summary(file_content)
 
         elif (
             content_type
@@ -300,3 +308,103 @@ def generate_file_description(
     except Exception as e:
         logger.error(f"Failed to generate file description: {str(e)}", exc_info=True)
         return f"File description could not be generated for {filename}"
+
+
+def split_pdf_into_pages(pdf_data: bytes) -> list[DocumentPageModel]:
+    """
+    Split a PDF file into individual pages and return them as a list of bytes.
+    Args:
+        pdf_data: Raw PDF file bytes
+    Returns:
+        list: List of base64-encoded strings representing each page of the PDF
+    """
+    try:
+        pdf_document = pymupdf.open(stream=pdf_data, filetype="pdf")
+
+        images: list[DocumentPageModel] = []
+        for page_num in range(pdf_document.page_count):
+            page = pdf_document.load_page(page_num)
+            pix = page.get_pixmap()
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+            buffer = io.BytesIO()
+            img.save(buffer, format="PNG")
+
+            images.append(
+                DocumentPageModel(
+                    page_number=page_num + 1,
+                    base64=base64.b64encode(buffer.getvalue()).decode("utf-8"),
+                )
+            )
+            buffer.close()
+
+        pdf_document.close()
+        return images
+    except Exception as e:
+        logger.error(f"Failed to split PDF into pages: {str(e)}", exc_info=True)
+        return []
+
+
+async def summarize_images(images: list[str], max_concurrency) -> list[str]:
+    """
+    Summarize a list of images using the Groq API.
+    Args:
+        images: List of base64-encoded strings representing images
+    Returns:
+        list: List of summaries for each image
+    """
+    from app.langchain.chatbot import llm_without_tools
+
+    try:
+        res = await llm_without_tools.abatch(
+            [
+                [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": """
+                                Provide a concise summary of the content in this image. Assume it is part of a document like a PDF or DOCX, and ensure the summary is relevant for semantic search and accurately describes the image.
+
+                                Note: Only respond with the summary text, without any additional information or context.""",
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/jpeg;base64,{img}"},
+                            },
+                        ],
+                    }
+                ]
+                for img in images
+            ],
+            config={
+                "max_concurrency": max_concurrency,
+            },
+        )
+
+        summaries = [r.content for r in res]
+
+        return summaries
+    except Exception:
+        logger.error("Failed to summarize images:", exc_info=True)
+        return ["Failed to summarize images."]
+
+
+async def generate_pdf_summary(pdf_data: bytes) -> list[DocumentSummaryModel]:
+    """
+    Generate a summary for a PDF file using the Groq API.
+    Args:
+        pdf_data: Raw PDF file bytes
+    Returns:
+        str: Summary of the PDF content
+    """
+    images = split_pdf_into_pages(pdf_data)
+    summaries = await summarize_images(
+        images=[img.base64 for img in images], max_concurrency=10
+    )
+
+    return [
+        DocumentSummaryModel(image=img, summary=summary)
+        for img, summary in zip(images, summaries)
+    ]
