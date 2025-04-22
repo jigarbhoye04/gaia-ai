@@ -29,22 +29,6 @@ async def chat_stream(
     Returns:
         StreamingResponse: A streaming response containing the LLM's generated content
     """
-    # context = {
-    #     "user_id": user.get("user_id"),
-    #     "conversation_id": body.conversation_id,
-    #     "query_text": last_message.get("content", "")
-    #     if last_message is not None
-    #     else "",
-    #     "last_message": last_message,
-    #     "body": body,
-    #     "user": user,
-    #     "messages": jsonable_encoder(body.messages),
-    #     "search_web": body.search_web,
-    #     "deep_search": body.deep_search,
-    #     "pageFetchURLs": body.pageFetchURLs,
-    #     "fileIds": body.fileIds,
-    # }
-    # context["messages"][-1] = context["last_message"]
 
     if body.conversation_id is None:
         last_message = body.messages[-1] if body.messages else None
@@ -65,7 +49,7 @@ async def chat_stream(
     # TODO: FETCH NOTES AND FILES AND USE THEM
 
     async for chunk in call_agent(
-        message_request=body,
+        request=body,
         user=user,
         conversation_id=body.conversation_id,
         access_token=user.get("access_token"),

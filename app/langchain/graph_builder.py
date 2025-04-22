@@ -1,23 +1,33 @@
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
-from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.prebuilt import ToolNode
 
+from app.config.loggers import llm_logger as logger
 from app.langchain.chatbot import chatbot
 from app.langchain.client import tools
 from app.langchain.state import State
-from app.config.loggers import llm_logger as logger
 
 
 def build_graph():
     """Construct and compile the state graph."""
     graph_builder = StateGraph(State)
+
+    # Add nodes
     graph_builder.add_node("chatbot", chatbot)
     graph_builder.add_node("tools", ToolNode(tools=tools))
 
+    # Define edges
     graph_builder.add_edge(START, "chatbot")
-    graph_builder.add_edge("chatbot", END)
+
+    #
+    # After tools node, return to chatbot
     graph_builder.add_edge("tools", "chatbot")
-    graph_builder.add_conditional_edges("chatbot", tools_condition)
+
+    # Allow chatbot to end the graph
+    graph_builder.add_edge("chatbot", END)
+
+    # Add tool condition edges
+    # graph_builder.add_conditional_edges("chatbot", tools_condition)
 
     # Add a proper memory saver with configuration to prevent infinite loops
     memory_saver = MemorySaver()

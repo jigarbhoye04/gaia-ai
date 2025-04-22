@@ -15,4 +15,5 @@ Please analyze this information and provide a detailed response addressing the u
 5. Indicate clearly if the information is incomplete or insufficient to fully answer the question
 
 If the retrieved content doesn't contain enough information, suggest what additional data might be needed.
+\n\nUSE THE ABOVE INFORMATION TO PROVIDE A COMPREHENSIVE, DETAILED RESPONSE. DO NOT JUST ACKNOWLEDGE RECEIPT OF THIS DATA.
 """

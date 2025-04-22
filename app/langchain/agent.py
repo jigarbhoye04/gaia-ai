@@ -15,13 +15,13 @@ graph = build_graph()
 
 
 async def call_agent(
-    message_request: MessageRequestWithHistory,
+    request: MessageRequestWithHistory,
     conversation_id,
     user,
     access_token=None,
 ):
     user_id = user.get("user_id")
-    messages = message_request.messages
+    messages = request.messages
 
     # messages[-1] = await add_file_content_to_message(
     #     messages[-1], message_request.fileIds, user_id
@@ -53,16 +53,15 @@ async def call_agent(
             stream_mode, payload = event
 
             if stream_mode == "messages":
-                chunk, metadata = payload  # now safe to unpack
+                chunk, metadata = payload
                 if chunk is None:
                     continue
 
                 if isinstance(chunk, AIMessageChunk):
-                    content = str(chunk.content).strip()
+                    content = str(chunk.content)
                     if content:
-                        yield f"data: {json.dumps({'response': chunk.content})}\n\n"
-
                         llm_message += content
+                        yield f"data: {json.dumps({'response': content})}\n\n"
 
                 elif isinstance(chunk, ToolMessage):
                     yield format_tool_response(
