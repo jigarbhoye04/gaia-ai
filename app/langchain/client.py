@@ -20,7 +20,7 @@ GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 tools = [
     fetch_tool.fetch_webpages,
     search_tool.deep_search,
-    search_tool.web_search,
+    search_tool.web_search_tool,
     memory_tool.create_memory,
     weather_tool.get_weather,
     calendar_tool.fetch_calendar_list,

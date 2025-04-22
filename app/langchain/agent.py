@@ -8,12 +8,23 @@ from app.langchain.graph_builder import build_graph
 from app.langchain.messages import (
     construct_langchain_messages,
 )
+
 from app.models.general_models import MessageRequestWithHistory
 from app.utils.sse_utils import format_tool_response
+from langsmith import traceable
 
 graph = build_graph()
 
+# display(
+#     Image(
+#         graph.get_graph().draw_mermaid_png(
+#             draw_method=MermaidDrawMethod.API, max_retries=5, retry_delay=2.0
+#         )
+#     )
+# )
 
+
+@traceable
 async def call_agent(
     message_request: MessageRequestWithHistory,
     conversation_id,
@@ -30,8 +41,9 @@ async def call_agent(
 
     initial_state = {
         "messages": history,
-        "force_web_search": False,
-        "force_deep_search": False,
+        # "force_web_search": message_request.search_web,
+        "force_web_search": True,
+        "force_deep_search": message_request.deep_search,
         "current_datetime": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -51,23 +63,20 @@ async def call_agent(
             },
         ):
             stream_mode, payload = event
-
             if stream_mode == "messages":
                 chunk, metadata = payload  # now safe to unpack
                 if chunk is None:
                     continue
 
                 if isinstance(chunk, AIMessageChunk):
-                    content = str(chunk.content).strip()
-                    if content:
-                        yield f"data: {json.dumps({'response': chunk.content})}\n\n"
-
-                        llm_message += content
+                    content = str(chunk.content)
+                    yield f"data: {json.dumps({'response': chunk.content})}\n\n"
+                    llm_message += content
 
                 elif isinstance(chunk, ToolMessage):
+                    logger.info(f"Tool message: {chunk.name} - {chunk.content}")
                     yield format_tool_response(
-                        tool_name=chunk.name,
-                        content=str(chunk.content),
+                        tool_name=chunk.name, content=str(chunk.content)
                     )
 
             elif stream_mode == "custom":

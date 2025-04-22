@@ -9,7 +9,7 @@ SEARCH_PROMPT = """
 
     Instructions:
     1. **Use only the given search results** as your knowledge base. Do not make up facts or introduce unrelated content.
-    2. **Cite all factual claims** using markdown-style links, e.g., [1](https://example.com). If multiple sources are used, number them ([1], [2], etc.) and cite accordingly.
+    2. **Cite all references** using perfectly formatted syntactically correct markdown-style links, e.g., [1](https://example.com).
     3. **Every factual statement must be traceable** to the search content. Do not include unverifiable opinions or generalizations.
     4. **Maintain a neutral, objective tone**. Avoid speculation, bias, or overstatements.
     5. **Do NOT add any notes, disclaimers, or mentions of tools, sources, or limitations**. Just answer the query based strictly on the provided search content.

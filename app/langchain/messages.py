@@ -1,23 +1,21 @@
 from datetime import datetime, timezone
-from typing import List, TypeAlias, Union
+from typing import List
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, AnyMessage
 
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
 from app.models.general_models import MessageDict
 from app.services.file_service import fetch_files
 
-LangChainMessageType: TypeAlias = Union[SystemMessage, HumanMessage, AIMessage]
-
 
 def construct_langchain_messages(
     messages: List[MessageDict],
-) -> List[LangChainMessageType]:
+) -> List[AnyMessage]:
     """Convert raw dict messages to LangChain message objects with current datetime."""
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
 
     system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
-    chain_msgs: List[LangChainMessageType] = [SystemMessage(system_prompt)]
+    chain_msgs: List[AnyMessage] = [SystemMessage(system_prompt)]
 
     for msg in messages:
         role = msg.get("role")
