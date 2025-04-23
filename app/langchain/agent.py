@@ -33,6 +33,7 @@ async def call_agent(
     history = construct_langchain_messages(messages)
 
     initial_state = {
+        "query": request.message,
         "messages": history,
         # "force_web_search": message_request.search_web,
         "force_web_search": True,

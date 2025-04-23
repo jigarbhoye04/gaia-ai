@@ -21,18 +21,42 @@ from typing import List, Optional
 from langchain_core.messages import AnyMessage
 
 
-class DictLikeModel(BaseModel):
-    def get(self, key, default=None):
-        return getattr(self, key, default)
+# class DictLikeModel(BaseModel):
+#     def get(self, key, default=None):
+#         return getattr(self, key, default)
 
+#     def __getitem__(self, key):
+#         return getattr(self, key)
+
+#     def __setitem__(self, key, value):
+#         return setattr(self, key, value)
+
+
+# class State(DictLikeModel):
+#     messages: List[AnyMessage] = Field(default_factory=list)
+#     force_web_search: bool = False
+#     force_deep_search: bool = False
+#     current_datetime: Optional[str] = None
+
+from collections.abc import MutableMapping
+
+
+class DictLikeModel(BaseModel, MutableMapping):
     def __getitem__(self, key):
         return getattr(self, key)
 
     def __setitem__(self, key, value):
-        return setattr(self, key, value)
+        setattr(self, key, value)
+
+    def __delitem__(self, key):
+        delattr(self, key)
+
+    def __len__(self):
+        return len(self.__dict__)
 
 
 class State(DictLikeModel):
+    query: str = ""
     messages: List[AnyMessage] = Field(default_factory=list)
     force_web_search: bool = False
     force_deep_search: bool = False
