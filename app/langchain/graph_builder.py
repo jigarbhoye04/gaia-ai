@@ -1,6 +1,6 @@
 from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.graph import END, StateGraph
+from langgraph.graph import END, StateGraph, START
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from app.langchain.chatbot import chatbot
@@ -48,7 +48,7 @@ def should_call_tool(state: State):
     elif state.get("force_deep_search", False):
         return "inject_deep_search"
     else:
-        return END
+        return "chatbot"
 
 
 def build_graph():
@@ -63,16 +63,17 @@ def build_graph():
     graph_builder.add_node("inject_web_search", inject_web_search_tool_call)
     graph_builder.add_node("inject_deep_search", inject_deep_search_tool_call)
 
-    graph_builder.set_entry_point("chatbot")
+    # graph_builder.set_entry_point("chatbot")
 
     # Conditional edges from chatbot to injector nodes or end
     graph_builder.add_conditional_edges(
-        "chatbot",
+        # "chatbot",
+        START,
         should_call_tool,
         {
             "inject_web_search": "inject_web_search",
             "inject_deep_search": "inject_deep_search",
-            END: END,
+            "chatbot": "chatbot",
         },
     )
 

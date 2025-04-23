@@ -36,7 +36,7 @@ async def call_agent(
         "query": request.message,
         "messages": history,
         # "force_web_search": message_request.search_web,
-        "force_web_search": True,
+        "force_web_search": request.search_web,
         "force_deep_search": request.deep_search,
         "current_datetime": datetime.now(timezone.utc).isoformat(),
     }
