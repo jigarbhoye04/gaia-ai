@@ -3,13 +3,12 @@ from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 from app.langchain.templates.weather_template import WEATHER_PROMPT_TEMPLATE
 from app.utils.weather_utils import user_weather
-import json
 
 
 @tool
 async def get_weather(
     location: Annotated[str, "Name of the location (e.g. Surat,IN)"],
-) -> str:
+) -> dict:
     """
     Fetches and formats the weather report for a given location.
 
@@ -32,12 +31,9 @@ async def get_weather(
     # Format for LLM consumption
     formatted_output = WEATHER_PROMPT_TEMPLATE.format(weather_data=weather_data)
 
-    # Create a response object with both the formatted text and the raw data
-    response = {
+    # Return as JSON string that can be parsed both by LLM and the frontend
+    return {
         "formatted_text": formatted_output,  # For the LLM to use
         "raw_weather_data": weather_data,  # For the frontend to use
         "location": location,  # The requested location
     }
-
-    # Return as JSON string that can be parsed both by LLM and the frontend
-    return json.dumps(response)

@@ -14,12 +14,12 @@ from app.langchain.tools import (
 
 # GROQ_MODEL = "llama-3.1-8b-instant"
 # GROQ_MODEL = "llama-3.3-70b-versatile"
-# GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
-GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+# GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 tools = [
     fetch_tool.fetch_webpages,
-    search_tool.deep_search,
+    search_tool.deep_search_tool,
     search_tool.web_search_tool,
     memory_tool.create_memory,
     weather_tool.get_weather,

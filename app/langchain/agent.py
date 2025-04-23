@@ -14,14 +14,7 @@ from app.utils.sse_utils import format_tool_response
 from langsmith import traceable
 
 graph = build_graph()
-
-# display(
-#     Image(
-#         graph.get_graph().draw_mermaid_png(
-#             draw_method=MermaidDrawMethod.API, max_retries=5, retry_delay=2.0
-#         )
-#     )
-# )
+print(graph.get_graph().draw_mermaid())
 
 
 @traceable

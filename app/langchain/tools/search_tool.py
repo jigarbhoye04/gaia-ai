@@ -132,7 +132,7 @@ async def web_search_tool(
 
 
 @tool
-async def deep_search(
+async def deep_search_tool(
     query_text: Annotated[
         str,
         "The search query for in-depth research. Be specific to get thorough and comprehensive results.",
