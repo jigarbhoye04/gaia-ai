@@ -34,21 +34,6 @@ export const ApiService = {
     }
   },
 
-  updateConversation: async (
-    conversationId: string,
-    messages: MessageType[],
-  ) => {
-    try {
-      await apiauth.put(`/conversations/${conversationId}/messages`, {
-        conversation_id: conversationId,
-        messages,
-      });
-    } catch (error) {
-      console.error(`Error updating conversation ${conversationId}:`, error);
-      toast.error("Error updating conversation. Please try again later.");
-      throw error;
-    }
-  },
 
   fetchChatStream: async (
     inputText: string,

@@ -196,7 +196,6 @@ export const useChatStream = () => {
       if (!botMessageRef?.current) return;
 
       // Finalize the bot message by setting loading to false
-      // Clear weather_data if the final intent is not weather
       const finalBotMessage = {
         ...botMessageRef.current,
         loading: false,
@@ -219,59 +218,22 @@ export const useChatStream = () => {
 
       updateConvoMessages(finalMessages);
 
-      // Handle URL navigation for new conversations after the messages are done streaming
       if (newConversationIdRef.current && !conversationId) {
         // Navigate to the newly created conversation
         router.push(`/c/${newConversationIdRef.current}`);
 
-        if (newConversationIdRef.current) {
-          // Fetch all conve
+        if (newConversationIdRef.current)
           fetchConversations();
-        }
       }
 
-      try {
-        // Use the new conversation ID if one was returned from the backend
-        const finalConversationId =
-          newConversationIdRef.current || conversationId;
 
-        if (finalConversationId) {
-          // Extract the most recent user and bot message pair to update the backend
-          // This ensures we're only sending the relevant message pair to the backend
-          const messagesForUpdate: MessageType[] = [];
-
-          // Find the last user message (if it exists)
-          const userMessageIndex = finalMessages.findIndex(
-            (msg, i) => msg.type === "user" && i > finalMessages.length - 4,
-          );
-
-          if (userMessageIndex >= 0) {
-            // Include the last user message and the bot response
-            messagesForUpdate.push(...finalMessages.slice(userMessageIndex));
-          } else {
-            // If no recent user message found, just send the bot message
-            messagesForUpdate.push(finalBotMessage);
-          }
-
-          // await ApiService.updateConversation(
-          //   finalConversationId,
-          //   messagesForUpdate,
-          // );
-        }
-      } catch (error) {
-        console.error("Failed to save conversation:", error);
-        toast.error(
-          "Failed to save the conversation. Some messages might not be preserved.",
-        );
-      } finally {
-        setIsLoading(false);
-        resetLoadingText();
-        botMessageRef.current = null;
-        newConversationIdRef.current = null;
-        newConversationDescriptionRef.current = null;
-      }
-    };
-
+      setIsLoading(false);
+      resetLoadingText();
+      botMessageRef.current = null;
+      newConversationIdRef.current = null;
+      newConversationDescriptionRef.current = null;
+    }
+    // };
     /**
      * Handles errors from the SSE stream.
      */
