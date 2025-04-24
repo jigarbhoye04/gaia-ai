@@ -43,7 +43,7 @@ export default function GeneratedImageSheet({
         </div>
 
         <div className="mt-3 flex w-screen max-w-(--breakpoint-sm) flex-col justify-evenly gap-3">
-          {imageData?.prompt && (
+          {/* {imageData?.prompt && (
             <div className="w-full">
               <ScrollArea className="max-h-[50px]">
                 <div className="font-medium">Your Prompt:</div>
@@ -63,7 +63,7 @@ export default function GeneratedImageSheet({
                 </div>
               </ScrollArea>
             </div>
-          )}
+          )} */}
         </div>
 
         {imageData?.src && (

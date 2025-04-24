@@ -96,14 +96,17 @@ export default function ChatRenderer() {
 
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
-          <div key={index} className="relative flex items-end gap-1 pl-1">
+          <div
+            key={index}
+            className="relative flex items-end gap-1 pt-1 pb-5 pl-1"
+          >
             <div className="min-w-[40px]">
               <Image
                 alt="GAIA Logo"
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "animate-spin" : ""} relative `}
+                className={`${isLoading ? "animate-spin" : ""} relative`}
               />
             </div>
 

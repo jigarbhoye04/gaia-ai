@@ -18,7 +18,7 @@ export default function ChatHeader() {
   const { clearMessages } = useConversation();
 
   return (
-    <div className="flex w-full justify-between">
+    <div className="flex w-full justify-between pb-3">
       <div />
       <div className="flex">
         {convoIdParam && (
@@ -59,7 +59,7 @@ export default function ChatHeader() {
             clearMessages();
           }}
         >
-          <ChatBubbleAddIcon className="text-zinc-400 transition-all group-hover:text-primary" />
+          <ChatBubbleAddIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
         </Button>
         {/* <Button
           aria-label="Notifications"

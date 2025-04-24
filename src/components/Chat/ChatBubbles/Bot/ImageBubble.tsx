@@ -38,9 +38,11 @@ export default function ImageBubble({
           />
         )}
       </Skeleton>
-      <div className="chat_bubble bg-zinc-800">
-        <span>{text}</span>
-      </div>
+      {text.trim() && (
+        <div className="chat_bubble bg-zinc-800">
+          <span>{text}</span>
+        </div>
+      )}
     </>
   );
 }

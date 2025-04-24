@@ -69,7 +69,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         <div
           ref={contentContainerRef}
           onClick={closeOnTouch}
-          className="main_chat bg-zinc-900/60 p-2 transition-all sm:p-[1rem]"
+          className="main_chat bg-zinc-900/60 p-2 transition-all sm:p-[0.8rem]"
         >
           <div
             className={`top-0 z-10 flex w-full justify-between rounded-xl transition-opacity sm:left-4 sm:px-0`}

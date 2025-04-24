@@ -201,6 +201,7 @@
   flex-direction: column;
   justify-content: center;
   width: 100%;
+  padding-top: 0.8rem;
 }
 .sidebar {
   background-color: #020202;
@@ -459,7 +460,7 @@ code {
 }
 
 .fadein-style {
-  animation: fade-in 1s;
+  /* animation: fade-in 1s; */
 }
 
 @keyframes fade-in {

@@ -48,7 +48,7 @@ export default function HeaderManager() {
       window.__customHeaderJSX = undefined;
     }
 
-    if (pathname.startsWith("/c/")) componentType = "chat";
+    if (pathname.startsWith("/c")) componentType = "chat";
     else if (pathname.startsWith("/mail")) componentType = "mail";
     else if (pathname.startsWith("/calendar")) componentType = "calendar";
     else if (pathname.startsWith("/browser")) componentType = "browser";

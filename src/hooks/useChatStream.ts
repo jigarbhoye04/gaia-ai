@@ -128,7 +128,6 @@ export const useChatStream = () => {
       // Handle image generation result
       if (dataJson.intent === "generate_image" && dataJson.image_data) {
         botMessageRef.current = buildBotResponse({
-          response: "Here is your generated image",
           image_data: dataJson.image_data,
           loading: false,
         });
@@ -243,7 +242,7 @@ export const useChatStream = () => {
 
           // Find the last user message (if it exists)
           const userMessageIndex = finalMessages.findIndex(
-            (msg, i) => msg.type === "user" && i > finalMessages.length - 4
+            (msg, i) => msg.type === "user" && i > finalMessages.length - 4,
           );
 
           if (userMessageIndex >= 0) {
@@ -254,10 +253,10 @@ export const useChatStream = () => {
             messagesForUpdate.push(finalBotMessage);
           }
 
-          await ApiService.updateConversation(
-            finalConversationId,
-            messagesForUpdate,
-          );
+          // await ApiService.updateConversation(
+          //   finalConversationId,
+          //   messagesForUpdate,
+          // );
         }
       } catch (error) {
         console.error("Failed to save conversation:", error);

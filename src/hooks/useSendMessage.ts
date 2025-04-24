@@ -12,7 +12,6 @@ import { addMessage } from "@/redux/slices/conversationSlice";
 import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
-
 export const useSendMessage = (convoIdParam: string | null) => {
   const dispatch = useDispatch();
   const fetchChatStream = useChatStream();
