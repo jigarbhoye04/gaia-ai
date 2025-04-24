@@ -5,8 +5,8 @@ import { toast } from "sonner";
 
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
-import { useLoading } from "@/hooks/useLoading";
 import { useFetchConversations } from "@/hooks/useConversationList";
+import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
 import { ImageData, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
@@ -82,15 +82,19 @@ export const useChatStream = () => {
       const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
 
+      // Show current progress of any tools
+      if (dataJson.progress) setLoadingText(dataJson.progress);
+
       // Check for newly created conversation info from the backend
       if (!conversationId) {
         // Store the newly created conversation ID
-        if (dataJson.conversation_id) newConversationIdRef.current = dataJson.conversation_id;
-
+        if (dataJson.conversation_id)
+          newConversationIdRef.current = dataJson.conversation_id;
 
         // Store the conversation description that comes from the backend
-        if (dataJson.conversation_description) newConversationDescriptionRef.current = dataJson.conversation_description;
-
+        if (dataJson.conversation_description)
+          newConversationDescriptionRef.current =
+            dataJson.conversation_description;
       }
 
       if (dataJson.status === "generating_image") {
@@ -221,32 +225,39 @@ export const useChatStream = () => {
         // Navigate to the newly created conversation
         router.push(`/c/${newConversationIdRef.current}`);
 
-        // If backend provided a description, use it directly
-        // No need to make an additional API call for description
         if (newConversationIdRef.current) {
-          // Instead of making a new API call, just trigger a fetch of the conversations list
-          // to update the sidebar with the new conversation and its description
+          // Fetch all conve
           fetchConversations();
         }
       }
 
-      const messagesForUpdate: MessageType[] = [];
-
-      const userMessageIndex = finalMessages.length - 2;
-      if (
-        userMessageIndex >= 0 &&
-        finalMessages[userMessageIndex].type === "user"
-      ) {
-        messagesForUpdate.push(finalMessages[userMessageIndex]);
-      }
-
-      messagesForUpdate.push(finalBotMessage);
-
       try {
         // Use the new conversation ID if one was returned from the backend
-        const finalConversationId = newConversationIdRef.current || conversationId;
+        const finalConversationId =
+          newConversationIdRef.current || conversationId;
+
         if (finalConversationId) {
-          await ApiService.updateConversation(finalConversationId, messagesForUpdate);
+          // Extract the most recent user and bot message pair to update the backend
+          // This ensures we're only sending the relevant message pair to the backend
+          const messagesForUpdate: MessageType[] = [];
+
+          // Find the last user message (if it exists)
+          const userMessageIndex = finalMessages.findIndex(
+            (msg, i) => msg.type === "user" && i > finalMessages.length - 4
+          );
+
+          if (userMessageIndex >= 0) {
+            // Include the last user message and the bot response
+            messagesForUpdate.push(...finalMessages.slice(userMessageIndex));
+          } else {
+            // If no recent user message found, just send the bot message
+            messagesForUpdate.push(finalBotMessage);
+          }
+
+          await ApiService.updateConversation(
+            finalConversationId,
+            messagesForUpdate,
+          );
         }
       } catch (error) {
         console.error("Failed to save conversation:", error);

@@ -48,7 +48,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
         {!loading && (
           <div
             ref={actionsRef}
-            className="flex flex-col gap-2 transition-all"
+            className="absolute flex flex-col transition-all"
             style={{ opacity: 0, visibility: "hidden" }}
           >
             {date && (

@@ -24,7 +24,6 @@ export const ApiService = {
     }
   },
 
-
   deleteAllConversations: async () => {
     try {
       await apiauth.delete(`/conversations`);
@@ -104,13 +103,11 @@ export const ApiService = {
           }
         },
         onclose() {
-          // onClose();
+          onClose();
           controller.abort();
         },
         onerror: onError,
       },
     );
   },
-
-
 };

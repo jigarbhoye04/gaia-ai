@@ -103,7 +103,7 @@ export default function ChatRenderer() {
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "animate-spin" : ""} relative bottom-14`}
+                className={`${isLoading ? "animate-spin" : ""} relative `}
               />
             </div>
 

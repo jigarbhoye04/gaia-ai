@@ -1,7 +1,6 @@
 "use client";
 
 import ObjectID from "bson-objectid";
-import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 
 import {
@@ -9,19 +8,14 @@ import {
   SearchMode,
 } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useChatStream } from "@/hooks/useChatStream";
-import { useFetchConversations } from "@/hooks/useConversationList";
 import { addMessage } from "@/redux/slices/conversationSlice";
 import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
-import { useLoading } from "./useLoading";
 
 export const useSendMessage = (convoIdParam: string | null) => {
-  const router = useRouter();
   const dispatch = useDispatch();
-  const { setIsLoading } = useLoading();
   const fetchChatStream = useChatStream();
-  const fetchConversations = useFetchConversations();
 
   // returns as sendMessage hook
   return async (
