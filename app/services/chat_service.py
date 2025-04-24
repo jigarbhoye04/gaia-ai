@@ -1,10 +1,9 @@
 from datetime import datetime, timezone
 import json
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
-from fastapi import BackgroundTasks, HTTPException
+from fastapi import BackgroundTasks
 
-from app.db.collections import conversations_collection
 from app.langchain.agent import call_agent
 from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import MessageRequestWithHistory
@@ -18,30 +17,52 @@ async def chat_stream(
     background_tasks: BackgroundTasks,
 ) -> AsyncGenerator:
     """
-    Stream chat messages in real-time using the plug-and-play pipeline.
-
-    This function coordinates the processing of chat messages through a pipeline,
-    including optional web search, deep internet search, document fetching,
-    and other enhancements before sending to the language model.
-
-    Args:
-        body (MessageRequestWithHistory): Contains the message, conversation ID, message history, and optional flags
-        user (dict): User information from authentication
+    Stream chat messages in real-time.
 
     Returns:
         StreamingResponse: A streaming response containing the LLM's generated content
     """
 
-    conversation_id = body.conversation_id or None
     complete_message = ""
+    conversation_id, init_chunk = await initialize_conversation(body, user)
+
+    if init_chunk:  # Return the conversation id and metadata if new convo
+        yield init_chunk
+
+    # TODO: FETCH NOTES AND FILES AND USE THEM
+    async for chunk in call_agent(
+        request=body,
+        user=user,
+        conversation_id=conversation_id,
+        access_token=user.get("access_token"),
+    ):
+        if chunk.startswith("nostream: "):
+            # So that we can return data that doesn't need to be streamed
+            chunk_json = json.loads(chunk.replace("nostream: ", ""))
+            complete_message = chunk_json.get("complete_message", "")
+        else:
+            yield chunk
+
+    update_conversation_messages(
+        background_tasks, body, user, conversation_id, complete_message
+    )
+
+
+async def initialize_conversation(
+    body: MessageRequestWithHistory, user: dict
+) -> tuple[str, Optional[str]]:
+    """
+    Initialize a conversation or use an existing one.
+    """
+    conversation_id = body.conversation_id or None
+    init_chunk = None
 
     if conversation_id is None:
         last_message = body.messages[-1] if body.messages else None
-
         conversation = await create_conversation(last_message=last_message, user=user)
         conversation_id = conversation.get("conversation_id", "")
 
-        yield f"""data: {
+        init_chunk = f"""data: {
             json.dumps(
                 {
                     "conversation_id": conversation_id,
@@ -50,20 +71,19 @@ async def chat_stream(
             )
         }\n\n"""
 
-    # TODO: FETCH NOTES AND FILES AND USE THEM
+    return conversation_id, init_chunk
 
-    async for chunk in call_agent(
-        request=body,
-        user=user,
-        conversation_id=conversation_id,
-        access_token=user.get("access_token"),
-    ):
-        if chunk.startswith("nostream: "):
-            chunk_json = json.loads(chunk.replace("nostream: ", ""))
-            complete_message = chunk_json.get("complete_message", "")
-        else:
-            yield chunk
 
+def update_conversation_messages(
+    background_tasks: BackgroundTasks,
+    body: MessageRequestWithHistory,
+    user: dict,
+    conversation_id: str,
+    complete_message: str,
+) -> None:
+    """
+    Schedule conversation update in the background.
+    """
     background_tasks.add_task(
         update_messages,
         UpdateMessagesRequest(
@@ -91,27 +111,3 @@ async def chat_stream(
         ),
         user=user,
     )
-
-
-async def get_starred_messages(user: dict) -> dict:
-    """
-    Fetch all pinned messages across all conversations for the authenticated user.
-    """
-    user_id = user.get("user_id")
-
-    results = await conversations_collection.aggregate(
-        [
-            {"$match": {"user_id": user_id}},
-            {"$unwind": "$messages"},
-            {"$match": {"messages.pinned": True}},
-            {"$project": {"_id": 0, "conversation_id": 1, "message": "$messages"}},
-        ]
-    ).to_list(None)
-
-    if not results:
-        raise HTTPException(
-            status_code=404,
-            detail="No pinned messages found across any conversation",
-        )
-
-    return {"results": results}
