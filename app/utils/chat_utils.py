@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AnyMessage
 
 from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.langchain.state import State
-from app.models.general_models import MessageDict
+from app.models.message_models import MessageDict
 from app.services.conversation_service import (
     ConversationModel,
     create_conversation_service,

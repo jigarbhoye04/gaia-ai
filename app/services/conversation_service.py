@@ -206,6 +206,7 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
 
     messages = []
     for message in request.messages:
+        print(f"{message=}")
         message_dict = message.model_dump(exclude={"loading"})
         # Remove None values to keep the document clean
         message_dict = {

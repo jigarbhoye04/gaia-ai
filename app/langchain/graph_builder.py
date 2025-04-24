@@ -1,11 +1,11 @@
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.graph import END, StateGraph, START
+from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from app.langchain.chatbot import chatbot
-from app.langchain.state import State
 from app.config.loggers import llm_logger as logger
+from app.langchain.chatbot import chatbot
 from app.langchain.client import tools
+from app.langchain.state import State
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
@@ -30,6 +30,8 @@ def build_graph():
         START,
         should_call_tool,
         {
+            # call_1, call_2, and call_chatbot are the return values from should_call_tool
+            # "return_value" : "name of node to call"
             "call_1": "inject_web_search",
             "call_2": "inject_deep_search",
             "call_chatbot": "chatbot",

@@ -16,7 +16,7 @@ from app.config.loggers import app_logger as logger
 from app.db.chromadb import ChromaClient
 from app.db.collections import files_collection
 from app.db.utils import serialize_document
-from app.models.general_models import FileData
+from app.models.message_models import FileData
 from app.utils.embedding_utils import generate_embedding, search_documents_by_similarity
 from app.utils.file_utils import generate_file_description
 

@@ -1,19 +1,21 @@
+from datetime import datetime, timezone
 import json
 from typing import AsyncGenerator
 
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 
 from app.db.collections import conversations_collection
 from app.langchain.agent import call_agent
-from app.models.general_models import (
-    MessageRequestWithHistory,
-)
+from app.models.chat_models import MessageModel, UpdateMessagesRequest
+from app.models.message_models import MessageRequestWithHistory
+from app.services.conversation_service import update_messages
 from app.utils.chat_utils import create_conversation
 
 
 async def chat_stream(
     body: MessageRequestWithHistory,
     user: dict,
+    background_tasks: BackgroundTasks,
 ) -> AsyncGenerator:
     """
     Stream chat messages in real-time using the plug-and-play pipeline.
@@ -30,18 +32,20 @@ async def chat_stream(
         StreamingResponse: A streaming response containing the LLM's generated content
     """
 
-    if body.conversation_id is None:
+    conversation_id = body.conversation_id or None
+    complete_message = ""
+
+    if conversation_id is None:
         last_message = body.messages[-1] if body.messages else None
 
         conversation = await create_conversation(last_message=last_message, user=user)
+        conversation_id = conversation.get("conversation_id", "")
 
         yield f"""data: {
             json.dumps(
                 {
-                    "conversation_id": conversation.get("conversation_id"),
-                    "conversation_description": conversation.get(
-                        "description", "New Chat"
-                    ),
+                    "conversation_id": conversation_id,
+                    "conversation_description": conversation.get("description"),
                 }
             )
         }\n\n"""
@@ -51,25 +55,42 @@ async def chat_stream(
     async for chunk in call_agent(
         request=body,
         user=user,
-        conversation_id=body.conversation_id,
+        conversation_id=conversation_id,
         access_token=user.get("access_token"),
     ):
-        yield chunk
+        if chunk.startswith("nostream: "):
+            chunk_json = json.loads(chunk.replace("nostream: ", ""))
+            complete_message = chunk_json.get("complete_message", "")
+        else:
+            yield chunk
 
-    # TODO: Update the conversation with the new messages here instead of from the frontend
-    # background_tasks.add_task(
-    #     update_messages,
-    #     UpdateMessagesRequest(
-    #         conversation_id=body.conversation_id,
-    #         new_messages=[
-    #             ConversationModel(
-    #                 conversation_id=body.conversation_id,
-    #                 description="New Chat",
-    #             )
-    #         ],
-    #     ),
-    #     user=user,
-    # )
+    background_tasks.add_task(
+        update_messages,
+        UpdateMessagesRequest(
+            conversation_id=conversation_id,
+            messages=[
+                MessageModel(
+                    type="user",
+                    response=body.messages[-1]["content"],
+                    date=datetime.now(timezone.utc).isoformat(),
+                    searchWeb=body.search_web,
+                    deepSearchWeb=body.deep_search,
+                    pageFetchURLs=body.pageFetchURLs,
+                    fileIds=body.fileIds,
+                ),
+                MessageModel(
+                    type="bot",
+                    response=complete_message,
+                    date=datetime.now(timezone.utc).isoformat(),
+                    searchWeb=body.search_web,
+                    deepSearchWeb=body.deep_search,
+                    pageFetchURLs=body.pageFetchURLs,
+                    fileIds=body.fileIds,
+                ),
+            ],
+        ),
+        user=user,
+    )
 
 
 async def get_starred_messages(user: dict) -> dict:

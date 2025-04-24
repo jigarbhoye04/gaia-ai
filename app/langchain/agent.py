@@ -1,5 +1,5 @@
-import json
 from datetime import datetime, timezone
+import json
 
 from langchain_core.messages import AIMessageChunk, ToolMessage
 
@@ -9,7 +9,7 @@ from app.langchain.messages import (
     construct_langchain_messages,
 )
 
-from app.models.general_models import MessageRequestWithHistory
+from app.models.message_models import MessageRequestWithHistory
 from app.utils.sse_utils import format_tool_response
 from langsmith import traceable
 
@@ -26,11 +26,12 @@ async def call_agent(
 ):
     user_id = user.get("user_id")
     messages = request.messages
+    complete_message = ""
+    history = construct_langchain_messages(messages)
 
     # messages[-1] = await add_file_content_to_message(
-    #     messages[-1], message_request.fileIds, user_id
+    #     messages[-1], request.fileIds, user_id
     # )
-    history = construct_langchain_messages(messages)
 
     initial_state = {
         "query": request.message,
@@ -40,7 +41,6 @@ async def call_agent(
         "current_datetime": datetime.now(timezone.utc).isoformat(),
     }
 
-    llm_message = ""
     try:
         async for event in graph.astream(
             initial_state,
@@ -63,8 +63,9 @@ async def call_agent(
 
                 if isinstance(chunk, AIMessageChunk):
                     content = str(chunk.content)
-                    yield f"data: {json.dumps({'response': chunk.content})}\n\n"
-                    llm_message += content
+                    if content.strip():
+                        yield f"data: {json.dumps({'response': content})}\n\n"
+                        complete_message += content
 
                 elif isinstance(chunk, ToolMessage):
                     logger.info(f"Tool message: {chunk.name} - {chunk.content}")
@@ -75,75 +76,10 @@ async def call_agent(
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"
 
+        yield f"nostream: {json.dumps({'complete_message': complete_message})}"
         yield "data: [DONE]\n\n"
 
     except Exception as e:
-        logger.error(f"Stream error: {e}")
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        logger.error(f"Error updating messages: {e}")
+        yield "data: {'error': 'Error updating messages'}\n\n"
         yield "data: [DONE]\n\n"
-
-    # try:
-    #     # Handle storing the conversation and updating the database here
-    #     await update_messages(
-    #         UpdateMessagesRequest(
-    #             conversation_id=conversation_id,
-    #             messages=[
-    #                 MessageModel(
-    #                     type="user",
-    #                     response=messages[-1]["content"],
-    #                     date=datetime.now(timezone.utc).isoformat(),
-    #                     searchWeb=message_request.search_web,
-    #                     deepSearchWeb=message_request.deep_search,
-    #                     pageFetchURLs=message_request.pageFetchURLs,
-    #                     fileIds=message_request.fileIds,
-    #                 ),
-    #                 MessageModel(
-    #                     type="bot",
-    #                     response=llm_message,
-    #                     date=datetime.now(timezone.utc).isoformat(),
-    #                     searchWeb=message_request.search_web,
-    #                     deepSearchWeb=message_request.deep_search,
-    #                     pageFetchURLs=message_request.pageFetchURLs,
-    #                     fileIds=message_request.fileIds,
-    #                 ),
-    #             ],
-    #         ),
-    #         user=user,
-    #     )
-    # except Exception as e:
-    #     logger.error(f"Error updating messages: {e}")
-    #     yield "data: {'error': 'Error updating messages'}\n\n"
-    #     yield "data: [DONE]\n\n"
-
-    # # try:
-    #     # Handle storing the conversation and updating the database here
-    #     await update_messages(
-    #         UpdateMessagesRequest(
-    #             conversation_id=conversation_id,
-    #             messages=[
-    #                 MessageModel(
-    #                     type="user",
-    #                     response=messages[-1]["content"],
-    #                     date=datetime.now(timezone.utc).isoformat(),
-    #                     searchWeb=message_request.search_web,
-    #                     deepSearchWeb=message_request.deep_search,
-    #                     pageFetchURLs=message_request.pageFetchURLs,
-    #                     fileIds=message_request.fileIds,
-    #                 ),
-    #                 MessageModel(
-    #                     type="bot",
-    #                     response=llm_message,
-    #                     date=datetime.now(timezone.utc).isoformat(),
-    #                     searchWeb=message_request.search_web,
-    #                     deepSearchWeb=message_request.deep_search,
-    #                     pageFetchURLs=message_request.pageFetchURLs,
-    #                     fileIds=message_request.fileIds,
-    #                 ),
-    #             ],
-    #         ),
-    #         user=user,
-    #     )
-    # except Exception as e:
-    #     logger.error(f"Error updating messages: {e}")
-    #     yield "data: {'error': 'Error updating messages'}\n\n"
-    yield "data: [DONE]\n\n"

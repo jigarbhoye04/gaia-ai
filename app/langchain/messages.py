@@ -4,7 +4,7 @@ from typing import List
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, AnyMessage
 
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.models.general_models import MessageDict
+from app.models.message_models import MessageDict
 from app.services.file_service import fetch_files
 
 

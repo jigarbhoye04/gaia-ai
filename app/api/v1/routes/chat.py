@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.chat_service import (
@@ -6,9 +6,8 @@ from app.services.chat_service import (
     get_starred_messages,
 )
 
-from app.models.general_models import (
-    MessageRequestWithHistory,
-)
+from app.models.message_models import MessageRequestWithHistory
+
 
 router = APIRouter()
 
@@ -16,7 +15,7 @@ router = APIRouter()
 @router.post("/chat-stream")
 async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
-    # request: Request,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> StreamingResponse:
     """
@@ -31,7 +30,7 @@ async def chat_stream_endpoint(
     #     client_ip = forwarded.split(",")[0] if forwarded else request.client.host
 
     return StreamingResponse(
-        chat_stream(body=body, user=user),
+        chat_stream(body=body, user=user, background_tasks=background_tasks),
         media_type="text/event-stream",
     )
 
