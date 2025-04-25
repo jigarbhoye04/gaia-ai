@@ -21,9 +21,11 @@ def download_nltk_resources():
     for resource_path, resource_name in resources:
         try:
             find(resource_path)
-            print(f"NLTK: {resource_name.capitalize()} resource already available.")
+            logger.info(
+                f"NLTK: {resource_name.capitalize()} resource already available."
+            )
         except LookupError:
-            print(
+            logger.info(
                 f"NLTK: {resource_name.capitalize()} resource not found. Downloading..."
             )
             nltk.download(resource_name)

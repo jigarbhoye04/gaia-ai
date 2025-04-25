@@ -24,7 +24,10 @@ class GraphManager:
 
     @classmethod
     def set_graph(cls, graph_instance: Any):
-        """Set the graph instance and signal that initialization is complete."""
+        if cls._graph is not None:
+            logger.info("LANGGRAPH: Graph already set, skipping")
+            return
+
         cls._graph = graph_instance
         cls._initialization_complete.set()
         logger.info("LANGGRAPH: Graph instance has been set successfully")

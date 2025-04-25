@@ -73,8 +73,4 @@ async def lifespan(app: FastAPI):
         logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed") from e
 
-    # on shutdown
-    graph_instance = GraphManager.get_instance()._graph
-    if graph_instance:
-        await graph_instance.close()
     logger.info("Shutting down GAIA API...")
