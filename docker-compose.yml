@@ -31,8 +31,14 @@ services:
     tty: true
     stdin_open: true
     depends_on:
-      - chromadb
-      - postgres
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - gaia_network
     healthcheck:
@@ -56,7 +62,7 @@ services:
     restart: on-failure
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -103,14 +109,17 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - rabbitmq
-      - chromadb
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
     networks:
       - gaia_network
 
   # ChromaDB Service
   chromadb:
-    image: chromadb/chroma:latest
+    # image: chromadb/chroma:latest
+    image: chromadb/chroma:1.0.0
     container_name: chromadb
     volumes:
       - chroma_data:/chroma/chroma
@@ -122,8 +131,9 @@ services:
       - "8080:8000"
     restart: on-failure
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
-      interval: 30s
+      test:
+        ["CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000"]
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -141,7 +151,7 @@ services:
     restart: on-failure
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -152,14 +162,14 @@ services:
     profiles: ["dev"]
     image: mongo:latest
     container_name: mongo
-    # ports:
-    #   - "27017:27017"
+    ports:
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     restart: on-failure
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -178,7 +188,8 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     networks:
       - gaia_network
 

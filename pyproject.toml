@@ -14,7 +14,6 @@ core = [
   "browser-use>=0.1.40",
   "bs4==0.0.2",
   "celery>=5.4.0",
-  "chromadb>=0.6.3",
   "cloudinary==1.41.0",
   "deepgram-sdk>=3.10.0",
   "docx2txt>=0.9",
@@ -74,6 +73,8 @@ core = [
   "hf-xet>=1.0.3",
   "langchain-huggingface>=0.1.2",
   "psycopg2-binary>=2.9.10",
+  "uuid7>=0.1.0",
+  "chromadb>=0.6.3",
 ]
 
 heavy = [

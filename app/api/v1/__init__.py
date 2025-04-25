@@ -30,8 +30,9 @@ from app.db.chromadb import init_chroma
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.text_utils import get_zero_shot_classifier
 from app.config.cloudinary import init_cloudinary
-from app.langchain.agent import initialize_graph
 
+from app.langchain.graph_builder import build_graph
+from app.langchain.graph_manager import GraphManager
 
 api_router = APIRouter()
 
@@ -64,12 +65,18 @@ async def lifespan(app: FastAPI):
         download_nltk_resources()
         get_zero_shot_classifier()
         init_cloudinary()
-        await initialize_graph()
+
+        # Initialize the graph and store in GraphManager
+        async with build_graph() as built_graph:
+            GraphManager.set_graph(built_graph)
+            yield
 
     except Exception as e:
         logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed") from e
 
-    yield
-
+    # on shutdown
+    graph_instance = GraphManager.get_instance()._graph
+    if graph_instance:
+        await graph_instance.close()
     logger.info("Shutting down GAIA API...")

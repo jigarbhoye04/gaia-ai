@@ -5,10 +5,10 @@ from langchain_core.messages import AIMessageChunk, ToolMessage
 from langsmith import traceable
 
 from app.config.loggers import llm_logger as logger
-from app.langchain.graph import initialize_graph
 from app.langchain.messages import construct_langchain_messages
 from app.models.message_models import MessageRequestWithHistory
 from app.utils.sse_utils import format_tool_response
+from app.langchain.graph_manager import GraphManager
 
 
 @traceable
@@ -18,7 +18,6 @@ async def call_agent(
     user,
     access_token=None,
 ):
-    graph = await initialize_graph()
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""
@@ -33,6 +32,9 @@ async def call_agent(
     }
 
     try:
+        # Get graph instance, waiting for it to be initialized if necessary
+        graph = await GraphManager.get_graph()
+
         async for event in graph.astream(
             initial_state,
             stream_mode=["messages", "custom"],
@@ -71,6 +73,6 @@ async def call_agent(
         yield "data: [DONE]\n\n"
 
     except Exception as e:
-        logger.error(f"Error updating messages: {e}")
-        yield "data: {'error': 'Error updating messages'}\n\n"
+        logger.error(f"Error fetching messages: {e}")
+        yield "data: {'error': 'Error fetching messages'}\n\n"
         yield "data: [DONE]\n\n"

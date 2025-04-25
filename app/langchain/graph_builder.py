@@ -1,10 +1,12 @@
+from contextlib import asynccontextmanager
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from langgraph.checkpoint.postgres import PostgresSaver
 
-from app.config.settings import settings
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from app.langchain.chatbot import chatbot
 from app.langchain.client import tools
+
+from app.config.settings import settings
 from app.langchain.state import State
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
@@ -13,11 +15,10 @@ from app.langchain.tool_injectors import (
 )
 
 
+@asynccontextmanager
 async def build_graph():
     """Construct and compile the state graph."""
-
     graph_builder = StateGraph(State)
-
     graph_builder.add_node("chatbot", chatbot)
     graph_builder.add_node("tools", ToolNode(tools=tools))
 
@@ -45,9 +46,12 @@ async def build_graph():
     graph_builder.add_conditional_edges("chatbot", tools_condition)
     graph_builder.add_edge("tools", "chatbot")
     graph_builder.add_edge("chatbot", END)
+    # checkpointer_cm = PostgresSaver.from_conn_string(settings.POSTGRES_URL)
+    # checkpointer = checkpointer_cm.__enter__()
 
-    # Create the checkpointer asynchronously
-    checkpointer = PostgresSaver.from_conn_string(settings.POSTGRES_URL)
-
-    # Compile with the checkpointer (non-context manager approach)
-    return graph_builder.compile(checkpointer=checkpointer)
+    # return graph_builder.compile(checkpointer=checkpointer)
+    async with AsyncPostgresSaver.from_conn_string(
+        settings.POSTGRES_URL
+    ) as checkpointer:
+        graph = graph_builder.compile(checkpointer=checkpointer)
+        yield graph
