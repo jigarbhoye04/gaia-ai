@@ -1,8 +1,8 @@
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.checkpoint.postgres import PostgresSaver
 
-from app.config.loggers import llm_logger as logger
+from app.config.settings import settings
 from app.langchain.chatbot import chatbot
 from app.langchain.client import tools
 from app.langchain.state import State
@@ -13,7 +13,7 @@ from app.langchain.tool_injectors import (
 )
 
 
-def build_graph():
+async def build_graph():
     """Construct and compile the state graph."""
 
     graph_builder = StateGraph(State)
@@ -46,12 +46,8 @@ def build_graph():
     graph_builder.add_edge("tools", "chatbot")
     graph_builder.add_edge("chatbot", END)
 
-    # TODO: replace this with sqlite or postgresql for production usage
-    # Add memory saver to prevent infinite loops
-    memory_saver = InMemorySaver()
+    # Create the checkpointer asynchronously
+    checkpointer = PostgresSaver.from_conn_string(settings.POSTGRES_URL)
 
-    try:
-        return graph_builder.compile(checkpointer=memory_saver)
-    except Exception as e:
-        logger.error(f"Error compiling graph: {e}")
-        return graph_builder.compile(checkpointer=memory_saver)
+    # Compile with the checkpointer (non-context manager approach)
+    return graph_builder.compile(checkpointer=checkpointer)

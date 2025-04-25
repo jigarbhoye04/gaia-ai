@@ -13,8 +13,19 @@ from app.models.message_models import MessageRequestWithHistory
 from app.utils.sse_utils import format_tool_response
 from langsmith import traceable
 
-graph = build_graph()
-print(graph.get_graph().draw_mermaid())
+# Initialize graph as None - will be set during application startup
+graph = None
+
+
+# Function to initialize the graph during application startup
+async def initialize_graph():
+    logger.info("LANGCHAIN: Initializing LangGraph...")
+    global graph
+    graph = await build_graph()
+    if graph:
+        logger.info(f"Compiled Graph: {graph.get_graph().draw_mermaid()}")
+    logger.info("LANGCHAIN: LangGraph initialized successfully")
+    return graph
 
 
 @traceable
@@ -24,6 +35,11 @@ async def call_agent(
     user,
     access_token=None,
 ):
+    # Ensure graph is initialized
+    global graph
+    if graph is None:
+        graph = await build_graph()
+
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""

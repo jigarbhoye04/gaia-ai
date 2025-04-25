@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 
 [dependency-groups]
 core = [
+  "langgraph-checkpoint-postgres>=2.0.21",
   "pyppeteer>=0.0.25",
   "assemblyai>=0.37.0",
   "beautifulsoup4==4.12.3",
@@ -72,6 +73,7 @@ core = [
   "uvicorn>=0.34.1",
   "hf-xet>=1.0.3",
   "langchain-huggingface>=0.1.2",
+  "psycopg2-binary>=2.9.10",
 ]
 
 heavy = [

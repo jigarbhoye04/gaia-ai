@@ -11,7 +11,7 @@ RUN apt-get update && \
   build-essential \
   libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
   libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-  libgbm1 libasound2 curl unzip tesseract-ocr \
+  libgbm1 libasound2 curl unzip tesseract-ocr libpq-dev \
   libdbus-1-3 && \
   rm -rf /var/lib/apt/lists/*
 
