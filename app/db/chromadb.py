@@ -2,8 +2,8 @@ from functools import lru_cache
 from typing import Dict, Optional
 
 import chromadb
+from chromadb.config import Settings
 from fastapi import Request
-from langchain.embeddings.base import Embeddings
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from chromadb.api import AsyncClientAPI, ClientAPI
@@ -13,7 +13,7 @@ from app.config.settings import settings
 
 
 @lru_cache(maxsize=1)
-def get_langchain_embedding_model() -> Embeddings:
+def get_langchain_embedding_model():
     """
     Lazy-load the HuggingFace embedding model and cache it.
 
@@ -80,7 +80,7 @@ class ChromaClient:
     @staticmethod
     async def get_langchain_client(
         collection_name: Optional[str] = None,
-        embedding_function: Optional[Embeddings] = None,
+        embedding_function=None,
         create_if_not_exists: bool = True,
     ) -> Chroma:
         """
@@ -191,7 +191,7 @@ async def init_chroma(app=None):
         # This is a workaround to avoid the `coroutine` error in langchain
         # when using the async client directly
         constructor_client = chromadb.Client(
-            settings=chromadb.Settings(
+            settings=Settings(
                 chroma_server_host=settings.CHROMADB_HOST,
                 chroma_server_http_port=settings.CHROMADB_PORT,
             )
@@ -204,6 +204,10 @@ async def init_chroma(app=None):
         )
 
         response = await client.heartbeat()
+        logger.info(f"CHROMA: ChromaDB heartbeat response: {response}")
+        logger.info(
+            f"CHROMA: Successfully connected to ChromaDB at {settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}"
+        )
 
         existing_collections = await client.list_collections()
         collection_names = ["notes", "documents"]
@@ -220,11 +224,6 @@ async def init_chroma(app=None):
                 logger.info(
                     f"CHROMA: '{collection_name}' collection created successfully."
                 )
-
-        logger.info(f"CHROMA: ChromaDB heartbeat response: {response}")
-        logger.info(
-            f"CHROMA: Successfully connected to ChromaDB at {settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}"
-        )
 
         ChromaClient(
             chroma_client=client,

@@ -3,7 +3,7 @@ services:
   gaia:
     container_name: gaia
     build: .
-    image: gaia-image
+    image: gaia
     working_dir: /app
     command:
       [
@@ -85,7 +85,7 @@ services:
   celery_worker:
     profiles: ["celery"]
     container_name: celery_worker
-    image: gaia-image
+    image: gaia
     working_dir: /app
     env_file:
       - .env
@@ -118,8 +118,8 @@ services:
       - PERSIST_DIRECTORY=/chroma/chroma
       - CHROMA_SERVER_HOST=0.0.0.0
       - CHROMA_SERVER_PORT=8000
-    # ports:
-    #   - "8080:8000"
+    ports:
+      - "8080:8000"
     restart: on-failure
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]

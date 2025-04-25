@@ -1,31 +1,14 @@
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 
 from langchain_core.messages import AIMessageChunk, ToolMessage
-
-from app.config.loggers import llm_logger as logger
-from app.langchain.graph_builder import build_graph
-from app.langchain.messages import (
-    construct_langchain_messages,
-)
-
-from app.models.message_models import MessageRequestWithHistory
-from app.utils.sse_utils import format_tool_response
 from langsmith import traceable
 
-# Initialize graph as None - will be set during application startup
-graph = None
-
-
-# Function to initialize the graph during application startup
-async def initialize_graph():
-    logger.info("LANGCHAIN: Initializing LangGraph...")
-    global graph
-    graph = await build_graph()
-    if graph:
-        logger.info(f"Compiled Graph: {graph.get_graph().draw_mermaid()}")
-    logger.info("LANGCHAIN: LangGraph initialized successfully")
-    return graph
+from app.config.loggers import llm_logger as logger
+from app.langchain.graph import initialize_graph
+from app.langchain.messages import construct_langchain_messages
+from app.models.message_models import MessageRequestWithHistory
+from app.utils.sse_utils import format_tool_response
 
 
 @traceable
@@ -35,19 +18,11 @@ async def call_agent(
     user,
     access_token=None,
 ):
-    # Ensure graph is initialized
-    global graph
-    if graph is None:
-        graph = await build_graph()
-
+    graph = await initialize_graph()
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""
     history = construct_langchain_messages(messages)
-
-    # messages[-1] = await add_file_content_to_message(
-    #     messages[-1], request.fileIds, user_id
-    # )
 
     initial_state = {
         "query": request.message,
