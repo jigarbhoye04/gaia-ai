@@ -1,12 +1,12 @@
 from contextlib import asynccontextmanager
+
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from app.config.settings import settings
 from app.langchain.chatbot import chatbot
 from app.langchain.client import tools
-
-from app.config.settings import settings
 from app.langchain.state import State
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
@@ -46,12 +46,10 @@ async def build_graph():
     graph_builder.add_conditional_edges("chatbot", tools_condition)
     graph_builder.add_edge("tools", "chatbot")
     graph_builder.add_edge("chatbot", END)
-    # checkpointer_cm = PostgresSaver.from_conn_string(settings.POSTGRES_URL)
-    # checkpointer = checkpointer_cm.__enter__()
 
-    # return graph_builder.compile(checkpointer=checkpointer)
     async with AsyncPostgresSaver.from_conn_string(
         settings.POSTGRES_URL
     ) as checkpointer:
+        await checkpointer.setup()
         graph = graph_builder.compile(checkpointer=checkpointer)
         yield graph

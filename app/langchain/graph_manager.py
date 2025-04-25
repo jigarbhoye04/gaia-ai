@@ -37,7 +37,3 @@ class GraphManager:
             await cls._initialization_complete.wait()
             logger.info("LANGGRAPH: Graph initialization complete, proceeding")
         return cls._graph
-
-
-# Legacy global variable for backward compatibility
-graph = None

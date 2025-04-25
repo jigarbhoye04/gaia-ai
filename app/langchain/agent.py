@@ -32,7 +32,6 @@ async def call_agent(
     }
 
     try:
-        # Get graph instance, waiting for it to be initialized if necessary
         graph = await GraphManager.get_graph()
 
         async for event in graph.astream(
