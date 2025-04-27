@@ -151,28 +151,35 @@ export const useChatStream = () => {
       const currentConvo = latestConvoRef.current;
       const parsedIntent = parseIntent(dataJson);
 
-      // Create a new bot response that preserves existing intent data
+      // // Create a new bot response that preserves existing intent data
+      // botMessageRef.current = buildBotResponse({
+      //   intent: parsedIntent.intent || botMessageRef.current?.intent,
+      //   // Preserve special data once it's available
+      //   calendar_options:
+      //     parsedIntent.calendar_options ||
+      //     botMessageRef.current?.calendar_options ||
+      //     null,
+      //   weather_data:
+      //     parsedIntent.weather_data ||
+      //     botMessageRef.current?.weather_data ||
+      //     null,
+      //   search_results:
+      //     parsedIntent.search_results ||
+      //     botMessageRef.current?.search_results ||
+      //     null,
+      //   deep_search_results:
+      //     parsedIntent.deep_search_results ||
+      //     botMessageRef.current?.deep_search_results ||
+      //     null,
+      //   image_data:
+      //     parsedIntent.image_data || botMessageRef.current?.image_data || null,
+      // });
+
       botMessageRef.current = buildBotResponse({
-        intent: parsedIntent.intent || botMessageRef.current?.intent,
-        // Preserve special data once it's available
-        calendar_options:
-          parsedIntent.calendar_options ||
-          botMessageRef.current?.calendar_options ||
-          null,
-        weather_data:
-          parsedIntent.weather_data ||
-          botMessageRef.current?.weather_data ||
-          null,
-        search_results:
-          parsedIntent.search_results ||
-          botMessageRef.current?.search_results ||
-          null,
-        deep_search_results:
-          parsedIntent.deep_search_results ||
-          botMessageRef.current?.deep_search_results ||
-          null,
-        image_data:
-          parsedIntent.image_data || botMessageRef.current?.image_data || null,
+        // intent: parsedIntent.intent || botMessageRef.current?.intent,
+        // Dynamically preserve all special data fields
+        ...(parsedIntent || {}),
+        ...(botMessageRef.current || {}),
       });
 
       // Always ensure we have the most recent messages
@@ -222,17 +229,15 @@ export const useChatStream = () => {
         // Navigate to the newly created conversation
         router.push(`/c/${newConversationIdRef.current}`);
 
-        if (newConversationIdRef.current)
-          fetchConversations();
+        if (newConversationIdRef.current) fetchConversations();
       }
-
 
       setIsLoading(false);
       resetLoadingText();
       botMessageRef.current = null;
       newConversationIdRef.current = null;
       newConversationDescriptionRef.current = null;
-    }
+    };
     // };
     /**
      * Handles errors from the SSE stream.
