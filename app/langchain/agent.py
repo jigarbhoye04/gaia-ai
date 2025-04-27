@@ -55,7 +55,7 @@ async def call_agent(
 
                 if isinstance(chunk, AIMessageChunk):
                     content = str(chunk.content)
-                    if content.strip():
+                    if content:
                         yield f"data: {json.dumps({'response': content})}\n\n"
                         complete_message += content
 

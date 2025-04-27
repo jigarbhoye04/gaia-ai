@@ -8,6 +8,7 @@ from app.models.calendar_models import EventCreateRequest
 
 from app.config.loggers import chat_logger as logger
 from app.services.calendar_service import list_calendars
+from app.langchain.templates.calendar_template import CALENDAR_PROMPT_TEMPLATE
 
 
 @tool
@@ -21,18 +22,13 @@ async def calendar_event(
     Create calendar events from structured data provided by the LLM.
 
     This tool processes calendar event information and returns a structured JSON response
-    that can be displayed to the user as calendar event options. When a user expresses
-    intent to schedule something, this tool formats that information for the frontend.
+    that can be displayed to the user as calendar event options.
 
     IMPORTANT: This tool does NOT directly add events to the calendar. Instead, it creates
     a prompt on the frontend that the user must interact with. The user will need to click
     a confirmation button to actually add the event to their calendar.
 
-    Use this tool when a user wants to:
-    1. Schedule a meeting, appointment, call, or any time-based event
-    2. Add a reminder or task with a specific date and time
-    3. Create a calendar entry with any combination of title, description, date, time
-    4. Book time slots for activities or commitments
+    Use this tool when a user wants to schedule a meeting, appointment, call, or any time-based event.
 
     Always provide event data as an array, even if there's only one event.
 
@@ -48,18 +44,7 @@ async def calendar_event(
             - calendar_color (str, optional): Color code for the calendar in hex format (e.g. "#00bbff")
 
     Returns:
-        JSON string containing formatted calendar event options that can be rendered on
-        the frontend, allowing the user to review and confirm the event details before
-        they are added to their calendar.
-
-    Example:
-        When a user says "Schedule a team meeting tomorrow at 2pm for 1 hour", this tool
-        will process that intent and create a structured calendar event with the appropriate
-        summary, start and end times, returning options for the user to confirm.
-
-    Note:
-        A "calendar_options" field will be returned containing the list of event options. These options will
-        be displayed to the user for confirmation before the actual calendar event is created.
+        JSON string containing formatted calendar event options for user confirmation.
     """
     try:
         logger.info("===== CALENDAR EVENT TOOL CALLED =====")
@@ -74,6 +59,7 @@ async def calendar_event(
                     "error": "Calendar event data must be provided as an array",
                     "intent": "calendar",
                     "calendar_options": [],
+                    "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
             )
 
@@ -103,11 +89,16 @@ async def calendar_event(
                     "details": validation_errors,
                     "intent": "calendar",
                     "calendar_options": [],
+                    "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
             )
 
         # Return the successfully processed events
-        response = {"intent": "calendar", "calendar_options": calendar_options}
+        response = {
+            "intent": "calendar",
+            "calendar_options": calendar_options,
+            "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
+        }
 
         # Include any validation warnings if some events had issues
         if validation_errors:
@@ -126,6 +117,7 @@ async def calendar_event(
                 "details": str(e),
                 "intent": "calendar",
                 "calendar_options": [],
+                "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
             }
         )
 
