@@ -1,4 +1,4 @@
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from app.langchain.prompts.search_prompts import SEARCH_PROMPT, DEEP_SEARCH_PROMPT
 
 SEARCH_TEMPLATE = PromptTemplate(

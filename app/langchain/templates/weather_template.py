@@ -1,4 +1,4 @@
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from app.langchain.prompts.weather_prompts import WEATHER_PROMPT
 
 WEATHER_PROMPT_TEMPLATE = PromptTemplate(
