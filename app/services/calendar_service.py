@@ -49,25 +49,39 @@ http_async_client = httpx.AsyncClient()
 #         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
-async def fetch_calendar_list(access_token: str) -> Dict[str, Any]:
+async def fetch_calendar_list(access_token: str, short: bool = False) -> Any:
     """
     Fetch the list of calendars for the authenticated user.
 
     Args:
         access_token (str): The access token.
+        short (bool): If True, returns only key fields per calendar.
 
     Returns:
-        dict: The calendar list data.
-
-    Raises:
-        HTTPException: If the request fails.
+        Any: Full or filtered calendar data.
     """
     url = "https://www.googleapis.com/calendar/v3/users/me/calendarList"
     headers = {"Authorization": f"Bearer {access_token}"}
+
     try:
-        response = await http_async_client.get(url, headers=headers)
+        response = await httpx.AsyncClient().get(url, headers=headers)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+
+        if short:
+            return [
+                {
+                    "id": c.get("id"),
+                    "summary": c.get("summary"),
+                    "description": c.get("description"),
+                    "timeZone": c.get("timeZone"),
+                    "backgroundColor": c.get("backgroundColor"),
+                }
+                for c in data.get("items", [])
+            ]
+
+        return data
+
     except httpx.HTTPStatusError as exc:
         error_detail = "Unknown error"
         error_json = exc.response.json()
@@ -155,7 +169,7 @@ async def fetch_calendar_events(
 
 
 async def list_calendars(
-    access_token: str, refresh_token: Optional[str] = None
+    access_token: str, refresh_token: Optional[str] = None, short=False
 ) -> Optional[Dict[str, Any]]:
     """
     Retrieve the user's calendar list. If the access token is invalid and a refresh token is provided,
@@ -164,12 +178,13 @@ async def list_calendars(
     Args:
         access_token (str): Current access token.
         refresh_token (Optional[str]): Refresh token.
+        short (bool): If True, returns only key fields per calendar.
 
     Returns:
         Optional[Dict[str, Any]]: Calendar list data or None if retrieval fails.
     """
     try:
-        return await fetch_calendar_list(access_token)
+        return await fetch_calendar_list(access_token, short)
     except HTTPException as e:
         if e.status_code == 401 and refresh_token:
             token_data = await refresh_access_token(refresh_token)
@@ -454,21 +469,22 @@ async def create_calendar_event(
     # Handle different event types (all-day vs. time-specific)
     if event.is_all_day:
         # For all-day events, use date format without time component
-        # Convert datetime to date string format "YYYY-MM-DD"
-        start_date = event.start.date().isoformat()
-        # For all-day events, end date is exclusive, so we don't need to add a day
-        # Google Calendar expects the end date to be the day AFTER the last day of the event
-        end_date = event.end.date().isoformat()
+        # Convert ISO string to date string format "YYYY-MM-DD"
+        # Event.start is a string, so we extract the date part
+        start_date = event.start.split("T")[0]
+        end_date = event.end.split("T")[0]
 
         event_payload["start"] = {"date": start_date}
         event_payload["end"] = {"date": end_date}
     else:
         # For time-specific events, use datetime with timezone
         try:
-            canonical_timezone = resolve_timezone(event.timezone)
+            canonical_timezone = resolve_timezone(event.timezone or "UTC")
             user_tz = ZoneInfo(canonical_timezone)
-            start_dt = event.start.replace(tzinfo=user_tz).astimezone(user_tz)
-            end_dt = event.end.replace(tzinfo=user_tz).astimezone(user_tz)
+
+            # Parse the ISO string into a datetime
+            start_dt = datetime.fromisoformat(event.start).replace(tzinfo=user_tz)
+            end_dt = datetime.fromisoformat(event.end).replace(tzinfo=user_tz)
 
             event_payload["start"] = {
                 "dateTime": start_dt.isoformat(),
@@ -479,7 +495,9 @@ async def create_calendar_event(
                 "timeZone": canonical_timezone,
             }
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid timezone: {str(e)}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid timezone or datetime format: {str(e)}"
+            )
 
     # Send request to create the event
     try:

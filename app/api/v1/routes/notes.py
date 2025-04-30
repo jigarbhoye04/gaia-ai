@@ -5,15 +5,15 @@ This module contains endpoints for creating, retrieving, updating, and deleting 
 """
 
 from fastapi import APIRouter, Depends, status
-from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
-from app.models.notes_models import NoteModel, NoteResponse
+
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.models.notes_models import NoteModel, NoteResponse
 from app.services.notes_service import (
     create_note_service,
-    get_note,
-    get_all_notes,
-    update_note,
     delete_note,
+    get_all_notes,
+    get_note,
+    update_note,
 )
 
 router = APIRouter()
@@ -23,7 +23,6 @@ router = APIRouter()
 async def create_note_endpoint(
     note: NoteModel,
     user: dict = Depends(get_current_user),
-    chromadb_client=Depends(get_chromadb),
 ):
     """
     Create a new note for the authenticated user.
@@ -31,12 +30,11 @@ async def create_note_endpoint(
     Args:
         note (NoteModel): The note data.
         user (dict): The authenticated user information.
-        chromadb_client: The ChromaDB client instance.
 
     Returns:
         NoteResponse: The created note.
     """
-    return await create_note_service(note, user["user_id"], chromadb_client)
+    return await create_note_service(note, user["user_id"])
 
 
 @router.get("/notes/{note_id}", response_model=NoteResponse)
@@ -73,7 +71,6 @@ async def update_note_endpoint(
     note_id: str,
     note: NoteModel,
     user: dict = Depends(get_current_user),
-    chromadb_client=Depends(get_chromadb),
 ):
     """
     Update an existing note by its ID.
@@ -82,19 +79,17 @@ async def update_note_endpoint(
         note_id (str): The ID of the note to update.
         note (NoteModel): The updated note data.
         user (dict): The authenticated user information.
-        chromadb_client: The ChromaDB client instance.
 
     Returns:
         NoteResponse: The updated note.
     """
-    return await update_note(note_id, note, user["user_id"], chromadb_client)
+    return await update_note(note_id, note, user["user_id"])
 
 
 @router.delete("/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_note_endpoint(
     note_id: str,
     user: dict = Depends(get_current_user),
-    chromadb_client=Depends(get_chromadb),
 ):
     """
     Delete a note by its ID.
@@ -102,6 +97,5 @@ async def delete_note_endpoint(
     Args:
         note_id (str): The ID of the note to delete.
         user (dict): The authenticated user information.
-        chromadb_client: The ChromaDB client instance.
     """
-    await delete_note(note_id, user["user_id"], chromadb_client)
+    await delete_note(note_id, user["user_id"])

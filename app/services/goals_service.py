@@ -7,48 +7,33 @@ from fastapi import HTTPException
 from app.db.collections import goals_collection
 from app.db.redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
 from app.models.goals_models import GoalCreate, UpdateNodeRequest, GoalResponse
-from app.utils.llm_utils import do_prompt_no_stream, do_prompt_with_stream_simple
 from app.utils.goals_utils import goal_helper
 from app.config.loggers import goals_logger as logger
-from app.prompts.user.goals_prompts import (
-    ROADMAP_JSON_STRUCTURE,
-    ROADMAP_INSTRUCTIONS,
-    ROADMAP_GENERATOR,
-)
-
-
-async def generate_roadmap_with_llm(title: str) -> dict:
-    detailed_prompt = ROADMAP_GENERATOR.format(
-        title=title,
-        instructions=ROADMAP_INSTRUCTIONS,
-        json_structure=ROADMAP_JSON_STRUCTURE,
-    )
-
-    try:
-        response = await do_prompt_no_stream(prompt=detailed_prompt, max_tokens=2048)
-        return response
-    except Exception as e:
-        print(f"LLM Generation Error: {e}")
-        return {}
+# from app.prompts.user.goals_prompts import (
+#     ROADMAP_JSON_STRUCTURE,
+#     ROADMAP_INSTRUCTIONS,
+#     ROADMAP_GENERATOR,
+# )
 
 
 async def generate_roadmap_with_llm_stream(title: str):
-    detailed_prompt = ROADMAP_GENERATOR.format(
-        title=title,
-        instructions=ROADMAP_INSTRUCTIONS,
-        json_structure=ROADMAP_JSON_STRUCTURE,
-    )
+    yield {"message": "This implementation is incomplete!!"}
+    # detailed_prompt = ROADMAP_GENERATOR.format(
+    #     title=title,
+    #     instructions=ROADMAP_INSTRUCTIONS,
+    #     json_structure=ROADMAP_JSON_STRUCTURE,
+    # )
 
-    try:
-        async for chunk in do_prompt_with_stream_simple(
-            messages=[{"role": "user", "content": detailed_prompt}],
-            max_tokens=4096,
-        ):
-            yield chunk
+    # try:
+    #     async for chunk in do_prompt_with_stream_simple(
+    #         messages=[{"role": "user", "content": detailed_prompt}],
+    #         max_tokens=4096,
+    #     ):
+    #         yield chunk
 
-    except Exception as e:
-        logger.error(f"LLM Generation Error: {e}")
-        yield json.dumps({"error": str(e)})
+    # except Exception as e:
+    #     logger.error(f"LLM Generation Error: {e}")
+    #     yield json.dumps({"error": str(e)})
 
 
 async def create_goal_service(goal: GoalCreate, user: dict) -> GoalResponse:

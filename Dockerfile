@@ -1,56 +1,90 @@
-# ---- Base Stage: Setup Python & Install Dependencies ----
+# ---- Base Stage: Contains system dependencies ----
 FROM python:3.12-slim AS base
-
-ARG ENV=production
-ENV ENV=${ENV} \
-    UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
-
-# Install uv (Ultra-Fast Python Package Installer) and system dependencies in one go
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
+
+# Copy uv installer
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+# Install system dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
-      libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-      libgbm1 libasound2 curl unzip tesseract-ocr && \
-    rm -rf /var/lib/apt/lists/*
+  apt-get install -y --no-install-recommends \
+  build-essential \
+  libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
+  libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
+  libgbm1 libasound2 curl unzip tesseract-ocr libpq-dev \
+  libdbus-1-3 && \
+  rm -rf /var/lib/apt/lists/*
 
-# Copy dependency files and install Python dependencies using caching
+# ---- Extraction Stage: Extract heavy dependencies ----
+FROM base AS extract
+WORKDIR /app
+
+# Install tomli for parsing
+RUN pip install tomli
+
+# Copy only pyproject.toml for extraction
 COPY pyproject.toml ./
+COPY scripts/extract_heavy_deps.py ./
+
+# Run script to extract heavy dependencies
+RUN python extract_heavy_deps.py && \
+  rm -rf /root/.cache/pip
+
+# ---- Heavy Dependencies Stage ----
+FROM base AS heavy-dependencies
+WORKDIR /app
+
+# Copy only the extracted dependencies file, not pyproject.toml
+COPY --from=extract /app/heavy-deps.txt ./
+
+# Run script to extract and install heavy dependencies
+RUN uv pip install --system --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+  uv pip install --system --no-cache-dir -r heavy-deps.txt && \
+  rm -rf /root/.cache/pip
+
+# Setup Playwright and NLTK
+RUN python -m playwright install --with-deps chromium
+RUN python -m nltk.downloader punkt stopwords punkt_tab && \
+  rm -rf /root/.cache/nltk
+
+# ---- Core Dependencies Stage: Install core application dependencies ----
+FROM heavy-dependencies AS core-dependencies
+WORKDIR /app
+
+# Copy only the pyproject.toml for core dependencies
+COPY pyproject.toml ./
+
+# Set environment variables
+ENV ENV=production \
+  UV_COMPILE_BYTECODE=1 \
+  UV_LINK_MODE=copy \
+  UV_SYSTEM_PYTHON=1 \
+  UV_LOGGING=1
+
+# Install core dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
-    if [ "$ENV" = "production" ]; then \
-      uv pip install --system --no-cache-dir . ; \
-    else \
-      uv pip install --system --no-cache-dir -e . ; \
-    fi
+  if [ "$ENV" = "production" ]; then \
+  uv pip install --no-cache-dir --group core ; \
+  else \
+  uv pip install --no-cache-dir --group core --editable . ; \
+  fi
 
-# ---- Builder Stage: Download Additional Resources ----
-FROM base AS builder
-RUN python -m nltk.downloader -d /root/nltk_data punkt stopwords punkt_tab
+# ---- Final Stage: Setup application for production ----
+FROM core-dependencies AS final
+WORKDIR /app
 
-# ---- Playwright Stage: Official Browser Assets ----
-FROM mcr.microsoft.com/playwright:v1.51.1-noble AS playwright
-# This stage is used solely to source the official browser assets
+# Setup non-root user and permissions
+RUN adduser --disabled-password --gecos '' appuser \
+  && mkdir -p /home/appuser/.cache/huggingface /home/appuser/nltk_data  \
+  && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
+  && chown -R appuser:appuser /home/appuser \
+  && cp -R /root/.cache/ms-playwright /home/appuser/.cache/ \
+  && chown -R appuser:appuser /home/appuser/.cache/ms-playwright
 
-# ---- Final Stage: Build Minimal Runtime Image ----
-FROM base AS final
+# Copy application code with proper ownership
+COPY --chown=appuser:appuser . .
 
-# Create a non-root user and switch ownership in one layer
-RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser /app
-
-# Copy application code and resources
-COPY --chown=appuser:appuser . /app
-COPY --from=builder /root/nltk_data /home/appuser/nltk_data
-COPY --from=playwright /ms-playwright /root/.cache/ms-playwright
-
-# Expose application ports
-EXPOSE 80
+USER appuser
 EXPOSE 8000
 
-# Switch to non-root user
-USER appuser
-
-# Start the FastAPI application
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

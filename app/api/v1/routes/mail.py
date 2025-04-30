@@ -3,30 +3,29 @@ from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
-from app.api.v1.dependencies.chromadb_dependencies import get_chromadb
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import (
+    EmailActionRequest,
+    EmailReadStatusRequest,
     EmailRequest,
     EmailSummaryRequest,
     SendEmailRequest,
-    EmailReadStatusRequest,
-    EmailActionRequest,
 )
-from app.prompts.user.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
-from app.utils.llm_utils import do_prompt_no_stream
+from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
+from app.utils.chat_utils import do_prompt_no_stream
 from app.services.mail_service import (
+    archive_messages,
     fetch_detailed_messages,
     fetch_thread,
     get_gmail_service,
-    send_email,
     mark_messages_as_read,
     mark_messages_as_unread,
-    star_messages,
-    unstar_messages,
-    trash_messages,
-    untrash_messages,
-    archive_messages,
     move_to_inbox,
+    send_email,
+    star_messages,
+    trash_messages,
+    unstar_messages,
+    untrash_messages,
 )
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
@@ -77,7 +76,6 @@ def list_messages(
 async def process_email(
     request: EmailRequest,
     current_user: dict = Depends(get_current_user),
-    chromadb_client=Depends(get_chromadb),
 ) -> Any:
     try:
         user_id = current_user.get("user_id")
@@ -85,9 +83,7 @@ async def process_email(
             raise HTTPException(status_code=401, detail="User ID is required")
 
         notes = await search_notes_by_similarity(
-            input_text=request.prompt,
-            user_id=str(user_id),
-            chromadb_client=chromadb_client,
+            input_text=request.prompt, user_id=str(user_id)
         )
 
         prompt = EMAIL_COMPOSER.format(
@@ -102,7 +98,7 @@ async def process_email(
         )
 
         result = await do_prompt_no_stream(
-            prompt=prompt, model="@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+            prompt=prompt,
         )
         print(result)
         if isinstance(result, dict) and result.get("response"):

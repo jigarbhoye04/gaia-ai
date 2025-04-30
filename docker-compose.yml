@@ -3,7 +3,7 @@ services:
   gaia:
     container_name: gaia
     build: .
-    image: gaia-image
+    image: gaia
     working_dir: /app
     command:
       [
@@ -31,7 +31,14 @@ services:
     tty: true
     stdin_open: true
     depends_on:
-      - chromadb
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
     networks:
       - gaia_network
     healthcheck:
@@ -39,6 +46,27 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  postgres:
+    # profiles: ["dev"]
+    image: postgres:alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres #pragma: allowlist secret
+      POSTGRES_DB: langgraph
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
 
   # RabbitMQ Service
   rabbitmq:
@@ -63,7 +91,7 @@ services:
   celery_worker:
     profiles: ["celery"]
     container_name: celery_worker
-    image: gaia-image
+    image: gaia
     working_dir: /app
     env_file:
       - .env
@@ -81,14 +109,17 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - rabbitmq
-      - chromadb
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
     networks:
       - gaia_network
 
   # ChromaDB Service
   chromadb:
-    image: chromadb/chroma:latest
+    # image: chromadb/chroma:latest
+    image: chromadb/chroma:1.0.0
     container_name: chromadb
     volumes:
       - chroma_data:/chroma/chroma
@@ -96,12 +127,13 @@ services:
       - PERSIST_DIRECTORY=/chroma/chroma
       - CHROMA_SERVER_HOST=0.0.0.0
       - CHROMA_SERVER_PORT=8000
-    # ports:
-    #   - "8080:8000"
+    ports:
+      - "8080:8000"
     restart: on-failure
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
-      interval: 30s
+      test:
+        ["CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000"]
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -119,7 +151,7 @@ services:
     restart: on-failure
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -130,14 +162,14 @@ services:
     profiles: ["dev"]
     image: mongo:latest
     container_name: mongo
-    # ports:
-    #   - "27017:27017"
+    ports:
+      - "27017:27017"
     volumes:
       - mongo_data:/data/db
     restart: on-failure
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
       timeout: 10s
       retries: 5
     networks:
@@ -151,12 +183,13 @@ services:
     environment:
       ME_CONFIG_MONGODB_SERVER: mongo
       ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: password
+      ME_CONFIG_BASICAUTH_USERNAME: admin #pragma: allowlist secret
+      ME_CONFIG_BASICAUTH_PASSWORD: password #pragma: allowlist secret
     ports:
       - "8081:8081"
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     networks:
       - gaia_network
 
@@ -165,6 +198,7 @@ volumes:
   chroma_data:
   redis_data:
   mongo_data:
+  pgdata:
 
 networks:
   gaia_network:

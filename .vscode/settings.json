@@ -10,5 +10,13 @@
     ".venv": true
   },
   "explorerExclude.backup": {},
-  "editor.formatOnSave": true
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  },
+  "python.linting.enabled": true,
+  "python.linting.ruffEnabled": true,
+  "python.linting.ruffPath": "ruff",
+  "editor.formatOnSave": true,
+  "python.formatting.provider": "none",
+  "ruff.organizeImports": true
 }

@@ -16,6 +16,7 @@ from app.api.v1 import api_router, lifespan
 from app.middleware.profiling import ProfilingMiddleware
 from app.config.settings import settings
 
+
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 

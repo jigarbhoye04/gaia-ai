@@ -1,88 +1,61 @@
-import json
-from typing import Any
-from app.utils.llm_utils import do_prompt_no_stream
-from app.prompts.system.notes_prompts import MEMORY_CREATOR
+from langchain_core.documents import Document
 
-
-from typing import Dict
-from fastapi import HTTPException
-from app.models.notes_models import NoteModel
-from app.utils.embedding_utils import generate_embedding
+from app.config.loggers import notes_logger as logger
+from app.db.chromadb import ChromaClient
 from app.db.collections import notes_collection
-from app.db.redis import delete_cache
+from app.db.redis import delete_cache, set_cache
+from app.models.notes_models import NoteModel, NoteResponse
 
 
-async def insert_note(note: NoteModel, user_id: str, auto_created=False) -> Dict:
-    """
-    Insert a new note into the database and handle related actions like embedding and cache invalidation.
-    """
-    # Generate embedding for the note content
-    embedding = generate_embedding(note.content)
+async def insert_note(
+    note: NoteModel,
+    user_id: str,
+    auto_created=False,
+) -> NoteResponse:
+    logger.info(f"Creating new note for user: {user_id}")
 
-    # Prepare the note data to insert into the database
-    new_note = {
-        **note.model_dump(),
-        "vector": embedding,
+    langchain_chroma_client = await ChromaClient.get_langchain_client(
+        collection_name="notes"
+    )
+
+    note_data = note.model_dump()
+    note_data["user_id"] = user_id
+    note_data["auto_created"] = auto_created
+
+    result = await notes_collection.insert_one(note_data)
+
+    note_id = str(result.inserted_id)
+
+    logger.info(f"Note created with ID: {note_id}")
+
+    # Add note to ChromaDB for vector search
+    await langchain_chroma_client.aadd_documents(
+        documents=[
+            Document(
+                page_content=note_data.get("plaintext"),
+                metadata={
+                    "note_id": note_id,
+                    "user_id": user_id,
+                },
+            )
+        ],
+        ids=[note_id],
+    )
+    logger.info(f"Note with id {note_id} indexed in ChromaDB")
+
+    response_data = {
+        "id": note_id,
+        "content": note_data["content"],
+        "plaintext": note_data["plaintext"],
         "user_id": user_id,
-        "auto_created": auto_created,
+        "auto_created": note_data.get("auto_created", False),
+        "title": note_data.get("title"),
+        "description": note_data.get("description"),
     }
 
-    # Insert the note into the collection
-    try:
-        result = await notes_collection.insert_one(new_note)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error inserting note: {str(e)}")
-
-    # Invalidate cache for all notes
     await delete_cache(f"notes:{user_id}")
 
-    # Return the inserted note with its ID
-    return {"id": str(result.inserted_id), **note.model_dump()}
+    await set_cache(f"note:{user_id}:{note_id}", response_data)
+    logger.info(f"Note created with ID: {note_id} and cache updated")
 
-
-async def should_create_memory(
-    message: str,
-) -> tuple[bool, None, None] | tuple[bool, Any, Any]:
-    try:
-        result = await do_prompt_no_stream(
-            prompt=f"This is the message: {message}",
-            model="@cf/meta/llama-3.3-70b-instruct-fp8-fast",
-            system_prompt=MEMORY_CREATOR,
-        )
-
-        if isinstance(result, str):
-            try:
-                result = json.loads(result.strip())
-            except json.JSONDecodeError:
-                return False, None, None
-
-        elif isinstance(result, dict) and "response" in result:
-            try:
-                result = json.loads(result["response"].strip())
-            except json.JSONDecodeError:
-                return False, None, None
-        else:
-            return False, None, None
-
-        is_memory = result.get("is_memory")
-
-        if isinstance(is_memory, bool):
-            return is_memory, result.get("plaintext"), result.get("content")
-
-        return False, None, None
-
-    except Exception:
-        return (False, None, None)
-
-
-async def store_note(query_text: str, user_id: str) -> None:
-    """
-    Store a note if the query meets memory creation criteria.
-    """
-    is_memory, plaintext, content = await should_create_memory(query_text)
-    if is_memory and content and plaintext:
-        await insert_note(
-            note=NoteModel(plaintext=plaintext, content=content),
-            user_id=user_id,
-            auto_created=True,
-        )
+    return NoteResponse(**response_data)

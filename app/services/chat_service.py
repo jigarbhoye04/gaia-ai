@@ -1,513 +1,208 @@
-import asyncio
 from datetime import datetime, timezone
-from typing import AsyncGenerator
+import json
+from typing import AsyncGenerator, Dict, Optional, Any
 
-from bson import ObjectId
-from fastapi import BackgroundTasks, HTTPException, status
-from fastapi.encoders import jsonable_encoder
+from fastapi import BackgroundTasks
 
+from app.langchain.agent import call_agent
+from app.models.chat_models import MessageModel, UpdateMessagesRequest
+from app.models.message_models import MessageRequestWithHistory
+from app.services.conversation_service import update_messages
+from app.utils.chat_utils import create_conversation
 from app.config.loggers import chat_logger as logger
-from app.db.collections import conversations_collection
-from app.models.chat_models import ConversationModel, UpdateMessagesRequest
-from app.models.general_models import (
-    DescriptionUpdateRequest,
-    DescriptionUpdateRequestLLM,
-    MessageRequest,
-    MessageRequestWithHistory,
-)
-from app.prompts.system.general import WEATHER_PROMPT
-from app.prompts.user.chat_prompts import CONVERSATION_DESCRIPTION_GENERATOR
-from app.services.file_service import fetch_files
-from app.services.image_service import generate_image_stream
-from app.services.internet_service import do_deep_search, do_search, fetch_webpages
-from app.services.notes_service import fetch_notes
-from app.utils.chat_utils import (
-    classify_intent,
-    user_weather,
-    extract_location_from_message,
-)
-from app.utils.llm_utils import (
-    do_prompt_no_stream,
-    do_prompt_with_stream,
-)
-from app.utils.notes_utils import store_note
-from app.utils.pipeline_utils import Pipeline
 
 
 async def chat_stream(
     body: MessageRequestWithHistory,
-    background_tasks: BackgroundTasks,
     user: dict,
-    llm_model: str,
-    user_ip: str,
-    chromadb_client=None,
+    background_tasks: BackgroundTasks,
 ) -> AsyncGenerator:
     """
-    Stream chat messages in real-time using the plug-and-play pipeline.
-
-    This function coordinates the processing of chat messages through a pipeline,
-    including optional web search, deep internet search, document fetching,
-    and other enhancements before sending to the language model.
-
-    Args:
-        body (MessageRequestWithHistory): Contains the message, conversation ID, message history,
-                                         and optional flags for search features
-        background_tasks (BackgroundTasks): FastAPI background tasks object for async operations
-        user (dict): User information from authentication
-        llm_model (str): Default LLM model identifier to use for generation
-        user_ip (str): User's IP address for location-specific features
-        chromadb_client: Optional ChromaDB client for vector search capabilities
+    Stream chat messages in real-time.
 
     Returns:
         StreamingResponse: A streaming response containing the LLM's generated content
     """
-    last_message = body.messages[-1] if body.messages else None
+    complete_message = ""
+    conversation_id, init_chunk = await initialize_conversation(body, user)
 
-    context = {
-        "user_id": user.get("user_id"),
-        "conversation_id": body.conversation_id,
-        "query_text": last_message.get("content", "")
-        if last_message is not None
-        else "",
-        "last_message": last_message,
-        "body": body,
-        "llm_model": llm_model,
-        "user": user,
-        "intent": None,
-        "messages": jsonable_encoder(body.messages),
-        "search_web": body.search_web,
-        "deep_search": body.deep_search,
-        "pageFetchURLs": body.pageFetchURLs,
-        "fileIds": body.fileIds,
-        "weather_data": "",
-        "fileData": body.fileData if body.fileData else [],
-        "user_ip": user_ip,
-        "chromadb_client": chromadb_client,
-    }
+    # Dictionary to collect tool outputs during streaming
+    tool_data: Dict[str, Any] = {}
 
-    context = await classify_intent(context)
+    if init_chunk:  # Return the conversation id and metadata if new convo
+        yield init_chunk
 
-    if context["intent"] == "generate_image":
-        async for chunk in generate_image_stream(context["query_text"]):
-            yield chunk
-        return
-
-    pipeline_steps = [
-        # choose_llm_model,
-        do_weather,
-        fetch_webpages,
-        do_deep_search,
-        do_search,
-        fetch_notes,
-        fetch_files,
-    ]
-
-    # Using Sequence type to avoid invariance issues with Pipeline constructor
-    # from typing import Sequence, Callable, Coroutine, Dict, Any
-
-    # typed_pipeline_steps: Sequence[
-    #     Callable[[Dict[str, Any]], Coroutine[Any, Any, Dict[str, Any]]]
-    # ] = pipeline_steps
-
-    pipeline = Pipeline(pipeline_steps)
-    context = await pipeline.run(context)
-
-    background_tasks.add_task(store_note, context["query_text"], context["user_id"])
-
-    context["messages"][-1] = context["last_message"]
-
-    async for chunk in do_prompt_with_stream(
-        messages=context["messages"],
-        max_tokens=4096,
-        intent=context["intent"],
-        model=context["llm_model"],
-        context=context,
+    # TODO: FETCH NOTES AND FILES AND USE THEM
+    # Stream response from the agent
+    async for chunk in call_agent(
+        request=body,
+        user=user,
+        conversation_id=conversation_id,
+        access_token=user.get("access_token"),
     ):
-        yield chunk
+        # Process complete message marker
+        if chunk.startswith("nostream: "):
+            # So that we can return data that doesn't need to be streamed
+            chunk_json = json.loads(chunk.replace("nostream: ", ""))
+            complete_message = chunk_json.get("complete_message", "")
+        # Process data chunk - potentially contains tool outputs
+        elif chunk.startswith("data: "):
+            try:
+                # Extract tool data from the chunk
+                new_data = extract_tool_data(chunk[6:])
+                if new_data:
+                    tool_data.update(new_data)
+            except Exception as e:
+                logger.error(f"Error extracting tool data: {e}")
+            yield chunk
+        # Pass through other chunks
+        else:
+            yield chunk
+
+    # Save the conversation once streaming is complete
+    update_conversation_messages(
+        background_tasks, body, user, conversation_id, complete_message, tool_data
+    )
 
 
-async def do_weather(context: dict) -> dict:
-    if context["intent"] == "weather" and context["last_message"]:
-        logger.info(f"Starting weather lookup for query: {context['query_text']}")
-
-        try:
-            location = await extract_location_from_message(context["query_text"])
-            context["weather_data"] = await user_weather(context["user_ip"], location)
-
-            context["last_message"]["content"] += WEATHER_PROMPT.format(
-                weather_data=context["weather_data"]
-            )
-            print(f"{context['weather_data']=}")
-            logger.info(f"Weather data added to context for: {location}")
-        except Exception as e:
-            logger.error(f"Error in weather service: {e}", exc_info=True)
-            context["weather_error"] = str(e)
-            context["last_message"]["content"] += (
-                "\n\nSorry, I couldn't retrieve the weather information at this time."
-            )
-
-    return context
-
-
-async def chat(request: MessageRequest) -> dict:
+def extract_tool_data(json_str: str) -> Dict[str, Any]:
     """
-    Get a chat response without streaming.
+    Extract structured data from tool response JSON.
+
+    Args:
+        json_str: The JSON string to parse
+
+    Returns:
+        Dictionary with extracted tool data
     """
-    response = await do_prompt_no_stream(request.message)
-    return response
-
-
-async def create_conversation(conversation: ConversationModel, user: dict) -> dict:
-    """
-    Create a new conversation.
-    """
-    user_id = user.get("user_id")
-    if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not authenticated"
-        )
-
-    created_at = datetime.now(timezone.utc).isoformat()
-    conversation_data = {
-        "user_id": user_id,
-        "conversation_id": conversation.conversation_id,
-        "description": conversation.description,
-        "messages": [],
-        "createdAt": created_at,
-    }
-
     try:
-        insert_result = await conversations_collection.insert_one(conversation_data)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create conversation: {str(e)}",
-        )
+        data = json.loads(json_str)
+        tool_data: Dict[str, Any] = {}
 
-    if not insert_result.acknowledged:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create conversation",
-        )
+        # Extract calendar data
+        if (
+            "intent" in data
+            and data["intent"] == "calendar"
+            and "calendar_options" in data
+        ):
+            tool_data["intent"] = "calendar"
+            tool_data["calendar_options"] = data["calendar_options"]
 
-    return {
-        "conversation_id": conversation.conversation_id,
-        "user_id": user_id,
-        "createdAt": created_at,
-        "detail": "Conversation created successfully",
-    }
+        # Extract search results
+        elif "search_results" in data:
+            tool_data["search_results"] = data["search_results"]
+
+        # Extract deep search results
+        elif "deep_search_results" in data:
+            tool_data["deep_search_results"] = data["deep_search_results"]
+
+        # Extract weather data
+        elif (
+            "intent" in data and data["intent"] == "weather" and "weather_data" in data
+        ):
+            tool_data["intent"] = "weather"
+            tool_data["weather_data"] = data["weather_data"]
+
+        # Extract image generation data
+        elif (
+            "intent" in data
+            and data["intent"] == "generate_image"
+            and "image_data" in data
+        ):
+            tool_data["intent"] = "generate_image"
+            tool_data["image_data"] = data["image_data"]
+
+        return tool_data
+    except json.JSONDecodeError:
+        return {}
 
 
-async def get_conversations(user: dict, page: int = 1, limit: int = 10) -> dict:
+async def initialize_conversation(
+    body: MessageRequestWithHistory, user: dict
+) -> tuple[str, Optional[str]]:
     """
-    Fetch paginated conversations for the authenticated user, including starred conversations.
+    Initialize a conversation or use an existing one.
+
+    Args:
+        body: The request body
+        user: User information
+
+    Returns:
+        Tuple of conversation ID and initialization chunk (if any)
     """
-    user_id = user["user_id"]
+    conversation_id = body.conversation_id or None
+    init_chunk = None
 
-    projection = {
-        "_id": 1,
-        "user_id": 1,
-        "conversation_id": 1,
-        "description": 1,
-        "starred": 1,
-        "createdAt": 1,
-    }
+    if conversation_id is None:
+        last_message = body.messages[-1] if body.messages else None
+        conversation = await create_conversation(last_message=last_message, user=user)
+        conversation_id = conversation.get("conversation_id", "")
 
-    starred_filter = {"user_id": user_id, "starred": True}
-    non_starred_filter = {
-        "user_id": user_id,
-        "$or": [{"starred": {"$exists": False}}, {"starred": False}],
-    }
-    skip = (page - 1) * limit
-
-    starred_future = (
-        conversations_collection.find(starred_filter, projection)
-        .sort("createdAt", -1)
-        .to_list(None)
-    )
-    non_starred_count_future = conversations_collection.count_documents(
-        non_starred_filter
-    )
-    non_starred_future = (
-        conversations_collection.find(non_starred_filter, projection)
-        .sort("createdAt", -1)
-        .skip(skip)
-        .limit(limit)
-        .to_list(limit)
-    )
-
-    (
-        starred_conversations,
-        non_starred_count,
-        non_starred_conversations,
-    ) = await asyncio.gather(
-        starred_future, non_starred_count_future, non_starred_future
-    )
-
-    def convert_ids(conversations):
-        for conv in conversations:
-            conv["_id"] = str(conv["_id"])
-        return conversations
-
-    starred_conversations = convert_ids(starred_conversations)
-    non_starred_conversations = convert_ids(non_starred_conversations)
-
-    combined_conversations = starred_conversations + non_starred_conversations
-    total = len(starred_conversations) + non_starred_count
-    total_pages = (
-        ((non_starred_count + limit - 1) // limit) if non_starred_count > 0 else 1
-    )
-
-    result = {
-        "conversations": combined_conversations,
-        "total": total,
-        "page": page,
-        "limit": limit,
-        "total_pages": total_pages,
-    }
-
-    return result
-
-
-async def get_conversation(conversation_id: str, user: dict) -> dict:
-    """
-    Fetch a specific conversation by ID.
-    """
-    user_id = user.get("user_id")
-    conversation = await conversations_collection.find_one(
-        {"user_id": user_id, "conversation_id": conversation_id}
-    )
-
-    if not conversation:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    conversation["_id"] = str(conversation["_id"])
-    return conversation
-
-
-async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
-    """
-    Add messages to an existing conversation, including any file IDs attached to the messages.
-    """
-    user_id = user.get("user_id")
-    conversation_id = request.conversation_id
-
-    messages = []
-    for message in request.messages:
-        message_dict = message.model_dump(exclude={"loading"})
-        # Remove None values to keep the document clean
-        message_dict = {
-            key: value for key, value in message_dict.items() if value is not None
-        }
-        # Ensure message has an ID
-        message_dict.setdefault("message_id", str(ObjectId()))
-        messages.append(message_dict)
-
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$push": {"messages": {"$each": messages}}},
-    )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    return {
-        "conversation_id": conversation_id,
-        "message": "Messages updated",
-        "modified_count": update_result.modified_count,
-    }
-
-
-async def update_conversation_description_llm(
-    conversation_id: str, data: DescriptionUpdateRequestLLM, user: dict, model: str
-) -> dict:
-    """
-    Update the conversation description using an LLM-generated summary.
-    """
-    user_id = user.get("user_id")
-    description = "New Chat"
-
-    try:
-        response = await do_prompt_no_stream(
-            prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(
-                user_message=data.userFirstMessage
-            ),
-            max_tokens=5,
-            model=model,
-        )
-        description = (response.get("response", "New Chat")).replace('"', "")
-    except Exception as e:
-        logger.error(f"LLM call failed: {e}")
-
-    try:
-        update_result = await conversations_collection.update_one(
-            {"user_id": user_id, "conversation_id": conversation_id},
-            {"$set": {"description": description}},
-        )
-
-        if update_result.modified_count == 0:
-            raise HTTPException(
-                status_code=404, detail="Conversation not found or update failed"
+        init_chunk = f"""data: {
+            json.dumps(
+                {
+                    "conversation_id": conversation_id,
+                    "conversation_description": conversation.get("description"),
+                }
             )
-    except Exception as e:
-        logger.error(f"Update conversation failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Update failed {e}")
+        }\n\n"""
 
-    return {
-        "message": "Conversation updated successfully",
-        "description": description,
-    }
+    return conversation_id, init_chunk
 
 
-async def update_conversation_description(
-    conversation_id: str, data: DescriptionUpdateRequest, user: dict
-) -> dict:
+def update_conversation_messages(
+    background_tasks: BackgroundTasks,
+    body: MessageRequestWithHistory,
+    user: dict,
+    conversation_id: str,
+    complete_message: str,
+    tool_data: Dict[str, Any] = {},
+) -> None:
     """
-    Update the conversation description.
-    """
-    user_id = user.get("user_id")
+    Schedule conversation update in the background.
 
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$set": {"description": data.description}},
+    Args:
+        background_tasks: FastAPI background task handler
+        body: Request body
+        user: User information
+        conversation_id: ID of the conversation to update
+        complete_message: Complete LLM-generated message
+        tool_data: Structured tool output data to store with the message
+    """
+    # Create user message
+    user_message = MessageModel(
+        type="user",
+        response=body.messages[-1]["content"],
+        date=datetime.now(timezone.utc).isoformat(),
+        searchWeb=body.search_web,
+        deepSearchWeb=body.deep_search,
+        pageFetchURLs=body.pageFetchURLs,
+        fileIds=body.fileIds,
     )
 
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Conversation not found or update failed"
-        )
-
-    return {
-        "message": "Conversation updated successfully",
-        "description": data.description,
-    }
-
-
-async def star_conversation(conversation_id: str, starred: bool, user: dict) -> dict:
-    """
-    Star or unstar a conversation.
-    """
-    user_id = user.get("user_id")
-    update_result = await conversations_collection.update_one(
-        {"user_id": user_id, "conversation_id": conversation_id},
-        {"$set": {"starred": starred}},
+    # Create bot message with base properties
+    bot_message = MessageModel(
+        type="bot",
+        response=complete_message,
+        date=datetime.now(timezone.utc).isoformat(),
+        searchWeb=body.search_web,
+        deepSearchWeb=body.deep_search,
+        pageFetchURLs=body.pageFetchURLs,
+        fileIds=body.fileIds,
     )
 
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Conversation not found or update failed"
-        )
+    # Apply tool data fields to bot message if available
+    if tool_data:
+        # Use dictionary unpacking for cleaner application of fields
+        for key, value in tool_data.items():
+            setattr(bot_message, key, value)
 
-    return {"message": "Conversation updated successfully", "starred": starred}
-
-
-async def delete_all_conversations(user: dict) -> dict:
-    """
-    Delete all conversations for the authenticated user.
-    """
-    user_id = user.get("user_id")
-    delete_result = await conversations_collection.delete_many({"user_id": user_id})
-
-    if delete_result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="No conversations found for the user",
-        )
-
-    return {"message": "All conversations deleted successfully"}
-
-
-async def delete_conversation(conversation_id: str, user: dict) -> dict:
-    """
-    Delete a specific conversation by ID.
-    """
-    user_id = user.get("user_id")
-    delete_result = await conversations_collection.delete_one(
-        {"user_id": user_id, "conversation_id": conversation_id}
+    # Schedule the DB update as a background task
+    background_tasks.add_task(
+        update_messages,
+        UpdateMessagesRequest(
+            conversation_id=conversation_id,
+            messages=[user_message, bot_message],
+        ),
+        user=user,
     )
-
-    if delete_result.deleted_count == 0:
-        raise HTTPException(
-            status_code=404,
-            detail="Conversation not found or does not belong to the user",
-        )
-
-    return {
-        "message": "Conversation deleted successfully",
-        "conversation_id": conversation_id,
-    }
-
-
-async def pin_message(
-    conversation_id: str, message_id: str, pinned: bool, user: dict
-) -> dict:
-    """
-    Pin or unpin a message within a conversation.
-    """
-    user_id = user.get("user_id")
-    conversation = await conversations_collection.find_one(
-        {"user_id": user_id, "conversation_id": conversation_id}
-    )
-
-    if not conversation:
-        raise HTTPException(status_code=404, detail="Conversation not found")
-
-    messages = conversation.get("messages", [])
-    target_message = next(
-        (msg for msg in messages if msg.get("message_id") == message_id), None
-    )
-
-    if not target_message:
-        raise HTTPException(status_code=404, detail="Message not found in conversation")
-
-    update_result = await conversations_collection.update_one(
-        {
-            "user_id": user_id,
-            "conversation_id": conversation_id,
-            "messages.message_id": message_id,
-        },
-        {"$set": {"messages.$.pinned": pinned}},
-    )
-
-    if update_result.modified_count == 0:
-        raise HTTPException(
-            status_code=404, detail="Message not found or update failed"
-        )
-
-    response_message = (
-        f"Message with ID {message_id} pinned successfully"
-        if pinned
-        else f"Message with ID {message_id} unpinned successfully"
-    )
-
-    return {"message": response_message, "pinned": pinned}
-
-
-async def get_starred_messages(user: dict) -> dict:
-    """
-    Fetch all pinned messages across all conversations for the authenticated user.
-    """
-    user_id = user.get("user_id")
-
-    results = await conversations_collection.aggregate(
-        [
-            {"$match": {"user_id": user_id}},
-            {"$unwind": "$messages"},
-            {"$match": {"messages.pinned": True}},
-            {"$project": {"_id": 0, "conversation_id": 1, "message": "$messages"}},
-        ]
-    ).to_list(None)
-
-    if not results:
-        raise HTTPException(
-            status_code=404,
-            detail="No pinned messages found across any conversation",
-        )
-
-    return {"results": results}

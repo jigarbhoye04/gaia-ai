@@ -35,9 +35,7 @@ class RedisCache:
         try:
             value = await self.redis.get(key)
             if value:
-                logger.info(f"Cache hit for key: {key}")
                 return json.loads(value)
-            logger.info(f"Cache miss for key: {key}")
             return None
         except Exception as e:
             logger.error(f"Error accessing Redis for key {key}: {e}")
@@ -54,7 +52,6 @@ class RedisCache:
         try:
             ttl = ttl or self.default_ttl
             await self.redis.setex(key, ttl, json.dumps(value))
-            logger.info(f"Cache set for key: {key} with TTL: {ttl}")
         except Exception as e:
             logger.error(f"Error setting Redis key {key}: {e}")
 

@@ -3,27 +3,28 @@ Service module for file upload functionality with vector search capabilities.
 """
 
 import io
-from typing import Optional, Any, Dict, List
 import uuid
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 import cloudinary
 import cloudinary.uploader
 from fastapi import HTTPException, UploadFile
+from langchain_core.documents import Document
 
 from app.config.loggers import app_logger as logger
+from app.db.chromadb import ChromaClient
 from app.db.collections import files_collection
 from app.db.utils import serialize_document
-from app.models.general_models import FileData
+from app.models.message_models import FileData
+from app.utils.embedding_utils import generate_embedding, search_documents_by_similarity
 from app.utils.file_utils import generate_file_description
-from app.utils.embedding_utils import generate_embedding
 
 
 async def upload_file_service(
     file: UploadFile,
     user_id: str,
     conversation_id: Optional[str] = None,
-    chromadb_client=None,
 ) -> dict:
     """
     Upload a file to Cloudinary, generate embeddings, and store metadata in MongoDB and ChromaDB.
@@ -32,7 +33,6 @@ async def upload_file_service(
         file (UploadFile): The file to upload
         user_id (str): The ID of the user uploading the file
         conversation_id (str, optional): The conversation ID to associate with the file
-        chromadb_client: The ChromaDB client instance
 
     Returns:
         dict: File metadata including fileId and url
@@ -63,7 +63,7 @@ async def upload_file_service(
         file_description = generate_file_description(
             content, file_url, file.content_type, file.filename
         )
-        logger.info(f"Generated description for file {file_id}: {file_description}")
+        logger.info(f"Generated description for file {file_id}")
 
         current_time = datetime.now(timezone.utc)
         file_metadata = {
@@ -82,51 +82,39 @@ async def upload_file_service(
         if conversation_id:
             file_metadata["conversation_id"] = conversation_id
 
-        # Generate embedding for file description
-        embedding = None
-        try:
-            embedding = generate_embedding(file_description)
-            file_metadata["embedding"] = embedding
-            logger.info(f"Generated embedding for file {file_id}")
-        except Exception as embed_err:
-            logger.error(
-                f"Failed to generate embedding: {str(embed_err)}", exc_info=True
-            )
-
         # Store in MongoDB
         result = await files_collection.insert_one(file_metadata)
         if not result.inserted_id:
             raise HTTPException(status_code=500, detail="Failed to store file metadata")
 
-        # Store in ChromaDB if client is provided and embedding was generated
-        if chromadb_client and embedding:
-            try:
-                chroma_documents_collection = await chromadb_client.get_collection(
-                    name="documents"
-                )
+        # Store in ChromaDB if embedding was generated
+        try:
+            chroma_documents_collection = await ChromaClient.get_langchain_client(
+                collection_name="documents"
+            )
 
-                # Store document metadata in ChromaDB
-                await chroma_documents_collection.add(
-                    ids=[file_id],
-                    embeddings=[embedding],
-                    documents=[file_description],
-                    metadatas=[
-                        {
+            # Store document metadata in ChromaDB
+            await chroma_documents_collection.aadd_documents(
+                ids=[file_id],
+                documents=[
+                    Document(
+                        page_content=file_description,
+                        metadata={
                             "file_id": file_id,
                             "user_id": user_id,
                             "filename": file.filename,
                             "type": file.content_type,
-                            "conversation_id": conversation_id or "",
-                        }
-                    ],
-                )
-                logger.info(f"File with id {file_id} indexed in ChromaDB")
-            except Exception as chroma_err:
-                # Log but don't fail if ChromaDB indexing fails
-                logger.error(
-                    f"Failed to index file in ChromaDB: {str(chroma_err)}",
-                    exc_info=True,
-                )
+                        },
+                    )
+                ],
+            )
+            logger.info(f"File with id {file_id} indexed in ChromaDB")
+        except Exception as chroma_err:
+            # Log but don't fail if ChromaDB indexing fails
+            logger.error(
+                f"Failed to index file in ChromaDB: {str(chroma_err)}",
+                exc_info=True,
+            )
 
         logger.info(f"File uploaded successfully. ID: {file_id}, URL: {file_url}")
 
@@ -156,7 +144,6 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
 
     Args:
         context (Dict[str, Any]): The pipeline context containing request data
-        chromadb_client: The ChromaDB client instance for vector search
 
     Returns:
         Dict[str, Any]: Updated context with file data added
@@ -166,11 +153,11 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
     if not user_id:
         return context
 
-    chromadb_client = context["chromadb_client"]
     conversation_id = context.get("conversation_id")
     query_text = context.get("query_text", "")
     last_message = context.get("last_message")
 
+    # Check if the last message is empty or not
     if not last_message:
         context["files_added"] = False
         return context
@@ -179,49 +166,70 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
         # Track files to include in the response
         included_files = []
 
-        # 1. First, handle explicit file IDs provided in the request
+        # Get explicit file IDs and file data from context
         explicit_file_ids = context.get("fileIds", [])
         file_data_list: List[FileData] = context.get("fileData", [])
 
         # Create a mapping of file IDs to their complete metadata from fileData
         file_data_map = {
-            file_data.fileId: file_data.dict() for file_data in file_data_list
+            file_data.fileId: file_data.model_dump() for file_data in file_data_list
         }
 
         if explicit_file_ids:
             logger.info(f"Fetching {len(explicit_file_ids)} files by ID")
+
+            # Find which IDs aren't in the file_data_map
+            missing_ids = [
+                file_id for file_id in explicit_file_ids if file_id not in file_data_map
+            ]
+
+            # Process files from file_data_map
             for file_id in explicit_file_ids:
-                # First try to use the file data from fileData if available
                 if file_id in file_data_map:
                     file_data = file_data_map[file_id]
-                    # Format field names to match database schema
-                    formatted_file_data = {
-                        "file_id": file_data["fileId"],
-                        "url": file_data["url"],
-                        "filename": file_data["filename"],
-                        "description": file_data.get("description", ""),
-                        "content_type": file_data.get("content_type", ""),
-                        "_id": file_data.get(
-                            "fileId"
-                        ),  # Use fileId as _id for consistency
-                    }
-                    included_files.append(formatted_file_data)
-                else:
-                    # Fall back to database lookup if not available in fileData
-                    file_data = await files_collection.find_one({"file_id": file_id})
-                    if file_data:
-                        # Convert ObjectId to string for serialization
-                        if "_id" in file_data:
-                            file_data["_id"] = str(file_data["_id"])
-                        # Convert date fields to ISO format
-                        for date_field in ["created_at", "updated_at"]:
-                            if date_field in file_data and hasattr(
-                                file_data[date_field], "isoformat"
-                            ):
-                                file_data[date_field] = file_data[
-                                    date_field
-                                ].isoformat()
-                        included_files.append(file_data)
+                    included_files.append(
+                        {
+                            "file_id": file_data["fileId"],
+                            "url": file_data["url"],
+                            "filename": file_data["filename"],
+                            "description": file_data.get("description", ""),
+                            "content_type": file_data.get("content_type", ""),
+                            "_id": file_data[
+                                "fileId"
+                            ],  # Use fileId as _id for consistency
+                        }
+                    )
+
+            # Batch lookup missing files from database
+            if missing_ids:
+                db_files = await files_collection.find(
+                    {"file_id": {"$in": missing_ids}}
+                ).to_list(length=None)
+
+                for file_data in db_files:
+                    # Convert ObjectId to string for serialization
+                    if "_id" in file_data:
+                        file_data["_id"] = str(file_data["_id"])
+
+                    # Convert date fields to ISO format
+                    for date_field in ["created_at", "updated_at"]:
+                        if date_field in file_data and hasattr(
+                            file_data[date_field], "isoformat"
+                        ):
+                            file_data[date_field] = file_data[date_field].isoformat()
+
+                    included_files.append(
+                        {
+                            "file_id": file_data["file_id"],
+                            "url": file_data["url"],
+                            "filename": file_data["filename"],
+                            "description": file_data.get("description", ""),
+                            "content_type": file_data.get("content_type", ""),
+                            "_id": file_data[
+                                "file_id"
+                            ],  # Use file_id as _id for consistency
+                        }
+                    )
 
         # 2. Perform vector search for relevant files based on the query
         # Only perform the search if there's a meaningful query
@@ -230,13 +238,10 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
 
             # Use ChromaDB for vector search
             try:
-                from app.utils.embedding_utils import search_documents_by_similarity
-
                 # Search documents using ChromaDB
                 relevant_files = await search_documents_by_similarity(
                     input_text=query_text,
                     user_id=user_id,
-                    chromadb_client=chromadb_client,
                     conversation_id=conversation_id,
                     top_k=5,
                 )
@@ -257,37 +262,17 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
                 for file in relevant_files:
                     file_id = file.get("file_id")
                     if file_id not in [f.get("file_id") for f in included_files]:
-                        # Get complete file data or use the data we already have
-                        if (
-                            "url" in file
-                            and "filename" in file
-                            and "description" in file
-                        ):
-                            # Already has complete data
-                            complete_file = file
-                        else:
-                            # Get complete file data from database
-                            complete_file = await files_collection.find_one(
-                                {"file_id": file_id}
-                            )
-                            if complete_file:
-                                # Convert ObjectId to string
-                                if "_id" in complete_file:
-                                    complete_file["_id"] = str(complete_file["_id"])
-
-                                # Convert date fields to ISO format
-                                for date_field in ["created_at", "updated_at"]:
-                                    if date_field in complete_file and hasattr(
-                                        complete_file[date_field], "isoformat"
-                                    ):
-                                        complete_file[date_field] = complete_file[
-                                            date_field
-                                        ].isoformat()
-
-                        if complete_file:
-                            # Include the similarity score from the search
-                            complete_file["relevance_score"] = file.get("score", 0)
-                            included_files.append(complete_file)
+                        included_files.append(
+                            {
+                                "file_id": file_id,
+                                "url": file.get("url"),
+                                "filename": file.get("filename"),
+                                "description": file.get("description", ""),
+                                "content_type": file.get("content_type", ""),
+                                "_id": file_id,  # Use file_id as _id for consistency
+                            }
+                        )
+                logger.info(f"Added {len(relevant_files)} semantically relevant files")
 
         # 3. Format and add file information to the message context
         if included_files:
@@ -343,9 +328,7 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
     return context
 
 
-async def delete_file_service(
-    file_id: str, user_id: Optional[str], chromadb_client=None
-) -> dict:
+async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
     """
     Delete a file by its ID for the specified user.
     Removes the file from MongoDB, Cloudinary, and ChromaDB.
@@ -353,7 +336,6 @@ async def delete_file_service(
     Args:
         file_id (str): The ID of the file to delete
         user_id (Optional[str]): The ID of the authenticated user
-        chromadb_client: The ChromaDB client instance
 
     Returns:
         dict: Success message with deleted file information
@@ -400,17 +382,15 @@ async def delete_file_service(
                 f"Error deleting file from Cloudinary: {str(e)}", exc_info=True
             )
 
-    # Delete from ChromaDB if client is provided
-    if chromadb_client:
-        try:
-            chroma_documents_collection = await chromadb_client.get_collection(
-                name="documents"
-            )
-            await chroma_documents_collection.delete(ids=[file_id])
-            logger.info(f"File with id {file_id} deleted from ChromaDB")
-        except Exception as e:
-            # Log the error but don't fail the request if ChromaDB deletion fails
-            logger.error(f"Failed to delete file from ChromaDB: {str(e)}")
+    try:
+        chroma_documents_collection = await ChromaClient.get_langchain_client(
+            collection_name="documents"
+        )
+        await chroma_documents_collection.adelete(ids=[file_id])
+        logger.info(f"File with id {file_id} deleted from ChromaDB")
+    except Exception as e:
+        # Log the error but don't fail the request if ChromaDB deletion fails
+        logger.error(f"Failed to delete file from ChromaDB: {str(e)}")
 
     logger.info(f"File {file_id} successfully deleted")
 

@@ -9,11 +9,11 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routes import (
-    # audio,
     blog,
     browser,
     calendar,
     chat,
+    conversations,
     feedback,
     file,
     goals,
@@ -24,19 +24,20 @@ from app.api.v1.routes import (
     search,
     waitlist,
 )
-
+from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
+from app.langchain.graph_builder import build_graph
+from app.langchain.graph_manager import GraphManager
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.text_utils import get_zero_shot_classifier
-from app.config.cloudinary import init_cloudinary
-
 
 api_router = APIRouter()
 
+api_router.include_router(chat.router, tags=["Chat"])
+api_router.include_router(conversations.router, tags=["Conversations"])
 api_router.include_router(waitlist.router, tags=["Waitlist"])
 api_router.include_router(feedback.router, tags=["Feedback"])
-api_router.include_router(chat.router, tags=["Chat"])
 api_router.include_router(image.router, tags=["Image"])
 api_router.include_router(search.router, tags=["Search"])
 api_router.include_router(calendar.router, tags=["Calendar"])
@@ -63,10 +64,13 @@ async def lifespan(app: FastAPI):
         get_zero_shot_classifier()
         init_cloudinary()
 
+        # Initialize the graph and store in GraphManager
+        async with build_graph() as built_graph:
+            GraphManager.set_graph(built_graph)
+            yield
+
     except Exception as e:
         logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed") from e
-
-    yield
 
     logger.info("Shutting down GAIA API...")
