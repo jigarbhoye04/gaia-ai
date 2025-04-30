@@ -6,11 +6,7 @@ import { useState } from "react";
 import MailCompose from "../../Mail/MailCompose";
 import {
   InboxIcon,
-  LabelImportantIcon,
-  LicenseDraftIcon,
   QuillWrite01Icon,
-  Sent02Icon,
-  TimeScheduleIcon,
 } from "../../Misc/icons";
 
 type MailItem = {

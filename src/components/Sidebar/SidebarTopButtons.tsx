@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 import {
-  AiBrowserIcon,
   CalendarIcon,
   Mail01Icon,
   PinIcon,

@@ -1,5 +1,7 @@
 "use client";
 
+import { ReactNode, Suspense } from "react";
+
 import { Providers } from "@/app/providers";
 import CalendarModal from "@/components/Calendar/CalendarModal";
 import LoginModal from "@/components/Login/LoginModal";
@@ -8,7 +10,6 @@ import { Toaster } from "@/components/ui/sonner";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import ReduxProviders from "@/redux/providers";
-import { ReactNode, Suspense } from "react";
 
 export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (

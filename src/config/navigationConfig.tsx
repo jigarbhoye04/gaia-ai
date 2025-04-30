@@ -4,7 +4,7 @@ import {
   BubbleConversationChatIcon,
   Home01Icon,
   Idea01Icon,
-  MapsIcon
+  MapsIcon,
 } from "@/components/Misc/icons";
 
 export interface NavLink {
