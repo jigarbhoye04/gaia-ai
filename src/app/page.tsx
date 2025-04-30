@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense,useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
 import HeroSection from "@/components/Landing/Sections/HeroSection";
