@@ -3,7 +3,7 @@
 import { Button } from "@heroui/button";
 import { useState } from "react";
 
-import MailCompose from "../Mail/MailCompose";
+import MailCompose from "../../Mail/MailCompose";
 import {
   InboxIcon,
   LabelImportantIcon,
@@ -11,7 +11,7 @@ import {
   QuillWrite01Icon,
   Sent02Icon,
   TimeScheduleIcon,
-} from "../Misc/icons";
+} from "../../Misc/icons";
 
 type MailItem = {
   label: string;
@@ -20,10 +20,10 @@ type MailItem = {
 
 const mailItems: MailItem[] = [
   { label: "Inbox", icon: InboxIcon },
-  { label: "Important", icon: LabelImportantIcon },
-  { label: "Sent", icon: Sent02Icon },
-  { label: "Drafts", icon: LicenseDraftIcon },
-  { label: "Scheduled", icon: TimeScheduleIcon },
+  // { label: "Important", icon: LabelImportantIcon },
+  // { label: "Sent", icon: Sent02Icon },
+  // { label: "Drafts", icon: LicenseDraftIcon },
+  // { label: "Scheduled", icon: TimeScheduleIcon },
   //   { label: "Trash", icon: LicenseDraftIcon },
 ];
 
@@ -70,12 +70,14 @@ export default function EmailSidebar() {
       <div className="flex h-full flex-col">
         <div className="mb-5 w-full">
           <Button
-            className="w-full justify-start text-medium font-medium"
+            className="w-full justify-start text-sm text-primary"
             color="primary"
+            size="sm"
+            variant="flat"
             onPress={() => setOpen(true)}
           >
-            <QuillWrite01Icon color={undefined} width={22} />
-            Compose
+            <QuillWrite01Icon color={undefined} width={18} />
+            Compose Email
           </Button>
         </div>
         <MailContainer items={mailItems} />

@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLoading } from "@/hooks/useLoading";
-import { useLoadingText } from "@/hooks/useLoadingText";
 import { cn } from "@/lib/utils";
 
 import {
@@ -48,7 +47,7 @@ export default function SearchbarLeftDropdown({
   handleSelectionChange,
 }: SearchbarLeftDropdownProps) {
   const { isLoading } = useLoading();
-  const { setLoadingText } = useLoadingText();
+  // const { setLoadingText } = useLoadingText();
 
   const currentMode = React.useMemo(
     () => Array.from(selectedMode)[0],
@@ -58,13 +57,11 @@ export default function SearchbarLeftDropdown({
   const dropdownItems: DropdownItemConfig[] = [
     {
       id: "deep_search",
-      label: "Deep Search",
+      label: "Deep Research",
       icon: (
         <AiWebBrowsingIcon className="min-h-[20px] min-w-[20px] text-primary" />
       ),
       isMode: true,
-      loadingText: "Performing Deep Search...",
-      // description: "Search multiple sources for comprehensive results",
       description:
         "Search the web and fetch content from those pages, extracting key information",
     },
@@ -75,7 +72,6 @@ export default function SearchbarLeftDropdown({
         <GlobalSearchIcon className="min-h-[20px] min-w-[20px] text-primary" />
       ),
       isMode: true,
-      loadingText: "Performing Web Search...",
       description: "Search the web for the latest information",
     },
     {
@@ -84,7 +80,6 @@ export default function SearchbarLeftDropdown({
       icon: <ArrowUpRight className="min-h-[20px] min-w-[20px] text-primary" />,
       action: openPageFetchModal,
       isMode: false,
-      loadingText: "Fetching Webpage(s)...",
       description: "Retrieve and understand content from specific webpages",
     },
     {
@@ -93,7 +88,6 @@ export default function SearchbarLeftDropdown({
       icon: <Image02Icon className="min-h-[20px] min-w-[20px] text-primary" />,
       action: openGenerateImageModal,
       isMode: false,
-      loadingText: "Generating Image...",
       description: "Create AI-generated images from text",
     },
     {
@@ -104,7 +98,6 @@ export default function SearchbarLeftDropdown({
       ),
       action: openFileUploadModal,
       isMode: false,
-      loadingText: "Uploading File(s)...",
       description: "Upload and analyze documents, images or other files",
     },
   ];
@@ -143,7 +136,7 @@ export default function SearchbarLeftDropdown({
             <DropdownMenuItem
               key={item.id}
               onClick={() => {
-                setLoadingText(item.loadingText ?? "");
+                // setLoadingText(item.loadingText ?? "");
                 if (item.isMode) handleSelectionChange(item.id as SearchMode);
                 else if (item.action) item.action();
               }}

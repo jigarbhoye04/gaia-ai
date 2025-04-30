@@ -44,11 +44,11 @@ export default function SidebarTopButtons() {
       icon: <PinIcon height={23} width={23} />,
       label: "Pins",
     },
-    {
-      route: "/browser",
-      icon: <AiBrowserIcon height={23} width={23} />,
-      label: "Use Browser",
-    },
+    // {
+    //   route: "/browser",
+    //   icon: <AiBrowserIcon height={23} width={23} />,
+    //   label: "Use Browser",
+    // },
   ];
 
   return (

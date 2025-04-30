@@ -40,7 +40,7 @@ export default function DeepSearchSection() {
         /> */}
         <LargeHeader
           headingText="Go Beyond Google Search"
-          chipText="Deep Search"
+          chipText="Deep Research"
           subHeadingText="Fetch smarter results as GAIA scans the web, dives into each page, and brings back meaningful insights — not just links."
         />
 
