@@ -4,10 +4,7 @@ import { Button } from "@heroui/button";
 import { useState } from "react";
 
 import MailCompose from "../../Mail/MailCompose";
-import {
-  InboxIcon,
-  QuillWrite01Icon,
-} from "../../Misc/icons";
+import { InboxIcon, QuillWrite01Icon } from "../../Misc/icons";
 
 type MailItem = {
   label: string;
