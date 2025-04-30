@@ -36,10 +36,10 @@ export const siteConfig = {
     {
       title: "Sitemap",
       links: [
-        { label: "About", href: "/about", icon: <GlobalIcon width={19} /> },
+        // { label: "About", href: "/about", icon: <GlobalIcon width={19} /> },
         // { label: "Blog", href: "/blog", icon: <BookOpen02Icon width={19} /> },
         {
-          label: "Feature Request",
+          label: "Request a Feature",
           href: "https://gaia.featurebase.app",
           external: true,
           icon: <Idea01Icon width={19} />,
