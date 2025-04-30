@@ -200,12 +200,14 @@ export default function SearchCommand({
               color={chipsVisibility.messages ? "primary" : "default"}
               endContent={
                 chipsVisibility.messages ? (
-                  <Tick02Icon color="#000" />
+                  <Tick02Icon color="#000" width={15} height={15} />
                 ) : undefined
               }
               startContent={
                 <BubbleChatIcon
                   color={chipsVisibility.messages ? "#000000" : "#9b9b9b"}
+                  width={15}
+                  height={15}
                 />
               }
               variant={chipsVisibility.messages ? "solid" : "faded"}
@@ -221,13 +223,15 @@ export default function SearchCommand({
               color={chipsVisibility.conversations ? "primary" : "default"}
               endContent={
                 chipsVisibility.conversations ? (
-                  <Tick02Icon color="#000" />
+                  <Tick02Icon color="#000" width={15} height={15} />
                 ) : undefined
               }
               size="sm"
               startContent={
                 <BubbleConversationChatIcon
                   color={chipsVisibility.conversations ? "#000000" : "#9b9b9b"}
+                  width={15}
+                  height={15}
                 />
               }
               variant={chipsVisibility.conversations ? "solid" : "faded"}
@@ -248,6 +252,8 @@ export default function SearchCommand({
               startContent={
                 <StickyNote01Icon
                   color={chipsVisibility.notes ? "#000000" : "#9b9b9b"}
+                  width={15}
+                  height={15}
                 />
               }
               variant={chipsVisibility.notes ? "solid" : "faded"}
@@ -264,7 +270,7 @@ export default function SearchCommand({
           {filteredCommands.map((command) => (
             <CommandItem
               key={command.name}
-              className="group my-3! cursor-pointer"
+              className="group my-3! cursor-pointer rounded-lg hover:bg-zinc-800"
               onSelect={() => {
                 setOpenSearchDialog(false);
                 command.action();
@@ -284,7 +290,7 @@ export default function SearchCommand({
           {filteredPages.map((page) => (
             <CommandItem
               key={page.name}
-              className="group cursor-pointer"
+              className="group cursor-pointer rounded-lg hover:bg-zinc-800"
               onSelect={() => {
                 setOpenSearchDialog(false);
                 router.push(page.path);

@@ -1,9 +1,7 @@
 import { ReactElement } from "react";
 
 import {
-  BookOpen02Icon,
   BubbleConversationChatIcon,
-  GlobalIcon,
   Home01Icon,
   Idea01Icon,
   MapsIcon,
@@ -25,19 +23,19 @@ export const mainNavLinks: NavLink[] = [
     label: "Home",
     icon: <Home01Icon width={19} color={undefined} />,
   },
-  {
-    href: "/about",
-    label: "About",
-    icon: <GlobalIcon width={19} color={undefined} />,
-  },
-  {
-    href: "/blog",
-    label: "Blog",
-    icon: <BookOpen02Icon width={19} color={undefined} />,
-  },
+  // {
+  //   href: "/about",
+  //   label: "About",
+  //   icon: <GlobalIcon width={19} color={undefined} />,
+  // },
+  // {
+  //   href: "/blog",
+  //   label: "Blog",
+  //   icon: <BookOpen02Icon width={19} color={undefined} />,
+  // },
   {
     href: "https://gaia.featurebase.app",
-    label: "Feature Request",
+    label: "Request a Feature",
     icon: <Idea01Icon width={19} color={undefined} />,
     external: true,
   },

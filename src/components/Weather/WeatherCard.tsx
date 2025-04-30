@@ -421,6 +421,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
         className="mt-2"
         isCompact
         selectionMode="multiple"
+        itemClasses={{ indicator: "text-white", trigger: "cursor-pointer" }}
         defaultExpandedKeys={["weekly-forecast"]}
       >
         {weatherData.forecast && weatherData.forecast.length > 0 ? (

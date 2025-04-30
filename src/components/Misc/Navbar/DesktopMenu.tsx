@@ -6,7 +6,7 @@ import { useUser } from "@/hooks/useUser";
 
 export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
   const user = useUser();
-  const isAuthenticated = user && user.email; // Check if user has email to determine auth status
+  const isAuthenticated = user?.email; // Check if user has email to determine auth status
 
   if (scrolled)
     return (

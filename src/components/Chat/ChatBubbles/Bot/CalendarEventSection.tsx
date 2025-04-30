@@ -6,14 +6,12 @@ import { CalendarEventsList } from "./CalendarEventCard";
 export default function CalendarEventSection({
   calendar_options,
 }: {
-  calendar_options: CalendarOptions | CalendarOptions[];
+  calendar_options: CalendarOptions[];
 }) {
-  const eventsArray = Array.isArray(calendar_options)
-    ? calendar_options
-    : [calendar_options];
-
   if (
-    !eventsArray.every((option) => option.start && option.end && option.summary)
+    !calendar_options.every(
+      (option) => option.start && option.end && option.summary,
+    )
   ) {
     return (
       <div className="p-3 text-red-500">
@@ -22,7 +20,7 @@ export default function CalendarEventSection({
     );
   }
 
-  const calendarEvents: CalendarEvent[] = eventsArray.map((option) => ({
+  const calendarEvents: CalendarEvent[] = calendar_options.map((option) => ({
     summary: option.summary!,
     description: option.description || "",
     start: option.start!,

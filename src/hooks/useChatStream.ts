@@ -1,12 +1,14 @@
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import { useConversation } from "@/hooks/useConversation";
+import { useFetchConversations } from "@/hooks/useConversationList";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
-import { MessageType } from "@/types/convoTypes";
+import { ImageData, MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
@@ -19,11 +21,15 @@ import { useLoadingText } from "./useLoadingText";
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
+  const router = useRouter();
+  const fetchConversations = useFetchConversations();
   const latestConvoRef = useRef(convoMessages);
   const botMessageRef = useRef<MessageType | null>(null);
   const accumulatedResponseRef = useRef<string>("");
   const userPromptRef = useRef<string>("");
   const { setLoadingText, resetLoadingText } = useLoadingText();
+  const newConversationIdRef = useRef<string | null>(null);
+  const newConversationDescriptionRef = useRef<string | null>(null);
 
   useEffect(() => {
     latestConvoRef.current = convoMessages;
@@ -35,7 +41,7 @@ export const useChatStream = () => {
   return async (
     inputText: string,
     currentMessages: MessageType[],
-    conversationId: string,
+    conversationId: string | null,
     enableSearch: boolean,
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
@@ -76,15 +82,34 @@ export const useChatStream = () => {
       const dataJson = JSON.parse(event.data);
       if (dataJson.error) return toast.error(dataJson.error);
 
+      // Show current progress of any tools
+      if (dataJson.progress) setLoadingText(dataJson.progress);
+
+      // Check for newly created conversation info from the backend
+      if (!conversationId) {
+        // Store the newly created conversation ID
+        if (dataJson.conversation_id)
+          newConversationIdRef.current = dataJson.conversation_id;
+
+        // Store the conversation description that comes from the backend
+        if (dataJson.conversation_description)
+          newConversationDescriptionRef.current =
+            dataJson.conversation_description;
+      }
+
       if (dataJson.status === "generating_image") {
-        console.log("GENERATING IMAGE");
         setLoadingText("Generating image...");
+
+        // Create initial image data object
+        const initialImageData: ImageData = {
+          url: "", // Will be filled later
+          prompt: userPromptRef.current,
+        };
 
         botMessageRef.current = buildBotResponse({
           response: "",
-          isImage: true,
-          imagePrompt: userPromptRef.current,
           loading: true,
+          image_data: initialImageData,
         });
 
         const currentConvo = latestConvoRef.current;
@@ -103,11 +128,7 @@ export const useChatStream = () => {
       // Handle image generation result
       if (dataJson.intent === "generate_image" && dataJson.image_data) {
         botMessageRef.current = buildBotResponse({
-          response: "Here is your generated image",
-          imageUrl: dataJson.image_data.url,
-          imagePrompt: userPromptRef.current,
-          improvedImagePrompt: dataJson.image_data.improved_prompt,
-          isImage: true,
+          image_data: dataJson.image_data,
           loading: false,
         });
 
@@ -129,13 +150,38 @@ export const useChatStream = () => {
       accumulatedResponseRef.current += dataJson.response || "\n";
       const currentConvo = latestConvoRef.current;
       const parsedIntent = parseIntent(dataJson);
+
+      // // Create a new bot response that preserves existing intent data
+      // botMessageRef.current = buildBotResponse({
+      //   intent: parsedIntent.intent || botMessageRef.current?.intent,
+      //   // Preserve special data once it's available
+      //   calendar_options:
+      //     parsedIntent.calendar_options ||
+      //     botMessageRef.current?.calendar_options ||
+      //     null,
+      //   weather_data:
+      //     parsedIntent.weather_data ||
+      //     botMessageRef.current?.weather_data ||
+      //     null,
+      //   search_results:
+      //     parsedIntent.search_results ||
+      //     botMessageRef.current?.search_results ||
+      //     null,
+      //   deep_search_results:
+      //     parsedIntent.deep_search_results ||
+      //     botMessageRef.current?.deep_search_results ||
+      //     null,
+      //   image_data:
+      //     parsedIntent.image_data || botMessageRef.current?.image_data || null,
+      // });
+
       botMessageRef.current = buildBotResponse({
-        intent: parsedIntent.intent,
-        calendar_options: parsedIntent.calendar_options,
-        weather_data: parsedIntent.weather_data,
-        search_results: parsedIntent.search_results,
-        deep_search_results: parsedIntent.deep_search_results,
+        // intent: parsedIntent.intent || botMessageRef.current?.intent,
+        // Dynamically preserve all special data fields
+        ...(parsedIntent || {}),
+        ...(botMessageRef.current || {}),
       });
+
       // Always ensure we have the most recent messages
       if (
         currentConvo.length > 0 &&
@@ -179,31 +225,20 @@ export const useChatStream = () => {
 
       updateConvoMessages(finalMessages);
 
-      const messagesForUpdate: MessageType[] = [];
+      if (newConversationIdRef.current && !conversationId) {
+        // Navigate to the newly created conversation
+        router.push(`/c/${newConversationIdRef.current}`);
 
-      const userMessageIndex = finalMessages.length - 2;
-      if (
-        userMessageIndex >= 0 &&
-        finalMessages[userMessageIndex].type === "user"
-      ) {
-        messagesForUpdate.push(finalMessages[userMessageIndex]);
+        if (newConversationIdRef.current) fetchConversations();
       }
 
-      messagesForUpdate.push(finalBotMessage);
-
-      try {
-        await ApiService.updateConversation(conversationId, messagesForUpdate);
-      } catch (error) {
-        console.error("Failed to save conversation:", error);
-        toast.error(
-          "Failed to save the conversation. Some messages might not be preserved.",
-        );
-      } finally {
-        setIsLoading(false);
-        resetLoadingText();
-      }
+      setIsLoading(false);
+      resetLoadingText();
+      botMessageRef.current = null;
+      newConversationIdRef.current = null;
+      newConversationDescriptionRef.current = null;
     };
-
+    // };
     /**
      * Handles errors from the SSE stream.
      */

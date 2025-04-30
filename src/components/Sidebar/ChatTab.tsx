@@ -32,7 +32,7 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
       onMouseOver={() => setButtonHovered(true)}
     >
       <Button
-        className={`flex h-[32px] min-h-[32px] w-full justify-start bg-transparent pr-0 pl-2 font-normal duration-0 hover:bg-white/10 ${
+        className={`flex h-[32px] min-h-[32px] w-full cursor-pointer justify-start bg-transparent pr-0 pl-2 font-normal duration-0 hover:bg-white/10 ${
           currentConvoId === id ? "text-primary" : "text-white"
         }`}
         onClick={() => {
@@ -54,7 +54,7 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
               width="19"
             />
           )}
-          <span className="w-[calc(100%-45px)] truncate text-left">
+          <span className="w-[calc(100%-45px)] max-w-[200px] truncate text-left">
             {name.replace('"', "")}
           </span>
         </div>

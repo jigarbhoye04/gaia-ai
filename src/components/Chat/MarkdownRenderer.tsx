@@ -12,7 +12,7 @@ export interface MarkdownRendererProps {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   return (
-    <div className="prose dark:prose-invert max-w-none">
+    <div className="prose dark:prose-invert fadein-style max-w-none">
       <ReactMarkdown
         components={{
           code: ({ className, children, ...props }) => (
@@ -57,17 +57,17 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           table: ({ ...props }) => (
             <div className="overflow-x-auto">
               <table
-                className="min-w-full border-collapse rounded-md border border-gray-300"
+                className="min-w-full border-collapse border border-zinc-600"
                 {...props}
               />
             </div>
           ),
           thead: ({ ...props }) => (
-            <thead className="bg-opacity-20 bg-gray-200" {...props} />
+            <thead className="bg-opacity-20 bg-zinc-900" {...props} />
           ),
           tbody: ({ ...props }) => <tbody {...props} />,
           tr: ({ ...props }) => (
-            <tr className="border-b border-gray-300" {...props} />
+            <tr className="border-b border-zinc-600" {...props} />
           ),
           th: ({ ...props }) => (
             <th className="px-4 py-2 text-left font-bold" {...props} />

@@ -38,11 +38,11 @@ export default function LoginSignup({
         </div>
         <Button
           className={`text-md gap-2 rounded-full px-4 ${
-            loading ? "bg-zinc-800 text-primary hover:bg-zinc-800" : ""
+            loading ? "bg-zinc-800 text-primary hover:bg-zinc-800" : "bg-white"
           }`}
           size="lg"
           type="button"
-          variant="secondary"
+          // variant="secondary"
           disabled={loading}
           onClick={() => {
             setLoading(true);

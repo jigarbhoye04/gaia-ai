@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useConversation } from "@/hooks/useConversation";
 import { useLoading } from "@/hooks/useLoading";
 import { useLoadingText } from "@/hooks/useLoadingText";
-import { MessageType } from "@/types/convoTypes";
+import { ImageData, MessageType } from "@/types/convoTypes";
 import { apiauth } from "@/utils/apiaxios";
 import fetchDate from "@/utils/fetchDate";
 
@@ -78,13 +78,18 @@ export default function GenerateImage({
         message_id: userMessageId,
       };
 
+      // Create initial image_data for the loading state
+      const initialImageData: ImageData = {
+        url: "",
+        prompt: imagePrompt,
+      };
+
       const botLoadingMessage: MessageType = {
         type: "bot",
         response: "",
         date: fetchDate(),
         loading: true,
-        imagePrompt,
-        isImage: true,
+        image_data: initialImageData,
         message_id: botMessageId,
       };
 
@@ -93,19 +98,23 @@ export default function GenerateImage({
 
       const [imageUrl, improvedPrompt] = await generateImage(imagePrompt);
 
+      // Create final image_data with the generated image URL
+      const finalImageData: ImageData = {
+        url: imageUrl,
+        prompt: imagePrompt,
+        improved_prompt: improvedPrompt,
+      };
+
       const finalBotMessage: MessageType = {
         type: "bot",
         response: "Here is your generated image",
         date: fetchDate(),
-        imageUrl,
-        imagePrompt,
-        improvedImagePrompt: improvedPrompt,
-        isImage: true,
+        image_data: finalImageData,
         loading: false,
         message_id: botMessageId,
       };
 
-      updateConvoMessages([...convoMessages, finalBotMessage]);
+      updateConvoMessages([...convoMessages, userMessage, finalBotMessage]);
     } catch (error) {
       toast.error("Error generating image. Please try again later.");
       console.error("Error generating image:", error);

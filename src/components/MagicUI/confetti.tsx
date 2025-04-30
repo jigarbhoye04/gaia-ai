@@ -1,4 +1,3 @@
-import { Button } from "@heroui/button";
 import type {
   CreateTypes as ConfettiInstance,
   GlobalOptions as ConfettiGlobalOptions,
@@ -93,39 +92,8 @@ const Confetti = forwardRef<ConfettiRef, Props>((props, ref) => {
 });
 
 Confetti.displayName = "Confetti";
-interface ConfettiButtonProps {
-  options?: ConfettiOptions;
-  children?: ReactNode;
-  // [key: string]: any; // For any additional props that might be passed to Button
-}
 
-function ConfettiButton({
-  options = {},
-  children,
-  ...props
-}: ConfettiButtonProps) {
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-
-    confetti({
-      ...options,
-      origin: {
-        x: x / window.innerWidth,
-        y: y / window.innerHeight,
-      },
-    });
-  };
-
-  return (
-    <Button onClick={handleClick} {...props}>
-      {children}
-    </Button>
-  );
-}
-
-export { Confetti, ConfettiButton };
+export { Confetti };
 
 // export function ConfettiFireworks({
 //   color,

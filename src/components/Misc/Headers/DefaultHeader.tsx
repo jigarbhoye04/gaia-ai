@@ -12,7 +12,7 @@ export default function DefaultHeader() {
 
   return (
     <>
-      <div></div>
+      <div />
       <div className="flex gap-2">
         <Button
           aria-label="Create new chat"
@@ -24,7 +24,7 @@ export default function DefaultHeader() {
             clearMessages();
           }}
         >
-          <ChatBubbleAddIcon className="text-zinc-400 transition-all group-hover:text-primary" />
+          <ChatBubbleAddIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
         </Button>
         <Button
           aria-label="Notifications"
@@ -36,7 +36,7 @@ export default function DefaultHeader() {
             clearMessages();
           }}
         >
-          <NotificationIcon className="text-zinc-400 transition-all group-hover:text-primary" />
+          <NotificationIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
         </Button>
       </div>
     </>

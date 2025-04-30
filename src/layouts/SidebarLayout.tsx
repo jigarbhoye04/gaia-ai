@@ -67,7 +67,7 @@ export default function SidebarLayout({
                   setOpenSearchDialog(true);
                 }}
               >
-                <Search className="text-zinc-400 transition-all group-hover:text-primary" />
+                <Search className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
               </Button>
 
               <Button
@@ -80,7 +80,7 @@ export default function SidebarLayout({
                   clearMessages();
                 }}
               >
-                <ChatBubbleAddIcon className="text-zinc-400 transition-all group-hover:text-primary" />
+                <ChatBubbleAddIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
               </Button>
 
               <CloseOpenSidebarBtn toggleSidebar={toggleSidebar} />
@@ -93,7 +93,7 @@ export default function SidebarLayout({
           {children}
         </div>
       </div>
-      <div className="absolute right-0 bottom-0 w-full">
+      <div className="absolute right-0 bottom-0 z-10 w-full">
         <UserContainer />
       </div>
     </div>

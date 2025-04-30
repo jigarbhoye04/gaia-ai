@@ -3,6 +3,13 @@
 
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
+// Define image data structure for image generation
+export type ImageData = {
+  url: string;
+  prompt?: string;
+  improved_prompt?: string | null;
+};
+
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
 export type MessageType = {
   message_id: string;
@@ -10,13 +17,13 @@ export type MessageType = {
   response: string; // The content of the message, typically text
   date?: string | ""; // The date when the message was sent, formatted as DateType, or an empty string
   loading?: boolean; // Optional: Indicates whether the message is still loading (e.g., for bot responses)
-  isImage?: boolean; // Optional: Indicates if the message contains an image
-  imageUrl?: string; // Optional: URL for the image if it's an image message
-  imagePrompt?: string;
+  // Removed legacy image properties:
+  // imageUrl?: string;
+  // imagePrompt?: string;
+  // improvedImagePrompt?: string;
   searchWeb?: boolean | false;
   deepSearchWeb?: boolean | false;
   pageFetchURLs?: string[] | []; // Optional: URLs for fetching webpage content
-  improvedImagePrompt?: string;
   disclaimer?: string; // Optional: Any disclaimer associated with the message (e.g., for AI-generated content)
   fileIds?: string[];
   pinned?: boolean;
@@ -26,6 +33,7 @@ export type MessageType = {
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
+  image_data?: ImageData | null; // Image generation data in structured format
 };
 
 export type CalendarOptions = {

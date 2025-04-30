@@ -10,16 +10,7 @@ import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
-  const {
-    text,
-    loading = false,
-    isImage = false,
-    imageSrc = null,
-    imagePrompt,
-    message_id,
-    pinned,
-    date,
-  } = props;
+  const { text, loading = false, message_id, pinned, image_data, date } = props;
 
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -38,13 +29,13 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   }, []);
 
   const renderedComponent = useMemo(() => {
-    if (isImage) return <ImageBubble {...props} />;
+    if (image_data) return <ImageBubble {...props} />;
 
     return <TextBubble {...props} />;
-  }, [isImage, props]);
+  }, [image_data, props]);
 
   return (
-    (!!text || loading || isImage) && (
+    (!!text || loading || image_data) && (
       <div
         id={message_id}
         onMouseOver={handleMouseOver}
@@ -57,7 +48,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
         {!loading && (
           <div
             ref={actionsRef}
-            className="flex flex-col gap-2 transition-all"
+            className="absolute flex flex-col transition-all"
             style={{ opacity: 0, visibility: "hidden" }}
           >
             {date && (
@@ -66,11 +57,8 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
               </span>
             )}
 
-            {isImage ? (
-              <ChatBubble_Actions_Image
-                imagePrompt={imagePrompt}
-                src={imageSrc as string}
-              />
+            {image_data ? (
+              <ChatBubble_Actions_Image image_data={image_data} />
             ) : (
               <ChatBubble_Actions
                 loading={loading}

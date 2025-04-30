@@ -16,7 +16,7 @@ export default function SearchedImageDialog() {
     <Sheet open={isOpen} onOpenChange={() => dispatch(closeImageDialog())}>
       <SheetContent
         side="right"
-        className="border-none bg-zinc-800 duration-100 sm:max-w-2xl"
+        className="border-none bg-zinc-800 p-5 duration-100 sm:max-w-2xl"
       >
         {selectedImage && (
           <div className="flex h-full w-full flex-col gap-4 pt-8">

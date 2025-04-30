@@ -201,6 +201,7 @@
   flex-direction: column;
   justify-content: center;
   width: 100%;
+  padding-top: 0.8rem;
 }
 .sidebar {
   background-color: #020202;
@@ -456,4 +457,17 @@ code {
 
 .bobbing {
   animation: rotateBounce 2s ease-in-out infinite;
+}
+
+.fadein-style {
+  /* animation: fade-in 1s; */
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 100;
+  }
 }

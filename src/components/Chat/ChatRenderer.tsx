@@ -96,24 +96,23 @@ export default function ChatRenderer() {
 
       {convoMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
-          <div key={index} className="relative flex items-end gap-1 pl-1">
+          <div
+            key={index}
+            className="relative flex items-end gap-1 pt-1 pb-5 pl-1"
+          >
             <div className="min-w-[40px]">
               <Image
                 alt="GAIA Logo"
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "animate-spin" : ""} relative bottom-14`}
+                className={`${isLoading ? "animate-spin" : ""} relative`}
               />
             </div>
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
-              imagePrompt={message.imagePrompt}
-              imageSrc={message.imageUrl}
-              improvedImagePrompt={message.improvedImagePrompt}
               intent={message.intent}
-              isImage={message.isImage}
               loading={message.loading}
               message_id={message.message_id}
               pageFetchURLs={message.pageFetchURLs}
@@ -127,6 +126,7 @@ export default function ChatRenderer() {
               search_results={message.search_results}
               deep_search_results={message.deep_search_results}
               weather_data={message.weather_data}
+              image_data={message.image_data}
             />
           </div>
         ) : (

@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLoading } from "@/hooks/useLoading";
-import { useLoadingText } from "@/hooks/useLoadingText";
 import { cn } from "@/lib/utils";
 
 import {
@@ -48,7 +47,7 @@ export default function SearchbarLeftDropdown({
   handleSelectionChange,
 }: SearchbarLeftDropdownProps) {
   const { isLoading } = useLoading();
-  const { setLoadingText } = useLoadingText();
+  // const { setLoadingText } = useLoadingText();
 
   const currentMode = React.useMemo(
     () => Array.from(selectedMode)[0],
@@ -58,47 +57,47 @@ export default function SearchbarLeftDropdown({
   const dropdownItems: DropdownItemConfig[] = [
     {
       id: "deep_search",
-      label: "Deep Search",
-      icon: <AiWebBrowsingIcon className="h-5 w-5 text-primary" />,
+      label: "Deep Research",
+      icon: (
+        <AiWebBrowsingIcon className="min-h-[20px] min-w-[20px] text-primary" />
+      ),
       isMode: true,
-      loadingText: "Performing Deep Search...",
-      // description: "Search multiple sources for comprehensive results",
       description:
         "Search the web and fetch content from those pages, extracting key information",
     },
     {
       id: "web_search",
       label: "Web Search",
-      icon: <GlobalSearchIcon className="h-5 w-5 text-primary" />,
+      icon: (
+        <GlobalSearchIcon className="min-h-[20px] min-w-[20px] text-primary" />
+      ),
       isMode: true,
-      loadingText: "Performing Web Search...",
       description: "Search the web for the latest information",
     },
     {
       id: "fetch_webpage",
       label: "Fetch Webpage",
-      icon: <ArrowUpRight className="h-5 w-5 text-primary" />,
+      icon: <ArrowUpRight className="min-h-[20px] min-w-[20px] text-primary" />,
       action: openPageFetchModal,
       isMode: false,
-      loadingText: "Fetching Webpage(s)...",
       description: "Retrieve and understand content from specific webpages",
     },
     {
       id: "generate_image",
       label: "Generate Image",
-      icon: <Image02Icon className="h-5 w-5 text-primary" />,
+      icon: <Image02Icon className="min-h-[20px] min-w-[20px] text-primary" />,
       action: openGenerateImageModal,
       isMode: false,
-      loadingText: "Generating Image...",
       description: "Create AI-generated images from text",
     },
     {
       id: "upload_file",
       label: "Attach Files",
-      icon: <AttachmentIcon className="h-5 w-5 text-primary" />,
+      icon: (
+        <AttachmentIcon className="min-h-[20px] min-w-[20px] text-primary" />
+      ),
       action: openFileUploadModal,
       isMode: false,
-      loadingText: "Uploading File(s)...",
       description: "Upload and analyze documents, images or other files",
     },
   ];
@@ -115,7 +114,7 @@ export default function SearchbarLeftDropdown({
           )}
           disabled={isLoading}
         >
-          <PlusSignIcon width={20} height={20} />
+          <PlusSignIcon className="min-h-[20px] min-w-[20px]" />
           <span
             className={`absolute -top-0 -right-0 h-2 w-2 rounded-full bg-primary transition ${currentMode ? "opacity-100" : "opacity-0"}`}
             aria-hidden="true"
@@ -137,7 +136,7 @@ export default function SearchbarLeftDropdown({
             <DropdownMenuItem
               key={item.id}
               onClick={() => {
-                setLoadingText(item.loadingText ?? "");
+                // setLoadingText(item.loadingText ?? "");
                 if (item.isMode) handleSelectionChange(item.id as SearchMode);
                 else if (item.action) item.action();
               }}
@@ -157,7 +156,7 @@ export default function SearchbarLeftDropdown({
                 </div>
                 <div>
                   {currentMode === item.id && (
-                    <Check className="h-5 w-5 text-primary" />
+                    <Check className="min-h-[20px] min-w-[20px] text-primary" />
                   )}
                 </div>
               </div>

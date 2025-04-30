@@ -66,7 +66,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         >
           {children}
         </MermaidTabs>
-        <div className="absolute top-2 right-2">
+        <div className="absolute top-2 right-1">
           <CopyButton copied={copied} onPress={handleCopy} />
         </div>
       </div>
@@ -85,7 +85,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({
         </StandardCodeBlock>
       ) : (
         <code
-          className={`${className} bg-opacity-40 rounded-sm bg-black`}
+          className={`${className} bg-opacity-40 rounded-[10px] bg-black`}
           {...props}
         >
           {children}
