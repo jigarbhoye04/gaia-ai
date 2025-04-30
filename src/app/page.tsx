@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, lazy, Suspense } from "react";
-import LandingLayout from "./(landing)/layout";
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
-import HeroSection from "@/components/Landing/Sections/HeroSection";
+import { lazy, Suspense,useEffect } from "react";
+
 import HeroImage from "@/components/Landing/Sections/HeroImageSection";
+import HeroSection from "@/components/Landing/Sections/HeroSection";
+import SuspenseLoader from "@/components/Misc/SuspenseLoader";
+
+import LandingLayout from "./(landing)/layout";
 
 // Lazy load section components
 const CalendarSection = lazy(

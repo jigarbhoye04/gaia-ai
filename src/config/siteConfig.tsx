@@ -15,7 +15,6 @@ import { ReactElement } from "react";
 
 import {
   CustomerService01Icon,
-  GlobalIcon,
   Idea01Icon,
   MapsIcon,
 } from "@/components/Misc/icons";
