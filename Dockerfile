@@ -79,7 +79,9 @@ RUN adduser --disabled-password --gecos '' appuser \
   && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
   && chown -R appuser:appuser /home/appuser \
   && cp -R /root/.cache/ms-playwright /home/appuser/.cache/ \
-  && chown -R appuser:appuser /home/appuser/.cache/ms-playwright
+  && chown -R appuser:appuser /home/appuser/.cache/ms-playwright \
+  && mkdir -p /app/logs \
+  && chown -R appuser:appuser /app/logs
 
 # Copy application code with proper ownership
 COPY --chown=appuser:appuser . .
