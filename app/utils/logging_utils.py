@@ -19,6 +19,7 @@ def get_logger(
     rich_tracebacks: bool = True,
     tracebacks_extra_lines: int = 3,
     tracebacks_suppress: tuple = (),
+    use_file_logging: bool = False,
 ) -> logging.Logger:
     """Create a configurable logger with Rich logging for colored console output.
 
@@ -33,9 +34,6 @@ def get_logger(
     if logger_name in _loggers:
         return _loggers[logger_name]
 
-    # Create log directory if it doesn't exist
-    os.makedirs(log_dir, exist_ok=True)
-
     # Get or create the logger
     logger = logging.getLogger(logger_name)
 
@@ -44,12 +42,23 @@ def get_logger(
         logger.setLevel(log_level)
         logger.propagate = False  # Prevent propagation to avoid duplicate logs
 
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        # File handler (plain text logging) - only if use_file_logging is True
+        if use_file_logging:
+            try:
+                # Create log directory if it doesn't exist - only when needed
+                os.makedirs(log_dir, exist_ok=True)
 
-        # File handler (plain text logging)
-        file_handler = logging.FileHandler(os.path.join(log_dir, log_file))
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+                formatter = logging.Formatter(
+                    "%(asctime)s - %(levelname)s - %(message)s"
+                )
+                file_handler = logging.FileHandler(os.path.join(log_dir, log_file))
+                file_handler.setFormatter(formatter)
+                logger.addHandler(file_handler)
+            except PermissionError:
+                # Log to console if we can't create the log directory
+                print(
+                    f"Warning: Cannot create or write to log directory '{log_dir}'. File logging disabled."
+                )
 
         # Rich console handler (colored output)
         console_handler = RichHandler(
@@ -68,5 +77,7 @@ def get_logger(
     return logger
 
 
-# Default application logger
-logger = get_logger(name="app", log_file="app.log", show_path=True)
+# Default application logger - using file logging by default for local development
+logger = get_logger(
+    name="app", log_file="app.log", show_path=True, use_file_logging=True
+)
