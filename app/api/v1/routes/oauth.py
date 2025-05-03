@@ -80,7 +80,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
                 path="/",
                 secure=True,  # HTTPS only
                 httponly=True,
-                samesite="None",
+                samesite="none",
                 domain=production_domain,
                 max_age=access_token_max_age,
             )
@@ -90,7 +90,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
                 path="/",
                 secure=True,
                 httponly=True,
-                samesite="None",
+                samesite="none",
                 domain=production_domain,
                 max_age=refresh_token_max_age,
             )
@@ -185,7 +185,7 @@ async def logout():
             expires=0,
             path="/",
             domain=production_domain,
-            samesite="None",
+            samesite="none",
             secure=True,
             httponly=True,
         )
@@ -195,7 +195,7 @@ async def logout():
             expires=0,
             path="/",
             domain=production_domain,
-            samesite="None",
+            samesite="none",
             secure=True,
             httponly=True,
         )
