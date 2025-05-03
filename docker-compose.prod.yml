@@ -7,8 +7,7 @@ services:
     build: .
     image: gaia
     working_dir: /app
-    command:
-      [
+    command: [
         "python",
         "-m",
         "uvicorn",
@@ -17,6 +16,7 @@ services:
         "0.0.0.0",
         "--port",
         "80",
+        "--no-access-log",
         # "--workers",
         # "4",
       ]

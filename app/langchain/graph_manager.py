@@ -7,7 +7,7 @@ This module helps avoid circular imports between app.api.v1 and app.langchain.ag
 import asyncio
 from typing import Any
 
-from app.config.loggers import app_logger as logger
+from app.config.loggers import langchain_logger as logger
 
 
 class GraphManager:

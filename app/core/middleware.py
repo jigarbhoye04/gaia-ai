@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import settings
+from app.middleware.logger import LoggingMiddleware
 from app.middleware.profiling import ProfilingMiddleware
 
 
@@ -20,6 +21,9 @@ def configure_middleware(app: FastAPI) -> None:
     """
     # Add profiling middleware
     app.add_middleware(ProfilingMiddleware)
+
+    # Add logging middleware
+    app.add_middleware(LoggingMiddleware)
 
     # Configure CORS
     app.add_middleware(

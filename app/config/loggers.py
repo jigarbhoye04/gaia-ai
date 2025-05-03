@@ -1,23 +1,28 @@
-from app.utils.logging_utils import get_logger
 from celery.utils.log import get_task_logger
+
+from app.utils.logging_utils import get_logger
 
 
 # Application loggers - each will be a singleton instance
-app_logger = get_logger(name="main", log_file="app.log")
-llm_logger = get_logger(name="llm", log_file="llm.log")
-audio_logger = get_logger(name="audio", log_file="audio.log")
-goals_logger = get_logger(name="goals", log_file="goals.log")
-auth_logger = get_logger(name="auth", log_file="auth.log")
-cloudinary_logger = get_logger(name="cloudinary", log_file="cloudinary.log")
-mongo_logger = get_logger(name="mongodb", log_file="mongodb.log")
-redis_logger = get_logger(name="redis", log_file="redis.log")
-calendar_logger = get_logger(name="calendar", log_file="calendar.log")
-chat_logger = get_logger(name="chat", log_file="chat.log")
-image_logger = get_logger(name="image", log_file="image.log")
-notes_logger = get_logger(name="notes", log_file="notes.log")
-search_logger = get_logger(name="search", log_file="search.log")
-profiler_logger = get_logger(name="profiler", log_file="profiler.log")
-general_logger = get_logger(name="general", log_file="general.log")
+app_logger = get_logger(name="main")
+llm_logger = get_logger(name="llm")
+audio_logger = get_logger(name="audio")
+goals_logger = get_logger(name="goals")
+auth_logger = get_logger(name="auth")
+cloudinary_logger = get_logger(name="cloudinary")
+mongo_logger = get_logger(name="mongodb")
+chroma_logger = get_logger(name="chromadb")
+redis_logger = get_logger(name="redis")
+calendar_logger = get_logger(name="calendar")
+chat_logger = get_logger(name="chat")
+image_logger = get_logger(name="image")
+notes_logger = get_logger(name="notes")
+search_logger = get_logger(name="search")
+profiler_logger = get_logger(name="profiler")
+general_logger = get_logger(name="general")
+nltk_logger = get_logger(name="nltk")
+langchain_logger = get_logger(name="langchain")
+request_logger = get_logger(name="requests")
 
 # Special case for Celery
 celery_logger = get_task_logger(__name__)
