@@ -17,7 +17,7 @@ export default function useAxiosInterceptor() {
       "/terms",
       "/privacy",
       "/login",
-      "/get-started",
+      "/signup",
       "/contact",
       "/about",
       "/blog",

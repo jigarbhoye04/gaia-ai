@@ -25,7 +25,6 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
                 radius="lg"
                 size="md"
                 href={link.href}
-                variant="shadow"
               >
                 {link.label}
               </Button>
@@ -40,11 +39,11 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
                   key={link.href}
                   as={Link}
                   className="p-0 px-4 font-semibold"
-                  color={link.href === "/get-started" ? "primary" : "primary"}
+                  color={link.href === "/signup" ? "primary" : "primary"}
                   radius="lg"
                   size="md"
                   href={link.href}
-                  variant={link.href === "/get-started" ? "shadow" : "light"}
+                  variant={link.href === "/signup" ? "shadow" : "light"}
                 >
                   {link.label}
                 </Button>

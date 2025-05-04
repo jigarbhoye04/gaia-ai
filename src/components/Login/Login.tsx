@@ -7,14 +7,12 @@ import { useEffect, useState } from "react";
 
 import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
-import { handleGoogleLogin } from "@/hooks/handleGoogleLogin";
 import { useUser } from "@/hooks/useUser";
 
-export default function LoginSignup({
-  isLogin = false,
-}: {
-  isLogin?: boolean;
-}) {
+import { FlickeringGrid } from "../magicui/flickering-grid";
+import { handleAuthButtonClick } from "./authHelpers";
+
+export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const user = useUser();
@@ -24,16 +22,12 @@ export default function LoginSignup({
   }, [user, router]);
 
   return (
-    <form className="flex h-screen w-screen flex-col items-center justify-center overflow-auto select-none">
-      <div className="relative z-1 flex w-full max-w-(--breakpoint-sm) flex-col items-center justify-center gap-5 rounded-3xl bg-zinc-900 p-10">
+    <form className="flex h-screen w-screen flex-row items-center justify-center gap-10 overflow-auto select-none">
+      <div className="0 relative z-1 flex w-full flex-col items-center justify-center gap-5 p-10">
         <div className="mb-3 space-y-2 text-center">
-          <div className="text-5xl font-medium">
-            {isLogin ? "Login" : "Sign Up"}
-          </div>
+          <div className="text-5xl font-medium">Welcome back!</div>
           <div className="text-lg text-foreground-600">
-            {isLogin
-              ? "Welcome back! Please login to continue your journey with GAIA."
-              : "Join us today by creating an account. It's quick and easy!"}
+            Your personal AI assistant is ready to help you today.
           </div>
         </div>
         <Button
@@ -42,12 +36,8 @@ export default function LoginSignup({
           }`}
           size="lg"
           type="button"
-          // variant="secondary"
           disabled={loading}
-          onClick={() => {
-            setLoading(true);
-            handleGoogleLogin();
-          }}
+          onClick={() => handleAuthButtonClick(setLoading)}
         >
           {loading ? (
             <>
@@ -57,22 +47,30 @@ export default function LoginSignup({
           ) : (
             <>
               <GoogleColouredIcon />
-              <span>{isLogin ? "Sign in" : "Sign up"} with Google</span>
+              <span>Sign in with Google</span>
             </>
           )}
         </Button>
-        <Link href={isLogin ? "/get-started" : "/login"}>
+        <Link href="/signup">
           <Button
             className="text-md gap-2 rounded-full px-4 font-normal text-primary"
             size="lg"
             type="button"
             variant="link"
           >
-            {isLogin
-              ? "New to GAIA? Create an Account"
-              : "Already a user? Login here"}
+            New to GAIA? Create an Account
           </Button>
         </Link>
+      </div>
+      <div className="relative h-full w-[170%]">
+        <FlickeringGrid
+          className="absolute inset-0 z-0 size-full [mask-image:linear-gradient(to_right,rgba(0,0,0,0),rgba(0,0,0,1),rgba(0,0,0,1))] [mask-size:100%_100%] [mask-repeat:no-repeat]"
+          squareSize={4}
+          gridGap={8}
+          color="#00bbff"
+          maxOpacity={0.8}
+          flickerChance={0.7}
+        />
       </div>
     </form>
   );

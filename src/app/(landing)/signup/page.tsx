@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import LoginSignup from "@/components/Login/LoginSignup";
+import Signup from "@/components/Login/Signup";
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -23,5 +23,5 @@ export const metadata: Metadata = {
 };
 
 export default function SignupPage() {
-  return <LoginSignup isLogin={false} />;
+  return <Signup />;
 }

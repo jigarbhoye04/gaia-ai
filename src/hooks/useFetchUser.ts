@@ -6,7 +6,7 @@ import { useCallback, useEffect } from "react";
 import { useUserActions } from "@/hooks/useUser";
 import { apiauth } from "@/utils/apiaxios";
 
-export const authPages = ["/login", "/signup", "/get-started"];
+export const authPages = ["/login", "/signup", "/signup"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];
 
 const useFetchUser = () => {

@@ -15,9 +15,9 @@ const CalendarSection = lazy(
 const DeepSearchSection = lazy(
   () => import("@/components/Landing/Sections/DeepSearchSection"),
 );
-const FeatureGridSection = lazy(
-  () => import("@/components/Landing/Sections/FeatureGridSection"),
-);
+// const FeatureGridSection = lazy(
+//   () => import("@/components/Landing/Sections/FeatureGridSection"),
+// );
 const FinalSection = lazy(
   () => import("@/components/Landing/Sections/FinalSection"),
 );
@@ -71,10 +71,10 @@ export default function LandingPage() {
           <Suspense fallback={<SuspenseLoader />}>
             <MailSection />
           </Suspense>
-
+          {/* 
           <Suspense fallback={<SuspenseLoader />}>
             <FeatureGridSection />
-          </Suspense>
+          </Suspense> */}
 
           <Suspense fallback={<SuspenseLoader />}>
             <MobileSection />

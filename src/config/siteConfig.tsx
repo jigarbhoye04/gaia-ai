@@ -28,7 +28,7 @@ export const siteConfig = {
       title: "HELLO",
       links: [
         { label: "Login", href: "/login" },
-        { label: "Get Started", href: "/get-started" },
+        { label: "Get Started", href: "/signup" },
         { label: "Chat", href: "/c", isLoggedIn: true },
       ],
     },
