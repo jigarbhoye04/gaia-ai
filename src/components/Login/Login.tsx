@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
+
 import { FlickeringGrid } from "../magicui/flickering-grid";
 import { handleAuthButtonClick } from "./authHelpers";
 

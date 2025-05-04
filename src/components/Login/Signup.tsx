@@ -8,8 +8,9 @@ import { useEffect, useState } from "react";
 import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
-import { handleAuthButtonClick } from "./authHelpers";
+
 import { FlickeringGrid } from "../magicui/flickering-grid";
+import { handleAuthButtonClick } from "./authHelpers";
 
 export default function Signup() {
   const [loading, setLoading] = useState(false);
