@@ -61,7 +61,7 @@ export const authNavLinks: NavLink[] = [
     guestOnly: true,
   },
   {
-    href: "/get-started",
+    href: "/signup",
     label: "Get Started",
     guestOnly: true,
   },

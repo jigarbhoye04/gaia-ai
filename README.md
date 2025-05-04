@@ -8,7 +8,6 @@ GAIA is an advanced personal AI assistant designed to enhance productivity and s
 
 **Website:** [https://heygaia.io](https://heygaia.io)
 
-
 ## 🚀 Getting Started
 
 ### Prerequisites

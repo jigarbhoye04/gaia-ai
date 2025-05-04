@@ -44,7 +44,7 @@ export default function LoginModal() {
             Sign in with Google
           </Button>
           <Link
-            href="/get-started"
+            href="/signup"
             className="text-md w-full gap-2 rounded-full px-4 text-center font-normal text-primary"
             onClick={() => setLoginModalOpen(false)}
           >
