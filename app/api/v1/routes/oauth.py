@@ -1,5 +1,5 @@
 from typing import Annotated
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -73,7 +73,8 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
 
         env = settings.ENV
         if env == "production":
-            production_domain = settings.FRONTEND_URL
+            parsed_frontend = urlparse(settings.FRONTEND_URL)
+            production_domain = parsed_frontend.hostname
             response.set_cookie(
                 key="access_token",
                 value=access_token,
@@ -178,7 +179,8 @@ async def logout():
     env = settings.ENV
 
     if env == "production":
-        production_domain = settings.FRONTEND_URL
+        parsed_frontend = urlparse(settings.FRONTEND_URL)
+        production_domain = parsed_frontend.hostname
         response.set_cookie(
             key="access_token",
             value="",
