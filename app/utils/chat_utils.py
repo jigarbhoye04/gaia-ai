@@ -1,15 +1,13 @@
 from typing import List
-import uuid
 from fastapi import HTTPException
-from langchain_core.messages import (
-    HumanMessage,
-    SystemMessage,
-)
+from langchain_core.messages import HumanMessage, SystemMessage, AnyMessage
 
 from app.langchain.prompts.convo_prompts import CONVERSATION_DESCRIPTION_GENERATOR
 from app.langchain.state import State
-from app.langchain.messages import LangChainMessageType
-from app.models.general_models import MessageDict
+from app.models.message_models import MessageDict
+from uuid_extensions import uuid7str
+
+# from uuid_extensions import uuid7, uuid7str
 from app.services.conversation_service import (
     ConversationModel,
     create_conversation_service,
@@ -17,7 +15,7 @@ from app.services.conversation_service import (
 
 
 async def create_conversation(last_message: MessageDict | None, user: dict) -> dict:
-    uuid_value = uuid.uuid4()
+    uuid_value = uuid7str()
 
     # If last_message is None or doesn't have content, use a fallback prompt
     user_message = (
@@ -56,12 +54,12 @@ async def do_prompt_no_stream(
     # Import the chatbot function only when needed to prevent circular imports
     from app.langchain.chatbot import chatbot
 
-    messages: List[LangChainMessageType] = (
+    messages: List[AnyMessage] = (
         [SystemMessage(content=system_prompt)] if system_prompt else []
     )
     messages.append(HumanMessage(content=prompt))
 
-    state = State({"messages": messages})
+    state = State(messages=messages)
 
     response = await chatbot(state, use_tools)
 

@@ -5,7 +5,7 @@ Router module for image generation and image-to-text endpoints.
 from fastapi import APIRouter, File, Form, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from app.models.general_models import MessageRequest
+from app.models.message_models import MessageRequest
 from app.services.image_service import (
     api_generate_image,
     generate_image_stream,

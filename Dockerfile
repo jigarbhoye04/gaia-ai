@@ -11,7 +11,7 @@ RUN apt-get update && \
   build-essential \
   libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
   libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-  libgbm1 libasound2 curl unzip tesseract-ocr \
+  libgbm1 libasound2 curl unzip tesseract-ocr libpq-dev \
   libdbus-1-3 && \
   rm -rf /var/lib/apt/lists/*
 
@@ -79,7 +79,9 @@ RUN adduser --disabled-password --gecos '' appuser \
   && cp -R /root/nltk_data/* /home/appuser/nltk_data/ \
   && chown -R appuser:appuser /home/appuser \
   && cp -R /root/.cache/ms-playwright /home/appuser/.cache/ \
-  && chown -R appuser:appuser /home/appuser/.cache/ms-playwright
+  && chown -R appuser:appuser /home/appuser/.cache/ms-playwright \
+  && mkdir -p /app/logs \
+  && chown -R appuser:appuser /app/logs
 
 # Copy application code with proper ownership
 COPY --chown=appuser:appuser . .
@@ -87,4 +89,5 @@ COPY --chown=appuser:appuser . .
 USER appuser
 EXPOSE 8000
 
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000","--no-access-log"]

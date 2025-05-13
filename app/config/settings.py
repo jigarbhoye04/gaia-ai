@@ -71,6 +71,7 @@ class Settings(BaseSettings):
     REDIS_URL: str
     CHROMADB_HOST: str
     CHROMADB_PORT: int
+    POSTGRES_URL: str
 
     # OAuth & Authentication
     GOOGLE_CLIENT_ID: str

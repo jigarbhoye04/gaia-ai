@@ -64,10 +64,10 @@ def init_mongodb():
     Args:
         app (FastAPI): The FastAPI application instance.
     """
-    logger.info("MONGODB: Initializing MongoDB...")
+    logger.info("Initializing MongoDB...")
 
     mongodb_instance = MongoDB(uri=settings.MONGO_DB, db_name="GAIA")
-    logger.info("MONGODB: Created MongoDB instance")
+    logger.info("Created MongoDB instance")
     mongodb_instance.ping()
-    logger.info("MONGODB: Successfully connected to MongoDB.")
+    logger.info("Successfully connected to MongoDB.")
     return mongodb_instance

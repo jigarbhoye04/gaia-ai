@@ -24,7 +24,7 @@ def format_tool_response(tool_name: str | None, content: str) -> str:
     if tool_name == "get_weather":
         return f"data: {json.dumps({'intent': 'weather', 'weather_data': data.get('raw_weather_data')})}\n\n"
 
-    elif tool_name == "web_search":
+    elif tool_name == "web_search_tool":
         return (
             f"data: {json.dumps({'search_results': data.get('raw_search_data')})}\n\n"
         )

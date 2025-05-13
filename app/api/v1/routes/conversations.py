@@ -14,6 +14,7 @@ from app.services.conversation_service import (
     delete_conversation,
     get_conversation,
     get_conversations,
+    get_starred_messages,
     pin_message,
     star_conversation,
     update_messages,
@@ -122,4 +123,15 @@ async def pin_message_endpoint(
     Pin or unpin a message within a conversation.
     """
     response = await pin_message(conversation_id, message_id, body.pinned, user)
+    return JSONResponse(content=response)
+
+
+@router.get("/messages/pinned")
+async def get_starred_messages_endpoint(
+    user: dict = Depends(get_current_user),
+) -> JSONResponse:
+    """
+    Retrieve all pinned messages across all conversations.
+    """
+    response = await get_starred_messages(user)
     return JSONResponse(content=response)
