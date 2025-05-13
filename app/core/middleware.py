@@ -12,6 +12,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.config.settings import settings
 from app.middleware.profiler import ProfilingMiddleware
+from app.middleware.logger import LoggingMiddleware
 from app.middleware.rate_limiter import limiter
 
 
@@ -34,6 +35,9 @@ def configure_middleware(app: FastAPI) -> None:
 
     # Add profiling middleware for logging request/response times
     app.add_middleware(ProfilingMiddleware)
+
+    # Add logging middleware
+    app.add_middleware(LoggingMiddleware)
 
     # Configure CORS
     app.add_middleware(

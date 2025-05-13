@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     try:
-        logger.info("GAIA: Starting up the API...")
+        logger.info("Starting up the API...")
         await init_chroma(app)
         download_nltk_resources()
         get_zero_shot_classifier()
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
             GraphManager.set_graph(built_graph)
             yield
     except Exception as e:
-        logger.error(f"GAIA: Error during startup: {e}")
-        raise RuntimeError("GAIA: Startup failed") from e
+        logger.error(f"Error during startup: {e}")
+        raise RuntimeError("Startup failed") from e
     finally:
-        logger.info("GAIA: Shutting down the API...")
+        logger.info("Shutting down the API...")

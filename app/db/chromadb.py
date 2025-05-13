@@ -8,7 +8,7 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from chromadb.api import AsyncClientAPI, ClientAPI
 
-from app.config.loggers import app_logger as logger
+from app.config.loggers import chroma_logger as logger
 from app.config.settings import settings
 
 
@@ -66,15 +66,13 @@ class ChromaClient:
             if ChromaClient.__instance is None or not hasattr(
                 ChromaClient.__instance, "_chroma_client"
             ):
-                logger.error("CHROMA: ChromaDB client not initialized")
-                raise RuntimeError("CHROMA: ChromaDB client not initialized")
+                logger.error("ChromaDB client not initialized")
+                raise RuntimeError("ChromaDB client not initialized")
             return ChromaClient.__instance._chroma_client
 
         if not hasattr(request.app.state, "chroma_client"):
-            logger.error("CHROMA: ChromaDB client not found in application state")
-            raise RuntimeError(
-                "CHROMA: ChromaDB client not initialized in application state"
-            )
+            logger.error("ChromaDB client not found in application state")
+            raise RuntimeError("ChromaDB client not initialized in application state")
         return request.app.state.chroma_client
 
     @staticmethod
@@ -102,8 +100,8 @@ class ChromaClient:
             embedding_function = get_langchain_embedding_model()
 
         if ChromaClient.__instance is None:
-            logger.error("CHROMA: ChromaClient instance not initialized")
-            raise RuntimeError("CHROMA: ChromaClient instance not initialized")
+            logger.error("ChromaClient instance not initialized")
+            raise RuntimeError("ChromaClient instance not initialized")
 
         # If no collection name provided, return the default client
         if not collection_name:
@@ -111,10 +109,8 @@ class ChromaClient:
                 not hasattr(ChromaClient.__instance, "_default_langchain_client")
                 or not ChromaClient.__instance._default_langchain_client
             ):
-                logger.error("CHROMA: Default Langchain Chroma client not found")
-                raise RuntimeError(
-                    "CHROMA: Default Langchain Chroma client not initialized"
-                )
+                logger.error("Default Langchain Chroma client not found")
+                raise RuntimeError("Default Langchain Chroma client not initialized")
             return ChromaClient.__instance._default_langchain_client
 
         # Check if we already have a client for this collection
@@ -132,21 +128,17 @@ class ChromaClient:
             if collection_name not in collections:
                 if create_if_not_exists:
                     logger.info(
-                        f"CHROMA: Collection '{collection_name}' not found. Creating new collection..."
+                        f"Collection '{collection_name}' not found. Creating new collection..."
                     )
                     await chroma_client.create_collection(
                         name=collection_name, metadata={"hnsw:space": "cosine"}
                     )
-                    logger.info(
-                        f"CHROMA: Collection '{collection_name}' created successfully."
-                    )
+                    logger.info(f"Collection '{collection_name}' created successfully.")
                 else:
                     logger.error(
-                        f"CHROMA: Collection '{collection_name}' not found and create_if_not_exists is False"
+                        f"Collection '{collection_name}' not found and create_if_not_exists is False"
                     )
-                    raise RuntimeError(
-                        f"CHROMA: Collection '{collection_name}' not found"
-                    )
+                    raise RuntimeError(f"Collection '{collection_name}' not found")
 
             # Create Langchain client for this collection
             new_client = Chroma(
@@ -158,14 +150,14 @@ class ChromaClient:
             # Cache the client for future use
             ChromaClient.__instance._langchain_clients[collection_name] = new_client
             logger.info(
-                f"CHROMA: Created new Langchain client for collection '{collection_name}'"
+                f"Created new Langchain client for collection '{collection_name}'"
             )
             return new_client
         except Exception as e:
             logger.error(
-                f"CHROMA: Error creating Langchain client for collection '{collection_name}': {e}"
+                f"Error creating Langchain client for collection '{collection_name}': {e}"
             )
-            raise RuntimeError(f"CHROMA: Failed to create Langchain client: {e}") from e
+            raise RuntimeError(f"Failed to create Langchain client: {e}") from e
 
 
 async def init_chroma(app=None):
@@ -179,7 +171,7 @@ async def init_chroma(app=None):
         The ChromaDB client
     """
     try:
-        logger.info("CHROMA: Initializing ChromaDB connection...")
+        logger.info("Initializing ChromaDB connection...")
 
         # Initialize ChromaDB async http client
         client = await chromadb.AsyncHttpClient(
@@ -204,9 +196,9 @@ async def init_chroma(app=None):
         )
 
         response = await client.heartbeat()
-        logger.info(f"CHROMA: ChromaDB heartbeat response: {response}")
+        logger.info(f"ChromaDB heartbeat response: {response}")
         logger.info(
-            f"CHROMA: Successfully connected to ChromaDB at {settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}"
+            f"Successfully connected to ChromaDB at {settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}"
         )
 
         existing_collections = await client.list_collections()
@@ -216,14 +208,12 @@ async def init_chroma(app=None):
         for collection_name in collection_names:
             if collection_name not in existing_collections:
                 logger.info(
-                    f"CHROMA: '{collection_name}' collection not found. Creating new collection..."
+                    f"'{collection_name}' collection not found. Creating new collection..."
                 )
                 await client.create_collection(
                     name=collection_name, metadata={"hnsw:space": "cosine"}
                 )
-                logger.info(
-                    f"CHROMA: '{collection_name}' collection created successfully."
-                )
+                logger.info(f"'{collection_name}' collection created successfully.")
 
         ChromaClient(
             chroma_client=client,
@@ -233,12 +223,12 @@ async def init_chroma(app=None):
 
         if app:
             app.state.chroma_client = client
-            logger.info("CHROMA: Client stored in application state")
+            logger.info("Client stored in application state")
 
         return client
     except Exception as e:
-        logger.error(f"CHROMA: Error connecting to ChromaDB: {e}")
+        logger.error(f"Error connecting to ChromaDB: {e}")
         logger.warning(
-            f"CHROMA: Failed to connect to ChromaDB at {settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}"
+            f"Failed to connect to ChromaDB at {settings.CHROMADB_HOST}:{settings.CHROMADB_PORT}"
         )
-        raise RuntimeError(f"CHROMA: ChromaDB connection failed: {e}") from e
+        raise RuntimeError(f"ChromaDB connection failed: {e}") from e
