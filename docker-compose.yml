@@ -18,6 +18,7 @@ services:
         "--port",
         "80",
         "--reload",
+        "--no-access-log",
       ]
     environment:
       DEBUG: 1

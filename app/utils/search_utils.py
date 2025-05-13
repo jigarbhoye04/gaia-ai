@@ -9,7 +9,7 @@ from playwright.async_api import async_playwright
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
 from app.db.redis import ONE_HOUR_TTL, get_cache, set_cache
-from app.exceptions import FetchError
+from app.utils.exceptions import FetchError
 
 http_async_client = httpx.AsyncClient()
 
