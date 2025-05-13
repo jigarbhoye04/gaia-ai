@@ -6,10 +6,14 @@ This module provides functions to configure middleware for the FastAPI applicati
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.config.settings import settings
+from app.middleware.profiler import ProfilingMiddleware
 from app.middleware.logger import LoggingMiddleware
-from app.middleware.profiling import ProfilingMiddleware
+from app.middleware.rate_limiter import limiter
 
 
 def configure_middleware(app: FastAPI) -> None:
@@ -19,7 +23,17 @@ def configure_middleware(app: FastAPI) -> None:
     Args:
         app (FastAPI): FastAPI application instance
     """
-    # Add profiling middleware
+
+    # Attach limiter to app state
+    app.state.limiter = limiter
+
+    # Exception handler for rate limiting
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    # Add rate limiting middleware
+    app.add_middleware(SlowAPIMiddleware)
+
+    # Add profiling middleware for logging request/response times
     app.add_middleware(ProfilingMiddleware)
 
     # Add logging middleware

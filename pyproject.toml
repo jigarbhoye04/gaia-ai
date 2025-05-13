@@ -74,6 +74,7 @@ core = [
   "psycopg2-binary>=2.9.10",
   "uuid7>=0.1.0",
   "chromadb>=0.6.3",
+  "slowapi>=0.1.9",
 ]
 
 heavy = [

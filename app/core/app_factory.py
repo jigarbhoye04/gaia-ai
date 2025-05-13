@@ -34,14 +34,11 @@ def create_app() -> FastAPI:
         redoc_url=None if settings.ENV == "production" else "/redoc",
     )
 
-    # Configure middleware
     configure_middleware(app)
 
-    # Include routers
     app.include_router(api_router, prefix="/api/v1")
     app.include_router(health_router)
 
-    # Configure static files
     app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
     return app

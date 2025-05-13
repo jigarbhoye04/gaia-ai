@@ -8,6 +8,8 @@ from app.config.loggers import request_logger as logger
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
+    """Middleware to log API request and response details."""
+
     async def dispatch(self, request: Request, call_next):
         start = time.time()
         response = await call_next(request)
