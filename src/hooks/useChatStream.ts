@@ -1,3 +1,4 @@
+// useChatStream.ts
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -14,30 +15,104 @@ import fetchDate from "@/utils/fetchDate";
 import { parseIntent } from "./useIntentParser";
 import { useLoadingText } from "./useLoadingText";
 
-/**
- * Custom hook to handle chat streaming via SSE (Server-Sent Events).
- * Manages incoming bot messages and updates the conversation state.
- */
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
   const router = useRouter();
   const fetchConversations = useFetchConversations();
-  const latestConvoRef = useRef(convoMessages);
-  const botMessageRef = useRef<MessageType | null>(null);
-  const accumulatedResponseRef = useRef<string>("");
-  const userPromptRef = useRef<string>("");
   const { setLoadingText, resetLoadingText } = useLoadingText();
-  const newConversationIdRef = useRef<string | null>(null);
-  const newConversationDescriptionRef = useRef<string | null>(null);
+
+  // Unified ref storage
+  const refs = useRef({
+    convoMessages: convoMessages,
+    botMessage: null as MessageType | null,
+    accumulatedResponse: "",
+    userPrompt: "",
+    newConversation: {
+      id: null as string | null,
+      description: null as string | null,
+    }
+  });
 
   useEffect(() => {
-    latestConvoRef.current = convoMessages;
+    refs.current.convoMessages = convoMessages;
   }, [convoMessages]);
 
-  /**
-   * Handles streaming chat responses from the bot.
-   */
+  const updateBotMessage = (overrides: Partial<MessageType>) => {
+    const baseMessage: MessageType = {
+      type: "bot",
+      message_id: refs.current.botMessage?.message_id || "",
+      response: refs.current.accumulatedResponse,
+      searchWeb: false,
+      deepSearchWeb: false,
+      date: fetchDate(),
+      loading: true,
+      ...overrides,
+    };
+
+    refs.current.botMessage = { ...baseMessage, ...overrides };
+    const currentConvo = [...refs.current.convoMessages];
+
+    if (currentConvo.length > 0 && currentConvo[currentConvo.length - 1].type === "bot") {
+      currentConvo[currentConvo.length - 1] = refs.current.botMessage;
+    } else {
+      currentConvo.push(refs.current.botMessage);
+    }
+
+    updateConvoMessages(currentConvo);
+  };
+
+  const handleStreamEvent = (event: EventSourceMessage) => {
+    if (event.data === "[DONE]") return;
+
+    const data = JSON.parse(event.data);
+    if (data.error) return toast.error(data.error);
+
+    if (data.progress) setLoadingText(data.progress);
+    if (data.conversation_id) refs.current.newConversation.id = data.conversation_id;
+    if (data.conversation_description) refs.current.newConversation.description = data.conversation_description;
+
+    if (data.status === "generating_image") {
+      setLoadingText("Generating image...");
+      updateBotMessage({
+        image_data: { url: "", prompt: refs.current.userPrompt },
+        response: ""
+      });
+      return;
+    }
+
+    if (data.intent === "generate_image" && data.image_data) {
+      updateBotMessage({
+        image_data: data.image_data,
+        loading: false
+      });
+      return;
+    }
+
+    refs.current.accumulatedResponse += data.response || "\n";
+    updateBotMessage({
+      ...parseIntent(data),
+      response: refs.current.accumulatedResponse
+    });
+  };
+
+  const handleStreamClose = async () => {
+    if (!refs.current.botMessage) return;
+
+    updateBotMessage({ loading: false });
+    setIsLoading(false);
+    resetLoadingText();
+
+    if (refs.current.newConversation.id) {
+      // && !refs.current.convoMessages[0]?.conversation_id
+      router.push(`/c/${refs.current.newConversation.id}`);
+      fetchConversations();
+    }
+
+    refs.current.botMessage = null;
+    refs.current.newConversation = { id: null, description: null };
+  };
+
   return async (
     inputText: string,
     currentMessages: MessageType[],
@@ -46,220 +121,38 @@ export const useChatStream = () => {
     enableDeepSearch: boolean,
     pageFetchURLs: string[],
     botMessageId: string,
-    fileData: FileData[] = [], // Updated to accept FileData instead of fileIds
+    fileData: FileData[] = [],
   ) => {
-    accumulatedResponseRef.current = "";
-    userPromptRef.current = inputText;
-
-    // Extract fileIds from fileData for backward compatibility
-    const fileIds = fileData.map((file) => file.fileId);
-
-    /**
-     * Builds a bot response object with optional overrides.
-     */
-    const buildBotResponse = (
-      overrides: Partial<MessageType> = {},
-    ): MessageType => ({
+    refs.current.accumulatedResponse = "";
+    refs.current.userPrompt = inputText;
+    refs.current.botMessage = {
       type: "bot",
       message_id: botMessageId,
-      response: accumulatedResponseRef.current,
+      response: "",
       searchWeb: enableSearch,
       deepSearchWeb: enableDeepSearch,
       pageFetchURLs,
       date: fetchDate(),
       loading: true,
-      fileIds: fileIds.length > 0 ? fileIds : undefined,
-      fileData: fileData.length > 0 ? fileData : undefined,
-      ...overrides,
-    });
-
-    /**
-     * Handles incoming SSE messages and updates the bot's response in real time.
-     */
-    const onMessage = (event: EventSourceMessage) => {
-      if (event.data === "[DONE]") return;
-
-      const dataJson = JSON.parse(event.data);
-      if (dataJson.error) return toast.error(dataJson.error);
-
-      // Show current progress of any tools
-      if (dataJson.progress) setLoadingText(dataJson.progress);
-
-      // Check for newly created conversation info from the backend
-      if (!conversationId) {
-        // Store the newly created conversation ID
-        if (dataJson.conversation_id)
-          newConversationIdRef.current = dataJson.conversation_id;
-
-        // Store the conversation description that comes from the backend
-        if (dataJson.conversation_description)
-          newConversationDescriptionRef.current =
-            dataJson.conversation_description;
-      }
-
-      if (dataJson.status === "generating_image") {
-        setLoadingText("Generating image...");
-
-        // Create initial image data object
-        const initialImageData: ImageData = {
-          url: "", // Will be filled later
-          prompt: userPromptRef.current,
-        };
-
-        botMessageRef.current = buildBotResponse({
-          response: "",
-          loading: true,
-          image_data: initialImageData,
-        });
-
-        const currentConvo = latestConvoRef.current;
-        if (
-          currentConvo.length > 0 &&
-          currentConvo[currentConvo.length - 1].type === "bot"
-        ) {
-          const updatedMessages = [...currentConvo];
-          updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
-          updateConvoMessages(updatedMessages);
-        } else updateConvoMessages([...currentConvo, botMessageRef.current]);
-
-        return;
-      }
-
-      // Handle image generation result
-      if (dataJson.intent === "generate_image" && dataJson.image_data) {
-        botMessageRef.current = buildBotResponse({
-          image_data: dataJson.image_data,
-          loading: false,
-        });
-
-        const currentConvo = latestConvoRef.current;
-        if (
-          currentConvo.length > 0 &&
-          currentConvo[currentConvo.length - 1].type === "bot"
-        ) {
-          const updatedMessages = [...currentConvo];
-          updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
-          updateConvoMessages(updatedMessages);
-        } else {
-          updateConvoMessages([...currentConvo, botMessageRef.current]);
-        }
-        return;
-      }
-
-      // Handle regular text responses
-      accumulatedResponseRef.current += dataJson.response || "\n";
-      const currentConvo = latestConvoRef.current;
-      const parsedIntent = parseIntent(dataJson);
-
-      // // Create a new bot response that preserves existing intent data
-      // botMessageRef.current = buildBotResponse({
-      //   intent: parsedIntent.intent || botMessageRef.current?.intent,
-      //   // Preserve special data once it's available
-      //   calendar_options:
-      //     parsedIntent.calendar_options ||
-      //     botMessageRef.current?.calendar_options ||
-      //     null,
-      //   weather_data:
-      //     parsedIntent.weather_data ||
-      //     botMessageRef.current?.weather_data ||
-      //     null,
-      //   search_results:
-      //     parsedIntent.search_results ||
-      //     botMessageRef.current?.search_results ||
-      //     null,
-      //   deep_search_results:
-      //     parsedIntent.deep_search_results ||
-      //     botMessageRef.current?.deep_search_results ||
-      //     null,
-      //   image_data:
-      //     parsedIntent.image_data || botMessageRef.current?.image_data || null,
-      // });
-
-      botMessageRef.current = buildBotResponse({
-        // intent: parsedIntent.intent || botMessageRef.current?.intent,
-        // Dynamically preserve all special data fields
-        ...(parsedIntent || {}),
-        ...(botMessageRef.current || {}),
-      });
-
-      // Always ensure we have the most recent messages
-      if (
-        currentConvo.length > 0 &&
-        currentConvo[currentConvo.length - 1].type === "bot"
-      ) {
-        const updatedMessages = [...currentConvo];
-        updatedMessages[updatedMessages.length - 1] = botMessageRef.current;
-        updateConvoMessages(updatedMessages);
-      } else {
-        updateConvoMessages([...currentConvo, botMessageRef.current]);
-      }
+      fileIds: fileData.map(f => f.fileId),
+      fileData,
     };
 
-    /**
-     * Handles the closing of the SSE connection.
-     * Updates the conversation history in the backend with final message state.
-     */
-    const onClose = async () => {
-      if (!botMessageRef?.current) return;
-
-      // Finalize the bot message by setting loading to false
-      const finalBotMessage = {
-        ...botMessageRef.current,
-        loading: false,
-      };
-
-      // Get the current conversation state
-      const currentConvo = latestConvoRef.current;
-      let finalMessages: MessageType[];
-
-      if (
-        currentConvo.length >= 2 &&
-        currentConvo[currentConvo.length - 1].type === "bot"
-      ) {
-        // If we have a bot message as the last message, update it
-        finalMessages = [...currentConvo.slice(0, -1), finalBotMessage];
-      } else {
-        // Otherwise append the bot message
-        finalMessages = [...currentConvo, finalBotMessage];
-      }
-
-      updateConvoMessages(finalMessages);
-
-      if (newConversationIdRef.current && !conversationId) {
-        // Navigate to the newly created conversation
-        router.push(`/c/${newConversationIdRef.current}`);
-
-        if (newConversationIdRef.current) fetchConversations();
-      }
-
-      setIsLoading(false);
-      resetLoadingText();
-      botMessageRef.current = null;
-      newConversationIdRef.current = null;
-      newConversationDescriptionRef.current = null;
-    };
-    // };
-    /**
-     * Handles errors from the SSE stream.
-     */
-    const onError = (err: unknown) => {
-      setIsLoading(false);
-      resetLoadingText();
-      console.error("Error from server:", err);
-      toast.error("Error fetching messages. Please try again later.");
-    };
-
-    // Initiate the SSE request to stream chat responses from the server.
     await ApiService.fetchChatStream(
       inputText,
       enableSearch,
       enableDeepSearch,
       pageFetchURLs,
-      [...latestConvoRef.current, ...currentMessages],
+      [...refs.current.convoMessages, ...currentMessages],
       conversationId,
-      onMessage,
-      onClose,
-      onError,
+      handleStreamEvent,
+      handleStreamClose,
+      (err) => {
+        setIsLoading(false);
+        resetLoadingText();
+        toast.error("Error fetching messages. Please try again later.");
+        console.error("Stream error:", err);
+      },
       fileData,
     );
   };
