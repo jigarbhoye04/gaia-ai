@@ -2,7 +2,6 @@ import json
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from langchain_core.tools import tool
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import (
@@ -52,7 +51,11 @@ router = APIRouter()
 @router.get("/gmail/labels", summary="List Gmail Labels")
 def list_labels(current_user: dict = Depends(get_current_user)):
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
+
         results = service.users().labels().list(userId="me").execute()
         return results
     except Exception as e:
@@ -66,7 +69,10 @@ def list_messages(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Prepare params for message list
         params = {"userId": "me", "labelIds": ["INBOX"], "maxResults": max_results}
@@ -88,7 +94,6 @@ def list_messages(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@tool
 @router.get("/gmail/search", summary="Advanced search for Gmail messages")
 async def search_emails(
     query: Optional[str] = None,
@@ -124,7 +129,10 @@ async def search_emails(
     Returns a list of messages matching the search criteria and a next page token if more results are available.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Build Gmail query string from parameters
         query_parts = []
@@ -235,7 +243,10 @@ async def send_email_route(
     - **attachments**: Optional files to attach to the email
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Get the user's email address
         profile = service.users().getProfile(userId="me").execute()
@@ -282,7 +293,10 @@ async def send_email_json(
     - **bcc**: Optional list of BCC recipients
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Get the user's email address
         profile = service.users().getProfile(userId="me").execute()
@@ -325,7 +339,10 @@ async def summarize_email(
     Returns a summary of the email with optional key points and action items.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Fetch the email by ID
         message = (
@@ -381,7 +398,10 @@ async def mark_as_read(
     Returns a list of IDs that were successfully marked as read.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = mark_messages_as_read(service, request.message_ids)
 
         return {
@@ -408,7 +428,10 @@ async def mark_as_unread(
     Returns a list of IDs that were successfully marked as unread.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = mark_messages_as_unread(service, request.message_ids)
 
         return {
@@ -435,7 +458,10 @@ async def star_emails(
     Returns a list of IDs that were successfully starred.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = star_messages(service, request.message_ids)
 
         return {
@@ -462,7 +488,10 @@ async def unstar_emails(
     Returns a list of IDs that were successfully unstarred.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = unstar_messages(service, request.message_ids)
 
         return {
@@ -489,7 +518,10 @@ async def trash_emails(
     Returns a list of IDs that were successfully moved to trash.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = trash_messages(service, request.message_ids)
 
         return {
@@ -516,7 +548,10 @@ async def untrash_emails(
     Returns a list of IDs that were successfully restored from trash.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = untrash_messages(service, request.message_ids)
 
         return {
@@ -543,7 +578,10 @@ async def archive_emails(
     Returns a list of IDs that were successfully archived.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = archive_messages(service, request.message_ids)
 
         return {
@@ -570,7 +608,10 @@ async def move_emails_to_inbox(
     Returns a list of IDs that were successfully moved to inbox.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = move_to_inbox(service, request.message_ids)
 
         return {
@@ -595,7 +636,10 @@ async def get_thread(thread_id: str, current_user: dict = Depends(get_current_us
     Returns the thread with all its messages in chronological order.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         thread = fetch_thread(service, thread_id)
 
         return {
@@ -625,7 +669,10 @@ async def create_label_route(
     Returns the created label data.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         new_label = create_label(
             service=service,
             name=request.name,
@@ -658,7 +705,10 @@ async def update_label_route(
     Returns the updated label data.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         updated_label = update_label(
             service=service,
             label_id=label_id,
@@ -685,7 +735,10 @@ async def delete_label_route(
     Returns a success message.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         success = delete_label(service=service, label_id=label_id)
         if success:
             return {"status": "success", "message": "Label deleted successfully"}
@@ -708,7 +761,10 @@ async def apply_labels_route(
     Returns a list of modified messages.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = apply_labels(
             service=service,
             message_ids=request.message_ids,
@@ -738,7 +794,10 @@ async def remove_labels_route(
     Returns a list of modified messages.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         modified_messages = remove_labels(
             service=service,
             message_ids=request.message_ids,
@@ -772,7 +831,10 @@ async def create_draft_route(
     Returns the created draft data.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Get the user's email address
         profile = service.users().getProfile(userId="me").execute()
@@ -813,7 +875,10 @@ async def list_drafts_route(
     Returns a list of drafts and a next page token if more results are available.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         drafts = list_drafts(
             service=service,
             max_results=max_results,
@@ -837,7 +902,10 @@ async def get_draft_route(
     Returns the draft data with message details.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         draft = get_draft(service=service, draft_id=draft_id)
 
         return draft
@@ -865,7 +933,10 @@ async def update_draft_route(
     Returns the updated draft data.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
 
         # Get the user's email address
         profile = service.users().getProfile(userId="me").execute()
@@ -904,7 +975,10 @@ async def delete_draft_route(
     Returns a success message.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         success = delete_draft(service=service, draft_id=draft_id)
 
         if success:
@@ -927,7 +1001,10 @@ async def send_draft_route(
     Returns the sent message data.
     """
     try:
-        service = get_gmail_service(current_user)
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
         sent_message = send_draft(service=service, draft_id=draft_id)
 
         return {

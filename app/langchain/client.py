@@ -10,11 +10,14 @@ from app.langchain.tools import (
     memory_tool,
     search_tool,
     weather_tool,
+    mail_tool,
 )
+
 
 # GROQ_MODEL = "llama-3.1-8b-instant"
 # GROQ_MODEL = "llama-3.3-70b-versatile"
 GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+# GROQ_MODEL = "deepseek-r1-distill-llama-70b"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 tools = [
@@ -27,6 +30,7 @@ tools = [
     calendar_tool.calendar_event,
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
+    *mail_tool.mail_tools,
 ]
 
 

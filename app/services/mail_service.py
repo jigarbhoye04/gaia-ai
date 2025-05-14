@@ -17,10 +17,10 @@ from app.config.loggers import general_logger as logger
 from app.utils.general_utils import transform_gmail_message
 
 
-def get_gmail_service(current_user: dict):
+def get_gmail_service(refresh_token: str, access_token: str):
     creds = Credentials(
-        token=current_user.get("access_token"),
-        refresh_token=current_user.get("refresh_token"),
+        token=access_token,
+        refresh_token=refresh_token,
         token_uri=settings.GOOGLE_TOKEN_URL,
         client_id=settings.GOOGLE_CLIENT_ID,
         client_secret=settings.GOOGLE_CLIENT_SECRET,
@@ -107,8 +107,33 @@ def create_message(
 
 
 def send_email(
-    service, sender, to_list, subject, body, is_html, cc_list, bcc_list, attachments
-):
+    service: Any,
+    sender: str,
+    to_list: List[str],
+    subject: str,
+    body: str,
+    is_html: bool = False,
+    cc_list: Optional[List[str]] = None,
+    bcc_list: Optional[List[str]] = None,
+    attachments: Optional[List[UploadFile]] = None,
+) -> Dict[str, Any]:
+    """
+    Send an email using Gmail.
+
+    Args:
+        service: Authenticated Gmail API service instance
+        sender: Email address of the sender
+        to_list: Email addresses of recipients
+        subject: Email subject
+        body: Email body content
+        is_html: Whether the body is HTML content
+        cc_list: Optional list of CC recipients
+        bcc_list: Optional list of BCC recipients
+        attachments: Optional list of files to attach
+
+    Returns:
+        Sent message data from the Gmail API
+    """
     message = create_message(
         sender=sender,
         to=to_list,

@@ -1,0 +1,171 @@
+"""Templates for mail-related tool responses."""
+
+from typing import Dict, Any
+
+
+# Template for minimal message representation
+def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a Gmail message to a minimal representation with only essential fields.
+
+    Args:
+        email_data: The full Gmail message data
+
+    Returns:
+        A dictionary with only the most essential email fields
+    """
+    return {
+        "id": email_data.get("id", ""),
+        "threadId": email_data.get("threadId", ""),
+        "from": email_data.get("from", ""),
+        "to": email_data.get("to", ""),
+        "subject": email_data.get("subject", ""),
+        "snippet": email_data.get("snippet", ""),
+        "time": email_data.get("time", ""),
+        "isRead": "UNREAD" not in email_data.get("labelIds", []),
+        "hasAttachment": "HAS_ATTACHMENT" in email_data.get("labelIds", []),
+        "labels": email_data.get("labelIds", []),
+    }
+
+
+# Template for message details (when a single message needs more detail)
+def detailed_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a Gmail message to a detailed but optimized representation.
+
+    Args:
+        email_data: The full Gmail message data
+
+    Returns:
+        A dictionary with the essential email fields plus body content
+    """
+    minimal_data = minimal_message_template(email_data)
+    return {
+        **minimal_data,
+        "body": email_data.get("body", ""),
+        "cc": email_data.get("cc", ""),
+    }
+
+
+# Template for label information
+def label_template(label_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a Gmail label to a minimal representation.
+
+    Args:
+        label_data: The full Gmail label data
+
+    Returns:
+        A dictionary with only the essential label fields
+    """
+    return {
+        "id": label_data.get("id", ""),
+        "name": label_data.get("name", ""),
+        "type": label_data.get("type", "user"),
+    }
+
+
+# Template for thread information
+def thread_template(thread_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a Gmail thread to a minimal representation.
+
+    Args:
+        thread_data: The full Gmail thread data
+
+    Returns:
+        A dictionary with thread ID and minimized messages
+    """
+    return {
+        "id": thread_data.get("id", ""),
+        "messages": [
+            minimal_message_template(msg) for msg in thread_data.get("messages", [])
+        ],
+        "messageCount": len(thread_data.get("messages", [])),
+    }
+
+
+# Template for draft information
+def draft_template(draft_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a Gmail draft to a minimal representation.
+
+    Args:
+        draft_data: The full Gmail draft data
+
+    Returns:
+        A dictionary with only the essential draft fields
+    """
+    message = draft_data.get("message", {})
+    return {
+        "id": draft_data.get("id", ""),
+        "message": {
+            "to": message.get("to", ""),
+            "subject": message.get("subject", ""),
+            "snippet": message.get("snippet", ""),
+            "body": message.get("body", ""),
+        },
+    }
+
+
+# Process tool responses
+def process_list_messages_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Process the response from list_gmail_messages tool to minimize data."""
+    processed_response = {
+        "nextPageToken": response.get("nextPageToken"),
+        "resultSize": len(response.get("messages", [])),
+    }
+
+    if "messages" in response:
+        processed_response["messages"] = [
+            minimal_message_template(msg) for msg in response.get("messages", [])
+        ]
+
+    if "error" in response:
+        processed_response["error"] = response["error"]
+
+    return processed_response
+
+
+def process_search_messages_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Process the response from search_gmail_messages tool to minimize data."""
+    return process_list_messages_response(response)
+
+
+def process_list_labels_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Process the response from list_gmail_labels tool to minimize data."""
+    processed_response: Dict[str, Any] = {}
+
+    if "labels" in response:
+        processed_response["labels"] = [
+            label_template(label) for label in response.get("labels", [])
+        ]
+        processed_response["labelCount"] = str(len(processed_response["labels"]))
+
+    if "error" in response:
+        processed_response["error"] = response["error"]
+
+    return processed_response
+
+
+def process_list_drafts_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Process the response from list_email_drafts tool to minimize data."""
+    processed_response = {
+        "nextPageToken": response.get("nextPageToken"),
+        "resultSize": len(response.get("drafts", [])),
+    }
+
+    if "drafts" in response:
+        processed_response["drafts"] = [
+            draft_template(draft) for draft in response.get("drafts", [])
+        ]
+
+    if "error" in response:
+        processed_response["error"] = response["error"]
+
+    return processed_response
+
+
+def process_get_thread_response(response: Dict[str, Any]) -> Dict[str, Any]:
+    """Process the response from get_email_thread tool to minimize data."""
+    return thread_template(response)
