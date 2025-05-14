@@ -417,3 +417,425 @@ def fetch_thread(service, thread_id: str) -> Dict[str, Any]:
     except HttpError as error:
         logger.error(f"Error fetching thread {thread_id}: {error}")
         raise
+
+
+def search_messages(
+    service,
+    query: Optional[str] = None,
+    max_results: int = 20,
+    page_token: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Search Gmail messages using the Gmail API's advanced search syntax.
+
+    Args:
+        service: Gmail API service instance
+        query: Search query in Gmail's search syntax
+        max_results: Maximum number of results to return
+        page_token: Token for pagination
+
+    Returns:
+        Dict containing messages and next page token
+    """
+    logger.info(f"Searching messages with query: {query}")
+    try:
+        params = {
+            "userId": "me",
+            "q": query or "",
+            "maxResults": max_results,
+        }
+        if page_token:
+            params["pageToken"] = page_token
+
+        # Fetch message list
+        results = service.users().messages().list(**params).execute()
+        messages = results.get("messages", [])
+
+        # Use batching to fetch full details for each message
+        detailed_messages = fetch_detailed_messages(service, messages)
+
+        return {
+            "messages": [transform_gmail_message(msg) for msg in detailed_messages],
+            "nextPageToken": results.get("nextPageToken"),
+        }
+    except HttpError as error:
+        logger.error(f"Error searching messages: {error}")
+        raise
+
+
+def create_label(
+    service,
+    name: str,
+    label_list_visibility: str = "labelShow",
+    message_list_visibility: str = "show",
+    background_color: Optional[str] = None,
+    text_color: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Create a new Gmail label.
+
+    Args:
+        service: Gmail API service instance
+        name: Name of the label
+        label_list_visibility: Whether the label appears in the label list
+        message_list_visibility: Whether the label appears in the message list
+        background_color: Background color of the label (hex code)
+        text_color: Text color of the label (hex code)
+
+    Returns:
+        Created label data
+    """
+    logger.info(f"Creating new label: {name}")
+    try:
+        label_data = {
+            "name": name,
+            "labelListVisibility": label_list_visibility,
+            "messageListVisibility": message_list_visibility,
+            "color": {
+                "backgroundColor": background_color,
+                "textColor": text_color,
+            },
+        }
+
+        return service.users().labels().create(userId="me", body=label_data).execute()
+    except HttpError as error:
+        logger.error(f"Error creating label {name}: {error}")
+        raise
+
+
+def update_label(
+    service,
+    label_id: str,
+    name: Optional[str] = None,
+    label_list_visibility: Optional[str] = None,
+    message_list_visibility: Optional[str] = None,
+    background_color: Optional[str] = None,
+    text_color: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Update an existing Gmail label.
+
+    Args:
+        service: Gmail API service instance
+        label_id: ID of the label to update
+        name: New name for the label
+        label_list_visibility: Whether the label appears in the label list
+        message_list_visibility: Whether the label appears in the message list
+        background_color: Background color of the label (hex code)
+        text_color: Text color of the label (hex code)
+
+    Returns:
+        Updated label data
+    """
+    logger.info(f"Updating label {label_id}")
+    try:
+        # First get the current label data
+        current_label = service.users().labels().get(userId="me", id=label_id).execute()
+
+        # Update with new values if provided
+        if name:
+            current_label["name"] = name
+        if label_list_visibility:
+            current_label["labelListVisibility"] = label_list_visibility
+        if message_list_visibility:
+            current_label["messageListVisibility"] = message_list_visibility
+
+        # Update color information if provided
+        if background_color or text_color:
+            color_data = {}
+            if "color" in current_label:
+                color_data = current_label["color"]
+            if background_color:
+                color_data["backgroundColor"] = background_color
+            if text_color:
+                color_data["textColor"] = text_color
+            current_label["color"] = color_data
+
+        return (
+            service.users()
+            .labels()
+            .update(userId="me", id=label_id, body=current_label)
+            .execute()
+        )
+    except HttpError as error:
+        logger.error(f"Error updating label {label_id}: {error}")
+        raise
+
+
+def delete_label(service, label_id: str) -> bool:
+    """
+    Delete a Gmail label.
+
+    Args:
+        service: Gmail API service instance
+        label_id: ID of the label to delete
+
+    Returns:
+        True if successful
+    """
+    logger.info(f"Deleting label {label_id}")
+    try:
+        service.users().labels().delete(userId="me", id=label_id).execute()
+        return True
+    except HttpError as error:
+        logger.error(f"Error deleting label {label_id}: {error}")
+        raise
+
+
+def apply_labels(
+    service, message_ids: List[str], label_ids: List[str]
+) -> List[Dict[str, Any]]:
+    """
+    Apply one or more labels to specified messages.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs
+        label_ids: List of label IDs to apply
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Applying labels {label_ids} to {len(message_ids)} messages")
+    return modify_message_labels(service, message_ids, add_labels=label_ids)
+
+
+def remove_labels(
+    service, message_ids: List[str], label_ids: List[str]
+) -> List[Dict[str, Any]]:
+    """
+    Remove one or more labels from specified messages.
+
+    Args:
+        service: Gmail API service instance
+        message_ids: List of message IDs
+        label_ids: List of label IDs to remove
+
+    Returns:
+        List of modified messages
+    """
+    logger.info(f"Removing labels {label_ids} from {len(message_ids)} messages")
+    return modify_message_labels(service, message_ids, remove_labels=label_ids)
+
+
+def create_draft(
+    service,
+    sender: str,
+    to_list: List[str],
+    subject: str,
+    body: str,
+    is_html: bool = False,
+    cc_list: Optional[List[str]] = None,
+    bcc_list: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Create a new Gmail draft.
+
+    Args:
+        service: Gmail API service instance
+        sender: Email address of the sender
+        to_list: Email addresses of recipients
+        subject: Email subject
+        body: Email body
+        is_html: Whether the body is HTML content
+        cc_list: Email addresses for CC
+        bcc_list: Email addresses for BCC
+
+    Returns:
+        Created draft data
+    """
+    logger.info(f"Creating draft email to {to_list} with subject: {subject}")
+    try:
+        message = create_message(
+            sender=sender,
+            to=to_list,
+            subject=subject,
+            body=body,
+            is_html=is_html,
+            cc=cc_list,
+            bcc=bcc_list,
+            attachments=None,
+        )
+
+        draft = {"message": message}
+        return service.users().drafts().create(userId="me", body=draft).execute()
+    except HttpError as error:
+        logger.error(f"Error creating draft: {error}")
+        raise
+
+
+def list_drafts(
+    service, max_results: int = 20, page_token: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    List Gmail draft messages.
+
+    Args:
+        service: Gmail API service instance
+        max_results: Maximum number of drafts to return
+        page_token: Token for pagination
+
+    Returns:
+        Dict containing drafts and next page token
+    """
+    logger.info(f"Listing drafts, max_results={max_results}")
+    try:
+        params = {"userId": "me", "maxResults": max_results}
+        if page_token:
+            params["pageToken"] = page_token
+
+        results = service.users().drafts().list(**params).execute()
+        drafts = results.get("drafts", [])
+
+        # If we have drafts, get full details for each one
+        detailed_drafts = []
+        for draft in drafts:
+            try:
+                draft_data = (
+                    service.users()
+                    .drafts()
+                    .get(userId="me", id=draft["id"], format="full")
+                    .execute()
+                )
+
+                # Transform the message data
+                if "message" in draft_data:
+                    draft_data["message"] = transform_gmail_message(
+                        draft_data["message"]
+                    )
+
+                detailed_drafts.append(draft_data)
+            except HttpError as error:
+                logger.error(f"Error fetching draft {draft['id']}: {error}")
+
+        return {
+            "drafts": detailed_drafts,
+            "nextPageToken": results.get("nextPageToken"),
+        }
+    except HttpError as error:
+        logger.error(f"Error listing drafts: {error}")
+        raise
+
+
+def get_draft(service, draft_id: str) -> Dict[str, Any]:
+    """
+    Get a specific Gmail draft.
+
+    Args:
+        service: Gmail API service instance
+        draft_id: ID of the draft to retrieve
+
+    Returns:
+        Draft data with message details
+    """
+    logger.info(f"Fetching draft {draft_id}")
+    try:
+        draft = (
+            service.users()
+            .drafts()
+            .get(userId="me", id=draft_id, format="full")
+            .execute()
+        )
+
+        # Transform the message data
+        if "message" in draft:
+            draft["message"] = transform_gmail_message(draft["message"])
+
+        return draft
+    except HttpError as error:
+        logger.error(f"Error fetching draft {draft_id}: {error}")
+        raise
+
+
+def update_draft(
+    service,
+    draft_id: str,
+    sender: str,
+    to_list: List[str],
+    subject: str,
+    body: str,
+    is_html: bool = False,
+    cc_list: Optional[List[str]] = None,
+    bcc_list: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """
+    Update an existing Gmail draft.
+
+    Args:
+        service: Gmail API service instance
+        draft_id: ID of the draft to update
+        sender: Email address of the sender
+        to_list: Email addresses of recipients
+        subject: Email subject
+        body: Email body
+        is_html: Whether the body is HTML content
+        cc_list: Email addresses for CC
+        bcc_list: Email addresses for BCC
+
+    Returns:
+        Updated draft data
+    """
+    logger.info(f"Updating draft {draft_id}")
+    try:
+        message = create_message(
+            sender=sender,
+            to=to_list,
+            subject=subject,
+            body=body,
+            is_html=is_html,
+            cc=cc_list,
+            bcc=bcc_list,
+            attachments=None,
+        )
+
+        draft = {"id": draft_id, "message": message}
+        return (
+            service.users()
+            .drafts()
+            .update(userId="me", id=draft_id, body=draft)
+            .execute()
+        )
+    except HttpError as error:
+        logger.error(f"Error updating draft {draft_id}: {error}")
+        raise
+
+
+def delete_draft(service, draft_id: str) -> bool:
+    """
+    Delete a Gmail draft.
+
+    Args:
+        service: Gmail API service instance
+        draft_id: ID of the draft to delete
+
+    Returns:
+        True if successful
+    """
+    logger.info(f"Deleting draft {draft_id}")
+    try:
+        service.users().drafts().delete(userId="me", id=draft_id).execute()
+        return True
+    except HttpError as error:
+        logger.error(f"Error deleting draft {draft_id}: {error}")
+        raise
+
+
+def send_draft(service, draft_id: str) -> Dict[str, Any]:
+    """
+    Send an existing Gmail draft.
+
+    Args:
+        service: Gmail API service instance
+        draft_id: ID of the draft to send
+
+    Returns:
+        Sent message data
+    """
+    logger.info(f"Sending draft {draft_id}")
+    try:
+        return (
+            service.users().drafts().send(userId="me", body={"id": draft_id}).execute()
+        )
+    except HttpError as error:
+        logger.error(f"Error sending draft {draft_id}: {error}")
+        raise

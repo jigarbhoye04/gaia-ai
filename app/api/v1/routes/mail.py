@@ -5,27 +5,42 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import (
+    ApplyLabelRequest,
+    DraftRequest,
     EmailActionRequest,
     EmailReadStatusRequest,
     EmailRequest,
     EmailSummaryRequest,
+    LabelRequest,
     SendEmailRequest,
 )
 from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.utils.chat_utils import do_prompt_no_stream
 from app.services.mail_service import (
+    apply_labels,
     archive_messages,
+    create_draft,
+    create_label,
+    delete_draft,
+    delete_label,
     fetch_detailed_messages,
     fetch_thread,
+    get_draft,
     get_gmail_service,
+    list_drafts,
     mark_messages_as_read,
     mark_messages_as_unread,
     move_to_inbox,
+    remove_labels,
+    search_messages,
+    send_draft,
     send_email,
     star_messages,
     trash_messages,
     unstar_messages,
     untrash_messages,
+    update_draft,
+    update_label,
 )
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
@@ -68,6 +83,84 @@ def list_messages(
             "messages": [transform_gmail_message(msg) for msg in detailed_messages],
             "nextPageToken": results.get("nextPageToken"),
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gmail/search", summary="Advanced search for Gmail messages")
+async def search_emails(
+    query: Optional[str] = None,
+    sender: Optional[str] = None,
+    recipient: Optional[str] = None,
+    subject: Optional[str] = None,
+    has_attachment: Optional[bool] = None,
+    attachment_type: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    label: Optional[str] = None,
+    is_read: Optional[bool] = None,
+    max_results: int = 20,
+    page_token: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Search Gmail messages with advanced query parameters.
+
+    - **query**: Free text search query
+    - **sender**: Filter by sender email
+    - **recipient**: Filter by recipient email
+    - **subject**: Filter by subject
+    - **has_attachment**: Filter for messages with attachments
+    - **attachment_type**: Filter by attachment type (e.g., pdf, doc)
+    - **date_from**: Filter messages after this date (YYYY/MM/DD)
+    - **date_to**: Filter messages before this date (YYYY/MM/DD)
+    - **label**: Filter by label
+    - **is_read**: Filter by read/unread status
+    - **max_results**: Maximum number of results to return
+    - **page_token**: Token for pagination
+
+    Returns a list of messages matching the search criteria and a next page token if more results are available.
+    """
+    try:
+        service = get_gmail_service(current_user)
+
+        # Build Gmail query string from parameters
+        query_parts = []
+
+        if query:
+            query_parts.append(f"{query}")
+        if sender:
+            query_parts.append(f"from:{sender}")
+        if recipient:
+            query_parts.append(f"to:{recipient}")
+        if subject:
+            query_parts.append(f"subject:{subject}")
+        if has_attachment is not None:
+            query_parts.append(
+                "has:attachment" if has_attachment else "-has:attachment"
+            )
+        if attachment_type:
+            query_parts.append(f"filename:{attachment_type}")
+        if date_from:
+            query_parts.append(f"after:{date_from}")
+        if date_to:
+            query_parts.append(f"before:{date_to}")
+        if label:
+            query_parts.append(f"label:{label}")
+        if is_read is not None:
+            query_parts.append("is:read" if is_read else "is:unread")
+
+        # Combine all query parts
+        gmail_query = " ".join(query_parts)
+
+        search_results = search_messages(
+            service=service,
+            query=gmail_query,
+            max_results=max_results,
+            page_token=page_token,
+        )
+
+        return search_results
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -512,3 +605,333 @@ async def get_thread(thread_id: str, current_user: dict = Depends(get_current_us
         raise HTTPException(
             status_code=500, detail=f"Failed to fetch email thread: {str(e)}"
         )
+
+
+@router.post("/gmail/labels", summary="Create a new Gmail label")
+async def create_label_route(
+    request: LabelRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a new Gmail label.
+
+    - **name**: Name of the label
+    - **label_list_visibility**: Whether the label appears in the label list
+    - **message_list_visibility**: Whether the label appears in the message list
+    - **background_color**: Background color of the label (hex code)
+    - **text_color**: Text color of the label (hex code)
+
+    Returns the created label data.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        new_label = create_label(
+            service=service,
+            name=request.name,
+            label_list_visibility=request.label_list_visibility or "labelShow",
+            message_list_visibility=request.message_list_visibility or "show",
+            background_color=request.background_color,
+            text_color=request.text_color,
+        )
+        return new_label
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/gmail/labels/{label_id}", summary="Update an existing Gmail label")
+async def update_label_route(
+    label_id: str,
+    request: LabelRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Update an existing Gmail label.
+
+    - **label_id**: ID of the label to update
+    - **name**: New name for the label
+    - **label_list_visibility**: Whether the label appears in the label list
+    - **message_list_visibility**: Whether the label appears in the message list
+    - **background_color**: Background color of the label (hex code)
+    - **text_color**: Text color of the label (hex code)
+
+    Returns the updated label data.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        updated_label = update_label(
+            service=service,
+            label_id=label_id,
+            name=request.name,
+            label_list_visibility=request.label_list_visibility,
+            message_list_visibility=request.message_list_visibility,
+            background_color=request.background_color,
+            text_color=request.text_color,
+        )
+        return updated_label
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/gmail/labels/{label_id}", summary="Delete a Gmail label")
+async def delete_label_route(
+    label_id: str, current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a Gmail label.
+
+    - **label_id**: ID of the label to delete
+
+    Returns a success message.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        success = delete_label(service=service, label_id=label_id)
+        if success:
+            return {"status": "success", "message": "Label deleted successfully"}
+        else:
+            return {"status": "error", "message": "Failed to delete label"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/gmail/messages/apply-label", summary="Apply labels to messages")
+async def apply_labels_route(
+    request: ApplyLabelRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Apply one or more labels to specified messages.
+
+    - **message_ids**: List of message IDs
+    - **label_ids**: List of label IDs to apply
+
+    Returns a list of modified messages.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = apply_labels(
+            service=service,
+            message_ids=request.message_ids,
+            label_ids=request.label_ids,
+        )
+
+        return {
+            "success": True,
+            "modified_messages": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Labels applied successfully",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/gmail/messages/remove-label", summary="Remove labels from messages")
+async def remove_labels_route(
+    request: ApplyLabelRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Remove one or more labels from specified messages.
+
+    - **message_ids**: List of message IDs
+    - **label_ids**: List of label IDs to remove
+
+    Returns a list of modified messages.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        modified_messages = remove_labels(
+            service=service,
+            message_ids=request.message_ids,
+            label_ids=request.label_ids,
+        )
+
+        return {
+            "success": True,
+            "modified_messages": [msg["id"] for msg in modified_messages],
+            "count": len(modified_messages),
+            "status": "Labels removed successfully",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/gmail/drafts", summary="Create a new draft email")
+async def create_draft_route(
+    request: DraftRequest, current_user: dict = Depends(get_current_user)
+):
+    """
+    Create a new Gmail draft email.
+
+    - **to**: List of recipient email addresses
+    - **subject**: Email subject
+    - **body**: Email body
+    - **cc**: Optional list of CC recipients
+    - **bcc**: Optional list of BCC recipients
+    - **is_html**: Whether the body is HTML content
+
+    Returns the created draft data.
+    """
+    try:
+        service = get_gmail_service(current_user)
+
+        # Get the user's email address
+        profile = service.users().getProfile(userId="me").execute()
+        sender = profile.get("emailAddress")
+
+        draft = create_draft(
+            service=service,
+            sender=sender,
+            to_list=request.to,
+            subject=request.subject,
+            body=request.body,
+            is_html=request.is_html if request.is_html is not None else False,
+            cc_list=request.cc,
+            bcc_list=request.bcc,
+        )
+
+        return {
+            "draft_id": draft.get("id"),
+            "message_id": draft.get("message", {}).get("id"),
+            "status": "Draft created successfully",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gmail/drafts", summary="List all draft emails")
+async def list_drafts_route(
+    max_results: int = 20,
+    page_token: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    List all Gmail draft emails.
+
+    - **max_results**: Maximum number of drafts to return
+    - **page_token**: Token for pagination
+
+    Returns a list of drafts and a next page token if more results are available.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        drafts = list_drafts(
+            service=service,
+            max_results=max_results,
+            page_token=page_token,
+        )
+
+        return drafts
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gmail/drafts/{draft_id}", summary="Get a specific draft email")
+async def get_draft_route(
+    draft_id: str, current_user: dict = Depends(get_current_user)
+):
+    """
+    Get a specific Gmail draft email.
+
+    - **draft_id**: ID of the draft to retrieve
+
+    Returns the draft data with message details.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        draft = get_draft(service=service, draft_id=draft_id)
+
+        return draft
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/gmail/drafts/{draft_id}", summary="Update a draft email")
+async def update_draft_route(
+    draft_id: str,
+    request: DraftRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Update an existing Gmail draft email.
+
+    - **draft_id**: ID of the draft to update
+    - **to**: List of recipient email addresses
+    - **subject**: Email subject
+    - **body**: Email body
+    - **cc**: Optional list of CC recipients
+    - **bcc**: Optional list of BCC recipients
+    - **is_html**: Whether the body is HTML content
+
+    Returns the updated draft data.
+    """
+    try:
+        service = get_gmail_service(current_user)
+
+        # Get the user's email address
+        profile = service.users().getProfile(userId="me").execute()
+        sender = profile.get("emailAddress")
+
+        updated_draft = update_draft(
+            service=service,
+            draft_id=draft_id,
+            sender=sender,
+            to_list=request.to,
+            subject=request.subject,
+            body=request.body,
+            is_html=request.is_html if request.is_html is not None else False,
+            cc_list=request.cc,
+            bcc_list=request.bcc,
+        )
+
+        return {
+            "draft_id": updated_draft.get("id"),
+            "message_id": updated_draft.get("message", {}).get("id"),
+            "status": "Draft updated successfully",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/gmail/drafts/{draft_id}", summary="Delete a draft email")
+async def delete_draft_route(
+    draft_id: str, current_user: dict = Depends(get_current_user)
+):
+    """
+    Delete a Gmail draft email.
+
+    - **draft_id**: ID of the draft to delete
+
+    Returns a success message.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        success = delete_draft(service=service, draft_id=draft_id)
+
+        if success:
+            return {"status": "success", "message": "Draft deleted successfully"}
+        else:
+            return {"status": "error", "message": "Failed to delete draft"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/gmail/drafts/{draft_id}/send", summary="Send a draft email")
+async def send_draft_route(
+    draft_id: str, current_user: dict = Depends(get_current_user)
+):
+    """
+    Send an existing Gmail draft email.
+
+    - **draft_id**: ID of the draft to send
+
+    Returns the sent message data.
+    """
+    try:
+        service = get_gmail_service(current_user)
+        sent_message = send_draft(service=service, draft_id=draft_id)
+
+        return {
+            "message_id": sent_message.get("id", ""),
+            "thread_id": sent_message.get("threadId", ""),
+            "status": "Draft sent successfully",
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
