@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend of GAIA - The personal AI assistant"
 readme = "README.md"
 requires-python = ">=3.11"
+dependencies = []
 
 [dependency-groups]
 core = [
@@ -75,6 +76,7 @@ core = [
   "uuid7>=0.1.0",
   "chromadb>=0.6.3",
   "slowapi>=0.1.9",
+  "fastapi-mcp>=0.3.3",
 ]
 
 heavy = [

@@ -2,6 +2,7 @@ import json
 from typing import Any, List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from langchain_core.tools import tool
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.mail_models import (
@@ -87,6 +88,7 @@ def list_messages(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@tool
 @router.get("/gmail/search", summary="Advanced search for Gmail messages")
 async def search_emails(
     query: Optional[str] = None,

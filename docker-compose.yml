@@ -4,7 +4,9 @@ services:
   # FastAPI Application
   gaia:
     container_name: gaia
-    image: ghcr.io/hey-gaia/gaia-backend
+    # image: ghcr.io/hey-gaia/gaia-backend
+    build: .
+    image: gaia
     working_dir: /app
     command:
       [

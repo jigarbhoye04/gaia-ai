@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import router as api_router
-from app.api.v1.routes.health import router as health_router
+from app.api.v1.router.health import router as health_router
 from app.config.settings import settings
 from app.core.lifespan import lifespan
 from app.core.middleware import configure_middleware
