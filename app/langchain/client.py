@@ -44,7 +44,7 @@ def init_groq_client():
             streaming=True,
         )
 
-    llm_with_tools = create_llm().bind_tools(tools=tools)
-    llm_without_tools = create_llm()
+    # llm_with_tools = create_llm().bind_tools(tools=tools)
+    llm = create_llm()
 
-    return llm_with_tools, llm_without_tools, tools
+    return llm
