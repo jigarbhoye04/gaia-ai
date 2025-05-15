@@ -19,7 +19,7 @@ def format_tool_response(tool_name: str | None, content: str) -> str:
     try:
         data = json.loads(content)
     except json.JSONDecodeError:
-        return f"data: {json.dumps({'error': f'Invalid JSON from tool response. Content is: {content}'})}\n\n"
+        return f"data: {json.dumps({'error': 'Invalid JSON from tool response. Please try again later'})}\n\n"
 
     if tool_name == "get_weather":
         return f"data: {json.dumps({'intent': 'weather', 'weather_data': data.get('raw_weather_data')})}\n\n"

@@ -45,32 +45,39 @@ LIST_GMAIL_MESSAGES = """
     """
 
 SEARCH_GMAIL_MESSAGES = """
-    Search Gmail messages with advanced query parameters.
+    Search Gmail messages using advanced, flexible query parameters.
 
-    This tool allows sophisticated searching across the entire mailbox with multiple
-    filtering options including sender, date, attachments, and more.
+    This tool enables powerful email searches across the entire mailbox with a wide
+    range of filters — including sender, subject, date, attachment status, and more.
 
     When to use:
-    - When user asks to find specific emails
-    - When searching for messages from a particular sender
-    - When looking for emails with attachments or date filters
-    - When user mentions keywords or specific search terms
-    - When the regular inbox list isn't specific enough
+    - When the user wants to locate specific emails
+    - When filtering emails by sender, recipient, subject, or date
+    - When the user is looking for messages with attachments
+    - When keywords or specific phrases are mentioned
+    - When general inbox listing doesn't meet the user's need
+
+    Usage Tips:
+    - Don't rely on a single query or calling this tool only once — if no results are found, try refining or altering the search terms.
+    - Experiment with different filters like subject, date range, or attachment status.
+    - Consider using Gmail-style query syntax (e.g., `from:someone@example.com has:attachment`) for more precise control.
 
     Input:
-    - Various filter options: query, sender, recipient, subject, etc.
-    - has_attachment: Filter for messages with attachments
-    - date_from/date_to: Filter by date range (YYYY/MM/DD)
-    - is_read: Filter by read/unread status
-    - max_results/page_token: For pagination
+    - query: Freeform search string (Gmail-style syntax supported)
+    - sender / recipient / subject: Optional structured filters
+    - has_attachment: True/False to filter messages with attachments
+    - date_from / date_to: Filter by date range (YYYY/MM/DD)
+    - is_read: True/False to filter by read/unread status
+    - max_results / page_token: For pagination control
 
     Output:
-    - Dictionary with "messages" matching search criteria
-    - nextPageToken for pagination if more results exist
-    - Error message if operation fails
+    - A dictionary with "messages" that match the search
+    - nextPageToken if more results are available
+    - An error message if the search fails
 
-    Limitations: Complex queries might be better expressed using Gmail's native query syntax.
+    Note: If results are empty, iterate with variations — this tool is most effective when you try multiple queries or adjust filters based on feedback.
     """
+
 
 SUMMARIZE_EMAIL = """
     Summarize an email using LLM.
@@ -552,4 +559,30 @@ SEND_EMAIL_DRAFT = """
 
     Limitations: Once sent, emails cannot be unsent; draft is automatically
     moved to Sent folder after sending.
+    """
+
+GET_GMAIL_CONTACTS = """
+    Get a list of email contacts from Gmail history.
+
+    This tool extracts a unique list of contacts (email addresses and names) from the user's
+    Gmail message history, making it easy to find people you've previously communicated with.
+
+    When to use:
+    - When user wants to find email addresses of people they've corresponded with
+    - When composing new emails to previous contacts
+    - When creating contact lists or groups
+    - When user needs to remember someone's email address
+    - When implementing autocomplete features for email composition
+
+    Input:
+    - max_results: Optional, maximum number of messages to analyze (default: 100)
+
+    Output:
+    - Dictionary with "contacts" containing list of contact objects with:
+      - name: The contact's name (if available)
+      - email: The contact's email address
+    - Error message if operation fails
+
+    Limitations: Only extracts contacts from message headers, not from message bodies.
+    Quality depends on the format of email addresses in headers.
     """

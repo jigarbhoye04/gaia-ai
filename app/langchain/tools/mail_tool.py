@@ -29,6 +29,7 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     UPDATE_EMAIL_DRAFT,
     DELETE_EMAIL_DRAFT,
     SEND_EMAIL_DRAFT,
+    GET_GMAIL_CONTACTS,
 )
 from app.docstrings.utils import with_doc
 from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
@@ -49,6 +50,7 @@ from app.services.mail_service import (
     delete_label,
     fetch_detailed_messages,
     fetch_thread,
+    get_contact_list,
     get_draft,
     get_gmail_service,
     list_drafts,
@@ -64,7 +66,6 @@ from app.services.mail_service import (
     update_label,
 )
 from app.utils.chat_utils import do_prompt_no_stream
-from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
 
 
@@ -345,13 +346,6 @@ async def compose_email(
 ) -> Dict[str, Any]:
     try:
         logger.info(f"Gmail Tool: Composing email with prompt: {prompt}")
-        user_id = config.get("configurable", {}).get("user_id") if config else None
-
-        notes = []
-        if user_id:
-            notes = await search_notes_by_similarity(
-                input_text=prompt, user_id=str(user_id)
-            )
 
         user_name = (
             config.get("configurable", {}).get("user_name", "") if config else ""
@@ -364,7 +358,6 @@ async def compose_email(
             writing_style=writing_style or "Professional",
             content_length=content_length or "None",
             clarity_option=clarity_option or "None",
-            notes="- ".join(notes) if notes else "No relevant notes found.",
             prompt=prompt,
         )
 
@@ -1004,6 +997,39 @@ async def send_email_draft(
         error_msg = f"Error sending email draft: {str(e)}"
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
+
+
+@tool
+@with_doc(GET_GMAIL_CONTACTS)
+async def get_gmail_contacts(
+    config: RunnableConfig,
+    max_results: Annotated[
+        int,
+        "Maximum number of messages to analyze for contact extraction (default: 100)",
+    ] = 100,
+) -> Dict[str, Any]:
+    try:
+        logger.info(f"Gmail Tool: Getting contacts from {max_results} messages")
+        auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return {
+                "success": False,
+                "error": "Authentication credentials not provided",
+                "contacts": [],
+            }
+
+        service = get_gmail_service(
+            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
+        )
+
+        contacts = get_contact_list(service, max_results=max_results)
+
+        return {"success": True, "contacts": contacts, "count": len(contacts)}
+    except Exception as e:
+        error_msg = f"Error getting Gmail contacts: {str(e)}"
+        logger.error(error_msg)
+        return {"success": False, "error": error_msg, "contacts": []}
 
 
 mail_tools = [

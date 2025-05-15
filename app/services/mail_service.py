@@ -864,3 +864,84 @@ def send_draft(service, draft_id: str) -> Dict[str, Any]:
     except HttpError as error:
         logger.error(f"Error sending draft {draft_id}: {error}")
         raise
+
+
+def get_contact_list(service, max_results=100):
+    """
+    Extract a list of unique contacts (email addresses and names) from the user's Gmail history.
+
+    Args:
+        service: Authenticated Gmail API service instance
+        max_results: Maximum number of messages to analyze (default: 100)
+
+    Returns:
+        List of unique contacts with their email addresses and names
+    """
+    try:
+        # Get messages from inbox, sent, and all mail to maximize contact discovery
+        query = "in:inbox OR in:sent OR in:all"
+
+        # First, get message IDs
+        results = (
+            service.users()
+            .messages()
+            .list(userId="me", q=query, maxResults=max_results)
+            .execute()
+        )
+
+        messages = results.get("messages", [])
+
+        # Use a dictionary to track unique contacts
+        contacts = {}
+
+        # Process each message to extract contacts
+        for msg_data in messages:
+            msg_id = msg_data.get("id")
+            msg = (
+                service.users()
+                .messages()
+                .get(userId="me", id=msg_id, format="full")
+                .execute()
+            )
+
+            # Extract headers
+            headers = {
+                h["name"]: h["value"] for h in msg.get("payload", {}).get("headers", [])
+            }
+
+            # Extract email addresses from From, To, Cc, and Reply-To fields
+            for field in ["From", "To", "Cc", "Reply-To"]:
+                if field in headers and headers[field]:
+                    # Split multiple addresses in a single field
+                    addresses = headers[field].split(",")
+
+                    for address in addresses:
+                        address = address.strip()
+                        if not address:
+                            continue
+
+                        # Parse name and email from address string
+                        name = ""
+                        email = address
+
+                        # Handle format: "Name <email@example.com>"
+                        if "<" in address and ">" in address:
+                            name = address.split("<")[0].strip()
+                            email = address.split("<")[1].split(">")[0].strip()
+
+                        # Only add if it's a valid email address
+                        if "@" in email and "." in email:
+                            # Add to contacts dict, using email as key to ensure uniqueness
+                            contacts[email] = {"name": name, "email": email}
+
+        # Convert dictionary to list for return
+        contact_list = list(contacts.values())
+
+        # Sort contacts alphabetically by name, then email
+        contact_list.sort(key=lambda x: (x["name"] if x["name"] else x["email"]))
+
+        return contact_list
+
+    except Exception as e:
+        print(f"Error getting contact list: {str(e)}")
+        return []

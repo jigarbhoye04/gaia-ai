@@ -49,7 +49,6 @@ async def call_agent(
                 "metadata": {"user_id": user_id},
             },
         ):
-            print(access_token, refresh_token)
             stream_mode, payload = event
             if stream_mode == "messages":
                 chunk, metadata = payload

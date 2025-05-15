@@ -50,7 +50,6 @@ EMAIL_COMPOSER = """
         - Writing Style: {writing_style}
         - Content Length Preference: {content_length}
         - Clarity Preference: {clarity_option}
-        - User Notes (from database): {notes}
 
         Only mention user notes when relevant to the email context.
 
