@@ -119,20 +119,11 @@ COMPOSE_EMAIL = """
     - When user wants to save time on routine correspondence
     - When user provides a partial draft that needs improvement
 
-    Input:
-    - prompt: Required, description of the email to compose
-    - subject/body: Optional, existing content to build upon
-    - writing_style: Optional, tone preference (Professional, Casual, Formal)
-    - content_length: Optional, verbosity control (Brief, Detailed)
-    - clarity_option: Optional, complexity level (Simple, Technical)
-
-    Output:
-    - Dictionary with generated subject and body
-    - Error message if operation fails
-
-    Limitations: May require refinement for highly specialized or technical content;
-    won't have access to user's previous communication style unless explicitly described.
+    Before calling this tool:
+    - If the recipient's email address is not provided or unclear,
+      first call the GET_GMAIL_CONTACTS tool to fetch possible recipients.
     """
+
 
 MARK_EMAILS_AS_READ = """
     Mark Gmail messages as read.

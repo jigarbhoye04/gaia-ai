@@ -44,6 +44,7 @@ async def call_agent(
                     "user_id": user_id,
                     "access_token": access_token,
                     "refresh_token": refresh_token,
+                    "email": user.get("email"),
                 },
                 "recursion_limit": 10,
                 "metadata": {"user_id": user_id},

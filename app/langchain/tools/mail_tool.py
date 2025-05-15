@@ -1,4 +1,3 @@
-import json
 from typing import Annotated, Any, Dict, List, Optional
 
 from langchain_core.runnables import RunnableConfig
@@ -32,7 +31,7 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     GET_GMAIL_CONTACTS,
 )
 from app.docstrings.utils import with_doc
-from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
+from app.langchain.prompts.mail_prompts import EMAIL_SUMMARIZER
 from app.langchain.templates.mail_templates import (
     draft_template,
     process_get_thread_response,
@@ -50,7 +49,6 @@ from app.services.mail_service import (
     delete_label,
     fetch_detailed_messages,
     fetch_thread,
-    get_contact_list,
     get_draft,
     get_gmail_service,
     list_drafts,
@@ -326,58 +324,22 @@ async def summarize_email(
 @tool
 @with_doc(COMPOSE_EMAIL)
 async def compose_email(
-    config: RunnableConfig,
-    prompt: Annotated[str, "Prompt describing what kind of email to compose"],
-    subject: Annotated[
-        Optional[str], "Optional subject to include in the prompt"
-    ] = None,
-    body: Annotated[
-        Optional[str], "Optional body text to include in the prompt"
-    ] = None,
-    writing_style: Annotated[
-        Optional[str], "Writing style (e.g., Professional, Casual, Formal)"
-    ] = "Professional",
-    content_length: Annotated[
-        Optional[str], "Desired length (e.g., Brief, Detailed)"
-    ] = None,
-    clarity_option: Annotated[
-        Optional[str], "Clarity option (e.g., Simple, Technical)"
+    body: Annotated[str, "Body content of the email"],
+    subject: Annotated[str, "Subject line for the email"],
+    to_email: Annotated[
+        Optional[List[str]],
+        "List of recipient email addresses fetched from the get_gmail_contacts tool",
     ] = None,
 ) -> Dict[str, Any]:
     try:
-        logger.info(f"Gmail Tool: Composing email with prompt: {prompt}")
-
-        user_name = (
-            config.get("configurable", {}).get("user_name", "") if config else ""
-        )
-
-        prompt_template = EMAIL_COMPOSER.format(
-            sender_name=user_name or "none",
-            subject=subject or "empty",
-            body=body or "empty",
-            writing_style=writing_style or "Professional",
-            content_length=content_length or "None",
-            clarity_option=clarity_option or "None",
-            prompt=prompt,
-        )
-
-        result = await do_prompt_no_stream(prompt=prompt_template)
-
-        if isinstance(result, dict) and result.get("response"):
-            try:
-                parsed_result = json.loads(result["response"])
-                subject = parsed_result.get("subject", "")
-                body = parsed_result.get("body", "")
-
-                return {"subject": subject, "body": body}
-            except Exception as e:
-                error_msg = f"Failed to parse response: {str(e)}"
-                logger.error(error_msg)
-                return {"error": error_msg}
-        else:
-            error_msg = "Invalid response format"
-            logger.error(error_msg)
-            return {"error": error_msg}
+        return {
+            "email_compose": {
+                "to": to_email,
+                "subject": subject,
+                "body": body,
+            },
+            "instructions": "Just tell the user that here's their email and tell them what the email is about. The actual email will be sent with a generated button click by the user on the frontend.",
+        }
     except Exception as e:
         error_msg = f"Error composing email: {str(e)}"
         logger.error(error_msg)
@@ -420,7 +382,6 @@ async def mark_emails_as_unread(
     config: RunnableConfig,
 ) -> Dict[str, Any]:
     try:
-        logger.info(f"Gmail Tool: Marking {len(message_ids)} emails as unread")
         auth = get_auth_from_config(config)
 
         if not auth["access_token"] or not auth["refresh_token"]:
@@ -449,7 +410,6 @@ async def star_emails(
     config: RunnableConfig,
 ) -> Dict[str, Any]:
     try:
-        logger.info(f"Gmail Tool: Starring {len(message_ids)} emails")
         auth = get_auth_from_config(config)
 
         if not auth["access_token"] or not auth["refresh_token"]:
@@ -478,7 +438,6 @@ async def unstar_emails(
     config: RunnableConfig,
 ) -> Dict[str, Any]:
     try:
-        logger.info(f"Gmail Tool: Unstarring {len(message_ids)} emails")
         auth = get_auth_from_config(config)
 
         if not auth["access_token"] or not auth["refresh_token"]:
@@ -603,7 +562,6 @@ async def create_gmail_label(
     text_color: Annotated[Optional[str], "Text color hex code (e.g., #000000)"] = None,
 ) -> Dict[str, Any]:
     try:
-        logger.info(f"Gmail Tool: Creating label '{name}'")
         auth = get_auth_from_config(config)
 
         if not auth["access_token"] or not auth["refresh_token"]:
@@ -1003,13 +961,16 @@ async def send_email_draft(
 @with_doc(GET_GMAIL_CONTACTS)
 async def get_gmail_contacts(
     config: RunnableConfig,
+    query: Annotated[
+        str,
+        "Search query to filter contacts (e.g., email address, name, or any Gmail search query)",
+    ],
     max_results: Annotated[
         int,
-        "Maximum number of messages to analyze for contact extraction (default: 100)",
-    ] = 100,
+        "Maximum number of messages to analyze for contact extraction (default: 30)",
+    ] = 30,
 ) -> Dict[str, Any]:
     try:
-        logger.info(f"Gmail Tool: Getting contacts from {max_results} messages")
         auth = get_auth_from_config(config)
 
         if not auth["access_token"] or not auth["refresh_token"]:
@@ -1023,9 +984,78 @@ async def get_gmail_contacts(
             access_token=auth["access_token"], refresh_token=auth["refresh_token"]
         )
 
-        contacts = get_contact_list(service, max_results=max_results)
+        # Search for messages matching the query
+        search_results = search_messages(
+            service=service, query=query, max_results=max_results
+        )
 
-        return {"success": True, "contacts": contacts, "count": len(contacts)}
+        message_ids = [msg.get("id") for msg in search_results.get("messages", [])]
+
+        # If messages found, extract contacts only from these messages
+        if message_ids:
+            # Extract contacts from the specific messages
+            contacts = []
+            contact_dict = {}  # To ensure uniqueness
+
+            for msg_id in message_ids:
+                msg = (
+                    service.users()
+                    .messages()
+                    .get(userId="me", id=msg_id, format="full")
+                    .execute()
+                )
+
+                # Extract headers
+                headers = {
+                    h["name"]: h["value"]
+                    for h in msg.get("payload", {}).get("headers", [])
+                }
+
+                # Extract email addresses from From, To, Cc, and Reply-To fields
+                for field in ["From", "To", "Cc", "Reply-To"]:
+                    if field in headers and headers[field]:
+                        # Split multiple addresses in a single field
+                        addresses = headers[field].split(",")
+
+                        for address in addresses:
+                            address = address.strip()
+                            if not address:
+                                continue
+
+                            # Parse name and email from address string
+                            name = ""
+                            email = address
+
+                            # Handle format: "Name <email@example.com>"
+                            if "<" in address and ">" in address:
+                                name = address.split("<")[0].strip()
+                                email = address.split("<")[1].split(">")[0].strip()
+
+                            # Only add if it's a valid email address
+                            if "@" in email and "." in email:
+                                # Add to contacts dict, using email as key to ensure uniqueness
+                                contact_dict[email] = {
+                                    "name": name,
+                                    "email": email,
+                                }
+
+            contacts = list(contact_dict.values())
+            # Sort contacts alphabetically by name, then email
+            contacts.sort(key=lambda x: (x["name"] if x["name"] else x["email"]))
+
+            return {
+                "success": True,
+                "contacts": contacts,
+                "count": len(contacts),
+            }
+        else:
+            return {
+                "success": True,
+                "contacts": [],
+                "count": 0,
+                "message": f"No messages found matching query: {query}",
+            }
+
     except Exception as e:
         error_msg = f"Error getting Gmail contacts: {str(e)}"
         logger.error(error_msg)
@@ -1056,4 +1086,5 @@ mail_tools = [
     update_email_draft,
     delete_email_draft,
     send_email_draft,
+    get_gmail_contacts,
 ]
