@@ -32,6 +32,8 @@ async def chat_stream(
     if init_chunk:  # Return the conversation id and metadata if new convo
         yield init_chunk
 
+    print("body", body)
+
     # TODO: FETCH NOTES AND FILES AND USE THEM
     # Stream response from the agent
     async for chunk in call_agent(

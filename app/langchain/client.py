@@ -4,12 +4,13 @@ from pydantic import SecretStr
 from app.config.settings import settings
 from app.langchain.tools import (
     calendar_tool,
-    fetch_tool,
+    file_tools,
     flowchart_tool,
     image_tool,
     memory_tool,
     search_tool,
     weather_tool,
+    webpage_tool,
 )
 
 # GROQ_MODEL = "llama-3.1-8b-instant"
@@ -18,7 +19,7 @@ GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 tools = [
-    fetch_tool.fetch_webpages,
+    webpage_tool.fetch_webpages,
     search_tool.deep_search_tool,
     search_tool.web_search_tool,
     memory_tool.create_memory,
@@ -27,6 +28,8 @@ tools = [
     calendar_tool.calendar_event,
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
+    file_tools.fetch_file,
+    file_tools.query_file,
 ]
 
 

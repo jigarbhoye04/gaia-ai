@@ -58,6 +58,7 @@ async def upload_file_service(
     file_id = str(uuid.uuid4())
     public_id = f"file_{file_id}_{file.filename.replace(' ', '_')}"
 
+    # TODO: Remove this line after testing
     if not conversation_id:
         conversation_id = "1aaae74f-8496-4ad2-8146-5534d1696082"
 
@@ -65,6 +66,12 @@ async def upload_file_service(
         # Read file content once
         content = await file.read()
         file_size = len(content)
+
+        if file.size and file.size > 10 * 1024 * 1024:  # 10 MB limit
+            logger.error("File size exceeds the 10 MB limit")
+            raise HTTPException(
+                status_code=400, detail="File size exceeds the 10 MB limit"
+            )
 
         # Start file description generation and upload in parallel
         description_task = asyncio.create_task(
