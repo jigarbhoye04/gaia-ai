@@ -1,14 +1,10 @@
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.services.chat_service import (
-    chat_stream,
-    get_starred_messages,
-)
+from app.services.chat_service import chat_stream
 
-from app.models.general_models import (
-    MessageRequestWithHistory,
-)
+from app.models.message_models import MessageRequestWithHistory
+
 
 router = APIRouter()
 
@@ -16,7 +12,7 @@ router = APIRouter()
 @router.post("/chat-stream")
 async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
-    # request: Request,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
 ) -> StreamingResponse:
     """
@@ -31,17 +27,6 @@ async def chat_stream_endpoint(
     #     client_ip = forwarded.split(",")[0] if forwarded else request.client.host
 
     return StreamingResponse(
-        chat_stream(body=body, user=user),
+        chat_stream(body=body, user=user, background_tasks=background_tasks),
         media_type="text/event-stream",
     )
-
-
-@router.get("/messages/pinned")
-async def get_starred_messages_endpoint(
-    user: dict = Depends(get_current_user),
-) -> JSONResponse:
-    """
-    Retrieve all pinned messages across all conversations.
-    """
-    response = await get_starred_messages(user)
-    return JSONResponse(content=response)

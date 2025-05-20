@@ -16,7 +16,7 @@ from app.utils.search_utils import format_results_for_llm, perform_search
 
 
 @tool
-async def web_search(
+async def web_search_tool(
     query_text: Annotated[
         str,
         "The search query to look up on the web. Be specific and concise for better results.",
@@ -132,7 +132,7 @@ async def web_search(
 
 
 @tool
-async def deep_search(
+async def deep_search_tool(
     query_text: Annotated[
         str,
         "The search query for in-depth research. Be specific to get thorough and comprehensive results.",

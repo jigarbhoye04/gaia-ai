@@ -2,6 +2,7 @@ import json
 from typing import Annotated
 
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 from app.config.loggers import image_logger as logger
 from app.services.image_service import api_generate_image
@@ -50,6 +51,9 @@ async def generate_image(
     """
 
     try:
+        writer = get_stream_writer()
+        writer({"status": "generating_image"})
+
         image_result = await api_generate_image(message=prompt, improve_prompt=False)
 
         return json.dumps(

@@ -1,4 +1,4 @@
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 
 from app.langchain.prompts.flowchart_prompts import FLOWCHART_PROMPT
 

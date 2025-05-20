@@ -469,21 +469,22 @@ async def create_calendar_event(
     # Handle different event types (all-day vs. time-specific)
     if event.is_all_day:
         # For all-day events, use date format without time component
-        # Convert datetime to date string format "YYYY-MM-DD"
-        start_date = event.start.date().isoformat()
-        # For all-day events, end date is exclusive, so we don't need to add a day
-        # Google Calendar expects the end date to be the day AFTER the last day of the event
-        end_date = event.end.date().isoformat()
+        # Convert ISO string to date string format "YYYY-MM-DD"
+        # Event.start is a string, so we extract the date part
+        start_date = event.start.split("T")[0]
+        end_date = event.end.split("T")[0]
 
         event_payload["start"] = {"date": start_date}
         event_payload["end"] = {"date": end_date}
     else:
         # For time-specific events, use datetime with timezone
         try:
-            canonical_timezone = resolve_timezone(event.timezone)
+            canonical_timezone = resolve_timezone(event.timezone or "UTC")
             user_tz = ZoneInfo(canonical_timezone)
-            start_dt = event.start.replace(tzinfo=user_tz).astimezone(user_tz)
-            end_dt = event.end.replace(tzinfo=user_tz).astimezone(user_tz)
+
+            # Parse the ISO string into a datetime
+            start_dt = datetime.fromisoformat(event.start).replace(tzinfo=user_tz)
+            end_dt = datetime.fromisoformat(event.end).replace(tzinfo=user_tz)
 
             event_payload["start"] = {
                 "dateTime": start_dt.isoformat(),
@@ -494,7 +495,9 @@ async def create_calendar_event(
                 "timeZone": canonical_timezone,
             }
         except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Invalid timezone: {str(e)}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid timezone or datetime format: {str(e)}"
+            )
 
     # Send request to create the event
     try:

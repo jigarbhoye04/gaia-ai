@@ -5,16 +5,13 @@ import httpx
 from bs4 import BeautifulSoup
 from langgraph.config import get_stream_writer
 from playwright.async_api import async_playwright
-from urlextract import URLExtract
 
 from app.config.loggers import search_logger as logger
 from app.config.settings import settings
 from app.db.redis import ONE_HOUR_TTL, get_cache, set_cache
-from app.exceptions import FetchError
+from app.utils.exceptions import FetchError
 
 http_async_client = httpx.AsyncClient()
-extractor = URLExtract()
-extractor.update()
 
 WEB_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
 IMAGE_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/search"

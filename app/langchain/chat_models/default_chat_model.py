@@ -1,3 +1,7 @@
+"""
+This file was created in order to fallback to the cloudflare worker API if Groq LLM API doesnt work. As we have shifted primarily to use the Groq API, this file is not used anymore. However, it is kept here for reference and in case we need to use it again in the future.
+"""
+
 from __future__ import annotations
 
 import json
@@ -38,8 +42,8 @@ from pydantic import (
 from app.config.loggers import llm_logger as logger
 from app.config.settings import settings
 
-http_async_client = httpx.AsyncClient(timeout=1000000)
-http_sync_client = httpx.Client(timeout=1000000)
+http_async_client = httpx.AsyncClient(timeout=1000)
+http_sync_client = httpx.Client(timeout=1000)
 
 
 class DefaultChatAgent(BaseChatModel):

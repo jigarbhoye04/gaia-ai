@@ -276,3 +276,27 @@ async def pin_message(
     )
 
     return {"message": response_message, "pinned": pinned}
+
+
+async def get_starred_messages(user: dict) -> dict:
+    """
+    Fetch all pinned messages across all conversations for the authenticated user.
+    """
+    user_id = user.get("user_id")
+
+    results = await conversations_collection.aggregate(
+        [
+            {"$match": {"user_id": user_id}},
+            {"$unwind": "$messages"},
+            {"$match": {"messages.pinned": True}},
+            {"$project": {"_id": 0, "conversation_id": 1, "message": "$messages"}},
+        ]
+    ).to_list(None)
+
+    if not results:
+        raise HTTPException(
+            status_code=404,
+            detail="No pinned messages found across any conversation",
+        )
+
+    return {"results": results}
