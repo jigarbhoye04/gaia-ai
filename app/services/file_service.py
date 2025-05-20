@@ -2,6 +2,7 @@
 Service module for file upload functionality with vector search capabilities.
 """
 
+import asyncio
 import io
 import uuid
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ from app.config.loggers import app_logger as logger
 from app.db.chromadb import ChromaClient
 from app.db.collections import files_collection
 from app.db.utils import serialize_document
+from app.models.files_models import DocumentSummaryModel
 from app.models.general_models import FileData
 from app.utils.embedding_utils import generate_embedding, search_documents_by_similarity
 from app.utils.file_utils import generate_file_description
@@ -40,12 +42,40 @@ async def upload_file_service(
     Raises:
         HTTPException: If file upload fails
     """
+    # Validate inputs early
+    if not file.filename:
+        logger.error("Missing filename in file upload")
+        raise HTTPException(
+            status_code=400, detail="Invalid file name. Filename is required."
+        )
+
+    if not file.content_type:
+        logger.error("Missing content_type in file upload")
+        raise HTTPException(
+            status_code=400, detail="Invalid file type. Content type is required."
+        )
+
+    file_id = str(uuid.uuid4())
+    public_id = f"file_{file_id}_{file.filename.replace(' ', '_')}"
+
+    if not conversation_id:
+        conversation_id = "1aaae74f-8496-4ad2-8146-5534d1696082"
+
     try:
+        # Read file content once
         content = await file.read()
+        file_size = len(content)
 
-        file_id = str(uuid.uuid4())
-        public_id = f"file_{file_id}_{file.filename.replace(' ', '_')}"
+        # Start file description generation and upload in parallel
+        description_task = asyncio.create_task(
+            generate_file_description(
+                file_content=content,
+                content_type=file.content_type,
+                filename=file.filename,
+            )
+        )
 
+        # Upload to Cloudinary
         upload_result = cloudinary.uploader.upload(
             io.BytesIO(content),
             resource_type="auto",
@@ -60,21 +90,27 @@ async def upload_file_service(
                 status_code=500, detail="Invalid response from file upload service"
             )
 
-        file_description = await generate_file_description(
-            content, file_url, file.content_type, file.filename
-        )
-        logger.info(f"Generated description for file {file_id}")
+        logger.info(f"File uploaded to Cloudinary: {file_url}")
 
+        # Wait for description generation to complete
+        file_description = await description_task
+
+        # Process file description
+        encoded_file_description, md_description = _process_file_description(
+            file_description
+        )
+
+        # Create metadata object
         current_time = datetime.now(timezone.utc)
         file_metadata = {
             "file_id": file_id,
             "filename": file.filename,
             "type": file.content_type,
-            "size": len(content),
+            "size": file_size,
             "url": file_url,
             "public_id": public_id,
             "user_id": user_id,
-            "description": file_description,
+            "description": encoded_file_description,
             "created_at": current_time,
             "updated_at": current_time,
         }
@@ -82,39 +118,18 @@ async def upload_file_service(
         if conversation_id:
             file_metadata["conversation_id"] = conversation_id
 
-        # Store in MongoDB
-        result = await files_collection.insert_one(file_metadata)
-        if not result.inserted_id:
-            raise HTTPException(status_code=500, detail="Failed to store file metadata")
-
-        # Store in ChromaDB if embedding was generated
-        try:
-            chroma_documents_collection = await ChromaClient.get_langchain_client(
-                collection_name="documents"
-            )
-
-            # Store document metadata in ChromaDB
-            await chroma_documents_collection.aadd_documents(
-                ids=[file_id],
-                documents=[
-                    Document(
-                        page_content=file_description,
-                        metadata={
-                            "file_id": file_id,
-                            "user_id": user_id,
-                            "filename": file.filename,
-                            "type": file.content_type,
-                        },
-                    )
-                ],
-            )
-            logger.info(f"File with id {file_id} indexed in ChromaDB")
-        except Exception as chroma_err:
-            # Log but don't fail if ChromaDB indexing fails
-            logger.error(
-                f"Failed to index file in ChromaDB: {str(chroma_err)}",
-                exc_info=True,
-            )
+        # Store in MongoDB and ChromaDB concurrently
+        await asyncio.gather(
+            _store_in_mongodb(file_metadata),
+            _store_in_chromadb(
+                file_id=file_id,
+                user_id=user_id,
+                filename=file.filename,
+                content_type=file.content_type,
+                conversation_id=conversation_id,
+                file_description=file_description,
+            ),
+        )
 
         logger.info(f"File uploaded successfully. ID: {file_id}, URL: {file_url}")
 
@@ -122,13 +137,117 @@ async def upload_file_service(
             "fileId": file_id,
             "url": file_url,
             "filename": file.filename,
-            "description": file_description,
+            "description": md_description,
             "type": file.content_type,
         }
 
+    except HTTPException:
+        # Re-raise HTTP exceptions without wrapping
+        raise
     except Exception as e:
         logger.error(f"Failed to upload file: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
+
+
+def _process_file_description(
+    file_description: str | DocumentSummaryModel | list[DocumentSummaryModel],
+) -> tuple:
+    """Helper function to process file description into the correct format."""
+    if isinstance(file_description, str):
+        return file_description, file_description
+    elif isinstance(file_description, DocumentSummaryModel):
+        return file_description.model_dump(mode="json"), file_description.data.md
+    elif isinstance(file_description, list):
+        content_str = ""
+        content_model = []
+        for x in file_description:
+            content_model.append(x.model_dump(mode="json"))
+            content_str += x.data.md
+        return content_model, content_str
+    else:
+        logger.error("Invalid file description format")
+        raise HTTPException(status_code=400, detail="Invalid file description format")
+
+
+async def _store_in_mongodb(file_metadata: dict) -> None:
+    """Helper function to store file metadata in MongoDB."""
+    result = await files_collection.insert_one(document=file_metadata)
+    if not result.inserted_id:
+        raise HTTPException(status_code=500, detail="Failed to store file metadata")
+
+
+async def _store_in_chromadb(
+    file_id: str,
+    user_id: str,
+    filename: str,
+    content_type: str,
+    file_description,
+    conversation_id: Optional[str] = None,
+) -> None:
+    """Helper function to store file data in ChromaDB."""
+    try:
+        chroma_documents_collection = await ChromaClient.get_langchain_client(
+            collection_name="documents"
+        )
+
+        documents = []
+        ids = []
+
+        if isinstance(file_description, list):
+            for page in file_description:
+                metadata = {
+                    "file_id": file_id,
+                    "user_id": user_id,
+                    "filename": filename,
+                    "type": content_type,
+                    "page_number": page.data.page_number,
+                }
+
+                if conversation_id:
+                    metadata["conversation_id"] = conversation_id
+
+                documents.append(
+                    Document(
+                        page_content=page.summary,
+                        metadata=metadata,
+                    )
+                )
+                ids.append(str(uuid.uuid4()))  # Generate a new ID for each page
+        else:
+            metadata = {
+                "file_id": file_id,
+                "user_id": user_id,
+                "filename": filename,
+                "type": content_type,
+            }
+
+            if conversation_id:
+                metadata["conversation_id"] = conversation_id
+
+            documents.append(
+                Document(
+                    page_content=(
+                        file_description
+                        if isinstance(file_description, str)
+                        else file_description.summary
+                    ),
+                    metadata=metadata,
+                )
+            )
+            ids.append(file_id)
+
+        # Store document metadata in ChromaDB
+        await chroma_documents_collection.aadd_documents(
+            ids=ids,
+            documents=documents,
+        )
+        logger.info(f"File with id {file_id} indexed in ChromaDB")
+    except Exception as chroma_err:
+        # Log but don't fail if ChromaDB indexing fails
+        logger.error(
+            f"Failed to index file in ChromaDB: {str(chroma_err)}",
+            exc_info=True,
+        )
 
 
 async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:

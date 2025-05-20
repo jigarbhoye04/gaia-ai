@@ -62,6 +62,8 @@ async def chat_stream(
             )
         }\n\n"""
 
+    print("body", body)
+
     # TODO: FETCH NOTES AND FILES AND USE THEM
 
     async for chunk in call_agent(

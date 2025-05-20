@@ -47,11 +47,11 @@ RUN python -m playwright install --with-deps chromium
 RUN python -m nltk.downloader punkt stopwords punkt_tab && \
   rm -rf /root/.cache/nltk
 
-# ---- Core Dependencies Stage: Install core application dependencies ----
-FROM heavy-dependencies AS core-dependencies
+# ---- Default Dependencies Stage: Install default application dependencies ----
+FROM heavy-dependencies AS default-dependencies
 WORKDIR /app
 
-# Copy only the pyproject.toml for core dependencies
+# Copy only the pyproject.toml for default dependencies
 COPY pyproject.toml ./
 
 # Set environment variables
@@ -61,16 +61,16 @@ ENV ENV=production \
   UV_SYSTEM_PYTHON=1 \
   UV_LOGGING=1
 
-# Install core dependencies
+# Install default dependencies
 RUN --mount=type=cache,target=/root/.cache/uv \
   if [ "$ENV" = "production" ]; then \
-  uv pip install --no-cache-dir --group core ; \
+  uv pip install --no-cache-dir .; \
   else \
-  uv pip install --no-cache-dir --group core --editable . ; \
+  uv pip install --no-cache-dir --editable . ; \
   fi
 
 # ---- Final Stage: Setup application for production ----
-FROM core-dependencies AS final
+FROM default-dependencies AS final
 WORKDIR /app
 
 # Setup non-root user and permissions

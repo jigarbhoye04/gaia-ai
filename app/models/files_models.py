@@ -1,5 +1,3 @@
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -8,12 +6,12 @@ class DocumentPageModel(BaseModel):
         ...,
         gt=0,
     )
-    base64: str = Field(...)
+    md: str = Field(...)
     # Other metadata fields can be added here
 
 
 class DocumentSummaryModel(BaseModel):
-    image: Optional[DocumentPageModel] = None
+    data: DocumentPageModel
     summary: str = Field(
         ...,
         max_length=100000,

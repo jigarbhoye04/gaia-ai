@@ -4,9 +4,7 @@ version = "0.1.0"
 description = "Backend of GAIA - The personal AI assistant"
 readme = "README.md"
 requires-python = ">=3.11"
-
-[dependency-groups]
-core = [
+dependencies = [
   "assemblyai>=0.37.0",
   "beautifulsoup4==4.12.3",
   "browser-use>=0.1.40",
@@ -71,8 +69,11 @@ core = [
   "uvicorn>=0.34.1",
   "hf-xet>=1.0.3",
   "langchain-huggingface>=0.1.2",
+  "llama-parse>=0.6.12",
+  "llama-cloud-services>=0.6.15",
 ]
 
+[dependency-groups]
 heavy = [
   "sentence-transformers",
   "langchain",
@@ -80,9 +81,6 @@ heavy = [
   "playwright",
   "nltk",
 ]
-
-[tool.uv]
-default-groups = ["core"]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
