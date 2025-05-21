@@ -42,6 +42,6 @@ def format_tool_response(tool_name: str | None, content: str) -> str:
         return f"data: {json.dumps({'intent': 'generate_image', 'image_data': data.get('image_data')})}\n\n"
 
     elif tool_name == "compose_email":
-        return f"data: {json.dumps({'email_compose_data': data.get('email_compose_data')})}\n\n"
+        return f"data: {json.dumps({'intent': 'email', 'email_compose_data': data.get('email_compose_data')})}\n\n"
 
     return ""
