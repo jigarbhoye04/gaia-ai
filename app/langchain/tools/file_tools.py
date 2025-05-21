@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -15,16 +15,37 @@ async def fetch_file(
         "The ID of the file to fetch.",
     ],
     config: RunnableConfig,
-) -> str:
-    # Write doc string to explain the function to llm. tool is used to fetch whole file
+):
     """
-    Fetch the content of a file using its ID.
-    This tool retrieves the content of a file based on its unique identifier.
-    It is used to access files stored in the system, such as documents or images.
-    Args:
-        file_id (str): The ID of the file to fetch.
+    Fetches the complete content of a file from the database using its unique file ID.
+
+    This tool retrieves the entire document content from the database, rather than
+    just searching for relevant sections. It accesses files stored in MongoDB that
+    were previously uploaded by the user.
+
+    Use this tool if:
+    - You need to read or analyze an entire document
+    - The user asks to see the full contents of a specific file
+    - You need comprehensive context from a document for detailed analysis
+    - The file's complete information is required for understanding or response
+
+    Avoid using this tool if:
+    - You only need specific information from a document (use query_file instead)
+    - The user hasn't mentioned a specific file to retrieve
+    - You can answer the user's question without accessing the full document
+
+    The function handles various document storage formats (string, list, dictionary)
+    and returns content in markdown format when possible.
+
+    Examples:
+    - ✅ "Show me my resume file" (retrieve the entire resume)
+    - ✅ "What's in the project scope document?" (retrieve full document)
+    - ❌ "What was the budget mentioned in the finance report?" (use query_file)
+    - ❌ "Find information about X in my documents" (use query_file)
+
     Returns:
-        str: The content of the file.
+        str: The complete document content in markdown format, or an error message
+             if the document is not found or has an invalid format.
     """
     try:
         configurable = config.get("configurable")
@@ -34,7 +55,7 @@ async def fetch_file(
             raise ValueError("Configurable is not set in the config.")
 
         document = await files_collection.find_one(
-            filter={"_id": file_id, "user_id": configurable["user_id"]},
+            filter={"fileId": file_id, "user_id": configurable["user_id"]},
         )
 
         if not document:
@@ -68,18 +89,42 @@ async def query_file(
         str,
         "The query to ask about the file.",
     ],
+    file_id: Annotated[
+        Optional[str],
+        "The ID of the file to query. If not provided, it will search all files.",
+    ],
     config: RunnableConfig,
-) -> str:
-    # Write doc string to explain the function to llm. tool is used to fetch whole file
+):
     """
-    Query a file using its ID and a specific question.
-    This tool retrieves the content of a file based on its unique identifier
-    and allows the user to ask questions about the file's content.
-    Args:
-        file_id (str): The ID of the file to query.
-        query (str): The question to ask about the file.
+    Queries a file or multiple files based on the provided query string and file ID.
+
+    This tool performs a semantic search to find relevant information within documents
+    based on your query. It uses vector similarity to identify the most appropriate
+    sections of documents that match your question.
+
+    Use this tool if:
+    - You need specific information from one or more documents
+    - You want to ask a question about the content of a file
+    - You need to find relevant sections rather than reading an entire document
+    - You're looking for similar information across multiple files
+
+    Avoid using this tool if:
+    - You need to see the complete content of a document (use fetch_file instead)
+    - You want general information not contained in any of the user's files
+    - The user hasn't provided enough context about what they're searching for
+
+    The tool can search within a specific file (if file_id is provided) or across
+    all files associated with the user's conversation.
+
+    Examples:
+    - ✅ "What's the budget for Q3 in my finance document?" (specific information)
+    - ✅ "Find all mentions of project timelines in my files" (search across files)
+    - ❌ "Show me my entire resume" (use fetch_file instead)
+    - ❌ "Tell me about this file" (too vague, needs more specific query)
+
     Returns:
-        str: The answer to the query based on the file's content.
+        str: A formatted response containing relevant sections from the documents
+             that match the query, or an error message if no matches are found.
     """
     try:
         configurable = config.get("configurable")
@@ -93,19 +138,26 @@ async def query_file(
         similar_documents = await _get_similar_documents(
             query=query,
             conversation_id=conversation_id,
+            file_id=file_id,
             user_id=configurable["user_id"],
         )
+
+        logger.info(f"Similar documents found: {similar_documents}")
 
         document_ids = list(
             set([document["file_id"] for document in similar_documents])
         )
 
+        logger.info(f"Document IDs: {document_ids}")
+
         documents = await files_collection.find(
             filter={
-                "_id": {"$in": document_ids},
+                "fileId": {"$in": document_ids},
                 "user_id": configurable["user_id"],
             },
         ).to_list(length=None)
+
+        logger.info(f"Documents found: {documents}")
 
         return _construct_content(
             documents=documents,
@@ -118,8 +170,27 @@ async def query_file(
 
 
 async def _get_similar_documents(
-    query: str, conversation_id: str, user_id: str
+    query: str,
+    conversation_id: str,
+    user_id: str,
+    file_id: Optional[str] = None,
 ) -> list:
+    """
+    Helper function to retrieve documents similar to the query from ChromaDB.
+
+    This function performs a semantic similarity search within ChromaDB to find documents
+    that match the provided query. It uses filters to limit results to the user's documents
+    and specific conversation context.
+
+    Args:
+        query: The search query string to find similar documents
+        conversation_id: The ID of the current conversation to filter documents
+        user_id: The ID of the user who owns the documents
+        file_id: Optional file ID to limit search to a specific file
+
+    Returns:
+        list: List of similar documents with their metadata and similarity scores
+    """
     chroma_documents_collection = await ChromaClient.get_langchain_client(
         collection_name="documents"
     )
@@ -128,17 +199,39 @@ async def _get_similar_documents(
         logger.error("ChromaDB client is not available.")
         return []
 
-    return await chroma_documents_collection.asimilarity_search(
+    filters = {
+        "$and": [
+            {"user_id": user_id},
+            {"conversation_id": conversation_id},
+        ]
+    }
+
+    if file_id:
+        filters["$and"].append({"file_id": file_id})
+
+    return await chroma_documents_collection.asimilarity_search_with_score(
         query=query,
-        where={
-            "conversation_id": conversation_id,
-            "user_id": user_id,
-        },
-        limit=5,
+        filter=filters,
+        k=5,
     )
 
 
 def _construct_content(documents: list, similar_documents: list) -> str:
+    """
+    Helper function to construct a formatted response from similar documents.
+
+    This function takes the document metadata from MongoDB and similar document sections
+    from ChromaDB to build a human-readable response. It handles different document formats
+    and extracts the relevant content, organizing it by document ID and page number.
+
+    Args:
+        documents: List of document metadata from MongoDB
+        similar_documents: List of similar document sections from ChromaDB with similarity scores
+
+    Returns:
+        str: Formatted content string containing relevant document sections with proper
+             attribution and structure for easy reading
+    """
     content = ""
 
     for similar_document in similar_documents:
@@ -172,5 +265,7 @@ def _construct_content(documents: list, similar_documents: list) -> str:
             )
             content += f"Document ID: {document_id}\n"
             content += "Description: Invalid format\n\n"
+
+    logger.info(f"Constructed content: {content}")
 
     return content

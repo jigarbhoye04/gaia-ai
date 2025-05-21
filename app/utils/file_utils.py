@@ -30,7 +30,7 @@ class DocumentProcessor:
 
     async def process_file(
         self, file_content: bytes, content_type: str, filename: str
-    ) -> Union[str, DocumentSummaryModel, List[DocumentSummaryModel]]:
+    ) -> Union[str, List[DocumentSummaryModel]]:
         """
         Process and summarize a file based on its content type.
 
@@ -226,9 +226,9 @@ class DocumentProcessor:
 
 
 # Function to implement file description generation interface compatible with existing code
-async def generate_file_description(
+async def generate_file_summary(
     file_content: bytes, content_type: str, filename: str
-) -> Union[str, DocumentSummaryModel, List[DocumentSummaryModel]]:
+) -> Union[str, List[DocumentSummaryModel]]:
     """
     Generate a description for a file based on its content type.
     Compatible with existing code interface.

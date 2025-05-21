@@ -9,6 +9,7 @@ from app.langchain.agent import call_agent
 from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import MessageRequestWithHistory
 from app.services.conversation_service import update_messages
+from app.services.file_service import get_files
 from app.utils.chat_utils import create_conversation
 
 
@@ -32,9 +33,14 @@ async def chat_stream(
     if init_chunk:  # Return the conversation id and metadata if new convo
         yield init_chunk
 
-    print("body", body)
+    logger.info(
+        f"User {user.get('user_id')} started a conversation with ID {conversation_id}"
+    )
+    logger.info(
+        f"User {user.get('user_id')} sent a message: {body.messages[-1]['content']}"
+    )
+    logger.info(f"Files: {body.fileIds}")
 
-    # TODO: FETCH NOTES AND FILES AND USE THEM
     # Stream response from the agent
     async for chunk in call_agent(
         request=body,
@@ -149,9 +155,18 @@ async def initialize_conversation(
             )
         }\n\n"""
 
-    print("body", body)
+        return conversation_id, init_chunk
 
-    # TODO: FETCH NOTES AND FILES AND USE THEM
+    # Load files and old messages if conversation_id is provided
+    uploaded_files = await get_files(
+        user_id=user.get("user_id"),
+        conversation_id=conversation_id,
+    )
+
+    if uploaded_files:
+        body.fileData = uploaded_files
+        body.fileIds = [file.fileId for file in uploaded_files]
+
     return conversation_id, init_chunk
 
 

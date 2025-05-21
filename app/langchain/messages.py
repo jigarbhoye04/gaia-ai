@@ -1,20 +1,29 @@
 from datetime import datetime, timezone
 from typing import List
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, AnyMessage
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.models.message_models import MessageDict
+from app.models.message_models import FileData, MessageDict
 from app.services.file_service import fetch_files
 
 
 def construct_langchain_messages(
     messages: List[MessageDict],
+    files_data: List[FileData] | None = None,
 ) -> List[AnyMessage]:
     """Convert raw dict messages to LangChain message objects with current datetime."""
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
 
-    system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
+    files_str = (
+        "\n".join(f"- Name:{file.filename} Id:{file.fileId}" for file in files_data)
+        if files_data
+        else "No files uploaded."
+    )
+
+    system_prompt = AGENT_PROMPT_TEMPLATE.format(
+        current_datetime=formatted_time, files=files_str
+    )
     chain_msgs: List[AnyMessage] = [SystemMessage(system_prompt)]
 
     for msg in messages:

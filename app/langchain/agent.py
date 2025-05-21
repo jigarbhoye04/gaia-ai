@@ -21,7 +21,7 @@ async def call_agent(
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""
-    history = construct_langchain_messages(messages)
+    history = construct_langchain_messages(messages, files_data=request.fileData)
 
     initial_state = {
         "query": request.message,

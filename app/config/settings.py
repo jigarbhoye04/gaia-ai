@@ -111,6 +111,7 @@ class Settings(BaseSettings):
 
     # Miscellaneous
     LLAMA_INDEX_KEY: str
+    OPENAI_API_KEY: str
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:

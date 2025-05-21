@@ -14,9 +14,10 @@ from app.langchain.tools import (
 )
 
 # GROQ_MODEL = "llama-3.1-8b-instant"
-# GROQ_MODEL = "llama-3.3-70b-versatile"
-GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+GROQ_MODEL = "llama-3.3-70b-versatile"
+# GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+OPENAI_MODEL = "gpt-4o"
 
 tools = [
     webpage_tool.fetch_webpages,
@@ -42,6 +43,11 @@ def init_groq_client():
             max_tokens=2048,
             streaming=True,
         )
+        # return ChatOpenAI(
+        #     model=OPENAI_MODEL,
+        #     temperature=0.6,
+        #     streaming=True,
+        # )
 
     llm_with_tools = create_llm().bind_tools(tools=tools)
     llm_without_tools = create_llm()

@@ -16,13 +16,20 @@ from langchain_core.documents import Document
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import ChromaClient
 from app.db.collections import files_collection
+from app.db.redis import Cacheable, CacheInvalidator
 from app.db.utils import serialize_document
 from app.models.files_models import DocumentSummaryModel
 from app.models.message_models import FileData
-from app.utils.embedding_utils import generate_embedding, search_documents_by_similarity
-from app.utils.file_utils import generate_file_description
+from app.utils.embedding_utils import search_documents_by_similarity
+from app.utils.file_utils import generate_file_summary
 
 
+@CacheInvalidator(
+    key_patterns=[
+        "files:{user_id}:{conversation_id}",
+        "files:{user_id}:all",
+    ]
+)
 async def upload_file_service(
     file: UploadFile,
     user_id: str,
@@ -60,7 +67,7 @@ async def upload_file_service(
 
     # TODO: Remove this line after testing
     if not conversation_id:
-        conversation_id = "1aaae74f-8496-4ad2-8146-5534d1696082"
+        conversation_id = "0682de20-6e71-75ae-8000-a496c9144cf7"
 
     try:
         # Read file content once
@@ -74,8 +81,8 @@ async def upload_file_service(
             )
 
         # Start file description generation and upload in parallel
-        description_task = asyncio.create_task(
-            generate_file_description(
+        summary_task = asyncio.create_task(
+            generate_file_summary(
                 file_content=content,
                 content_type=file.content_type,
                 filename=file.filename,
@@ -100,12 +107,10 @@ async def upload_file_service(
         logger.info(f"File uploaded to Cloudinary: {file_url}")
 
         # Wait for description generation to complete
-        file_description = await description_task
+        file_summary = await summary_task
 
         # Process file description
-        encoded_file_description, md_description = _process_file_description(
-            file_description
-        )
+        summary, page_wise_summary = _process_file_summary(file_summary)
 
         # Create metadata object
         current_time = datetime.now(timezone.utc)
@@ -117,15 +122,16 @@ async def upload_file_service(
             "url": file_url,
             "public_id": public_id,
             "user_id": user_id,
-            "description": encoded_file_description,
+            "description": summary,
+            "page_wise_summary": page_wise_summary,
             "created_at": current_time,
             "updated_at": current_time,
         }
 
         if conversation_id:
-            file_metadata["conversation_id"] = conversation_id
-
-        # Store in MongoDB and ChromaDB concurrently
+            file_metadata["conversation_id"] = (
+                conversation_id  # Store in MongoDB and ChromaDB concurrently
+            )
         await asyncio.gather(
             _store_in_mongodb(file_metadata),
             _store_in_chromadb(
@@ -134,9 +140,9 @@ async def upload_file_service(
                 filename=file.filename,
                 content_type=file.content_type,
                 conversation_id=conversation_id,
-                file_description=file_description,
+                file_description=file_summary,
             ),
-        )
+        )  # Cache invalidation handled by the CacheInvalidator decorator
 
         logger.info(f"File uploaded successfully. ID: {file_id}, URL: {file_url}")
 
@@ -144,7 +150,7 @@ async def upload_file_service(
             "fileId": file_id,
             "url": file_url,
             "filename": file.filename,
-            "description": md_description,
+            "description": summary,
             "type": file.content_type,
         }
 
@@ -156,21 +162,19 @@ async def upload_file_service(
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
 
-def _process_file_description(
-    file_description: str | DocumentSummaryModel | list[DocumentSummaryModel],
+def _process_file_summary(
+    file_summary: str | list[DocumentSummaryModel],
 ) -> tuple:
     """Helper function to process file description into the correct format."""
-    if isinstance(file_description, str):
-        return file_description, file_description
-    elif isinstance(file_description, DocumentSummaryModel):
-        return file_description.model_dump(mode="json"), file_description.data.md
-    elif isinstance(file_description, list):
+    if isinstance(file_summary, str):
+        return file_summary, None
+    elif isinstance(file_summary, list):
         content_str = ""
         content_model = []
-        for x in file_description:
+        for x in file_summary:
             content_model.append(x.model_dump(mode="json"))
-            content_str += x.data.md
-        return content_model, content_str
+            content_str += x.summary
+        return content_str, content_model
     else:
         logger.error("Invalid file description format")
         raise HTTPException(status_code=400, detail="Invalid file description format")
@@ -257,6 +261,47 @@ async def _store_in_chromadb(
         )
 
 
+async def update_file_in_chromadb(
+    file_id: str,
+    user_id: str,
+    filename: str,
+    content_type: str,
+    file_description,
+    conversation_id: Optional[str] = None,
+) -> None:
+    """Helper function to update file data in ChromaDB."""
+    try:
+        # First try to delete the existing records
+        try:
+            chroma_documents_collection = await ChromaClient.get_langchain_client(
+                collection_name="documents"
+            )
+            await chroma_documents_collection.adelete(ids=[file_id])
+            logger.info(f"Removed old file data for {file_id} from ChromaDB")
+        except Exception as delete_err:
+            # Just log and continue with the new insertion
+            logger.warning(
+                f"Could not delete old file data from ChromaDB: {str(delete_err)}"
+            )
+
+        # Now store the updated file data
+        await _store_in_chromadb(
+            file_id=file_id,
+            user_id=user_id,
+            filename=filename,
+            content_type=content_type,
+            file_description=file_description,
+            conversation_id=conversation_id,
+        )
+
+    except Exception as chroma_err:
+        # Log but don't fail if ChromaDB update fails
+        logger.error(
+            f"Failed to update file in ChromaDB: {str(chroma_err)}",
+            exc_info=True,
+        )
+
+
 async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
     """
     Fetch file data based on fileIds in the request, perform RAG with vector search,
@@ -318,7 +363,7 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
                             "file_id": file_data["fileId"],
                             "url": file_data["url"],
                             "filename": file_data["filename"],
-                            "description": file_data.get("description", ""),
+                            "description": file_data.get("deskcription", ""),
                             "content_type": file_data.get("content_type", ""),
                             "_id": file_data[
                                 "fileId"
@@ -454,6 +499,12 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
     return context
 
 
+@CacheInvalidator(
+    key_patterns=[
+        "files:{user_id}:*",
+        "files:{user_id}:all",
+    ]
+)
 async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
     """
     Delete a file by its ID for the specified user.
@@ -481,7 +532,9 @@ async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
     )
     if not file_data:
         logger.error(f"File with id {file_id} not found for user {user_id}")
-        raise HTTPException(status_code=404, detail="File not found")
+        raise HTTPException(
+            status_code=404, detail="File not found"
+        )  # Get the conversation_id for cache invalidation
 
     # Get the public_id for cloudinary deletion
     public_id = file_data.get("public_id")
@@ -518,6 +571,7 @@ async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
         # Log the error but don't fail the request if ChromaDB deletion fails
         logger.error(f"Failed to delete file from ChromaDB: {str(e)}")
 
+    # Cache invalidation is handled by the CacheInvalidator decorator
     logger.info(f"File {file_id} successfully deleted")
 
     return {
@@ -527,17 +581,29 @@ async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
     }
 
 
+@CacheInvalidator(
+    key_patterns=[
+        "files:{user_id}:{conversation_id}",
+        "files:{user_id}:all",
+    ]
+)
 async def update_file_service(
-    file_id: str, user_id: str, update_data: dict, chromadb_client=None
+    file_id: str,
+    user_id: str,
+    update_data: dict,
+    file_content: Optional[bytes] = None,
+    conversation_id: Optional[str] = None,
 ) -> dict:
     """
-    Update file metadata and optionally refresh the ChromaDB embedding.
+    Update file metadata and optionally regenerate description if file content is provided.
+    The function refreshes ChromaDB embedding and invalidates related caches.
 
     Args:
         file_id (str): The ID of the file to update
         user_id (str): The ID of the authenticated user
         update_data (dict): The file data to update
-        chromadb_client: The ChromaDB client instance
+        file_content (bytes, optional): The new file content to process for description
+        conversation_id (str, optional): The conversation ID to associate with the file
 
     Returns:
         dict: Updated file metadata
@@ -555,9 +621,39 @@ async def update_file_service(
         logger.error(f"File with id {file_id} not found for user {user_id}")
         raise HTTPException(status_code=404, detail="File not found")
 
+    # Store original conversation ID if not provided in update
+    if not conversation_id:
+        conversation_id = file_data.get("conversation_id")
+
     # Prepare update data
     current_time = datetime.now(timezone.utc)
     update_data["updated_at"] = current_time
+
+    # Generate new description if file content is provided
+    if file_content:
+        try:
+            # Use the same file description generator as upload_file_service
+            content_type = update_data.get("type") or file_data.get("type")
+            filename = update_data.get("filename") or file_data.get("filename")
+
+            file_description = await generate_file_summary(
+                file_content=file_content,
+                content_type=content_type,
+                filename=filename,
+            )
+
+            # Process file description
+            summary, page_wise_summary = _process_file_summary(file_description)
+
+            update_data["description"] = summary
+            update_data["page_wise_summary"] = page_wise_summary
+        except Exception as e:
+            logger.error(
+                f"Failed to generate file description: {str(e)}", exc_info=True
+            )
+            raise HTTPException(
+                status_code=500, detail=f"Failed to process file: {str(e)}"
+            )
 
     # Check if description is being updated
     description_updated = "description" in update_data
@@ -578,50 +674,26 @@ async def update_file_service(
         logger.error(f"Updated file {file_id} not found")
         raise HTTPException(status_code=404, detail="File not found after update")
 
-    # If description was updated and ChromaDB client is provided, update the embedding
-    if description_updated and chromadb_client:
+    # If description was updated, update ChromaDB
+    if description_updated:
         try:
             # Generate new embedding for the updated description
             new_description = update_data["description"]
-            new_embedding = generate_embedding(new_description)
-
-            # Update embedding in MongoDB
-            await files_collection.update_one(
-                {"file_id": file_id, "user_id": user_id},
-                {"$set": {"embedding": new_embedding}},
-            )
 
             # Update in ChromaDB
-            try:
-                chroma_documents_collection = await chromadb_client.get_collection(
-                    name="documents"
-                )
+            await update_file_in_chromadb(
+                file_id=file_id,
+                user_id=user_id,
+                filename=updated_file.get("filename", ""),
+                content_type=updated_file.get("type", ""),
+                file_description=new_description,
+                conversation_id=conversation_id,
+            )
 
-                # Update the document in ChromaDB
-                await chroma_documents_collection.update(
-                    ids=[file_id],
-                    embeddings=[new_embedding],
-                    documents=[new_description],
-                    metadatas=[
-                        {
-                            "file_id": file_id,
-                            "user_id": user_id,
-                            "filename": updated_file.get("filename", ""),
-                            "type": updated_file.get("type", ""),
-                            "conversation_id": updated_file.get("conversation_id", ""),
-                        }
-                    ],
-                )
-                logger.info(f"File with id {file_id} updated in ChromaDB")
-            except Exception as chroma_err:
-                # Log but don't fail if ChromaDB update fails
-                logger.error(
-                    f"Failed to update file in ChromaDB: {str(chroma_err)}",
-                    exc_info=True,
-                )
-        except Exception as embed_err:
+        except Exception as err:
+            # Log but don't fail if ChromaDB update fails
             logger.error(
-                f"Failed to generate new embedding: {str(embed_err)}", exc_info=True
+                f"Failed to update file in ChromaDB: {str(err)}", exc_info=True
             )
 
     # Convert ObjectId to string for serialization
@@ -636,3 +708,62 @@ async def update_file_service(
             updated_file[date_field] = updated_file[date_field].isoformat()
 
     return serialize_document(updated_file)
+
+
+@Cacheable(
+    key_pattern="files:{user_id}:{conversation_id}",
+    ttl=86400,  # 24 hours
+    serializer=lambda files: [file.model_dump(mode="json") for file in files],
+    deserializer=lambda files: [FileData(**file) for file in files],
+)
+async def get_files(
+    user_id: str,
+    conversation_id: Optional[str] = None,
+) -> List[FileData]:
+    """
+    Retrieve files for a specific user and optionally filter by conversation ID.
+
+    Args:
+        user_id (str): The ID of the user
+        conversation_id (Optional[str]): The conversation ID to filter by
+        use_cache (bool): Whether to use cache or force a database query
+
+    Returns:
+        List[FileData]: A list of file data objects
+    """
+    # If conversation_id is None, fetch all files for the user
+    if conversation_id:
+        query = {"user_id": user_id, "conversation_id": conversation_id}
+    else:
+        query = {"user_id": user_id}
+
+    # Cache miss or cache disabled, fetch from database
+    logger.info(
+        f"Fetching files from database for user: {user_id}"
+        + (f", conversation: {conversation_id}" if conversation_id else "")
+    )
+
+    files = await files_collection.find(query).to_list(length=None)
+
+    # Convert ObjectId to string for serialization
+    return [serialize_file(file) for file in files]
+
+
+def serialize_file(file: dict) -> FileData:
+    """
+    Serialize a file document to a FileData object.
+
+    Args:
+        file (dict): The file document to serialize
+
+    Returns:
+        FileData: The serialized file data object
+    """
+    return FileData(
+        fileId=file["file_id"],
+        filename=file["filename"],
+        description=file.get("description", ""),
+        url=file["url"],
+        type=file["type"],
+        message=file.get("message", ""),
+    )
