@@ -62,6 +62,31 @@ uvx ruff check
 pre-commit run --all-files
 ```
 
+## Streaming and Tool Data Persistence
+
+### Email Compose Data Issue (Fixed)
+- **Problem**: Email compose components were visible during streaming but disappeared after stream completion
+- **Root Cause**: Email data wasn't being extracted and stored in backend like other tool outputs (calendar, weather, etc.)
+- **Fix Applied**:
+  1. Added email data extraction in `chat_service.py:extract_tool_data()` function
+  2. Updated frontend `useChatStream.ts:handleStreamClose()` to preserve email data when stream ends
+- **Files Modified**:
+  - `/app/services/chat_service.py` - Added email compose data extraction
+  - Frontend: `/src/hooks/useChatStream.ts` - Preserved tool data on stream close
+
+### Tool Data Flow
+1. LLM generates tool response → `sse_utils.py:format_tool_response()` formats for streaming
+2. During streaming → `chat_service.py:extract_tool_data()` extracts structured data
+3. Stream ends → `chat_service.py:update_conversation_messages()` saves to database
+4. Frontend preserves tool data in `useChatStream.ts:handleStreamClose()`
+
+### Adding New Tool Data Types
+To add a new tool data type (similar to email/calendar):
+1. Add formatting in `sse_utils.py:format_tool_response()`
+2. Add extraction in `chat_service.py:extract_tool_data()`
+3. Add frontend parsing in `useStreamDataParser.ts:parseStreamData()`
+4. Add preservation in `useChatStream.ts:handleStreamClose()`
+
 ## Architecture Overview
 
 ### Application Structure

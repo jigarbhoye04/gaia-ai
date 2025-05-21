@@ -119,6 +119,15 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
             tool_data["intent"] = "generate_image"
             tool_data["image_data"] = data["image_data"]
 
+        # Extract email compose data
+        elif (
+            "intent" in data
+            and data["intent"] == "email"
+            and "email_compose_data" in data
+        ):
+            tool_data["intent"] = "email"
+            tool_data["email_compose_data"] = data["email_compose_data"]
+
         return tool_data
     except json.JSONDecodeError:
         return {}
