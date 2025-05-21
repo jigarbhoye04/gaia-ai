@@ -1,6 +1,15 @@
 import { MessageType } from "@/types/convoTypes";
 
-export function parseStreamData(streamChunk: any): Partial<MessageType> {
+type StreamChunk = Partial<MessageType> & {
+  searchWeb?: boolean;
+  deepSearchWeb?: boolean;
+  pageFetchURLs?: string[];
+  disclaimer?: string;
+};
+
+export function parseStreamData(
+  streamChunk: StreamChunk,
+): Partial<MessageType> {
   if (!streamChunk) {
     return {};
   }

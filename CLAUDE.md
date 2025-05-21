@@ -97,6 +97,38 @@ GAIA (General Purpose AI Assistant) is an advanced personal AI assistant built w
 - **ApiService** - Service for handling API requests
 - **Redux Slices** - Define global state and reducers
 
+### Streaming and Tool Data Persistence
+
+#### Email Compose Data Issue (Fixed)
+- **Problem**: Email compose components were visible during streaming but disappeared after stream completion
+- **Root Cause**: Frontend wasn't preserving email data when stream ended
+- **Fix Applied**: Updated `useChatStream.ts:handleStreamClose()` to explicitly preserve all tool data
+- **Files Modified**: `/src/hooks/useChatStream.ts` - Added preservation of email_compose_data and other tool outputs
+
+#### Tool Data Flow in Frontend
+1. Stream data received → `useChatStream.ts:handleStreamEvent()` processes chunks
+2. Tool data parsed → `useStreamDataParser.ts:parseStreamData()` extracts structured data
+3. Stream ends → `useChatStream.ts:handleStreamClose()` preserves all tool data in final message
+4. Components render → `TextBubble.tsx` conditionally renders tool-specific components
+
+#### Adding New Tool Components
+To add a new tool component (similar to EmailComposeSection):
+1. Create component in `/components/Chat/ChatBubbles/Bot/`
+2. Add parsing logic in `useStreamDataParser.ts:parseStreamData()`  
+3. Add preservation logic in `useChatStream.ts:handleStreamClose()`
+4. Add conditional rendering in `TextBubble.tsx`
+
+#### Stream Data Preservation Pattern
+```typescript
+// In handleStreamClose(), always preserve existing tool data:
+updateBotMessage({
+  loading: false,
+  ...(refs.current.botMessage.tool_data && {
+    tool_data: refs.current.botMessage.tool_data
+  })
+});
+```
+
 ## Working with the Codebase
 
 When making changes:

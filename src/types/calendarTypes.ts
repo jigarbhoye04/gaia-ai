@@ -95,6 +95,7 @@ export interface BaseEvent {
   organizer?: {
     email?: string;
   };
+  is_all_day?: boolean;
 }
 
 export interface TimedEvent extends BaseEvent {

@@ -76,16 +76,25 @@ export default function CalendarModal() {
       return;
     }
 
-    if (!isTimedEvent(editedEvent)) {
-      dispatch(setError("Real events require start and end times"));
-      return;
-    }
+    // Special handling for all-day events
+    const isAllDay = Boolean(editedEvent.is_all_day);
 
     try {
-      await apiauth.post("/calendar/event", {
+      const eventPayload = {
         ...editedEvent,
-        fixedTime: true,
-      });
+        is_all_day: isAllDay,
+        fixedTime: !isAllDay,
+      };
+
+      // For all-day events, we don't need to send start and end
+      if (isAllDay && !isTimedEvent(editedEvent)) {
+        // Keep only the necessary fields
+        const { start, end, ...eventWithoutTimes } = eventPayload;
+        await apiauth.post("/calendar/event", eventWithoutTimes);
+      } else {
+        // For time-specific events, include start and end
+        await apiauth.post("/calendar/event", eventPayload);
+      }
 
       toast.success("Event updated and added to calendar!", {
         description: editedEvent.description,
@@ -185,7 +194,30 @@ export default function CalendarModal() {
             value={editedEvent.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
           />
-          {isTimedEvent(editedEvent) && (
+
+          <div className="mb-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isAllDay"
+                className="h-4 w-4 rounded border-zinc-700 bg-zinc-800"
+                checked={Boolean(editedEvent.is_all_day)}
+                onChange={(e) => {
+                  dispatch(
+                    updateEditedEvent({
+                      ...editedEvent,
+                      is_all_day: e.target.checked,
+                    }),
+                  );
+                }}
+              />
+              <label htmlFor="isAllDay" className="text-sm">
+                All-day event
+              </label>
+            </div>
+          </div>
+
+          {!editedEvent.is_all_day && isTimedEvent(editedEvent) && (
             <>
               <div className="flex w-full justify-evenly gap-2">
                 <div className="flex w-full flex-col gap-1">

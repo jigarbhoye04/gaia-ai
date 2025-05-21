@@ -99,10 +99,22 @@ export const useChatStream = () => {
       return;
     }
 
-    refs.current.accumulatedResponse += data.response || "\n";
+    // Add to the accumulated response if there's new response content
+    if (data.response) {
+      refs.current.accumulatedResponse += data.response;
+    }
 
     // Parse only the data that's actually present in this stream chunk
     const streamUpdates = parseStreamData(data);
+
+    // Keep the existing email_compose_data if we're not receiving a new one
+    if (
+      refs.current.botMessage?.email_compose_data &&
+      !streamUpdates.email_compose_data
+    ) {
+      streamUpdates.email_compose_data =
+        refs.current.botMessage.email_compose_data;
+    }
 
     updateBotMessage({
       ...streamUpdates,
@@ -113,7 +125,32 @@ export const useChatStream = () => {
   const handleStreamClose = async () => {
     if (!refs.current.botMessage) return;
 
-    updateBotMessage({ loading: false });
+    // Preserve all existing data when marking as complete
+    updateBotMessage({ 
+      loading: false,
+      // Explicitly preserve email_compose_data and other tool data
+      ...(refs.current.botMessage.email_compose_data && {
+        email_compose_data: refs.current.botMessage.email_compose_data
+      }),
+      ...(refs.current.botMessage.calendar_options && {
+        calendar_options: refs.current.botMessage.calendar_options
+      }),
+      ...(refs.current.botMessage.weather_data && {
+        weather_data: refs.current.botMessage.weather_data
+      }),
+      ...(refs.current.botMessage.search_results && {
+        search_results: refs.current.botMessage.search_results
+      }),
+      ...(refs.current.botMessage.deep_search_results && {
+        deep_search_results: refs.current.botMessage.deep_search_results
+      }),
+      ...(refs.current.botMessage.image_data && {
+        image_data: refs.current.botMessage.image_data
+      }),
+      ...(refs.current.botMessage.intent && {
+        intent: refs.current.botMessage.intent
+      })
+    });
     setIsLoading(false);
     resetLoadingText();
 
