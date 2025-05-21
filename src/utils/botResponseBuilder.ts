@@ -18,5 +18,7 @@ export const buildBotResponse = (
   date: fetchDate(),
   intent: finalIntent.intent,
   calendar_options: finalIntent.calendar_options,
+  email_compose_data: finalIntent.email_compose_data,
+  weather_data: finalIntent.weather_data,
   ...overrides,
 });

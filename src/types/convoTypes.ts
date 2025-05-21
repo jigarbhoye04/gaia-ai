@@ -30,6 +30,7 @@ export type MessageType = {
   fileData?: FileData[];
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
@@ -41,6 +42,13 @@ export type CalendarOptions = {
   description: string | undefined;
   start: string | undefined;
   end: string | undefined;
+};
+
+// Email compose data structure for email intent
+export type EmailComposeData = {
+  to: string[];
+  subject: string;
+  body: string;
 };
 
 // Weather data structure for weather intent
@@ -115,6 +123,7 @@ export type ConversationType = {
 export interface IntentType {
   intent: string | undefined;
   calendar_options?: CalendarOptions[] | null;
+  email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
 }
 

@@ -12,8 +12,8 @@ import { ApiService } from "@/services/apiService";
 import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
-import { parseIntent } from "./useIntentParser";
 import { useLoadingText } from "./useLoadingText";
+import { parseStreamData } from "./useStreamDataParser";
 
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
@@ -47,10 +47,15 @@ export const useChatStream = () => {
       deepSearchWeb: false,
       date: fetchDate(),
       loading: true,
-      ...overrides,
     };
 
-    refs.current.botMessage = { ...baseMessage, ...overrides };
+    // Preserve existing data and merge with new overrides
+    refs.current.botMessage = {
+      ...baseMessage,
+      ...refs.current.botMessage, // Keep existing data
+      ...overrides, // Apply new updates
+    };
+
     const currentConvo = [...refs.current.convoMessages];
 
     if (
@@ -95,8 +100,12 @@ export const useChatStream = () => {
     }
 
     refs.current.accumulatedResponse += data.response || "\n";
+
+    // Parse only the data that's actually present in this stream chunk
+    const streamUpdates = parseStreamData(data);
+
     updateBotMessage({
-      ...parseIntent(data),
+      ...streamUpdates,
       response: refs.current.accumulatedResponse,
     });
   };

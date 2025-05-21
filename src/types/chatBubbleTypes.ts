@@ -5,6 +5,7 @@ import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 import {
   CalendarOptions,
   DeepSearchResults,
+  EmailComposeData,
   ImageData,
   SearchResults,
   WeatherData,
@@ -46,6 +47,7 @@ export interface ChatBubbleBotProps {
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
