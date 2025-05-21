@@ -119,9 +119,7 @@ COMPOSE_EMAIL = """
     - When user wants to save time on routine correspondence
     - When user provides a partial draft that needs improvement
 
-    Before calling this tool:
-    - If the recipient's email address is not provided or unclear,
-      first call the GET_GMAIL_CONTACTS tool to fetch possible recipients.
+    Note: The tool independently handles recipient email resolution.
     """
 
 
@@ -553,20 +551,21 @@ SEND_EMAIL_DRAFT = """
     """
 
 GET_GMAIL_CONTACTS = """
-    Get a list of email contacts from Gmail history.
+    Get a list of email contacts from Gmail history based on a search query.
 
-    This tool extracts a unique list of contacts (email addresses and names) from the user's
-    Gmail message history, making it easy to find people you've previously communicated with.
+    This tool searches through Gmail messages and extracts unique contacts (email addresses
+    and names) from people you've previously communicated with.
 
     When to use:
-    - When user wants to find email addresses of people they've corresponded with
-    - When composing new emails to previous contacts
+    - When user wants to find email addresses of specific people
+    - When user mentions names but needs their email addresses
     - When creating contact lists or groups
     - When user needs to remember someone's email address
-    - When implementing autocomplete features for email composition
+    - When searching for people by name or email
 
     Input:
-    - max_results: Optional, maximum number of messages to analyze (default: 100)
+    - query: Search query to filter contacts (e.g., name, email, or keywords)
+    - max_results: Optional, maximum number of messages to analyze (default: 30)
 
     Output:
     - Dictionary with "contacts" containing list of contact objects with:
@@ -574,6 +573,6 @@ GET_GMAIL_CONTACTS = """
       - email: The contact's email address
     - Error message if operation fails
 
-    Limitations: Only extracts contacts from message headers, not from message bodies.
-    Quality depends on the format of email addresses in headers.
+    Limitations: Only extracts contacts from message headers based on search results.
+    Quality depends on the format of email addresses in headers and search effectiveness.
     """

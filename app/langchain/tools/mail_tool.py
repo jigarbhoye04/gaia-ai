@@ -324,21 +324,41 @@ async def summarize_email(
 @tool
 @with_doc(COMPOSE_EMAIL)
 async def compose_email(
+    config: RunnableConfig,
     body: Annotated[str, "Body content of the email"],
     subject: Annotated[str, "Subject line for the email"],
-    to_email: Annotated[
-        Optional[List[str]],
-        "List of recipient email addresses fetched from the get_gmail_contacts tool",
+    recipient_query: Annotated[
+        Optional[str],
+        "Name or partial information about the recipient to search for their email address. Leave empty if no recipient information is provided.",
     ] = None,
 ) -> Dict[str, Any]:
     try:
+        resolved_emails = []
+        
+        # If recipient_query is provided, try to resolve contact emails
+        if recipient_query and recipient_query.strip():
+            try:
+                # Ensure config is valid and has proper structure for contact resolution
+                if not config or not hasattr(config, 'get'):
+                    logger.warning(f"Invalid config for contact resolution: {type(config)}. Skipping contact resolution.")
+                    resolved_emails = []
+                else:
+                    contacts_result = await get_contacts(config, recipient_query)
+                    logger.info(f"{contacts_result=}")
+                    if isinstance(contacts_result, dict) and contacts_result.get("success") and contacts_result.get("contacts"):
+                        resolved_emails = [contact["email"] for contact in contacts_result["contacts"]]
+                    logger.info(f"Resolved emails: {resolved_emails}")
+            except Exception as contact_error:
+                logger.warning(f"Failed to resolve contacts for '{recipient_query}': {contact_error}")
+                # Continue with empty resolved_emails if contact resolution fails
+        
         return {
-            "email_compose": {
-                "to": to_email,
+            "email_compose_data": {
+                "to": resolved_emails if resolved_emails else [],
                 "subject": subject,
                 "body": body,
             },
-            "instructions": "Just tell the user that here's their email and tell them what the email is about. The actual email will be sent with a generated button click by the user on the frontend.",
+            "instructions": "Just tell the user that here's their email and summarise the gist of it. The actual email will be sent with a generated button click by the user on the frontend.",
         }
     except Exception as e:
         error_msg = f"Error composing email: {str(e)}"
@@ -741,225 +761,9 @@ async def remove_labels_from_emails(
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
 
-
-@tool
-@with_doc(CREATE_EMAIL_DRAFT)
-async def create_email_draft(
-    config: RunnableConfig,
-    to: Annotated[List[str], "List of recipient email addresses"],
-    subject: Annotated[str, "Email subject"],
-    body: Annotated[str, "Email body/content"],
-    cc: Annotated[Optional[List[str]], "List of CC recipients"] = None,
-    bcc: Annotated[Optional[List[str]], "List of BCC recipients"] = None,
-    is_html: Annotated[
-        Optional[bool], "Whether the body contains HTML formatting"
-    ] = False,
-) -> Dict[str, Any]:
-    try:
-        logger.info(
-            f"Gmail Tool: Creating draft email to {to} with subject '{subject}'"
-        )
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        # Get user's email address
-        profile = service.users().getProfile(userId="me").execute()
-        sender = profile.get("emailAddress")
-
-        draft = create_draft(
-            service,
-            sender=sender,
-            to_list=to,
-            subject=subject,
-            body=body,
-            is_html=bool(is_html),
-            cc_list=cc,
-            bcc_list=bcc,
-        )
-
-        return {"success": True, "draft": draft}
-    except Exception as e:
-        error_msg = f"Error creating email draft: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool
-@with_doc(LIST_EMAIL_DRAFTS)
-async def list_email_drafts(
-    config: RunnableConfig,
-    max_results: Annotated[int, "Maximum number of drafts to fetch (default: 20)"] = 20,
-    page_token: Annotated[Optional[str], "Token for pagination"] = None,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Listing drafts (max: {max_results})")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {"error": "Authentication credentials not provided", "drafts": []}
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        drafts = list_drafts(service, max_results, page_token)
-
-        # Process to minimize data for LLM
-        return process_list_drafts_response(drafts)
-    except Exception as e:
-        error_msg = f"Error listing email drafts: {str(e)}"
-        logger.error(error_msg)
-        return {"error": error_msg, "drafts": []}
-
-
-@tool
-@with_doc(GET_EMAIL_DRAFT)
-async def get_email_draft(
-    draft_id: Annotated[str, "ID of the draft to fetch"],
-    config: RunnableConfig,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Getting draft {draft_id}")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {"error": "Authentication credentials not provided"}
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        draft = get_draft(service, draft_id)
-
-        # Convert to minimal format
-        return {"draft": draft_template(draft)}
-    except Exception as e:
-        error_msg = f"Error getting email draft: {str(e)}"
-        logger.error(error_msg)
-        return {"error": error_msg}
-
-
-@tool
-@with_doc(UPDATE_EMAIL_DRAFT)
-async def update_email_draft(
-    config: RunnableConfig,
-    draft_id: Annotated[str, "ID of the draft to update"],
-    to: Annotated[List[str], "List of recipient email addresses"],
-    subject: Annotated[str, "Email subject"],
-    body: Annotated[str, "Email body/content"],
-    cc: Annotated[Optional[List[str]], "List of CC recipients"] = None,
-    bcc: Annotated[Optional[List[str]], "List of BCC recipients"] = None,
-    is_html: Annotated[
-        Optional[bool], "Whether the body contains HTML formatting"
-    ] = False,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Updating draft {draft_id}")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        # Get user's email address
-        profile = service.users().getProfile(userId="me").execute()
-        sender = profile.get("emailAddress")
-
-        draft = update_draft(
-            service,
-            draft_id=draft_id,
-            sender=sender,
-            to_list=to,
-            subject=subject,
-            body=body,
-            is_html=bool(is_html),
-            cc_list=cc,
-            bcc_list=bcc,
-        )
-
-        return {"success": True, "draft": draft}
-    except Exception as e:
-        error_msg = f"Error updating email draft: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool
-@with_doc(DELETE_EMAIL_DRAFT)
-async def delete_email_draft(
-    draft_id: Annotated[str, "ID of the draft to delete"],
-    config: RunnableConfig,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Deleting draft {draft_id}")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        result = delete_draft(service, draft_id)
-
-        return {"success": result, "draft_id": draft_id}
-    except Exception as e:
-        error_msg = f"Error deleting email draft: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool
-@with_doc(SEND_EMAIL_DRAFT)
-async def send_email_draft(
-    draft_id: Annotated[str, "ID of the draft to send"],
-    config: RunnableConfig,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Sending draft {draft_id}")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        message = send_draft(service, draft_id)
-
-        return {"success": True, "message": message}
-    except Exception as e:
-        error_msg = f"Error sending email draft: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
 @tool
 @with_doc(GET_GMAIL_CONTACTS)
-async def get_gmail_contacts(
+async def get_contacts(
     config: RunnableConfig,
     query: Annotated[
         str,
@@ -1080,11 +884,5 @@ mail_tools = [
     delete_gmail_label,
     apply_labels_to_emails,
     remove_labels_from_emails,
-    create_email_draft,
-    list_email_drafts,
-    get_email_draft,
-    update_email_draft,
-    delete_email_draft,
-    send_email_draft,
-    get_gmail_contacts,
+    get_contacts,
 ]
