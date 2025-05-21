@@ -4,11 +4,14 @@
 import ObjectID from "bson-objectid";
 import { useDispatch } from "react-redux";
 
+import {
+  FileData,
+  SearchMode,
+} from "@/components/Chat/SearchBar/MainSearchbar";
 import { useChatStream } from "@/hooks/useChatStream";
 import { addMessage } from "@/redux/slices/conversationSlice";
 import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
-import { SearchMode, FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
 export const useSendMessage = (convoIdParam: string | null) => {
   const dispatch = useDispatch();
@@ -32,7 +35,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       pageFetchURLs,
       date: fetchDate(),
       message_id: String(ObjectID()),
-      fileIds: fileData.map(f => f.fileId),
+      fileIds: fileData.map((f) => f.fileId),
       fileData,
     };
 

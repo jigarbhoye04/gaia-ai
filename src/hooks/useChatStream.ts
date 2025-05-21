@@ -9,7 +9,7 @@ import { useConversation } from "@/hooks/useConversation";
 import { useFetchConversations } from "@/hooks/useConversationList";
 import { useLoading } from "@/hooks/useLoading";
 import { ApiService } from "@/services/apiService";
-import { ImageData, MessageType } from "@/types/convoTypes";
+import { MessageType } from "@/types/convoTypes";
 import fetchDate from "@/utils/fetchDate";
 
 import { parseIntent } from "./useIntentParser";
@@ -31,7 +31,7 @@ export const useChatStream = () => {
     newConversation: {
       id: null as string | null,
       description: null as string | null,
-    }
+    },
   });
 
   useEffect(() => {
@@ -53,7 +53,10 @@ export const useChatStream = () => {
     refs.current.botMessage = { ...baseMessage, ...overrides };
     const currentConvo = [...refs.current.convoMessages];
 
-    if (currentConvo.length > 0 && currentConvo[currentConvo.length - 1].type === "bot") {
+    if (
+      currentConvo.length > 0 &&
+      currentConvo[currentConvo.length - 1].type === "bot"
+    ) {
       currentConvo[currentConvo.length - 1] = refs.current.botMessage;
     } else {
       currentConvo.push(refs.current.botMessage);
@@ -69,14 +72,16 @@ export const useChatStream = () => {
     if (data.error) return toast.error(data.error);
 
     if (data.progress) setLoadingText(data.progress);
-    if (data.conversation_id) refs.current.newConversation.id = data.conversation_id;
-    if (data.conversation_description) refs.current.newConversation.description = data.conversation_description;
+    if (data.conversation_id)
+      refs.current.newConversation.id = data.conversation_id;
+    if (data.conversation_description)
+      refs.current.newConversation.description = data.conversation_description;
 
     if (data.status === "generating_image") {
       setLoadingText("Generating image...");
       updateBotMessage({
         image_data: { url: "", prompt: refs.current.userPrompt },
-        response: ""
+        response: "",
       });
       return;
     }
@@ -84,7 +89,7 @@ export const useChatStream = () => {
     if (data.intent === "generate_image" && data.image_data) {
       updateBotMessage({
         image_data: data.image_data,
-        loading: false
+        loading: false,
       });
       return;
     }
@@ -92,7 +97,7 @@ export const useChatStream = () => {
     refs.current.accumulatedResponse += data.response || "\n";
     updateBotMessage({
       ...parseIntent(data),
-      response: refs.current.accumulatedResponse
+      response: refs.current.accumulatedResponse,
     });
   };
 
@@ -134,7 +139,7 @@ export const useChatStream = () => {
       pageFetchURLs,
       date: fetchDate(),
       loading: true,
-      fileIds: fileData.map(f => f.fileId),
+      fileIds: fileData.map((f) => f.fileId),
       fileData,
     };
 
