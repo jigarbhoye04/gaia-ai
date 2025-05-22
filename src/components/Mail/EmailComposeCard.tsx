@@ -314,13 +314,19 @@ export default function EmailComposeCard({
 
     setIsSending(true);
     try {
-      await apiauth.post("/mail/send", {
-        to: selectedEmails,
-        subject: editData.subject,
-        body: editData.body,
+      // Create FormData for the Gmail API endpoint
+      const formData = new FormData();
+      formData.append("to", selectedEmails.join(", "));
+      formData.append("subject", editData.subject);
+      formData.append("body", editData.body);
+
+      await apiauth.post("/gmail/send", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      toast.success("Email sent successfully! 📧");
+      toast.success("Email sent successfully!");
       onSent?.();
     } catch (error) {
       console.error("Failed to send email:", error);
