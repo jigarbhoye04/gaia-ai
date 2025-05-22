@@ -64,10 +64,6 @@ async def upload_file_service(
     file_id = str(uuid.uuid4())
     public_id = f"file_{file_id}_{file.filename.replace(' ', '_')}"
 
-    # TODO: Remove after testing
-    if not conversation_id:
-        conversation_id = "0682f126-786a-7926-8000-ce47b1f96868"
-
     try:
         # Read file content once
         content = await file.read()
