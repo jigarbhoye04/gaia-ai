@@ -7,8 +7,9 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@heroui/modal";
-import { Edit, Mail, Send, User } from "lucide-react";
-import React, { useState } from "react";
+import { Chip } from "@heroui/chip";
+import { Edit, Mail, Send, User, X, Plus, Search } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -29,6 +30,8 @@ const emailComposeSchema = z.object({
     .max(10000, "Email body must be under 10,000 characters"),
 });
 
+const emailValidationSchema = z.string().email("Invalid email address");
+
 interface EmailData {
   to: string[];
   subject: string;
@@ -40,25 +43,231 @@ interface EmailComposeCardProps {
   onSent?: () => void;
 }
 
+function EditEmailModal({
+  isOpen,
+  onClose,
+  onSave,
+  editData,
+  setEditData,
+  errors,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: () => void;
+  editData: EmailData;
+  setEditData: React.Dispatch<React.SetStateAction<EmailData>>;
+  errors: Record<string, string>;
+}) {
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onClose} size="2xl">
+      <ModalContent className="w-full max-w-md">
+        <ModalBody>
+          <div className="pt-2 text-sm font-medium">Edit Email</div>
+          {/* Subject Field */}
+          <div className="mb-1">
+            <Input
+              label="Subject"
+              placeholder="Subject"
+              value={editData.subject}
+              onChange={(e) =>
+                setEditData({ ...editData, subject: e.target.value })
+              }
+              isInvalid={!!errors.subject}
+              errorMessage={errors.subject}
+              size="sm"
+            />
+          </div>
+          {/* Body Field */}
+          <div>
+            <Textarea
+              label="Message"
+              placeholder="Your message"
+              value={editData.body}
+              onChange={(e) =>
+                setEditData({ ...editData, body: e.target.value })
+              }
+              minRows={5}
+              maxRows={8}
+              isInvalid={!!errors.body}
+              errorMessage={errors.body}
+              size="sm"
+            />
+          </div>
+          {/* Action Buttons */}
+          <div className="mt-4 flex justify-end gap-2">
+            <Button
+              variant="light"
+              size="sm"
+              onPress={onClose}
+              className="h-7 px-2 text-xs text-gray-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              size="sm"
+              onPress={onSave}
+              className="h-7 px-3 text-xs font-medium"
+            >
+              Save
+            </Button>
+          </div>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+}
+
+function RecipientSelectionModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  suggestions,
+  selectedEmails,
+  setSelectedEmails,
+  customEmailInput,
+  setCustomEmailInput,
+  customEmailError,
+  setCustomEmailError,
+  handleAddCustomEmail,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  suggestions: string[];
+  selectedEmails: string[];
+  setSelectedEmails: React.Dispatch<React.SetStateAction<string[]>>;
+  customEmailInput: string;
+  setCustomEmailInput: React.Dispatch<React.SetStateAction<string>>;
+  customEmailError: string;
+  setCustomEmailError: React.Dispatch<React.SetStateAction<string>>;
+  handleAddCustomEmail: () => void;
+}) {
+  const handleSuggestionToggle = (email: string) => {
+    setSelectedEmails((prev) => {
+      if (prev.includes(email)) {
+        // Remove from selected
+        return prev.filter((e) => e !== email);
+      } else {
+        // Add to selected
+        return [...prev, email];
+      }
+    });
+  };
+
+  const handleCustomEmailKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCustomEmail();
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onClose} size="sm">
+      <ModalContent>
+        <ModalBody>
+          <div className="pt-2 text-sm font-medium">Email Suggestions</div>
+
+          {/* Suggestions */}
+          <div className="flex flex-wrap gap-2">
+            {suggestions.map((email) => (
+              <Chip
+                key={email}
+                size="sm"
+                variant="flat"
+                color={selectedEmails.includes(email) ? "primary" : "default"}
+                className="cursor-pointer text-xs"
+                onClick={() => handleSuggestionToggle(email)}
+                endContent={
+                  selectedEmails.includes(email) ? (
+                    <X className="h-3 w-3" />
+                  ) : null
+                }
+              >
+                {email}
+              </Chip>
+            ))}
+          </div>
+
+          <hr className="my-2 border-zinc-700" />
+
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add email..."
+              value={customEmailInput}
+              onChange={(e) => {
+                setCustomEmailInput(e.target.value);
+                setCustomEmailError("");
+              }}
+              onKeyDown={handleCustomEmailKeyPress}
+              size="sm"
+              isInvalid={!!customEmailError}
+              errorMessage={customEmailError}
+            />
+            <Button
+              size="sm"
+              color="primary"
+              onPress={handleAddCustomEmail}
+              isIconOnly
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="light" size="sm" onPress={onClose}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              size="sm"
+              onPress={onConfirm}
+              isDisabled={selectedEmails.length === 0}
+            >
+              Done ({selectedEmails.length})
+            </Button>
+          </div>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+}
+
 export default function EmailComposeCard({
   emailData,
   onSent,
 }: EmailComposeCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isRecipientModalOpen, setIsRecipientModalOpen] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [editData, setEditData] = useState<EmailData>(emailData);
-  const [toInput, setToInput] = useState(emailData.to.join(", "));
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Suggestions come from emailData.to - these are the initial suggestions
+  const [suggestions, setSuggestions] = useState<string[]>(emailData.to || []);
+
+  // Selected emails state - starts empty, user must select
+  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+
+  // Custom email input state
+  const [customEmailInput, setCustomEmailInput] = useState("");
+  const [customEmailError, setCustomEmailError] = useState("");
+
+  // Search/filter state
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Initialize with empty emails array - user must select recipients
+  useEffect(() => {
+    setEditData((prev) => ({ ...prev, to: [] }));
+    setSelectedEmails([]);
+    setSuggestions(emailData.to || []);
+  }, [emailData.to]);
 
   const validateForm = () => {
     try {
-      const toEmails = toInput
-        .split(",")
-        .map((email) => email.trim())
-        .filter((email) => email.length > 0);
-
       emailComposeSchema.parse({
-        to: toEmails,
+        to: selectedEmails,
         subject: editData.subject,
         body: editData.body,
       });
@@ -79,13 +288,36 @@ export default function EmailComposeCard({
     }
   };
 
-  const handleSend = async (dataToSend = emailData) => {
+  const validateCustomEmail = (email: string): boolean => {
+    try {
+      emailValidationSchema.parse(email);
+      setCustomEmailError("");
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        setCustomEmailError(error.errors[0]?.message || "Invalid email");
+      }
+      return false;
+    }
+  };
+
+  const handleSend = async () => {
+    if (selectedEmails.length === 0) {
+      toast.error("Please select at least one recipient");
+      return;
+    }
+
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors");
+      return;
+    }
+
     setIsSending(true);
     try {
       await apiauth.post("/mail/send", {
-        to: dataToSend.to,
-        subject: dataToSend.subject,
-        body: dataToSend.body,
+        to: selectedEmails,
+        subject: editData.subject,
+        body: editData.body,
       });
 
       toast.success("Email sent successfully! 📧");
@@ -104,14 +336,9 @@ export default function EmailComposeCard({
       return;
     }
 
-    const toEmails = toInput
-      .split(",")
-      .map((email) => email.trim())
-      .filter((email) => email.length > 0);
-
     const updatedData = {
       ...editData,
-      to: toEmails,
+      to: selectedEmails,
     };
 
     setEditData(updatedData);
@@ -120,195 +347,175 @@ export default function EmailComposeCard({
   };
 
   const handleEditClick = () => {
-    setToInput(editData.to.join(", "));
     setErrors({});
     setIsEditModalOpen(true);
   };
 
+  // Handle custom email addition
+  const handleAddCustomEmail = () => {
+    const trimmedEmail = customEmailInput.trim();
+
+    if (!trimmedEmail) {
+      setCustomEmailError("Please enter an email address");
+      return;
+    }
+
+    if (!validateCustomEmail(trimmedEmail)) {
+      return;
+    }
+
+    if (selectedEmails.includes(trimmedEmail)) {
+      setCustomEmailError("Email already selected");
+      return;
+    }
+
+    // Add to selected emails
+    setSelectedEmails((prev) => [...prev, trimmedEmail]);
+
+    // Add to suggestions if not already there
+    if (!suggestions.includes(trimmedEmail)) {
+      setSuggestions((prev) => [...prev, trimmedEmail]);
+    }
+
+    // Clear input
+    setCustomEmailInput("");
+    setCustomEmailError("");
+    toast.success(`Added ${trimmedEmail}`);
+  };
+
+  const handleRemoveSelectedEmail = (email: string) => {
+    setSelectedEmails((prev) => prev.filter((e) => e !== email));
+  };
+
+  const handleConfirmRecipients = () => {
+    setEditData((prev) => ({ ...prev, to: selectedEmails }));
+    setIsRecipientModalOpen(false);
+    toast.success(`Selected ${selectedEmails.length} recipient(s)`);
+  };
+
+  // Filter suggestions based on search term
+  const filteredSuggestions = suggestions.filter((email) =>
+    email.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
   return (
     <>
       {/* Main Email Card */}
-      <div className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-white/20 bg-white/95 shadow-lg backdrop-blur-sm">
-        {/* Header */}
-        <div className="border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-blue-100 p-2">
-                <Mail className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Draft Email</h3>
-                <p className="text-sm text-gray-600">Ready to send</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={handleEditClick}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      <div className="mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-zinc-800 shadow-lg backdrop-blur-sm">
+        <div className="absolute top-2 right-2 flex gap-1">
+          <Button isIconOnly variant="light" onPress={handleEditClick}>
+            <Edit className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Content */}
-        <div className="space-y-4 p-6">
-          {/* Recipients */}
-          <div className="flex items-start gap-3">
-            <User className="mt-1 h-4 w-4 text-gray-500" />
+        <div className="space-y-3 p-4">
+          {/* Recipients Section */}
+          <div className="flex items-start gap-2">
             <div className="flex-1">
-              <div className="mb-1 text-sm font-medium text-gray-700">To:</div>
-              <div className="flex flex-wrap gap-1">
-                {editData.to.map((email, index) => (
-                  <span
-                    key={index}
-                    className="rounded-full bg-blue-100 px-2 py-1 text-sm text-blue-800"
-                  >
-                    {email}
-                  </span>
-                ))}
+              <div className="flex flex-col gap-2">
+                {/* Select Recipients Button */}
+                <Button
+                  size="sm"
+                  color="primary"
+                  onPress={() => setIsRecipientModalOpen(true)}
+                  className="h-8 w-fit rounded-full px-3 py-1 text-xs font-normal"
+                  startContent={<User className="h-3 w-3" />}
+                >
+                  {selectedEmails.length === 0
+                    ? "Select Recipients"
+                    : `${selectedEmails.length} Selected`}
+                </Button>
+
+                {/* Selected Email Chips */}
+                {selectedEmails.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedEmails.slice(0, 3).map((email) => (
+                      <Chip
+                        key={email}
+                        size="sm"
+                        variant="flat"
+                        color="primary"
+                        className="text-xs"
+                        endContent={
+                          <button
+                            onClick={() => handleRemoveSelectedEmail(email)}
+                            className="ml-1 rounded-full p-0.5 hover:bg-primary-200"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        }
+                      >
+                        {email}
+                      </Chip>
+                    ))}
+                    {selectedEmails.length > 3 && (
+                      <Chip size="sm" variant="flat" className="text-xs">
+                        +{selectedEmails.length - 3} more
+                      </Chip>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Subject */}
-          <div className="border-l-4 border-blue-200 pl-4">
-            <div className="mb-1 text-sm font-medium text-gray-700">
-              Subject:
+          <div className="relative rounded-r-xl bg-zinc-900 p-3 pl-5">
+            <div className="absolute top-0 left-0 h-full min-w-1 rounded-full bg-primary" />
+            <div className="mb-0.5 text-xs font-bold text-gray-500">
+              Subject
             </div>
-            <div className="font-medium text-gray-900">{editData.subject}</div>
+            <div className="text-sm text-gray-200">{editData.subject}</div>
           </div>
 
-          {/* Body Preview */}
-          <div className="border-l-4 border-gray-200 pl-4">
-            <div className="mb-2 text-sm font-medium text-gray-700">
-              Message:
-            </div>
-            <div className="max-h-32 overflow-y-auto text-sm leading-relaxed text-gray-800">
+          <div className="relative rounded-r-xl bg-zinc-900 p-3 pl-5">
+            <div className="absolute top-0 left-0 h-full min-w-1 rounded-full bg-primary" />
+            <div className="mb-0.5 text-xs font-bold text-gray-500">Body</div>
+            <div className="max-h-24 overflow-y-auto text-sm leading-relaxed text-gray-200">
               {editData.body}
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-100 bg-gray-50 px-6 py-4">
+        <div className="px-4 pb-4">
           <div className="flex justify-end">
             <Button
               color="primary"
-              onPress={() => handleSend(editData)}
+              onPress={handleSend}
               isLoading={isSending}
-              className="font-medium"
+              isDisabled={selectedEmails.length === 0}
               startContent={
-                !isSending ? <Send className="h-4 w-4" /> : undefined
+                isSending ? undefined : <Send className="h-3.5 w-3.5" />
               }
             >
-              {isSending ? "Sending..." : "Send Email"}
+              {isSending ? "Sending..." : "Send"}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Edit Modal */}
-      <Modal
+      <EditEmailModal
         isOpen={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-        size="2xl"
-        classNames={{
-          base: "bg-white",
-          header: "border-b border-gray-200",
-          body: "py-6",
-          footer: "border-t border-gray-200",
-        }}
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-semibold text-gray-900">Edit Email</h2>
-            <p className="text-sm text-gray-600">
-              Make changes to your email before sending
-            </p>
-          </ModalHeader>
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSave}
+        editData={editData}
+        setEditData={setEditData}
+        errors={errors}
+      />
 
-          <ModalBody className="space-y-4">
-            {/* To Field */}
-            <div>
-              <Input
-                label="Recipients"
-                placeholder="Enter email addresses separated by commas"
-                value={toInput}
-                onChange={(e) => setToInput(e.target.value)}
-                variant="bordered"
-                isInvalid={!!errors.to}
-                errorMessage={errors.to}
-                classNames={{
-                  input: "text-sm",
-                  label: "text-sm font-medium text-gray-700",
-                }}
-              />
-            </div>
-
-            {/* Subject Field */}
-            <div>
-              <Input
-                label="Subject"
-                placeholder="Enter email subject"
-                value={editData.subject}
-                onChange={(e) =>
-                  setEditData({ ...editData, subject: e.target.value })
-                }
-                variant="bordered"
-                isInvalid={!!errors.subject}
-                errorMessage={errors.subject}
-                classNames={{
-                  input: "text-sm",
-                  label: "text-sm font-medium text-gray-700",
-                }}
-              />
-            </div>
-
-            {/* Body Field */}
-            <div>
-              <Textarea
-                label="Message"
-                placeholder="Enter your email message"
-                value={editData.body}
-                onChange={(e) =>
-                  setEditData({ ...editData, body: e.target.value })
-                }
-                variant="bordered"
-                minRows={6}
-                maxRows={10}
-                isInvalid={!!errors.body}
-                errorMessage={errors.body}
-                classNames={{
-                  input: "text-sm",
-                  label: "text-sm font-medium text-gray-700",
-                }}
-              />
-            </div>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setIsEditModalOpen(false)}
-              className="text-gray-600"
-            >
-              Cancel
-            </Button>
-            <Button
-              color="primary"
-              onPress={handleSave}
-              className="font-medium"
-            >
-              Save Changes
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <RecipientSelectionModal
+        isOpen={isRecipientModalOpen}
+        onClose={() => setIsRecipientModalOpen(false)}
+        onConfirm={handleConfirmRecipients}
+        suggestions={suggestions}
+        selectedEmails={selectedEmails}
+        setSelectedEmails={setSelectedEmails}
+        customEmailInput={customEmailInput}
+        setCustomEmailInput={setCustomEmailInput}
+        customEmailError={customEmailError}
+        setCustomEmailError={setCustomEmailError}
+        handleAddCustomEmail={handleAddCustomEmail}
+      />
     </>
   );
 }

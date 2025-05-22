@@ -126,30 +126,30 @@ export const useChatStream = () => {
     if (!refs.current.botMessage) return;
 
     // Preserve all existing data when marking as complete
-    updateBotMessage({ 
+    updateBotMessage({
       loading: false,
       // Explicitly preserve email_compose_data and other tool data
       ...(refs.current.botMessage.email_compose_data && {
-        email_compose_data: refs.current.botMessage.email_compose_data
+        email_compose_data: refs.current.botMessage.email_compose_data,
       }),
       ...(refs.current.botMessage.calendar_options && {
-        calendar_options: refs.current.botMessage.calendar_options
+        calendar_options: refs.current.botMessage.calendar_options,
       }),
       ...(refs.current.botMessage.weather_data && {
-        weather_data: refs.current.botMessage.weather_data
+        weather_data: refs.current.botMessage.weather_data,
       }),
       ...(refs.current.botMessage.search_results && {
-        search_results: refs.current.botMessage.search_results
+        search_results: refs.current.botMessage.search_results,
       }),
       ...(refs.current.botMessage.deep_search_results && {
-        deep_search_results: refs.current.botMessage.deep_search_results
+        deep_search_results: refs.current.botMessage.deep_search_results,
       }),
       ...(refs.current.botMessage.image_data && {
-        image_data: refs.current.botMessage.image_data
+        image_data: refs.current.botMessage.image_data,
       }),
       ...(refs.current.botMessage.intent && {
-        intent: refs.current.botMessage.intent
-      })
+        intent: refs.current.botMessage.intent,
+      }),
     });
     setIsLoading(false);
     resetLoadingText();
