@@ -13,8 +13,8 @@ from app.langchain.tools import (
     webpage_tool,
 )
 
-# GROQ_MODEL = "llama-3.1-8b-instant"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama-3.1-8b-instant"
+# GROQ_MODEL = "llama-3.3-70b-versatile"
 # GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 OPENAI_MODEL = "gpt-4o"
@@ -29,8 +29,12 @@ tools = [
     calendar_tool.calendar_event,
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
-    file_tools.fetch_file,
     file_tools.query_file,
+]
+
+silent_tools = [
+    file_tools.query_file.name,
+    memory_tool.create_memory.name,
 ]
 
 
@@ -39,7 +43,7 @@ def init_groq_client():
         return ChatGroq(
             model=GROQ_MODEL,
             api_key=SecretStr(settings.GROQ_API_KEY),
-            temperature=0.6,
+            temperature=0.1,
             max_tokens=2048,
             streaming=True,
         )

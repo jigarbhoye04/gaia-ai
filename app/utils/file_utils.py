@@ -30,7 +30,7 @@ class DocumentProcessor:
 
     async def process_file(
         self, file_content: bytes, content_type: str, filename: str
-    ) -> Union[str, List[DocumentSummaryModel]]:
+    ) -> Union[str, List[DocumentSummaryModel], DocumentSummaryModel]:
         """
         Process and summarize a file based on its content type.
 
@@ -166,7 +166,7 @@ class DocumentProcessor:
                 DocumentSummaryModel(
                     data=DocumentPageModel(
                         page_number=i + 1,
-                        md=md_documents[i].text,
+                        content=md_documents[i].text,
                     ),
                     summary=str(summarized_pages[i].content),
                 )
@@ -177,7 +177,7 @@ class DocumentProcessor:
             logger.error(f"Failed to process PDF: {str(e)}", exc_info=True)
             return []
 
-    async def process_text(self, text_data: bytes) -> str:
+    async def process_text(self, text_data: bytes) -> DocumentSummaryModel:
         """
         Process and summarize a text file.
 
@@ -196,11 +196,17 @@ class DocumentProcessor:
                 text_content[:4000]
             )  # Limit to avoid token issues
 
-            return summary
+            return DocumentSummaryModel(
+                data=DocumentPageModel(
+                    page_number=1,
+                    content=text_content,
+                ),
+                summary=summary,
+            )
 
         except Exception as e:
             logger.error(f"Failed to process text: {str(e)}", exc_info=True)
-            return "Text could not be processed."
+            raise e
 
     async def _generate_text_summary(self, text: str) -> str:
         """Generate a summary for text content using LlamaCloud."""
@@ -228,7 +234,7 @@ class DocumentProcessor:
 # Function to implement file description generation interface compatible with existing code
 async def generate_file_summary(
     file_content: bytes, content_type: str, filename: str
-) -> Union[str, List[DocumentSummaryModel]]:
+) -> Union[str, List[DocumentSummaryModel], DocumentSummaryModel]:
     """
     Generate a description for a file based on its content type.
     Compatible with existing code interface.

@@ -96,7 +96,32 @@ async def delete_cache(key: str):
     """
     Delete a cached key.
     """
+    # TODO: Optimize this
+    if key.endswith("*"):
+        await delete_cache_by_pattern(key)
+        return
+
     await redis_cache.delete(key)
+
+
+async def delete_cache_by_pattern(pattern: str):
+    """
+    Delete cached keys by pattern.
+    """
+    if not redis_cache.redis:
+        logger.warning("Redis is not initialized. Skipping delete operation.")
+        return
+
+    try:
+        keys = await redis_cache.redis.keys(pattern)
+        if not keys:
+            logger.info(f"No keys found for pattern: {pattern}")
+            return
+        for key in keys:
+            await redis_cache.delete(key)
+            logger.info(f"Cache deleted for key: {key}")
+    except Exception as e:
+        logger.error(f"Error deleting Redis keys by pattern {pattern}: {e}")
 
 
 T = TypeVar("T")
@@ -184,9 +209,14 @@ class Cacheable(Generic[T]):
             # Call the original function and cache the result
             result = await func(*args, **kwargs)
 
+            serialized_result = result
             if self.serializer:
-                result = self.serializer(result)
-            await set_cache(key=cache_key, value=result, ttl=self.ttl)
+                serialized_result = self.serializer(result)
+
+            logger.info(f"Cache miss for key: {cache_key}")
+            logger.info(f"Setting cache for key: {cache_key}")
+
+            await set_cache(key=cache_key, value=serialized_result, ttl=self.ttl)
 
             return result
 
@@ -257,6 +287,8 @@ class CacheInvalidator:
                     _pattern_to_key(pattern, arguments=bound_args.arguments)
                     for pattern in self.key_patterns
                 ]
+
+            logger.info(f"Cache invalidation for keys: {cache_keys}")
 
             # Invalidate the cache
             await asyncio.gather(*[delete_cache(key) for key in cache_keys])

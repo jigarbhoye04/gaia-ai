@@ -6,7 +6,7 @@ class DocumentPageModel(BaseModel):
         ...,
         gt=0,
     )
-    md: str = Field(...)
+    content: str = Field(...)
     # Other metadata fields can be added here
 
 

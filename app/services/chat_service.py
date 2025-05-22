@@ -39,7 +39,6 @@ async def chat_stream(
     logger.info(
         f"User {user.get('user_id')} sent a message: {body.messages[-1]['content']}"
     )
-    logger.info(f"Files: {body.fileIds}")
 
     # Stream response from the agent
     async for chunk in call_agent(
@@ -163,9 +162,7 @@ async def initialize_conversation(
         conversation_id=conversation_id,
     )
 
-    if uploaded_files:
-        body.fileData = uploaded_files
-        body.fileIds = [file.fileId for file in uploaded_files]
+    logger.info(f"{uploaded_files=}")
 
     return conversation_id, init_chunk
 

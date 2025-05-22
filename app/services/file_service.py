@@ -26,8 +26,7 @@ from app.utils.file_utils import generate_file_summary
 
 @CacheInvalidator(
     key_patterns=[
-        "files:{user_id}:{conversation_id}",
-        "files:{user_id}:all",
+        "files:{user_id}:*",
     ]
 )
 async def upload_file_service(
@@ -44,7 +43,7 @@ async def upload_file_service(
         conversation_id (str, optional): The conversation ID to associate with the file
 
     Returns:
-        dict: File metadata including fileId and url
+        dict: File metadata including file_id and url
 
     Raises:
         HTTPException: If file upload fails
@@ -65,9 +64,9 @@ async def upload_file_service(
     file_id = str(uuid.uuid4())
     public_id = f"file_{file_id}_{file.filename.replace(' ', '_')}"
 
-    # TODO: Remove this line after testing
+    # TODO: Remove after testing
     if not conversation_id:
-        conversation_id = "0682de20-6e71-75ae-8000-a496c9144cf7"
+        conversation_id = "0682f126-786a-7926-8000-ce47b1f96868"
 
     try:
         # Read file content once
@@ -110,7 +109,7 @@ async def upload_file_service(
         file_summary = await summary_task
 
         # Process file description
-        summary, page_wise_summary = _process_file_summary(file_summary)
+        summary, formatted_file_content = _process_file_summary(file_summary)
 
         # Create metadata object
         current_time = datetime.now(timezone.utc)
@@ -123,7 +122,7 @@ async def upload_file_service(
             "public_id": public_id,
             "user_id": user_id,
             "description": summary,
-            "page_wise_summary": page_wise_summary,
+            "page_wise_summary": formatted_file_content,
             "created_at": current_time,
             "updated_at": current_time,
         }
@@ -147,7 +146,7 @@ async def upload_file_service(
         logger.info(f"File uploaded successfully. ID: {file_id}, URL: {file_url}")
 
         return {
-            "fileId": file_id,
+            "file_id": file_id,
             "url": file_url,
             "filename": file.filename,
             "description": summary,
@@ -163,7 +162,7 @@ async def upload_file_service(
 
 
 def _process_file_summary(
-    file_summary: str | list[DocumentSummaryModel],
+    file_summary: str | list[DocumentSummaryModel] | DocumentSummaryModel,
 ) -> tuple:
     """Helper function to process file description into the correct format."""
     if isinstance(file_summary, str):
@@ -174,6 +173,10 @@ def _process_file_summary(
         for x in file_summary:
             content_model.append(x.model_dump(mode="json"))
             content_str += x.summary
+        return content_str, content_model
+    elif isinstance(file_summary, DocumentSummaryModel):
+        content_str = file_summary.summary
+        content_model = file_summary.model_dump(mode="json")
         return content_str, content_model
     else:
         logger.error("Invalid file description format")
@@ -360,14 +363,14 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
                     file_data = file_data_map[file_id]
                     included_files.append(
                         {
-                            "file_id": file_data["fileId"],
+                            "file_id": file_data["file_id"],
                             "url": file_data["url"],
                             "filename": file_data["filename"],
                             "description": file_data.get("deskcription", ""),
                             "content_type": file_data.get("content_type", ""),
                             "_id": file_data[
-                                "fileId"
-                            ],  # Use fileId as _id for consistency
+                                "file_id"
+                            ],  # Use file_id as _id for consistency
                         }
                     )
 
@@ -502,7 +505,6 @@ async def fetch_files(context: Dict[str, Any]) -> Dict[str, Any]:
 @CacheInvalidator(
     key_patterns=[
         "files:{user_id}:*",
-        "files:{user_id}:all",
     ]
 )
 async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
@@ -583,8 +585,7 @@ async def delete_file_service(file_id: str, user_id: Optional[str]) -> dict:
 
 @CacheInvalidator(
     key_patterns=[
-        "files:{user_id}:{conversation_id}",
-        "files:{user_id}:all",
+        "files:{user_id}:*",
     ]
 )
 async def update_file_service(
@@ -714,7 +715,7 @@ async def update_file_service(
     key_pattern="files:{user_id}:{conversation_id}",
     ttl=86400,  # 24 hours
     serializer=lambda files: [file.model_dump(mode="json") for file in files],
-    deserializer=lambda files: [FileData(**file) for file in files],
+    deserializer=lambda files: [deserialize_file(file) for file in files],
 )
 async def get_files(
     user_id: str,
@@ -745,11 +746,13 @@ async def get_files(
 
     files = await files_collection.find(query).to_list(length=None)
 
+    logger.info(f"Found {len(files)} files for user: {user_id}")
+
     # Convert ObjectId to string for serialization
-    return [serialize_file(file) for file in files]
+    return [deserialize_file(file) for file in files]
 
 
-def serialize_file(file: dict) -> FileData:
+def deserialize_file(file: dict) -> FileData:
     """
     Serialize a file document to a FileData object.
 
@@ -759,10 +762,14 @@ def serialize_file(file: dict) -> FileData:
     Returns:
         FileData: The serialized file data object
     """
+    file_id = file.get("file_id", "") or file.get("fileId", "")
+    if not file_id:
+        logger.error("Missing file_id in file document")
+        raise HTTPException(status_code=400, detail="Invalid file document")
+
     return FileData(
-        fileId=file["file_id"],
+        fileId=file_id,
         filename=file["filename"],
-        description=file.get("description", ""),
         url=file["url"],
         type=file["type"],
         message=file.get("message", ""),

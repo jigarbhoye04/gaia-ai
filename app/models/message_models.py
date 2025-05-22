@@ -13,7 +13,6 @@ class FileData(BaseModel):
     fileId: str
     url: str
     filename: str
-    description: Optional[str] = None
     type: Optional[str] = "file"
     message: Optional[str] = "File uploaded successfully"
 

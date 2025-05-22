@@ -1,5 +1,7 @@
 import json
 
+from app.langchain.client import silent_tools
+
 
 def format_tool_response(tool_name: str | None, content: str) -> str:
     """
@@ -14,6 +16,10 @@ def format_tool_response(tool_name: str | None, content: str) -> str:
     """
 
     if not tool_name or not content:
+        return ""
+
+    # Check if the tool is silent
+    if tool_name in silent_tools:
         return ""
 
     try:

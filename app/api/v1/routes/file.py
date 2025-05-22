@@ -46,10 +46,9 @@ async def upload_file_endpoint(
     )
 
     return FileData(
-        fileId=result["fileId"],
+        fileId=result["file_id"],
         url=result["url"],
         filename=result["filename"],
-        description=result.get("description"),
         message="File uploaded successfully",
         type=result.get("type", "file"),
     )
