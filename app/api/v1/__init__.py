@@ -6,7 +6,7 @@ This package contains the API routes and dependencies for version 1 of the GAIA 
 
 from fastapi import APIRouter
 
-from app.api.v1.routes import (
+from app.api.v1.router import (
     blog,
     browser,
     calendar,

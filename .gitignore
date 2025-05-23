@@ -9,7 +9,7 @@ api/.env
 */.env
 *.pyc
 .vercel
-
+.DS_Store
 uv.lock
 
 venv/

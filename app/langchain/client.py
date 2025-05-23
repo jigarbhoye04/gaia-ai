@@ -7,23 +7,25 @@ from app.langchain.tools import (
     file_tools,
     flowchart_tool,
     image_tool,
+    mail_tool,
     memory_tool,
     search_tool,
     weather_tool,
     webpage_tool,
 )
 
-GROQ_MODEL = "llama-3.1-8b-instant"
-# GROQ_MODEL = "llama-3.3-70b-versatile"
+# GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = "llama-3.3-70b-versatile"
 # GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+# GROQ_MODEL = "deepseek-r1-distill-llama-70b"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
-OPENAI_MODEL = "gpt-4o"
 
 tools = [
     webpage_tool.fetch_webpages,
     search_tool.deep_search_tool,
     search_tool.web_search_tool,
     memory_tool.create_memory,
+    *mail_tool.mail_tools,
     weather_tool.get_weather,
     calendar_tool.fetch_calendar_list,
     calendar_tool.calendar_event,
@@ -35,6 +37,7 @@ tools = [
 silent_tools = [
     file_tools.query_file.name,
     memory_tool.create_memory.name,
+    *[tool.name for tool in mail_tool.mail_tools],
 ]
 
 
@@ -47,13 +50,5 @@ def init_groq_client():
             max_tokens=2048,
             streaming=True,
         )
-        # return ChatOpenAI(
-        #     model=OPENAI_MODEL,
-        #     temperature=0.6,
-        #     streaming=True,
-        # )
 
-    llm_with_tools = create_llm().bind_tools(tools=tools)
-    llm_without_tools = create_llm()
-
-    return llm_with_tools, llm_without_tools, tools
+    return create_llm()

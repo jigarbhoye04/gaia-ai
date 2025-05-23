@@ -17,6 +17,7 @@ async def call_agent(
     conversation_id,
     user,
     access_token=None,
+    refresh_token=None,
 ):
     user_id = user.get("user_id")
     messages = request.messages
@@ -47,6 +48,8 @@ async def call_agent(
                     "thread_id": conversation_id,
                     "user_id": user_id,
                     "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "email": user.get("email"),
                 },
                 "recursion_limit": 10,
                 "metadata": {"user_id": user_id},

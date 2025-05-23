@@ -1,0 +1,37 @@
+name: Publish Docker Image
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read  # To fetch the code
+  packages: write  # To push to GitHub Packages (GHCR)
+  actions: read  # To use GitHub Actions
+  id-token: write  # Needed for some authentication steps (optional)
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/gaia-backend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          COMMIT_HASH=${{ github.sha }}
+          docker build -t $IMAGE_NAME:latest -t $IMAGE_NAME:$COMMIT_HASH -f ./Dockerfile .
+
+      - name: Push Docker Image to GHCR
+        run: |
+          docker push $IMAGE_NAME:latest
+          docker push $IMAGE_NAME:$COMMIT_HASH
+
+      - name: Log out from GHCR
+        run: docker logout

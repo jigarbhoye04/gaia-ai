@@ -46,6 +46,7 @@ async def chat_stream(
         user=user,
         conversation_id=conversation_id,
         access_token=user.get("access_token"),
+        refresh_token=user.get("refresh_token"),
     ):
         # Process complete message marker
         if chunk.startswith("nostream: "):
@@ -74,13 +75,19 @@ async def chat_stream(
 
 def extract_tool_data(json_str: str) -> Dict[str, Any]:
     """
-    Extract structured data from tool response JSON.
+    Parse and extract structured tool output from an agent's JSON response chunk.
 
-    Args:
-        json_str: The JSON string to parse
+     This function is responsible for detecting and extracting specific tool-related
+     intents and their data (e.g., calendar options, search results, weather data,
+     image generation outputs) from a JSON string sent during streaming.
 
-    Returns:
-        Dictionary with extracted tool data
+     Returns:
+         Dict[str, Any]: A dictionary containing extracted structured data.
+
+     Notes:
+         - This is meant to handle tool response metadata during streaming.
+         - If the JSON is malformed or does not match known tool structures, an empty dict is returned.
+         - This function is tolerant to missing keys and safe for runtime use in an async stream.
     """
     try:
         data = json.loads(json_str)
@@ -118,6 +125,15 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         ):
             tool_data["intent"] = "generate_image"
             tool_data["image_data"] = data["image_data"]
+
+        # Extract email compose data
+        elif (
+            "intent" in data
+            and data["intent"] == "email"
+            and "email_compose_data" in data
+        ):
+            tool_data["intent"] = "email"
+            tool_data["email_compose_data"] = data["email_compose_data"]
 
         return tool_data
     except json.JSONDecodeError:

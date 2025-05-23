@@ -75,6 +75,8 @@ dependencies = [
   "uuid7>=0.1.0",
   "chromadb>=0.6.3",
   "slowapi>=0.1.9",
+  "fastapi-mcp>=0.3.3",
+  "langgraph-bigtool>=0.0.2",
 ]
 
 [dependency-groups]

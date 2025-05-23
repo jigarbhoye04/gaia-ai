@@ -1,33 +1,59 @@
+import uuid
 from contextlib import asynccontextmanager
 
+from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.graph import END, START
+from langgraph.store.memory import InMemoryStore
+from langgraph_bigtool import create_agent
 
 from app.config.settings import settings
-from app.langchain.chatbot import chatbot
-from app.langchain.client import tools
-from app.langchain.state import State
+from app.langchain.client import init_groq_client
+from app.langchain.client import tools as all_tools
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
     should_call_tool,
 )
 
+llm = init_groq_client()
+
 
 @asynccontextmanager
 async def build_graph():
     """Construct and compile the state graph."""
-    graph_builder = StateGraph(State)
-    graph_builder.add_node("chatbot", chatbot)
-    graph_builder.add_node("tools", ToolNode(tools=tools))
+    tool_registry = {str(uuid.uuid4()): tool for tool in all_tools}
+
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+    store = InMemoryStore(
+        index={
+            "embed": embeddings,
+            "dims": 384,
+            "fields": ["description"],
+        }
+    )
+
+    for tool_id, tool in tool_registry.items():
+        store.put(
+            ("tools",),
+            tool_id,
+            {
+                "description": f"{tool.name}: {tool.description}",
+            },
+        )
+
+    builder = create_agent(llm, tool_registry)
+
+    # builder.add_node("chatbot", chatbot)
+    # builder.add_node("tools", ToolNode(tools=tools))
 
     # Injector nodes add tool calls to the state messages
-    graph_builder.add_node("inject_web_search", inject_web_search_tool_call)
-    graph_builder.add_node("inject_deep_search", inject_deep_search_tool_call)
+    builder.add_node("inject_web_search", inject_web_search_tool_call)
+    builder.add_node("inject_deep_search", inject_deep_search_tool_call)
 
     # Conditional edges from chatbot to injector nodes or end
-    graph_builder.add_conditional_edges(
+    builder.add_conditional_edges(
         START,
         should_call_tool,
         {
@@ -35,21 +61,22 @@ async def build_graph():
             # "return_value" : "name of node to call"
             "call_1": "inject_web_search",
             "call_2": "inject_deep_search",
-            "call_chatbot": "chatbot",
+            "call_chatbot": "agent",
         },
     )
 
     # After injecting tool call, route to shared tools node to execute
-    graph_builder.add_edge("inject_web_search", "tools")
-    graph_builder.add_edge("inject_deep_search", "tools")
+    builder.add_edge("inject_web_search", "tools")
+    builder.add_edge("inject_deep_search", "tools")
 
-    graph_builder.add_conditional_edges("chatbot", tools_condition)
-    graph_builder.add_edge("tools", "chatbot")
-    graph_builder.add_edge("chatbot", END)
+    # builder.add_conditional_edges("chatbot", tools_condition)
+    # builder.add_edge("tools", "chatbot")
+    builder.add_edge("agent", END)
 
     async with AsyncPostgresSaver.from_conn_string(
         settings.POSTGRES_URL
     ) as checkpointer:
         await checkpointer.setup()
-        graph = graph_builder.compile(checkpointer=checkpointer)
+        graph = builder.compile(checkpointer=checkpointer, store=store)
+        print(graph.get_graph().draw_mermaid())
         yield graph
