@@ -1,6 +1,6 @@
 import json
 import pprint
-from typing import Annotated, List
+from typing import List
 
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool

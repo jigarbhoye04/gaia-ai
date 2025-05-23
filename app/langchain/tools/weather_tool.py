@@ -1,7 +1,6 @@
 from typing import Annotated
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
-from app.langchain.templates.weather_template import WEATHER_PROMPT_TEMPLATE
 from app.utils.weather_utils import user_weather
 
 
@@ -35,4 +34,4 @@ async def get_weather(
     })
 
     # Return simple confirmation message
-    return f"Weather data sent to frontend. Do not write anything else. Just send the weather data."
+    return "Weather data sent to frontend. Do not write anything else. Just send the weather data."

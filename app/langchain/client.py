@@ -1,6 +1,4 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
-from app.config.settings import settings
 from app.langchain.tools import (
     calendar_tool,
     file_tools,

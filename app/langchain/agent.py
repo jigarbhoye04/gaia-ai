@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
 
-from langchain_core.messages import AIMessageChunk, ToolMessage
+from langchain_core.messages import AIMessageChunk
 from langsmith import traceable
 
 from app.config.loggers import llm_logger as logger
@@ -67,11 +67,6 @@ async def call_agent(
                         yield f"data: {json.dumps({'response': content})}\n\n"
                         complete_message += content
 
-                # elif isinstance(chunk, ToolMessage):
-                #     logger.info(f"Tool message: {chunk.name} - {chunk.content}")
-                #     yield format_tool_response(
-                #         tool_name=chunk.name, content=str(chunk.content)
-                #     )
 
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"

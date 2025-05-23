@@ -10,7 +10,6 @@ from langgraph_bigtool import create_agent
 from app.config.settings import settings
 from app.langchain.client import init_groq_client
 from app.langchain.client import tools as all_tools
-from app.config.loggers import llm_logger as logger
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,

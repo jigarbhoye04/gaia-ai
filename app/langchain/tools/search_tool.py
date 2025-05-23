@@ -7,10 +7,6 @@ from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
-from app.langchain.templates.search_templates import (
-    DEEP_SEARCH_TEMPLATE,
-    SEARCH_TEMPLATE,
-)
 from app.utils.internet_utils import perform_deep_search
 from app.utils.search_utils import format_results_for_llm, perform_search
 
