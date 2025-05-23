@@ -118,13 +118,13 @@ export const useChatStream = () => {
 
     // Create a shallow copy of the current bot message to preserve all existing data
     const preservedBotMessage = { ...refs.current.botMessage };
-    
+
     // Update only the loading state while preserving everything else
     updateBotMessage({
       ...preservedBotMessage,
       loading: false,
     });
-    
+
     setIsLoading(false);
     resetLoadingText();
 
@@ -135,7 +135,7 @@ export const useChatStream = () => {
     }
 
     // Clear the saved input text since the message was sent successfully
-    localStorage.removeItem('gaia-searchbar-text');
+    localStorage.removeItem("gaia-searchbar-text");
 
     refs.current.botMessage = null;
     refs.current.newConversation = { id: null, description: null };
@@ -180,9 +180,9 @@ export const useChatStream = () => {
         resetLoadingText();
         toast.error("Error fetching messages. Please try again later.");
         console.error("Stream error:", err);
-        
+
         // Save the user's input text for restoration on error
-        localStorage.setItem('gaia-searchbar-text', inputText);
+        localStorage.setItem("gaia-searchbar-text", inputText);
       },
       fileData,
     );
