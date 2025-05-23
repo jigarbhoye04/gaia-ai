@@ -107,15 +107,6 @@ export const useChatStream = () => {
     // Parse only the data that's actually present in this stream chunk
     const streamUpdates = parseStreamData(data);
 
-    // Keep the existing email_compose_data if we're not receiving a new one
-    if (
-      refs.current.botMessage?.email_compose_data &&
-      !streamUpdates.email_compose_data
-    ) {
-      streamUpdates.email_compose_data =
-        refs.current.botMessage.email_compose_data;
-    }
-
     updateBotMessage({
       ...streamUpdates,
       response: refs.current.accumulatedResponse,
@@ -125,32 +116,15 @@ export const useChatStream = () => {
   const handleStreamClose = async () => {
     if (!refs.current.botMessage) return;
 
-    // Preserve all existing data when marking as complete
+    // Create a shallow copy of the current bot message to preserve all existing data
+    const preservedBotMessage = { ...refs.current.botMessage };
+    
+    // Update only the loading state while preserving everything else
     updateBotMessage({
+      ...preservedBotMessage,
       loading: false,
-      // Explicitly preserve email_compose_data and other tool data
-      ...(refs.current.botMessage.email_compose_data && {
-        email_compose_data: refs.current.botMessage.email_compose_data,
-      }),
-      ...(refs.current.botMessage.calendar_options && {
-        calendar_options: refs.current.botMessage.calendar_options,
-      }),
-      ...(refs.current.botMessage.weather_data && {
-        weather_data: refs.current.botMessage.weather_data,
-      }),
-      ...(refs.current.botMessage.search_results && {
-        search_results: refs.current.botMessage.search_results,
-      }),
-      ...(refs.current.botMessage.deep_search_results && {
-        deep_search_results: refs.current.botMessage.deep_search_results,
-      }),
-      ...(refs.current.botMessage.image_data && {
-        image_data: refs.current.botMessage.image_data,
-      }),
-      ...(refs.current.botMessage.intent && {
-        intent: refs.current.botMessage.intent,
-      }),
     });
+    
     setIsLoading(false);
     resetLoadingText();
 
@@ -159,6 +133,9 @@ export const useChatStream = () => {
       router.push(`/c/${refs.current.newConversation.id}`);
       fetchConversations();
     }
+
+    // Clear the saved input text since the message was sent successfully
+    localStorage.removeItem('gaia-searchbar-text');
 
     refs.current.botMessage = null;
     refs.current.newConversation = { id: null, description: null };
@@ -203,6 +180,9 @@ export const useChatStream = () => {
         resetLoadingText();
         toast.error("Error fetching messages. Please try again later.");
         console.error("Stream error:", err);
+        
+        // Save the user's input text for restoration on error
+        localStorage.setItem('gaia-searchbar-text', inputText);
       },
       fileData,
     );

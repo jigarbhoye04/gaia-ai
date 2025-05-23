@@ -1,15 +1,13 @@
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { Input, Textarea } from "@heroui/input";
 import {
   Modal,
   ModalBody,
   ModalContent,
-  ModalFooter,
-  ModalHeader,
 } from "@heroui/modal";
-import { Chip } from "@heroui/chip";
-import { Edit, Mail, Send, User, X, Plus, Search } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import { Edit, Plus,Send, User, X } from "lucide-react";
+import React, { useEffect,useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 

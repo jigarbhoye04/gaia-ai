@@ -108,7 +108,7 @@ export default function TextBubble({
         <CalendarEventSection calendar_options={calendar_options} />
       )}
 
-      {intent === "email" && email_compose_data && (
+      {email_compose_data && (
         <EmailComposeSection email_compose_data={email_compose_data} />
       )}
     </>
