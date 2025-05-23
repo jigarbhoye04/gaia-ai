@@ -157,7 +157,6 @@ export default function AccountSection({
           <Avatar
             className="aspect-square"
             size="lg"
-            
             src={
               user?.profilePicture ||
               "https://links.aryanranderiya.com/l/default_user"

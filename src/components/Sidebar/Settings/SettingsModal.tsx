@@ -2,8 +2,8 @@ import { Button } from "@heroui/button";
 import { Modal, ModalBody, ModalContent } from "@heroui/modal";
 import React, { useState } from "react";
 
-import GeneralSection from "./GeneralSettings";
 import AccountSection from "./AccountSettings";
+import GeneralSection from "./GeneralSettings";
 import { ModalAction } from "./SettingsMenu";
 
 interface SidebarItem {
@@ -12,8 +12,7 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-  { key: "general", label: "General" },
-  { key: "privacy", label: "Privacy" },
+  { key: "chats", label: "Chats" },
   { key: "account", label: "Account" },
 ];
 
@@ -26,15 +25,15 @@ export default function SettingsModal({
   setOpenSettings: React.Dispatch<React.SetStateAction<boolean>>;
   setModalAction: React.Dispatch<React.SetStateAction<ModalAction | null>>;
 }) {
-  const [activeSection, setActiveSection] = useState("general");
+  const [activeSection, setActiveSection] = useState("account");
 
   // Render the main content based on the active section.
   const renderSectionContent = () => {
     switch (activeSection) {
-      case "general":
-        return <GeneralSection setModalAction={setModalAction} />;
       case "account":
         return <AccountSection setModalAction={setModalAction} />;
+      case "chats":
+        return <GeneralSection setModalAction={setModalAction} />;
       default:
         return null;
     }
