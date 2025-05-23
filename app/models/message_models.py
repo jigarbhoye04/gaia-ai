@@ -13,7 +13,6 @@ class FileData(BaseModel):
     fileId: str
     url: str
     filename: str
-    description: Optional[str] = None
     type: Optional[str] = "file"
     message: Optional[str] = "File uploaded successfully"
 
@@ -26,9 +25,8 @@ class MessageRequestWithHistory(BaseModel):
     deep_search: Optional[bool] = False
     pageFetchURLs: Optional[List[str]] = []
     fileIds: Optional[List[str]] = []
-    fileData: Optional[
-        List[FileData]
-    ] = []  # TODO: Remove this field, we should not request it from the frontend
+    fileData: Optional[List[FileData]] = []
+    # TODO: Remove fileIds, fileData and messages, we should not get them from the client
 
 
 class MessageRequest(BaseModel):

@@ -1,15 +1,16 @@
-from datetime import datetime, timezone
 import json
-from typing import AsyncGenerator, Dict, Optional, Any
+from datetime import datetime, timezone
+from typing import Any, AsyncGenerator, Dict, Optional
 
 from fastapi import BackgroundTasks
 
+from app.config.loggers import chat_logger as logger
 from app.langchain.agent import call_agent
 from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import MessageRequestWithHistory
 from app.services.conversation_service import update_messages
+from app.services.file_service import get_files
 from app.utils.chat_utils import create_conversation
-from app.config.loggers import chat_logger as logger
 
 
 async def chat_stream(
@@ -32,13 +33,20 @@ async def chat_stream(
     if init_chunk:  # Return the conversation id and metadata if new convo
         yield init_chunk
 
-    # TODO: FETCH NOTES AND FILES AND USE THEM
+    logger.info(
+        f"User {user.get('user_id')} started a conversation with ID {conversation_id}"
+    )
+    logger.info(
+        f"User {user.get('user_id')} sent a message: {body.messages[-1]['content']}"
+    )
+
     # Stream response from the agent
     async for chunk in call_agent(
         request=body,
         user=user,
         conversation_id=conversation_id,
         access_token=user.get("access_token"),
+        refresh_token=user.get("refresh_token"),
     ):
         # Process complete message marker
         if chunk.startswith("nostream: "):
@@ -67,13 +75,19 @@ async def chat_stream(
 
 def extract_tool_data(json_str: str) -> Dict[str, Any]:
     """
-    Extract structured data from tool response JSON.
+    Parse and extract structured tool output from an agent's JSON response chunk.
 
-    Args:
-        json_str: The JSON string to parse
+     This function is responsible for detecting and extracting specific tool-related
+     intents and their data (e.g., calendar options, search results, weather data,
+     image generation outputs) from a JSON string sent during streaming.
 
-    Returns:
-        Dictionary with extracted tool data
+     Returns:
+         Dict[str, Any]: A dictionary containing extracted structured data.
+
+     Notes:
+         - This is meant to handle tool response metadata during streaming.
+         - If the JSON is malformed or does not match known tool structures, an empty dict is returned.
+         - This function is tolerant to missing keys and safe for runtime use in an async stream.
     """
     try:
         data = json.loads(json_str)
@@ -112,6 +126,15 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
             tool_data["intent"] = "generate_image"
             tool_data["image_data"] = data["image_data"]
 
+        # Extract email compose data
+        elif (
+            "intent" in data
+            and data["intent"] == "email"
+            and "email_compose_data" in data
+        ):
+            tool_data["intent"] = "email"
+            tool_data["email_compose_data"] = data["email_compose_data"]
+
         return tool_data
     except json.JSONDecodeError:
         return {}
@@ -146,6 +169,16 @@ async def initialize_conversation(
                 }
             )
         }\n\n"""
+
+        return conversation_id, init_chunk
+
+    # Load files and old messages if conversation_id is provided
+    uploaded_files = await get_files(
+        user_id=user.get("user_id"),
+        conversation_id=conversation_id,
+    )
+
+    logger.info(f"{uploaded_files=}")
 
     return conversation_id, init_chunk
 

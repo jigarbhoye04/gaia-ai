@@ -18,6 +18,7 @@ http_async_client = httpx.AsyncClient()
 TOKEN_REFRESH_THRESHOLD = 300  # 5 minutes
 USER_CACHE_EXPIRY = 3600  # 1 hour
 TOKEN_CACHE_EXPIRY = 3600  # 1 hour
+REFRESH_TOKEN_CACHE_EXPIRY = 86400  # 24 hours (refresh tokens typically last longer)
 
 
 async def get_user_info(access_token: str) -> dict:
@@ -75,19 +76,87 @@ async def refresh_access_token(refresh_token: str) -> dict:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
 
 
-async def get_valid_access_token(refresh_token: str) -> tuple[str, int]:
+async def get_valid_access_token(
+    refresh_token: str, user_email: Optional[str] = None
+) -> tuple[str, int]:
     """
     Refreshes the access token using the refresh token.
     Returns a tuple of the new access token and its expires_in value.
+
+    If user_email is provided, checks for cached token first.
     """
+    # Check if we have a cached token for this user
+    if user_email:
+        cache_key = f"user_token:{user_email}"
+        cached_token_data = await get_cache(cache_key)
+        if cached_token_data and "access_token" in cached_token_data:
+            current_time = int(time.time())
+            # Only use cached token if it's not about to expire
+            if (
+                cached_token_data.get("expires_at", 0)
+                > current_time + TOKEN_REFRESH_THRESHOLD
+            ):
+                logger.debug(f"Using cached access token for user {user_email}")
+                return cached_token_data["access_token"], cached_token_data.get(
+                    "expires_at", 0
+                ) - current_time
+
     try:
         token_data = await refresh_access_token(refresh_token)
         new_access_token = token_data["access_token"]
         expires_in = token_data.get("expires_in", 3600)
+
+        # Cache the new token if we have user email
+        if user_email:
+            cache_key = f"user_token:{user_email}"
+            expires_at = int(time.time()) + expires_in
+            await set_cache(
+                cache_key,
+                {
+                    "access_token": new_access_token,
+                    "expires_at": expires_at,
+                    "refresh_token": refresh_token,
+                },
+                TOKEN_CACHE_EXPIRY,
+            )
+
         return new_access_token, expires_in
     except Exception as e:
         logger.error(f"Error refreshing token: {e}")
         raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+
+async def cache_refresh_token(user_email: str, refresh_token: str) -> None:
+    """
+    Cache the refresh token for a user for future use.
+    Refresh tokens typically have a much longer lifespan than access tokens.
+    """
+    if not user_email or not refresh_token:
+        return
+
+    cache_key = f"user_refresh:{user_email}"
+    await set_cache(
+        cache_key,
+        {"refresh_token": refresh_token, "cached_at": int(time.time())},
+        REFRESH_TOKEN_CACHE_EXPIRY,
+    )
+    logger.debug(f"Cached refresh token for user {user_email}")
+
+
+async def get_cached_refresh_token(user_email: Optional[str]) -> Optional[str]:
+    """
+    Retrieve a cached refresh token for a user.
+    """
+    if not user_email:
+        return None
+
+    cache_key = f"user_refresh:{user_email}"
+    cached_data = await get_cache(cache_key)
+    if cached_data and "refresh_token" in cached_data:
+        logger.debug(f"Using cached refresh token for user {user_email}")
+        return cached_data["refresh_token"]
+
+    return None
 
 
 async def get_current_user(
@@ -103,31 +172,63 @@ async def get_current_user(
 
     try:
         user_email = None
+        user_info = None
 
         if access_token:
             try:
                 user_info = await get_user_info(access_token)
+                user_email = user_info.get("email")
+
+                # If we have a valid access token and a refresh token, cache the refresh token
+                if user_email and refresh_token:
+                    await cache_refresh_token(user_email, refresh_token)
 
             except HTTPException:
                 logger.info("Access token invalid or expired")
 
-        # If the access token is invalid/expired, refresh it
+        # If the access token is invalid/expired, try to use or refresh a token
         if not user_email:
+            # Try to get a cached refresh token if none was provided and we have some user info
+            if not refresh_token and user_info and user_info.get("email"):
+                temp_email = user_info.get("email")
+                if temp_email:  # This check ensures temp_email is not None
+                    cached_refresh_token = await get_cached_refresh_token(temp_email)
+                    if cached_refresh_token:
+                        refresh_token = cached_refresh_token
+                        logger.info(f"Using cached refresh token for user {temp_email}")
+
             if not refresh_token:
                 raise HTTPException(status_code=401, detail="Authentication required")
-            new_access_token, expires_in = await get_valid_access_token(refresh_token)
+
+            # Use user_email for cache lookup if we have it
+            temp_email = user_email if user_email else None
+
+            # Get a valid access token
+            new_access_token, expires_in = await get_valid_access_token(
+                refresh_token, temp_email
+            )
             access_token = new_access_token
+
+            # Get user info with the new access token
             user_info = await get_user_info(access_token)
             user_email = user_info.get("email")
 
-            # Update token cache using the retrieved email
-            cache_key = f"user_token:{user_email}"
-            expires_at = int(time.time()) + expires_in
-            await set_cache(
-                cache_key,
-                {"access_token": access_token, "expires_at": expires_at},
-                TOKEN_CACHE_EXPIRY,
-            )
+            # Now that we have the email, cache the refresh token if email is not None
+            if user_email:
+                await cache_refresh_token(user_email, refresh_token)
+
+                # Update token cache using the retrieved email
+                cache_key = f"user_token:{user_email}"
+                expires_at = int(time.time()) + expires_in
+                await set_cache(
+                    cache_key,
+                    {
+                        "access_token": access_token,
+                        "expires_at": expires_at,
+                        "refresh_token": refresh_token,
+                    },
+                    TOKEN_CACHE_EXPIRY,
+                )
 
         if not user_email:
             raise HTTPException(status_code=400, detail="Email not found")
@@ -136,6 +237,11 @@ async def get_current_user(
         cache_key = f"user_cache:{user_email}"
         cached_user_data = await get_cache(cache_key)
         if cached_user_data:
+            # Update with new tokens if available but keep other cached data
+            if access_token and access_token != cached_user_data.get("access_token"):
+                cached_user_data["access_token"] = access_token
+                # Update the cache with new data
+                await set_cache(cache_key, cached_user_data, USER_CACHE_EXPIRY)
             return cached_user_data
 
         user_data = await users_collection.find_one({"email": user_email})
@@ -150,6 +256,11 @@ async def get_current_user(
             "access_token": access_token,
             "cached_at": int(time.time()),
         }
+
+        # Include refresh token in user cache if available
+        if refresh_token:
+            user_info_to_cache["refresh_token"] = refresh_token
+
         await set_cache(cache_key, user_info_to_cache, USER_CACHE_EXPIRY)
 
         return user_info_to_cache

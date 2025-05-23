@@ -1,4 +1,5 @@
 from langchain_core.prompts import PromptTemplate
+
 from app.langchain.prompts.agent_prompts import AGENT_SYSTEM_PROMPT
 
 AGENT_PROMPT_TEMPLATE = PromptTemplate(

@@ -4,29 +4,40 @@ from pydantic import SecretStr
 from app.config.settings import settings
 from app.langchain.tools import (
     calendar_tool,
-    fetch_tool,
+    file_tools,
     flowchart_tool,
     image_tool,
+    mail_tool,
     memory_tool,
     search_tool,
     weather_tool,
+    webpage_tool,
 )
 
 # GROQ_MODEL = "llama-3.1-8b-instant"
-# GROQ_MODEL = "llama-3.3-70b-versatile"
-GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+GROQ_MODEL = "llama-3.3-70b-versatile"
+# GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
+# GROQ_MODEL = "deepseek-r1-distill-llama-70b"
 # GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
 
 tools = [
-    fetch_tool.fetch_webpages,
+    webpage_tool.fetch_webpages,
     search_tool.deep_search_tool,
     search_tool.web_search_tool,
     memory_tool.create_memory,
+    *mail_tool.mail_tools,
     weather_tool.get_weather,
     calendar_tool.fetch_calendar_list,
     calendar_tool.calendar_event,
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
+    file_tools.query_file,
+]
+
+silent_tools = [
+    file_tools.query_file.name,
+    memory_tool.create_memory.name,
+    *[tool.name for tool in mail_tool.mail_tools],
 ]
 
 
@@ -35,12 +46,9 @@ def init_groq_client():
         return ChatGroq(
             model=GROQ_MODEL,
             api_key=SecretStr(settings.GROQ_API_KEY),
-            temperature=0.6,
+            temperature=0.1,
             max_tokens=2048,
             streaming=True,
         )
 
-    llm_with_tools = create_llm().bind_tools(tools=tools)
-    llm_without_tools = create_llm()
-
-    return llm_with_tools, llm_without_tools, tools
+    return create_llm()

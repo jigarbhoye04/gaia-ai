@@ -15,7 +15,7 @@ from app.langchain.templates.calendar_template import CALENDAR_PROMPT_TEMPLATE
 async def calendar_event(
     event_data: Annotated[
         List[EventCreateRequest],
-        "Array of calendar event data with fields: summary, description, start, end, is_all_day, calendar_id, calendar_name, calendar_color",
+        "Array of calendar event data with fields: summary, description, is_all_day, start, end, calendar_id, calendar_name, calendar_color",
     ],
 ) -> str:
     """
@@ -36,9 +36,9 @@ async def calendar_event(
         event_data (List[EventCreateRequest]): Array of dictionaries containing calendar event details with fields:
             - summary (str): Event title or name (required)
             - description (str): Detailed description of the event (optional)
-            - start (str): Start time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required)
-            - end (str): End time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required)
             - is_all_day (bool): Boolean indicating if this is an all-day event (required)
+            - start (str): Start time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required only for non-all-day events)
+            - end (str): End time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required only for non-all-day events)
             - calendar_id (str, optional): ID of the specific calendar to add event to
             - calendar_name (str, optional): Display name of the calendar
             - calendar_color (str, optional): Color code for the calendar in hex format (e.g. "#00bbff")
@@ -71,6 +71,16 @@ async def calendar_event(
         # Process each event with validation
         for event in event_data:
             try:
+                # Validate event fields based on whether it's an all-day event
+                if event.is_all_day:
+                    # For all-day events, start and end are optional
+                    # They'll be handled in the service with defaults if missing
+                    pass
+                else:
+                    # For time-specific events, both start and end are required
+                    if not event.start or not event.end:
+                        raise ValueError("Start and end times are required for time-specific events")
+                
                 # Add the validated event
                 calendar_options.append(event.model_dump())
                 logger.info(f"Added calendar event: {event.summary}")

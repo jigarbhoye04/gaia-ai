@@ -61,7 +61,7 @@ async def do_prompt_no_stream(
 
     state = State(messages=messages)
 
-    response = await chatbot(state, use_tools)
+    response = await chatbot(state)
 
     # Extract the AI's response content
     ai_message = response["messages"][0]
