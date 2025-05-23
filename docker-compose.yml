@@ -100,8 +100,6 @@ services:
     container_name: redis
     volumes:
       - redis_data:/data
-    ports:
-      - "6379:6379"
     restart: on-failure
     ports:
       - "6379:6379"
