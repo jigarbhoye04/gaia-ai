@@ -15,7 +15,7 @@ from app.langchain.tools import (
 
 # MODEL = "llama-3.3-70b-versatile"
 # MODEL = "gemini-2.5-pro-preview-03-25"
-MODEL = "gpt-4o"
+MODEL = "gpt-4o-mini"
 
 tools = [
     webpage_tool.fetch_webpages,

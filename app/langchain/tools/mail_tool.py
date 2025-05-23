@@ -29,6 +29,7 @@ from app.langchain.templates.mail_templates import (
     process_list_labels_response,
     process_list_messages_response,
     process_search_messages_response,
+    COMPOSE_EMAIL_TEMPLATE,
 )
 from app.services.mail_service import (
     apply_labels,
@@ -316,7 +317,7 @@ async def compose_email(
         Optional[str],
         "Name or partial information about the recipient to search for their email address. Leave empty if no recipient information is provided.",
     ] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, Any] | str:
     try:
         writer = get_stream_writer()
         resolved_emails = []
@@ -364,8 +365,10 @@ async def compose_email(
                 "subject": subject,
                 "body": body,
             }})
-        
-        return {"subject": subject, "body": body}
+
+        # Generate summary of the composed email
+        return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)
+
     except Exception as e:
         error_msg = f"Error composing email: {str(e)}"
         logger.error(error_msg)
