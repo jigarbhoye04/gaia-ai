@@ -1,14 +1,13 @@
 import json
 from datetime import datetime, timezone
 
-from langchain_core.messages import AIMessageChunk, ToolMessage
+from langchain_core.messages import AIMessageChunk
 from langsmith import traceable
 
 from app.config.loggers import llm_logger as logger
 from app.langchain.graph_manager import GraphManager
 from app.langchain.messages import construct_langchain_messages
 from app.models.message_models import MessageRequestWithHistory
-from app.utils.sse_utils import format_tool_response
 
 
 @traceable
@@ -51,7 +50,7 @@ async def call_agent(
                     "refresh_token": refresh_token,
                     "email": user.get("email"),
                 },
-                "recursion_limit": 10,
+                "recursion_limit": 7,
                 "metadata": {"user_id": user_id},
             },
         ):
@@ -61,17 +60,13 @@ async def call_agent(
                 if chunk is None:
                     continue
 
+                # If we remove this check, all tool outputs will be yielded
                 if isinstance(chunk, AIMessageChunk):
                     content = str(chunk.content)
                     if content:
                         yield f"data: {json.dumps({'response': content})}\n\n"
                         complete_message += content
 
-                elif isinstance(chunk, ToolMessage):
-                    logger.info(f"Tool message: {chunk.name} - {chunk.content}")
-                    yield format_tool_response(
-                        tool_name=chunk.name, content=str(chunk.content)
-                    )
 
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"

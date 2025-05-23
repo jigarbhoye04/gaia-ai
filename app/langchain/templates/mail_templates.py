@@ -1,6 +1,8 @@
 """Templates for mail-related tool responses."""
 
 from typing import Dict, Any
+from langchain_core.prompts import PromptTemplate
+from app.langchain.prompts.mail_prompts import COMPOSE_EMAIL_SUMMARY
 
 
 # Template for minimal message representation
@@ -169,3 +171,10 @@ def process_list_drafts_response(response: Dict[str, Any]) -> Dict[str, Any]:
 def process_get_thread_response(response: Dict[str, Any]) -> Dict[str, Any]:
     """Process the response from get_email_thread tool to minimize data."""
     return thread_template(response)
+
+
+# Compose email template
+COMPOSE_EMAIL_TEMPLATE = PromptTemplate(
+    input_variables=["subject", "body"],
+    template=COMPOSE_EMAIL_SUMMARY,
+)

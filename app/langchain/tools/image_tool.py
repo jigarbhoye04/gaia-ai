@@ -1,4 +1,3 @@
-import json
 from typing import Annotated
 
 from langchain_core.tools import tool
@@ -14,7 +13,7 @@ async def generate_image(
         str,
         "An enhanced, detailed description for image generation. Expand from the user's request to include style, composition, lighting, mood, and other visual details for optimal results.",
     ],
-) -> str:
+) -> dict:
     """
     Generate an image based on an enhanced text prompt and return its URL.
 
@@ -22,12 +21,6 @@ async def generate_image(
         prompt: YOUR ENHANCED VERSION of the user's image request. You should expand the original request
                with details about artistic style, lighting, composition, colors, mood, perspective,
                and specific visual elements. Make it comprehensive (50-100+ words) for best results.
-
-    Returns:
-        A JSON string containing:
-            - "image_data": The URL or data of the generated image
-            - "instructions": Do not add a hyperlink to the image. Just explain the generated image.
-                              The image will be shown to the user on the frontend accordingly.
 
     Prompt Enhancement Guidelines:
         1. Start with the user's core concept
@@ -56,17 +49,14 @@ async def generate_image(
 
         image_result = await api_generate_image(message=prompt, improve_prompt=False)
 
-        return json.dumps(
-            {
-                "image_data": image_result,
-                "instructions": "Do not add a hyperlink to the image. Just explain the generated image. The image will be shown to the user on the frontend accordingly.",
-            }
-        )
+        # Send image data to frontend via writer
+        writer({"image_data": image_result})
+
+        # Return simple confirmation message
+        return {"status": "success", "instructions": "Image generated successfully."}
 
     except Exception as e:
+        writer = get_stream_writer()
         logger.error(f"Error generating image: {str(e)}")
-        error_response = {
-            "formatted_text": "\n\nError generating image. Please try again with a different prompt.",
-            "error": str(e),
-        }
-        return json.dumps(error_response)
+        writer({"error": f"Error generating image: {str(e)}"})
+        return {"status": "error", "message": f"Error generating image: {str(e)}"}

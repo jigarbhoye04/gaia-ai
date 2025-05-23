@@ -1,7 +1,4 @@
-from langchain_groq import ChatGroq
-from pydantic import SecretStr
-
-from app.config.settings import settings
+from langchain_openai import ChatOpenAI
 from app.langchain.tools import (
     calendar_tool,
     file_tools,
@@ -14,11 +11,9 @@ from app.langchain.tools import (
     webpage_tool,
 )
 
-# GROQ_MODEL = "llama-3.1-8b-instant"
-GROQ_MODEL = "llama-3.3-70b-versatile"
-# GROQ_MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
-# GROQ_MODEL = "deepseek-r1-distill-llama-70b"
-# GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+# MODEL = "llama-3.3-70b-versatile"
+# MODEL = "gemini-2.5-pro-preview-03-25"
+MODEL = "gpt-4o-mini"
 
 tools = [
     webpage_tool.fetch_webpages,
@@ -34,21 +29,21 @@ tools = [
     file_tools.query_file,
 ]
 
-silent_tools = [
-    file_tools.query_file.name,
-    memory_tool.create_memory.name,
-    *[tool.name for tool in mail_tool.mail_tools],
-]
-
 
 def init_groq_client():
     def create_llm():
-        return ChatGroq(
-            model=GROQ_MODEL,
-            api_key=SecretStr(settings.GROQ_API_KEY),
+        return ChatOpenAI(
+            model=MODEL,
+            # google_api_key=settings.GEMINI_API_KEY,
             temperature=0.1,
-            max_tokens=2048,
             streaming=True,
         )
+        # return ChatGroq(
+        #     model=GROQ_MODEL,
+        #     api_key=SecretStr(settings.GROQ_API_KEY),
+        #     temperature=0.1,
+        #     max_tokens=2048,
+        #     streaming=True,
+        # )
 
     return create_llm()
