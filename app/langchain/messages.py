@@ -15,28 +15,21 @@ def construct_langchain_messages(
     """Convert raw dict messages to LangChain message objects with current datetime."""
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
 
-    files_str = _format_files_list(files_data)
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
 
-    system_prompt = AGENT_PROMPT_TEMPLATE.format(
-        current_datetime=formatted_time, files=files_str
-    )
+    system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
     chain_msgs: List[AnyMessage] = [SystemMessage(system_prompt)]
 
-    for msg in messages:
+    for index, msg in enumerate(messages):
         role = msg.get("role")
         content = msg.get("content", "")
         if role == "user":
+            # If the message is last and the role is "user", it means the user is uploading files
+            if index == len(messages) - 1 and currently_uploaded_file_ids:
+                content += f"\n\n{current_files_str}"
             chain_msgs.append(HumanMessage(content=content))
         elif role in ("assistant", "bot"):
             chain_msgs.append(AIMessage(content=content))
-
-    # If last message is from human then append current files to the last message
-    if current_files_str and messages and messages[-1].get("role") == "user":
-        last_message = messages[-1]
-        last_message["content"] += f"\n\nCurrently Uploaded files:\n{current_files_str}"
-        # Update the last message in the list
-        messages[-1] = last_message
 
     return chain_msgs
 
