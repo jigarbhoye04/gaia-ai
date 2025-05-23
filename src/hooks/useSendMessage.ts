@@ -1,3 +1,4 @@
+// useSendMessage.ts
 "use client";
 
 import ObjectID from "bson-objectid";
@@ -16,47 +17,36 @@ export const useSendMessage = (convoIdParam: string | null) => {
   const dispatch = useDispatch();
   const fetchChatStream = useChatStream();
 
-  // returns as sendMessage hook
   return async (
     inputText: string,
     currentMode: SearchMode,
     pageFetchURLs: string[] = [],
-    fileData: FileData[] = [], // Update parameter to accept FileData objects
+    fileData: FileData[] = [],
   ) => {
-    const enableSearch = currentMode === "web_search";
-    const enableDeepSearch = currentMode === "deep_search";
-
     const botMessageId = String(ObjectID());
+    const isWebSearch = currentMode === "web_search";
+    const isDeepSearch = currentMode === "deep_search";
 
-    // Extract just the file IDs for the message
-    const fileIds = fileData.map((file) => file.fileId);
-
-    const currentMessage: MessageType = {
+    const userMessage: MessageType = {
       type: "user",
       response: inputText,
-      searchWeb: enableSearch,
-      deepSearchWeb: enableDeepSearch,
+      searchWeb: isWebSearch,
+      deepSearchWeb: isDeepSearch,
       pageFetchURLs,
       date: fetchDate(),
       message_id: String(ObjectID()),
-      fileIds: fileIds.length > 0 ? fileIds : undefined, // Include file IDs if provided
-      fileData: fileData.length > 0 ? fileData : undefined, // Store the complete file data
+      fileIds: fileData.map((f) => f.fileId),
+      fileData,
     };
 
-    dispatch(addMessage(currentMessage));
+    dispatch(addMessage(userMessage));
 
-    // For new conversations, we'll let the backend create the conversation
-    // No need to call createNewConversation explicitly
-    const conversationId = convoIdParam || null;
-
-    // If this is a new conversation (null conversationId),
-    // the backend will create it and return the ID
     await fetchChatStream(
       inputText,
-      [currentMessage],
-      conversationId,
-      enableSearch,
-      enableDeepSearch,
+      [userMessage],
+      convoIdParam,
+      isWebSearch,
+      isDeepSearch,
       pageFetchURLs,
       botMessageId,
       fileData,

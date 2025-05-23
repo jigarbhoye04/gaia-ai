@@ -9,6 +9,7 @@ import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 
 import MarkdownRenderer from "../../MarkdownRenderer";
 import CalendarEventSection from "./CalendarEventSection";
+import EmailComposeSection from "./EmailComposeSection";
 import DeepSearchResultsTabs from "./SearchResults/DeepSearchResultsTabs";
 import SearchResultsTabs from "./SearchResults/SearchResultsTabs";
 
@@ -19,6 +20,7 @@ export default function TextBubble({
   pageFetchURLs,
   disclaimer,
   calendar_options,
+  email_compose_data,
   weather_data,
   intent,
   search_results,
@@ -104,6 +106,10 @@ export default function TextBubble({
 
       {intent === "calendar" && calendar_options && (
         <CalendarEventSection calendar_options={calendar_options} />
+      )}
+
+      {email_compose_data && (
+        <EmailComposeSection email_compose_data={email_compose_data} />
       )}
     </>
   );

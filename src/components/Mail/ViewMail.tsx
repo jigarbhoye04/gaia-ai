@@ -48,7 +48,7 @@ function AISummary({ summary }: { summary: string | null }) {
 
   return (
     <>
-      <div className="mb-3 flex w-fit flex-col rounded-xl bg-zinc-800 p-2 shadow-md outline outline-2 outline-zinc-700">
+      <div className="mb-3 flex w-fit flex-col rounded-xl bg-zinc-800 p-2 shadow-md outline outline-zinc-700">
         <div className="relative flex items-center gap-3 text-sm font-medium text-white">
           <Chip
             classNames={{

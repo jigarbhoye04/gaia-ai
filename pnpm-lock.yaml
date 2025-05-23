@@ -425,6 +425,9 @@ importers:
       "@types/dagre":
         specifier: ^0.7.52
         version: 0.7.52
+      "@types/node":
+        specifier: 22.15.21
+        version: 22.15.21
       "@types/react":
         specifier: ^19.1.2
         version: 19.1.2
@@ -6912,10 +6915,10 @@ packages:
         integrity: sha512-zeMXFn8zQ+UkjK4ws0RiOC9EWByyW1CcVmLe+2rQocXRsGEDxUCwPEIVgpsGcLHS/P8JkT0oa3839BRABS0oPw==,
       }
 
-  "@types/node@22.15.3":
+  "@types/node@22.15.21":
     resolution:
       {
-        integrity: sha512-lX7HFZeHf4QG/J7tBZqrCAXwz9J5RD56Y6MpP0eJkka8p+K0RY/yBTW7CYFJ4VGCclxqOLKmiGP5juQc6MKgcw==,
+        integrity: sha512-EV/37Td6c+MgKAbkcLG6vqZ2zEYHD7bvSrzqqs2RIhbA6w3x+Dqz8MZM3sP6kGTeLrdoOgKZe+Xja7tUB2DNkQ==,
       }
 
   "@types/parse-json@4.0.2":
@@ -12352,6 +12355,12 @@ packages:
         integrity: sha512-FQT/OVqCD+7edmmJpsgCsY820RTD5AkBryuG5IUqR5YQZSdj5xlH5nLgH7YPths7WsLPSpSBNneJdM8aS8aeFA==,
       }
 
+  tailwind-merge@3.3.0:
+    resolution:
+      {
+        integrity: sha512-fyW/pEfcQSiigd5SNn0nApUOxx0zB/dm6UDU/rEwc2c3sX2smWUNbapHv+QRqLGVp9GWX3THIa7MUGPo+YkDzQ==,
+      }
+
   tailwind-variants@1.0.0:
     resolution:
       {
@@ -15878,7 +15887,7 @@ snapshots:
       "@inquirer/figures": 1.0.11
       "@inquirer/type": 2.0.0
       "@types/mute-stream": 0.0.4
-      "@types/node": 22.15.3
+      "@types/node": 22.15.21
       "@types/wrap-ansi": 3.0.0
       ansi-escapes: 4.3.2
       cli-width: 4.1.0
@@ -19319,11 +19328,11 @@ snapshots:
 
   "@types/mute-stream@0.0.4":
     dependencies:
-      "@types/node": 20.17.32
+      "@types/node": 22.15.21
 
   "@types/node-fetch@2.6.12":
     dependencies:
-      "@types/node": 18.19.87
+      "@types/node": 22.15.21
       form-data: 4.0.2
 
   "@types/node@18.19.87":
@@ -19334,7 +19343,7 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  "@types/node@22.15.3":
+  "@types/node@22.15.21":
     dependencies:
       undici-types: 6.21.0
 
@@ -20380,7 +20389,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
       react-easy-sort: 1.6.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      tailwind-merge: 3.2.0
+      tailwind-merge: 3.3.0
     transitivePeerDependencies:
       - "@types/react"
       - "@types/react-dom"
@@ -23043,6 +23052,8 @@ snapshots:
   tailwind-merge@3.0.2: {}
 
   tailwind-merge@3.2.0: {}
+
+  tailwind-merge@3.3.0: {}
 
   tailwind-variants@1.0.0(tailwindcss@4.1.5):
     dependencies:

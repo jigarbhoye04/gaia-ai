@@ -8,11 +8,13 @@ import {
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
 import { useConversation } from "@/hooks/useConversation";
 import { useFetchConversations } from "@/hooks/useConversationList";
 import { useUserActions } from "@/hooks/useUser";
+import { clearConversations } from "@/redux/slices/conversationsSlice";
 import { ApiService } from "@/services/apiService";
 import { apiauth } from "@/utils/apiaxios";
 
@@ -32,6 +34,7 @@ interface MenuItem {
 export default function SettingsMenu() {
   const { clearUser } = useUserActions();
   const router = useRouter();
+  const dispatch = useDispatch();
   const fetchConversations = useFetchConversations();
   const { updateConvoMessages } = useConversation();
   const [openSettings, setOpenSettings] = useState(false);
@@ -59,7 +62,12 @@ export default function SettingsMenu() {
       router.push("/c");
 
       await ApiService.deleteAllConversations();
-      await fetchConversations();
+
+      // Clear conversations in Redux state immediately
+      dispatch(clearConversations());
+
+      // Then fetch from the API to ensure sync with server
+      await fetchConversations(1, 20, false);
 
       updateConvoMessages([]);
       toast.success("All chats cleared successfully!");

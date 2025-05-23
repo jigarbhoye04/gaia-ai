@@ -112,6 +112,7 @@ export default function ChatRenderer() {
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
+              email_compose_data={message.email_compose_data}
               intent={message.intent}
               loading={message.loading}
               message_id={message.message_id}

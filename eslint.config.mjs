@@ -26,6 +26,7 @@ export default [
       "node_modules/",
       "pnpm-lock.yaml",
       ".next/",
+      ".claude/",
       ".env",
       ".env.local",
       ".env.*.local",

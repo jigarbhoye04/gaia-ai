@@ -35,6 +35,8 @@ export const useConversation = () => {
           response: botResponseText,
           intent: finalIntent.intent,
           calendar_options: finalIntent.calendar_options,
+          email_compose_data: finalIntent.email_compose_data,
+          weather_data: finalIntent.weather_data,
         },
       ] as MessageType[];
     });

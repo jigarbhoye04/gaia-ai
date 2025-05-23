@@ -73,6 +73,19 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
     [selectedMode],
   );
 
+  // Load saved input from localStorage on mount
+  useEffect(() => {
+    const savedInput = localStorage.getItem("gaia-searchbar-text");
+    if (savedInput) {
+      setSearchbarText(savedInput);
+    }
+  }, []);
+
+  // Save input to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("gaia-searchbar-text", searchbarText);
+  }, [searchbarText]);
+
   // Expose functions to parent component via ref
   useImperativeHandle(
     fileUploadRef,
@@ -143,10 +156,18 @@ const MainSearchbar: React.FC<MainSearchbarProps> = ({
       uploadedFileData,
     );
 
-    // Clear input and uploaded files after sending
-    setSearchbarText("");
+    // Clear uploaded files after sending
     setUploadedFiles([]);
     setUploadedFileData([]);
+
+    // Optional: Clear the input field (can be controlled via a setting)
+    const shouldClearInput =
+      localStorage.getItem("gaia-clear-input-on-send") !== "false";
+    if (shouldClearInput) {
+      setSearchbarText("");
+      localStorage.removeItem("gaia-searchbar-text"); // Clear saved text when intentionally clearing
+    }
+
     if (inputRef) inputRef.current?.focus();
     scrollToBottom();
   };

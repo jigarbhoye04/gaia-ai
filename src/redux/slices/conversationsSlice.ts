@@ -54,10 +54,10 @@ export const fetchConversations = createAsyncThunk<
       return {
         conversations: data.conversations ?? [],
         paginationMeta: {
-          total: data.total,
-          page: data.page,
-          limit: data.limit,
-          total_pages: data.total_pages,
+          total: data.total ?? 0,
+          page: data.page ?? 1,
+          limit: data.limit ?? limit,
+          total_pages: data.total_pages ?? 1,
         },
         append,
       };
