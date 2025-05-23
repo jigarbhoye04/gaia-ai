@@ -3,8 +3,7 @@ import { Modal, ModalBody, ModalContent } from "@heroui/modal";
 import React, { useState } from "react";
 
 import GeneralSection from "./GeneralSettings";
-import PrivacySection from "./PrivacySettings";
-// import AccountSection from "./AccountSettings";
+import AccountSection from "./AccountSettings";
 import { ModalAction } from "./SettingsMenu";
 
 interface SidebarItem {
@@ -34,10 +33,8 @@ export default function SettingsModal({
     switch (activeSection) {
       case "general":
         return <GeneralSection setModalAction={setModalAction} />;
-      case "privacy":
-        return <PrivacySection />;
-      // case "account":
-      //   return <AccountSection setModalAction={setModalAction} />;
+      case "account":
+        return <AccountSection setModalAction={setModalAction} />;
       default:
         return null;
     }
