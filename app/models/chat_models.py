@@ -37,7 +37,7 @@ class MessageModel(BaseModel):
     message_id: Optional[str] = None  # Message ID
     fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
     fileData: Optional[List[FileData]] = []  # Complete file metadata
-    intent: Optional[Literal["calendar", "generate_image", "weather", "email"]] = None
+    intent: Optional[Literal["calendar", "generate_image", "weather"]] = None
     calendar_options: Optional[List[EventCreateRequest]] = None
     search_results: Optional[SearchResults] = None
     deep_search_results: Optional[DeepSearchResults] = None  # Results from deep search

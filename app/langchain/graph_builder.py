@@ -10,6 +10,7 @@ from langgraph_bigtool import create_agent
 from app.config.settings import settings
 from app.langchain.client import init_groq_client
 from app.langchain.client import tools as all_tools
+from app.config.loggers import llm_logger as logger
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
@@ -35,6 +36,7 @@ async def build_graph():
     )
 
     for tool_id, tool in tool_registry.items():
+        logger.info(f"Registering tool: {tool.name=} ({tool_id=}) {tool.description=}")
         store.put(
             ("tools",),
             tool_id,
@@ -44,9 +46,6 @@ async def build_graph():
         )
 
     builder = create_agent(llm, tool_registry)
-
-    # builder.add_node("chatbot", chatbot)
-    # builder.add_node("tools", ToolNode(tools=tools))
 
     # Injector nodes add tool calls to the state messages
     builder.add_node("inject_web_search", inject_web_search_tool_call)
@@ -69,8 +68,6 @@ async def build_graph():
     builder.add_edge("inject_web_search", "tools")
     builder.add_edge("inject_deep_search", "tools")
 
-    # builder.add_conditional_edges("chatbot", tools_condition)
-    # builder.add_edge("tools", "chatbot")
     builder.add_edge("agent", END)
 
     async with AsyncPostgresSaver.from_conn_string(

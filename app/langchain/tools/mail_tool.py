@@ -11,12 +11,9 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     SEARCH_GMAIL_MESSAGES,
     SUMMARIZE_EMAIL,
     COMPOSE_EMAIL,
-    MARK_EMAILS_AS_READ,
-    MARK_EMAILS_AS_UNREAD,
     STAR_EMAILS,
     UNSTAR_EMAILS,
     ARCHIVE_EMAILS,
-    MOVE_EMAILS_TO_INBOX,
     GET_EMAIL_THREAD,
     CREATE_GMAIL_LABEL,
     UPDATE_GMAIL_LABEL,
@@ -95,7 +92,7 @@ async def list_gmail_labels(config: RunnableConfig) -> Dict[str, Any]:
 
 @tool
 @with_doc(LIST_GMAIL_MESSAGES)
-async def list_gmail_messages(
+async def fetch_gmail_messages(
     config: RunnableConfig,
     max_results: Annotated[
         int, "Maximum number of messages to fetch (default: 20)"
@@ -358,17 +355,15 @@ async def compose_email(
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
         
-        # Simulate some processing time for dramatic effect (optional)
-        import asyncio
-        await asyncio.sleep(0.5)
-        
-        # Progress update for final touches
         writer({"progress": "Adding final touches..."})
-        await asyncio.sleep(0.3)
         
-        # Final progress update
         writer({"progress": "Email draft ready!"})
-        await asyncio.sleep(0.2)
+
+        # writer({"email_compose_data": {
+        #         "to": resolved_emails if resolved_emails else [],
+        #         "subject": subject,
+        #         "body": body,
+        #     }})
         
         return {
             "email_compose_data": {
@@ -382,63 +377,6 @@ async def compose_email(
         error_msg = f"Error composing email: {str(e)}"
         logger.error(error_msg)
         return {"error": error_msg}
-
-
-@tool
-@with_doc(MARK_EMAILS_AS_READ)
-async def mark_emails_as_read(
-    message_ids: Annotated[List[str], "List of Gmail message IDs to mark as read"],
-    config: RunnableConfig,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Marking {len(message_ids)} emails as read")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        mark_messages_as_read(service, message_ids)
-
-        return {"success": True, "message_ids": message_ids}
-    except Exception as e:
-        error_msg = f"Error marking emails as read: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool
-@with_doc(MARK_EMAILS_AS_UNREAD)
-async def mark_emails_as_unread(
-    message_ids: Annotated[List[str], "List of Gmail message IDs to mark as unread"],
-    config: RunnableConfig,
-) -> Dict[str, Any]:
-    try:
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        result = mark_messages_as_unread(service, message_ids)
-
-        return {"success": True, "message_ids": message_ids, "result": result}
-    except Exception as e:
-        error_msg = f"Error marking emails as unread: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
 
 
 @tool
@@ -522,35 +460,6 @@ async def archive_emails(
         return {"success": True, "message_ids": message_ids, "result": result}
     except Exception as e:
         error_msg = f"Error archiving emails: {str(e)}"
-        logger.error(error_msg)
-        return {"success": False, "error": error_msg}
-
-
-@tool
-@with_doc(MOVE_EMAILS_TO_INBOX)
-async def move_emails_to_inbox(
-    message_ids: Annotated[List[str], "List of Gmail message IDs to move to inbox"],
-    config: RunnableConfig,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Moving {len(message_ids)} emails to inbox")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {
-                "success": False,
-                "error": "Authentication credentials not provided",
-            }
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        result = move_to_inbox(service, message_ids)
-
-        return {"success": True, "message_ids": message_ids, "result": result}
-    except Exception as e:
-        error_msg = f"Error moving emails to inbox: {str(e)}"
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
 
@@ -816,22 +725,19 @@ async def get_contacts(
 
 
 mail_tools = [
-    list_gmail_labels,
-    list_gmail_messages,
+    # list_gmail_labels,
+    fetch_gmail_messages,
     search_gmail_messages,
     summarize_email,
     compose_email,
-    mark_emails_as_read,
-    mark_emails_as_unread,
-    star_emails,
-    unstar_emails,
-    archive_emails,
-    move_emails_to_inbox,
+    # star_emails,
+    # unstar_emails,
+    # archive_emails,
     get_email_thread,
-    create_gmail_label,
-    update_gmail_label,
-    delete_gmail_label,
-    apply_labels_to_emails,
-    remove_labels_from_emails,
+    # create_gmail_label,
+    # update_gmail_label,
+    # delete_gmail_label,
+    # apply_labels_to_emails,
+    # remove_labels_from_emails,
     get_contacts,
 ]

@@ -128,50 +128,6 @@ COMPOSE_EMAIL = """
     Note: The tool automatically resolves recipients and can fill in missing context when needed.
     """
 
-MARK_EMAILS_AS_READ = """
-    Mark Gmail messages as read.
-
-    This tool removes the UNREAD label from specified messages, marking them as read
-    in the user's Gmail account.
-
-    When to use:
-    - When user wants to mark emails as read after viewing them
-    - When implementing bulk email processing
-    - After extracting information from unread emails
-    - When user specifically asks to mark messages as read
-
-    Input:
-    - message_ids: Required list of Gmail message IDs to mark as read
-
-    Output:
-    - Dictionary with success status and affected message IDs
-    - Error message if operation fails
-
-    Limitations: Cannot be undone directly (would need to use mark_emails_as_unread).
-    """
-
-MARK_EMAILS_AS_UNREAD = """
-    Mark Gmail messages as unread.
-
-    This tool adds the UNREAD label to specified messages, marking them as unread
-    in the user's Gmail account.
-
-    When to use:
-    - When user wants to flag emails for later attention
-    - When emails need to be revisited later
-    - When implementing "mark as unread" functionality
-    - When user specifically asks to mark messages as unread
-
-    Input:
-    - message_ids: Required list of Gmail message IDs to mark as unread
-
-    Output:
-    - Dictionary with success status and affected message IDs
-    - Error message if operation fails
-
-    Limitations: May affect how emails appear in different Gmail views.
-    """
-
 STAR_EMAILS = """
     Star Gmail messages.
 
@@ -236,28 +192,6 @@ ARCHIVE_EMAILS = """
     - Error message if operation fails
 
     Limitations: Archived emails remain searchable and retain other labels.
-    """
-
-MOVE_EMAILS_TO_INBOX = """
-    Move Gmail messages to inbox.
-
-    This tool adds the INBOX label to specified messages, moving them to the user's
-    inbox. This effectively unarchives emails or ensures they appear in the inbox view.
-
-    When to use:
-    - When user wants to restore previously archived emails
-    - When emails need renewed attention in the inbox
-    - When implementing "move to inbox" functionality
-    - When user explicitly asks to move messages to inbox
-
-    Input:
-    - message_ids: Required list of Gmail message IDs to move to inbox
-
-    Output:
-    - Dictionary with success status and affected message IDs
-    - Error message if operation fails
-
-    Limitations: Messages already in inbox will remain unchanged.
     """
 
 GET_EMAIL_THREAD = """
