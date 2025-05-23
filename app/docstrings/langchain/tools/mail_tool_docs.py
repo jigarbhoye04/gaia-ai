@@ -107,25 +107,29 @@ SUMMARIZE_EMAIL = """
     """
 
 COMPOSE_EMAIL = """
-    Use AI to compose a detailed, professional-grade email based on a user's prompt.
+    Compose, write, or draft an email message based on the user's request.
 
-    The output must be:
-    - At least 3–5 full paragraphs (unless the user requests brevity)
-    - Properly formatted with paragraph spacing and professional structure
-    - Written in clear, polished English appropriate to the requested tone (formal, friendly, persuasive, etc.)
+    This tool helps create emails of any type - from simple personal messages to detailed professional communications.
 
     When to use:
-    - User needs help writing a well-structured email
-    - User gives a prompt or partial draft
-    - User requests tone/styling (e.g., formal, friendly, assertive)
-    - Time-saving for long or complex email responses
+    - User wants to compose, write, send, or draft any email
+    - User mentions writing to someone via email
+    - User asks to email someone (e.g., "email John", "send an email to Sarah")
+    - User provides email content or instructions (e.g., "tell her I love her", "ask about the meeting")
+    - User needs help with any email-related task
 
-    Always:
-    - Expand on the user's input with context, background, and actionable points
-    - Add thoughtful openings and closings, unless the user provides them
-    - Avoid generic replies—be specific and realistic
+    The tool will:
+    - Create appropriate email content based on the context
+    - Handle both brief personal messages and detailed professional emails
+    - Automatically resolve recipient names to email addresses when possible
+    - Adapt tone and style to match the user's intent
 
-    Note: The tool automatically resolves recipients and can fill in missing context when needed.
+    Input requirements:
+    - Body content or instructions for what to write
+    - Subject line or topic
+    - Optional: recipient name or query to search for their email
+
+    Note: The tool can handle any email request, from "email mom happy birthday" to complex business proposals.
     """
 
 STAR_EMAILS = """

@@ -359,20 +359,13 @@ async def compose_email(
         
         writer({"progress": "Email draft ready!"})
 
-        # writer({"email_compose_data": {
-        #         "to": resolved_emails if resolved_emails else [],
-        #         "subject": subject,
-        #         "body": body,
-        #     }})
-        
-        return {
-            "email_compose_data": {
+        writer({"email_compose_data": {
                 "to": resolved_emails if resolved_emails else [],
                 "subject": subject,
                 "body": body,
-            },
-            "instructions": "Just tell the user that here's their email and summarise the gist of it. The actual email will be sent with a generated button click by the user on the frontend.",
-        }
+            }})
+        
+        return {"subject": subject, "body": body}
     except Exception as e:
         error_msg = f"Error composing email: {str(e)}"
         logger.error(error_msg)

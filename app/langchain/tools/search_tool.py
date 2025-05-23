@@ -91,11 +91,9 @@ async def web_search_tool(
         logger.info(formatted_text)
         writer({"progress": formatted_text})
 
-        response = {
-            "formatted_text": SEARCH_TEMPLATE.format(
-                formatted_results=formatted_results
-            ),
-            "raw_search_data": {
+        # Send search data to frontend via writer
+        writer({
+            "search_data": {
                 "web": web_results,
                 "news": news_results,
                 "images": image_results,
@@ -103,10 +101,10 @@ async def web_search_tool(
                 "query": query_text,
                 "elapsed_time": elapsed_time,
                 "result_count": {"web": len(web_results), "news": len(news_results)},
-            },
-        }
+            }
+        })
 
-        return json.dumps(response)
+        return "Search results sent to frontend"
 
     except (asyncio.TimeoutError, ConnectionError) as e:
         logger.error(f"Network error in web search: {e}", exc_info=True)
@@ -216,17 +214,12 @@ async def deep_search_tool(
         elapsed_time = time.time() - start_time
         logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
 
-        # Create a response with both formatted text for the LLM and structured data for the frontend
-        response = {
-            "formatted_text": DEEP_SEARCH_TEMPLATE.format(
-                formatted_results=formatted_results
-            ),
-            "raw_deep_search_data": {
-                **deep_search_results,
-            },
-        }
+        # Send deep search data to frontend via writer
+        writer({
+            "deep_search_data": deep_search_results
+        })
 
-        return json.dumps(response)
+        return "Deep search results sent to frontend"
 
     except (asyncio.TimeoutError, ConnectionError) as e:
         logger.error(f"Network error in deep search: {e}", exc_info=True)
