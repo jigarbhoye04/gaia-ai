@@ -107,21 +107,26 @@ SUMMARIZE_EMAIL = """
     """
 
 COMPOSE_EMAIL = """
-    Use AI to compose an email based on a prompt.
+    Use AI to compose a detailed, professional-grade email based on a user's prompt.
 
-    This tool generates complete email drafts from natural language instructions,
-    adapting to different writing styles and content preferences.
+    The output must be:
+    - At least 3–5 full paragraphs (unless the user requests brevity)
+    - Properly formatted with paragraph spacing and professional structure
+    - Written in clear, polished English appropriate to the requested tone (formal, friendly, persuasive, etc.)
 
     When to use:
-    - When user needs help writing an email
-    - When drafting responses to common email types
-    - When user requests specific tone or style for an email
-    - When user wants to save time on routine correspondence
-    - When user provides a partial draft that needs improvement
+    - User needs help writing a well-structured email
+    - User gives a prompt or partial draft
+    - User requests tone/styling (e.g., formal, friendly, assertive)
+    - Time-saving for long or complex email responses
 
-    Note: The tool independently handles recipient email resolution.
+    Always:
+    - Expand on the user's input with context, background, and actionable points
+    - Add thoughtful openings and closings, unless the user provides them
+    - Avoid generic replies—be specific and realistic
+
+    Note: The tool automatically resolves recipients and can fill in missing context when needed.
     """
-
 
 MARK_EMAILS_AS_READ = """
     Mark Gmail messages as read.
