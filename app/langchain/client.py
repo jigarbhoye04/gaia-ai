@@ -31,12 +31,6 @@ tools = [
     file_tools.query_file,
 ]
 
-silent_tools = [
-    file_tools.query_file.name,
-    memory_tool.create_memory.name,
-    *[tool.name for tool in mail_tool.mail_tools],
-]
-
 
 def init_groq_client():
     def create_llm():

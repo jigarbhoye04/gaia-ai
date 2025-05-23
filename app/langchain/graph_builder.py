@@ -36,7 +36,7 @@ async def build_graph():
     )
 
     for tool_id, tool in tool_registry.items():
-        logger.info(f"Registering tool: {tool.name=} ({tool_id=}) {tool.description=}")
+        # logger.info(f"Registering tool: {tool.name=} ({tool_id=}) {tool.description=}")
         store.put(
             ("tools",),
             tool_id,

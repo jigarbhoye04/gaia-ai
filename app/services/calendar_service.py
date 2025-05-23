@@ -74,7 +74,6 @@ async def fetch_calendar_list(access_token: str, short: bool = False) -> Any:
                     "id": c.get("id"),
                     "summary": c.get("summary"),
                     "description": c.get("description"),
-                    "timeZone": c.get("timeZone"),
                     "backgroundColor": c.get("backgroundColor"),
                 }
                 for c in data.get("items", [])

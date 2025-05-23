@@ -683,7 +683,7 @@ async def remove_labels_from_emails(
 
 @tool
 @with_doc(GET_GMAIL_CONTACTS)
-async def get_contacts(
+async def get_mail_contacts(
     config: RunnableConfig,
     query: Annotated[
         str,
@@ -732,5 +732,5 @@ mail_tools = [
     # delete_gmail_label,
     # apply_labels_to_emails,
     # remove_labels_from_emails,
-    get_contacts,
+    get_mail_contacts,
 ]

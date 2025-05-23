@@ -2,6 +2,33 @@
 Calendar-related prompt templates for the chat agent.
 """
 
+CALENDAR_LIST_PROMPT = """
+You have retrieved the user's calendar list. 
+
+IMPORTANT INSTRUCTIONS:
+- This calendar data is for YOUR internal use only - NEVER show raw JSON to the user
+- Use this information to intelligently select the appropriate calendar for events
+- Default to the primary calendar (where primary=true) for general events
+- Match calendars based on context (e.g., select "Work" calendar for work meetings)
+- Only ask the user which calendar to use in extreme cases where you cannot determine the appropriate calendar
+
+When creating calendar events:
+1. Silently select the most appropriate calendar based on the event context
+2. Use the calendar_id when calling calendar_event
+3. Simply tell the user "I'll add this to your calendar" without technical details
+
+Example contextual matching:
+- "Schedule a team meeting" → Use "Work" calendar if available
+- "Doctor appointment" → Use "Personal" or primary calendar
+- "Birthday party" → Use "Personal" or primary calendar
+- General events without clear context → Use primary calendar
+
+Here is the calendar list:
+
+{calendars}
+
+"""
+
 CALENDAR_PROMPT = """
 Use this template to explain calendar events to the user. The user has requested to create a calendar event, and the event details have been processed.
 
