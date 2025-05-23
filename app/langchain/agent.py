@@ -26,6 +26,7 @@ async def call_agent(
         messages,
         files_data=request.fileData,
         currently_uploaded_file_ids=request.fileIds,
+        user_info=user,
     )
 
     initial_state = {

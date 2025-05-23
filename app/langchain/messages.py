@@ -11,13 +11,16 @@ def construct_langchain_messages(
     messages: List[MessageDict],
     files_data: List[FileData] | None = None,
     currently_uploaded_file_ids: Optional[List[str]] = [],
+    user_info: dict = {},
 ) -> List[AnyMessage]:
     """Convert raw dict messages to LangChain message objects with current datetime."""
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
 
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
 
-    system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
+    system_prompt = AGENT_PROMPT_TEMPLATE.format(
+        current_datetime=formatted_time, user_name=user_info.get("name", "")
+    )
     chain_msgs: List[AnyMessage] = [SystemMessage(system_prompt)]
 
     for index, msg in enumerate(messages):
