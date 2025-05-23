@@ -60,11 +60,12 @@ async def call_agent(
                 if chunk is None:
                     continue
 
-                # if isinstance(chunk, AIMessageChunk):
-                content = str(chunk.content)
-                if content:
-                    yield f"data: {json.dumps({'response': content})}\n\n"
-                    complete_message += content
+                # If we remove this check, all tool outputs will be yielded
+                if isinstance(chunk, AIMessageChunk):
+                    content = str(chunk.content)
+                    if content:
+                        yield f"data: {json.dumps({'response': content})}\n\n"
+                        complete_message += content
 
                 # elif isinstance(chunk, ToolMessage):
                 #     logger.info(f"Tool message: {chunk.name} - {chunk.content}")
