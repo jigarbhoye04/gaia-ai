@@ -11,7 +11,7 @@ class CurrentUserModel(BaseModel):
         default_factory=datetime.utcnow,
         description="Timestamp when the user data was cached",
     )
-    profile_picture: str = Field(
+    picture: str = Field(
         default=None, description="URL of the user's profile picture"
     )
     is_active: bool = Field(default=True, description="Indicates if the user is active")
