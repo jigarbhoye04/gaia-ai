@@ -1,4 +1,3 @@
-import uuid
 from contextlib import asynccontextmanager
 
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -22,7 +21,7 @@ llm = init_groq_client()
 @asynccontextmanager
 async def build_graph():
     """Construct and compile the state graph."""
-    tool_registry = {str(uuid.uuid4()): tool for tool in all_tools}
+    tool_registry = {tool.name: tool for tool in all_tools}
 
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 

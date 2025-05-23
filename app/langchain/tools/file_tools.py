@@ -67,9 +67,6 @@ async def query_file(
 
         conversation_id = configurable["thread_id"]
 
-        logger.info(f"User ID from config: {configurable['user_id']}")
-        logger.info(f"Querying file with query: {query} and file_id: {file_id}")
-
         similar_documents = await _get_similar_documents(
             query=query,
             conversation_id=conversation_id,
