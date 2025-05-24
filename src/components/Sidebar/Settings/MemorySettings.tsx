@@ -14,7 +14,7 @@ import { Brain, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import apiaxios from "@/utils/apiaxios";
+import { apiauth } from "@/utils/apiaxios";
 
 interface Memory {
   id: string;
@@ -35,7 +35,7 @@ export default function MemorySettings() {
   const fetchMemories = async (page: number = 1) => {
     setLoading(true);
     try {
-      const response = await apiaxios.get("memory", {
+      const response = await apiauth.get("memory", {
         params: { page, page_size: 10 },
       });
 
@@ -57,7 +57,7 @@ export default function MemorySettings() {
     if (!newMemoryContent.trim()) return;
 
     try {
-      const response = await apiaxios.post("memory", {
+      const response = await apiauth.post("memory", {
         content: newMemoryContent.trim(),
       });
 
@@ -78,7 +78,7 @@ export default function MemorySettings() {
   const handleDeleteMemory = async (memoryId: string) => {
     setDeletingId(memoryId);
     try {
-      const response = await apiaxios.delete(`memory/${memoryId}`);
+      const response = await apiauth.delete(`memory/${memoryId}`);
 
       if (response.data.success) {
         toast.success("Memory deleted");
@@ -104,7 +104,7 @@ export default function MemorySettings() {
     }
 
     try {
-      const response = await apiaxios.delete("memory");
+      const response = await apiauth.delete("memory");
 
       if (response.data.success) {
         toast.success(response.data.message || "All memories cleared");

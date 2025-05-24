@@ -4,8 +4,6 @@ import { Button } from "@heroui/react";
 import { Brain } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import MemoryModal from "./MemoryModal";
-
 interface MemoryResult {
   id: string;
   content: string;
@@ -34,10 +32,13 @@ interface MemoryIndicatorProps {
     timestamp?: string;
     conversation_id?: string;
   } | null;
+  onOpenModal: () => void;
 }
 
-export default function MemoryIndicator({ memoryData }: MemoryIndicatorProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function MemoryIndicator({
+  memoryData,
+  onOpenModal,
+}: MemoryIndicatorProps) {
   const [displayText, setDisplayText] = useState<string>("");
   const [showIndicator, setShowIndicator] = useState(false);
 
@@ -101,13 +102,11 @@ export default function MemoryIndicator({ memoryData }: MemoryIndicatorProps) {
           radius="full"
           className="w-fit text-gray-500"
           startContent={<Brain className="h-4 w-4" />}
-          onPress={() => setIsModalOpen(true)}
+          onPress={onOpenModal}
         >
           {displayText}
         </Button>
       )}
-
-      <MemoryModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   );
 }

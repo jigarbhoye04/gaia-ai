@@ -77,4 +77,7 @@ export interface ChatBubbleBotProps {
     timestamp?: string;
     conversation_id?: string;
   } | null;
+
+  // Function to open the shared memory modal
+  onOpenMemoryModal?: () => void;
 }

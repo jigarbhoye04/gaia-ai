@@ -15,11 +15,13 @@ import ChatBubbleBot from "./ChatBubbles/Bot/ChatBubbleBot";
 import SearchedImageDialog from "./ChatBubbles/Bot/SearchResults/SearchedImageDialog";
 import ChatBubbleUser from "./ChatBubbles/User/ChatBubbleUser";
 import GeneratedImageSheet from "./Image/GeneratedImageSheet";
+import MemoryModal from "./Memory/MemoryModal";
 
 export default function ChatRenderer() {
   const { convoMessages } = useConversation();
   const { conversations } = useConversationList();
   const [openGeneratedImage, setOpenGeneratedImage] = useState<boolean>(false);
+  const [openMemoryModal, setOpenMemoryModal] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
   const { isLoading } = useLoading();
@@ -92,6 +94,11 @@ export default function ChatRenderer() {
         setOpenImage={setOpenGeneratedImage}
       />
 
+      <MemoryModal
+        isOpen={openMemoryModal}
+        onClose={() => setOpenMemoryModal(false)}
+      />
+
       <SearchedImageDialog />
 
       {convoMessages?.map((message: MessageType, index: number) =>
@@ -129,6 +136,7 @@ export default function ChatRenderer() {
               weather_data={message.weather_data}
               image_data={message.image_data}
               memory_data={message.memory_data}
+              onOpenMemoryModal={() => setOpenMemoryModal(true)}
             />
           </div>
         ) : (
