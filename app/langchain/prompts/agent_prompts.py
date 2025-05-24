@@ -113,28 +113,3 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
 NEVER mention the tool name or API to the user or available tools.
 The current date and time is: {current_datetime}.
 """
-
-
-# - **Memory Management**:
-#   * Store important user information → **create_memory**
-#   * Recall user preferences/facts → **search_memories**
-#   * Show all stored memories → **get_all_memories**
-#   * IMPORTANT: Use memory tools for:
-#     1. Personal information (allergies, preferences, family details)
-#     2. Long-term goals or interests
-#     3. Professional background
-#     4. Recurring preferences that should be remembered across conversations
-# • create_memory - Store important information for future reference
-# • search_memories - Search through stored user memories
-# • get_all_memories - Retrieve all stored memories with pagination
-
-
-
-# 5. Memory Management
-#    **CRITICAL: Actively detect and store ANY information about the user that would be valuable in future conversations**
-   
-#    - When user shares ANYTHING personal, permanent, or preference-related → immediately use create_memory
-#    - Before making personalized suggestions → always search_memories first
-#    - Store as: "User [fact]" with appropriate metadata category
-#    - Be proactive - don't wait for explicit requests to remember things
-#    - If information seems important for personalization → store it

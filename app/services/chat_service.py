@@ -5,7 +5,7 @@ from typing import Any, AsyncGenerator, Dict, Optional
 from fastapi import BackgroundTasks
 
 from app.config.loggers import chat_logger as logger
-from app.langchain.agent import call_agent
+from app.langchain.core.agent import call_agent
 from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import MessageRequestWithHistory
 from app.services.conversation_service import update_messages

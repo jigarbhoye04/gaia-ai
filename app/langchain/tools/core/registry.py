@@ -1,4 +1,3 @@
-from langchain_openai import ChatOpenAI
 from app.langchain.tools import (
     calendar_tool,
     file_tools,
@@ -10,7 +9,6 @@ from app.langchain.tools import (
     webpage_tool,
 )
 
-MODEL = "gpt-4o-mini"
 
 # Define tools that should always be accessible to the agent directly
 ALWAYS_AVAILABLE_TOOLS = [
@@ -29,14 +27,3 @@ tools = [
     image_tool.generate_image,
     weather_tool.get_weather,
 ]
-
-
-def init_groq_client():
-    def create_llm():
-        return ChatOpenAI(
-            model=MODEL,
-            temperature=0.1,
-            streaming=True,
-        )
-
-    return create_llm()

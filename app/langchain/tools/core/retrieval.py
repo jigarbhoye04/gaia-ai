@@ -2,7 +2,7 @@ from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 from typing_extensions import Annotated
 
-from app.langchain.client import ALWAYS_AVAILABLE_TOOLS
+from app.langchain.tools.core.registry   import ALWAYS_AVAILABLE_TOOLS
 
 
 def retrieve_tools(

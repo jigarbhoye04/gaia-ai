@@ -11,7 +11,7 @@ from typing import List, Union
 from llama_cloud_services import LlamaParse
 from llama_cloud_services.parse.utils import ResultType
 
-import app.langchain.graph_builder as graph_builder
+import app.langchain.core.graph_builder as graph_builder
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
 from app.models.files_models import DocumentPageModel, DocumentSummaryModel

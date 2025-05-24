@@ -6,24 +6,23 @@ from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
-from app.langchain.client import init_groq_client
+from app.langchain.llm.client import init_llm
 from app.config.settings import settings
-from app.langchain.client import tools
-from app.langchain.tool_injectors import (
+from app.langchain.tools.core.registry import tools,ALWAYS_AVAILABLE_TOOLS
+from app.langchain.tools.core.injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
     should_call_tool,
 )
-from app.langchain.tool_retrieval import retrieve_tools
+from app.langchain.tools.core.retrieval import retrieve_tools
 
-llm = init_groq_client()
+llm = init_llm()
 
 
 @asynccontextmanager
 async def build_graph():
     """Construct and compile the state graph."""
     # Register both regular and always available tools
-    from app.langchain.client import ALWAYS_AVAILABLE_TOOLS
     all_tools = tools + ALWAYS_AVAILABLE_TOOLS
     tool_registry = {tool.name: tool for tool in all_tools}
 
