@@ -6,14 +6,15 @@ from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
-from app.config.settings import settings
 from app.langchain.client import init_groq_client
-from app.langchain.client import tools as all_tools
+from app.config.settings import settings
+from app.langchain.client import tools
 from app.langchain.tool_injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
     should_call_tool,
 )
+from app.langchain.utils.tool_retrieval import retrieve_tools
 
 llm = init_groq_client()
 
@@ -21,10 +22,14 @@ llm = init_groq_client()
 @asynccontextmanager
 async def build_graph():
     """Construct and compile the state graph."""
+    # Register both regular and always available tools
+    from app.langchain.client import ALWAYS_AVAILABLE_TOOLS
+    all_tools = tools + ALWAYS_AVAILABLE_TOOLS
     tool_registry = {tool.name: tool for tool in all_tools}
 
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
+    # Create store for tool discovery
     store = InMemoryStore(
         index={
             "embed": embeddings,
@@ -33,17 +38,18 @@ async def build_graph():
         }
     )
 
-    for tool_id, tool in tool_registry.items():
-        # logger.info(f"Registering tool: {tool.name=} ({tool_id=}) {tool.description=}")
+    # Store ONLY regular tools for vector search (NOT always available tools)
+    for tool in tools:
         store.put(
             ("tools",),
-            tool_id,
+            tool.name,
             {
                 "description": f"{tool.name}: {tool.description}",
             },
         )
 
-    builder = create_agent(llm, tool_registry)
+    # Create agent with custom tool retrieval logic
+    builder = create_agent(llm, tool_registry, retrieve_tools_function=retrieve_tools)
 
     # Injector nodes add tool calls to the state messages
     builder.add_node("inject_web_search", inject_web_search_tool_call)

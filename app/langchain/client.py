@@ -10,47 +10,37 @@ from app.langchain.tools import (
     weather_tool,
     webpage_tool,
 )
-from app.config.settings import settings
-from mem0 import MemoryClient
 
-# MODEL = "llama-3.3-70b-versatile"
-# MODEL = "gemini-2.5-pro-preview-03-25"
 MODEL = "gpt-4o-mini"
 
-tools = [
-    webpage_tool.fetch_webpages,
-    search_tool.deep_search_tool,
+# Define tools that should always be accessible to the agent directly
+ALWAYS_AVAILABLE_TOOLS = [
     search_tool.web_search_tool,
+    search_tool.deep_search_tool,
+    webpage_tool.fetch_webpages,
+    file_tools.query_file,
     memory_tool.create_memory,
     memory_tool.search_memories,
     memory_tool.get_all_memories,
+]
+
+# All other tools will be accessible through vector search
+tools = [
     *mail_tool.mail_tools,
-    weather_tool.get_weather,
     calendar_tool.fetch_calendar_list,
     calendar_tool.calendar_event,
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
-    file_tools.query_file,
+    weather_tool.get_weather,
 ]
-
-
-mem0 = MemoryClient(api_key=settings.MEM0_API_KEY)
 
 
 def init_groq_client():
     def create_llm():
         return ChatOpenAI(
             model=MODEL,
-            # google_api_key=settings.GEMINI_API_KEY,
             temperature=0.1,
             streaming=True,
         )
-        # return ChatGroq(
-        #     model=GROQ_MODEL,
-        #     api_key=SecretStr(settings.GROQ_API_KEY),
-        #     temperature=0.1,
-        #     max_tokens=2048,
-        #     streaming=True,
-        # )
 
     return create_llm()
