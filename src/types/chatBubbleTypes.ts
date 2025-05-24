@@ -54,10 +54,8 @@ export interface ChatBubbleBotProps {
   image_data?: ImageData | null;
 
   // Memory-related fields
-  memory_operation?: string | null;
-  memory_status?: string | null;
-  memory_content?: string | null;
   memory_data?: {
+    type?: string;
     operation?: string;
     status?: string;
     results?: Array<{
@@ -76,5 +74,7 @@ export interface ChatBubbleBotProps {
     content?: string;
     memory_id?: string;
     error?: string;
+    timestamp?: string;
+    conversation_id?: string;
   } | null;
 }

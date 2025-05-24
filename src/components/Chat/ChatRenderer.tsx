@@ -128,6 +128,7 @@ export default function ChatRenderer() {
               deep_search_results={message.deep_search_results}
               weather_data={message.weather_data}
               image_data={message.image_data}
+              memory_data={message.memory_data}
             />
           </div>
         ) : (

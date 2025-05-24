@@ -5,9 +5,6 @@ type StreamChunk = Partial<MessageType> & {
   deepSearchWeb?: boolean;
   pageFetchURLs?: string[];
   disclaimer?: string;
-  memory_operation?: string | null;
-  memory_status?: string | null;
-  memory_content?: string | null;
   memory_data?: {
     operation?: string;
     status?: string;
@@ -98,18 +95,6 @@ export function parseStreamData(
   }
 
   // Memory-related fields
-  if (streamChunk.memory_operation !== undefined) {
-    result.memory_operation = streamChunk.memory_operation;
-  }
-
-  if (streamChunk.memory_status !== undefined) {
-    result.memory_status = streamChunk.memory_status;
-  }
-
-  if (streamChunk.memory_content !== undefined) {
-    result.memory_content = streamChunk.memory_content;
-  }
-
   if (streamChunk.memory_data !== undefined) {
     result.memory_data = streamChunk.memory_data;
   }

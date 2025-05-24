@@ -37,9 +37,6 @@ export type MessageType = {
   image_data?: ImageData | null; // Image generation data in structured format
 
   // Memory-related fields
-  memory_operation?: string | null;
-  memory_status?: string | null;
-  memory_content?: string | null;
   memory_data?: {
     operation?: string;
     status?: string;

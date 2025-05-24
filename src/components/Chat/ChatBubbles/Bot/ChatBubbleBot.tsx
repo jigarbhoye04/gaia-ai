@@ -19,8 +19,6 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     image_data,
     date,
     memory_data,
-    memory_operation,
-    memory_status,
   } = props;
 
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -54,13 +52,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
       >
         <div className="chatbubblebot_parent">
           <div className="flex w-full flex-col gap-2">
-            {(memory_data || memory_operation) && (
-              <MemoryIndicator
-                memoryData={memory_data}
-                memoryOperation={memory_operation}
-                memoryStatus={memory_status}
-              />
-            )}
+            {memory_data && <MemoryIndicator memoryData={memory_data} />}
             <div className="chat_bubble_container">{renderedComponent}</div>
           </div>
         </div>

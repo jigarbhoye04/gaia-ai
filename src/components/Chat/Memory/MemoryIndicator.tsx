@@ -1,9 +1,8 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { AnimatePresence,motion } from "framer-motion";
 import { Brain } from "lucide-react";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 import MemoryModal from "./MemoryModal";
 
@@ -23,6 +22,7 @@ interface MemoryItem {
 
 interface MemoryIndicatorProps {
   memoryData?: {
+    type?: string;
     operation?: string;
     status?: string;
     results?: MemoryResult[];
@@ -31,26 +31,28 @@ interface MemoryIndicatorProps {
     content?: string;
     memory_id?: string;
     error?: string;
+    timestamp?: string;
+    conversation_id?: string;
   } | null;
-  memoryOperation?: string | null;
-  memoryStatus?: string | null;
 }
 
-export default function MemoryIndicator({
-  memoryData,
-  memoryOperation,
-  memoryStatus,
-}: MemoryIndicatorProps) {
+export default function MemoryIndicator({ memoryData }: MemoryIndicatorProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [displayText, setDisplayText] = useState<string>("");
   const [showIndicator, setShowIndicator] = useState(false);
 
+  console.log(memoryData);
+
   useEffect(() => {
     // Determine what text to display based on memory data
     if (memoryData) {
-      const { operation, status, count } = memoryData;
+      const { type, operation, status, count } = memoryData;
 
-      if (status === "success") {
+      // Handle new simplified memory_stored type
+      if (type === "memory_stored") {
+        setDisplayText("Memory stored");
+        setShowIndicator(true);
+      } else if (status === "success") {
         switch (operation) {
           case "create":
             setDisplayText("Created a memory");
@@ -75,55 +77,35 @@ export default function MemoryIndicator({
             setDisplayText("Memory operation completed");
         }
         setShowIndicator(true);
-      }
-    } else if (memoryOperation && memoryStatus) {
-      // Handle in-progress operations
-      if (memoryStatus === "storing") {
+      } else if (status === "storing") {
         setDisplayText("Storing memory...");
         setShowIndicator(true);
-      } else if (memoryStatus === "searching") {
+      } else if (status === "searching") {
         setDisplayText("Searching memories...");
         setShowIndicator(true);
-      } else if (memoryStatus === "retrieving") {
+      } else if (status === "retrieving") {
         setDisplayText("Retrieving memories...");
         setShowIndicator(true);
       }
     }
-
-    // Auto-hide after 5 seconds for completed operations
-    if (memoryData?.status === "success") {
-      const timer = setTimeout(() => {
-        setShowIndicator(false);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [memoryData, memoryOperation, memoryStatus]);
+  }, [memoryData]);
 
   if (!showIndicator && !displayText) return null;
 
   return (
     <>
-      <AnimatePresence>
-        {showIndicator && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="mb-2"
-          >
-            <Button
-              size="sm"
-              variant="flat"
-              className="bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300"
-              startContent={<Brain className="h-4 w-4" />}
-              onPress={() => setIsModalOpen(true)}
-            >
-              {displayText}
-            </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {showIndicator && (
+        <Button
+          size="sm"
+          variant="flat"
+          radius="full"
+          className="w-fit text-gray-500"
+          startContent={<Brain className="h-4 w-4" />}
+          onPress={() => setIsModalOpen(true)}
+        >
+          {displayText}
+        </Button>
+      )}
 
       <MemoryModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
