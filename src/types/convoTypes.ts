@@ -35,6 +35,31 @@ export type MessageType = {
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
+
+  // Memory-related fields
+  memory_operation?: string | null;
+  memory_status?: string | null;
+  memory_content?: string | null;
+  memory_data?: {
+    operation?: string;
+    status?: string;
+    results?: Array<{
+      id: string;
+      content: string;
+      relevance_score?: number;
+      metadata?: Record<string, unknown>;
+    }>;
+    memories?: Array<{
+      id: string;
+      content: string;
+      metadata?: Record<string, unknown>;
+      created_at?: string;
+    }>;
+    count?: number;
+    content?: string;
+    memory_id?: string;
+    error?: string;
+  } | null;
 };
 
 export type CalendarOptions = {

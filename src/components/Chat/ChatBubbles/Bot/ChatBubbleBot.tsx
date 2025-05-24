@@ -1,6 +1,7 @@
 // ChatBubbleBot.tsx
 import { useCallback, useMemo, useRef } from "react";
 
+import MemoryIndicator from "@/components/Chat/Memory/MemoryIndicator";
 import { ChatBubbleBotProps } from "@/types/chatBubbleTypes";
 import { parseDate } from "@/utils/fetchDate";
 
@@ -10,7 +11,17 @@ import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
-  const { text, loading = false, message_id, pinned, image_data, date } = props;
+  const {
+    text,
+    loading = false,
+    message_id,
+    pinned,
+    image_data,
+    date,
+    memory_data,
+    memory_operation,
+    memory_status,
+  } = props;
 
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +53,16 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
         onMouseOut={handleMouseOut}
       >
         <div className="chatbubblebot_parent">
-          <div className="chat_bubble_container">{renderedComponent}</div>
+          <div className="flex w-full flex-col gap-2">
+            {(memory_data || memory_operation) && (
+              <MemoryIndicator
+                memoryData={memory_data}
+                memoryOperation={memory_operation}
+                memoryStatus={memory_status}
+              />
+            )}
+            <div className="chat_bubble_container">{renderedComponent}</div>
+          </div>
         </div>
 
         {!loading && (
