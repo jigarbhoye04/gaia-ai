@@ -88,17 +88,22 @@ async def web_search_tool(
         writer({"progress": formatted_text})
 
         # Send search data to frontend via writer
-        writer({
-            "search_data": {
-                "web": web_results,
-                "news": news_results,
-                "images": image_results,
-                "videos": video_results,
-                "query": query_text,
-                "elapsed_time": elapsed_time,
-                "result_count": {"web": len(web_results), "news": len(news_results)},
+        writer(
+            {
+                "search_results": {
+                    "web": web_results,
+                    "news": news_results,
+                    "images": image_results,
+                    "videos": video_results,
+                    "query": query_text,
+                    "elapsed_time": elapsed_time,
+                    "result_count": {
+                        "web": len(web_results),
+                        "news": len(news_results),
+                    },
+                }
             }
-        })
+        )
 
         return "Search results sent to frontend"
 
@@ -211,9 +216,7 @@ async def deep_search_tool(
         logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
 
         # Send deep search data to frontend via writer
-        writer({
-            "deep_search_data": deep_search_results
-        })
+        writer({"deep_search_results": deep_search_results})
 
         return "Deep search results sent to frontend"
 

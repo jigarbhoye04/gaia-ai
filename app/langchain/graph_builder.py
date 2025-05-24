@@ -14,7 +14,7 @@ from app.langchain.tool_injectors import (
     inject_web_search_tool_call,
     should_call_tool,
 )
-from app.langchain.utils.tool_retrieval import retrieve_tools
+from app.langchain.tool_retrieval import retrieve_tools
 
 llm = init_groq_client()
 
@@ -38,8 +38,8 @@ async def build_graph():
         }
     )
 
-    # Store ONLY regular tools for vector search (NOT always available tools)
-    for tool in tools:
+    # Store all tools for vector search (both regular and always available)
+    for tool in all_tools:
         store.put(
             ("tools",),
             tool.name,

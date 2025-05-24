@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional
 
 from app.config.loggers import llm_logger as logger
 from app.memory.client import get_memory_client
-from app.memory.models import (
+from app.models.memory_models import (
     ConversationMemory,
     MemoryEntry,
     MemorySearchResult,

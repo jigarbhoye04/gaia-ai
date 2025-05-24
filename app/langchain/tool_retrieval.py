@@ -19,6 +19,5 @@ def retrieve_tools(
 
     # Combine both sets of tools (semantic search + always available)
     combined_tools = tool_ids + always_available_tool_ids
-    
-    # Return the combined list of tools to the LLM
+
     return combined_tools

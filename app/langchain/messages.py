@@ -3,23 +3,66 @@ from typing import List, Optional
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 
+from app.config.loggers import llm_logger as logger
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
+from app.services.memory_service import memory_service
 from app.models.message_models import FileData, MessageDict
 
 
-def construct_langchain_messages(
+async def construct_langchain_messages(
     messages: List[MessageDict],
     files_data: List[FileData] | None = None,
     currently_uploaded_file_ids: Optional[List[str]] = [],
+    user_id: Optional[str] = None,
+    query: Optional[str] = None,
 ) -> List[AnyMessage]:
-    """Convert raw dict messages to LangChain message objects with current datetime."""
+    """
+    Convert raw dict messages to LangChain message objects with current datetime.
+
+    Args:
+        messages: List of message dictionaries containing role and content
+        files_data: Optional list of file data objects
+        currently_uploaded_file_ids: Optional list of currently uploaded file IDs
+        user_id: Optional user ID for retrieving relevant memories
+        query: Optional query string for memory search (usually the latest user message)
+
+    Returns:
+        List of LangChain message objects
+    """
+    # Format current time for the system prompt
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
 
+    # Format the list of files if any
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
 
+    # Create the system prompt with the current time
     system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
-    chain_msgs: List[AnyMessage] = [SystemMessage(system_prompt)]
 
+    chain_msgs: List[AnyMessage] = [SystemMessage(content=system_prompt)]
+
+    # Add relevant memories from memory service if user_id and query are provided
+    if user_id and query:
+        try:
+            # Search for relevant memories
+            memory_results = await memory_service.search_memories(
+                query=query, user_id=user_id, limit=5
+            )
+
+            # If we have memories, add them as a system message
+            if memory_results.memories:
+                memory_content = "Based on our previous conversations:\n"
+                for mem in memory_results.memories:
+                    memory_content += f"- {mem.content}\n"
+
+                # Add memory as a system message
+                memory_message = SystemMessage(content=memory_content.strip())
+                chain_msgs.append(memory_message)
+
+                logger.info(f"Added {len(memory_results.memories)} memories to context")
+        except Exception as e:
+            logger.error(f"Error retrieving memories: {e}")
+
+    # Convert each message to the appropriate LangChain message type
     for index, msg in enumerate(messages):
         role = msg.get("role")
         content = msg.get("content", "")

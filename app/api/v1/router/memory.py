@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.memory.service import memory_service
-from app.memory.models import MemorySearchResult
+from app.services.memory_service import memory_service
+from app.models.memory_models import MemorySearchResult
 
 router = APIRouter(prefix="/memory", tags=["Memory"])
 

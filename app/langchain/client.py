@@ -5,7 +5,6 @@ from app.langchain.tools import (
     flowchart_tool,
     image_tool,
     mail_tool,
-    memory_tool,
     search_tool,
     weather_tool,
     webpage_tool,
@@ -19,9 +18,6 @@ ALWAYS_AVAILABLE_TOOLS = [
     search_tool.deep_search_tool,
     webpage_tool.fetch_webpages,
     file_tools.query_file,
-    memory_tool.create_memory,
-    memory_tool.search_memories,
-    memory_tool.get_all_memories,
 ]
 
 # All other tools will be accessible through vector search
