@@ -9,7 +9,6 @@ class Message(BaseModel):
 class AddMemoryInput(BaseModel):
     messages: List[Message] = Field(description="List of messages to add to memory")
     user_id: str = Field(description="ID of the user associated with these messages")
-    output_format: str = Field(description="Version format for the output")
     metadata: Optional[Dict[str, Any]] = Field(
         description="Additional metadata for the messages", default=None
     )
@@ -29,7 +28,6 @@ class AddMemoryInput(BaseModel):
                         },
                     ],
                     "user_id": "alex",
-                    "output_format": "v1.1",
                     "metadata": {"food": "vegan"},
                 }
             ]

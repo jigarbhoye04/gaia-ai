@@ -54,5 +54,4 @@ class AddMemoryInput(BaseModel):
     """Input model for adding memories via API."""
     messages: List[Message] = Field(description="Messages to add to memory")
     user_id: str = Field(description="User ID for the memories")
-    output_format: str = Field(default="json", description="Output format for the response")
     metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")

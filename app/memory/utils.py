@@ -2,7 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 
 def extract_user_id_from_context(context: Dict[str, Any]) -> Optional[str]:

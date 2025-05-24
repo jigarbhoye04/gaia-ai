@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 from typing_extensions import Annotated
 
 from app.config.loggers import llm_logger as logger
@@ -38,27 +39,59 @@ async def create_memory(
     - Information that belongs in calendar or notes
     """
     try:
+        # Get stream writer for progress updates
+        writer = get_stream_writer()
+
         # Extract user_id from config
         user_id = extract_user_id_from_context(config)
         
         if not user_id:
             logger.warning("Unable to create memory: User ID not found in config")
             return "Unable to create memory: User identification not available."
-        
+
+        # Send progress update
+        writer({"progress": "Creating memory..."})
+
         # Store memory using the service
         memory_entry = await memory_service.store_memory(
-            content=memory_content,
-            user_id=user_id,
-            metadata=metadata
+            content=memory_content, user_id=user_id, metadata=metadata
         )
-        
+
         if memory_entry:
+            # Send success data
+            logger.info("Sending memory creation success data via stream writer")
+            writer(
+                {
+                    "memory_data": {
+                        "operation": "create",
+                        "status": "success",
+                        "memory_id": memory_entry.id,
+                        "content": memory_content,
+                        "metadata": metadata,
+                    }
+                }
+            )
             return f"Memory stored successfully: '{memory_content}'. I'll remember this for our future conversations."
         else:
+            writer(
+                {
+                    "memory_data": {
+                        "operation": "create",
+                        "status": "failed",
+                        "error": "Failed to store memory",
+                    }
+                }
+            )
             return "Failed to store memory. Please try again later."
-        
+
     except Exception as e:
         logger.error(f"Error creating memory: {e}")
+
+        writer = get_stream_writer()
+
+        writer(
+            {"memory_data": {"operation": "create", "status": "error", "error": str(e)}}
+        )
         return f"Failed to create memory: {str(e)}"
 
 
@@ -76,20 +109,25 @@ async def search_memories(
 ) -> str:
     """
     Search through stored memories about the user.
-    
+
     Use this to:
     - Recall user preferences when making recommendations
     - Remember personal information when relevant
     - Find context from previous conversations
     """
     try:
+        # Get stream writer
+        writer = get_stream_writer()
+
         # Extract user_id from config
         user_id = extract_user_id_from_context(config)
-        
+
         if not user_id:
             logger.warning("Unable to search memories: User ID not found in config")
             return "Unable to search memories: User identification not available."
-        
+
+        writer({"progress": "Searching memories..."})
+
         # Search memories using the service
         search_result = await memory_service.search_memories(
             query=query,
@@ -98,17 +136,54 @@ async def search_memories(
         )
         
         if not search_result.memories:
+            writer(
+                {
+                    "memory_data": {
+                        "operation": "search",
+                        "status": "success",
+                        "query": query,
+                        "results": [],
+                        "count": 0,
+                    }
+                }
+            )
             return "No relevant memories found."
-        
-        # Format memories for display
+
+        # Format memories for stream and display
+        memory_list = []
         formatted_memories = []
+
         for i, memory in enumerate(search_result.memories, 1):
+            memory_list.append(
+                {
+                    "id": memory.id,
+                    "content": memory.content,
+                    "relevance_score": memory.relevance_score,
+                    "metadata": memory.metadata,
+                }
+            )
             formatted_memories.append(f"{i}. {memory.content}")
-        
+
+        # Send search results
+        writer(
+            {
+                "memory_data": {
+                    "operation": "search",
+                    "status": "success",
+                    "query": query,
+                    "results": memory_list,
+                    "count": len(memory_list),
+                }
+            }
+        )
+
         return "Found memories:\n" + "\n".join(formatted_memories)
-        
+
     except Exception as e:
         logger.error(f"Error searching memories: {e}")
+        writer(
+            {"memory_data": {"operation": "search", "status": "error", "error": str(e)}}
+        )
         return f"Failed to search memories: {str(e)}"
 
 
@@ -126,36 +201,77 @@ async def get_all_memories(
 ) -> str:
     """
     Retrieve all stored memories for the user with pagination.
-    
+
     Use this to:
     - Show the user what you remember about them
     - Review stored preferences and information
     """
     try:
+        # Get stream writer
+        writer = get_stream_writer()
+
         # Extract user_id from config
         user_id = extract_user_id_from_context(config)
-        
+
         if not user_id:
             logger.warning("Unable to retrieve memories: User ID not found in config")
             return "Unable to retrieve memories: User identification not available."
-        
+
+        # Send retrieval progress
+        writer({"status": f"Fetching memories from page {page}/{page_size}..."})
+
         # Get all memories using the service
         memory_result = await memory_service.get_all_memories(
-            user_id=user_id,
-            page=page,
-            page_size=page_size
+            user_id=user_id, page=page, page_size=page_size
         )
-        
+
         if not memory_result.memories:
-            return "No memories found."
-        
-        # Format memories for display
-        formatted_memories = []
-        for i, memory in enumerate(memory_result.memories, 1):
-            formatted_memories.append(
-                f"{(page-1)*page_size + i}. {memory.content}"
+            writer(
+                {
+                    "memory_data": {
+                        "operation": "list",
+                        "status": "success",
+                        "memories": [],
+                        "page": page,
+                        "total_count": 0,
+                        "has_next": False,
+                    }
+                }
             )
-        
+            return "No memories found."
+
+        # Format memories for stream and display
+        memory_list = []
+        formatted_memories = []
+
+        for i, memory in enumerate(memory_result.memories, 1):
+            memory_list.append(
+                {
+                    "id": memory.id,
+                    "content": memory.content,
+                    "metadata": memory.metadata,
+                    "created_at": memory.created_at.isoformat()
+                    if memory.created_at
+                    else None,
+                }
+            )
+            formatted_memories.append(f"{(page - 1) * page_size + i}. {memory.content}")
+
+        # Send all memories data
+        writer(
+            {
+                "memory_data": {
+                    "operation": "list",
+                    "status": "success",
+                    "memories": memory_list,
+                    "page": page,
+                    "page_size": page_size,
+                    "total_count": memory_result.total_count,
+                    "has_next": memory_result.has_next,
+                }
+            }
+        )
+
         result = f"Memories (Page {page}):\n" + "\n".join(formatted_memories)
         
         if memory_result.has_next:
@@ -165,4 +281,7 @@ async def get_all_memories(
         
     except Exception as e:
         logger.error(f"Error retrieving memories: {e}")
+        writer(
+            {"memory_data": {"operation": "list", "status": "error", "error": str(e)}}
+        )
         return f"Failed to retrieve memories: {str(e)}"
