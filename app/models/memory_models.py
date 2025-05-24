@@ -6,6 +6,28 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
+class CreateMemoryRequest(BaseModel):
+    """Request model for creating a memory."""
+
+    content: str = Field(description="The memory content to store")
+    metadata: Optional[dict] = Field(default=None, description="Optional metadata")
+
+
+class CreateMemoryResponse(BaseModel):
+    """Response model for memory creation."""
+
+    success: bool
+    memory_id: Optional[str] = None
+    message: str
+
+
+class DeleteMemoryResponse(BaseModel):
+    """Response model for memory deletion."""
+
+    success: bool
+    message: str
+
+
 class Message(BaseModel):
     """Represents a single message in a conversation."""
     role: str = Field(description="Role of the message sender (user, assistant, system)")

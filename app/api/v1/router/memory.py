@@ -3,35 +3,19 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.memory_service import memory_service
-from app.models.memory_models import MemorySearchResult
+from app.models.memory_models import (
+    CreateMemoryRequest,
+    CreateMemoryResponse,
+    DeleteMemoryResponse,
+    MemorySearchResult,
+)
 
-router = APIRouter(prefix="/memory", tags=["Memory"])
+router = APIRouter()
 
-
-class CreateMemoryRequest(BaseModel):
-    """Request model for creating a memory."""
-    content: str = Field(description="The memory content to store")
-    metadata: Optional[dict] = Field(default=None, description="Optional metadata")
-
-
-class CreateMemoryResponse(BaseModel):
-    """Response model for memory creation."""
-    success: bool
-    memory_id: Optional[str] = None
-    message: str
-
-
-class DeleteMemoryResponse(BaseModel):
-    """Response model for memory deletion."""
-    success: bool
-    message: str
-
-
-@router.get("/all", response_model=MemorySearchResult)
+@router.get("/", response_model=MemorySearchResult)
 async def get_all_memories(
     page: int = 1,
     page_size: int = 20,
@@ -59,7 +43,7 @@ async def get_all_memories(
     )
 
 
-@router.post("/create", response_model=CreateMemoryResponse)
+@router.post("/", response_model=CreateMemoryResponse)
 async def create_memory(
     request: CreateMemoryRequest,
     user: dict = Depends(get_current_user),
@@ -133,7 +117,7 @@ async def delete_memory(
         )
 
 
-@router.delete("/all/clear", response_model=DeleteMemoryResponse)
+@router.delete("/", response_model=DeleteMemoryResponse)
 async def clear_all_memories(
     user: dict = Depends(get_current_user),
 ):

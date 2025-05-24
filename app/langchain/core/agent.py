@@ -91,8 +91,17 @@ async def call_agent(
                     },
                 )
 
-                await memory_service.store_conversation(conversation_memory)
-                logger.info(f"Stored conversation in memory for user {user_id}")
+                result = await memory_service.store_conversation(conversation_memory)
+
+                if result:
+                    memory_data = {
+                        'type': 'memory_stored',
+                        'content': f'Stored conversation: {request.message[:50]}...',
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                        'conversation_id': conversation_id,
+                    }
+                    yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
+
             except Exception as e:
                 logger.error(f"Error storing conversation memory: {e}")
 

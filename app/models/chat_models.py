@@ -43,9 +43,6 @@ class MessageModel(BaseModel):
     deep_search_results: Optional[DeepSearchResults] = None  # Results from deep search
     weather_data: Optional[WeatherData] = None  # Weather data from OpenWeatherMap API
     email_compose_data: Optional[dict] = None  # Email compose data from mail_tool
-    memory_operation: Optional[str] = None  # Memory operation type
-    memory_status: Optional[str] = None  # Memory operation status
-    memory_content: Optional[str] = None  # Memory content being processed
     memory_data: Optional[dict] = None  # Complete memory operation data
 
 

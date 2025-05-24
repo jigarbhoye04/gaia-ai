@@ -129,16 +129,8 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         # Extract email compose data
         elif "email_compose_data" in data:
             tool_data["email_compose_data"] = data["email_compose_data"]
-
-        # Extract memory operation data
-        elif "memory_operation" in data:
-            tool_data["memory_operation"] = data["memory_operation"]
-            if "status" in data:
-                tool_data["memory_status"] = data["status"]
-            if "content" in data:
-                tool_data["memory_content"] = data["content"]
                 
-        # Extract memory data (final result)
+        # Extract memory data
         elif "memory_data" in data:
             tool_data["memory_data"] = data["memory_data"]
 
