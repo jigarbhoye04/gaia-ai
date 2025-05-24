@@ -10,6 +10,8 @@ from app.langchain.tools import (
     weather_tool,
     webpage_tool,
 )
+from app.config.settings import settings
+from mem0 import MemoryClient
 
 # MODEL = "llama-3.3-70b-versatile"
 # MODEL = "gemini-2.5-pro-preview-03-25"
@@ -20,6 +22,8 @@ tools = [
     search_tool.deep_search_tool,
     search_tool.web_search_tool,
     memory_tool.create_memory,
+    memory_tool.search_memories,
+    memory_tool.get_all_memories,
     *mail_tool.mail_tools,
     weather_tool.get_weather,
     calendar_tool.fetch_calendar_list,
@@ -28,6 +32,9 @@ tools = [
     image_tool.generate_image,
     file_tools.query_file,
 ]
+
+
+mem0 = MemoryClient(api_key=settings.MEM0_API_KEY)
 
 
 def init_groq_client():

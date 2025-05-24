@@ -1,60 +1,168 @@
+"""Memory tools using Mem0 for persistent conversation memory."""
+
+from typing import Dict, Optional
+
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from typing_extensions import Annotated
 
-from app.models.notes_models import NoteModel
-from app.utils.notes_utils import insert_note
+from app.config.loggers import llm_logger as logger
+from app.memory.service import memory_service
+from app.memory.utils import extract_user_id_from_context
 
 
 @tool
 async def create_memory(
-    plaintext: Annotated[
+    memory_content: Annotated[
         str,
-        "The plaintext content of the note.",
+        "The memory to store. This should be a clear, concise fact or preference about the user.",
     ],
-    content: Annotated[
-        str,
-        "The content of the note in Markdown format.",
-    ],
-    config: RunnableConfig,
+    metadata: Annotated[
+        Optional[Dict[str, str]],
+        "Optional metadata about the memory (e.g., category: 'preference', 'personal_info', 'goal')",
+    ] = None,
+    config: RunnableConfig = None,
 ) -> str:
     """
-    Create a memory note based on important user input.
-
-    This tool stores user-provided information in memory for long-term reference.
-    It should only be used when the input is clearly valuable for future context,
-    such as preferences, recurring topics, personal context, or explicit memory requests.
-
-    Use this tool if:
-    - The user says something they want you to remember.
-    - The information is long-term relevant or likely to come up again.
-    - The content defines their preferences, identity, goals, or context.
-
-    Avoid using this tool for:
-    - Temporary, task-specific, or one-time information.
-    - Casual conversation or unimportant facts.
-    - Sensitive information unless explicitly requested.
-
-    Examples:
-    - ✅ "My assistant is named GAIA." (Remember)
-    - ✅ "I'm building a startup called XYZ." (Remember)
-    - ❌ "Send this email." (Don't remember)
-    - ❌ "What's the weather today?" (Don't remember)
-
-    Returns:
-        A confirmation message once memory has been stored.
+    Store a specific memory about the user for future conversations.
+    
+    Use this when the user shares:
+    - Personal preferences (e.g., "I prefer Python over JavaScript")
+    - Personal information (e.g., "I'm allergic to peanuts")
+    - Long-term goals or interests (e.g., "I'm planning a trip to Paris")
+    - Important facts about their work or life
+    
+    Do NOT use this for:
+    - Temporary information (e.g., meetings today)
+    - General questions or requests
+    - Information that belongs in calendar or notes
     """
-    metadata = config.get("metadata") or {}
-    user_id = metadata.get("user_id")
+    try:
+        # Extract user_id from config
+        user_id = extract_user_id_from_context(config)
+        
+        if not user_id:
+            logger.warning("Unable to create memory: User ID not found in config")
+            return "Unable to create memory: User identification not available."
+        
+        # Store memory using the service
+        memory_entry = await memory_service.store_memory(
+            content=memory_content,
+            user_id=user_id,
+            metadata=metadata
+        )
+        
+        if memory_entry:
+            return f"Memory stored successfully: '{memory_content}'. I'll remember this for our future conversations."
+        else:
+            return "Failed to store memory. Please try again later."
+        
+    except Exception as e:
+        logger.error(f"Error creating memory: {e}")
+        return f"Failed to create memory: {str(e)}"
 
-    if not isinstance(user_id, str):
-        raise ValueError("User ID is required for memory creation.")
 
-    await insert_note(
-        NoteModel(content=content, plaintext=plaintext),
-        user_id=user_id,
-        auto_created=True,
-    )
+@tool
+async def search_memories(
+    query: Annotated[
+        str,
+        "The search query to find relevant memories",
+    ],
+    limit: Annotated[
+        int,
+        "Maximum number of memories to return (default: 5)",
+    ] = 5,
+    config: RunnableConfig = None,
+) -> str:
+    """
+    Search through stored memories about the user.
+    
+    Use this to:
+    - Recall user preferences when making recommendations
+    - Remember personal information when relevant
+    - Find context from previous conversations
+    """
+    try:
+        # Extract user_id from config
+        user_id = extract_user_id_from_context(config)
+        
+        if not user_id:
+            logger.warning("Unable to search memories: User ID not found in config")
+            return "Unable to search memories: User identification not available."
+        
+        # Search memories using the service
+        search_result = await memory_service.search_memories(
+            query=query,
+            user_id=user_id,
+            limit=limit
+        )
+        
+        if not search_result.memories:
+            return "No relevant memories found."
+        
+        # Format memories for display
+        formatted_memories = []
+        for i, memory in enumerate(search_result.memories, 1):
+            formatted_memories.append(f"{i}. {memory.content}")
+        
+        return "Found memories:\n" + "\n".join(formatted_memories)
+        
+    except Exception as e:
+        logger.error(f"Error searching memories: {e}")
+        return f"Failed to search memories: {str(e)}"
 
-    # TODO: Change this to a more appropriate message
-    return "Memory has been created successfully. You can now use it in your conversations. You can continue your conversation."
+
+@tool
+async def get_all_memories(
+    page: Annotated[
+        int,
+        "Page number for pagination (default: 1)",
+    ] = 1,
+    page_size: Annotated[
+        int,
+        "Number of memories per page (default: 10)",
+    ] = 10,
+    config: RunnableConfig = None,
+) -> str:
+    """
+    Retrieve all stored memories for the user with pagination.
+    
+    Use this to:
+    - Show the user what you remember about them
+    - Review stored preferences and information
+    """
+    try:
+        # Extract user_id from config
+        user_id = extract_user_id_from_context(config)
+        
+        if not user_id:
+            logger.warning("Unable to retrieve memories: User ID not found in config")
+            return "Unable to retrieve memories: User identification not available."
+        
+        # Get all memories using the service
+        memory_result = await memory_service.get_all_memories(
+            user_id=user_id,
+            page=page,
+            page_size=page_size
+        )
+        
+        if not memory_result.memories:
+            return "No memories found."
+        
+        # Format memories for display
+        formatted_memories = []
+        for i, memory in enumerate(memory_result.memories, 1):
+            formatted_memories.append(
+                f"{(page-1)*page_size + i}. {memory.content}"
+            )
+        
+        result = f"Memories (Page {page}):\n" + "\n".join(formatted_memories)
+        
+        if memory_result.has_next:
+            result += f"\n\nMore memories available. Use page={page+1} to see more."
+            
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error retrieving memories: {e}")
+        return f"Failed to retrieve memories: {str(e)}"

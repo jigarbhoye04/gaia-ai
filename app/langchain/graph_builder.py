@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.graph import END, START
+from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
@@ -65,8 +65,6 @@ async def build_graph():
     # After injecting tool call, route to shared tools node to execute
     builder.add_edge("inject_web_search", "tools")
     builder.add_edge("inject_deep_search", "tools")
-
-    builder.add_edge("agent", END)
 
     async with AsyncPostgresSaver.from_conn_string(
         settings.POSTGRES_URL
