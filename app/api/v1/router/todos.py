@@ -42,13 +42,61 @@ async def create_todo_endpoint(
     return await create_todo(todo, user["user_id"])
 
 
-@router.get("/todos/{todo_id}", response_model=TodoResponse)
-async def get_todo_endpoint(
-    todo_id: str,
+# Search and statistics endpoints - MUST be before /{todo_id} to avoid matching
+@router.get("/todos/search", response_model=List[TodoResponse])
+async def search_todos_endpoint(
+    q: str,
     user: dict = Depends(get_current_user)
 ):
-    """Get a specific todo item."""
-    return await get_todo(todo_id, user["user_id"])
+    """
+    Search todos by title, description, or labels.
+    
+    Query Parameters:
+    - q: Search query string
+    """
+    from app.services.todo_service import search_todos
+    return await search_todos(q, user["user_id"])
+
+
+@router.get("/todos/stats")
+async def get_todo_stats_endpoint(
+    user: dict = Depends(get_current_user)
+):
+    """Get statistics about user's todos."""
+    from app.services.todo_service import get_todo_stats
+    return await get_todo_stats(user["user_id"])
+
+
+@router.get("/todos/today", response_model=List[TodoResponse])
+async def get_today_todos_endpoint(
+    user: dict = Depends(get_current_user)
+):
+    """Get todos due today."""
+    from datetime import datetime, time
+    today_start = datetime.combine(datetime.today(), time.min)
+    today_end = datetime.combine(datetime.today(), time.max)
+    
+    from app.services.todo_service import get_todos_by_date_range
+    return await get_todos_by_date_range(user["user_id"], today_start, today_end)
+
+
+@router.get("/todos/upcoming", response_model=List[TodoResponse])
+async def get_upcoming_todos_endpoint(
+    days: int = 7,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get todos due in the upcoming days.
+    
+    Query Parameters:
+    - days: Number of days to look ahead (default: 7)
+    """
+    from datetime import datetime, timedelta
+    start_date = datetime.utcnow()
+    end_date = start_date + timedelta(days=days)
+    
+    from app.services.todo_service import get_todos_by_date_range
+    return await get_todos_by_date_range(user["user_id"], start_date, end_date)
 
 
 @router.get("/todos", response_model=List[TodoResponse])
@@ -237,7 +285,7 @@ async def delete_subtask_endpoint(
     return await update_todo(todo_id, update_data, user["user_id"])
 
 
-# Bulk operations
+# Bulk operations - MUST be before /{todo_id} routes
 @router.post("/todos/bulk/complete", response_model=List[TodoResponse])
 async def bulk_complete_todos_endpoint(
     todo_ids: List[str],
@@ -272,58 +320,11 @@ async def bulk_delete_todos_endpoint(
     return None
 
 
-# Search and statistics endpoints
-@router.get("/todos/search", response_model=List[TodoResponse])
-async def search_todos_endpoint(
-    q: str,
+# Get a specific todo - MUST be after all specific routes
+@router.get("/todos/{todo_id}", response_model=TodoResponse)
+async def get_todo_endpoint(
+    todo_id: str,
     user: dict = Depends(get_current_user)
 ):
-    """
-    Search todos by title, description, or labels.
-    
-    Query Parameters:
-    - q: Search query string
-    """
-    from app.services.todo_service import search_todos
-    return await search_todos(q, user["user_id"])
-
-
-@router.get("/todos/stats")
-async def get_todo_stats_endpoint(
-    user: dict = Depends(get_current_user)
-):
-    """Get statistics about user's todos."""
-    from app.services.todo_service import get_todo_stats
-    return await get_todo_stats(user["user_id"])
-
-
-@router.get("/todos/today", response_model=List[TodoResponse])
-async def get_today_todos_endpoint(
-    user: dict = Depends(get_current_user)
-):
-    """Get todos due today."""
-    from datetime import datetime, time
-    today_start = datetime.combine(datetime.today(), time.min)
-    today_end = datetime.combine(datetime.today(), time.max)
-    
-    from app.services.todo_service import get_todos_by_date_range
-    return await get_todos_by_date_range(user["user_id"], today_start, today_end)
-
-
-@router.get("/todos/upcoming", response_model=List[TodoResponse])
-async def get_upcoming_todos_endpoint(
-    days: int = 7,
-    user: dict = Depends(get_current_user)
-):
-    """
-    Get todos due in the upcoming days.
-    
-    Query Parameters:
-    - days: Number of days to look ahead (default: 7)
-    """
-    from datetime import datetime, timedelta
-    start_date = datetime.utcnow()
-    end_date = start_date + timedelta(days=days)
-    
-    from app.services.todo_service import get_todos_by_date_range
-    return await get_todos_by_date_range(user["user_id"], start_date, end_date)
+    """Get a specific todo item."""
+    return await get_todo(todo_id, user["user_id"])

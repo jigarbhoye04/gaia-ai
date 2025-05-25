@@ -14,6 +14,7 @@ async def construct_langchain_messages(
     files_data: List[FileData] | None = None,
     currently_uploaded_file_ids: Optional[List[str]] = [],
     user_id: Optional[str] = None,
+    user_name: Optional[str] = None,
     query: Optional[str] = None,
 ) -> List[AnyMessage]:
     """
@@ -36,7 +37,9 @@ async def construct_langchain_messages(
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
 
     # Create the system prompt with the current time
-    system_prompt = AGENT_PROMPT_TEMPLATE.format(current_datetime=formatted_time)
+    system_prompt = AGENT_PROMPT_TEMPLATE.format(
+        current_datetime=formatted_time, user_name=user_name
+    )
 
     chain_msgs: List[AnyMessage] = [SystemMessage(content=system_prompt)]
 
