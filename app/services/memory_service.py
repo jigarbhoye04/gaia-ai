@@ -9,6 +9,7 @@ from app.models.memory_models import (
     MemoryEntry,
     MemorySearchResult,
 )
+from app.db.redis import Cacheable, CacheInvalidator, ONE_HOUR_TTL, delete_cache
 
 
 class MemoryService:
@@ -91,6 +92,7 @@ class MemoryService:
                 parsed_memories.append(memory_entry)
         return parsed_memories
     
+    @CacheInvalidator(key_patterns=["memory:user:{user_id}:*", "memory:all:{user_id}:*"])
     async def store_memory(
         self,
         content: str,
@@ -187,6 +189,10 @@ class MemoryService:
                 metadata=metadata,
             )
             
+            # Invalidate cache after storing conversation
+            await delete_cache(f"memory:user:{user_id}:*")
+            await delete_cache(f"memory:all:{user_id}:*")
+            
             self.logger.info(f"Conversation stored for user {user_id}")
             return True
             
@@ -194,6 +200,11 @@ class MemoryService:
             self.logger.error(f"Error storing conversation: {e}")
             return False
     
+    @Cacheable(
+        key_pattern="memory:search:{user_id}:{query}:{limit}", 
+        ttl=ONE_HOUR_TTL,
+        deserializer=lambda data: MemorySearchResult(**data) if data else None
+    )
     async def search_memories(
         self,
         query: str,
@@ -240,6 +251,11 @@ class MemoryService:
             self.logger.error(f"Error searching memories: {e}")
             return MemorySearchResult()
     
+    @Cacheable(
+        key_pattern="memory:all:{user_id}:{page}:{page_size}", 
+        ttl=ONE_HOUR_TTL,
+        deserializer=lambda data: MemorySearchResult(**data) if data else None
+    )
     async def get_all_memories(
         self,
         user_id: Optional[str],
@@ -286,6 +302,7 @@ class MemoryService:
             self.logger.error(f"Error retrieving all memories: {e}")
             return MemorySearchResult()
     
+    @CacheInvalidator(key_patterns=["memory:user:{user_id}:*", "memory:all:{user_id}:*"])
     async def delete_memory(
         self, memory_id: str, user_id: Optional[str]
     ) -> bool:
