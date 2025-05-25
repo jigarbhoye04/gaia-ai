@@ -22,6 +22,9 @@ from app.models.todo_models import (
 ONE_YEAR_TTL = 365 * 24 * 60 * 60
 ONE_HOUR_TTL = 60 * 60
 
+# Special constant for inbox project
+INBOX_PROJECT_ID = "inbox"
+
 
 async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
     """
@@ -35,8 +38,12 @@ async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
         TodoResponse: The created todo item
     """
     try:
-        # Verify project exists (or is inbox)
-        if todo.project_id != "inbox":
+        # Get or create inbox project if no project specified
+        if todo.project_id is None:
+            inbox_id = await create_default_project_for_user(user_id)
+            todo.project_id = inbox_id
+        else:
+            # Verify project exists
             project = await projects_collection.find_one({
                 "_id": ObjectId(todo.project_id),
                 "user_id": user_id
@@ -59,8 +66,7 @@ async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
         
         # Clear cache
         await delete_cache(f"todos:{user_id}")
-        if todo.project_id != "inbox":
-            await delete_cache(f"todos:{user_id}:project:{todo.project_id}")
+        await delete_cache(f"todos:{user_id}:project:{todo.project_id}")
         
         todos_logger.info(f"Created todo {result.inserted_id} for user {user_id}")
         
@@ -128,7 +134,9 @@ async def get_all_todos(
     completed: Optional[bool] = None,
     priority: Optional[str] = None,
     has_due_date: Optional[bool] = None,
-    overdue: Optional[bool] = None
+    overdue: Optional[bool] = None,
+    skip: int = 0,
+    limit: int = 50
 ) -> List[TodoResponse]:
     """
     Get all todos for a user with optional filtering.
@@ -156,6 +164,8 @@ async def get_all_todos(
         cache_key_parts.append(f"has_due_date:{has_due_date}")
     if overdue is not None:
         cache_key_parts.append(f"overdue:{overdue}")
+    cache_key_parts.append(f"skip:{skip}")
+    cache_key_parts.append(f"limit:{limit}")
     
     cache_key = ":".join(cache_key_parts)
     cached_todos = await get_cache(cache_key)
@@ -188,8 +198,8 @@ async def get_all_todos(
                 {"due_date": {"$gte": datetime.utcnow()}}
             ]
         
-        cursor = todos_collection.find(query).sort("created_at", -1)
-        todos = await cursor.to_list(length=None)
+        cursor = todos_collection.find(query).sort("created_at", -1).skip(skip).limit(limit)
+        todos = await cursor.to_list(length=limit)
         
         todo_responses = [TodoResponse(**serialize_document(todo)) for todo in todos]
         
@@ -243,7 +253,7 @@ async def update_todo(
         update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
         
         # Verify new project exists if changing project
-        if "project_id" in update_dict and update_dict["project_id"] != "inbox":
+        if "project_id" in update_dict and update_dict["project_id"] is not None:
             project = await projects_collection.find_one({
                 "_id": ObjectId(update_dict["project_id"]),
                 "user_id": user_id
@@ -279,9 +289,9 @@ async def update_todo(
         # Clear relevant caches
         await delete_cache(f"todo:{user_id}:{todo_id}")
         await delete_cache(f"todos:{user_id}")
-        if existing_todo.get("project_id") != "inbox":
+        if existing_todo.get("project_id"):
             await delete_cache(f"todos:{user_id}:project:{existing_todo['project_id']}")
-        if "project_id" in update_dict and update_dict["project_id"] != "inbox":
+        if "project_id" in update_dict:
             await delete_cache(f"todos:{user_id}:project:{update_dict['project_id']}")
         
         todos_logger.info(f"Updated todo {todo_id} for user {user_id}")
@@ -325,7 +335,7 @@ async def delete_todo(todo_id: str, user_id: str) -> None:
         # Clear caches
         await delete_cache(f"todo:{user_id}:{todo_id}")
         await delete_cache(f"todos:{user_id}")
-        if todo.get("project_id") != "inbox":
+        if todo.get("project_id"):
             await delete_cache(f"todos:{user_id}:project:{todo['project_id']}")
         
         todos_logger.info(f"Deleted todo {todo_id} for user {user_id}")
@@ -342,12 +352,15 @@ async def delete_todo(todo_id: str, user_id: str) -> None:
 
 # Project management functions
 
-async def create_default_project_for_user(user_id: str) -> None:
+async def create_default_project_for_user(user_id: str) -> str:
     """
     Create the default Inbox project for a new user.
     
     Args:
         user_id: ID of the user
+        
+    Returns:
+        str: The ID of the inbox project
     """
     try:
         # Check if user already has an inbox project
@@ -356,22 +369,26 @@ async def create_default_project_for_user(user_id: str) -> None:
             "is_default": True
         })
         
-        if not existing_inbox:
-            inbox_project = {
-                "_id": ObjectId("inbox"),  # Special ID for inbox
-                "user_id": user_id,
-                "name": "Inbox",
-                "description": "Default project for new todos",
-                "color": "#6B7280",  # Gray color
-                "is_default": True,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            await projects_collection.insert_one(inbox_project)
-            todos_logger.info(f"Created default Inbox project for user {user_id}")
+        if existing_inbox:
+            return str(existing_inbox["_id"])
+        
+        # Create new inbox project with generated ObjectId
+        inbox_project = {
+            "user_id": user_id,
+            "name": "Inbox",
+            "description": "Default project for new todos",
+            "color": "#6B7280",  # Gray color
+            "is_default": True,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        result = await projects_collection.insert_one(inbox_project)
+        todos_logger.info(f"Created default Inbox project for user {user_id}")
+        return str(result.inserted_id)
     
     except Exception as e:
         todos_logger.error(f"Error creating default project: {str(e)}")
+        raise
 
 
 async def create_project(project: ProjectCreate, user_id: str) -> ProjectResponse:
@@ -441,25 +458,57 @@ async def get_all_projects(user_id: str) -> List[ProjectResponse]:
     
     try:
         # Ensure user has default project
-        await create_default_project_for_user(user_id)
+        inbox_id = await create_default_project_for_user(user_id)
         
-        cursor = projects_collection.find({"user_id": user_id}).sort("created_at", -1)
+        # Use aggregation to get projects with todo counts in one query
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$sort": {"created_at": -1}},
+            {
+                "$lookup": {
+                    "from": "todos",
+                    "let": {
+                        "project_id": {
+                            "$cond": {
+                                "if": "$is_default",
+                                "then": inbox_id,
+                                "else": {"$toString": "$_id"}
+                            }
+                        }
+                    },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {
+                                    "$and": [
+                                        {"$eq": ["$user_id", user_id]},
+                                        {"$eq": ["$project_id", "$$project_id"]}
+                                    ]
+                                }
+                            }
+                        },
+                        {"$count": "count"}
+                    ],
+                    "as": "todo_stats"
+                }
+            },
+            {
+                "$addFields": {
+                    "todo_count": {
+                        "$ifNull": [{"$first": "$todo_stats.count"}, 0]
+                    }
+                }
+            },
+            {"$project": {"todo_stats": 0}}
+        ]
+        
+        cursor = projects_collection.aggregate(pipeline)
         projects = await cursor.to_list(length=None)
         
-        project_responses = []
-        for project in projects:
-            # Get todo count for each project
-            project_id = "inbox" if project.get("is_default") else str(project["_id"])
-            todo_count = await todos_collection.count_documents({
-                "user_id": user_id,
-                "project_id": project_id
-            })
-            
-            project_response = ProjectResponse(
-                **serialize_document(project),
-                todo_count=todo_count
-            )
-            project_responses.append(project_response)
+        project_responses = [
+            ProjectResponse(**serialize_document(project))
+            for project in projects
+        ]
         
         # Cache the results
         await set_cache(

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.todo_models import (
@@ -22,6 +22,11 @@ from app.services.todo_service import (
     get_all_projects,
     update_project,
     delete_project
+)
+from app.services.todo_bulk_service import (
+    bulk_complete_todos,
+    bulk_move_todos,
+    bulk_delete_todos
 )
 
 router = APIRouter()
@@ -53,6 +58,8 @@ async def get_all_todos_endpoint(
     priority: Optional[Priority] = None,
     has_due_date: Optional[bool] = None,
     overdue: Optional[bool] = None,
+    skip: int = 0,
+    limit: int = 50,
     user: dict = Depends(get_current_user)
 ):
     """
@@ -64,14 +71,22 @@ async def get_all_todos_endpoint(
     - priority: Filter by priority level (high, medium, low, none)
     - has_due_date: Filter todos with/without due dates
     - overdue: Filter overdue todos (uncompleted todos past due date)
+    - skip: Number of records to skip (default: 0)
+    - limit: Maximum number of records to return (default: 50, max: 100)
     """
+    # Ensure limit is reasonable
+    if limit > 100:
+        limit = 100
+    
     return await get_all_todos(
         user["user_id"],
         project_id=project_id,
         completed=completed,
         priority=priority.value if priority else None,
         has_due_date=has_due_date,
-        overdue=overdue
+        overdue=overdue,
+        skip=skip,
+        limit=limit
     )
 
 
@@ -137,12 +152,18 @@ async def delete_project_endpoint(
 @router.post("/todos/{todo_id}/subtasks", response_model=TodoResponse)
 async def add_subtask_endpoint(
     todo_id: str,
-    subtask_title: str,
+    subtask: dict,  # {"title": "string"}
     user: dict = Depends(get_current_user)
 ):
     """Add a subtask to a todo item."""
     from app.models.todo_models import SubTask
     import uuid
+    
+    if "title" not in subtask:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Subtask title is required"
+        )
     
     # Get the todo first
     todo = await get_todo(todo_id, user["user_id"])
@@ -150,7 +171,7 @@ async def add_subtask_endpoint(
     # Create new subtask
     new_subtask = SubTask(
         id=str(uuid.uuid4()),
-        title=subtask_title,
+        title=subtask["title"],
         completed=False
     )
     
@@ -166,8 +187,7 @@ async def add_subtask_endpoint(
 async def update_subtask_endpoint(
     todo_id: str,
     subtask_id: str,
-    title: Optional[str] = None,
-    completed: Optional[bool] = None,
+    update: dict,  # {"title": "string", "completed": bool}
     user: dict = Depends(get_current_user)
 ):
     """Update a specific subtask."""
@@ -176,13 +196,21 @@ async def update_subtask_endpoint(
     
     # Find and update the subtask
     updated_subtasks = []
+    subtask_found = False
     for subtask in todo.subtasks:
         if subtask.id == subtask_id:
-            if title is not None:
-                subtask.title = title
-            if completed is not None:
-                subtask.completed = completed
+            subtask_found = True
+            if "title" in update:
+                subtask.title = update["title"]
+            if "completed" in update:
+                subtask.completed = update["completed"]
         updated_subtasks.append(subtask)
+    
+    if not subtask_found:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Subtask with id {subtask_id} not found"
+        )
     
     # Update todo with modified subtasks
     update_data = UpdateTodoRequest(subtasks=updated_subtasks)
@@ -216,29 +244,22 @@ async def bulk_complete_todos_endpoint(
     user: dict = Depends(get_current_user)
 ):
     """Mark multiple todos as completed."""
-    updated_todos = []
-    for todo_id in todo_ids:
-        update_data = UpdateTodoRequest(completed=True)
-        updated_todo = await update_todo(todo_id, update_data, user["user_id"])
-        updated_todos.append(updated_todo)
-    
-    return updated_todos
+    return await bulk_complete_todos(todo_ids, user["user_id"])
 
 
 @router.post("/todos/bulk/move", response_model=List[TodoResponse])
 async def bulk_move_todos_endpoint(
-    todo_ids: List[str],
-    project_id: str,
+    request: dict,  # {"todo_ids": ["id1", "id2"], "project_id": "project_id"}
     user: dict = Depends(get_current_user)
 ):
     """Move multiple todos to a different project."""
-    updated_todos = []
-    for todo_id in todo_ids:
-        update_data = UpdateTodoRequest(project_id=project_id)
-        updated_todo = await update_todo(todo_id, update_data, user["user_id"])
-        updated_todos.append(updated_todo)
+    if "todo_ids" not in request or "project_id" not in request:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="todo_ids and project_id are required"
+        )
     
-    return updated_todos
+    return await bulk_move_todos(request["todo_ids"], request["project_id"], user["user_id"])
 
 
 @router.delete("/todos/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
@@ -247,9 +268,7 @@ async def bulk_delete_todos_endpoint(
     user: dict = Depends(get_current_user)
 ):
     """Delete multiple todos."""
-    for todo_id in todo_ids:
-        await delete_todo(todo_id, user["user_id"])
-    
+    await bulk_delete_todos(todo_ids, user["user_id"])
     return None
 
 
