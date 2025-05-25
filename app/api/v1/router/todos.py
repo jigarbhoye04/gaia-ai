@@ -1,0 +1,310 @@
+from typing import List, Optional
+
+from fastapi import APIRouter, Depends, status
+
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.models.todo_models import (
+    TodoCreate,
+    TodoResponse,
+    UpdateTodoRequest,
+    ProjectCreate,
+    ProjectResponse,
+    UpdateProjectRequest,
+    Priority
+)
+from app.services.todo_service import (
+    create_todo,
+    get_todo,
+    get_all_todos,
+    update_todo,
+    delete_todo,
+    create_project,
+    get_all_projects,
+    update_project,
+    delete_project
+)
+
+router = APIRouter()
+
+
+# Todo endpoints
+@router.post("/todos", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+async def create_todo_endpoint(
+    todo: TodoCreate,
+    user: dict = Depends(get_current_user)
+):
+    """Create a new todo item."""
+    return await create_todo(todo, user["user_id"])
+
+
+@router.get("/todos/{todo_id}", response_model=TodoResponse)
+async def get_todo_endpoint(
+    todo_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Get a specific todo item."""
+    return await get_todo(todo_id, user["user_id"])
+
+
+@router.get("/todos", response_model=List[TodoResponse])
+async def get_all_todos_endpoint(
+    project_id: Optional[str] = None,
+    completed: Optional[bool] = None,
+    priority: Optional[Priority] = None,
+    has_due_date: Optional[bool] = None,
+    overdue: Optional[bool] = None,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get all todos for the current user.
+    
+    Query Parameters:
+    - project_id: Filter by project ID
+    - completed: Filter by completion status
+    - priority: Filter by priority level (high, medium, low, none)
+    - has_due_date: Filter todos with/without due dates
+    - overdue: Filter overdue todos (uncompleted todos past due date)
+    """
+    return await get_all_todos(
+        user["user_id"],
+        project_id=project_id,
+        completed=completed,
+        priority=priority.value if priority else None,
+        has_due_date=has_due_date,
+        overdue=overdue
+    )
+
+
+@router.put("/todos/{todo_id}", response_model=TodoResponse)
+async def update_todo_endpoint(
+    todo_id: str,
+    update_data: UpdateTodoRequest,
+    user: dict = Depends(get_current_user)
+):
+    """Update a todo item."""
+    return await update_todo(todo_id, update_data, user["user_id"])
+
+
+@router.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo_endpoint(
+    todo_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Delete a todo item."""
+    await delete_todo(todo_id, user["user_id"])
+    return None
+
+
+# Project endpoints
+@router.post("/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
+async def create_project_endpoint(
+    project: ProjectCreate,
+    user: dict = Depends(get_current_user)
+):
+    """Create a new project."""
+    return await create_project(project, user["user_id"])
+
+
+@router.get("/projects", response_model=List[ProjectResponse])
+async def get_all_projects_endpoint(
+    user: dict = Depends(get_current_user)
+):
+    """Get all projects for the current user."""
+    return await get_all_projects(user["user_id"])
+
+
+@router.put("/projects/{project_id}", response_model=ProjectResponse)
+async def update_project_endpoint(
+    project_id: str,
+    update_data: UpdateProjectRequest,
+    user: dict = Depends(get_current_user)
+):
+    """Update a project."""
+    return await update_project(project_id, update_data, user["user_id"])
+
+
+@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project_endpoint(
+    project_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Delete a project. All todos in this project will be moved to Inbox."""
+    await delete_project(project_id, user["user_id"])
+    return None
+
+
+# Subtask endpoints
+@router.post("/todos/{todo_id}/subtasks", response_model=TodoResponse)
+async def add_subtask_endpoint(
+    todo_id: str,
+    subtask_title: str,
+    user: dict = Depends(get_current_user)
+):
+    """Add a subtask to a todo item."""
+    from app.models.todo_models import SubTask
+    import uuid
+    
+    # Get the todo first
+    todo = await get_todo(todo_id, user["user_id"])
+    
+    # Create new subtask
+    new_subtask = SubTask(
+        id=str(uuid.uuid4()),
+        title=subtask_title,
+        completed=False
+    )
+    
+    # Update todo with new subtask
+    update_data = UpdateTodoRequest(
+        subtasks=todo.subtasks + [new_subtask]
+    )
+    
+    return await update_todo(todo_id, update_data, user["user_id"])
+
+
+@router.put("/todos/{todo_id}/subtasks/{subtask_id}", response_model=TodoResponse)
+async def update_subtask_endpoint(
+    todo_id: str,
+    subtask_id: str,
+    title: Optional[str] = None,
+    completed: Optional[bool] = None,
+    user: dict = Depends(get_current_user)
+):
+    """Update a specific subtask."""
+    # Get the todo first
+    todo = await get_todo(todo_id, user["user_id"])
+    
+    # Find and update the subtask
+    updated_subtasks = []
+    for subtask in todo.subtasks:
+        if subtask.id == subtask_id:
+            if title is not None:
+                subtask.title = title
+            if completed is not None:
+                subtask.completed = completed
+        updated_subtasks.append(subtask)
+    
+    # Update todo with modified subtasks
+    update_data = UpdateTodoRequest(subtasks=updated_subtasks)
+    
+    return await update_todo(todo_id, update_data, user["user_id"])
+
+
+@router.delete("/todos/{todo_id}/subtasks/{subtask_id}", response_model=TodoResponse)
+async def delete_subtask_endpoint(
+    todo_id: str,
+    subtask_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Delete a subtask from a todo item."""
+    # Get the todo first
+    todo = await get_todo(todo_id, user["user_id"])
+    
+    # Remove the subtask
+    updated_subtasks = [s for s in todo.subtasks if s.id != subtask_id]
+    
+    # Update todo with remaining subtasks
+    update_data = UpdateTodoRequest(subtasks=updated_subtasks)
+    
+    return await update_todo(todo_id, update_data, user["user_id"])
+
+
+# Bulk operations
+@router.post("/todos/bulk/complete", response_model=List[TodoResponse])
+async def bulk_complete_todos_endpoint(
+    todo_ids: List[str],
+    user: dict = Depends(get_current_user)
+):
+    """Mark multiple todos as completed."""
+    updated_todos = []
+    for todo_id in todo_ids:
+        update_data = UpdateTodoRequest(completed=True)
+        updated_todo = await update_todo(todo_id, update_data, user["user_id"])
+        updated_todos.append(updated_todo)
+    
+    return updated_todos
+
+
+@router.post("/todos/bulk/move", response_model=List[TodoResponse])
+async def bulk_move_todos_endpoint(
+    todo_ids: List[str],
+    project_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Move multiple todos to a different project."""
+    updated_todos = []
+    for todo_id in todo_ids:
+        update_data = UpdateTodoRequest(project_id=project_id)
+        updated_todo = await update_todo(todo_id, update_data, user["user_id"])
+        updated_todos.append(updated_todo)
+    
+    return updated_todos
+
+
+@router.delete("/todos/bulk/delete", status_code=status.HTTP_204_NO_CONTENT)
+async def bulk_delete_todos_endpoint(
+    todo_ids: List[str],
+    user: dict = Depends(get_current_user)
+):
+    """Delete multiple todos."""
+    for todo_id in todo_ids:
+        await delete_todo(todo_id, user["user_id"])
+    
+    return None
+
+
+# Search and statistics endpoints
+@router.get("/todos/search", response_model=List[TodoResponse])
+async def search_todos_endpoint(
+    q: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Search todos by title, description, or labels.
+    
+    Query Parameters:
+    - q: Search query string
+    """
+    from app.services.todo_service import search_todos
+    return await search_todos(q, user["user_id"])
+
+
+@router.get("/todos/stats")
+async def get_todo_stats_endpoint(
+    user: dict = Depends(get_current_user)
+):
+    """Get statistics about user's todos."""
+    from app.services.todo_service import get_todo_stats
+    return await get_todo_stats(user["user_id"])
+
+
+@router.get("/todos/today", response_model=List[TodoResponse])
+async def get_today_todos_endpoint(
+    user: dict = Depends(get_current_user)
+):
+    """Get todos due today."""
+    from datetime import datetime, time
+    today_start = datetime.combine(datetime.today(), time.min)
+    today_end = datetime.combine(datetime.today(), time.max)
+    
+    from app.services.todo_service import get_todos_by_date_range
+    return await get_todos_by_date_range(user["user_id"], today_start, today_end)
+
+
+@router.get("/todos/upcoming", response_model=List[TodoResponse])
+async def get_upcoming_todos_endpoint(
+    days: int = 7,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get todos due in the upcoming days.
+    
+    Query Parameters:
+    - days: Number of days to look ahead (default: 7)
+    """
+    from datetime import datetime, timedelta
+    start_date = datetime.utcnow()
+    end_date = start_date + timedelta(days=days)
+    
+    from app.services.todo_service import get_todos_by_date_range
+    return await get_todos_by_date_range(user["user_id"], start_date, end_date)
