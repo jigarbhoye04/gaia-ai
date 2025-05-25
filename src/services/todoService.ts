@@ -259,4 +259,28 @@ export const TodoService = {
       throw error;
     }
   },
+
+  getAllLabels: async (): Promise<{ name: string; count: number }[]> => {
+    try {
+      const response = await apiauth.get("/todos/labels");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching labels:", error);
+      toast.error("Failed to fetch labels");
+      throw error;
+    }
+  },
+
+  getTodosByLabel: async (label: string): Promise<Todo[]> => {
+    try {
+      const response = await apiauth.get(
+        `/todos/by-label/${encodeURIComponent(label)}`,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching todos by label:", error);
+      toast.error("Failed to fetch todos by label");
+      throw error;
+    }
+  },
 };

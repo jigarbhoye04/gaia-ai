@@ -1,7 +1,7 @@
 "use client";
 
 import { Spinner } from "@heroui/spinner";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import TodoHeader from "@/components/Todo/TodoHeader";
@@ -9,29 +9,24 @@ import TodoList from "@/components/Todo/TodoList";
 import { TodoService } from "@/services/todoService";
 import { Todo, TodoUpdate } from "@/types/todoTypes";
 
-export default function SearchTodosPage() {
-  const searchParams = useSearchParams();
-  const query = searchParams.get("q") || "";
+export default function LabelTodosPage() {
+  const params = useParams();
+  const label = decodeURIComponent(params.label as string);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    if (query) {
-      searchTodos();
-    } else {
-      setTodos([]);
-      setLoading(false);
-    }
-  }, [query]);
+    loadTodosByLabel();
+  }, [label]);
 
-  const searchTodos = async () => {
+  const loadTodosByLabel = async () => {
     setLoading(true);
     try {
-      const results = await TodoService.searchTodos(query);
-      setTodos(results);
+      const todoList = await TodoService.getTodosByLabel(label);
+      setTodos(todoList);
     } catch (error) {
-      console.error("Failed to search todos:", error);
+      console.error("Failed to load todos by label:", error);
     } finally {
       setLoading(false);
     }
@@ -112,7 +107,7 @@ export default function SearchTodosPage() {
   return (
     <div className="flex h-full flex-col" style={{ minWidth: "500px" }}>
       <TodoHeader
-        title={query ? `Search Results for "${query}"` : "Search"}
+        title={`Label: ${label}`}
         todoCount={todos.length}
         selectedCount={selectedTodos.size}
         onSelectAll={handleSelectAll}
@@ -125,32 +120,21 @@ export default function SearchTodosPage() {
         className="flex-1 overflow-y-auto"
         style={{ maxWidth: "1200px", margin: "0 auto" }}
       >
-        {!query ? (
-          <div className="flex h-64 flex-col items-center justify-center text-foreground-500">
-            <p className="text-lg">Enter a search query to find tasks</p>
-          </div>
-        ) : todos.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center text-foreground-500">
-            <p className="mb-2 text-lg">No tasks found for "{query}"</p>
-            <p className="text-sm">Try a different search term</p>
-          </div>
-        ) : (
-          <TodoList
-            todos={todos}
-            selectedTodos={selectedTodos}
-            onTodoUpdate={handleTodoUpdate}
-            onTodoDelete={handleTodoDelete}
-            onTodoSelect={(todoId) => {
-              const newSelected = new Set(selectedTodos);
-              if (newSelected.has(todoId)) {
-                newSelected.delete(todoId);
-              } else {
-                newSelected.add(todoId);
-              }
-              setSelectedTodos(newSelected);
-            }}
-          />
-        )}
+        <TodoList
+          todos={todos}
+          selectedTodos={selectedTodos}
+          onTodoUpdate={handleTodoUpdate}
+          onTodoDelete={handleTodoDelete}
+          onTodoSelect={(todoId) => {
+            const newSelected = new Set(selectedTodos);
+            if (newSelected.has(todoId)) {
+              newSelected.delete(todoId);
+            } else {
+              newSelected.add(todoId);
+            }
+            setSelectedTodos(newSelected);
+          }}
+        />
       </div>
     </div>
   );

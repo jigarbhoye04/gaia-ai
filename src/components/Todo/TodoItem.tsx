@@ -22,6 +22,7 @@ import {
 import { useState } from "react";
 
 import { CalendarIcon } from "@/components/Misc/icons";
+import { TodoService } from "@/services/todoService";
 import { Priority, Todo, TodoUpdate } from "@/types/todoTypes";
 
 import EditTodoModal from "./EditTodoModal";
@@ -31,7 +32,7 @@ interface TodoItemProps {
   isSelected: boolean;
   onUpdate: (todoId: string, updates: TodoUpdate) => void;
   onDelete: (todoId: string) => void;
-  onSelect: (todoId: string) => void;
+  onClick?: (todo: Todo) => void;
 }
 
 const priorityColors = {
@@ -46,7 +47,7 @@ export default function TodoItem({
   isSelected,
   onUpdate,
   onDelete,
-  onSelect,
+  onClick,
 }: TodoItemProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(false);
@@ -60,9 +61,16 @@ export default function TodoItem({
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
 
-    // This would call the subtask API
-    setNewSubtaskTitle("");
-    setAddingSubtask(false);
+    try {
+      const updatedTodo = await TodoService.addSubtask(todo.id, {
+        title: newSubtaskTitle.trim(),
+      });
+      onUpdate(todo.id, updatedTodo);
+      setNewSubtaskTitle("");
+      setAddingSubtask(false);
+    } catch (error) {
+      console.error("Failed to add subtask:", error);
+    }
   };
 
   const isOverdue =
@@ -71,22 +79,17 @@ export default function TodoItem({
   return (
     <>
       <Card
-        className={`${isSelected ? "ring-2 ring-primary" : ""} ${
-          todo.completed ? "opacity-60" : ""
-        }`}
-        isPressable={false}
+        className={`cursor-pointer transition-all ${
+          isSelected
+            ? "bg-primary/5 ring-2 ring-primary"
+            : "hover:bg-default-50"
+        } ${todo.completed ? "opacity-60" : ""}`}
+        isPressable
         shadow="sm"
+        onPress={() => onClick?.(todo)}
       >
         <CardBody className="p-3">
           <div className="flex items-start gap-3">
-            {/* Selection Checkbox */}
-            <Checkbox
-              isSelected={isSelected}
-              onChange={() => onSelect(todo.id)}
-              size="sm"
-              className="mt-1"
-            />
-
             {/* Complete Checkbox */}
             <Checkbox
               isSelected={todo.completed}
@@ -173,14 +176,17 @@ export default function TodoItem({
                       <Checkbox
                         size="sm"
                         isSelected={subtask.completed}
-                        onChange={() => {
-                          // Update subtask completion
-                          const updatedSubtasks = todo.subtasks.map((s) =>
-                            s.id === subtask.id
-                              ? { ...s, completed: !s.completed }
-                              : s,
-                          );
-                          onUpdate(todo.id, { subtasks: updatedSubtasks });
+                        onChange={async () => {
+                          try {
+                            const updatedTodo = await TodoService.updateSubtask(
+                              todo.id,
+                              subtask.id,
+                              { completed: !subtask.completed },
+                            );
+                            onUpdate(todo.id, updatedTodo);
+                          } catch (error) {
+                            console.error("Failed to update subtask:", error);
+                          }
                         }}
                       />
                       <span

@@ -4,16 +4,28 @@ import { Spinner } from "@heroui/spinner";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import TodoDetailSheet from "@/components/Todo/TodoDetailSheet";
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
 import { TodoService } from "@/services/todoService";
-import { Priority, Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
+import {
+  Priority,
+  Project,
+  Todo,
+  TodoFilters,
+  TodoUpdate,
+} from "@/types/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const ITEMS_PER_PAGE = 50;
 
   // Get filter from URL params
   const projectId = searchParams.get("project");
@@ -22,12 +34,29 @@ export default function TodosPage() {
 
   useEffect(() => {
     loadTodos();
+    loadProjects();
   }, [projectId, priority, completed]);
 
-  const loadTodos = async () => {
-    setLoading(true);
+  const loadProjects = async () => {
     try {
-      const filters: TodoFilters = {};
+      const projectList = await TodoService.getAllProjects();
+      setProjects(projectList);
+    } catch (error) {
+      console.error("Failed to load projects:", error);
+    }
+  };
+
+  const loadTodos = async (loadMore = false) => {
+    if (!loadMore) {
+      setLoading(true);
+      setPage(0);
+    }
+
+    try {
+      const filters: TodoFilters = {
+        skip: loadMore ? page * ITEMS_PER_PAGE : 0,
+        limit: ITEMS_PER_PAGE,
+      };
 
       // Default to inbox if no project specified
       if (!projectId && !priority && !completed) {
@@ -40,7 +69,15 @@ export default function TodosPage() {
       }
 
       const todoList = await TodoService.getAllTodos(filters);
-      setTodos(todoList);
+
+      if (loadMore) {
+        setTodos((prev) => [...prev, ...todoList]);
+      } else {
+        setTodos(todoList);
+      }
+
+      setHasMore(todoList.length === ITEMS_PER_PAGE);
+      if (loadMore) setPage((prev) => prev + 1);
     } catch (error) {
       console.error("Failed to load todos:", error);
     } finally {
@@ -137,6 +174,16 @@ export default function TodosPage() {
       <div
         className="flex-1 overflow-y-auto"
         style={{ maxWidth: "1200px", margin: "0 auto" }}
+        onScroll={(e) => {
+          const target = e.target as HTMLDivElement;
+          if (
+            hasMore &&
+            !loading &&
+            target.scrollHeight - target.scrollTop <= target.clientHeight + 100
+          ) {
+            loadTodos(true);
+          }
+        }}
       >
         <TodoList
           todos={todos}
@@ -152,9 +199,20 @@ export default function TodosPage() {
             }
             setSelectedTodos(newSelected);
           }}
-          onRefresh={loadTodos}
+          onTodoClick={(todo) => setSelectedTodo(todo)}
+          onRefresh={() => loadTodos(false)}
         />
       </div>
+
+      {/* Todo Detail Sheet */}
+      <TodoDetailSheet
+        todo={selectedTodo}
+        isOpen={!!selectedTodo}
+        onClose={() => setSelectedTodo(null)}
+        onUpdate={handleTodoUpdate}
+        onDelete={handleTodoDelete}
+        projects={projects}
+      />
     </div>
   );
 

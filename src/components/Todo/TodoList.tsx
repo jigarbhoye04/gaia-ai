@@ -9,7 +9,7 @@ interface TodoListProps {
   selectedTodos: Set<string>;
   onTodoUpdate: (todoId: string, updates: TodoUpdate) => void;
   onTodoDelete: (todoId: string) => void;
-  onTodoSelect: (todoId: string) => void;
+  onTodoClick?: (todo: Todo) => void;
   onRefresh?: () => void;
 }
 
@@ -18,7 +18,7 @@ export default function TodoList({
   selectedTodos,
   onTodoUpdate,
   onTodoDelete,
-  onTodoSelect,
+  onTodoClick,
 }: TodoListProps) {
   if (todos.length === 0) {
     return (
@@ -49,7 +49,7 @@ export default function TodoList({
                 isSelected={selectedTodos.has(todo.id)}
                 onUpdate={onTodoUpdate}
                 onDelete={onTodoDelete}
-                onSelect={onTodoSelect}
+                onClick={onTodoClick}
               />
             ))}
           </div>
