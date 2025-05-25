@@ -5,12 +5,7 @@ import { Tooltip } from "@heroui/tooltip";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
-import {
-  CalendarIcon,
-  Mail01Icon,
-  PinIcon,
-  Route02Icon,
-} from "../Misc/icons";
+import { CalendarIcon, Mail01Icon, PinIcon, Route02Icon } from "../Misc/icons";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
