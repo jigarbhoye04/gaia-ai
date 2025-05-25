@@ -45,9 +45,6 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Send an email to John about the meeting" → get_mail_contacts then compose_email
      * "Create a diagram showing our process" → create_flowchart
      * "Search for recent developments in AI" → web_search_tool
-     * "Remember that I'm allergic to peanuts" → create_memory
-     * "What do you know about my preferences?" → search_memories
-     * "Show me everything you remember about me" → get_all_memories
      * "What meetings do I have tomorrow?" → fetch_calendar_list
      * "Add a meeting next Tuesday at 3pm" → fetch_calendar_list then calendar_event
      * "Summarize this webpage [URL]" → fetch_webpages

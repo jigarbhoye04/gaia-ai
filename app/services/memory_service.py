@@ -1,6 +1,6 @@
 """Memory service layer for handling all memory operations."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from app.config.loggers import llm_logger as logger
 from app.memory.client import get_memory_client
@@ -40,6 +40,45 @@ class MemoryService:
             
         return str(user_id) if user_id else None
     
+    def _parse_memory_result(self, result: Dict[str, Any]) -> Optional[MemoryEntry]:
+        """
+        Parse a single memory result from Mem0 API response.
+        
+        Args:
+            result: Memory result dictionary
+            
+        Returns:
+            MemoryEntry or None if parsing fails
+        """
+        if not isinstance(result, dict):
+            return None
+            
+        return MemoryEntry(
+            id=result.get("id"),
+            content=result.get("memory") or result.get("text") or result.get("content", ""),
+            user_id=result.get("user_id", ""),
+            metadata=result.get("metadata", {}),
+            relevance_score=result.get("score") or result.get("relevance_score"),
+        )
+    
+    def _parse_memory_list(self, memories: List[Dict[str, Any]], user_id: str) -> List[MemoryEntry]:
+        """
+        Parse a list of memory results.
+        
+        Args:
+            memories: List of memory dictionaries
+            user_id: User ID to associate with memories
+            
+        Returns:
+            List of MemoryEntry objects
+        """
+        parsed_memories = []
+        for memory_data in memories:
+            if memory_entry := self._parse_memory_result(memory_data):
+                memory_entry.user_id = user_id
+                parsed_memories.append(memory_entry)
+        return parsed_memories
+    
     async def store_memory(
         self,
         content: str,
@@ -67,25 +106,25 @@ class MemoryService:
                 messages=[{"role": "user", "content": content}],
                 user_id=user_id,
                 metadata=metadata or {},
-                infer=True  # Let mem0 infer and extract the memory
+                infer=True
             )
             
-            self.logger.info(f"Memory stored for user {user_id}: {result}")
+            self.logger.info(f"Memory stored for user {user_id}")
             
-            # Handle different response formats from mem0
-            if isinstance(result, dict):
-                memory_id = result.get("id") or result.get("results", [{}])[0].get("id")
-                # The actual inferred memory might be different from input
-                inferred_content = result.get("memory", content)
-                if "results" in result and result["results"]:
-                    inferred_content = result["results"][0].get("memory", content)
-            else:
-                memory_id = None
-                inferred_content = content
-            
+            # Mem0 cloud API returns a dict with 'results' array
+            if not isinstance(result, dict) or "results" not in result:
+                self.logger.warning(f"Unexpected response format from mem0: {result}")
+                return None
+                
+            results = result.get("results", [])
+            if not results:
+                return None
+                
+            # Get the first result (usually only one when inferring)
+            first_result = results[0]
             return MemoryEntry(
-                id=memory_id,
-                content=inferred_content,
+                id=first_result.get("id"),
+                content=first_result.get("memory", content),
                 user_id=user_id,
                 metadata=metadata or {},
             )
@@ -116,13 +155,15 @@ class MemoryService:
                 {"role": "assistant", "content": conversation.assistant_response},
             ]
             
+            metadata = {
+                "conversation_id": conversation.conversation_id,
+                **conversation.metadata,
+            }
+            
             self.client.add(
                 messages=messages,
                 user_id=user_id,
-                metadata={
-                    "conversation_id": conversation.conversation_id,
-                    **conversation.metadata,
-                },
+                metadata=metadata,
             )
             
             self.logger.info(f"Conversation stored for user {user_id}")
@@ -160,42 +201,12 @@ class MemoryService:
                 limit=limit,
             )
             
-            memories = []
-            # Handle both list and dict response formats
-            if isinstance(results, dict):
-                results_list = results.get("results", [])
-            elif isinstance(results, list):
-                results_list = results
-            else:
-                self.logger.warning(f"Unexpected search result type: {type(results)}")
-                results_list = []
+            # Mem0 cloud API returns dict with 'results' key
+            if not isinstance(results, dict) or "results" not in results:
+                self.logger.warning(f"Unexpected search result format: {results}")
+                return MemorySearchResult()
             
-            for result in results_list:
-                if isinstance(result, dict):
-                    memory_content = (
-                        result.get("memory") or 
-                        result.get("text") or 
-                        result.get("content") or
-                        str(result)
-                    )
-                    memory_id = result.get("id") or result.get("hash")
-                    memory_metadata = result.get("metadata", {})
-                    relevance_score = result.get("score") or result.get("relevance_score")
-                else:
-                    memory_content = str(result)
-                    memory_id = None
-                    memory_metadata = {}
-                    relevance_score = None
-                
-                memories.append(
-                    MemoryEntry(
-                        id=memory_id,
-                        content=memory_content,
-                        user_id=user_id,
-                        metadata=memory_metadata,
-                        relevance_score=relevance_score,
-                    )
-                )
+            memories = self._parse_memory_list(results["results"], user_id)
             
             return MemorySearchResult(
                 memories=memories,
@@ -205,7 +216,7 @@ class MemoryService:
             )
             
         except Exception as e:
-            self.logger.error(f"Error searching memories: {e}, user_id: {user_id}")
+            self.logger.error(f"Error searching memories: {e}")
             return MemorySearchResult()
     
     async def get_all_memories(
@@ -230,66 +241,32 @@ class MemoryService:
             return MemorySearchResult()
             
         try:
-            # Mem0 get_all returns a list directly, not a dict
             result = self.client.get_all(user_id=user_id)
             
-            # Handle pagination manually since mem0 doesn't support it in get_all
+            # Mem0 cloud API returns dict with 'memories' key
+            if not isinstance(result, dict) or "memories" not in result:
+                self.logger.warning(f"Unexpected result format: {result}")
+                return MemorySearchResult()
+            
+            all_memories = result["memories"]
+            
+            # Handle pagination manually
             start_idx = (page - 1) * page_size
             end_idx = start_idx + page_size
-            
-            # If result is a dict with 'memories' key (newer mem0 versions)
-            if isinstance(result, dict):
-                all_memories = result.get("memories", [])
-            # If result is a list directly (older mem0 versions)
-            elif isinstance(result, list):
-                all_memories = result
-            else:
-                self.logger.warning(f"Unexpected result type from mem0: {type(result)}")
-                all_memories = []
-            
-            # Paginate the results
             paginated_memories = all_memories[start_idx:end_idx]
             
-            memories = []
-            for memory_data in paginated_memories:
-                # Handle different memory data formats
-                if isinstance(memory_data, dict):
-                    memory_content = (
-                        memory_data.get("memory") or 
-                        memory_data.get("text") or 
-                        memory_data.get("content") or
-                        str(memory_data)
-                    )
-                    memory_id = memory_data.get("id") or memory_data.get("hash")
-                    memory_metadata = memory_data.get("metadata", {})
-                else:
-                    # If it's a string or other type, convert to string
-                    memory_content = str(memory_data)
-                    memory_id = None
-                    memory_metadata = {}
-                
-                memories.append(
-                    MemoryEntry(
-                        id=memory_id,
-                        content=memory_content,
-                        user_id=user_id,
-                        metadata=memory_metadata,
-                    )
-                )
-            
-            total_count = len(all_memories)
-            has_next = end_idx < total_count
+            memories = self._parse_memory_list(paginated_memories, user_id)
             
             return MemorySearchResult(
                 memories=memories,
-                total_count=total_count,
+                total_count=len(all_memories),
                 page=page,
                 page_size=page_size,
-                has_next=has_next,
+                has_next=end_idx < len(all_memories),
             )
             
         except Exception as e:
-            self.logger.error(f"Error retrieving all memories: {e}, user_id: {user_id}")
+            self.logger.error(f"Error retrieving all memories: {e}")
             return MemorySearchResult()
     
     async def delete_memory(
@@ -300,7 +277,7 @@ class MemoryService:
         
         Args:
             memory_id: Memory identifier
-            user_id: User identifier
+            user_id: User identifier (for validation only)
             
         Returns:
             True if successful, False otherwise
@@ -310,12 +287,13 @@ class MemoryService:
             return False
             
         try:
-            self.client.delete(memory_id=memory_id, user_id=user_id)
+            # Mem0 cloud API doesn't require user_id for delete
+            self.client.delete(memory_id=memory_id)
             self.logger.info(f"Memory {memory_id} deleted for user {user_id}")
             return True
             
         except Exception as e:
-            self.logger.error(f"Error deleting memory: {e}")
+            self.logger.error(f"Error deleting memory {memory_id}: {e}")
             return False
 
 
