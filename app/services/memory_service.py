@@ -62,17 +62,30 @@ class MemoryService:
             return None
             
         try:
+            # Store as a simple user message for mem0 to infer memory from
             result = self.client.add(
-                messages=[{"role": "memory", "content": content}],
+                messages=[{"role": "user", "content": content}],
                 user_id=user_id,
                 metadata=metadata or {},
+                infer=True  # Let mem0 infer and extract the memory
             )
             
             self.logger.info(f"Memory stored for user {user_id}: {result}")
             
+            # Handle different response formats from mem0
+            if isinstance(result, dict):
+                memory_id = result.get("id") or result.get("results", [{}])[0].get("id")
+                # The actual inferred memory might be different from input
+                inferred_content = result.get("memory", content)
+                if "results" in result and result["results"]:
+                    inferred_content = result["results"][0].get("memory", content)
+            else:
+                memory_id = None
+                inferred_content = content
+            
             return MemoryEntry(
-                id=result.get("id"),
-                content=content,
+                id=memory_id,
+                content=inferred_content,
                 user_id=user_id,
                 metadata=metadata or {},
             )
@@ -148,14 +161,39 @@ class MemoryService:
             )
             
             memories = []
-            for result in results:
+            # Handle both list and dict response formats
+            if isinstance(results, dict):
+                results_list = results.get("results", [])
+            elif isinstance(results, list):
+                results_list = results
+            else:
+                self.logger.warning(f"Unexpected search result type: {type(results)}")
+                results_list = []
+            
+            for result in results_list:
+                if isinstance(result, dict):
+                    memory_content = (
+                        result.get("memory") or 
+                        result.get("text") or 
+                        result.get("content") or
+                        str(result)
+                    )
+                    memory_id = result.get("id") or result.get("hash")
+                    memory_metadata = result.get("metadata", {})
+                    relevance_score = result.get("score") or result.get("relevance_score")
+                else:
+                    memory_content = str(result)
+                    memory_id = None
+                    memory_metadata = {}
+                    relevance_score = None
+                
                 memories.append(
                     MemoryEntry(
-                        id=result.get("id"),
-                        content=result.get("memory", ""),
+                        id=memory_id,
+                        content=memory_content,
                         user_id=user_id,
-                        metadata=result.get("metadata", {}),
-                        relevance_score=result.get("score"),
+                        metadata=memory_metadata,
+                        relevance_score=relevance_score,
                     )
                 )
             
@@ -167,7 +205,7 @@ class MemoryService:
             )
             
         except Exception as e:
-            self.logger.error(f"Error searching memories: {e}")
+            self.logger.error(f"Error searching memories: {e}, user_id: {user_id}")
             return MemorySearchResult()
     
     async def get_all_memories(
@@ -192,33 +230,66 @@ class MemoryService:
             return MemorySearchResult()
             
         try:
-            result = self.client.get_all(
-                user_id=user_id,
-                page=page,
-                page_size=page_size,
-            )
+            # Mem0 get_all returns a list directly, not a dict
+            result = self.client.get_all(user_id=user_id)
+            
+            # Handle pagination manually since mem0 doesn't support it in get_all
+            start_idx = (page - 1) * page_size
+            end_idx = start_idx + page_size
+            
+            # If result is a dict with 'memories' key (newer mem0 versions)
+            if isinstance(result, dict):
+                all_memories = result.get("memories", [])
+            # If result is a list directly (older mem0 versions)
+            elif isinstance(result, list):
+                all_memories = result
+            else:
+                self.logger.warning(f"Unexpected result type from mem0: {type(result)}")
+                all_memories = []
+            
+            # Paginate the results
+            paginated_memories = all_memories[start_idx:end_idx]
             
             memories = []
-            for memory_data in result.get("memories", []):
+            for memory_data in paginated_memories:
+                # Handle different memory data formats
+                if isinstance(memory_data, dict):
+                    memory_content = (
+                        memory_data.get("memory") or 
+                        memory_data.get("text") or 
+                        memory_data.get("content") or
+                        str(memory_data)
+                    )
+                    memory_id = memory_data.get("id") or memory_data.get("hash")
+                    memory_metadata = memory_data.get("metadata", {})
+                else:
+                    # If it's a string or other type, convert to string
+                    memory_content = str(memory_data)
+                    memory_id = None
+                    memory_metadata = {}
+                
                 memories.append(
                     MemoryEntry(
-                        id=memory_data.get("id"),
-                        content=memory_data.get("memory", ""),
+                        id=memory_id,
+                        content=memory_content,
                         user_id=user_id,
-                        metadata=memory_data.get("metadata", {}),
+                        metadata=memory_metadata,
                     )
                 )
             
+            total_count = len(all_memories)
+            has_next = end_idx < total_count
+            
             return MemorySearchResult(
                 memories=memories,
-                total_count=result.get("total", len(memories)),
+                total_count=total_count,
                 page=page,
                 page_size=page_size,
-                has_next=result.get("has_next", False),
+                has_next=has_next,
             )
             
         except Exception as e:
-            self.logger.error(f"Error retrieving all memories: {e}")
+            self.logger.error(f"Error retrieving all memories: {e}, user_id: {user_id}")
             return MemorySearchResult()
     
     async def delete_memory(

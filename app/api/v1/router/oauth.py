@@ -133,46 +133,6 @@ async def get_me(
 
     return {"message": "User retrieved successfully", **user}
 
-
-# async def me(access_token: str = Cookie(None)):
-# if not access_token:
-#     raise HTTPException(status_code=401, detail="Authentication required")
-# try:
-#     # Validate the access token with Google's API
-#     user_info_response = requests.get(
-#         settings.GOOGLE_USERINFO_URL,
-#         headers={"Authorization": f"Bearer {access_token}"},
-#     )
-#     if user_info_response.status_code != 200:
-#         raise HTTPException(
-#             status_code=401, detail="Invalid or expired access token"
-#         )
-
-#     user_info = user_info_response.json()
-#     user_email = user_info.get("email")
-#     if not user_email:
-#         raise HTTPException(status_code=400, detail="Email not found in user info")
-
-#     user_data = await users_collection.find_one({"email": user_email})
-#     if not user_data:
-#         raise HTTPException(status_code=404, detail="User not found")
-
-#     return JSONResponse(
-#         content={
-#             "email": user_data["email"],
-#             "name": user_data["name"],
-#             "picture": user_data["picture"],
-#         }
-#     )
-
-# except requests.exceptions.RequestException as e:
-#     logger.error(f"Error fetching user info from Google: {str(e)}")
-#     raise HTTPException(status_code=500, detail="Error contacting Google API")
-# except Exception as e:
-#     logger.error(f"Unexpected error: {str(e)}")
-#     raise HTTPException(status_code=500, detail="Internal server error")
-
-
 @router.post("/logout")
 async def logout():
     response = JSONResponse(content={"detail": "Logged out successfully"})

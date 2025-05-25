@@ -11,11 +11,12 @@ from app.models.memory_models import (
     CreateMemoryResponse,
     DeleteMemoryResponse,
     MemorySearchResult,
+    AddMemoryInput,
 )
 
 router = APIRouter()
 
-@router.get("/", response_model=MemorySearchResult)
+@router.get("", response_model=MemorySearchResult)
 async def get_all_memories(
     page: int = 1,
     page_size: int = 20,
@@ -43,7 +44,7 @@ async def get_all_memories(
     )
 
 
-@router.post("/", response_model=CreateMemoryResponse)
+@router.post("", response_model=CreateMemoryResponse)
 async def create_memory(
     request: CreateMemoryRequest,
     user: dict = Depends(get_current_user),
@@ -117,7 +118,7 @@ async def delete_memory(
         )
 
 
-@router.delete("/", response_model=DeleteMemoryResponse)
+@router.delete("", response_model=DeleteMemoryResponse)
 async def clear_all_memories(
     user: dict = Depends(get_current_user),
 ):
