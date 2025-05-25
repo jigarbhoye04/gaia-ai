@@ -11,7 +11,6 @@ import { Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 export default function CompletedTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadCompletedTodos();
@@ -53,34 +52,11 @@ export default function CompletedTodosPage() {
     try {
       await TodoService.deleteTodo(todoId);
       setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
-      selectedTodos.delete(todoId);
-      setSelectedTodos(new Set(selectedTodos));
     } catch (error) {
       console.error("Failed to delete todo:", error);
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedTodos.size === 0) return;
-
-    try {
-      const todoIds = Array.from(selectedTodos);
-      await TodoService.bulkDeleteTodos(todoIds);
-
-      setTodos((prev) => prev.filter((todo) => !selectedTodos.has(todo.id)));
-      setSelectedTodos(new Set());
-    } catch (error) {
-      console.error("Failed to delete todos:", error);
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTodos.size === todos.length) {
-      setSelectedTodos(new Set());
-    } else {
-      setSelectedTodos(new Set(todos.map((t) => t.id)));
-    }
-  };
 
   if (loading) {
     return (
@@ -95,28 +71,13 @@ export default function CompletedTodosPage() {
       <TodoHeader
         title="Completed"
         todoCount={todos.length}
-        selectedCount={selectedTodos.size}
-        onSelectAll={handleSelectAll}
-        onBulkComplete={() => {}} // Not needed for completed todos
-        onBulkDelete={handleBulkDelete}
-        allSelected={selectedTodos.size === todos.length && todos.length > 0}
       />
 
       <div className="flex-1 overflow-y-auto">
         <TodoList
           todos={todos}
-          selectedTodos={selectedTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoSelect={(todoId) => {
-            const newSelected = new Set(selectedTodos);
-            if (newSelected.has(todoId)) {
-              newSelected.delete(todoId);
-            } else {
-              newSelected.add(todoId);
-            }
-            setSelectedTodos(newSelected);
-          }}
           onRefresh={loadCompletedTodos}
         />
       </div>

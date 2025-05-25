@@ -18,7 +18,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 
 import { Priority, Project, Todo, TodoUpdate } from "@/types/todoTypes";
 
@@ -56,6 +56,17 @@ export default function TodoDetailSheet({
   projects,
 }: TodoDetailSheetProps) {
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // Handle animation states
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsAnimating(true);
+    } else if (isAnimating) {
+      const timer = setTimeout(() => setIsAnimating(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, isAnimating]);
 
   if (!todo) return null;
 
@@ -74,15 +85,17 @@ export default function TodoDetailSheet({
 
   const completedSubtasks = todo.subtasks.filter((s) => s.completed).length;
 
+  if (!isAnimating && !isOpen) return null;
+
   return (
     <>
       {/* Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/50 transition-opacity duration-300"
-          onClick={onClose}
-        />
-      )}
+      <div
+        className={`fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={onClose}
+      />
 
       {/* Sheet */}
       <div

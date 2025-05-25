@@ -15,7 +15,6 @@ export default function PriorityTodosPage() {
 
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (priority) {
@@ -59,54 +58,11 @@ export default function PriorityTodosPage() {
     try {
       await TodoService.deleteTodo(todoId);
       setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
-      selectedTodos.delete(todoId);
-      setSelectedTodos(new Set(selectedTodos));
     } catch (error) {
       console.error("Failed to delete todo:", error);
     }
   };
 
-  const handleBulkComplete = async () => {
-    if (selectedTodos.size === 0) return;
-
-    try {
-      const todoIds = Array.from(selectedTodos);
-      const updatedTodos = await TodoService.bulkCompleteTodos(todoIds);
-
-      setTodos((prev) =>
-        prev.map((todo) => {
-          const updated = updatedTodos.find((t) => t.id === todo.id);
-          return updated || todo;
-        }),
-      );
-
-      setSelectedTodos(new Set());
-    } catch (error) {
-      console.error("Failed to complete todos:", error);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedTodos.size === 0) return;
-
-    try {
-      const todoIds = Array.from(selectedTodos);
-      await TodoService.bulkDeleteTodos(todoIds);
-
-      setTodos((prev) => prev.filter((todo) => !selectedTodos.has(todo.id)));
-      setSelectedTodos(new Set());
-    } catch (error) {
-      console.error("Failed to delete todos:", error);
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTodos.size === todos.length) {
-      setSelectedTodos(new Set());
-    } else {
-      setSelectedTodos(new Set(todos.map((t) => t.id)));
-    }
-  };
 
   if (loading) {
     return (
@@ -128,28 +84,13 @@ export default function PriorityTodosPage() {
       <TodoHeader
         title={priorityLabels[priority] || "Priority"}
         todoCount={todos.length}
-        selectedCount={selectedTodos.size}
-        onSelectAll={handleSelectAll}
-        onBulkComplete={handleBulkComplete}
-        onBulkDelete={handleBulkDelete}
-        allSelected={selectedTodos.size === todos.length && todos.length > 0}
       />
 
       <div className="flex-1 overflow-y-auto">
         <TodoList
           todos={todos}
-          selectedTodos={selectedTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoSelect={(todoId) => {
-            const newSelected = new Set(selectedTodos);
-            if (newSelected.has(todoId)) {
-              newSelected.delete(todoId);
-            } else {
-              newSelected.add(todoId);
-            }
-            setSelectedTodos(newSelected);
-          }}
           onRefresh={loadPriorityTodos}
         />
       </div>

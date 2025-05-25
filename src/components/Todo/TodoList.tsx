@@ -6,7 +6,6 @@ import TodoItem from "./TodoItem";
 
 interface TodoListProps {
   todos: Todo[];
-  selectedTodos: Set<string>;
   onTodoUpdate: (todoId: string, updates: TodoUpdate) => void;
   onTodoDelete: (todoId: string) => void;
   onTodoClick?: (todo: Todo) => void;
@@ -15,7 +14,6 @@ interface TodoListProps {
 
 export default function TodoList({
   todos,
-  selectedTodos,
   onTodoUpdate,
   onTodoDelete,
   onTodoClick,
@@ -46,7 +44,7 @@ export default function TodoList({
               <TodoItem
                 key={todo.id}
                 todo={todo}
-                isSelected={selectedTodos.has(todo.id)}
+                isSelected={false}
                 onUpdate={onTodoUpdate}
                 onDelete={onTodoDelete}
                 onClick={onTodoClick}

@@ -137,18 +137,8 @@ export default function SearchTodosPage() {
         ) : (
           <TodoList
             todos={todos}
-            selectedTodos={selectedTodos}
             onTodoUpdate={handleTodoUpdate}
             onTodoDelete={handleTodoDelete}
-            onTodoSelect={(todoId) => {
-              const newSelected = new Set(selectedTodos);
-              if (newSelected.has(todoId)) {
-                newSelected.delete(todoId);
-              } else {
-                newSelected.add(todoId);
-              }
-              setSelectedTodos(newSelected);
-            }}
           />
         )}
       </div>
