@@ -4,6 +4,7 @@ from app.langchain.tools import (
     flowchart_tool,
     image_tool,
     mail_tool,
+    memory_tools,
     search_tool,
     weather_tool,
     webpage_tool,
@@ -26,4 +27,7 @@ tools = [
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
     weather_tool.get_weather,
+    memory_tools.add_memory,
+    memory_tools.search_memory,
+    memory_tools.get_all_memory,
 ]

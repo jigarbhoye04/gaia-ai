@@ -52,12 +52,24 @@ class MemoryService:
         """
         if not isinstance(result, dict):
             return None
-            
+
+        # Handle both memory structure formats
+        content = (
+            result.get("memory") or result.get("text") or result.get("content", "")
+        )
+
+        # Extract all the fields that match the output structure
         return MemoryEntry(
             id=result.get("id"),
-            content=result.get("memory") or result.get("text") or result.get("content", ""),
+            content=content,
             user_id=result.get("user_id", ""),
             metadata=result.get("metadata", {}),
+            categories=result.get("categories", []),
+            created_at=result.get("created_at"),
+            updated_at=result.get("updated_at"),
+            expiration_date=result.get("expiration_date"),
+            internal_metadata=result.get("internal_metadata"),
+            deleted_at=result.get("deleted_at"),
             relevance_score=result.get("score") or result.get("relevance_score"),
         )
     
@@ -122,12 +134,21 @@ class MemoryService:
                 
             # Get the first result (usually only one when inferring)
             first_result = results[0]
-            return MemoryEntry(
-                id=first_result.get("id"),
-                content=first_result.get("memory", content),
-                user_id=user_id,
-                metadata=metadata or {},
-            )
+
+            # Use the standardized parsing method for consistency
+            memory_entry = self._parse_memory_result(first_result)
+
+            # Ensure the user_id is set correctly
+            if memory_entry:
+                memory_entry.user_id = user_id
+                # If the memory doesn't have content, use the original content
+                if not memory_entry.content:
+                    memory_entry.content = content
+                # Ensure metadata is preserved
+                if not memory_entry.metadata and metadata:
+                    memory_entry.metadata = metadata
+
+            return memory_entry
             
         except Exception as e:
             self.logger.error(f"Error storing memory: {e}")
@@ -241,28 +262,24 @@ class MemoryService:
             return MemorySearchResult()
             
         try:
-            result = self.client.get_all(user_id=user_id)
-            
-            # Mem0 cloud API returns dict with 'memories' key
-            if not isinstance(result, dict) or "memories" not in result:
-                self.logger.warning(f"Unexpected result format: {result}")
-                return MemorySearchResult()
-            
-            all_memories = result["memories"]
-            
-            # Handle pagination manually
-            start_idx = (page - 1) * page_size
-            end_idx = start_idx + page_size
-            paginated_memories = all_memories[start_idx:end_idx]
-            
-            memories = self._parse_memory_list(paginated_memories, user_id)
+            all_memories = self.client.get_all(user_id=user_id)
+
+            # Log the raw response
+            self.logger.info(f"Raw memory response: {all_memories}")
+
+            memory_entries = []
+
+            for memory in all_memories:
+                memory_entry = self._parse_memory_result(memory)
+                if memory_entry:
+                    memory_entries.append(memory_entry)
             
             return MemorySearchResult(
-                memories=memories,
-                total_count=len(all_memories),
+                memories=memory_entries,
+                total_count=len(memory_entries),
                 page=page,
                 page_size=page_size,
-                has_next=end_idx < len(all_memories),
+                has_next=len(memory_entries) > page * page_size,
             )
             
         except Exception as e:

@@ -11,7 +11,6 @@ from app.models.memory_models import (
     CreateMemoryResponse,
     DeleteMemoryResponse,
     MemorySearchResult,
-    AddMemoryInput,
 )
 
 router = APIRouter()
@@ -36,12 +35,12 @@ async def get_all_memories(
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="User ID not found")
-    
-    return await memory_service.get_all_memories(
-        user_id=user_id,
-        page=page,
-        page_size=page_size
+
+    result = await memory_service.get_all_memories(
+        user_id=user_id, page=page, page_size=page_size
     )
+
+    return result
 
 
 @router.post("", response_model=CreateMemoryResponse)

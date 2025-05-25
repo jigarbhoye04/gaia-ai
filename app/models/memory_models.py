@@ -41,8 +41,20 @@ class MemoryEntry(BaseModel):
     content: str = Field(description="The memory content")
     user_id: str = Field(description="User ID associated with this memory")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    categories: Optional[List[str]] = Field(
+        default_factory=list, description="Categories this memory belongs to"
+    )
     created_at: Optional[datetime] = Field(default=None, description="When the memory was created")
     updated_at: Optional[datetime] = Field(default=None, description="When the memory was last updated")
+    expiration_date: Optional[datetime] = Field(
+        default=None, description="When this memory expires"
+    )
+    internal_metadata: Optional[Dict[str, Any]] = Field(
+        default=None, description="Internal metadata not exposed to users"
+    )
+    deleted_at: Optional[datetime] = Field(
+        default=None, description="When this memory was deleted"
+    )
     relevance_score: Optional[float] = Field(default=None, description="Relevance score from search")
 
 
@@ -70,10 +82,3 @@ class ConversationMemory(BaseModel):
     conversation_id: str = Field(description="Conversation thread ID")
     user_id: str = Field(description="User ID")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
-
-
-class AddMemoryInput(BaseModel):
-    """Input model for adding memories via API."""
-    messages: List[Message] = Field(description="Messages to add to memory")
-    user_id: str = Field(description="User ID for the memories")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
