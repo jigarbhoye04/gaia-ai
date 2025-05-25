@@ -45,7 +45,7 @@ export default function SettingsModal({
 
   return (
     <Modal backdrop="blur" isOpen={openSettings} onOpenChange={setOpenSettings}>
-      <ModalContent className="min-h-[400px] max-w-4xl">
+      <ModalContent className="min-h-[500px] max-w-4xl">
         <ModalBody className="flex flex-row p-5">
           <div className="w-1/4 border-r border-r-[#ffffff20] pr-4">
             <ul className="space-y-1">

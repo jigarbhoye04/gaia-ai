@@ -235,7 +235,7 @@ export default function MemoryManagement({
           </p>
         </div>
       ) : (
-        <div className="max-h-[250px] space-y-2 overflow-y-auto pr-4">
+        <div className="max-h-[330px] space-y-2 overflow-y-auto pr-4">
           {memories.map((memory) => (
             <MemoryCard key={memory.id} memory={memory} />
           ))}

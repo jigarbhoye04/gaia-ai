@@ -10,7 +10,6 @@ import {
   Mail01Icon,
   PinIcon,
   Route02Icon,
-  StickyNote01Icon,
 } from "../Misc/icons";
 
 export default function SidebarTopButtons() {
