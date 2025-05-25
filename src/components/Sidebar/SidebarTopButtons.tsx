@@ -5,13 +5,7 @@ import { Tooltip } from "@heroui/tooltip";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
-import {
-  CalendarIcon,
-  Mail01Icon,
-  PinIcon,
-  Route02Icon,
-  StickyNote01Icon,
-} from "../Misc/icons";
+import { CalendarIcon, Mail01Icon, PinIcon, Route02Icon } from "../Misc/icons";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
@@ -33,11 +27,11 @@ export default function SidebarTopButtons() {
       icon: <Mail01Icon height={23} width={23} />,
       label: "Mail",
     },
-    {
-      route: "/notes",
-      icon: <StickyNote01Icon height={23} width={23} />,
-      label: "Notes",
-    },
+    // {
+    //   route: "/notes",
+    //   icon: <StickyNote01Icon height={23} width={23} />,
+    //   label: "Notes",
+    // },
     {
       route: "/pins",
       icon: <PinIcon height={23} width={23} />,

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 
 import AccountSection from "./AccountSettings";
 import GeneralSection from "./GeneralSettings";
+import MemorySettings from "./MemorySettings";
 import { ModalAction } from "./SettingsMenu";
 
 interface SidebarItem {
@@ -12,8 +13,9 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-  { key: "chats", label: "Chats" },
   { key: "account", label: "Account" },
+  { key: "chats", label: "Chats" },
+  { key: "memory", label: "Memory" },
 ];
 
 export default function SettingsModal({
@@ -34,6 +36,8 @@ export default function SettingsModal({
         return <AccountSection setModalAction={setModalAction} />;
       case "chats":
         return <GeneralSection setModalAction={setModalAction} />;
+      case "memory":
+        return <MemorySettings />;
       default:
         return null;
     }
@@ -41,7 +45,7 @@ export default function SettingsModal({
 
   return (
     <Modal backdrop="blur" isOpen={openSettings} onOpenChange={setOpenSettings}>
-      <ModalContent className="min-h-[400px] max-w-4xl">
+      <ModalContent className="min-h-[500px] max-w-4xl">
         <ModalBody className="flex flex-row p-5">
           <div className="w-1/4 border-r border-r-[#ffffff20] pr-4">
             <ul className="space-y-1">

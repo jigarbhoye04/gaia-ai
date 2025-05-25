@@ -5,6 +5,32 @@ type StreamChunk = Partial<MessageType> & {
   deepSearchWeb?: boolean;
   pageFetchURLs?: string[];
   disclaimer?: string;
+  memory_data?: {
+    operation?: string;
+    status?: string;
+    memory_id?: string;
+    content?: string;
+    messages?: Array<{ role: string; content: string }>;
+    metadata?: Record<string, unknown>;
+    results?: Array<{
+      id: string;
+      content: string;
+      relevance_score?: number;
+      metadata?: Record<string, unknown>;
+    }>;
+    memories?: Array<{
+      id: string;
+      content: string;
+      metadata?: Record<string, unknown>;
+      created_at?: string;
+    }>;
+    count?: number;
+    page?: number;
+    page_size?: number;
+    total_count?: number;
+    has_next?: boolean;
+    error?: string;
+  };
 };
 
 export function parseStreamData(
@@ -66,6 +92,11 @@ export function parseStreamData(
 
   if (streamChunk.disclaimer !== undefined) {
     result.disclaimer = streamChunk.disclaimer;
+  }
+
+  // Memory-related fields
+  if (streamChunk.memory_data !== undefined) {
+    result.memory_data = streamChunk.memory_data;
   }
 
   return result;

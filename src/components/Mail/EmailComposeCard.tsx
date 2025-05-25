@@ -249,7 +249,7 @@ export default function EmailComposeCard({
   const [customEmailError, setCustomEmailError] = useState("");
 
   // Search/filter state
-  const [searchTerm, setSearchTerm] = useState("");
+  const [_searchTerm, _setSearchTerm] = useState("");
 
   // Initialize with empty emails array - user must select recipients
   useEffect(() => {
@@ -393,10 +393,10 @@ export default function EmailComposeCard({
     toast.success(`Selected ${selectedEmails.length} recipient(s)`);
   };
 
-  // Filter suggestions based on search term
-  const filteredSuggestions = suggestions.filter((email) =>
-    email.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Filter suggestions based on search term - commented out as not used
+  // const filteredSuggestions = suggestions.filter((email) =>
+  //   email.toLowerCase().includes(_searchTerm.toLowerCase()),
+  // );
 
   return (
     <>
