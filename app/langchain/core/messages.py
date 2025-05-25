@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemM
 
 from app.config.loggers import llm_logger as logger
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.services.memory_service import memory_service
+from app.services.memory_service import MemorySearchResult, memory_service
 from app.models.message_models import FileData, MessageDict
 
 
@@ -44,12 +44,16 @@ async def construct_langchain_messages(
     if user_id and query:
         try:
             # Search for relevant memories
-            memory_results = await memory_service.search_memories(
+            memory_results: MemorySearchResult = await memory_service.search_memories(
                 query=query, user_id=user_id, limit=5
             )
 
             # If we have memories, add them as a system message
-            if memory_results.memories:
+            if (
+                memory_results
+                and hasattr(memory_results, "memories")
+                and memory_results.memories
+            ):
                 memory_content = "Based on our previous conversations:\n"
                 for mem in memory_results.memories:
                     memory_content += f"- {mem.content}\n"

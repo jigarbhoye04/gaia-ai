@@ -12,6 +12,64 @@ from app.services.memory_service import memory_service
 from app.models.memory_models import ConversationMemory
 
 
+async def store_conversation_memory(
+    user_id, user_message, assistant_response, conversation_id
+):
+    """
+    Store a conversation memory with user message and assistant response.
+
+    Args:
+        user_id: The user's ID
+        user_message: The user's message
+        assistant_response: The assistant's response
+        conversation_id: The conversation ID
+
+    Returns:
+        tuple: (success_flag, memory_data_event)
+    """
+    # Skip if any required parameter is missing
+    if (
+        not user_id
+        or not user_message
+        or not user_message.strip()
+        or not assistant_response
+        or not assistant_response.strip()
+    ):
+        logger.info("Skipping memory storage - missing required parameters")
+        return False, None
+
+    try:
+        # Create conversation memory
+        conversation_memory = ConversationMemory(
+            user_message=user_message,
+            assistant_response=assistant_response,
+            conversation_id=conversation_id,
+            user_id=user_id,
+            metadata={
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+        result = await memory_service.store_conversation(conversation_memory)
+
+        if result:
+            logger.info("Conversation memory stored successfully")
+            memory_data = {
+                "type": "memory_stored",
+                "content": f"Stored conversation: {user_message[:50]}...",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "conversation_id": conversation_id,
+            }
+            return True, memory_data
+        else:
+            logger.info("Memory service declined to store memory")
+            return False, None
+
+    except Exception as e:
+        logger.error(f"Error storing conversation memory: {e}")
+        return False, None
+
+
 @traceable
 async def call_agent(
     request: MessageRequestWithHistory,
@@ -78,32 +136,14 @@ async def call_agent(
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"
 
-        # Store the conversation in memory after completion
+        # Update the conversation in memory with complete response
         if user_id and complete_message and request.message:
-            try:
-                conversation_memory = ConversationMemory(
-                    user_message=request.message,
-                    assistant_response=complete_message,
-                    conversation_id=conversation_id,
-                    user_id=user_id,
-                    metadata={
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
-                    },
-                )
+            success, memory_data = await store_conversation_memory(
+                user_id, request.message, complete_message, conversation_id
+            )
 
-                result = await memory_service.store_conversation(conversation_memory)
-
-                if result:
-                    memory_data = {
-                        'type': 'memory_stored',
-                        'content': f'Stored conversation: {request.message[:50]}...',
-                        'timestamp': datetime.now(timezone.utc).isoformat(),
-                        'conversation_id': conversation_id,
-                    }
-                    yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
-
-            except Exception as e:
-                logger.error(f"Error storing conversation memory: {e}")
+            if success and memory_data:
+                yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
 
         yield f"nostream: {json.dumps({'complete_message': complete_message})}"
         yield "data: [DONE]\n\n"

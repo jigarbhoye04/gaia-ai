@@ -171,28 +171,46 @@ class MemoryService:
         user_id = self._validate_user_id(conversation.user_id)
         if not user_id:
             return False
-            
+
+        # Skip storing if both messages are empty
+        if (
+            not conversation.user_message.strip()
+            and not conversation.assistant_response.strip()
+        ):
+            self.logger.info(f"Skipping empty conversation for user {user_id}")
+            return False
+
         try:
             messages = [
                 {"role": "user", "content": conversation.user_message},
                 {"role": "assistant", "content": conversation.assistant_response},
             ]
-            
+
             metadata = {
                 "conversation_id": conversation.conversation_id,
                 **conversation.metadata,
             }
-            
-            self.client.add(
+
+            result = self.client.add(
                 messages=messages,
                 user_id=user_id,
                 metadata=metadata,
             )
-            
+
+            # Check if result is empty or contains empty results
+            if (
+                isinstance(result, dict)
+                and "results" in result
+                and not result["results"]
+            ) or len(result) == 0:
+                self.logger.warning(f"No memory was stored for user {user_id}")
+                return False
+
             # Invalidate cache after storing conversation
             await delete_cache(f"memory:user:{user_id}:*")
             await delete_cache(f"memory:all:{user_id}:*")
-            
+
+            self.logger.info(f"Memory storage result: {result}")
             self.logger.info(f"Conversation stored for user {user_id}")
             return True
             
