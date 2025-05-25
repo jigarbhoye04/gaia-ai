@@ -13,9 +13,9 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
+  { key: "account", label: "Account" },
   { key: "chats", label: "Chats" },
   { key: "memory", label: "Memory" },
-  { key: "account", label: "Account" },
 ];
 
 export default function SettingsModal({

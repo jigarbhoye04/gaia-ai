@@ -1,6 +1,4 @@
-"use client";
-
-import { Button, Card, CardBody, Pagination, Spinner } from "@heroui/react";
+import { Button, Card, CardBody, Pagination } from "@heroui/react";
 import { Brain, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
@@ -131,16 +129,10 @@ export default function MemoryManagement({
           })
         : "";
 
-      // Safely get conversation ID
-      const conversationId =
-        memory.metadata && typeof memory.metadata.conversation_id === "string"
-          ? memory.metadata.conversation_id.substring(0, 8) + "..."
-          : "";
-
       return (
         <div>
           <Card className="bg-zinc-800">
-            <CardBody className="flex flex-col gap-2">
+            <CardBody className="flex flex-col gap-1">
               <div className="flex flex-row items-center justify-between">
                 <div className="flex-1">
                   <p className="text-sm">{memory.content}</p>
@@ -162,13 +154,17 @@ export default function MemoryManagement({
                 {formattedDate && <span>{formattedDate}</span>}
 
                 {memory.categories && memory.categories.length > 0 && (
-                  <div className="flex flex-wrap">
+                  <div className="flex flex-wrap gap-1">
                     {memory.categories.map((category) => (
                       <span
                         key={category}
                         className="rounded-full bg-zinc-700 px-2 py-0.5"
                       >
-                        {category}
+                        {category.split("_").map((part) => (
+                          <span key={part}>
+                            {part.charAt(0).toUpperCase() + part.slice(1)}{" "}
+                          </span>
+                        ))}
                       </span>
                     ))}
                   </div>
@@ -239,7 +235,7 @@ export default function MemoryManagement({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="max-h-[250px] space-y-2 overflow-y-auto pr-4">
           {memories.map((memory) => (
             <MemoryCard key={memory.id} memory={memory} />
           ))}
