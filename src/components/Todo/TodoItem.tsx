@@ -4,7 +4,12 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
-import { Dropdown, DropdownItem,DropdownMenu, DropdownTrigger } from "@heroui/dropdown";
+import {
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/dropdown";
 import { format } from "date-fns";
 import {
   ChevronDown,
@@ -17,14 +22,14 @@ import {
 import { useState } from "react";
 
 import { CalendarIcon } from "@/components/Misc/icons";
-import { Priority,Todo } from "@/types/todoTypes";
+import { Priority, Todo, TodoUpdate } from "@/types/todoTypes";
 
 import EditTodoModal from "./EditTodoModal";
 
 interface TodoItemProps {
   todo: Todo;
   isSelected: boolean;
-  onUpdate: (todoId: string, updates: any) => void;
+  onUpdate: (todoId: string, updates: TodoUpdate) => void;
   onDelete: (todoId: string) => void;
   onSelect: (todoId: string) => void;
 }
@@ -54,17 +59,18 @@ export default function TodoItem({
 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim()) return;
-    
+
     // This would call the subtask API
     setNewSubtaskTitle("");
     setAddingSubtask(false);
   };
 
-  const isOverdue = todo.due_date && new Date(todo.due_date) < new Date() && !todo.completed;
+  const isOverdue =
+    todo.due_date && new Date(todo.due_date) < new Date() && !todo.completed;
 
   return (
     <>
-      <Card 
+      <Card
         className={`${isSelected ? "ring-2 ring-primary" : ""} ${
           todo.completed ? "opacity-60" : ""
         }`}
@@ -91,23 +97,25 @@ export default function TodoItem({
             />
 
             {/* Main Content */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               {/* Title and Description */}
               <div className="mb-2">
-                <h4 className={`text-sm font-medium ${
-                  todo.completed ? "line-through text-foreground-500" : ""
-                }`}>
+                <h4
+                  className={`text-sm font-medium ${
+                    todo.completed ? "text-foreground-500 line-through" : ""
+                  }`}
+                >
                   {todo.title}
                 </h4>
                 {todo.description && (
-                  <p className="text-xs text-foreground-500 mt-1">
+                  <p className="mt-1 text-xs text-foreground-500">
                     {todo.description}
                   </p>
                 )}
               </div>
 
               {/* Metadata Row */}
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* Priority */}
                 {todo.priority !== Priority.NONE && (
                   <Chip
@@ -121,10 +129,12 @@ export default function TodoItem({
 
                 {/* Due Date */}
                 {todo.due_date && (
-                  <div className={`flex items-center gap-1 text-xs ${
-                    isOverdue ? "text-danger" : "text-foreground-500"
-                  }`}>
-                    <CalendarIcon className="w-3 h-3" />
+                  <div
+                    className={`flex items-center gap-1 text-xs ${
+                      isOverdue ? "text-danger" : "text-foreground-500"
+                    }`}
+                  >
+                    <CalendarIcon className="h-3 w-3" />
                     {format(new Date(todo.due_date), "MMM d")}
                   </div>
                 )}
@@ -141,15 +151,16 @@ export default function TodoItem({
                   <Button
                     size="sm"
                     variant="light"
-                    className="h-6 px-2 min-w-0"
+                    className="h-6 min-w-0 px-2"
                     onPress={() => setShowSubtasks(!showSubtasks)}
                   >
                     {showSubtasks ? (
-                      <ChevronDown className="w-3 h-3" />
+                      <ChevronDown className="h-3 w-3" />
                     ) : (
-                      <ChevronRight className="w-3 h-3" />
+                      <ChevronRight className="h-3 w-3" />
                     )}
-                    {todo.subtasks.filter((s) => s.completed).length}/{todo.subtasks.length}
+                    {todo.subtasks.filter((s) => s.completed).length}/
+                    {todo.subtasks.length}
                   </Button>
                 )}
               </div>
@@ -167,19 +178,23 @@ export default function TodoItem({
                           const updatedSubtasks = todo.subtasks.map((s) =>
                             s.id === subtask.id
                               ? { ...s, completed: !s.completed }
-                              : s
+                              : s,
                           );
                           onUpdate(todo.id, { subtasks: updatedSubtasks });
                         }}
                       />
-                      <span className={`text-xs ${
-                        subtask.completed ? "line-through text-foreground-500" : ""
-                      }`}>
+                      <span
+                        className={`text-xs ${
+                          subtask.completed
+                            ? "text-foreground-500 line-through"
+                            : ""
+                        }`}
+                      >
                         {subtask.title}
                       </span>
                     </div>
                   ))}
-                  
+
                   {/* Add Subtask */}
                   {addingSubtask ? (
                     <div className="flex items-center gap-2">
@@ -195,13 +210,13 @@ export default function TodoItem({
                           }
                         }}
                         placeholder="Add subtask..."
-                        className="flex-1 text-xs px-2 py-1 rounded border border-default-200"
+                        className="flex-1 rounded border border-default-200 px-2 py-1 text-xs"
                         autoFocus
                       />
                       <Button
                         size="sm"
                         variant="flat"
-                        className="h-6 px-2 min-w-0"
+                        className="h-6 min-w-0 px-2"
                         onPress={handleAddSubtask}
                       >
                         Add
@@ -212,7 +227,7 @@ export default function TodoItem({
                       size="sm"
                       variant="light"
                       className="h-6 px-2"
-                      startContent={<Plus className="w-3 h-3" />}
+                      startContent={<Plus className="h-3 w-3" />}
                       onPress={() => setAddingSubtask(true)}
                     >
                       Add subtask
@@ -229,22 +244,22 @@ export default function TodoItem({
                   isIconOnly
                   size="sm"
                   variant="light"
-                  className="min-w-6 w-6 h-6"
+                  className="h-6 w-6 min-w-6"
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Todo actions">
                 <DropdownItem
                   key="edit"
-                  startContent={<Edit2 className="w-4 h-4" />}
+                  startContent={<Edit2 className="h-4 w-4" />}
                   onPress={() => setEditOpen(true)}
                 >
                   Edit
                 </DropdownItem>
                 <DropdownItem
                   key="delete"
-                  startContent={<Trash2 className="w-4 h-4" />}
+                  startContent={<Trash2 className="h-4 w-4" />}
                   className="text-danger"
                   color="danger"
                   onPress={() => onDelete(todo.id)}

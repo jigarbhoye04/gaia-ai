@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
 import { TodoService } from "@/services/todoService";
-import { Todo } from "@/types/todoTypes";
+import { Todo, TodoUpdate } from "@/types/todoTypes";
 
 export default function TodoSearchPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
-  
+
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
@@ -38,11 +38,11 @@ export default function TodoSearchPage() {
     }
   };
 
-  const handleTodoUpdate = async (todoId: string, updates: any) => {
+  const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
       const updatedTodo = await TodoService.updateTodo(todoId, updates);
       setTodos((prev) =>
-        prev.map((todo) => (todo.id === todoId ? updatedTodo : todo))
+        prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
       );
     } catch (error) {
       console.error("Failed to update todo:", error);
@@ -62,18 +62,18 @@ export default function TodoSearchPage() {
 
   const handleBulkComplete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       const updatedTodos = await TodoService.bulkCompleteTodos(todoIds);
-      
+
       setTodos((prev) =>
         prev.map((todo) => {
           const updated = updatedTodos.find((t) => t.id === todo.id);
           return updated || todo;
-        })
+        }),
       );
-      
+
       setSelectedTodos(new Set());
     } catch (error) {
       console.error("Failed to complete todos:", error);
@@ -82,11 +82,11 @@ export default function TodoSearchPage() {
 
   const handleBulkDelete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       await TodoService.bulkDeleteTodos(todoIds);
-      
+
       setTodos((prev) => prev.filter((todo) => !selectedTodos.has(todo.id)));
       setSelectedTodos(new Set());
     } catch (error) {
@@ -104,7 +104,7 @@ export default function TodoSearchPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
@@ -112,14 +112,14 @@ export default function TodoSearchPage() {
 
   if (!query) {
     return (
-      <div className="flex items-center justify-center h-full text-foreground-500">
+      <div className="flex h-full items-center justify-center text-foreground-500">
         <p>Enter a search query to find tasks</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <TodoHeader
         title={`Search results for "${query}"`}
         todoCount={todos.length}
@@ -129,10 +129,10 @@ export default function TodoSearchPage() {
         onBulkDelete={handleBulkDelete}
         allSelected={selectedTodos.size === todos.length && todos.length > 0}
       />
-      
+
       <div className="flex-1 overflow-y-auto">
         {todos.length === 0 ? (
-          <div className="flex items-center justify-center h-64 text-foreground-500">
+          <div className="flex h-64 items-center justify-center text-foreground-500">
             <p>No tasks found matching "{query}"</p>
           </div>
         ) : (

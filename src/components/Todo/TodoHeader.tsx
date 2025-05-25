@@ -2,12 +2,13 @@
 
 import { Button } from "@heroui/button";
 import { Checkbox } from "@heroui/checkbox";
-import { Dropdown, DropdownItem,DropdownMenu, DropdownTrigger } from "@heroui/dropdown";
 import {
-  CheckCircle,
-  MoreHorizontal,
-  Trash2,
-} from "lucide-react";
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@heroui/dropdown";
+import { CheckCircle, MoreHorizontal, Trash2 } from "lucide-react";
 
 interface TodoHeaderProps {
   title: string;
@@ -54,7 +55,7 @@ export default function TodoHeader({
             <Button
               size="sm"
               variant="flat"
-              startContent={<CheckCircle className="w-4 h-4" />}
+              startContent={<CheckCircle className="h-4 w-4" />}
               onPress={onBulkComplete}
             >
               Complete
@@ -63,19 +64,15 @@ export default function TodoHeader({
               size="sm"
               variant="flat"
               color="danger"
-              startContent={<Trash2 className="w-4 h-4" />}
+              startContent={<Trash2 className="h-4 w-4" />}
               onPress={onBulkDelete}
             >
               Delete
             </Button>
             <Dropdown>
               <DropdownTrigger>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="flat"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
+                <Button isIconOnly size="sm" variant="flat">
+                  <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownTrigger>
               <DropdownMenu aria-label="Bulk actions">

@@ -12,8 +12,8 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import { Select, SelectItem } from "@heroui/select";
-import { parseDate } from "@internationalized/date";
-import { useEffect,useState } from "react";
+import { CalendarDate, parseDate } from "@internationalized/date";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { TodoService } from "@/services/todoService";
@@ -66,7 +66,7 @@ export default function AddTodoModal({
     try {
       const projectList = await TodoService.getAllProjects();
       setProjects(projectList);
-      
+
       // Set default project if not set
       if (!formData.project_id) {
         const inboxProject = projectList.find((p) => p.is_default);
@@ -88,7 +88,7 @@ export default function AddTodoModal({
     setLoading(true);
     try {
       await TodoService.createTodo(formData);
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -98,7 +98,7 @@ export default function AddTodoModal({
         project_id: formData.project_id,
       });
       setLabelInput("");
-      
+
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -126,7 +126,7 @@ export default function AddTodoModal({
     }));
   };
 
-  const handleDateChange = (date: any) => {
+  const handleDateChange = (date: CalendarDate | null) => {
     if (date) {
       const jsDate = new Date(date.year, date.month - 1, date.day);
       setFormData((prev) => ({
@@ -190,7 +190,9 @@ export default function AddTodoModal({
                   <Select
                     label="Project"
                     placeholder="Select project"
-                    selectedKeys={formData.project_id ? [formData.project_id] : []}
+                    selectedKeys={
+                      formData.project_id ? [formData.project_id] : []
+                    }
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -240,7 +242,7 @@ export default function AddTodoModal({
 
                 {/* Labels */}
                 <div>
-                  <div className="flex gap-2 mb-2">
+                  <div className="mb-2 flex gap-2">
                     <Input
                       placeholder="Add label..."
                       value={labelInput}

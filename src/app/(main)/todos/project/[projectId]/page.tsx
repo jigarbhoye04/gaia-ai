@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
 import { TodoService } from "@/services/todoService";
-import { Project,Todo, TodoFilters } from "@/types/todoTypes";
+import { Project, Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 
 export default function ProjectTodosPage() {
   const params = useParams();
   const projectId = params.projectId as string;
-  
+
   const [todos, setTodos] = useState<Todo[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,7 @@ export default function ProjectTodosPage() {
     try {
       // Load project details
       const projects = await TodoService.getAllProjects();
-      const currentProject = projects.find(p => p.id === projectId);
+      const currentProject = projects.find((p) => p.id === projectId);
       setProject(currentProject || null);
 
       // Load todos for this project
@@ -45,16 +45,16 @@ export default function ProjectTodosPage() {
     }
   };
 
-  const handleTodoUpdate = async (todoId: string, updates: any) => {
+  const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
       const updatedTodo = await TodoService.updateTodo(todoId, updates);
-      
+
       // If the todo is moved to a different project, remove it from this view
       if (updates.project_id && updates.project_id !== projectId) {
         setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
       } else {
         setTodos((prev) =>
-          prev.map((todo) => (todo.id === todoId ? updatedTodo : todo))
+          prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
         );
       }
     } catch (error) {
@@ -75,18 +75,18 @@ export default function ProjectTodosPage() {
 
   const handleBulkComplete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       const updatedTodos = await TodoService.bulkCompleteTodos(todoIds);
-      
+
       setTodos((prev) =>
         prev.map((todo) => {
           const updated = updatedTodos.find((t) => t.id === todo.id);
           return updated || todo;
-        })
+        }),
       );
-      
+
       setSelectedTodos(new Set());
     } catch (error) {
       console.error("Failed to complete todos:", error);
@@ -95,11 +95,11 @@ export default function ProjectTodosPage() {
 
   const handleBulkDelete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       await TodoService.bulkDeleteTodos(todoIds);
-      
+
       setTodos((prev) => prev.filter((todo) => !selectedTodos.has(todo.id)));
       setSelectedTodos(new Set());
     } catch (error) {
@@ -117,14 +117,14 @@ export default function ProjectTodosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <TodoHeader
         title={project?.name || "Project"}
         todoCount={todos.length}
@@ -134,7 +134,7 @@ export default function ProjectTodosPage() {
         onBulkDelete={handleBulkDelete}
         allSelected={selectedTodos.size === todos.length && todos.length > 0}
       />
-      
+
       <div className="flex-1 overflow-y-auto">
         <TodoList
           todos={todos}

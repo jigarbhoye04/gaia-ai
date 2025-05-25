@@ -108,7 +108,7 @@ export const TodoService = {
 
   updateProject: async (
     projectId: string,
-    update: ProjectUpdate
+    update: ProjectUpdate,
   ): Promise<Project> => {
     try {
       const response = await apiauth.put(`/projects/${projectId}`, update);
@@ -133,10 +133,7 @@ export const TodoService = {
   },
 
   // Subtask operations
-  addSubtask: async (
-    todoId: string,
-    subtask: SubtaskCreate
-  ): Promise<Todo> => {
+  addSubtask: async (todoId: string, subtask: SubtaskCreate): Promise<Todo> => {
     try {
       const response = await apiauth.post(`/todos/${todoId}/subtasks`, subtask);
       toast.success("Subtask added successfully");
@@ -151,12 +148,12 @@ export const TodoService = {
   updateSubtask: async (
     todoId: string,
     subtaskId: string,
-    update: SubtaskUpdate
+    update: SubtaskUpdate,
   ): Promise<Todo> => {
     try {
       const response = await apiauth.put(
         `/todos/${todoId}/subtasks/${subtaskId}`,
-        update
+        update,
       );
       return response.data;
     } catch (error) {
@@ -169,7 +166,7 @@ export const TodoService = {
   deleteSubtask: async (todoId: string, subtaskId: string): Promise<Todo> => {
     try {
       const response = await apiauth.delete(
-        `/todos/${todoId}/subtasks/${subtaskId}`
+        `/todos/${todoId}/subtasks/${subtaskId}`,
       );
       toast.success("Subtask deleted successfully");
       return response.data;
@@ -219,7 +216,9 @@ export const TodoService = {
   // Search and stats
   searchTodos: async (query: string): Promise<Todo[]> => {
     try {
-      const response = await apiauth.get(`/todos/search?q=${encodeURIComponent(query)}`);
+      const response = await apiauth.get(
+        `/todos/search?q=${encodeURIComponent(query)}`,
+      );
       return response.data;
     } catch (error) {
       console.error("Error searching todos:", error);

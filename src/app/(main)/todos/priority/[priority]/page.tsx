@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
 import { TodoService } from "@/services/todoService";
-import { Priority,Todo, TodoFilters } from "@/types/todoTypes";
+import { Priority, Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 
 export default function PriorityTodosPage() {
   const params = useParams();
   const priority = params.priority as Priority;
-  
+
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
@@ -38,16 +38,16 @@ export default function PriorityTodosPage() {
     }
   };
 
-  const handleTodoUpdate = async (todoId: string, updates: any) => {
+  const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
       const updatedTodo = await TodoService.updateTodo(todoId, updates);
-      
+
       // If the todo's priority changed, remove it from this view
       if (updates.priority && updates.priority !== priority) {
         setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
       } else {
         setTodos((prev) =>
-          prev.map((todo) => (todo.id === todoId ? updatedTodo : todo))
+          prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
         );
       }
     } catch (error) {
@@ -68,18 +68,18 @@ export default function PriorityTodosPage() {
 
   const handleBulkComplete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       const updatedTodos = await TodoService.bulkCompleteTodos(todoIds);
-      
+
       setTodos((prev) =>
         prev.map((todo) => {
           const updated = updatedTodos.find((t) => t.id === todo.id);
           return updated || todo;
-        })
+        }),
       );
-      
+
       setSelectedTodos(new Set());
     } catch (error) {
       console.error("Failed to complete todos:", error);
@@ -88,11 +88,11 @@ export default function PriorityTodosPage() {
 
   const handleBulkDelete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       await TodoService.bulkDeleteTodos(todoIds);
-      
+
       setTodos((prev) => prev.filter((todo) => !selectedTodos.has(todo.id)));
       setSelectedTodos(new Set());
     } catch (error) {
@@ -110,7 +110,7 @@ export default function PriorityTodosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
@@ -124,7 +124,7 @@ export default function PriorityTodosPage() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <TodoHeader
         title={priorityLabels[priority] || "Priority"}
         todoCount={todos.length}
@@ -134,7 +134,7 @@ export default function PriorityTodosPage() {
         onBulkDelete={handleBulkDelete}
         allSelected={selectedTodos.size === todos.length && todos.length > 0}
       />
-      
+
       <div className="flex-1 overflow-y-auto">
         <TodoList
           todos={todos}

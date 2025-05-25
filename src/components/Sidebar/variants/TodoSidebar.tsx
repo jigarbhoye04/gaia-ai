@@ -10,17 +10,14 @@ import {
   Folder,
   Plus,
 } from "lucide-react";
-import { usePathname,useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import {
-  InboxIcon,
-  SearchIcon,
-} from "@/components/Misc/icons";
+import { InboxIcon, SearchIcon } from "@/components/Misc/icons";
 import AddProjectModal from "@/components/Todo/AddProjectModal";
 import AddTodoModal from "@/components/Todo/AddTodoModal";
 import { TodoService } from "@/services/todoService";
-import { Priority,Project } from "@/types/todoTypes";
+import { Priority, Project } from "@/types/todoTypes";
 
 type MenuItem = {
   label: string;
@@ -36,18 +33,23 @@ type SidebarSectionProps = {
   onItemClick: (href: string) => void;
 };
 
-function SidebarSection({ title, items, activeItem, onItemClick }: SidebarSectionProps) {
+function SidebarSection({
+  title,
+  items,
+  activeItem,
+  onItemClick,
+}: SidebarSectionProps) {
   return (
     <div className="mb-4">
       {title && (
-        <div className="px-2 pb-1 text-xs font-medium text-foreground-500">
+        <div className="px-2 pb-1 text-sm font-medium text-foreground-500">
           {title}
         </div>
       )}
       {items.map((item) => (
         <Button
           key={item.href}
-          startContent={<item.icon className="w-4 h-4" />}
+          startContent={<item.icon className="mr-1" />}
           endContent={
             item.count !== undefined && (
               <span className="ml-auto text-xs text-foreground-500">
@@ -55,14 +57,13 @@ function SidebarSection({ title, items, activeItem, onItemClick }: SidebarSectio
               </span>
             )
           }
-          className={`w-full justify-start mb-1 ${
+          className={`justify-start pl-2 text-start ${
             activeItem === item.href
-              ? "bg-primary-100 text-primary"
+              ? "bg-primary/10 text-primary"
               : "text-foreground-600"
           }`}
-          variant={activeItem === item.href ? "flat" : "light"}
+          variant="light"
           radius="sm"
-          size="sm"
           onPress={() => onItemClick(item.href)}
         >
           {item.label}
@@ -178,7 +179,7 @@ export default function TodoSidebar() {
       label: "High Priority",
       icon: () => (
         <div
-          className="w-3 h-3 rounded-full"
+          className="h-3 w-3 rounded-full"
           style={{ backgroundColor: priorityColors[Priority.HIGH] }}
         />
       ),
@@ -188,7 +189,7 @@ export default function TodoSidebar() {
       label: "Medium Priority",
       icon: () => (
         <div
-          className="w-3 h-3 rounded-full"
+          className="h-3 w-3 rounded-full"
           style={{ backgroundColor: priorityColors[Priority.MEDIUM] }}
         />
       ),
@@ -198,7 +199,7 @@ export default function TodoSidebar() {
       label: "Low Priority",
       icon: () => (
         <div
-          className="w-3 h-3 rounded-full"
+          className="h-3 w-3 rounded-full"
           style={{ backgroundColor: priorityColors[Priority.LOW] }}
         />
       ),
@@ -208,26 +209,30 @@ export default function TodoSidebar() {
 
   return (
     <>
-      <div className="flex h-full flex-col p-2">
+      <div className="flex h-full flex-col">
         {/* Add Task Button */}
-        <Button
-          className="w-full mb-4 text-white"
-          color="primary"
-          size="sm"
-          variant="solid"
-          startContent={<Plus className="w-4 h-4" />}
-          onPress={() => setAddTodoOpen(true)}
-        >
-          Add Task
-        </Button>
+        <div className="mb-5 w-full">
+          <Button
+            className="w-full justify-start text-sm text-primary"
+            color="primary"
+            size="sm"
+            variant="flat"
+            startContent={<Plus className="h-4 w-4" />}
+            onPress={() => setAddTodoOpen(true)}
+          >
+            Add Task
+          </Button>
+        </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="mb-4">
+        <form onSubmit={handleSearch} className="mb-4 px-2">
           <Input
             placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            startContent={<SearchIcon className="w-4 h-4 text-foreground-400" />}
+            startContent={
+              <SearchIcon className="h-4 w-4 text-foreground-400" />
+            }
             size="sm"
             radius="sm"
             classNames={{
@@ -258,7 +263,7 @@ export default function TodoSidebar() {
 
         {/* Projects */}
         <div className="flex items-center justify-between px-2 pb-1">
-          <span className="text-xs font-medium text-foreground-500">
+          <span className="text-sm font-medium text-foreground-500">
             PROJECTS
           </span>
           <Button
@@ -268,7 +273,7 @@ export default function TodoSidebar() {
             onPress={() => setAddProjectOpen(true)}
             className="h-6 w-6 min-w-6"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="h-3 w-3" />
           </Button>
         </div>
         <SidebarSection

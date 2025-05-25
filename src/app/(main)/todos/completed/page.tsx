@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
 import { TodoService } from "@/services/todoService";
-import { Todo, TodoFilters } from "@/types/todoTypes";
+import { Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 
 export default function CompletedTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -32,16 +32,16 @@ export default function CompletedTodosPage() {
     }
   };
 
-  const handleTodoUpdate = async (todoId: string, updates: any) => {
+  const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
       const updatedTodo = await TodoService.updateTodo(todoId, updates);
-      
+
       // If the todo is marked as incomplete, remove it from this view
       if (updates.completed === false) {
         setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
       } else {
         setTodos((prev) =>
-          prev.map((todo) => (todo.id === todoId ? updatedTodo : todo))
+          prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
         );
       }
     } catch (error) {
@@ -62,11 +62,11 @@ export default function CompletedTodosPage() {
 
   const handleBulkDelete = async () => {
     if (selectedTodos.size === 0) return;
-    
+
     try {
       const todoIds = Array.from(selectedTodos);
       await TodoService.bulkDeleteTodos(todoIds);
-      
+
       setTodos((prev) => prev.filter((todo) => !selectedTodos.has(todo.id)));
       setSelectedTodos(new Set());
     } catch (error) {
@@ -84,14 +84,14 @@ export default function CompletedTodosPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       <TodoHeader
         title="Completed"
         todoCount={todos.length}
@@ -101,7 +101,7 @@ export default function CompletedTodosPage() {
         onBulkDelete={handleBulkDelete}
         allSelected={selectedTodos.size === todos.length && todos.length > 0}
       />
-      
+
       <div className="flex-1 overflow-y-auto">
         <TodoList
           todos={todos}

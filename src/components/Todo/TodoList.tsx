@@ -1,13 +1,13 @@
 "use client";
 
-import { Todo } from "@/types/todoTypes";
+import { Todo, TodoUpdate } from "@/types/todoTypes";
 
 import TodoItem from "./TodoItem";
 
 interface TodoListProps {
   todos: Todo[];
   selectedTodos: Set<string>;
-  onTodoUpdate: (todoId: string, updates: any) => void;
+  onTodoUpdate: (todoId: string, updates: TodoUpdate) => void;
   onTodoDelete: (todoId: string) => void;
   onTodoSelect: (todoId: string) => void;
   onRefresh?: () => void;
@@ -19,12 +19,11 @@ export default function TodoList({
   onTodoUpdate,
   onTodoDelete,
   onTodoSelect,
-  onRefresh,
 }: TodoListProps) {
   if (todos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-foreground-500">
-        <p className="text-lg mb-2">No tasks found</p>
+      <div className="flex h-64 flex-col items-center justify-center text-foreground-500">
+        <p className="mb-2 text-lg">No tasks found</p>
         <p className="text-sm">Create a new task to get started</p>
       </div>
     );
@@ -34,11 +33,11 @@ export default function TodoList({
   const groupedTodos = groupTodosByDate(todos);
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       {Object.entries(groupedTodos).map(([date, todosForDate]) => (
         <div key={date}>
           {date !== "No Due Date" && (
-            <h3 className="text-sm font-medium text-foreground-600 mb-2">
+            <h3 className="mb-2 text-sm font-medium text-foreground-600">
               {date}
             </h3>
           )}
@@ -98,7 +97,7 @@ function groupTodosByDate(todos: Todo[]) {
   // Sort groups by date priority
   const sortedGroups: Record<string, Todo[]> = {};
   const order = ["Overdue", "Today", "Tomorrow"];
-  
+
   order.forEach((key) => {
     if (groups[key]) {
       sortedGroups[key] = groups[key];

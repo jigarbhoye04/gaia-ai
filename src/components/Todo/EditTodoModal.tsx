@@ -12,8 +12,8 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import { Select, SelectItem } from "@heroui/select";
-import { parseDate } from "@internationalized/date";
-import { useEffect,useState } from "react";
+import { CalendarDate, parseDate } from "@internationalized/date";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { TodoService } from "@/services/todoService";
@@ -88,10 +88,14 @@ export default function EditTodoModal({
       // Only send changed fields
       const updates: TodoUpdate = {};
       if (formData.title !== todo.title) updates.title = formData.title;
-      if (formData.description !== todo.description) updates.description = formData.description;
-      if (JSON.stringify(formData.labels) !== JSON.stringify(todo.labels)) updates.labels = formData.labels;
-      if (formData.priority !== todo.priority) updates.priority = formData.priority;
-      if (formData.project_id !== todo.project_id) updates.project_id = formData.project_id;
+      if (formData.description !== todo.description)
+        updates.description = formData.description;
+      if (JSON.stringify(formData.labels) !== JSON.stringify(todo.labels))
+        updates.labels = formData.labels;
+      if (formData.priority !== todo.priority)
+        updates.priority = formData.priority;
+      if (formData.project_id !== todo.project_id)
+        updates.project_id = formData.project_id;
       if (formData.due_date !== todo.due_date) {
         updates.due_date = formData.due_date;
         updates.due_date_timezone = formData.due_date_timezone;
@@ -114,7 +118,11 @@ export default function EditTodoModal({
 
   const handleAddLabel = () => {
     const trimmedLabel = labelInput.trim();
-    if (trimmedLabel && formData.labels && !formData.labels.includes(trimmedLabel)) {
+    if (
+      trimmedLabel &&
+      formData.labels &&
+      !formData.labels.includes(trimmedLabel)
+    ) {
       setFormData((prev) => ({
         ...prev,
         labels: [...(prev.labels || []), trimmedLabel],
@@ -130,7 +138,7 @@ export default function EditTodoModal({
     }));
   };
 
-  const handleDateChange = (date: any) => {
+  const handleDateChange = (date: CalendarDate | null) => {
     if (date) {
       const jsDate = new Date(date.year, date.month - 1, date.day);
       setFormData((prev) => ({
@@ -157,9 +165,7 @@ export default function EditTodoModal({
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1">
-              Edit Task
-            </ModalHeader>
+            <ModalHeader className="flex flex-col gap-1">Edit Task</ModalHeader>
             <ModalBody>
               <div className="flex flex-col gap-4">
                 {/* Title */}
@@ -193,7 +199,9 @@ export default function EditTodoModal({
                   <Select
                     label="Project"
                     placeholder="Select project"
-                    selectedKeys={formData.project_id ? [formData.project_id] : []}
+                    selectedKeys={
+                      formData.project_id ? [formData.project_id] : []
+                    }
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
@@ -243,7 +251,7 @@ export default function EditTodoModal({
 
                 {/* Labels */}
                 <div>
-                  <div className="flex gap-2 mb-2">
+                  <div className="mb-2 flex gap-2">
                     <Input
                       placeholder="Add label..."
                       value={labelInput}

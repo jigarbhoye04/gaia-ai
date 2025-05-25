@@ -9,7 +9,7 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@heroui/modal";
-import { Radio,RadioGroup } from "@heroui/radio";
+import { Radio, RadioGroup } from "@heroui/radio";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -54,14 +54,14 @@ export default function AddProjectModal({
     setLoading(true);
     try {
       await TodoService.createProject(formData);
-      
+
       // Reset form
       setFormData({
         name: "",
         description: "",
         color: "#3b82f6",
       });
-      
+
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -115,7 +115,7 @@ export default function AddProjectModal({
 
                 {/* Color */}
                 <div>
-                  <label className="text-sm font-medium text-foreground-600 mb-2 block">
+                  <label className="mb-2 block text-sm font-medium text-foreground-600">
                     Project Color
                   </label>
                   <RadioGroup
@@ -133,7 +133,7 @@ export default function AddProjectModal({
                         className="p-0"
                       >
                         <div
-                          className="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                          className="h-8 w-8 rounded-full border-2 border-white shadow-sm"
                           style={{ backgroundColor: option.value }}
                         />
                       </Radio>
