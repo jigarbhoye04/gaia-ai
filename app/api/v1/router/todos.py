@@ -99,6 +99,38 @@ async def get_upcoming_todos_endpoint(
     return await get_todos_by_date_range(user["user_id"], start_date, end_date)
 
 
+@router.get("/todos/labels")
+async def get_all_labels_endpoint(
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get all unique labels used by the user.
+    
+    Returns:
+        List of label objects with name and count
+    """
+    from app.services.todo_service import get_all_labels
+    return await get_all_labels(user["user_id"])
+
+
+@router.get("/todos/by-label/{label}", response_model=List[TodoResponse])
+async def get_todos_by_label_endpoint(
+    label: str,
+    user: dict = Depends(get_current_user)
+):
+    """
+    Get all todos that have a specific label.
+    
+    Args:
+        label: The label to filter by
+    
+    Returns:
+        List of todos with the specified label
+    """
+    from app.services.todo_service import get_todos_by_label
+    return await get_todos_by_label(user["user_id"], label)
+
+
 @router.get("/todos", response_model=List[TodoResponse])
 async def get_all_todos_endpoint(
     project_id: Optional[str] = None,

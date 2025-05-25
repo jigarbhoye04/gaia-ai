@@ -792,3 +792,75 @@ async def get_todos_by_date_range(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get todos by date range: {str(e)}"
         )
+
+
+async def get_all_labels(user_id: str) -> List[dict]:
+    """
+    Get all unique labels used by the user with their counts.
+    
+    Args:
+        user_id: ID of the user
+        
+    Returns:
+        List[dict]: List of label objects with name and count
+    """
+    try:
+        # Use aggregation to get unique labels with counts
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {"$unwind": "$labels"},
+            {
+                "$group": {
+                    "_id": "$labels",
+                    "count": {"$sum": 1}
+                }
+            },
+            {"$sort": {"count": -1}},  # Sort by most used first
+            {
+                "$project": {
+                    "_id": 0,
+                    "name": "$_id",
+                    "count": 1
+                }
+            }
+        ]
+        
+        labels = await todos_collection.aggregate(pipeline).to_list(length=None)
+        return labels
+    
+    except Exception as e:
+        todos_logger.error(f"Error getting all labels: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get labels: {str(e)}"
+        )
+
+
+async def get_todos_by_label(user_id: str, label: str) -> List[TodoResponse]:
+    """
+    Get all todos that have a specific label.
+    
+    Args:
+        user_id: ID of the user
+        label: The label to filter by
+        
+    Returns:
+        List[TodoResponse]: List of todos with the specified label
+    """
+    try:
+        query = {
+            "user_id": user_id,
+            "labels": label  # MongoDB automatically matches arrays containing this value
+        }
+        
+        cursor = todos_collection.find(query).sort("created_at", -1)
+        todos = await cursor.to_list(length=None)
+        
+        return [TodoResponse(**serialize_document(todo)) for todo in todos]
+    
+    except Exception as e:
+        todos_logger.error(f"Error getting todos by label: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get todos by label: {str(e)}"
+        )
