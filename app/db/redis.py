@@ -2,15 +2,25 @@ import asyncio
 import functools
 import inspect
 import json
+from datetime import datetime
 from typing import Any, Awaitable, Callable, Dict, Generic, List, Optional, TypeVar
 
 import redis.asyncio as redis
+from pydantic import BaseModel
 
 from app.config.loggers import redis_logger as logger
 from app.config.settings import settings
 
 ONE_YEAR_TTL = 31_536_000
 ONE_HOUR_TTL = 3600
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects."""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 class RedisCache:
     def __init__(self, redis_url="redis://localhost:6379", default_ttl=3600):
@@ -54,7 +64,14 @@ class RedisCache:
 
         try:
             ttl = ttl or self.default_ttl
-            await self.redis.setex(key, ttl, json.dumps(value))
+            
+            # Handle Pydantic models
+            if isinstance(value, BaseModel):
+                # Use Pydantic's JSON encoder to handle datetime and other special types
+                json_str = value.model_dump_json()
+                await self.redis.setex(key, ttl, json_str)
+            else:
+                await self.redis.setex(key, ttl, json.dumps(value, cls=DateTimeEncoder))
         except Exception as e:
             logger.error(f"Error setting Redis key {key}: {e}")
 
@@ -216,6 +233,7 @@ class Cacheable(Generic[T]):
             logger.info(f"Cache miss for key: {cache_key}")
             logger.info(f"Setting cache for key: {cache_key}")
 
+            # Let set_cache handle Pydantic serialization
             await set_cache(key=cache_key, value=serialized_result, ttl=self.ttl)
 
             return result

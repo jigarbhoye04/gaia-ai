@@ -43,6 +43,7 @@ class MessageModel(BaseModel):
     deep_search_results: Optional[DeepSearchResults] = None  # Results from deep search
     weather_data: Optional[WeatherData] = None  # Weather data from OpenWeatherMap API
     email_compose_data: Optional[dict] = None  # Email compose data from mail_tool
+    memory_data: Optional[dict] = None  # Complete memory operation data
 
 
 class ConversationModel(BaseModel):
