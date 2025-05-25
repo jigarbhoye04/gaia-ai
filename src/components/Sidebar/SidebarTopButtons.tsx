@@ -33,11 +33,11 @@ export default function SidebarTopButtons() {
       icon: <Mail01Icon height={23} width={23} />,
       label: "Mail",
     },
-    {
-      route: "/notes",
-      icon: <StickyNote01Icon height={23} width={23} />,
-      label: "Notes",
-    },
+    // {
+    //   route: "/notes",
+    //   icon: <StickyNote01Icon height={23} width={23} />,
+    //   label: "Notes",
+    // },
     {
       route: "/pins",
       icon: <PinIcon height={23} width={23} />,
