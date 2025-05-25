@@ -22,10 +22,13 @@ export default function MemoryModal({ isOpen, onClose }: MemoryModalProps) {
       onClose={onClose}
       size="2xl"
       scrollBehavior="inside"
+      isDismissable={true}
       classNames={{
         body: "py-6",
         backdrop:
           "bg-gradient-to-t from-zinc-900 to-zinc-900/10 backdrop-opacity-20",
+        base: "z-[50]", // Lower z-index than child modal
+        wrapper: "z-[50]", // Lower z-index than child modal
       }}
     >
       <ModalContent>

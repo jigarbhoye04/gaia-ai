@@ -2,6 +2,7 @@
 
 import { Button, Card, CardBody, Pagination, Spinner } from "@heroui/react";
 import { Brain, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,8 +12,15 @@ import { apiauth } from "@/utils/apiaxios";
 export interface Memory {
   id: string;
   content: string;
+  user_id: string;
   metadata?: Record<string, unknown>;
+  categories?: string[];
   created_at?: string;
+  updated_at?: string;
+  expiration_date?: string | null;
+  internal_metadata?: Record<string, unknown> | null;
+  deleted_at?: string | null;
+  relevance_score?: number | null;
 }
 
 export interface MemoryManagementProps {
@@ -113,27 +121,64 @@ export default function MemoryManagement({
   }, []);
 
   const MemoryCard = useCallback(
-    ({ memory }: { memory: Memory }) => (
-      <div>
-        <Card className="bg-zinc-800">
-          <CardBody className="flex flex-row items-center justify-between gap-3">
-            <div className="flex-1">
-              <p className="text-sm">{memory.content}</p>
-            </div>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              color="danger"
-              onPress={() => handleDeleteMemory(memory.id)}
-              isLoading={deletingId === memory.id}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </CardBody>
-        </Card>
-      </div>
-    ),
+    ({ memory }: { memory: Memory }) => {
+      // Format date to be more readable
+      const formattedDate = memory.created_at
+        ? new Date(memory.created_at).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        : "";
+
+      // Safely get conversation ID
+      const conversationId =
+        memory.metadata && typeof memory.metadata.conversation_id === "string"
+          ? memory.metadata.conversation_id.substring(0, 8) + "..."
+          : "";
+
+      return (
+        <div>
+          <Card className="bg-zinc-800">
+            <CardBody className="flex flex-col gap-2">
+              <div className="flex flex-row items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm">{memory.content}</p>
+                </div>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  color="danger"
+                  onPress={() => handleDeleteMemory(memory.id)}
+                  isLoading={deletingId === memory.id}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Additional memory details */}
+              <div className="flex w-full items-center justify-between text-xs text-gray-400">
+                {formattedDate && <span>{formattedDate}</span>}
+
+                {memory.categories && memory.categories.length > 0 && (
+                  <div className="flex flex-wrap">
+                    {memory.categories.map((category) => (
+                      <span
+                        key={category}
+                        className="rounded-full bg-zinc-700 px-2 py-0.5"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardBody>
+          </Card>
+        </div>
+      );
+    },
     [handleDeleteMemory, deletingId],
   );
 
@@ -177,7 +222,13 @@ export default function MemoryManagement({
 
       {loading ? (
         <div className="flex h-40 items-center justify-center">
-          <Spinner variant="spinner" />
+          <Image
+            alt="GAIA Logo"
+            src={"/branding/logo.webp"}
+            width={30}
+            height={30}
+            className={`animate-spin`}
+          />
         </div>
       ) : memories.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center text-gray-500">
