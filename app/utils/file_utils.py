@@ -11,7 +11,7 @@ from typing import List, Union
 from llama_cloud_services import LlamaParse
 from llama_cloud_services.parse.utils import ResultType
 
-import app.langchain.core.graph_builder as graph_builder
+import app.langchain.chatbot as chatbot
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
 from app.models.files_models import DocumentPageModel, DocumentSummaryModel
@@ -78,7 +78,7 @@ class DocumentProcessor:
             base64_image = base64.b64encode(image_data).decode("utf-8")
 
             # Process with vision model
-            response = await graph_builder.llm.ainvoke(
+            response = await chatbot.llm.ainvoke(
                 input=[
                     {
                         "role": "user",
@@ -143,7 +143,7 @@ class DocumentProcessor:
 
             md_documents = await result.aget_markdown_documents(split_by_page=True)
 
-            summarized_pages = await graph_builder.llm.abatch(
+            summarized_pages = await chatbot.llm.abatch(
                 inputs=[
                     [
                         {
@@ -211,7 +211,7 @@ class DocumentProcessor:
     async def _generate_text_summary(self, text: str) -> str:
         """Generate a summary for text content using LlamaCloud."""
         try:
-            response = await graph_builder.llm.ainvoke(
+            response = await chatbot.llm.ainvoke(
                 input=[
                     {
                         "role": "system",
