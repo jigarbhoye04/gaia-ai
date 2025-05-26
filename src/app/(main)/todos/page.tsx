@@ -12,7 +12,7 @@ import { Priority, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
-  const [page, setPage] = useState(0);
+  const [_page, setPage] = useState(0);
 
   const {
     todos,

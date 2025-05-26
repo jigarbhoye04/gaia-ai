@@ -46,11 +46,24 @@ export const TodoService = {
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "") {
-            params.append(key, String(value));
+            // Convert skip/limit to page/per_page for new API
+            if (key === 'skip' && filters.limit) {
+              const page = Math.floor(Number(value) / filters.limit) + 1;
+              params.append('page', String(page));
+            } else if (key === 'limit') {
+              params.append('per_page', String(value));
+            } else if (key !== 'skip') {
+              params.append(key, String(value));
+            }
           }
         });
       }
       const response = await apiauth.get(`/todos?${params.toString()}`);
+      // Handle new API response format
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
+      // Fallback for old format
       return response.data;
     } catch (error) {
       console.error("Error fetching todos:", error);
@@ -144,10 +157,26 @@ export const TodoService = {
     }
   },
 
-  // Subtask operations
+  // Subtask operations (Note: Backend doesn't have separate subtask endpoints)
+  // These need to be implemented via todo updates
   addSubtask: async (todoId: string, subtask: SubtaskCreate): Promise<Todo> => {
     try {
-      const response = await apiauth.post(`/todos/${todoId}/subtasks`, subtask);
+      // First get the todo
+      const todo = await TodoService.getTodo(todoId);
+      
+      // Add new subtask with generated ID
+      const newSubtask = {
+        id: Date.now().toString(), // Simple ID generation
+        title: subtask.title,
+        completed: false,
+        created_at: new Date().toISOString()
+      };
+      
+      // Update todo with new subtasks array
+      const response = await apiauth.put(`/todos/${todoId}`, {
+        subtasks: [...todo.subtasks, newSubtask]
+      });
+      
       toast.success("Subtask added successfully");
       return response.data;
     } catch (error) {
@@ -163,10 +192,19 @@ export const TodoService = {
     update: SubtaskUpdate,
   ): Promise<Todo> => {
     try {
-      const response = await apiauth.put(
-        `/todos/${todoId}/subtasks/${subtaskId}`,
-        update,
+      // First get the todo
+      const todo = await TodoService.getTodo(todoId);
+      
+      // Update the specific subtask
+      const updatedSubtasks = todo.subtasks.map(st => 
+        st.id === subtaskId ? { ...st, ...update } : st
       );
+      
+      // Update todo with modified subtasks array
+      const response = await apiauth.put(`/todos/${todoId}`, {
+        subtasks: updatedSubtasks
+      });
+      
       return response.data;
     } catch (error) {
       console.error("Error updating subtask:", error);
@@ -177,9 +215,17 @@ export const TodoService = {
 
   deleteSubtask: async (todoId: string, subtaskId: string): Promise<Todo> => {
     try {
-      const response = await apiauth.delete(
-        `/todos/${todoId}/subtasks/${subtaskId}`,
-      );
+      // First get the todo
+      const todo = await TodoService.getTodo(todoId);
+      
+      // Remove the subtask
+      const updatedSubtasks = todo.subtasks.filter(st => st.id !== subtaskId);
+      
+      // Update todo with modified subtasks array
+      const response = await apiauth.put(`/todos/${todoId}`, {
+        subtasks: updatedSubtasks
+      });
+      
       toast.success("Subtask deleted successfully");
       return response.data;
     } catch (error) {
@@ -194,6 +240,10 @@ export const TodoService = {
     try {
       const response = await apiauth.post("/todos/bulk/complete", todoIds);
       toast.success(`${todoIds.length} tasks completed`);
+      // Handle new API response format
+      if (response.data.updated && Array.isArray(response.data.updated)) {
+        return response.data.updated;
+      }
       return response.data;
     } catch (error) {
       console.error("Error completing todos:", error);
@@ -206,6 +256,10 @@ export const TodoService = {
     try {
       const response = await apiauth.post("/todos/bulk/move", request);
       toast.success(`${request.todo_ids.length} tasks moved`);
+      // Handle new API response format
+      if (response.data.updated && Array.isArray(response.data.updated)) {
+        return response.data.updated;
+      }
       return response.data;
     } catch (error) {
       console.error("Error moving todos:", error);
@@ -216,7 +270,7 @@ export const TodoService = {
 
   bulkDeleteTodos: async (todoIds: string[]): Promise<void> => {
     try {
-      await apiauth.delete("/todos/bulk/delete", { data: todoIds });
+      await apiauth.delete("/todos/bulk", { data: todoIds });
       toast.success(`${todoIds.length} tasks deleted`);
     } catch (error) {
       console.error("Error deleting todos:", error);
@@ -229,8 +283,12 @@ export const TodoService = {
   searchTodos: async (query: string): Promise<Todo[]> => {
     try {
       const response = await apiauth.get(
-        `/todos/search?q=${encodeURIComponent(query)}`,
+        `/todos?q=${encodeURIComponent(query)}`,
       );
+      // Handle new API response format
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       console.error("Error searching todos:", error);
@@ -241,8 +299,16 @@ export const TodoService = {
 
   getTodoStats: async (): Promise<TodoStats> => {
     try {
-      const response = await apiauth.get("/todos/stats");
-      return response.data;
+      const response = await apiauth.get(
+        "/todos?include_stats=true&per_page=1",
+      );
+      // Extract stats from new API response
+      if (response.data.stats) {
+        return response.data.stats;
+      }
+      // Fallback to old endpoint
+      const statsResponse = await apiauth.get("/todos/stats");
+      return statsResponse.data;
     } catch (error) {
       console.error("Error fetching stats:", error);
       toast.error("Failed to fetch statistics");
@@ -252,7 +318,11 @@ export const TodoService = {
 
   getTodayTodos: async (): Promise<Todo[]> => {
     try {
-      const response = await apiauth.get("/todos/today");
+      const response = await apiauth.get("/todos?due_today=true");
+      // Handle new API response format
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       console.error("Error fetching today's todos:", error);
@@ -261,9 +331,14 @@ export const TodoService = {
     }
   },
 
-  getUpcomingTodos: async (days: number = 7): Promise<Todo[]> => {
+  getUpcomingTodos: async (_days: number = 7): Promise<Todo[]> => {
     try {
-      const response = await apiauth.get(`/todos/upcoming?days=${days}`);
+      // Note: Backend uses due_this_week=true for 7 days, doesn't support custom days
+      const response = await apiauth.get(`/todos?due_this_week=true`);
+      // Handle new API response format
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       console.error("Error fetching upcoming todos:", error);
@@ -274,12 +349,44 @@ export const TodoService = {
 
   getAllLabels: async (): Promise<{ name: string; count: number }[]> => {
     try {
-      const response = await apiauth.get("/todos/labels");
-      return response.data;
+      // Try to get labels from stats first (more efficient)
+      const response = await apiauth.get(
+        "/todos?include_stats=true&per_page=1",
+      );
+
+      if (response.data.stats && response.data.stats.labels) {
+        return response.data.stats.labels;
+      }
+
+      // Fallback: fetch todos and extract labels
+      if (response.data.data && Array.isArray(response.data.data)) {
+        const fullResponse = await apiauth.get("/todos?per_page=1000");
+        if (fullResponse.data.data && Array.isArray(fullResponse.data.data)) {
+          const todos = fullResponse.data.data;
+          const labelCounts: Record<string, number> = {};
+
+          // Count labels from todos
+          todos.forEach((todo: Todo) => {
+            if (todo.labels && Array.isArray(todo.labels)) {
+              todo.labels.forEach((label: string) => {
+                labelCounts[label] = (labelCounts[label] || 0) + 1;
+              });
+            }
+          });
+
+          // Convert to array format
+          return Object.entries(labelCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+        }
+      }
+
+      // Return empty array if no data
+      return [];
     } catch (error) {
       console.error("Error fetching labels:", error);
-      toast.error("Failed to fetch labels");
-      throw error;
+      // Return empty array instead of throwing to prevent app crashes
+      return [];
     }
   },
 
@@ -290,12 +397,18 @@ export const TodoService = {
   ): Promise<Todo[]> => {
     try {
       const params = new URLSearchParams();
-      if (skip !== undefined) params.append("skip", String(skip));
-      if (limit !== undefined) params.append("limit", String(limit));
+      params.append("labels", label);
+      if (skip !== undefined && limit !== undefined) {
+        const page = Math.floor(skip / limit) + 1;
+        params.append("page", String(page));
+        params.append("per_page", String(limit));
+      }
 
-      const response = await apiauth.get(
-        `/todos/by-label/${encodeURIComponent(label)}?${params.toString()}`,
-      );
+      const response = await apiauth.get(`/todos?${params.toString()}`);
+      // Handle new API response format
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       console.error("Error fetching todos by label:", error);
@@ -316,16 +429,19 @@ export const TodoService = {
     try {
       const params = new URLSearchParams();
       params.append("q", query);
+      params.append("mode", "semantic");
 
-      if (options?.limit) params.append("limit", String(options.limit));
+      if (options?.limit) params.append("per_page", String(options.limit));
       if (options?.project_id) params.append("project_id", options.project_id);
       if (options?.completed !== undefined)
         params.append("completed", String(options.completed));
       if (options?.priority) params.append("priority", options.priority);
 
-      const response = await apiauth.get(
-        `/todos/search/semantic?${params.toString()}`,
-      );
+      const response = await apiauth.get(`/todos?${params.toString()}`);
+      // Handle new API response format
+      if (response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      }
       return response.data;
     } catch (error) {
       console.error("Error in semantic search:", error);
@@ -334,7 +450,7 @@ export const TodoService = {
     }
   },
 
-  reindexTodos: async (batchSize?: number): Promise<Todo> => {
+  reindexTodos: async (batchSize?: number): Promise<{ message: string; batch_size: number; total_todos: number }> => {
     try {
       const params = new URLSearchParams();
       if (batchSize) params.append("batch_size", String(batchSize));

@@ -95,7 +95,6 @@ export default function SearchTodosPage() {
           onTodoClick={handleTodoClick}
           initialQuery={initialQuery} // Pass initial query from URL
         />
-
       </div>
     </div>
   );

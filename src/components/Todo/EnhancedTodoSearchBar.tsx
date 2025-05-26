@@ -1,7 +1,6 @@
 "use client";
 
 import { Brain, Search, Settings, X } from "lucide-react";
-import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,11 +41,13 @@ const searchModeConfig = {
     label: "Traditional",
     icon: Search,
     description: "Text-based search through title and description",
+    color: "bg-blue-500",
   },
   semantic: {
     label: "Semantic Search",
     icon: Brain,
     description: "Semantic search for natural language queries",
+    color: "bg-purple-500",
   },
 };
 

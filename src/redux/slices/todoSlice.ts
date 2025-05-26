@@ -479,7 +479,7 @@ const todoSlice = createSlice({
         state.counts = action.payload;
         state.initialDataLoaded.counts = true;
       })
-      .addCase(fetchTodoCounts.rejected, (state, action) => {
+      .addCase(fetchTodoCounts.rejected, (_state, action) => {
         console.error("Failed to fetch counts:", action.error.message);
       });
 
@@ -506,7 +506,7 @@ const todoSlice = createSlice({
 
     // Update todo
     builder
-      .addCase(updateTodo.pending, (state, action) => {
+      .addCase(updateTodo.pending, (state, _action) => {
         state.error = null;
         // Don't clear pending updates here - wait for fulfilled
       })

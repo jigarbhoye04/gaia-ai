@@ -85,6 +85,11 @@ export interface TodoFilters {
   overdue?: boolean;
   skip?: number;
   limit?: number;
+  labels?: string[];
+  due_today?: boolean;
+  due_this_week?: boolean;
+  due_after?: string;
+  due_before?: string;
 }
 
 // Stats response type
@@ -101,6 +106,7 @@ export interface TodoStats {
   };
   by_project: Record<string, number>;
   completion_rate: number;
+  labels?: Array<{ name: string; count: number }>;
 }
 
 // Bulk operation types
@@ -116,4 +122,26 @@ export interface SubtaskCreate {
 export interface SubtaskUpdate {
   title?: string;
   completed?: boolean;
+}
+
+// New API response types
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  per_page: number;
+  pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export interface TodoListResponse {
+  data: Todo[];
+  meta: PaginationMeta;
+  stats?: TodoStats;
+}
+
+export enum TodoSearchMode {
+  TEXT = "text",
+  SEMANTIC = "semantic",
+  HYBRID = "hybrid",
 }
