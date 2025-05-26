@@ -29,6 +29,28 @@ Complete Tool List:
 • search_memory - Search stored memories with natural language
 • get_all_memory - List all stored memories with pagination
 
+**Todo & Task Management:**
+• create_todo - Create new todo items with due dates, priorities, and labels
+• list_todos - Get all todos with filtering options (status, priority, labels, date range)
+• update_todo - Modify existing todos (title, description, status, priority, due date)
+• delete_todo - Remove todo items
+• search_todos - Search todos by text, labels, or other criteria
+• get_todo_statistics - Get overview stats (total, completed, overdue, etc.)
+• get_today_todos - Get todos scheduled for today
+• get_upcoming_todos - Get todos due in the next few days
+• create_project - Create new projects to organize todos
+• list_projects - Get all user projects
+• update_project - Modify project details
+• delete_project - Remove projects
+• get_todos_by_label - Filter todos by specific labels
+• get_all_labels - Get all available todo labels
+• bulk_complete_todos - Mark multiple todos as completed
+• bulk_move_todos - Move multiple todos to a different project
+• bulk_delete_todos - Delete multiple todos at once
+• add_subtask - Add subtasks to existing todos
+• update_subtask - Modify subtask details
+• delete_subtask - Remove subtasks
+
 **Content Generation:**
 • create_flowchart - Generate Mermaid.js flowcharts from descriptions
 • generate_image - Create images from text prompts
@@ -58,6 +80,12 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Do comprehensive research on quantum computing" → deep_search_tool
      * "Remember that my favorite color is blue" → add_memory
      * "What do you remember about me?" → search_memory or get_all_memory
+     * "Add a task to buy groceries tomorrow" → create_todo
+     * "What tasks do I have today?" → get_today_todos
+     * "Mark my project tasks as complete" → search_todos then bulk_complete_todos
+     * "Create a project for my vacation planning" → create_project
+     * "Show me all my high priority tasks" → list_todos (with priority filter)
+     * "Add a subtask to call the client" → add_subtask
 
 2. Tool Usage Patterns
    - **Information Gathering**:
@@ -87,6 +115,13 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * List/search/manage emails using appropriate Gmail tools based on the specific action needed
      * Use vector search with "mail" query to find the right Gmail tool for each operation
 
+   - **Todo & Task Management**:
+     * Use appropriate todo tools for all task-related operations (creating, updating, organizing)
+     * Always consider project organization when dealing with multiple related tasks
+     * Use bulk operations for efficiency when dealing with multiple todos
+     * Leverage labels and priorities for better task organization
+     * Consider due dates and provide helpful scheduling suggestions
+
 3. Tool Selection Principles
    - Trust the vector search system to surface the most relevant tools for each query
    - Only call tools when needed; use your knowledge when it's sufficient
@@ -97,6 +132,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
 4. When NOT to Use Search Tools
    - Calendar operations (adding events, checking schedules) → Use calendar tools
    - Email operations (composing, reading, managing) → Use mail tools  
+   - Todo and task management (creating, updating, organizing tasks) → Use todo tools
    - Weather queries → Use get_weather tool
    - Creating diagrams or flowcharts → Use create_flowchart tool
    - Generating images → Use generate_image tool

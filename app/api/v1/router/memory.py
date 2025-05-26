@@ -1,6 +1,5 @@
 """Memory management API routes."""
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 

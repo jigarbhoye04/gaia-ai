@@ -30,14 +30,10 @@ from app.docstrings.langchain.tools.todo_tool_docs import (
 from app.docstrings.utils import with_doc
 from app.models.todo_models import (
     TodoCreate,
-    TodoResponse,
     UpdateTodoRequest,
     ProjectCreate,
-    ProjectResponse,
     UpdateProjectRequest,
     Priority,
-    SubtaskCreateRequest,
-    SubtaskUpdateRequest,
     SubTask,
 )
 from app.services.todo_service import (

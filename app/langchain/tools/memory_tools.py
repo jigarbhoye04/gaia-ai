@@ -5,7 +5,7 @@ These tools allow agents to store, search, and retrieve memories,
 enabling them to maintain context and learn from past interactions.
 """
 
-from typing import Annotated, Dict, List, Optional
+from typing import Annotated, Dict, Optional
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
