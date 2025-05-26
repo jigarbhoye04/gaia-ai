@@ -47,12 +47,12 @@ export const TodoService = {
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "") {
             // Convert skip/limit to page/per_page for new API
-            if (key === 'skip' && filters.limit) {
+            if (key === "skip" && filters.limit) {
               const page = Math.floor(Number(value) / filters.limit) + 1;
-              params.append('page', String(page));
-            } else if (key === 'limit') {
-              params.append('per_page', String(value));
-            } else if (key !== 'skip') {
+              params.append("page", String(page));
+            } else if (key === "limit") {
+              params.append("per_page", String(value));
+            } else if (key !== "skip") {
               params.append(key, String(value));
             }
           }
@@ -163,20 +163,20 @@ export const TodoService = {
     try {
       // First get the todo
       const todo = await TodoService.getTodo(todoId);
-      
+
       // Add new subtask with generated ID
       const newSubtask = {
         id: Date.now().toString(), // Simple ID generation
         title: subtask.title,
         completed: false,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
-      
+
       // Update todo with new subtasks array
       const response = await apiauth.put(`/todos/${todoId}`, {
-        subtasks: [...todo.subtasks, newSubtask]
+        subtasks: [...todo.subtasks, newSubtask],
       });
-      
+
       toast.success("Subtask added successfully");
       return response.data;
     } catch (error) {
@@ -194,17 +194,17 @@ export const TodoService = {
     try {
       // First get the todo
       const todo = await TodoService.getTodo(todoId);
-      
+
       // Update the specific subtask
-      const updatedSubtasks = todo.subtasks.map(st => 
-        st.id === subtaskId ? { ...st, ...update } : st
+      const updatedSubtasks = todo.subtasks.map((st) =>
+        st.id === subtaskId ? { ...st, ...update } : st,
       );
-      
+
       // Update todo with modified subtasks array
       const response = await apiauth.put(`/todos/${todoId}`, {
-        subtasks: updatedSubtasks
+        subtasks: updatedSubtasks,
       });
-      
+
       return response.data;
     } catch (error) {
       console.error("Error updating subtask:", error);
@@ -217,15 +217,15 @@ export const TodoService = {
     try {
       // First get the todo
       const todo = await TodoService.getTodo(todoId);
-      
+
       // Remove the subtask
-      const updatedSubtasks = todo.subtasks.filter(st => st.id !== subtaskId);
-      
+      const updatedSubtasks = todo.subtasks.filter((st) => st.id !== subtaskId);
+
       // Update todo with modified subtasks array
       const response = await apiauth.put(`/todos/${todoId}`, {
-        subtasks: updatedSubtasks
+        subtasks: updatedSubtasks,
       });
-      
+
       toast.success("Subtask deleted successfully");
       return response.data;
     } catch (error) {
@@ -450,7 +450,9 @@ export const TodoService = {
     }
   },
 
-  reindexTodos: async (batchSize?: number): Promise<{ message: string; batch_size: number; total_todos: number }> => {
+  reindexTodos: async (
+    batchSize?: number,
+  ): Promise<{ message: string; batch_size: number; total_todos: number }> => {
     try {
       const params = new URLSearchParams();
       if (batchSize) params.append("batch_size", String(batchSize));
