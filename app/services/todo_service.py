@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 
 from app.config.loggers import todos_logger
 from app.db.collections import todos_collection, projects_collection
-from app.db.redis import delete_cache, get_cache, set_cache
+from app.db.redis import delete_cache, delete_cache_by_pattern, get_cache, set_cache
 from app.db.utils import serialize_document
 from app.models.todo_models import (
     TodoCreate,
@@ -18,12 +18,57 @@ from app.models.todo_models import (
     UpdateProjectRequest,
     SubTask
 )
+from app.utils.todo_vector_utils import (
+    store_todo_embedding,
+    update_todo_embedding,
+    delete_todo_embedding,
+    semantic_search_todos,
+    bulk_index_todos,
+    hybrid_search_todos
+)
 
 ONE_YEAR_TTL = 365 * 24 * 60 * 60
 ONE_HOUR_TTL = 60 * 60
 
 # Special constant for inbox project
 INBOX_PROJECT_ID = "inbox"
+
+
+async def invalidate_user_todo_caches(user_id: str, project_id: Optional[str] = None):
+    """
+    Invalidate all todo-related caches for a user.
+    This includes all filtered variations of the cache keys.
+    """
+    try:
+        # Clear all todo list caches for the user (with any filters)
+        await delete_cache_by_pattern(f"todos:{user_id}*")
+
+        # Clear individual todo caches
+        await delete_cache_by_pattern(f"todo:{user_id}:*")
+
+        # Clear project-specific caches if project_id is provided
+        if project_id:
+            await delete_cache_by_pattern(f"todos:{user_id}:project:{project_id}*")
+
+        # Clear projects cache to update todo counts
+        await delete_cache(f"projects:{user_id}")
+
+        todos_logger.info(
+            f"Invalidated todo caches for user {user_id}, project {project_id}"
+        )
+    except Exception as e:
+        todos_logger.warning(f"Failed to invalidate todo caches: {str(e)}")
+
+
+async def invalidate_project_caches(user_id: str):
+    """
+    Invalidate all project-related caches for a user.
+    """
+    try:
+        await delete_cache(f"projects:{user_id}")
+        todos_logger.info(f"Invalidated project caches for user {user_id}")
+    except Exception as e:
+        todos_logger.warning(f"Failed to invalidate project caches: {str(e)}")
 
 
 async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
@@ -66,7 +111,6 @@ async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
 
         # Store embedding for semantic search
         try:
-            from app.utils.todo_vector_utils import store_todo_embedding
 
             await store_todo_embedding(str(result.inserted_id), created_todo, user_id)
         except Exception as e:
@@ -74,9 +118,8 @@ async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
                 f"Failed to store embedding for todo {result.inserted_id}: {str(e)}"
             )
 
-        # Clear cache
-        await delete_cache(f"todos:{user_id}")
-        await delete_cache(f"todos:{user_id}:project:{todo.project_id}")
+        # Clear all relevant caches using patterns
+        await invalidate_user_todo_caches(user_id, todo.project_id)
         
         todos_logger.info(f"Created todo {result.inserted_id} for user {user_id}")
         
@@ -162,22 +205,34 @@ async def get_all_todos(
     Returns:
         List[TodoResponse]: List of todos matching the criteria
     """
-    # Build cache key based on filters
+    # Build simplified cache key - use hash of filters for complex queries
     cache_key_parts = [f"todos:{user_id}"]
-    if project_id:
-        cache_key_parts.append(f"project:{project_id}")
-    if completed is not None:
-        cache_key_parts.append(f"completed:{completed}")
-    if priority:
-        cache_key_parts.append(f"priority:{priority}")
-    if has_due_date is not None:
-        cache_key_parts.append(f"has_due_date:{has_due_date}")
-    if overdue is not None:
-        cache_key_parts.append(f"overdue:{overdue}")
-    cache_key_parts.append(f"skip:{skip}")
-    cache_key_parts.append(f"limit:{limit}")
-    
-    cache_key = ":".join(cache_key_parts)
+
+    # For simple, common queries, use specific cache keys
+    if not any([priority, has_due_date, overdue]) and skip == 0 and limit == 50:
+        if project_id:
+            cache_key_parts.append(f"project:{project_id}")
+        if completed is not None:
+            cache_key_parts.append(f"completed:{str(completed).lower()}")
+        cache_key = ":".join(cache_key_parts)
+    else:
+        # For complex queries, use a hash-based cache key
+        import hashlib
+
+        filter_dict = {
+            "project_id": project_id,
+            "completed": completed,
+            "priority": priority,
+            "has_due_date": has_due_date,
+            "overdue": overdue,
+            "skip": skip,
+            "limit": limit,
+        }
+        # Only include non-None values in hash
+        filter_str = str({k: v for k, v in filter_dict.items() if v is not None})
+        filter_hash = hashlib.md5(filter_str.encode()).hexdigest()[:8]
+        cache_key = f"todos:{user_id}:hash:{filter_hash}"
+
     cached_todos = await get_cache(cache_key)
     if cached_todos:
         return [TodoResponse(**todo) for todo in cached_todos]
@@ -298,7 +353,6 @@ async def update_todo(
 
         # Update embedding for semantic search
         try:
-            from app.utils.todo_vector_utils import update_todo_embedding
 
             await update_todo_embedding(todo_id, updated_todo, user_id)
         except Exception as e:
@@ -308,11 +362,9 @@ async def update_todo(
 
         # Clear relevant caches
         await delete_cache(f"todo:{user_id}:{todo_id}")
-        await delete_cache(f"todos:{user_id}")
-        if existing_todo.get("project_id"):
-            await delete_cache(f"todos:{user_id}:project:{existing_todo['project_id']}")
+        await invalidate_user_todo_caches(user_id, existing_todo.get("project_id"))
         if "project_id" in update_dict:
-            await delete_cache(f"todos:{user_id}:project:{update_dict['project_id']}")
+            await invalidate_user_todo_caches(user_id, update_dict["project_id"])
         
         todos_logger.info(f"Updated todo {todo_id} for user {user_id}")
         
@@ -354,7 +406,6 @@ async def delete_todo(todo_id: str, user_id: str) -> None:
 
         # Delete embedding for semantic search
         try:
-            from app.utils.todo_vector_utils import delete_todo_embedding
 
             await delete_todo_embedding(todo_id, user_id)
         except Exception as e:
@@ -364,9 +415,7 @@ async def delete_todo(todo_id: str, user_id: str) -> None:
 
         # Clear caches
         await delete_cache(f"todo:{user_id}:{todo_id}")
-        await delete_cache(f"todos:{user_id}")
-        if todo.get("project_id"):
-            await delete_cache(f"todos:{user_id}:project:{todo['project_id']}")
+        await invalidate_user_todo_caches(user_id, todo.get("project_id"))
         
         todos_logger.info(f"Deleted todo {todo_id} for user {user_id}")
     
@@ -457,7 +506,7 @@ async def create_project(project: ProjectCreate, user_id: str) -> ProjectRespons
         )
         
         # Clear cache
-        await delete_cache(f"projects:{user_id}")
+        await invalidate_project_caches(user_id)
         
         todos_logger.info(f"Created project {result.inserted_id} for user {user_id}")
         
@@ -613,7 +662,7 @@ async def update_project(
         })
         
         # Clear cache
-        await delete_cache(f"projects:{user_id}")
+        await invalidate_project_caches(user_id)
         
         todos_logger.info(f"Updated project {project_id} for user {user_id}")
         
@@ -670,9 +719,8 @@ async def delete_project(project_id: str, user_id: str) -> None:
         await projects_collection.delete_one({"_id": ObjectId(project_id)})
         
         # Clear caches
-        await delete_cache(f"projects:{user_id}")
-        await delete_cache(f"todos:{user_id}")
-        await delete_cache(f"todos:{user_id}:project:{project_id}")
+        await invalidate_project_caches(user_id)
+        await invalidate_user_todo_caches(user_id, project_id)
         
         todos_logger.info(f"Deleted project {project_id} for user {user_id}")
     
@@ -688,13 +736,22 @@ async def delete_project(project_id: str, user_id: str) -> None:
 
 # Additional helper functions
 
-async def search_todos(query: str, user_id: str) -> List[TodoResponse]:
+async def search_todos(
+    query: str, 
+    user_id: str,
+    completed: Optional[bool] = None,
+    priority: Optional[str] = None,
+    project_id: Optional[str] = None
+) -> List[TodoResponse]:
     """
-    Search todos by title, description, or labels.
+    Search todos by title, description, or labels with optional filters.
     
     Args:
         query: Search query string
         user_id: ID of the user
+        completed: Filter by completion status
+        priority: Filter by priority
+        project_id: Filter by project ID
         
     Returns:
         List[TodoResponse]: List of matching todos
@@ -709,6 +766,14 @@ async def search_todos(query: str, user_id: str) -> List[TodoResponse]:
                 {"labels": {"$in": [query]}}
             ]
         }
+        
+        # Apply additional filters if provided
+        if completed is not None:
+            search_query["completed"] = completed
+        if priority:
+            search_query["priority"] = priority
+        if project_id:
+            search_query["project_id"] = project_id
         
         cursor = todos_collection.find(search_query).sort("created_at", -1)
         todos = await cursor.to_list(length=None)
@@ -922,17 +987,15 @@ async def semantic_search_todos(
         List[TodoResponse]: List of semantically matching todos
     """
     try:
-        from app.utils.todo_vector_utils import semantic_search_todos as vector_search
-
         # Perform semantic search with filters
-        results = await vector_search(
+        results = await semantic_search_todos(
             query=query,
             user_id=user_id,
             top_k=limit,
             completed=completed,
             priority=priority,
             project_id=project_id,
-            include_traditional_search=True,
+            include_traditional_search=False,
         )
 
         return results
@@ -941,7 +1004,13 @@ async def semantic_search_todos(
         todos_logger.error(f"Error in semantic search: {str(e)}")
         # Fall back to regular search if semantic search fails
         todos_logger.info("Falling back to regular text search")
-        return await search_todos(query, user_id)
+        return await search_todos(
+            query=query, 
+            user_id=user_id,
+            completed=completed,
+            priority=priority,
+            project_id=project_id
+        )
 
 
 async def hybrid_search_todos(
@@ -969,12 +1038,8 @@ async def hybrid_search_todos(
         List[TodoResponse]: Combined and ranked search results
     """
     try:
-        from app.utils.todo_vector_utils import (
-            hybrid_search_todos as vector_hybrid_search,
-        )
-
         # Perform hybrid search
-        results = await vector_hybrid_search(
+        results = await hybrid_search_todos(
             query=query,
             user_id=user_id,
             top_k=limit,
@@ -1005,7 +1070,6 @@ async def bulk_index_existing_todos(user_id: str, batch_size: int = 100) -> dict
         dict: Summary of indexing operation
     """
     try:
-        from app.utils.todo_vector_utils import bulk_index_todos
 
         # Bulk index todos
         indexed_count = await bulk_index_todos(user_id, batch_size)

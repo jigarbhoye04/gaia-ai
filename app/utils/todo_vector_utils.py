@@ -230,11 +230,10 @@ async def semantic_search_todos(
             if hasattr(doc, 'metadata') and 'todo_id' in doc.metadata:
                 todo_ids.append(ObjectId(doc.metadata['todo_id']))
         
-        if not todo_ids and include_traditional_search:
-            # Fallback to traditional search if no vector results
-            logger.info(f"No vector results for query '{query}', falling back to traditional search")
-            from app.services.todo_service import search_todos
-            return await search_todos(query, user_id)
+        if not todo_ids:
+            # No vector results found
+            logger.info(f"No vector results for query '{query}'")
+            return []
         
         # Fetch full todo documents from MongoDB in the order of similarity
         todos = []

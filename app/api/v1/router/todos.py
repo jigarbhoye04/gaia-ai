@@ -3,6 +3,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, status, HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.services.todo_service import search_todos
 from app.models.todo_models import (
     SubtaskCreateRequest,
     SubtaskUpdateRequest,
@@ -52,11 +53,10 @@ async def search_todos_endpoint(
 ):
     """
     Search todos by title, description, or labels.
-    
+
     Query Parameters:
     - q: Search query string
     """
-    from app.services.todo_service import search_todos
     return await search_todos(q, user["user_id"])
 
 
@@ -131,6 +131,86 @@ async def get_todos_by_label_endpoint(
     """
     from app.services.todo_service import get_todos_by_label
     return await get_todos_by_label(user["user_id"], label)
+
+
+@router.get("/todos/search/semantic", response_model=List[TodoResponse])
+async def semantic_search_todos_endpoint(
+    q: str,
+    limit: int = 20,
+    project_id: Optional[str] = None,
+    completed: Optional[bool] = None,
+    priority: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Perform semantic search on todos using vector embeddings.
+
+    Query Parameters:
+    - q: Natural language search query
+    - limit: Maximum number of results (default: 20)
+    - project_id: Optional project filter
+    - completed: Optional completion status filter
+    - priority: Optional priority filter
+    """
+    from app.services.todo_service import semantic_search_todos
+
+    return await semantic_search_todos(
+        query=q,
+        user_id=user["user_id"],
+        limit=limit,
+        project_id=project_id,
+        completed=completed,
+        priority=priority,
+    )
+
+
+@router.get("/todos/search/hybrid", response_model=List[TodoResponse])
+async def hybrid_search_todos_endpoint(
+    q: str,
+    limit: int = 20,
+    project_id: Optional[str] = None,
+    completed: Optional[bool] = None,
+    priority: Optional[str] = None,
+    semantic_weight: float = 0.7,
+    user: dict = Depends(get_current_user),
+):
+    """
+    Perform hybrid search combining semantic and traditional search.
+
+    Query Parameters:
+    - q: Search query string
+    - limit: Maximum number of results (default: 20)
+    - project_id: Optional project filter
+    - completed: Optional completion status filter
+    - priority: Optional priority filter
+    - semantic_weight: Weight for semantic results (0.0-1.0, default: 0.7)
+    """
+    from app.services.todo_service import hybrid_search_todos
+
+    return await hybrid_search_todos(
+        query=q,
+        user_id=user["user_id"],
+        limit=limit,
+        project_id=project_id,
+        completed=completed,
+        priority=priority,
+        semantic_weight=semantic_weight,
+    )
+
+
+@router.post("/todos/reindex")
+async def reindex_todos_endpoint(
+    batch_size: int = 100, user: dict = Depends(get_current_user)
+):
+    """
+    Bulk reindex all user's todos in the vector database.
+
+    Query Parameters:
+    - batch_size: Number of todos to process in each batch (default: 100)
+    """
+    from app.services.todo_service import bulk_index_existing_todos
+
+    return await bulk_index_existing_todos(user["user_id"], batch_size)
 
 
 @router.get("/todos", response_model=List[TodoResponse])
@@ -356,83 +436,3 @@ async def get_todo_endpoint(
 ):
     """Get a specific todo item."""
     return await get_todo(todo_id, user["user_id"])
-
-
-@router.get("/todos/search/semantic", response_model=List[TodoResponse])
-async def semantic_search_todos_endpoint(
-    q: str,
-    limit: int = 20,
-    project_id: Optional[str] = None,
-    completed: Optional[bool] = None,
-    priority: Optional[str] = None,
-    user: dict = Depends(get_current_user),
-):
-    """
-    Perform semantic search on todos using vector embeddings.
-
-    Query Parameters:
-    - q: Natural language search query
-    - limit: Maximum number of results (default: 20)
-    - project_id: Optional project filter
-    - completed: Optional completion status filter
-    - priority: Optional priority filter
-    """
-    from app.services.todo_service import semantic_search_todos
-
-    return await semantic_search_todos(
-        query=q,
-        user_id=user["user_id"],
-        limit=limit,
-        project_id=project_id,
-        completed=completed,
-        priority=priority,
-    )
-
-
-@router.get("/todos/search/hybrid", response_model=List[TodoResponse])
-async def hybrid_search_todos_endpoint(
-    q: str,
-    limit: int = 20,
-    project_id: Optional[str] = None,
-    completed: Optional[bool] = None,
-    priority: Optional[str] = None,
-    semantic_weight: float = 0.7,
-    user: dict = Depends(get_current_user),
-):
-    """
-    Perform hybrid search combining semantic and traditional search.
-
-    Query Parameters:
-    - q: Search query string
-    - limit: Maximum number of results (default: 20)
-    - project_id: Optional project filter
-    - completed: Optional completion status filter
-    - priority: Optional priority filter
-    - semantic_weight: Weight for semantic results (0.0-1.0, default: 0.7)
-    """
-    from app.services.todo_service import hybrid_search_todos
-
-    return await hybrid_search_todos(
-        query=q,
-        user_id=user["user_id"],
-        limit=limit,
-        project_id=project_id,
-        completed=completed,
-        priority=priority,
-        semantic_weight=semantic_weight,
-    )
-
-
-@router.post("/todos/reindex")
-async def reindex_todos_endpoint(
-    batch_size: int = 100, user: dict = Depends(get_current_user)
-):
-    """
-    Bulk reindex all user's todos in the vector database.
-
-    Query Parameters:
-    - batch_size: Number of todos to process in each batch (default: 100)
-    """
-    from app.services.todo_service import bulk_index_existing_todos
-
-    return await bulk_index_existing_todos(user["user_id"], batch_size)
