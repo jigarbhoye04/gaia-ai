@@ -114,37 +114,44 @@ export const useTodos = () => {
       // Find the original todo for potential rollback
       const originalTodo = todoState.todos.find((t) => t.id === todoId);
 
-      // Apply optimistic update
+      // Apply optimistic update immediately
       dispatch(optimisticUpdateTodo({ todoId, updates }));
 
       try {
         const result = await dispatch(updateTodo({ todoId, updates }));
-        if (updateTodo.fulfilled.match(result)) {
-          // Refresh counts if completion status or project changed
-          const needsCountRefresh =
-            (updates.completed !== undefined &&
-              originalTodo?.completed !== updates.completed) ||
-            (updates.project_id !== undefined &&
-              originalTodo?.project_id !== updates.project_id);
-
-          if (needsCountRefresh) {
-            // Refresh counts and projects to ensure accurate data
-            await Promise.all([
-              dispatch(fetchTodoCounts()),
-              dispatch(fetchProjects()),
-            ]);
-          }
-
-          // Refresh labels if labels changed
-          if (updates.labels !== undefined) {
-            await dispatch(fetchLabels());
-          }
-        } else {
-          // Revert on failure
+        if (!updateTodo.fulfilled.match(result)) {
+          // Update failed, revert
           if (originalTodo) {
             dispatch(revertOptimisticUpdate({ todoId, originalTodo }));
           }
+          return result;
         }
+        
+        // Update succeeded
+        // Background sync - don't await these
+        const needsCountRefresh =
+          (updates.completed !== undefined &&
+            originalTodo?.completed !== updates.completed) ||
+          (updates.project_id !== undefined &&
+            originalTodo?.project_id !== updates.project_id);
+
+        if (needsCountRefresh) {
+          // Fire and forget - refresh in background
+          Promise.all([
+            dispatch(fetchTodoCounts()),
+            dispatch(fetchProjects()),
+          ]).catch((error) => {
+            console.error("Failed to refresh counts:", error);
+          });
+        }
+
+        // Refresh labels if labels changed
+        if (updates.labels !== undefined) {
+          dispatch(fetchLabels()).catch((error) => {
+            console.error("Failed to refresh labels:", error);
+          });
+        }
+        
         return result;
       } catch (error) {
         // Revert on error

@@ -251,8 +251,77 @@ const todoSlice = createSlice({
       const { todoId, updates } = action.payload;
       const index = state.todos.findIndex((t) => t.id === todoId);
       if (index !== -1) {
-        state.todos[index] = { ...state.todos[index], ...updates };
+        const oldTodo = state.todos[index];
+        const updatedTodo = { ...oldTodo, ...updates };
+        state.todos[index] = updatedTodo;
         state.pendingUpdates[todoId] = updates;
+
+        // Update selected todo if it's the same
+        if (state.selectedTodo?.id === todoId) {
+          state.selectedTodo = updatedTodo;
+        }
+
+        // Optimistically update counts for completion status change
+        if (
+          updates.completed !== undefined &&
+          oldTodo.completed !== updates.completed
+        ) {
+          if (updates.completed) {
+            // Todo marked as completed
+            state.counts.completed += 1;
+
+            // Decrease counts based on todo properties
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (oldTodo.due_date) {
+              const dueDate = new Date(oldTodo.due_date);
+              dueDate.setHours(0, 0, 0, 0);
+
+              if (dueDate.getTime() === today.getTime()) {
+                state.counts.today = Math.max(0, state.counts.today - 1);
+              } else if (
+                dueDate > today &&
+                dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+              ) {
+                state.counts.upcoming = Math.max(0, state.counts.upcoming - 1);
+              }
+            }
+
+            // Decrease inbox count if in default project
+            const inboxProject = state.projects.find((p) => p.is_default);
+            if (inboxProject && oldTodo.project_id === inboxProject.id) {
+              state.counts.inbox = Math.max(0, state.counts.inbox - 1);
+            }
+          } else {
+            // Todo marked as incomplete
+            state.counts.completed = Math.max(0, state.counts.completed - 1);
+
+            // Increase counts based on todo properties
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (oldTodo.due_date) {
+              const dueDate = new Date(oldTodo.due_date);
+              dueDate.setHours(0, 0, 0, 0);
+
+              if (dueDate.getTime() === today.getTime()) {
+                state.counts.today += 1;
+              } else if (
+                dueDate > today &&
+                dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+              ) {
+                state.counts.upcoming += 1;
+              }
+            }
+
+            // Increase inbox count if in default project
+            const inboxProject = state.projects.find((p) => p.is_default);
+            if (inboxProject && oldTodo.project_id === inboxProject.id) {
+              state.counts.inbox += 1;
+            }
+          }
+        }
       }
     },
     optimisticDeleteTodo: (state, action: PayloadAction<string>) => {
@@ -267,7 +336,66 @@ const todoSlice = createSlice({
       const { todoId, originalTodo } = action.payload;
       const index = state.todos.findIndex((t) => t.id === todoId);
       if (index !== -1) {
+        const currentTodo = state.todos[index];
         state.todos[index] = originalTodo;
+        
+        // Revert selected todo if it's the same
+        if (state.selectedTodo?.id === todoId) {
+          state.selectedTodo = originalTodo;
+        }
+        
+        // Revert count changes if completion status was changed
+        if (currentTodo.completed !== originalTodo.completed) {
+          if (currentTodo.completed && !originalTodo.completed) {
+            // Was marked complete, now reverting to incomplete
+            state.counts.completed = Math.max(0, state.counts.completed - 1);
+            
+            // Restore counts based on todo properties
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (originalTodo.due_date) {
+              const dueDate = new Date(originalTodo.due_date);
+              dueDate.setHours(0, 0, 0, 0);
+              
+              if (dueDate.getTime() === today.getTime()) {
+                state.counts.today += 1;
+              } else if (dueDate > today && dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+                state.counts.upcoming += 1;
+              }
+            }
+            
+            // Restore inbox count if in default project
+            const inboxProject = state.projects.find(p => p.is_default);
+            if (inboxProject && originalTodo.project_id === inboxProject.id) {
+              state.counts.inbox += 1;
+            }
+          } else if (!currentTodo.completed && originalTodo.completed) {
+            // Was marked incomplete, now reverting to complete
+            state.counts.completed += 1;
+            
+            // Restore counts based on todo properties
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (originalTodo.due_date) {
+              const dueDate = new Date(originalTodo.due_date);
+              dueDate.setHours(0, 0, 0, 0);
+              
+              if (dueDate.getTime() === today.getTime()) {
+                state.counts.today = Math.max(0, state.counts.today - 1);
+              } else if (dueDate > today && dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+                state.counts.upcoming = Math.max(0, state.counts.upcoming - 1);
+              }
+            }
+            
+            // Restore inbox count if in default project
+            const inboxProject = state.projects.find(p => p.is_default);
+            if (inboxProject && originalTodo.project_id === inboxProject.id) {
+              state.counts.inbox = Math.max(0, state.counts.inbox - 1);
+            }
+          }
+        }
       }
       delete state.pendingUpdates[todoId];
     },
@@ -371,13 +499,24 @@ const todoSlice = createSlice({
     });
 
     // Update todo
-    builder.addCase(updateTodo.fulfilled, (state, action) => {
+    builder
+      .addCase(updateTodo.pending, (state, action) => {
+        state.error = null;
+        // Don't clear pending updates here - wait for fulfilled
+      })
+      .addCase(updateTodo.fulfilled, (state, action) => {
       const updatedTodo = action.payload;
-      const index = state.todos.findIndex((t) => t.id === updatedTodo.id);
+      const todoId = updatedTodo.id;
+      const index = state.todos.findIndex((t) => t.id === todoId);
 
       if (index !== -1) {
         const oldTodo = state.todos[index];
+        
+        // Apply the server response
         state.todos[index] = updatedTodo;
+        
+        // Clear any pending updates for this todo
+        delete state.pendingUpdates[todoId];
 
         // Update selected todo if it's the same
         if (state.selectedTodo?.id === updatedTodo.id) {
@@ -422,7 +561,10 @@ const todoSlice = createSlice({
           updateLabelCounts(state, newLabels, oldLabels);
         }
       }
-    });
+    })
+      .addCase(updateTodo.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to update todo";
+      });
 
     // Delete todo
     builder
@@ -486,6 +628,10 @@ const todoSlice = createSlice({
         state.todos = action.payload;
         state.loading = false;
         state.hasMore = action.payload.length === 50;
+      })
+      .addCase(fetchCompletedTodos.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch completed todos";
       });
 
     // Handle priority todos

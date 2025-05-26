@@ -54,7 +54,8 @@ export default function TodoItem({
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
 
-  const handleToggleComplete = () => {
+  const handleToggleComplete = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation();
     onUpdate(todo.id, { completed: !todo.completed });
   };
 
@@ -86,7 +87,14 @@ export default function TodoItem({
         } ${todo.completed ? "opacity-60" : ""}`}
         isPressable
         shadow="sm"
-        onPress={() => onClick?.(todo)}
+        onPress={(e) => {
+          // Don't trigger card click if clicking on interactive elements
+          const target = e.target as HTMLElement;
+          if (target.closest('input, button, [role="checkbox"]')) {
+            return;
+          }
+          onClick?.(todo);
+        }}
       >
         <CardBody className="p-3">
           <div className="flex items-start gap-3">
@@ -97,6 +105,7 @@ export default function TodoItem({
               size="sm"
               className="mt-1"
               color="success"
+              onClick={(e) => e.stopPropagation()}
             />
 
             {/* Main Content */}

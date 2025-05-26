@@ -62,6 +62,15 @@ export const TodoService = {
   updateTodo: async (todoId: string, update: TodoUpdate): Promise<Todo> => {
     try {
       const response = await apiauth.put(`/todos/${todoId}`, update);
+      
+      // Check if the response has the correct completed status
+      if (update.completed !== undefined && response.data.completed !== update.completed) {
+        console.error("Server returned wrong completed status!", {
+          requested: update.completed,
+          received: response.data.completed
+        });
+      }
+      
       toast.success("Task updated successfully");
       return response.data;
     } catch (error) {
