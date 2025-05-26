@@ -97,13 +97,12 @@ export default function TodoItem({
         }}
       >
         <CardBody className="p-3">
-          <div className="flex items-start gap-3">
+          <div className="flex items-center gap-3">
             {/* Complete Checkbox */}
             <Checkbox
               isSelected={todo.completed}
               onChange={handleToggleComplete}
               size="sm"
-              className="mt-1"
               color="success"
               onClick={(e) => e.stopPropagation()}
             />
@@ -111,7 +110,7 @@ export default function TodoItem({
             {/* Main Content */}
             <div className="min-w-0 flex-1">
               {/* Title and Description */}
-              <div className="mb-2">
+              <div>
                 <h4
                   className={`text-sm font-medium ${
                     todo.completed ? "text-foreground-500 line-through" : ""
@@ -120,62 +119,65 @@ export default function TodoItem({
                   {todo.title}
                 </h4>
                 {todo.description && (
-                  <p className="mt-1 text-xs text-foreground-500">
+                  <p className="mt-2 text-xs text-foreground-500">
                     {todo.description}
                   </p>
                 )}
               </div>
 
-              {/* Metadata Row */}
-              <div className="flex flex-wrap items-center gap-2">
-                {/* Priority */}
-                {todo.priority !== Priority.NONE && (
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    color={priorityColors[todo.priority]}
-                  >
-                    {todo.priority}
-                  </Chip>
-                )}
+              {(todo.priority !== Priority.NONE ||
+                todo.due_date ||
+                todo.labels.length > 0) && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {/* Priority */}
+                  {todo.priority !== Priority.NONE && (
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={priorityColors[todo.priority]}
+                    >
+                      {todo.priority}
+                    </Chip>
+                  )}
 
-                {/* Due Date */}
-                {todo.due_date && (
-                  <div
-                    className={`flex items-center gap-1 text-xs ${
-                      isOverdue ? "text-danger" : "text-foreground-500"
-                    }`}
-                  >
-                    <CalendarIcon className="h-3 w-3" />
-                    {format(new Date(todo.due_date), "MMM d")}
-                  </div>
-                )}
+                  {/* Due Date */}
+                  {todo.due_date && (
+                    <div
+                      className={`flex items-center gap-1 text-xs ${
+                        isOverdue ? "text-danger" : "text-foreground-500"
+                      }`}
+                    >
+                      <CalendarIcon className="h-3 w-3" />
+                      {format(new Date(todo.due_date), "MMM d")}
+                    </div>
+                  )}
 
-                {/* Labels */}
-                {todo.labels.map((label) => (
-                  <Chip key={label} size="sm" variant="flat">
-                    {label}
-                  </Chip>
-                ))}
+                  {/* Labels */}
+                  {todo.labels.map((label) => (
+                    <Chip key={label} size="sm" variant="flat">
+                      {label}
+                    </Chip>
+                  ))}
 
-                {/* Subtasks Count */}
-                {todo.subtasks.length > 0 && (
-                  <Button
-                    size="sm"
-                    variant="light"
-                    className="h-6 min-w-0 px-2"
-                    onPress={() => setShowSubtasks(!showSubtasks)}
-                  >
-                    {showSubtasks ? (
-                      <ChevronDown className="h-3 w-3" />
-                    ) : (
-                      <ChevronRight className="h-3 w-3" />
-                    )}
-                    {todo.subtasks.filter((s) => s.completed).length}/
-                    {todo.subtasks.length}
-                  </Button>
-                )}
-              </div>
+                  {/* Subtasks Count */}
+                  {todo.subtasks.length > 0 && (
+                    <Button
+                      size="sm"
+                      variant="light"
+                      className="h-6 min-w-0 px-2"
+                      onPress={() => setShowSubtasks(!showSubtasks)}
+                    >
+                      {showSubtasks ? (
+                        <ChevronDown className="h-3 w-3" />
+                      ) : (
+                        <ChevronRight className="h-3 w-3" />
+                      )}
+                      {todo.subtasks.filter((s) => s.completed).length}/
+                      {todo.subtasks.length}
+                    </Button>
+                  )}
+                </div>
+              )}
 
               {/* Subtasks */}
               {showSubtasks && todo.subtasks.length > 0 && (

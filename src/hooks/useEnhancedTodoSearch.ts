@@ -21,9 +21,9 @@ export const useEnhancedTodoSearch = (
   const [searchResults, setSearchResults] = useState<Todo[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [searchMode, setSearchMode] = useState<SearchMode>("traditional");
+  const [searchMode, setSearchMode] = useState<SearchMode>("semantic");
   const [searchOptions, setSearchOptions] = useState<SearchOptions>({
-    mode: "traditional",
+    mode: "semantic",
     limit: 50,
     includeCompleted: false,
   });

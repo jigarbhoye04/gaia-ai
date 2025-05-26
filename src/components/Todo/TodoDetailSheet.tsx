@@ -95,8 +95,6 @@ export default function TodoDetailSheet({
       ? Math.round((completedSubtasks / totalSubtasks) * 100)
       : 0;
 
-  if (!isOpen) return null;
-
   return (
     <>
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>

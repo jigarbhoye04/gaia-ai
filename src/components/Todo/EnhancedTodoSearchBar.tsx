@@ -42,13 +42,11 @@ const searchModeConfig = {
     label: "Traditional",
     icon: Search,
     description: "Text-based search through title and description",
-    color: "bg-blue-500",
   },
   semantic: {
-    label: "AI Search",
+    label: "Semantic Search",
     icon: Brain,
-    description: "AI-powered semantic search for natural language queries",
-    color: "bg-purple-500",
+    description: "Semantic search for natural language queries",
   },
 };
 
@@ -70,8 +68,6 @@ export default function EnhancedTodoSearchBar({
     updateSearchMode,
     updateSearchOptions,
   } = useEnhancedTodoSearch(300, initialQuery);
-
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const currentModeConfig = searchModeConfig[searchMode];
   const ModeIcon = currentModeConfig.icon;
@@ -97,10 +93,6 @@ export default function EnhancedTodoSearchBar({
         <Select value={searchMode} onValueChange={handleModeChange}>
           <SelectTrigger className="w-fit min-w-[140px] border-none bg-zinc-900 text-white shadow-none">
             <div className="flex items-center gap-2">
-              <div
-                className={`h-2 w-2 rounded-full ${currentModeConfig.color}`}
-              />
-              <ModeIcon className="h-4 w-4" />
               <SelectValue />
             </div>
           </SelectTrigger>
@@ -114,7 +106,6 @@ export default function EnhancedTodoSearchBar({
                   className="border-none bg-zinc-900 text-white"
                 >
                   <div className="flex items-center gap-2">
-                    <div className={`h-2 w-2 rounded-full ${config.color}`} />
                     <IconComponent className="h-4 w-4" />
                     <span>{config.label}</span>
                   </div>

@@ -96,24 +96,6 @@ export default function SearchTodosPage() {
           initialQuery={initialQuery} // Pass initial query from URL
         />
 
-        {/* Help Text */}
-        <div className="text-muted-foreground mt-8 text-center">
-          <h3 className="mb-2 text-lg font-medium">Search Your Tasks</h3>
-          <div className="space-y-2 text-sm">
-            <p>
-              <strong>Traditional Search:</strong> Find tasks by title and
-              description
-            </p>
-            <p>
-              <strong>AI Search:</strong> Use natural language like "urgent
-              tasks for next week"
-            </p>
-            <p>
-              <strong>Smart Search:</strong> Combines both approaches for
-              comprehensive results
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
