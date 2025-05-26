@@ -805,9 +805,12 @@ async def get_all_labels(user_id: str) -> List[dict]:
         List[dict]: List of label objects with name and count
     """
     try:
-        # Use aggregation to get unique labels with counts
+        # Use aggregation to get unique labels with counts (only from non-completed todos)
         pipeline = [
-            {"$match": {"user_id": user_id}},
+            {"$match": {
+                "user_id": user_id,
+                "completed": False  # Only count labels from non-completed todos
+            }},
             {"$unwind": "$labels"},
             {
                 "$group": {
