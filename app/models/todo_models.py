@@ -27,7 +27,7 @@ class TodoModel(BaseModel):
         None, max_length=2000, description="Description of the todo item"
     )
     labels: List[str] = Field(
-        default_factory=list, max_items=10, description="Labels for categorization"
+        default_factory=list, max_length=10, description="Labels for categorization"
     )
     due_date: Optional[datetime] = Field(None, description="Due date for the todo item")
     due_date_timezone: Optional[str] = Field(
@@ -39,7 +39,7 @@ class TodoModel(BaseModel):
     )
     completed: bool = Field(default=False, description="Whether the todo is completed")
     subtasks: List[SubTask] = Field(
-        default_factory=list, max_items=50, description="List of subtasks"
+        default_factory=list, max_length=50, description="List of subtasks"
     )
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -53,7 +53,7 @@ class TodoCreate(BaseModel):
         None, max_length=2000, description="Description of the todo item"
     )
     labels: List[str] = Field(
-        default_factory=list, max_items=10, description="Labels for categorization"
+        default_factory=list, max_length=10, description="Labels for categorization"
     )
     due_date: Optional[datetime] = Field(None, description="Due date for the todo item")
     due_date_timezone: Optional[str] = Field(
@@ -73,7 +73,7 @@ class UpdateTodoRequest(BaseModel):
         None, max_length=2000, description="Description of the todo item"
     )
     labels: Optional[List[str]] = Field(
-        None, max_items=10, description="Labels for categorization"
+        None, max_length=10, description="Labels for categorization"
     )
     due_date: Optional[datetime] = Field(None, description="Due date for the todo item")
     due_date_timezone: Optional[str] = Field(
@@ -83,7 +83,7 @@ class UpdateTodoRequest(BaseModel):
     project_id: Optional[str] = Field(None, description="Project ID the todo belongs to")
     completed: Optional[bool] = Field(None, description="Whether the todo is completed")
     subtasks: Optional[List[SubTask]] = Field(
-        None, max_items=50, description="List of subtasks"
+        None, max_length=50, description="List of subtasks"
     )
 
 

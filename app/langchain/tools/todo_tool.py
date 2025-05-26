@@ -11,6 +11,9 @@ from app.docstrings.langchain.tools.todo_tool_docs import (
     UPDATE_TODO,
     DELETE_TODO,
     SEARCH_TODOS,
+    SEMANTIC_SEARCH_TODOS,
+    HYBRID_SEARCH_TODOS,
+    REINDEX_TODOS,
     GET_TODO_STATS,
     GET_TODAY_TODOS,
     GET_UPCOMING_TODOS,
@@ -43,6 +46,9 @@ from app.services.todo_service import (
     update_todo as update_todo_service,
     delete_todo as delete_todo_service,
     search_todos as search_todos_service,
+    semantic_search_todos as semantic_search_todos_service,
+    hybrid_search_todos as hybrid_search_todos_service,
+    bulk_index_existing_todos as bulk_index_existing_todos_service,
     get_todo_stats as get_todo_stats_service,
     get_todos_by_date_range,
     get_todos_by_label as get_todos_by_label_service,
@@ -262,6 +268,136 @@ async def search_todos(
         error_msg = f"Error searching todos: {str(e)}"
         logger.error(error_msg)
         return {"error": error_msg, "todos": []}
+
+
+@tool
+@with_doc(SEMANTIC_SEARCH_TODOS)
+async def semantic_search_todos(
+    config: RunnableConfig,
+    query: Annotated[str, "Natural language search query (required)"],
+    limit: Annotated[int, "Maximum number of results to return"] = 20,
+    project_id: Annotated[Optional[str], "Filter by specific project ID"] = None,
+    completed: Annotated[Optional[bool], "Filter by completion status"] = None,
+    priority: Annotated[
+        Optional[str], "Filter by priority: high, medium, low, or none"
+    ] = None,
+) -> Dict[str, Any]:
+    try:
+        logger.info(f"Todo Tool: Semantic search for '{query}'")
+        user_id = get_user_id_from_config(config)
+
+        if not user_id:
+            return {"error": "User authentication required", "todos": []}
+
+        # Ensure limit is reasonable
+        if limit > 50:
+            limit = 50
+
+        results = await semantic_search_todos_service(
+            query=query,
+            user_id=user_id,
+            limit=limit,
+            project_id=project_id,
+            completed=completed,
+            priority=priority,
+        )
+
+        return {
+            "todos": [todo.model_dump() for todo in results],
+            "count": len(results),
+            "search_type": "semantic",
+            "error": None,
+        }
+
+    except Exception as e:
+        error_msg = f"Error in semantic search: {str(e)}"
+        logger.error(error_msg)
+        return {"error": error_msg, "todos": []}
+
+
+@tool
+@with_doc(HYBRID_SEARCH_TODOS)
+async def hybrid_search_todos(
+    config: RunnableConfig,
+    query: Annotated[str, "Search query string (required)"],
+    limit: Annotated[int, "Maximum number of results to return"] = 20,
+    project_id: Annotated[Optional[str], "Filter by specific project ID"] = None,
+    completed: Annotated[Optional[bool], "Filter by completion status"] = None,
+    priority: Annotated[
+        Optional[str], "Filter by priority: high, medium, low, or none"
+    ] = None,
+    semantic_weight: Annotated[float, "Weight for semantic results (0.0-1.0)"] = 0.7,
+) -> Dict[str, Any]:
+    try:
+        logger.info(
+            f"Todo Tool: Hybrid search for '{query}' with semantic weight {semantic_weight}"
+        )
+        user_id = get_user_id_from_config(config)
+
+        if not user_id:
+            return {"error": "User authentication required", "todos": []}
+
+        # Ensure limit is reasonable
+        if limit > 50:
+            limit = 50
+
+        # Ensure semantic_weight is in valid range
+        if semantic_weight < 0.0:
+            semantic_weight = 0.0
+        elif semantic_weight > 1.0:
+            semantic_weight = 1.0
+
+        results = await hybrid_search_todos_service(
+            query=query,
+            user_id=user_id,
+            limit=limit,
+            project_id=project_id,
+            completed=completed,
+            priority=priority,
+            semantic_weight=semantic_weight,
+        )
+
+        return {
+            "todos": [todo.model_dump() for todo in results],
+            "count": len(results),
+            "search_type": "hybrid",
+            "semantic_weight": semantic_weight,
+            "error": None,
+        }
+
+    except Exception as e:
+        error_msg = f"Error in hybrid search: {str(e)}"
+        logger.error(error_msg)
+        return {"error": error_msg, "todos": []}
+
+
+@tool
+@with_doc(REINDEX_TODOS)
+async def reindex_todos(
+    config: RunnableConfig,
+    batch_size: Annotated[int, "Number of todos to process in each batch"] = 100,
+) -> Dict[str, Any]:
+    try:
+        logger.info(f"Todo Tool: Reindexing todos with batch size {batch_size}")
+        user_id = get_user_id_from_config(config)
+
+        if not user_id:
+            return {"error": "User authentication required", "result": None}
+
+        # Ensure batch_size is reasonable
+        if batch_size < 1:
+            batch_size = 100
+        elif batch_size > 1000:
+            batch_size = 1000
+
+        result = await bulk_index_existing_todos_service(user_id, batch_size)
+
+        return {"result": result, "batch_size": batch_size, "error": None}
+
+    except Exception as e:
+        error_msg = f"Error reindexing todos: {str(e)}"
+        logger.error(error_msg)
+        return {"error": error_msg, "result": None}
 
 
 @tool
@@ -705,6 +841,9 @@ todo_tools = [
     update_todo,
     delete_todo,
     search_todos,
+    semantic_search_todos,
+    hybrid_search_todos,
+    reindex_todos,
     get_todo_statistics,
     get_today_todos,
     get_upcoming_todos,

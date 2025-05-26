@@ -469,3 +469,86 @@ DELETE_SUBTASK = """
 
     Note: Only removes the subtask, parent todo remains unchanged.
     """
+
+SEMANTIC_SEARCH_TODOS = """
+    Perform semantic search on todos using vector embeddings.
+
+    This tool uses AI-powered semantic understanding to find todos that match
+    the intent and meaning of the search query, not just exact keyword matches.
+    It can understand context, synonyms, and related concepts.
+
+    When to use:
+    - When user searches with natural language queries
+    - When looking for todos by concept rather than exact keywords
+    - When traditional search doesn't find relevant results
+    - When user describes what they're looking for conceptually
+    - For finding related or similar tasks
+
+    Input:
+    - query: Required, natural language search query
+    - limit: Optional, maximum results (default: 20)
+    - project_id: Optional, filter by specific project
+    - completed: Optional, filter by completion status
+    - priority: Optional, filter by priority level
+
+    Output:
+    - List of TodoResponse objects ranked by semantic similarity
+    - Empty list if no matches found
+    - Falls back to traditional search if semantic search fails
+
+    Examples:
+    - "tasks about meetings" finds todos with meeting-related content
+    - "urgent work items" finds high-priority work tasks
+    - "shopping and errands" finds personal task categories
+    """
+
+HYBRID_SEARCH_TODOS = """
+    Perform hybrid search combining semantic and traditional search.
+
+    This tool combines the power of semantic understanding with exact keyword
+    matching to provide the most comprehensive search results. It weights
+    semantic and traditional results for optimal relevance.
+
+    When to use:
+    - When you want the best of both search approaches
+    - For comprehensive search that catches both exact matches and concepts
+    - When user query might benefit from multiple search strategies
+    - As the default search method for complex queries
+
+    Input:
+    - query: Required, search query string
+    - limit: Optional, maximum results (default: 20)
+    - project_id: Optional, filter by specific project
+    - completed: Optional, filter by completion status
+    - priority: Optional, filter by priority level
+    - semantic_weight: Optional, weight for semantic results (0.0-1.0, default: 0.7)
+
+    Output:
+    - List of TodoResponse objects ranked by combined relevance score
+    - Combines and deduplicates results from both search methods
+    - Falls back to traditional search if hybrid search fails
+
+    Note: Higher semantic_weight favors AI understanding over exact matches.
+    """
+
+REINDEX_TODOS = """
+    Bulk reindex all user's todos in the vector database.
+
+    This tool rebuilds the semantic search index for all of a user's todos.
+    Useful for ensuring optimal search performance and after system updates.
+
+    When to use:
+    - When semantic search results seem outdated or incomplete
+    - After bulk importing or migrating todos
+    - When user reports search quality issues
+    - For maintenance and optimization
+
+    Input:
+    - batch_size: Optional, processing batch size (default: 100)
+
+    Output:
+    - Summary of indexing operation including count of indexed todos
+    - Status information about the reindexing process
+
+    Note: This operation may take time for users with many todos.
+    """

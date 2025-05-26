@@ -63,7 +63,17 @@ async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
         
         result = await todos_collection.insert_one(todo_dict)
         created_todo = await todos_collection.find_one({"_id": result.inserted_id})
-        
+
+        # Store embedding for semantic search
+        try:
+            from app.utils.todo_vector_utils import store_todo_embedding
+
+            await store_todo_embedding(str(result.inserted_id), created_todo, user_id)
+        except Exception as e:
+            todos_logger.warning(
+                f"Failed to store embedding for todo {result.inserted_id}: {str(e)}"
+            )
+
         # Clear cache
         await delete_cache(f"todos:{user_id}")
         await delete_cache(f"todos:{user_id}:project:{todo.project_id}")
@@ -285,7 +295,17 @@ async def update_todo(
         
         # Get updated todo
         updated_todo = await todos_collection.find_one({"_id": ObjectId(todo_id)})
-        
+
+        # Update embedding for semantic search
+        try:
+            from app.utils.todo_vector_utils import update_todo_embedding
+
+            await update_todo_embedding(todo_id, updated_todo, user_id)
+        except Exception as e:
+            todos_logger.warning(
+                f"Failed to update embedding for todo {todo_id}: {str(e)}"
+            )
+
         # Clear relevant caches
         await delete_cache(f"todo:{user_id}:{todo_id}")
         await delete_cache(f"todos:{user_id}")
@@ -331,7 +351,17 @@ async def delete_todo(todo_id: str, user_id: str) -> None:
         
         # Delete the todo
         await todos_collection.delete_one({"_id": ObjectId(todo_id)})
-        
+
+        # Delete embedding for semantic search
+        try:
+            from app.utils.todo_vector_utils import delete_todo_embedding
+
+            await delete_todo_embedding(todo_id, user_id)
+        except Exception as e:
+            todos_logger.warning(
+                f"Failed to delete embedding for todo {todo_id}: {str(e)}"
+            )
+
         # Clear caches
         await delete_cache(f"todo:{user_id}:{todo_id}")
         await delete_cache(f"todos:{user_id}")
@@ -866,4 +896,128 @@ async def get_todos_by_label(user_id: str, label: str) -> List[TodoResponse]:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get todos by label: {str(e)}"
+        )
+
+
+async def semantic_search_todos(
+    query: str,
+    user_id: str,
+    limit: int = 20,
+    project_id: Optional[str] = None,
+    completed: Optional[bool] = None,
+    priority: Optional[str] = None,
+) -> List[TodoResponse]:
+    """
+    Perform semantic search on todos using vector embeddings.
+
+    Args:
+        query: Natural language search query
+        user_id: ID of the user
+        limit: Maximum number of results to return
+        project_id: Optional project filter
+        completed: Optional completion status filter
+        priority: Optional priority filter
+
+    Returns:
+        List[TodoResponse]: List of semantically matching todos
+    """
+    try:
+        from app.utils.todo_vector_utils import semantic_search_todos as vector_search
+
+        # Perform semantic search with filters
+        results = await vector_search(
+            query=query,
+            user_id=user_id,
+            top_k=limit,
+            completed=completed,
+            priority=priority,
+            project_id=project_id,
+            include_traditional_search=True,
+        )
+
+        return results
+
+    except Exception as e:
+        todos_logger.error(f"Error in semantic search: {str(e)}")
+        # Fall back to regular search if semantic search fails
+        todos_logger.info("Falling back to regular text search")
+        return await search_todos(query, user_id)
+
+
+async def hybrid_search_todos(
+    query: str,
+    user_id: str,
+    limit: int = 20,
+    project_id: Optional[str] = None,
+    completed: Optional[bool] = None,
+    priority: Optional[str] = None,
+    semantic_weight: float = 0.7,
+) -> List[TodoResponse]:
+    """
+    Perform hybrid search combining semantic and text-based search.
+
+    Args:
+        query: Search query string
+        user_id: ID of the user
+        limit: Maximum number of results to return
+        project_id: Optional project filter
+        completed: Optional completion status filter
+        priority: Optional priority filter
+        semantic_weight: Weight for semantic search results (0.0-1.0)
+
+    Returns:
+        List[TodoResponse]: Combined and ranked search results
+    """
+    try:
+        from app.utils.todo_vector_utils import (
+            hybrid_search_todos as vector_hybrid_search,
+        )
+
+        # Perform hybrid search
+        results = await vector_hybrid_search(
+            query=query,
+            user_id=user_id,
+            top_k=limit,
+            semantic_weight=semantic_weight,
+            completed=completed,
+            priority=priority,
+            project_id=project_id,
+        )
+
+        return results
+
+    except Exception as e:
+        todos_logger.error(f"Error in hybrid search: {str(e)}")
+        # Fall back to regular search if hybrid search fails
+        todos_logger.info("Falling back to regular text search")
+        return await search_todos(query, user_id)
+
+
+async def bulk_index_existing_todos(user_id: str, batch_size: int = 100) -> dict:
+    """
+    Bulk index all existing todos for a user into the vector database.
+
+    Args:
+        user_id: ID of the user whose todos to index
+        batch_size: Number of todos to process in each batch
+
+    Returns:
+        dict: Summary of indexing operation
+    """
+    try:
+        from app.utils.todo_vector_utils import bulk_index_todos
+
+        # Bulk index todos
+        indexed_count = await bulk_index_todos(user_id, batch_size)
+
+        result = {"indexed": indexed_count, "user_id": user_id, "status": "completed"}
+
+        todos_logger.info(f"Bulk indexed {indexed_count} todos for user {user_id}")
+        return result
+
+    except Exception as e:
+        todos_logger.error(f"Error bulk indexing todos: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to index todos: {str(e)}",
         )
