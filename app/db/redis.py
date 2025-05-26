@@ -13,6 +13,8 @@ from app.config.settings import settings
 
 ONE_YEAR_TTL = 31_536_000
 ONE_HOUR_TTL = 3600
+CACHE_TTL = ONE_HOUR_TTL  # Default cache TTL for todos
+STATS_CACHE_TTL = 5 * 60  # 5 minutes for stats
 
 
 class DateTimeEncoder(json.JSONEncoder):

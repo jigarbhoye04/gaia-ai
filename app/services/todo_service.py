@@ -1,13 +1,14 @@
-from datetime import datetime
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional, Tuple, Dict, Any
 import uuid
+import math
 
 from bson import ObjectId
-from fastapi import HTTPException, status
+from pymongo import ReturnDocument
 
 from app.config.loggers import todos_logger
 from app.db.collections import todos_collection, projects_collection
-from app.db.redis import delete_cache, delete_cache_by_pattern, get_cache, set_cache
+from app.db.redis import get_cache, set_cache, delete_cache_by_pattern, CACHE_TTL, STATS_CACHE_TTL
 from app.db.utils import serialize_document
 from app.models.todo_models import (
     TodoCreate,
@@ -16,838 +17,746 @@ from app.models.todo_models import (
     ProjectCreate,
     ProjectResponse,
     UpdateProjectRequest,
-    SubTask
+    SubTask,
+    TodoListResponse,
+    PaginationMeta,
+    TodoStats,
+    TodoSearchParams,
+    SearchMode,
+    BulkOperationResponse,
+    BulkUpdateRequest,
+    BulkMoveRequest,
+    Priority,
 )
 from app.utils.todo_vector_utils import (
     store_todo_embedding,
     update_todo_embedding,
     delete_todo_embedding,
-    semantic_search_todos,
+    semantic_search_todos as vector_search,
+    hybrid_search_todos as vector_hybrid_search,
     bulk_index_todos,
-    hybrid_search_todos
 )
 
-ONE_YEAR_TTL = 365 * 24 * 60 * 60
-ONE_HOUR_TTL = 60 * 60
-
-# Special constant for inbox project
+# Special constants
 INBOX_PROJECT_ID = "inbox"
 
 
-async def invalidate_user_todo_caches(user_id: str, project_id: Optional[str] = None):
-    """
-    Invalidate all todo-related caches for a user.
-    This includes all filtered variations of the cache keys.
-    """
-    try:
-        # Clear all todo list caches for the user (with any filters)
-        await delete_cache_by_pattern(f"todos:{user_id}*")
+class TodoService:
+    """Service class for todo operations with consistent error handling and caching."""
 
-        # Clear individual todo caches
-        await delete_cache_by_pattern(f"todo:{user_id}:*")
+    @staticmethod
+    async def _invalidate_cache(user_id: str, project_id: Optional[str] = None):
+        """Invalidate all relevant caches for a user."""
+        try:
+            await delete_cache_by_pattern(f"todos:{user_id}*")
+            await delete_cache_by_pattern(f"todo:{user_id}:*")
+            await delete_cache_by_pattern(f"projects:{user_id}*")
+            await delete_cache_by_pattern(f"stats:{user_id}*")
+            if project_id:
+                await delete_cache_by_pattern(f"*:project:{project_id}*")
+        except Exception as e:
+            todos_logger.warning(f"Cache invalidation failed: {str(e)}")
 
-        # Clear project-specific caches if project_id is provided
-        if project_id:
-            await delete_cache_by_pattern(f"todos:{user_id}:project:{project_id}*")
-
-        # Clear projects cache to update todo counts
-        await delete_cache(f"projects:{user_id}")
-
-        todos_logger.info(
-            f"Invalidated todo caches for user {user_id}, project {project_id}"
+    @staticmethod
+    async def _get_or_create_inbox(user_id: str) -> str:
+        """Get or create the default inbox project for a user."""
+        existing = await projects_collection.find_one(
+            {"user_id": user_id, "is_default": True}
         )
-    except Exception as e:
-        todos_logger.warning(f"Failed to invalidate todo caches: {str(e)}")
 
+        if existing:
+            return str(existing["_id"])
 
-async def invalidate_project_caches(user_id: str):
-    """
-    Invalidate all project-related caches for a user.
-    """
-    try:
-        await delete_cache(f"projects:{user_id}")
-        todos_logger.info(f"Invalidated project caches for user {user_id}")
-    except Exception as e:
-        todos_logger.warning(f"Failed to invalidate project caches: {str(e)}")
+        inbox = {
+            "user_id": user_id,
+            "name": "Inbox",
+            "description": "Default project for new todos",
+            "color": "#6B7280",
+            "is_default": True,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        result = await projects_collection.insert_one(inbox)
+        return str(result.inserted_id)
 
+    @staticmethod
+    async def _build_query(user_id: str, params: TodoSearchParams) -> dict:
+        """Build MongoDB query from search parameters."""
+        query = {"user_id": user_id}
 
-async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
-    """
-    Create a new todo item.
-    
-    Args:
-        todo: Todo creation model
-        user_id: ID of the user creating the todo
+        # Text search
+        if params.q and params.mode == SearchMode.TEXT:
+            query["$or"] = [
+                {"title": {"$regex": params.q, "$options": "i"}},
+                {"description": {"$regex": params.q, "$options": "i"}},
+                {"labels": {"$in": [params.q]}},
+            ]
+
+        # Filters
+        if params.project_id is not None:
+            query["project_id"] = params.project_id
+        if params.completed is not None:
+            query["completed"] = params.completed
+        if params.priority:
+            query["priority"] = params.priority.value
+        if params.labels:
+            query["labels"] = {"$in": params.labels}
+
+        # Date filters
+        if params.has_due_date is True:
+            query["due_date"] = {"$ne": None}
+        elif params.has_due_date is False:
+            query["due_date"] = None
+
+        if params.due_date_start or params.due_date_end:
+            date_query = {}
+            if params.due_date_start:
+                date_query["$gte"] = params.due_date_start
+            if params.due_date_end:
+                date_query["$lte"] = params.due_date_end
+            query["due_date"] = date_query
+
+        # Overdue filter
+        if params.overdue is True:
+            query["due_date"] = {"$lt": datetime.now(timezone.utc)}
+            query["completed"] = False
+        elif params.overdue is False and params.has_due_date is not False:
+            query["$or"] = [
+                {"due_date": None},
+                {"due_date": {"$gte": datetime.now(timezone.utc)}},
+            ]
+
+        return query
+
+    @staticmethod
+    async def _calculate_stats(user_id: str) -> TodoStats:
+        """Calculate todo statistics for a user."""
+        cache_key = f"stats:{user_id}"
+        cached = await get_cache(cache_key)
+        if cached:
+            return TodoStats(**cached)
+
+        # Use aggregation pipeline for efficient calculation
+        pipeline = [
+            {"$match": {"user_id": user_id}},
+            {
+                "$facet": {
+                    "total": [{"$count": "count"}],
+                    "completed": [{"$match": {"completed": True}}, {"$count": "count"}],
+                    "overdue": [
+                        {
+                            "$match": {
+                                "completed": False,
+                                "due_date": {"$lt": datetime.now(timezone.utc)},
+                            }
+                        },
+                        {"$count": "count"},
+                    ],
+                    "by_priority": [
+                        {"$group": {"_id": "$priority", "count": {"$sum": 1}}}
+                    ],
+                    "by_project": [
+                        {"$group": {"_id": "$project_id", "count": {"$sum": 1}}}
+                    ],
+                    "labels": [
+                        {"$match": {"completed": False}},  # Only count labels from non-completed todos
+                        {"$unwind": "$labels"},
+                        {"$group": {"_id": "$labels", "count": {"$sum": 1}}},
+                        {"$sort": {"count": -1}},
+                        {"$limit": 50}  # Limit to top 50 labels
+                    ],
+                }
+            },
+        ]
+
+        result = await todos_collection.aggregate(pipeline).to_list(1)
+        if not result:
+            return TodoStats()
+
+        facets = result[0]
+        total = facets["total"][0]["count"] if facets["total"] else 0
+        completed = facets["completed"][0]["count"] if facets["completed"] else 0
+        overdue = facets["overdue"][0]["count"] if facets["overdue"] else 0
+
+        by_priority = {item["_id"]: item["count"] for item in facets["by_priority"]}
+        by_project = {item["_id"]: item["count"] for item in facets["by_project"]}
+
+        stats = TodoStats(
+            total=total,
+            completed=completed,
+            pending=total - completed,
+            overdue=overdue,
+            by_priority=by_priority,
+            by_project=by_project,
+            completion_rate=round((completed / total * 100) if total > 0 else 0, 2),
+        )
         
-    Returns:
-        TodoResponse: The created todo item
-    """
-    try:
-        # Get or create inbox project if no project specified
-        if todo.project_id is None:
-            inbox_id = await create_default_project_for_user(user_id)
-            todo.project_id = inbox_id
+        # Add labels if available
+        if "labels" in facets:
+            stats.labels = [
+                {"name": item["_id"], "count": item["count"]} 
+                for item in facets["labels"]
+            ]
+
+        await set_cache(cache_key, stats.model_dump(), STATS_CACHE_TTL)
+        return stats
+
+    # CRUD Operations
+    @classmethod
+    async def create_todo(cls, todo: TodoCreate, user_id: str) -> TodoResponse:
+        """Create a new todo with automatic inbox assignment."""
+        # Ensure project exists or use inbox
+        if not todo.project_id:
+            todo.project_id = await cls._get_or_create_inbox(user_id)
         else:
-            # Verify project exists
-            project = await projects_collection.find_one({
-                "_id": ObjectId(todo.project_id),
-                "user_id": user_id
-            })
+            project = await projects_collection.find_one(
+                {"_id": ObjectId(todo.project_id), "user_id": user_id}
+            )
             if not project:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Project with id {todo.project_id} not found"
-                )
-        
+                raise ValueError(f"Project {todo.project_id} not found")
+
         todo_dict = todo.model_dump()
-        todo_dict["user_id"] = user_id
-        todo_dict["created_at"] = datetime.utcnow()
-        todo_dict["updated_at"] = datetime.utcnow()
-        todo_dict["completed"] = False
-        todo_dict["subtasks"] = []
-        
+        todo_dict.update(
+            {
+                "user_id": user_id,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+                "completed": False,
+                "subtasks": [],
+            }
+        )
+
         result = await todos_collection.insert_one(todo_dict)
         created_todo = await todos_collection.find_one({"_id": result.inserted_id})
 
-        # Store embedding for semantic search
+        # Index for search
         try:
-
             await store_todo_embedding(str(result.inserted_id), created_todo, user_id)
         except Exception as e:
-            todos_logger.warning(
-                f"Failed to store embedding for todo {result.inserted_id}: {str(e)}"
-            )
+            todos_logger.warning(f"Failed to index todo: {str(e)}")
 
-        # Clear all relevant caches using patterns
-        await invalidate_user_todo_caches(user_id, todo.project_id)
-        
-        todos_logger.info(f"Created todo {result.inserted_id} for user {user_id}")
-        
+        await cls._invalidate_cache(user_id, todo.project_id)
+
         return TodoResponse(**serialize_document(created_todo))
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        todos_logger.error(f"Error creating todo: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create todo: {str(e)}"
+
+    @classmethod
+    async def get_todo(cls, todo_id: str, user_id: str) -> TodoResponse:
+        """Get a single todo by ID."""
+        todo = await todos_collection.find_one(
+            {"_id": ObjectId(todo_id), "user_id": user_id}
         )
 
-
-async def get_todo(todo_id: str, user_id: str) -> TodoResponse:
-    """
-    Get a specific todo item.
-    
-    Args:
-        todo_id: ID of the todo to retrieve
-        user_id: ID of the user requesting the todo
-        
-    Returns:
-        TodoResponse: The requested todo item
-    """
-    # Check cache first
-    cache_key = f"todo:{user_id}:{todo_id}"
-    cached_todo = await get_cache(cache_key)
-    if cached_todo:
-        return TodoResponse(**cached_todo)
-    
-    try:
-        todo = await todos_collection.find_one({
-            "_id": ObjectId(todo_id),
-            "user_id": user_id
-        })
-        
         if not todo:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Todo with id {todo_id} not found"
-            )
-        
-        todo_response = TodoResponse(**serialize_document(todo))
-        
-        # Cache the result
-        await set_cache(cache_key, todo_response.model_dump(), ONE_HOUR_TTL)
-        
-        return todo_response
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        todos_logger.error(f"Error retrieving todo {todo_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve todo: {str(e)}"
-        )
+            raise ValueError(f"Todo {todo_id} not found")
 
+        return TodoResponse(**serialize_document(todo))
 
-async def get_all_todos(
-    user_id: str,
-    project_id: Optional[str] = None,
-    completed: Optional[bool] = None,
-    priority: Optional[str] = None,
-    has_due_date: Optional[bool] = None,
-    overdue: Optional[bool] = None,
-    skip: int = 0,
-    limit: int = 50
-) -> List[TodoResponse]:
-    """
-    Get all todos for a user with optional filtering.
-    
-    Args:
-        user_id: ID of the user
-        project_id: Optional project ID to filter by
-        completed: Optional completion status filter
-        priority: Optional priority filter
-        has_due_date: Optional filter for todos with due dates
-        overdue: Optional filter for overdue todos
-        
-    Returns:
-        List[TodoResponse]: List of todos matching the criteria
-    """
-    # Build simplified cache key - use hash of filters for complex queries
-    cache_key_parts = [f"todos:{user_id}"]
+    @classmethod
+    async def list_todos(
+        cls, user_id: str, params: TodoSearchParams
+    ) -> TodoListResponse:
+        """List todos with filtering, pagination, and optional stats."""
+        # Handle search modes
+        if params.q and params.mode in [SearchMode.SEMANTIC, SearchMode.HYBRID]:
+            return await cls._search_todos(user_id, params)
 
-    # For simple, common queries, use specific cache keys
-    if not any([priority, has_due_date, overdue]) and skip == 0 and limit == 50:
-        if project_id:
-            cache_key_parts.append(f"project:{project_id}")
-        if completed is not None:
-            cache_key_parts.append(f"completed:{str(completed).lower()}")
-        cache_key = ":".join(cache_key_parts)
-    else:
-        # For complex queries, use a hash-based cache key
-        import hashlib
-
-        filter_dict = {
-            "project_id": project_id,
-            "completed": completed,
-            "priority": priority,
-            "has_due_date": has_due_date,
-            "overdue": overdue,
-            "skip": skip,
-            "limit": limit,
-        }
-        # Only include non-None values in hash
-        filter_str = str({k: v for k, v in filter_dict.items() if v is not None})
-        filter_hash = hashlib.md5(filter_str.encode()).hexdigest()[:8]
-        cache_key = f"todos:{user_id}:hash:{filter_hash}"
-
-    cached_todos = await get_cache(cache_key)
-    if cached_todos:
-        return [TodoResponse(**todo) for todo in cached_todos]
-    
-    try:
         # Build query
-        query = {"user_id": user_id}
-        if project_id:
-            query["project_id"] = project_id
-        if completed is not None:
-            query["completed"] = completed
-        if priority:
-            query["priority"] = priority
-        
-        # Handle due date filters
-        if has_due_date is True:
-            query["due_date"] = {"$ne": None}
-        elif has_due_date is False:
-            query["due_date"] = None
-        
-        # Handle overdue filter
-        if overdue is True:
-            query["due_date"] = {"$lt": datetime.utcnow()}
-            query["completed"] = False  # Only uncompleted todos can be overdue
-        elif overdue is False and has_due_date is not False:
-            query["$or"] = [
-                {"due_date": None},
-                {"due_date": {"$gte": datetime.utcnow()}}
-            ]
-        
-        cursor = todos_collection.find(query).sort("created_at", -1).skip(skip).limit(limit)
-        todos = await cursor.to_list(length=limit)
-        
-        todo_responses = [TodoResponse(**serialize_document(todo)) for todo in todos]
-        
-        # Cache the results
-        await set_cache(
-            cache_key,
-            [todo.model_dump() for todo in todo_responses],
-            ONE_HOUR_TTL
-        )
-        
-        return todo_responses
-    
-    except Exception as e:
-        todos_logger.error(f"Error retrieving todos: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve todos: {str(e)}"
+        query = await cls._build_query(user_id, params)
+
+        # Count total
+        total = await todos_collection.count_documents(query)
+
+        # Calculate pagination
+        skip = (params.page - 1) * params.per_page
+        pages = math.ceil(total / params.per_page)
+
+        # Fetch todos
+        cursor = todos_collection.find(query).sort("created_at", -1)
+        cursor = cursor.skip(skip).limit(params.per_page)
+        todos = await cursor.to_list(params.per_page)
+
+        # Build response
+        data = [TodoResponse(**serialize_document(todo)) for todo in todos]
+        meta = PaginationMeta(
+            total=total,
+            page=params.page,
+            per_page=params.per_page,
+            pages=pages,
+            has_next=params.page < pages,
+            has_prev=params.page > 1,
         )
 
+        response = TodoListResponse(data=data, meta=meta)
 
-async def update_todo(
-    todo_id: str,
-    update_data: UpdateTodoRequest,
-    user_id: str
-) -> TodoResponse:
-    """
-    Update a todo item.
-    
-    Args:
-        todo_id: ID of the todo to update
-        update_data: Update data
-        user_id: ID of the user updating the todo
-        
-    Returns:
-        TodoResponse: The updated todo item
-    """
-    try:
-        # Verify todo exists and belongs to user
-        existing_todo = await todos_collection.find_one({
-            "_id": ObjectId(todo_id),
-            "user_id": user_id
-        })
-        
-        if not existing_todo:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Todo with id {todo_id} not found"
+        # Include stats if requested
+        if params.include_stats:
+            response.stats = await cls._calculate_stats(user_id)
+
+        return response
+
+    @classmethod
+    async def update_todo(
+        cls, todo_id: str, updates: UpdateTodoRequest, user_id: str
+    ) -> TodoResponse:
+        """Update a todo."""
+        # Verify ownership
+        existing = await todos_collection.find_one(
+            {"_id": ObjectId(todo_id), "user_id": user_id}
+        )
+
+        if not existing:
+            raise ValueError(f"Todo {todo_id} not found")
+
+        # Prepare updates
+        update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+
+        # Validate project if changing
+        if "project_id" in update_dict:
+            project = await projects_collection.find_one(
+                {"_id": ObjectId(update_dict["project_id"]), "user_id": user_id}
             )
-        
-        # Prepare update data
-        update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-        
-        # Verify new project exists if changing project
-        if "project_id" in update_dict and update_dict["project_id"] is not None:
-            project = await projects_collection.find_one({
-                "_id": ObjectId(update_dict["project_id"]),
-                "user_id": user_id
-            })
             if not project:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Project with id {update_dict['project_id']} not found"
-                )
-        
-        # Convert SubTask objects to dicts if present
+                raise ValueError(f"Project {update_dict['project_id']} not found")
+
+        # Handle subtasks
         if "subtasks" in update_dict:
             update_dict["subtasks"] = [
                 subtask.model_dump() if isinstance(subtask, SubTask) else subtask
                 for subtask in update_dict["subtasks"]
             ]
-            # Generate IDs for new subtasks without IDs
             for subtask in update_dict["subtasks"]:
                 if not subtask.get("id"):
                     subtask["id"] = str(uuid.uuid4())
-        
-        update_dict["updated_at"] = datetime.utcnow()
-        
-        # Update the todo
-        await todos_collection.update_one(
+
+        update_dict["updated_at"] = datetime.now(timezone.utc)
+
+        # Update and return
+        updated = await todos_collection.find_one_and_update(
             {"_id": ObjectId(todo_id)},
-            {"$set": update_dict}
+            {"$set": update_dict},
+            return_document=ReturnDocument.AFTER,
         )
-        
-        # Get updated todo
-        updated_todo = await todos_collection.find_one({"_id": ObjectId(todo_id)})
 
-        # Update embedding for semantic search
+        # Update search index
         try:
-
-            await update_todo_embedding(todo_id, updated_todo, user_id)
+            await update_todo_embedding(todo_id, updated, user_id)
         except Exception as e:
-            todos_logger.warning(
-                f"Failed to update embedding for todo {todo_id}: {str(e)}"
-            )
+            todos_logger.warning(f"Failed to update index: {str(e)}")
 
-        # Clear relevant caches
-        await delete_cache(f"todo:{user_id}:{todo_id}")
-        await invalidate_user_todo_caches(user_id, existing_todo.get("project_id"))
-        if "project_id" in update_dict:
-            await invalidate_user_todo_caches(user_id, update_dict["project_id"])
-        
-        todos_logger.info(f"Updated todo {todo_id} for user {user_id}")
-        
-        return TodoResponse(**serialize_document(updated_todo))
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        todos_logger.error(f"Error updating todo {todo_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update todo: {str(e)}"
+        await cls._invalidate_cache(user_id)
+
+        return TodoResponse(**serialize_document(updated))
+
+    @classmethod
+    async def delete_todo(cls, todo_id: str, user_id: str) -> None:
+        """Delete a todo."""
+        result = await todos_collection.delete_one(
+            {"_id": ObjectId(todo_id), "user_id": user_id}
         )
 
+        if result.deleted_count == 0:
+            raise ValueError(f"Todo {todo_id} not found")
 
-async def delete_todo(todo_id: str, user_id: str) -> None:
-    """
-    Delete a todo item.
-    
-    Args:
-        todo_id: ID of the todo to delete
-        user_id: ID of the user deleting the todo
-    """
-    try:
-        # Verify todo exists and get project_id for cache clearing
-        todo = await todos_collection.find_one({
-            "_id": ObjectId(todo_id),
-            "user_id": user_id
-        })
-        
-        if not todo:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Todo with id {todo_id} not found"
-            )
-        
-        # Delete the todo
-        await todos_collection.delete_one({"_id": ObjectId(todo_id)})
-
-        # Delete embedding for semantic search
+        # Remove from search index
         try:
-
             await delete_todo_embedding(todo_id, user_id)
         except Exception as e:
-            todos_logger.warning(
-                f"Failed to delete embedding for todo {todo_id}: {str(e)}"
+            todos_logger.warning(f"Failed to remove from index: {str(e)}")
+
+        await cls._invalidate_cache(user_id)
+
+    # Bulk Operations
+    @classmethod
+    async def bulk_update_todos(
+        cls, request: BulkUpdateRequest, user_id: str
+    ) -> BulkOperationResponse:
+        """Bulk update multiple todos."""
+        success = []
+        failed = []
+
+        for todo_id in request.todo_ids:
+            try:
+                await cls.update_todo(todo_id, request.updates, user_id)
+                success.append(todo_id)
+            except Exception as e:
+                failed.append({"id": todo_id, "error": str(e)})
+
+        await cls._invalidate_cache(user_id)
+
+        return BulkOperationResponse(
+            success=success,
+            failed=failed,
+            total=len(request.todo_ids),
+            message=f"Updated {len(success)} todos",
+        )
+
+    @classmethod
+    async def bulk_delete_todos(
+        cls, todo_ids: List[str], user_id: str
+    ) -> BulkOperationResponse:
+        """Bulk delete multiple todos."""
+        success = []
+        failed = []
+
+        for todo_id in todo_ids:
+            try:
+                await cls.delete_todo(todo_id, user_id)
+                success.append(todo_id)
+            except Exception as e:
+                failed.append({"id": todo_id, "error": str(e)})
+
+        return BulkOperationResponse(
+            success=success,
+            failed=failed,
+            total=len(todo_ids),
+            message=f"Deleted {len(success)} todos",
+        )
+
+    @classmethod
+    async def bulk_move_todos(
+        cls, request: BulkMoveRequest, user_id: str
+    ) -> BulkOperationResponse:
+        """Bulk move todos to another project."""
+        # Verify project exists
+        project = await projects_collection.find_one(
+            {"_id": ObjectId(request.project_id), "user_id": user_id}
+        )
+
+        if not project:
+            raise ValueError(f"Project {request.project_id} not found")
+
+        result = await todos_collection.update_many(
+            {
+                "_id": {"$in": [ObjectId(tid) for tid in request.todo_ids]},
+                "user_id": user_id,
+            },
+            {
+                "$set": {
+                    "project_id": request.project_id,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        await cls._invalidate_cache(user_id)
+
+        return BulkOperationResponse(
+            success=request.todo_ids if result.modified_count > 0 else [],
+            failed=[],
+            total=len(request.todo_ids),
+            message=f"Moved {result.modified_count} todos",
+        )
+
+    # Search Operations
+    @classmethod
+    async def _search_todos(
+        cls, user_id: str, params: TodoSearchParams
+    ) -> TodoListResponse:
+        """Perform semantic or hybrid search."""
+        if not params.q:
+            # No query provided, return empty results
+            return TodoListResponse(
+                data=[],
+                meta=PaginationMeta(
+                    total=0,
+                    page=params.page,
+                    per_page=params.per_page,
+                    pages=0,
+                    has_next=False,
+                    has_prev=False,
+                ),
+            )
+            
+        if params.mode == SearchMode.SEMANTIC:
+            results = await vector_search(
+                query=params.q,
+                user_id=user_id,
+                top_k=params.per_page * params.page,  # Get enough for pagination
+                completed=params.completed,
+                priority=params.priority.value if params.priority else None,
+                project_id=params.project_id,
+                include_traditional_search=False,
+            )
+        else:  # HYBRID
+            results = await vector_hybrid_search(
+                query=params.q,
+                user_id=user_id,
+                top_k=params.per_page * params.page,
+                semantic_weight=0.7,
+                completed=params.completed,
+                priority=params.priority.value if params.priority else None,
+                project_id=params.project_id,
             )
 
-        # Clear caches
-        await delete_cache(f"todo:{user_id}:{todo_id}")
-        await invalidate_user_todo_caches(user_id, todo.get("project_id"))
-        
-        todos_logger.info(f"Deleted todo {todo_id} for user {user_id}")
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        todos_logger.error(f"Error deleting todo {todo_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete todo: {str(e)}"
+        # Apply pagination to results
+        total = len(results)
+        start = (params.page - 1) * params.per_page
+        end = start + params.per_page
+        paginated_results = results[start:end]
+
+        pages = math.ceil(total / params.per_page)
+        meta = PaginationMeta(
+            total=total,
+            page=params.page,
+            per_page=params.per_page,
+            pages=pages,
+            has_next=params.page < pages,
+            has_prev=params.page > 1,
         )
 
+        response = TodoListResponse(data=paginated_results, meta=meta)
 
-# Project management functions
+        if params.include_stats:
+            response.stats = await cls._calculate_stats(user_id)
 
-async def create_default_project_for_user(user_id: str) -> str:
-    """
-    Create the default Inbox project for a new user.
-    
-    Args:
-        user_id: ID of the user
-        
-    Returns:
-        str: The ID of the inbox project
-    """
-    try:
-        # Check if user already has an inbox project
-        existing_inbox = await projects_collection.find_one({
-            "user_id": user_id,
-            "is_default": True
-        })
-        
-        if existing_inbox:
-            return str(existing_inbox["_id"])
-        
-        # Create new inbox project with generated ObjectId
-        inbox_project = {
-            "user_id": user_id,
-            "name": "Inbox",
-            "description": "Default project for new todos",
-            "color": "#6B7280",  # Gray color
-            "is_default": True,
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        }
-        result = await projects_collection.insert_one(inbox_project)
-        todos_logger.info(f"Created default Inbox project for user {user_id}")
-        return str(result.inserted_id)
-    
-    except Exception as e:
-        todos_logger.error(f"Error creating default project: {str(e)}")
-        raise
+        return response
+
+    @classmethod
+    async def reindex_todos(cls, user_id: str, batch_size: int = 100) -> dict:
+        """Reindex all todos for vector search."""
+        indexed = await bulk_index_todos(user_id, batch_size)
+        return {"indexed": indexed, "user_id": user_id, "status": "completed"}
 
 
-async def create_project(project: ProjectCreate, user_id: str) -> ProjectResponse:
-    """
-    Create a new project.
-    
-    Args:
-        project: Project creation model
-        user_id: ID of the user creating the project
-        
-    Returns:
-        ProjectResponse: The created project
-    """
-    try:
-        # Ensure user has default project
-        await create_default_project_for_user(user_id)
-        
+# Project Operations (kept separate as they're less complex)
+class ProjectService:
+    """Service for project operations."""
+
+    @staticmethod
+    async def create_project(project: ProjectCreate, user_id: str) -> ProjectResponse:
+        """Create a new project."""
+        # Ensure user has inbox
+        await TodoService._get_or_create_inbox(user_id)
+
         project_dict = project.model_dump()
-        project_dict["user_id"] = user_id
-        project_dict["is_default"] = False
-        project_dict["created_at"] = datetime.utcnow()
-        project_dict["updated_at"] = datetime.utcnow()
-        
+        project_dict.update(
+            {
+                "user_id": user_id,
+                "is_default": False,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+            }
+        )
+
         result = await projects_collection.insert_one(project_dict)
-        created_project = await projects_collection.find_one({"_id": result.inserted_id})
-        
+        created = await projects_collection.find_one({"_id": result.inserted_id})
+
         # Get todo count
-        todo_count = await todos_collection.count_documents({
-            "user_id": user_id,
-            "project_id": str(result.inserted_id)
-        })
-        
-        project_response = ProjectResponse(
-            **serialize_document(created_project),
-            todo_count=todo_count
-        )
-        
-        # Clear cache
-        await invalidate_project_caches(user_id)
-        
-        todos_logger.info(f"Created project {result.inserted_id} for user {user_id}")
-        
-        return project_response
-    
-    except Exception as e:
-        todos_logger.error(f"Error creating project: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create project: {str(e)}"
+        todo_count = await todos_collection.count_documents(
+            {"user_id": user_id, "project_id": str(result.inserted_id)}
         )
 
+        await TodoService._invalidate_cache(user_id)
 
-async def get_all_projects(user_id: str) -> List[ProjectResponse]:
-    """
-    Get all projects for a user.
-    
-    Args:
-        user_id: ID of the user
-        
-    Returns:
-        List[ProjectResponse]: List of all user's projects
-    """
-    cache_key = f"projects:{user_id}"
-    cached_projects = await get_cache(cache_key)
-    if cached_projects:
-        return [ProjectResponse(**project) for project in cached_projects]
-    
-    try:
-        # Ensure user has default project
-        inbox_id = await create_default_project_for_user(user_id)
-        
-        # Use aggregation to get projects with todo counts in one query
+        return ProjectResponse(**serialize_document(created), todo_count=todo_count)
+
+    @staticmethod
+    async def list_projects(user_id: str) -> List[ProjectResponse]:
+        """List all projects with todo counts."""
+        # Ensure inbox exists
+        await TodoService._get_or_create_inbox(user_id)
+
+        # Aggregation to get projects with counts
         pipeline = [
             {"$match": {"user_id": user_id}},
             {"$sort": {"created_at": -1}},
             {
                 "$lookup": {
                     "from": "todos",
-                    "let": {
-                        "project_id": {
-                            "$cond": {
-                                "if": "$is_default",
-                                "then": inbox_id,
-                                "else": {"$toString": "$_id"}
-                            }
-                        }
-                    },
+                    "let": {"project_id": {"$toString": "$_id"}},
                     "pipeline": [
                         {
                             "$match": {
                                 "$expr": {
                                     "$and": [
                                         {"$eq": ["$user_id", user_id]},
-                                        {"$eq": ["$project_id", "$$project_id"]}
+                                        {"$eq": ["$project_id", "$$project_id"]},
                                     ]
                                 }
                             }
                         },
-                        {"$count": "count"}
+                        {"$count": "count"},
                     ],
-                    "as": "todo_stats"
+                    "as": "todo_stats",
                 }
             },
             {
                 "$addFields": {
-                    "todo_count": {
-                        "$ifNull": [{"$first": "$todo_stats.count"}, 0]
-                    }
+                    "todo_count": {"$ifNull": [{"$first": "$todo_stats.count"}, 0]}
                 }
             },
-            {"$project": {"todo_stats": 0}}
         ]
-        
-        cursor = projects_collection.aggregate(pipeline)
-        projects = await cursor.to_list(length=None)
-        
-        project_responses = [
-            ProjectResponse(**serialize_document(project))
-            for project in projects
-        ]
-        
-        # Cache the results
-        await set_cache(
-            cache_key,
-            [project.model_dump() for project in project_responses],
-            ONE_HOUR_TTL
+
+        projects = await projects_collection.aggregate(pipeline).to_list(None)
+
+        return [ProjectResponse(**serialize_document(project)) for project in projects]
+
+    @staticmethod
+    async def update_project(
+        project_id: str, updates: UpdateProjectRequest, user_id: str
+    ) -> ProjectResponse:
+        """Update a project."""
+        existing = await projects_collection.find_one(
+            {"_id": ObjectId(project_id), "user_id": user_id}
         )
-        
-        return project_responses
-    
-    except Exception as e:
-        todos_logger.error(f"Error retrieving projects: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve projects: {str(e)}"
+
+        if not existing:
+            raise ValueError(f"Project {project_id} not found")
+
+        if existing.get("is_default"):
+            raise ValueError("Cannot update default Inbox project")
+
+        update_dict = {k: v for k, v in updates.model_dump().items() if v is not None}
+        update_dict["updated_at"] = datetime.now(timezone.utc)
+
+        updated = await projects_collection.find_one_and_update(
+            {"_id": ObjectId(project_id)},
+            {"$set": update_dict},
+            return_document=ReturnDocument.AFTER,
         )
+
+        # Get todo count
+        todo_count = await todos_collection.count_documents(
+            {"user_id": user_id, "project_id": project_id}
+        )
+
+        await TodoService._invalidate_cache(user_id)
+
+        return ProjectResponse(**serialize_document(updated), todo_count=todo_count)
+
+    @staticmethod
+    async def delete_project(project_id: str, user_id: str) -> None:
+        """Delete a project and move todos to inbox."""
+        project = await projects_collection.find_one(
+            {"_id": ObjectId(project_id), "user_id": user_id}
+        )
+
+        if not project:
+            raise ValueError(f"Project {project_id} not found")
+
+        if project.get("is_default"):
+            raise ValueError("Cannot delete default Inbox project")
+
+        # Move todos to inbox
+        inbox_id = await TodoService._get_or_create_inbox(user_id)
+        await todos_collection.update_many(
+            {"user_id": user_id, "project_id": project_id},
+            {
+                "$set": {
+                    "project_id": inbox_id,
+                    "updated_at": datetime.now(timezone.utc),
+                }
+            },
+        )
+
+        # Delete project
+        await projects_collection.delete_one({"_id": ObjectId(project_id)})
+
+        await TodoService._invalidate_cache(user_id)
+
+
+# Compatibility functions for old API
+async def create_todo(todo: TodoCreate, user_id: str) -> TodoResponse:
+    """Compatibility wrapper for old create_todo function."""
+    return await TodoService.create_todo(todo, user_id)
+
+
+async def get_todo(todo_id: str, user_id: str) -> TodoResponse:
+    """Compatibility wrapper for old get_todo function."""
+    return await TodoService.get_todo(todo_id, user_id)
+
+
+async def get_all_todos(
+    user_id: str,
+    project_id=None,
+    completed=None,
+    priority=None,
+    has_due_date=None,
+    overdue=None,
+    skip=0,
+    limit=50,
+) -> List[TodoResponse]:
+    """Compatibility wrapper for old get_all_todos function."""
+    from app.models.todo_models import Priority
+
+    params = TodoSearchParams(
+        mode=SearchMode.TEXT,
+        project_id=project_id,
+        completed=completed,
+        priority=Priority(priority) if priority else None,
+        has_due_date=has_due_date,
+        overdue=overdue,
+        page=(skip // limit) + 1 if limit > 0 else 1,
+        per_page=limit,
+        include_stats=False,
+    )
+
+    response = await TodoService.list_todos(user_id, params)
+    return response.data
+
+
+async def update_todo(
+    todo_id: str, updates: UpdateTodoRequest, user_id: str
+) -> TodoResponse:
+    """Compatibility wrapper for old update_todo function."""
+    return await TodoService.update_todo(todo_id, updates, user_id)
+
+
+async def delete_todo(todo_id: str, user_id: str) -> None:
+    """Compatibility wrapper for old delete_todo function."""
+    await TodoService.delete_todo(todo_id, user_id)
+
+
+async def create_project(project: ProjectCreate, user_id: str) -> ProjectResponse:
+    """Compatibility wrapper for old create_project function."""
+    return await ProjectService.create_project(project, user_id)
+
+
+async def get_all_projects(user_id: str) -> List[ProjectResponse]:
+    """Compatibility wrapper for old get_all_projects function."""
+    return await ProjectService.list_projects(user_id)
 
 
 async def update_project(
-    project_id: str,
-    update_data: UpdateProjectRequest,
-    user_id: str
+    project_id: str, updates: UpdateProjectRequest, user_id: str
 ) -> ProjectResponse:
-    """
-    Update a project.
-    
-    Args:
-        project_id: ID of the project to update
-        update_data: Update data
-        user_id: ID of the user updating the project
-        
-    Returns:
-        ProjectResponse: The updated project
-    """
-    try:
-        # Verify project exists and belongs to user
-        existing_project = await projects_collection.find_one({
-            "_id": ObjectId(project_id),
-            "user_id": user_id
-        })
-        
-        if not existing_project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project with id {project_id} not found"
-            )
-        
-        # Prevent updating default project
-        if existing_project.get("is_default"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot update the default Inbox project"
-            )
-        
-        # Prepare update data
-        update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
-        update_dict["updated_at"] = datetime.utcnow()
-        
-        # Update the project
-        await projects_collection.update_one(
-            {"_id": ObjectId(project_id)},
-            {"$set": update_dict}
-        )
-        
-        # Get updated project
-        updated_project = await projects_collection.find_one({"_id": ObjectId(project_id)})
-        
-        # Get todo count
-        todo_count = await todos_collection.count_documents({
-            "user_id": user_id,
-            "project_id": project_id
-        })
-        
-        # Clear cache
-        await invalidate_project_caches(user_id)
-        
-        todos_logger.info(f"Updated project {project_id} for user {user_id}")
-        
-        return ProjectResponse(
-            **serialize_document(updated_project),
-            todo_count=todo_count
-        )
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        todos_logger.error(f"Error updating project {project_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update project: {str(e)}"
-        )
+    """Compatibility wrapper for old update_project function."""
+    return await ProjectService.update_project(project_id, updates, user_id)
 
 
 async def delete_project(project_id: str, user_id: str) -> None:
-    """
-    Delete a project and move all its todos to Inbox.
-    
-    Args:
-        project_id: ID of the project to delete
-        user_id: ID of the user deleting the project
-    """
-    try:
-        # Verify project exists
-        project = await projects_collection.find_one({
-            "_id": ObjectId(project_id),
-            "user_id": user_id
-        })
-        
-        if not project:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project with id {project_id} not found"
-            )
-        
-        # Prevent deleting default project
-        if project.get("is_default"):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete the default Inbox project"
-            )
-        
-        # Move all todos from this project to inbox
-        await todos_collection.update_many(
-            {"user_id": user_id, "project_id": project_id},
-            {"$set": {"project_id": "inbox", "updated_at": datetime.utcnow()}}
-        )
-        
-        # Delete the project
-        await projects_collection.delete_one({"_id": ObjectId(project_id)})
-        
-        # Clear caches
-        await invalidate_project_caches(user_id)
-        await invalidate_user_todo_caches(user_id, project_id)
-        
-        todos_logger.info(f"Deleted project {project_id} for user {user_id}")
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        todos_logger.error(f"Error deleting project {project_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete project: {str(e)}"
-        )
+    """Compatibility wrapper for old delete_project function."""
+    await ProjectService.delete_project(project_id, user_id)
 
-
-# Additional helper functions
 
 async def search_todos(
-    query: str, 
+    query: str,
     user_id: str,
     completed: Optional[bool] = None,
     priority: Optional[str] = None,
-    project_id: Optional[str] = None
+    project_id: Optional[str] = None,
 ) -> List[TodoResponse]:
-    """
-    Search todos by title, description, or labels with optional filters.
+    """Compatibility wrapper for old search_todos function."""
+    params = TodoSearchParams(
+        q=query,
+        mode=SearchMode.TEXT,
+        project_id=project_id,
+        completed=completed,
+        priority=Priority(priority) if priority else None,
+        page=1,
+        per_page=100,
+        include_stats=False,
+    )
     
-    Args:
-        query: Search query string
-        user_id: ID of the user
-        completed: Filter by completion status
-        priority: Filter by priority
-        project_id: Filter by project ID
-        
-    Returns:
-        List[TodoResponse]: List of matching todos
-    """
-    try:
-        # Create text search query
-        search_query = {
-            "user_id": user_id,
-            "$or": [
-                {"title": {"$regex": query, "$options": "i"}},
-                {"description": {"$regex": query, "$options": "i"}},
-                {"labels": {"$in": [query]}}
-            ]
-        }
-        
-        # Apply additional filters if provided
-        if completed is not None:
-            search_query["completed"] = completed
-        if priority:
-            search_query["priority"] = priority
-        if project_id:
-            search_query["project_id"] = project_id
-        
-        cursor = todos_collection.find(search_query).sort("created_at", -1)
-        todos = await cursor.to_list(length=None)
-        
-        return [TodoResponse(**serialize_document(todo)) for todo in todos]
-    
-    except Exception as e:
-        todos_logger.error(f"Error searching todos: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to search todos: {str(e)}"
-        )
+    response = await TodoService.list_todos(user_id, params)
+    return response.data
 
 
+# Additional compatibility functions that might be used elsewhere
 async def get_todo_stats(user_id: str) -> dict:
-    """
-    Get statistics about user's todos.
-    
-    Args:
-        user_id: ID of the user
-        
-    Returns:
-        dict: Statistics about todos
-    """
-    try:
-        # Get all todos for the user
-        all_todos = await todos_collection.find({"user_id": user_id}).to_list(length=None)
-        
-        # Calculate statistics
-        total = len(all_todos)
-        completed = sum(1 for todo in all_todos if todo.get("completed"))
-        pending = total - completed
-        
-        # Count by priority
-        priority_counts = {
-            "high": 0,
-            "medium": 0,
-            "low": 0,
-            "none": 0
-        }
-        for todo in all_todos:
-            priority = todo.get("priority", "none")
-            priority_counts[priority] += 1
-        
-        # Count overdue
-        overdue = 0
-        for todo in all_todos:
-            if (not todo.get("completed") and 
-                todo.get("due_date") and 
-                todo["due_date"] < datetime.utcnow()):
-                overdue += 1
-        
-        # Count by project
-        project_counts = {}
-        for todo in all_todos:
-            project_id = todo.get("project_id", "inbox")
-            project_counts[project_id] = project_counts.get(project_id, 0) + 1
-        
-        return {
-            "total": total,
-            "completed": completed,
-            "pending": pending,
-            "overdue": overdue,
-            "by_priority": priority_counts,
-            "by_project": project_counts,
-            "completion_rate": round((completed / total * 100) if total > 0 else 0, 2)
-        }
-    
-    except Exception as e:
-        todos_logger.error(f"Error getting todo stats: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get todo stats: {str(e)}"
-        )
+    """Get statistics about user's todos."""
+    stats = await TodoService._calculate_stats(user_id)
+    return stats.model_dump()
 
 
 async def get_todos_by_date_range(
@@ -855,113 +764,45 @@ async def get_todos_by_date_range(
     start_date: datetime,
     end_date: datetime
 ) -> List[TodoResponse]:
-    """
-    Get todos within a date range.
+    """Get todos within a date range."""
+    params = TodoSearchParams(
+        mode=SearchMode.TEXT,
+        due_date_start=start_date,
+        due_date_end=end_date,
+        completed=False,
+        page=1,
+        per_page=1000,
+        include_stats=False,
+    )
     
-    Args:
-        user_id: ID of the user
-        start_date: Start of date range
-        end_date: End of date range
-        
-    Returns:
-        List[TodoResponse]: List of todos within the date range
-    """
-    try:
-        query = {
-            "user_id": user_id,
-            "due_date": {
-                "$gte": start_date,
-                "$lte": end_date
-            },
-            "completed": False  # Only show uncompleted todos
-        }
-        
-        cursor = todos_collection.find(query).sort("due_date", 1)
-        todos = await cursor.to_list(length=None)
-        
-        return [TodoResponse(**serialize_document(todo)) for todo in todos]
-    
-    except Exception as e:
-        todos_logger.error(f"Error getting todos by date range: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get todos by date range: {str(e)}"
-        )
+    response = await TodoService.list_todos(user_id, params)
+    return response.data
 
 
 async def get_all_labels(user_id: str) -> List[dict]:
-    """
-    Get all unique labels used by the user with their counts.
+    """Get all unique labels used by the user with counts."""
+    # Get stats which includes label info
+    stats = await TodoService._calculate_stats(user_id)
     
-    Args:
-        user_id: ID of the user
-        
-    Returns:
-        List[dict]: List of label objects with name and count
-    """
-    try:
-        # Use aggregation to get unique labels with counts (only from non-completed todos)
-        pipeline = [
-            {"$match": {
-                "user_id": user_id,
-                "completed": False  # Only count labels from non-completed todos
-            }},
-            {"$unwind": "$labels"},
-            {
-                "$group": {
-                    "_id": "$labels",
-                    "count": {"$sum": 1}
-                }
-            },
-            {"$sort": {"count": -1}},  # Sort by most used first
-            {
-                "$project": {
-                    "_id": 0,
-                    "name": "$_id",
-                    "count": 1
-                }
-            }
-        ]
-        
-        labels = await todos_collection.aggregate(pipeline).to_list(length=None)
-        return labels
+    # Return labels from stats if available
+    if hasattr(stats, 'labels') and stats.labels:
+        return stats.labels
     
-    except Exception as e:
-        todos_logger.error(f"Error getting all labels: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get labels: {str(e)}"
-        )
+    return []
 
 
 async def get_todos_by_label(user_id: str, label: str) -> List[TodoResponse]:
-    """
-    Get all todos that have a specific label.
+    """Get all todos that have a specific label."""
+    params = TodoSearchParams(
+        mode=SearchMode.TEXT,
+        labels=[label],
+        page=1,
+        per_page=1000,
+        include_stats=False,
+    )
     
-    Args:
-        user_id: ID of the user
-        label: The label to filter by
-        
-    Returns:
-        List[TodoResponse]: List of todos with the specified label
-    """
-    try:
-        query = {
-            "user_id": user_id,
-            "labels": label  # MongoDB automatically matches arrays containing this value
-        }
-        
-        cursor = todos_collection.find(query).sort("created_at", -1)
-        todos = await cursor.to_list(length=None)
-        
-        return [TodoResponse(**serialize_document(todo)) for todo in todos]
-    
-    except Exception as e:
-        todos_logger.error(f"Error getting todos by label: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get todos by label: {str(e)}"
-        )
+    response = await TodoService.list_todos(user_id, params)
+    return response.data
 
 
 async def semantic_search_todos(
@@ -972,45 +813,20 @@ async def semantic_search_todos(
     completed: Optional[bool] = None,
     priority: Optional[str] = None,
 ) -> List[TodoResponse]:
-    """
-    Perform semantic search on todos using vector embeddings.
-
-    Args:
-        query: Natural language search query
-        user_id: ID of the user
-        limit: Maximum number of results to return
-        project_id: Optional project filter
-        completed: Optional completion status filter
-        priority: Optional priority filter
-
-    Returns:
-        List[TodoResponse]: List of semantically matching todos
-    """
-    try:
-        # Perform semantic search with filters
-        results = await semantic_search_todos(
-            query=query,
-            user_id=user_id,
-            top_k=limit,
-            completed=completed,
-            priority=priority,
-            project_id=project_id,
-            include_traditional_search=False,
-        )
-
-        return results
-
-    except Exception as e:
-        todos_logger.error(f"Error in semantic search: {str(e)}")
-        # Fall back to regular search if semantic search fails
-        todos_logger.info("Falling back to regular text search")
-        return await search_todos(
-            query=query, 
-            user_id=user_id,
-            completed=completed,
-            priority=priority,
-            project_id=project_id
-        )
+    """Perform semantic search on todos."""
+    params = TodoSearchParams(
+        q=query,
+        mode=SearchMode.SEMANTIC,
+        project_id=project_id,
+        completed=completed,
+        priority=Priority(priority) if priority else None,
+        page=1,
+        per_page=limit,
+        include_stats=False,
+    )
+    
+    response = await TodoService.list_todos(user_id, params)
+    return response.data
 
 
 async def hybrid_search_todos(
@@ -1022,66 +838,22 @@ async def hybrid_search_todos(
     priority: Optional[str] = None,
     semantic_weight: float = 0.7,
 ) -> List[TodoResponse]:
-    """
-    Perform hybrid search combining semantic and text-based search.
-
-    Args:
-        query: Search query string
-        user_id: ID of the user
-        limit: Maximum number of results to return
-        project_id: Optional project filter
-        completed: Optional completion status filter
-        priority: Optional priority filter
-        semantic_weight: Weight for semantic search results (0.0-1.0)
-
-    Returns:
-        List[TodoResponse]: Combined and ranked search results
-    """
-    try:
-        # Perform hybrid search
-        results = await hybrid_search_todos(
-            query=query,
-            user_id=user_id,
-            top_k=limit,
-            semantic_weight=semantic_weight,
-            completed=completed,
-            priority=priority,
-            project_id=project_id,
-        )
-
-        return results
-
-    except Exception as e:
-        todos_logger.error(f"Error in hybrid search: {str(e)}")
-        # Fall back to regular search if hybrid search fails
-        todos_logger.info("Falling back to regular text search")
-        return await search_todos(query, user_id)
+    """Perform hybrid search on todos."""
+    params = TodoSearchParams(
+        q=query,
+        mode=SearchMode.HYBRID,
+        project_id=project_id,
+        completed=completed,
+        priority=Priority(priority) if priority else None,
+        page=1,
+        per_page=limit,
+        include_stats=False,
+    )
+    
+    response = await TodoService.list_todos(user_id, params)
+    return response.data
 
 
 async def bulk_index_existing_todos(user_id: str, batch_size: int = 100) -> dict:
-    """
-    Bulk index all existing todos for a user into the vector database.
-
-    Args:
-        user_id: ID of the user whose todos to index
-        batch_size: Number of todos to process in each batch
-
-    Returns:
-        dict: Summary of indexing operation
-    """
-    try:
-
-        # Bulk index todos
-        indexed_count = await bulk_index_todos(user_id, batch_size)
-
-        result = {"indexed": indexed_count, "user_id": user_id, "status": "completed"}
-
-        todos_logger.info(f"Bulk indexed {indexed_count} todos for user {user_id}")
-        return result
-
-    except Exception as e:
-        todos_logger.error(f"Error bulk indexing todos: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to index todos: {str(e)}",
-        )
+    """Bulk index all existing todos for a user."""
+    return await TodoService.reindex_todos(user_id, batch_size)

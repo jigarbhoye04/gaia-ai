@@ -166,3 +166,70 @@ class SubtaskCreateRequest(BaseModel):
 class SubtaskUpdateRequest(BaseModel):
     title: Optional[str] = None
     completed: Optional[bool] = None
+
+
+class PaginationMeta(BaseModel):
+    total: int = Field(..., description="Total number of items")
+    page: int = Field(..., description="Current page (1-based)")
+    per_page: int = Field(..., description="Items per page")
+    pages: int = Field(..., description="Total number of pages")
+    has_next: bool = Field(..., description="Whether there's a next page")
+    has_prev: bool = Field(..., description="Whether there's a previous page")
+
+
+class TodoStats(BaseModel):
+    total: int = Field(default=0)
+    completed: int = Field(default=0)
+    pending: int = Field(default=0)
+    overdue: int = Field(default=0)
+    by_priority: dict[str, int] = Field(default_factory=dict)
+    by_project: dict[str, int] = Field(default_factory=dict)
+    completion_rate: float = Field(default=0.0)
+    labels: Optional[List[dict]] = Field(default=None)
+
+
+class TodoListResponse(BaseModel):
+    data: List[TodoResponse]
+    meta: PaginationMeta
+    stats: Optional[TodoStats] = None
+
+
+class SearchMode(str, Enum):
+    TEXT = "text"
+    SEMANTIC = "semantic"
+    HYBRID = "hybrid"
+
+
+class TodoSearchParams(BaseModel):
+    q: Optional[str] = Field(None, description="Search query")
+    mode: SearchMode = Field(default=SearchMode.HYBRID, description="Search mode")
+    project_id: Optional[str] = None
+    completed: Optional[bool] = None
+    priority: Optional[Priority] = None
+    has_due_date: Optional[bool] = None
+    overdue: Optional[bool] = None
+    due_date_start: Optional[datetime] = None
+    due_date_end: Optional[datetime] = None
+    labels: Optional[List[str]] = None
+    page: int = Field(default=1, ge=1)
+    per_page: int = Field(default=50, ge=1, le=100)
+    include_stats: bool = Field(default=False)
+
+
+class BulkOperationRequest(BaseModel):
+    todo_ids: List[str] = Field(..., min_items=1, max_items=100)
+
+
+class BulkUpdateRequest(BulkOperationRequest):
+    updates: UpdateTodoRequest
+
+
+class BulkMoveRequest(BulkOperationRequest):
+    project_id: str
+
+
+class BulkOperationResponse(BaseModel):
+    success: List[str] = Field(default_factory=list)
+    failed: List[dict] = Field(default_factory=list)
+    total: int
+    message: str
