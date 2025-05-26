@@ -159,3 +159,10 @@ class ProjectResponse(BaseModel):
     todo_count: int = Field(default=0, description="Number of todos in this project")
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
+
+class SubtaskCreateRequest(BaseModel):
+    title: str
+
+class SubtaskUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    completed: Optional[bool] = None

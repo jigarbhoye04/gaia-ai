@@ -1,9 +1,12 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, status, HTTPException
+from pydantic import BaseModel
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.todo_models import (
+    SubtaskCreateRequest,
+    SubtaskUpdateRequest,
     TodoCreate,
     TodoResponse,
     UpdateTodoRequest,
@@ -228,22 +231,16 @@ async def delete_project_endpoint(
     return None
 
 
-# Subtask endpoints
+
 @router.post("/todos/{todo_id}/subtasks", response_model=TodoResponse)
 async def add_subtask_endpoint(
     todo_id: str,
-    subtask: dict,  # {"title": "string"}
+    subtask: SubtaskCreateRequest,
     user: dict = Depends(get_current_user)
 ):
     """Add a subtask to a todo item."""
     from app.models.todo_models import SubTask
     import uuid
-    
-    if "title" not in subtask:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Subtask title is required"
-        )
     
     # Get the todo first
     todo = await get_todo(todo_id, user["user_id"])
@@ -251,7 +248,7 @@ async def add_subtask_endpoint(
     # Create new subtask
     new_subtask = SubTask(
         id=str(uuid.uuid4()),
-        title=subtask["title"],
+        title=subtask.title,
         completed=False
     )
     
@@ -267,7 +264,7 @@ async def add_subtask_endpoint(
 async def update_subtask_endpoint(
     todo_id: str,
     subtask_id: str,
-    update: dict,  # {"title": "string", "completed": bool}
+    update: SubtaskUpdateRequest,
     user: dict = Depends(get_current_user)
 ):
     """Update a specific subtask."""
@@ -280,10 +277,10 @@ async def update_subtask_endpoint(
     for subtask in todo.subtasks:
         if subtask.id == subtask_id:
             subtask_found = True
-            if "title" in update:
-                subtask.title = update["title"]
-            if "completed" in update:
-                subtask.completed = update["completed"]
+            if update.title is not None:
+                subtask.title = update.title
+            if update.completed is not None:
+                subtask.completed = update.completed
         updated_subtasks.append(subtask)
     
     if not subtask_found:
