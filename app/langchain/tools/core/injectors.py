@@ -1,6 +1,6 @@
 from langchain_core.messages import AIMessage
 
-from app.langchain.state import State
+from app.langchain.core.state import State
 
 
 def inject_web_search_tool_call(state: State):

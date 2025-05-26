@@ -113,6 +113,11 @@ class Settings(BaseSettings):
     LLAMA_INDEX_KEY: str
     OPENAI_API_KEY: str
 
+    # Memory Configuration
+    MEM0_API_KEY: str
+    MEM0_ORG_ID: str
+    MEM0_PROJECT_ID: str
+
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only if explicitly enabled in production."""

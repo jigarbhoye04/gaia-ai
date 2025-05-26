@@ -110,3 +110,17 @@ From: {sender}
 Time: {time}
 Body: {body}
 """
+
+COMPOSE_EMAIL_SUMMARY = """You are an AI assistant that summarizes composed emails.
+
+Given the following email that was just composed:
+Subject: {subject}
+Body: {body}
+
+Provide a brief, professional summary explaining what this email is about in 1-2 sentences. Focus on:
+- The main purpose or topic of the email
+- Key action items or requests if any
+- The overall tone (formal, casual, urgent, etc.)
+
+Do not include the actual subject or body content in your response, just summarize what the email is about.
+"""

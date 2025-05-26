@@ -2,29 +2,33 @@ from contextlib import asynccontextmanager
 
 from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.graph import END, START
+from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
+from app.langchain.llm.client import init_llm
 from app.config.settings import settings
-from app.langchain.client import init_groq_client
-from app.langchain.client import tools as all_tools
-from app.langchain.tool_injectors import (
+from app.langchain.tools.core.registry import tools,ALWAYS_AVAILABLE_TOOLS
+from app.langchain.tools.core.injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
     should_call_tool,
 )
+from app.langchain.tools.core.retrieval import retrieve_tools
 
-llm = init_groq_client()
+llm = init_llm()
 
 
 @asynccontextmanager
 async def build_graph():
     """Construct and compile the state graph."""
+    # Register both regular and always available tools
+    all_tools = tools + ALWAYS_AVAILABLE_TOOLS
     tool_registry = {tool.name: tool for tool in all_tools}
 
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
+    # Create store for tool discovery
     store = InMemoryStore(
         index={
             "embed": embeddings,
@@ -33,19 +37,18 @@ async def build_graph():
         }
     )
 
-    for tool_id, tool in tool_registry.items():
+    # Store all tools for vector search (both regular and always available)
+    for tool in all_tools:
         store.put(
             ("tools",),
-            tool_id,
+            tool.name,
             {
                 "description": f"{tool.name}: {tool.description}",
             },
         )
 
-    builder = create_agent(llm, tool_registry)
-
-    # builder.add_node("chatbot", chatbot)
-    # builder.add_node("tools", ToolNode(tools=tools))
+    # Create agent with custom tool retrieval logic
+    builder = create_agent(llm, tool_registry, retrieve_tools_function=retrieve_tools)
 
     # Injector nodes add tool calls to the state messages
     builder.add_node("inject_web_search", inject_web_search_tool_call)
@@ -67,10 +70,6 @@ async def build_graph():
     # After injecting tool call, route to shared tools node to execute
     builder.add_edge("inject_web_search", "tools")
     builder.add_edge("inject_deep_search", "tools")
-
-    # builder.add_conditional_edges("chatbot", tools_condition)
-    # builder.add_edge("tools", "chatbot")
-    builder.add_edge("agent", END)
 
     async with AsyncPostgresSaver.from_conn_string(
         settings.POSTGRES_URL

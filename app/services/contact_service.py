@@ -2,12 +2,9 @@
 Service functions for handling contact-related operations.
 """
 from typing import Dict, List, Any
-import functools
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app.config.loggers import chat_logger as logger
-from app.services.mail_service import get_gmail_service, search_messages
+from app.services.mail_service import search_messages
 
 
 def _process_message_batch(service, message_ids: List[str], filter_query: str | None = None) -> Dict[str, Dict[str, str]]:

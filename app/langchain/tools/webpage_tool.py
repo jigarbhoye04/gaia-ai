@@ -61,8 +61,12 @@ async def fetch_webpages(
             writer({"progress": f"Processing Page {i + 1}/{len(fetched_pages)}..."})
 
         writer({"progress": "Fetching Complete!"})
+        data = {"webpage_data": combined_content, "fetched_urls": processed_urls}
+        
+        # Send webpage data to frontend via writer
+        writer(data)
 
-        return {"webpage_data": combined_content, "fetched_urls": processed_urls}
+        return data
 
     except Exception as e:
         return {"error": f"An error occurred while fetching webpages: {str(e)}"}

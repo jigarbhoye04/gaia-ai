@@ -1,14 +1,13 @@
 from typing import Annotated
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
-from app.langchain.templates.weather_template import WEATHER_PROMPT_TEMPLATE
 from app.utils.weather_utils import user_weather
 
 
 @tool
 async def get_weather(
     location: Annotated[str, "Name of the location (e.g. Surat,IN)"],
-) -> dict:
+) -> dict|str:
     """
     Fetches and formats the weather report for a given location.
 
@@ -28,12 +27,11 @@ async def get_weather(
     # Get the raw weather data
     weather_data = await user_weather(location)
 
-    # Format for LLM consumption
-    formatted_output = WEATHER_PROMPT_TEMPLATE.format(weather_data=weather_data)
+    # Send weather data to frontend via writer
+    writer({
+        "weather_data": weather_data,
+        "location": location
+    })
 
-    # Return as JSON string that can be parsed both by LLM and the frontend
-    return {
-        "formatted_text": formatted_output,  # For the LLM to use
-        "raw_weather_data": weather_data,  # For the frontend to use
-        "location": location,  # The requested location
-    }
+    # Return simple confirmation message
+    return "Weather data sent to frontend. Do not write anything else. Just send the weather data."

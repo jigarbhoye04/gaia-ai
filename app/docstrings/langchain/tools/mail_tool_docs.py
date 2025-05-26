@@ -107,64 +107,29 @@ SUMMARIZE_EMAIL = """
     """
 
 COMPOSE_EMAIL = """
-    Use AI to compose an email based on a prompt.
+    Compose, write, or draft an email message based on the user's request.
 
-    This tool generates complete email drafts from natural language instructions,
-    adapting to different writing styles and content preferences.
-
-    When to use:
-    - When user needs help writing an email
-    - When drafting responses to common email types
-    - When user requests specific tone or style for an email
-    - When user wants to save time on routine correspondence
-    - When user provides a partial draft that needs improvement
-
-    Note: The tool independently handles recipient email resolution.
-    """
-
-
-MARK_EMAILS_AS_READ = """
-    Mark Gmail messages as read.
-
-    This tool removes the UNREAD label from specified messages, marking them as read
-    in the user's Gmail account.
+    This tool helps create emails of any type - from simple personal messages to detailed professional communications.
 
     When to use:
-    - When user wants to mark emails as read after viewing them
-    - When implementing bulk email processing
-    - After extracting information from unread emails
-    - When user specifically asks to mark messages as read
+    - User wants to compose, write, send, or draft any email
+    - User mentions writing to someone via email
+    - User asks to email someone (e.g., "email John", "send an email to Sarah")
+    - User provides email content or instructions (e.g., "tell her I love her", "ask about the meeting")
+    - User needs help with any email-related task
 
-    Input:
-    - message_ids: Required list of Gmail message IDs to mark as read
+    The tool will:
+    - Create appropriate email content based on the context
+    - Handle both brief personal messages and detailed professional emails
+    - Automatically resolve recipient names to email addresses when possible
+    - Adapt tone and style to match the user's intent
 
-    Output:
-    - Dictionary with success status and affected message IDs
-    - Error message if operation fails
+    Input requirements:
+    - Body content or instructions for what to write
+    - Subject line or topic
+    - Optional: recipient name or query to search for their email
 
-    Limitations: Cannot be undone directly (would need to use mark_emails_as_unread).
-    """
-
-MARK_EMAILS_AS_UNREAD = """
-    Mark Gmail messages as unread.
-
-    This tool adds the UNREAD label to specified messages, marking them as unread
-    in the user's Gmail account.
-
-    When to use:
-    - When user wants to flag emails for later attention
-    - When emails need to be revisited later
-    - When implementing "mark as unread" functionality
-    - When user specifically asks to mark messages as unread
-
-    Input:
-    - message_ids: Required list of Gmail message IDs to mark as unread
-
-    Output:
-    - Dictionary with success status and affected message IDs
-    - Error message if operation fails
-
-    Limitations: May affect how emails appear in different Gmail views.
+    Note: The tool can handle any email request, from "email mom happy birthday" to complex business proposals.
     """
 
 STAR_EMAILS = """
@@ -231,28 +196,6 @@ ARCHIVE_EMAILS = """
     - Error message if operation fails
 
     Limitations: Archived emails remain searchable and retain other labels.
-    """
-
-MOVE_EMAILS_TO_INBOX = """
-    Move Gmail messages to inbox.
-
-    This tool adds the INBOX label to specified messages, moving them to the user's
-    inbox. This effectively unarchives emails or ensures they appear in the inbox view.
-
-    When to use:
-    - When user wants to restore previously archived emails
-    - When emails need renewed attention in the inbox
-    - When implementing "move to inbox" functionality
-    - When user explicitly asks to move messages to inbox
-
-    Input:
-    - message_ids: Required list of Gmail message IDs to move to inbox
-
-    Output:
-    - Dictionary with success status and affected message IDs
-    - Error message if operation fails
-
-    Limitations: Messages already in inbox will remain unchanged.
     """
 
 GET_EMAIL_THREAD = """

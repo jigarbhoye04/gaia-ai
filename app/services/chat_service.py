@@ -5,7 +5,7 @@ from typing import Any, AsyncGenerator, Dict, Optional
 from fastapi import BackgroundTasks
 
 from app.config.loggers import chat_logger as logger
-from app.langchain.agent import call_agent
+from app.langchain.core.agent import call_agent
 from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import MessageRequestWithHistory
 from app.services.conversation_service import update_messages
@@ -127,13 +127,12 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
             tool_data["image_data"] = data["image_data"]
 
         # Extract email compose data
-        elif (
-            "intent" in data
-            and data["intent"] == "email"
-            and "email_compose_data" in data
-        ):
-            tool_data["intent"] = "email"
+        elif "email_compose_data" in data:
             tool_data["email_compose_data"] = data["email_compose_data"]
+                
+        # Extract memory data
+        elif "memory_data" in data:
+            tool_data["memory_data"] = data["memory_data"]
 
         return tool_data
     except json.JSONDecodeError:
