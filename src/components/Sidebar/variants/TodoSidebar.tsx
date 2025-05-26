@@ -14,12 +14,14 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 import { SearchIcon } from "@/components/Misc/icons";
 import AddProjectModal from "@/components/Todo/AddProjectModal";
 import AddTodoModal from "@/components/Todo/AddTodoModal";
 import Spinner from "@/components/ui/spinner";
 import { useTodos } from "@/hooks/useTodos";
+import { RootState } from "@/redux/store";
 import { Priority } from "@/types/todoTypes";
 
 type MenuItem = {
@@ -98,12 +100,42 @@ export default function TodoSidebar() {
   const [addProjectOpen, setAddProjectOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { projects, labels, counts, loading, refreshAllData } = useTodos();
+  const {
+    projects,
+    labels,
+    counts,
+    loading,
+    loadProjects,
+    loadLabels,
+    loadCounts,
+    refreshAllData,
+  } = useTodos();
+  const todoState = useSelector((state: RootState) => state.todos);
+
+  // Check if initial data has been loaded
+  const isInitialDataLoaded =
+    todoState.initialDataLoaded.projects &&
+    todoState.initialDataLoaded.labels &&
+    todoState.initialDataLoaded.counts;
 
   // Load initial data
   useEffect(() => {
-    refreshAllData();
-  }, [refreshAllData]);
+    const loadData = async () => {
+      // Load all data in parallel - fetchTodoCounts now handles dependencies internally
+      await Promise.all([loadProjects(), loadLabels(), loadCounts()]);
+    };
+
+    if (!isInitialDataLoaded) {
+      loadData();
+    }
+  }, [loadProjects, loadLabels, loadCounts, isInitialDataLoaded]);
+
+  // Refresh counts when pathname changes (e.g., when navigating between views)
+  useEffect(() => {
+    if (isInitialDataLoaded) {
+      loadCounts();
+    }
+  }, [pathname, loadCounts, isInitialDataLoaded]);
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -233,8 +265,8 @@ export default function TodoSidebar() {
           />
         </form>
 
-        {loading ? (
-          <div className="flex h-[200px] w-full items-center justify-center">
+        {!isInitialDataLoaded ? (
+          <div className="flex h-[400px] w-full items-center justify-center">
             <Spinner />
           </div>
         ) : (
@@ -291,6 +323,10 @@ export default function TodoSidebar() {
                     {item.label}
                   </Button>
                 ))
+              ) : loading ? (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
               ) : (
                 <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
                   No labels yet
@@ -342,6 +378,10 @@ export default function TodoSidebar() {
                     {item.label}
                   </Button>
                 ))
+              ) : loading ? (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
               ) : (
                 <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
                   No projects yet
@@ -357,7 +397,8 @@ export default function TodoSidebar() {
         open={addTodoOpen}
         onOpenChange={setAddTodoOpen}
         onSuccess={() => {
-          // No need to manually refresh - Redux will handle it
+          // Refresh data after creating a todo
+          refreshAllData();
         }}
       />
       <AddProjectModal

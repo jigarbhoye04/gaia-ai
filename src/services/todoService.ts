@@ -271,10 +271,18 @@ export const TodoService = {
     }
   },
 
-  getTodosByLabel: async (label: string): Promise<Todo[]> => {
+  getTodosByLabel: async (
+    label: string,
+    skip?: number,
+    limit?: number,
+  ): Promise<Todo[]> => {
     try {
+      const params = new URLSearchParams();
+      if (skip !== undefined) params.append("skip", String(skip));
+      if (limit !== undefined) params.append("limit", String(limit));
+
       const response = await apiauth.get(
-        `/todos/by-label/${encodeURIComponent(label)}`,
+        `/todos/by-label/${encodeURIComponent(label)}?${params.toString()}`,
       );
       return response.data;
     } catch (error) {

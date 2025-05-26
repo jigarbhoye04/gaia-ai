@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useDispatch,useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   createTodo,
@@ -14,12 +14,16 @@ import {
   fetchTodosByPriority,
   fetchTodosByProject,
   fetchUpcomingTodos,
+  optimisticDeleteTodo,
+  optimisticUpdateTodo,
   resetTodos,
+  revertOptimisticDelete,
+  revertOptimisticUpdate,
   setFilters,
   setSelectedTodo,
   updateTodo,
 } from "@/redux/slices/todoSlice";
-import { AppDispatch,RootState } from "@/redux/store";
+import { AppDispatch, RootState } from "@/redux/store";
 import {
   Priority,
   TodoCreate,
@@ -93,10 +97,12 @@ export const useTodos = () => {
     async (todoData: TodoCreate) => {
       const result = await dispatch(createTodo(todoData));
       if (createTodo.fulfilled.match(result)) {
-        // Also refresh counts after creating
-        dispatch(fetchTodoCounts());
-        dispatch(fetchProjects());
-        dispatch(fetchLabels());
+        // Refresh counts and metadata in parallel to avoid race conditions
+        await Promise.all([
+          dispatch(fetchTodoCounts()),
+          dispatch(fetchProjects()),
+          dispatch(fetchLabels()),
+        ]);
       }
       return result;
     },
@@ -105,28 +111,85 @@ export const useTodos = () => {
 
   const modifyTodo = useCallback(
     async (todoId: string, updates: TodoUpdate) => {
-      const result = await dispatch(updateTodo({ todoId, updates }));
-      if (updateTodo.fulfilled.match(result)) {
-        // Refresh counts after updating
-        dispatch(fetchTodoCounts());
+      // Find the original todo for potential rollback
+      const originalTodo = todoState.todos.find((t) => t.id === todoId);
+
+      // Apply optimistic update
+      dispatch(optimisticUpdateTodo({ todoId, updates }));
+
+      try {
+        const result = await dispatch(updateTodo({ todoId, updates }));
+        if (updateTodo.fulfilled.match(result)) {
+          // Refresh counts if completion status or project changed
+          const needsCountRefresh =
+            (updates.completed !== undefined &&
+              originalTodo?.completed !== updates.completed) ||
+            (updates.project_id !== undefined &&
+              originalTodo?.project_id !== updates.project_id);
+
+          if (needsCountRefresh) {
+            // Refresh counts and projects to ensure accurate data
+            await Promise.all([
+              dispatch(fetchTodoCounts()),
+              dispatch(fetchProjects()),
+            ]);
+          }
+
+          // Refresh labels if labels changed
+          if (updates.labels !== undefined) {
+            await dispatch(fetchLabels());
+          }
+        } else {
+          // Revert on failure
+          if (originalTodo) {
+            dispatch(revertOptimisticUpdate({ todoId, originalTodo }));
+          }
+        }
+        return result;
+      } catch (error) {
+        // Revert on error
+        if (originalTodo) {
+          dispatch(revertOptimisticUpdate({ todoId, originalTodo }));
+        }
+        throw error;
       }
-      return result;
     },
-    [dispatch],
+    [dispatch, todoState.todos],
   );
 
   const removeTodo = useCallback(
     async (todoId: string) => {
-      const result = await dispatch(deleteTodo(todoId));
-      if (deleteTodo.fulfilled.match(result)) {
-        // Refresh counts after deleting
-        dispatch(fetchTodoCounts());
-        dispatch(fetchProjects());
-        dispatch(fetchLabels());
+      // Find the original todo for potential rollback
+      const originalTodo = todoState.todos.find((t) => t.id === todoId);
+
+      // Apply optimistic delete
+      dispatch(optimisticDeleteTodo(todoId));
+
+      try {
+        const result = await dispatch(deleteTodo(todoId));
+        if (deleteTodo.fulfilled.match(result)) {
+          // Refresh counts and metadata in parallel
+          await Promise.all([
+            dispatch(fetchTodoCounts()),
+            dispatch(fetchProjects()),
+            dispatch(fetchLabels()),
+          ]);
+        } else {
+          // Revert on failure
+          if (originalTodo) {
+            dispatch(revertOptimisticDelete(originalTodo));
+          }
+        }
+        return result;
+      } catch (error) {
+        // Revert on error
+        if (originalTodo) {
+          dispatch(revertOptimisticDelete(originalTodo));
+        }
+        throw error;
       }
-      return result;
     },
-    [dispatch],
+    [dispatch, todoState.todos],
   );
 
   const selectTodo = useCallback(
@@ -148,6 +211,7 @@ export const useTodos = () => {
   }, [dispatch]);
 
   const refreshAllData = useCallback(async () => {
+    // Fetch all data including counts
     await Promise.all([
       dispatch(fetchProjects()),
       dispatch(fetchLabels()),

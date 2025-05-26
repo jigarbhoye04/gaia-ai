@@ -26,6 +26,17 @@ interface TodoState {
   hasMore: boolean;
   page: number;
   filters: TodoFilters;
+  // Optimistic update tracking
+  pendingUpdates: Record<string, TodoUpdate>;
+  pendingDeletes: string[];
+  // Pagination metadata
+  totalCount: number;
+  // Initial data loading states
+  initialDataLoaded: {
+    projects: boolean;
+    labels: boolean;
+    counts: boolean;
+  };
 }
 
 const initialState: TodoState = {
@@ -44,6 +55,14 @@ const initialState: TodoState = {
   hasMore: true,
   page: 0,
   filters: {},
+  pendingUpdates: {},
+  pendingDeletes: [],
+  totalCount: 0,
+  initialDataLoaded: {
+    projects: false,
+    labels: false,
+    counts: false,
+  },
 };
 
 // Async thunks
@@ -77,21 +96,32 @@ export const fetchLabels = createAsyncThunk("todos/fetchLabels", async () => {
 
 export const fetchTodoCounts = createAsyncThunk(
   "todos/fetchCounts",
-  async (_, { getState }) => {
-    const state = getState() as { todos: TodoState };
-    const projects = state.todos.projects;
+  async () => {
+    // Fetch all necessary data in parallel
+    const [stats, todayTodos, upcomingTodos, projects] = await Promise.all([
+      TodoService.getTodoStats(),
+      TodoService.getTodayTodos(),
+      TodoService.getUpcomingTodos(7),
+      TodoService.getAllProjects(),
+    ]);
 
-    const stats = await TodoService.getTodoStats();
-    const todayTodos = await TodoService.getTodayTodos();
-    const upcomingTodos = await TodoService.getUpcomingTodos(7);
-
+    // Get inbox project and calculate its pending count
     const inboxProject = projects.find((p) => p.is_default);
-    const inboxCount = inboxProject ? inboxProject.todo_count : 0;
+    let inboxCount = 0;
+
+    if (inboxProject) {
+      // Fetch only pending todos for inbox
+      const inboxTodos = await TodoService.getAllTodos({
+        project_id: inboxProject.id,
+        completed: false,
+      });
+      inboxCount = inboxTodos.length;
+    }
 
     return {
       inbox: inboxCount,
-      today: todayTodos.length,
-      upcoming: upcomingTodos.length,
+      today: todayTodos.filter((todo) => !todo.completed).length,
+      upcoming: upcomingTodos.filter((todo) => !todo.completed).length,
       completed: stats.completed,
     };
   },
@@ -210,7 +240,51 @@ const todoSlice = createSlice({
     },
     refreshAllData: (state) => {
       // This will trigger a refresh by components watching the state
+      // Don't reset initialDataLoaded flags to avoid showing empty states
       state.loading = true;
+    },
+    // Optimistic update actions
+    optimisticUpdateTodo: (
+      state,
+      action: PayloadAction<{ todoId: string; updates: TodoUpdate }>,
+    ) => {
+      const { todoId, updates } = action.payload;
+      const index = state.todos.findIndex((t) => t.id === todoId);
+      if (index !== -1) {
+        state.todos[index] = { ...state.todos[index], ...updates };
+        state.pendingUpdates[todoId] = updates;
+      }
+    },
+    optimisticDeleteTodo: (state, action: PayloadAction<string>) => {
+      const todoId = action.payload;
+      state.todos = state.todos.filter((t) => t.id !== todoId);
+      state.pendingDeletes.push(todoId);
+    },
+    revertOptimisticUpdate: (
+      state,
+      action: PayloadAction<{ todoId: string; originalTodo: Todo }>,
+    ) => {
+      const { todoId, originalTodo } = action.payload;
+      const index = state.todos.findIndex((t) => t.id === todoId);
+      if (index !== -1) {
+        state.todos[index] = originalTodo;
+      }
+      delete state.pendingUpdates[todoId];
+    },
+    revertOptimisticDelete: (state, action: PayloadAction<Todo>) => {
+      const todo = action.payload;
+      state.todos.push(todo);
+      state.pendingDeletes = state.pendingDeletes.filter(
+        (id) => id !== todo.id,
+      );
+    },
+    clearPendingUpdate: (state, action: PayloadAction<string>) => {
+      delete state.pendingUpdates[action.payload];
+    },
+    clearPendingDelete: (state, action: PayloadAction<string>) => {
+      state.pendingDeletes = state.pendingDeletes.filter(
+        (id) => id !== action.payload,
+      );
     },
   },
   extraReducers: (builder) => {
@@ -229,7 +303,9 @@ const todoSlice = createSlice({
           state.todos = todos;
           state.page = 0;
         }
-        state.hasMore = todos.length === 50;
+        // Better pagination logic - check if we got less than requested
+        state.hasMore = todos.length >= 50;
+        state.totalCount = loadMore ? state.totalCount : todos.length;
         state.loading = false;
       })
       .addCase(fetchTodos.rejected, (state, action) => {
@@ -238,19 +314,40 @@ const todoSlice = createSlice({
       });
 
     // Fetch projects
-    builder.addCase(fetchProjects.fulfilled, (state, action) => {
-      state.projects = action.payload;
-    });
+    builder
+      .addCase(fetchProjects.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchProjects.fulfilled, (state, action) => {
+        state.projects = action.payload;
+        state.initialDataLoaded.projects = true;
+      })
+      .addCase(fetchProjects.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to fetch projects";
+      });
 
     // Fetch labels
-    builder.addCase(fetchLabels.fulfilled, (state, action) => {
-      state.labels = action.payload;
-    });
+    builder
+      .addCase(fetchLabels.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchLabels.fulfilled, (state, action) => {
+        state.labels = action.payload;
+        state.initialDataLoaded.labels = true;
+      })
+      .addCase(fetchLabels.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to fetch labels";
+      });
 
     // Fetch counts
-    builder.addCase(fetchTodoCounts.fulfilled, (state, action) => {
-      state.counts = action.payload;
-    });
+    builder
+      .addCase(fetchTodoCounts.fulfilled, (state, action) => {
+        state.counts = action.payload;
+        state.initialDataLoaded.counts = true;
+      })
+      .addCase(fetchTodoCounts.rejected, (state, action) => {
+        console.error("Failed to fetch counts:", action.error.message);
+      });
 
     // Create todo
     builder.addCase(createTodo.fulfilled, (state, action) => {
@@ -267,15 +364,10 @@ const todoSlice = createSlice({
         project.todo_count += 1;
       }
 
-      // Update label counts
-      newTodo.labels.forEach((label) => {
-        const existingLabel = state.labels.find((l) => l.name === label);
-        if (existingLabel) {
-          existingLabel.count += 1;
-        } else {
-          state.labels.push({ name: label, count: 1 });
-        }
-      });
+      // Update label counts only for non-completed todos
+      if (!newTodo.completed) {
+        updateLabelCounts(state, newTodo.labels, []);
+      }
     });
 
     // Update todo
@@ -292,49 +384,76 @@ const todoSlice = createSlice({
           state.selectedTodo = updatedTodo;
         }
 
-        // Update project counts if project changed
-        if (oldTodo.project_id !== updatedTodo.project_id) {
-          const oldProject = state.projects.find(
-            (p) => p.id === oldTodo.project_id,
-          );
-          const newProject = state.projects.find(
-            (p) => p.id === updatedTodo.project_id,
-          );
-          if (oldProject) oldProject.todo_count -= 1;
-          if (newProject) newProject.todo_count += 1;
+        // Update project counts if project changed or completion status changed
+        if (
+          oldTodo.project_id !== updatedTodo.project_id ||
+          oldTodo.completed !== updatedTodo.completed
+        ) {
+          // Handle old project
+          if (oldTodo.project_id) {
+            const oldProject = state.projects.find(
+              (p) => p.id === oldTodo.project_id,
+            );
+            if (oldProject && oldTodo.project_id !== updatedTodo.project_id) {
+              oldProject.todo_count = Math.max(0, oldProject.todo_count - 1);
+            }
+          }
+
+          // Handle new project
+          if (
+            updatedTodo.project_id &&
+            oldTodo.project_id !== updatedTodo.project_id
+          ) {
+            const newProject = state.projects.find(
+              (p) => p.id === updatedTodo.project_id,
+            );
+            if (newProject) {
+              newProject.todo_count += 1;
+            }
+          }
+        }
+
+        // Update label counts if labels changed
+        const oldLabels = oldTodo.labels || [];
+        const newLabels = updatedTodo.labels || [];
+        if (
+          JSON.stringify(oldLabels.sort()) !== JSON.stringify(newLabels.sort())
+        ) {
+          updateLabelCounts(state, newLabels, oldLabels);
         }
       }
     });
 
     // Delete todo
-    builder.addCase(deleteTodo.fulfilled, (state, action) => {
-      const todoId = action.payload;
-      const todoIndex = state.todos.findIndex((t) => t.id === todoId);
+    builder
+      .addCase(deleteTodo.fulfilled, (state, action) => {
+        const todoId = action.payload;
+        const todoIndex = state.todos.findIndex((t) => t.id === todoId);
 
-      if (todoIndex !== -1) {
-        const todo = state.todos[todoIndex];
-        state.todos.splice(todoIndex, 1);
+        if (todoIndex !== -1) {
+          const todo = state.todos[todoIndex];
+          state.todos.splice(todoIndex, 1);
 
-        // Update project count
-        const project = state.projects.find((p) => p.id === todo.project_id);
-        if (project) {
-          project.todo_count -= 1;
-        }
-
-        // Update label counts
-        todo.labels.forEach((label) => {
-          const existingLabel = state.labels.find((l) => l.name === label);
-          if (existingLabel && existingLabel.count > 0) {
-            existingLabel.count -= 1;
+          // Update project count
+          const project = state.projects.find((p) => p.id === todo.project_id);
+          if (project) {
+            project.todo_count = Math.max(0, project.todo_count - 1);
           }
-        });
 
-        // Clear selected todo if it was deleted
-        if (state.selectedTodo?.id === todoId) {
-          state.selectedTodo = null;
+          // Update label counts only if todo was not completed
+          if (!todo.completed) {
+            updateLabelCounts(state, [], todo.labels);
+          }
+
+          // Clear selected todo if it was deleted
+          if (state.selectedTodo?.id === todoId) {
+            state.selectedTodo = null;
+          }
         }
-      }
-    });
+      })
+      .addCase(deleteTodo.rejected, (state, action) => {
+        state.error = action.error.message || "Failed to delete todo";
+      });
 
     // Handle today todos
     builder
@@ -421,6 +540,53 @@ function shouldIncludeTodo(todo: Todo, filters: TodoFilters): boolean {
   return true;
 }
 
-export const { setSelectedTodo, setFilters, resetTodos, refreshAllData } =
-  todoSlice.actions;
+// Helper function to update label counts (only for non-completed todos)
+function updateLabelCounts(
+  state: TodoState,
+  addLabels: string[],
+  removeLabels: string[],
+) {
+  // Remove counts for old labels
+  removeLabels.forEach((label) => {
+    const existingLabel = state.labels.find((l) => l.name === label);
+    if (existingLabel && existingLabel.count > 0) {
+      existingLabel.count = Math.max(0, existingLabel.count - 1);
+      // Remove label if count reaches 0
+      if (existingLabel.count === 0) {
+        state.labels = state.labels.filter((l) => l.name !== label);
+      }
+    }
+  });
+
+  // Add counts for new labels
+  addLabels.forEach((label) => {
+    const existingLabel = state.labels.find((l) => l.name === label);
+    if (existingLabel) {
+      existingLabel.count += 1;
+    } else {
+      state.labels.push({ name: label, count: 1 });
+    }
+  });
+
+  // Sort labels by count (descending) and then by name
+  state.labels.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
+    }
+    return a.name.localeCompare(b.name);
+  });
+}
+
+export const {
+  setSelectedTodo,
+  setFilters,
+  resetTodos,
+  refreshAllData,
+  optimisticUpdateTodo,
+  optimisticDeleteTodo,
+  revertOptimisticUpdate,
+  revertOptimisticDelete,
+  clearPendingUpdate,
+  clearPendingDelete,
+} = todoSlice.actions;
 export default todoSlice.reducer;

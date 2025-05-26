@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 import { Todo, TodoUpdate } from "@/types/todoTypes";
 
 import TodoItem from "./TodoItem";
@@ -18,6 +20,9 @@ export default function TodoList({
   onTodoDelete,
   onTodoClick,
 }: TodoListProps) {
+  // Group todos by date if they have due dates - memoized to prevent recalculation
+  const groupedTodos = useMemo(() => groupTodosByDate(todos), [todos]);
+
   if (todos.length === 0) {
     return (
       <div className="flex h-64 min-w-5xl flex-col items-center justify-center text-foreground-500">
@@ -26,9 +31,6 @@ export default function TodoList({
       </div>
     );
   }
-
-  // Group todos by date if they have due dates
-  const groupedTodos = groupTodosByDate(todos);
 
   return (
     <div className="w-screen max-w-5xl space-y-4 p-4">
@@ -57,6 +59,7 @@ export default function TodoList({
   );
 }
 
+// Memoized grouping function to prevent unnecessary recalculations
 function groupTodosByDate(todos: Todo[]) {
   const groups: Record<string, Todo[]> = {};
   const today = new Date();

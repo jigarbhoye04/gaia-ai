@@ -29,7 +29,8 @@ export default function TodosPage() {
   // Get filter from URL params
   const projectId = searchParams.get("project");
   const priority = searchParams.get("priority");
-  const completed = searchParams.get("completed") === "true";
+  const completedParam = searchParams.get("completed");
+  const completed = completedParam === "true";
 
   // Helper function to validate priority value
   const getPriorityFilter = (
@@ -45,24 +46,49 @@ export default function TodosPage() {
     const filters: TodoFilters = {
       project_id: projectId || undefined,
       priority: getPriorityFilter(priority),
-      completed: completed || undefined,
     };
 
-    // Default to inbox (no project) if no filters
-    if (!projectId && !priority && !completed) {
-      filters.project_id = undefined;
+    // Handle completed filter
+    if (completedParam !== null) {
+      filters.completed = completed;
+    } else if (!projectId && !priority) {
+      // Default to showing only non-completed todos in inbox
+      filters.completed = false;
+    }
+
+    // Default to inbox project if no project specified
+    if (!projectId && !priority) {
+      const inboxProject = projects.find((p) => p.is_default);
+      if (inboxProject) {
+        filters.project_id = inboxProject.id;
+      }
     }
 
     loadTodos(filters, false);
     setPage(0);
-  }, [projectId, priority, completed, loadTodos]);
+  }, [projectId, priority, completed, completedParam, loadTodos, projects]);
 
   const handleLoadMore = () => {
     const filters: TodoFilters = {
       project_id: projectId || undefined,
       priority: getPriorityFilter(priority),
-      completed: completed || undefined,
     };
+
+    // Handle completed filter
+    if (completedParam !== null) {
+      filters.completed = completed;
+    } else if (!projectId && !priority) {
+      filters.completed = false;
+    }
+
+    // Default to inbox project if needed
+    if (!projectId && !priority) {
+      const inboxProject = projects.find((p) => p.is_default);
+      if (inboxProject) {
+        filters.project_id = inboxProject.id;
+      }
+    }
+
     loadTodos(filters, true);
     setPage((prev) => prev + 1);
   };
@@ -110,8 +136,21 @@ export default function TodosPage() {
             const filters: TodoFilters = {
               project_id: projectId || undefined,
               priority: getPriorityFilter(priority),
-              completed: completed || undefined,
             };
+
+            if (completedParam !== null) {
+              filters.completed = completed;
+            } else if (!projectId && !priority) {
+              filters.completed = false;
+            }
+
+            if (!projectId && !priority) {
+              const inboxProject = projects.find((p) => p.is_default);
+              if (inboxProject) {
+                filters.project_id = inboxProject.id;
+              }
+            }
+
             loadTodos(filters, false);
           }}
         />
