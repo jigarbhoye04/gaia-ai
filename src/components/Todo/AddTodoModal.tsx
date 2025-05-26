@@ -12,7 +12,7 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import { Select, SelectItem } from "@heroui/select";
-import { CalendarDate, parseDate } from "@internationalized/date";
+import { parseDate } from "@internationalized/date";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -126,9 +126,16 @@ export default function AddTodoModal({
     }));
   };
 
-  const handleDateChange = (date: CalendarDate | null) => {
-    if (date) {
-      const jsDate = new Date(date.year, date.month - 1, date.day);
+  const handleDateChange = (date: unknown) => {
+    if (
+      date &&
+      typeof date === "object" &&
+      "year" in date &&
+      "month" in date &&
+      "day" in date
+    ) {
+      const d = date as { year: number; month: number; day: number };
+      const jsDate = new Date(d.year, d.month - 1, d.day);
       setFormData((prev) => ({
         ...prev,
         due_date: jsDate.toISOString(),
@@ -202,9 +209,7 @@ export default function AddTodoModal({
                     className="flex-1"
                   >
                     {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
+                      <SelectItem key={project.id}>{project.name}</SelectItem>
                     ))}
                   </Select>
 
@@ -221,9 +226,7 @@ export default function AddTodoModal({
                     className="flex-1"
                   >
                     {priorityOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
+                      <SelectItem key={option.value}>{option.label}</SelectItem>
                     ))}
                   </Select>
                 </div>
@@ -233,8 +236,8 @@ export default function AddTodoModal({
                   label="Due Date"
                   value={
                     formData.due_date
-                      ? parseDate(formData.due_date.split("T")[0])
-                      : null
+                      ? (parseDate(formData.due_date.split("T")[0]) as never)
+                      : undefined
                   }
                   onChange={handleDateChange}
                   granularity="day"

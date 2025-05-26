@@ -57,7 +57,6 @@ export default function CompletedTodosPage() {
     }
   };
 
-
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -68,10 +67,7 @@ export default function CompletedTodosPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <TodoHeader
-        title="Completed"
-        todoCount={todos.length}
-      />
+      <TodoHeader title="Completed" todoCount={todos.length} />
 
       <div className="flex-1 overflow-y-auto">
         <TodoList

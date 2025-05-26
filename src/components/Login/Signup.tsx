@@ -9,7 +9,7 @@ import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/hooks/useUser";
 
-import { FlickeringGrid } from "../magicui/flickering-grid";
+import { FlickeringGrid } from "../MagicUI/flickering-grid";
 import { handleAuthButtonClick } from "./authHelpers";
 
 export default function Signup() {

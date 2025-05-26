@@ -13,11 +13,11 @@ import { CheckCircle, MoreHorizontal, Trash2 } from "lucide-react";
 interface TodoHeaderProps {
   title: string;
   todoCount: number;
-  selectedCount: number;
-  allSelected: boolean;
-  onSelectAll: () => void;
-  onBulkComplete: () => void;
-  onBulkDelete: () => void;
+  selectedCount?: number;
+  allSelected?: boolean;
+  onSelectAll?: () => void;
+  onBulkComplete?: () => void;
+  onBulkDelete?: () => void;
 }
 
 export default function TodoHeader({
@@ -29,14 +29,21 @@ export default function TodoHeader({
   onBulkComplete,
   onBulkDelete,
 }: TodoHeaderProps) {
+  const showBulkActions =
+    selectedCount !== undefined &&
+    onSelectAll &&
+    onBulkComplete &&
+    onBulkDelete;
+  const hasSelection = selectedCount !== undefined && selectedCount > 0;
+
   return (
     <div className="border-b border-default-200 px-4 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {todoCount > 0 && (
+          {todoCount > 0 && showBulkActions && (
             <Checkbox
-              isSelected={allSelected}
-              isIndeterminate={selectedCount > 0 && selectedCount < todoCount}
+              isSelected={allSelected || false}
+              isIndeterminate={hasSelection && selectedCount < todoCount}
               onChange={onSelectAll}
               size="sm"
             />
@@ -45,12 +52,12 @@ export default function TodoHeader({
             <h1 className="text-lg font-semibold">{title}</h1>
             <p className="text-sm text-foreground-500">
               {todoCount} {todoCount === 1 ? "task" : "tasks"}
-              {selectedCount > 0 && ` • ${selectedCount} selected`}
+              {hasSelection && ` • ${selectedCount} selected`}
             </p>
           </div>
         </div>
 
-        {selectedCount > 0 && (
+        {hasSelection && showBulkActions && (
           <div className="flex items-center gap-2">
             <Button
               size="sm"

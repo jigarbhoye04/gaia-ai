@@ -90,6 +90,10 @@ export default function TodosPage() {
       setTodos((prev) =>
         prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
       );
+      // Update the selected todo if it's the one being updated
+      if (selectedTodo && selectedTodo.id === todoId) {
+        setSelectedTodo(updatedTodo);
+      }
     } catch (error) {
       console.error("Failed to update todo:", error);
     }
@@ -113,11 +117,8 @@ export default function TodosPage() {
   }
 
   return (
-    <div className="flex h-full flex-col" style={{ minWidth: "500px" }}>
-      <TodoHeader
-        title={getPageTitle()}
-        todoCount={todos.length}
-      />
+    <div className="flex h-full w-screen max-w-5xl flex-col">
+      <TodoHeader title={getPageTitle()} todoCount={todos.length} />
 
       <div
         className="flex-1 overflow-y-auto"

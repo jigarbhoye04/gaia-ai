@@ -79,7 +79,7 @@ export default function TodoItem({
   return (
     <>
       <Card
-        className={`cursor-pointer transition-all ${
+        className={`w-full cursor-pointer transition-all ${
           isSelected
             ? "bg-primary/5 ring-2 ring-primary"
             : "hover:bg-default-50"

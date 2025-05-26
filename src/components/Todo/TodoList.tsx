@@ -31,7 +31,7 @@ export default function TodoList({
   const groupedTodos = groupTodosByDate(todos);
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="w-screen max-w-5xl space-y-4 p-4">
       {Object.entries(groupedTodos).map(([date, todosForDate]) => (
         <div key={date}>
           {date !== "No Due Date" && (
@@ -39,7 +39,7 @@ export default function TodoList({
               {date}
             </h3>
           )}
-          <div className="space-y-2">
+          <div className="w-full space-y-2">
             {todosForDate.map((todo) => (
               <TodoItem
                 key={todo.id}
