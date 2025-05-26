@@ -1,6 +1,5 @@
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
 import { User } from "@heroui/user";
 import CharacterCount from "@tiptap/extension-character-count";
@@ -17,6 +16,7 @@ import { toast } from "sonner";
 import { Drawer } from "vaul";
 
 import GmailBody from "@/components/Mail/GmailBody";
+import Spinner from "@/components/ui/spinner";
 import { EmailData } from "@/types/mailTypes";
 import { apiauth } from "@/utils/apiaxios";
 import { parseEmail } from "@/utils/mailUtils";
@@ -254,7 +254,7 @@ export default function ViewEmail({
             <Drawer.Description className="space-y-4 text-foreground-600">
               {isLoadingThread && (
                 <div className="flex items-center justify-center py-4">
-                  <Spinner size="sm" color="primary" />
+                  <Spinner />
                   <span className="ml-2">Loading conversation...</span>
                 </div>
               )}

@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
 import {
   ArchiveIcon,
@@ -24,6 +23,7 @@ import { useEmailViewer } from "@/components/Mail/hooks/useEmailViewer";
 import { useInfiniteEmails } from "@/components/Mail/hooks/useInfiniteEmails";
 import { EmailFrom } from "@/components/Mail/MailFrom";
 import ViewEmail from "@/components/Mail/ViewMail";
+import Spinner from "@/components/ui/spinner";
 import useMediaQuery from "@/hooks/useMediaQuery";
 import { EmailData } from "@/types/mailTypes";
 import { formatTime } from "@/utils/mailUtils";

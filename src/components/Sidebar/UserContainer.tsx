@@ -2,7 +2,7 @@ import { useUser } from "@/hooks/useUser";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import SettingsMenu from "./Settings/SettingsMenu";
-// import { Spinner } from "@heroui/spinner";
+// import Spinner from "@/components/ui/spinner";
 
 export default function UserContainer() {
   const user = useUser();

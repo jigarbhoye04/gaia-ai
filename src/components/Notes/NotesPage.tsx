@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Spinner } from "@heroui/spinner";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { StickyNote01Icon } from "@/components/Misc/icons";
 import NoteCard from "@/components/Notes/NoteCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
 import { apiauth } from "@/utils/apiaxios";
 
 export interface Note {

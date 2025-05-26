@@ -1,11 +1,11 @@
 "use client";
 
-import { Spinner } from "@heroui/spinner";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import CalendarCard from "@/components/Calendar/CalendarCard";
 import CalendarEventDialog from "@/components/Calendar/CalendarEventDialog";
 import CalendarSelector from "@/components/Calendar/CalendarSelector";
+import Spinner from "@/components/ui/spinner";
 import { GoogleCalendarEvent } from "@/types/calendarTypes";
 
 import { useCalendarEvents } from "./hooks/useCalendarEvents";

@@ -16,8 +16,8 @@ import { parseDate } from "@internationalized/date";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { TodoService } from "@/services/todoService";
-import { Priority, Project, TodoCreate } from "@/types/todoTypes";
+import { useTodos } from "@/hooks/useTodos";
+import { Priority, TodoCreate } from "@/types/todoTypes";
 
 interface AddTodoModalProps {
   open: boolean;
@@ -40,7 +40,6 @@ export default function AddTodoModal({
   initialProjectId,
 }: AddTodoModalProps) {
   const [loading, setLoading] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [formData, setFormData] = useState<TodoCreate>({
     title: "",
     description: "",
@@ -50,11 +49,9 @@ export default function AddTodoModal({
   });
   const [labelInput, setLabelInput] = useState("");
 
-  useEffect(() => {
-    if (open) {
-      loadProjects();
-    }
-  }, [open]);
+  const { projects, addTodo } = useTodos();
+
+  // Projects are loaded via Redux, no need to load here
 
   useEffect(() => {
     if (initialProjectId) {
@@ -62,22 +59,15 @@ export default function AddTodoModal({
     }
   }, [initialProjectId]);
 
-  const loadProjects = async () => {
-    try {
-      const projectList = await TodoService.getAllProjects();
-      setProjects(projectList);
-
-      // Set default project if not set
-      if (!formData.project_id) {
-        const inboxProject = projectList.find((p) => p.is_default);
-        if (inboxProject) {
-          setFormData((prev) => ({ ...prev, project_id: inboxProject.id }));
-        }
+  // Set default project when projects are loaded
+  useEffect(() => {
+    if (!formData.project_id && projects.length > 0) {
+      const inboxProject = projects.find((p) => p.is_default);
+      if (inboxProject) {
+        setFormData((prev) => ({ ...prev, project_id: inboxProject.id }));
       }
-    } catch (error) {
-      console.error("Failed to load projects:", error);
     }
-  };
+  }, [projects, formData.project_id]);
 
   const handleSubmit = async () => {
     if (!formData.title.trim()) {
@@ -87,7 +77,7 @@ export default function AddTodoModal({
 
     setLoading(true);
     try {
-      await TodoService.createTodo(formData);
+      await addTodo(formData);
 
       // Reset form
       setFormData({
@@ -101,8 +91,11 @@ export default function AddTodoModal({
 
       onOpenChange(false);
       onSuccess?.();
+
+      toast.success("Task created successfully!");
     } catch (error) {
       console.error("Failed to create todo:", error);
+      toast.error("Failed to create task");
     } finally {
       setLoading(false);
     }

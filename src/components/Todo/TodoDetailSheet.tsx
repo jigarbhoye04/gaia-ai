@@ -8,7 +8,6 @@ import { format } from "date-fns";
 import {
   AlertCircle,
   Calendar,
-  CalendarDays,
   Check,
   CheckCircle2,
   Circle,
@@ -16,7 +15,6 @@ import {
   Edit2,
   Flag,
   FolderOpen,
-  Hash,
   History,
   Info,
   RotateCcw,
@@ -104,7 +102,7 @@ export default function TodoDetailSheet({
       <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <SheetContent
           side="right"
-          className="w-96 overflow-hidden border-none bg-zinc-800 p-0"
+          className="w-96 overflow-hidden border-none bg-zinc-900 p-0"
         >
           <div className="relative flex h-full flex-col">
             <SheetHeader className="border-b border-divider p-6">
@@ -306,19 +304,6 @@ export default function TodoDetailSheet({
                       </div>
                     )}
 
-                    {/* Task ID */}
-                    <div className="flex items-center gap-3">
-                      <Hash className="h-4 w-4 text-foreground-500" />
-                      <div className="flex flex-col">
-                        <span className="text-sm text-foreground-700">
-                          Task ID
-                        </span>
-                        <span className="font-mono text-xs text-foreground-500">
-                          {todo.id.slice(-8).toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-
                     {/* Created Date */}
                     <div className="flex items-center gap-3">
                       <Clock className="h-4 w-4 text-foreground-500" />
@@ -369,59 +354,6 @@ export default function TodoDetailSheet({
                         </div>
                       </div>
                     )}
-                  </div>
-                </CardBody>
-              </Card>
-
-              {/* Additional Metadata */}
-              <Card className="border-dashed border-default-200">
-                <CardBody className="p-4">
-                  <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                    <CalendarDays className="h-4 w-4" />
-                    Task Metadata
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-foreground-500">Status</span>
-                      <p className="font-medium">
-                        {todo.completed ? "Completed" : "Active"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-foreground-500">Progress</span>
-                      <p className="font-medium">
-                        {totalSubtasks > 0
-                          ? `${progressPercentage}%`
-                          : "No subtasks"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-foreground-500">
-                        Days Until Due
-                      </span>
-                      <p className="font-medium">
-                        {todo.due_date
-                          ? (() => {
-                              const daysUntil = Math.ceil(
-                                (new Date(todo.due_date).getTime() -
-                                  new Date().getTime()) /
-                                  (1000 * 60 * 60 * 24),
-                              );
-                              if (daysUntil < 0)
-                                return `${Math.abs(daysUntil)} days overdue`;
-                              if (daysUntil === 0) return "Due today";
-                              if (daysUntil === 1) return "Due tomorrow";
-                              return `${daysUntil} days`;
-                            })()
-                          : "No due date"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-foreground-500">
-                        Total Subtasks
-                      </span>
-                      <p className="font-medium">{totalSubtasks}</p>
-                    </div>
                   </div>
                 </CardBody>
               </Card>

@@ -1,0 +1,426 @@
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+import { TodoService } from "@/services/todoService";
+import {
+  Priority,
+  Project,
+  Todo,
+  TodoCreate,
+  TodoFilters,
+  TodoUpdate,
+} from "@/types/todoTypes";
+
+interface TodoState {
+  todos: Todo[];
+  projects: Project[];
+  labels: { name: string; count: number }[];
+  selectedTodo: Todo | null;
+  counts: {
+    inbox: number;
+    today: number;
+    upcoming: number;
+    completed: number;
+  };
+  loading: boolean;
+  error: string | null;
+  hasMore: boolean;
+  page: number;
+  filters: TodoFilters;
+}
+
+const initialState: TodoState = {
+  todos: [],
+  projects: [],
+  labels: [],
+  selectedTodo: null,
+  counts: {
+    inbox: 0,
+    today: 0,
+    upcoming: 0,
+    completed: 0,
+  },
+  loading: false,
+  error: null,
+  hasMore: true,
+  page: 0,
+  filters: {},
+};
+
+// Async thunks
+export const fetchTodos = createAsyncThunk(
+  "todos/fetchTodos",
+  async (
+    { filters, loadMore = false }: { filters: TodoFilters; loadMore?: boolean },
+    { getState },
+  ) => {
+    const state = getState() as { todos: TodoState };
+    const skip = loadMore ? state.todos.page * 50 : 0;
+    const todos = await TodoService.getAllTodos({
+      ...filters,
+      skip,
+      limit: 50,
+    });
+    return { todos, loadMore };
+  },
+);
+
+export const fetchProjects = createAsyncThunk(
+  "todos/fetchProjects",
+  async () => {
+    return await TodoService.getAllProjects();
+  },
+);
+
+export const fetchLabels = createAsyncThunk("todos/fetchLabels", async () => {
+  return await TodoService.getAllLabels();
+});
+
+export const fetchTodoCounts = createAsyncThunk(
+  "todos/fetchCounts",
+  async (_, { getState }) => {
+    const state = getState() as { todos: TodoState };
+    const projects = state.todos.projects;
+
+    const stats = await TodoService.getTodoStats();
+    const todayTodos = await TodoService.getTodayTodos();
+    const upcomingTodos = await TodoService.getUpcomingTodos(7);
+
+    const inboxProject = projects.find((p) => p.is_default);
+    const inboxCount = inboxProject ? inboxProject.todo_count : 0;
+
+    return {
+      inbox: inboxCount,
+      today: todayTodos.length,
+      upcoming: upcomingTodos.length,
+      completed: stats.completed,
+    };
+  },
+);
+
+export const createTodo = createAsyncThunk(
+  "todos/create",
+  async (todoData: TodoCreate) => {
+    const todo = await TodoService.createTodo(todoData);
+    return todo;
+  },
+);
+
+export const updateTodo = createAsyncThunk(
+  "todos/update",
+  async ({ todoId, updates }: { todoId: string; updates: TodoUpdate }) => {
+    const todo = await TodoService.updateTodo(todoId, updates);
+    return todo;
+  },
+);
+
+export const deleteTodo = createAsyncThunk(
+  "todos/delete",
+  async (todoId: string) => {
+    await TodoService.deleteTodo(todoId);
+    return todoId;
+  },
+);
+
+export const fetchTodayTodos = createAsyncThunk(
+  "todos/fetchToday",
+  async () => {
+    return await TodoService.getTodayTodos();
+  },
+);
+
+export const fetchUpcomingTodos = createAsyncThunk(
+  "todos/fetchUpcoming",
+  async (days: number = 7) => {
+    return await TodoService.getUpcomingTodos(days);
+  },
+);
+
+export const fetchCompletedTodos = createAsyncThunk(
+  "todos/fetchCompleted",
+  async ({ skip = 0, limit = 50 }: { skip?: number; limit?: number }) => {
+    return await TodoService.getAllTodos({ completed: true, skip, limit });
+  },
+);
+
+export const fetchTodosByPriority = createAsyncThunk(
+  "todos/fetchByPriority",
+  async ({
+    priority,
+    skip = 0,
+    limit = 50,
+  }: {
+    priority: Priority;
+    skip?: number;
+    limit?: number;
+  }) => {
+    return await TodoService.getAllTodos({ priority, skip, limit });
+  },
+);
+
+export const fetchTodosByProject = createAsyncThunk(
+  "todos/fetchByProject",
+  async ({
+    projectId,
+    skip = 0,
+    limit = 50,
+  }: {
+    projectId: string;
+    skip?: number;
+    limit?: number;
+  }) => {
+    return await TodoService.getAllTodos({
+      project_id: projectId,
+      skip,
+      limit,
+    });
+  },
+);
+
+export const fetchTodosByLabel = createAsyncThunk(
+  "todos/fetchByLabel",
+  async ({
+    label,
+    skip = 0,
+    limit = 50,
+  }: {
+    label: string;
+    skip?: number;
+    limit?: number;
+  }) => {
+    return await TodoService.getTodosByLabel(label, skip, limit);
+  },
+);
+
+// Redux slice
+const todoSlice = createSlice({
+  name: "todos",
+  initialState,
+  reducers: {
+    setSelectedTodo: (state, action: PayloadAction<Todo | null>) => {
+      state.selectedTodo = action.payload;
+    },
+    setFilters: (state, action: PayloadAction<TodoFilters>) => {
+      state.filters = action.payload;
+      state.page = 0;
+    },
+    resetTodos: (state) => {
+      state.todos = [];
+      state.page = 0;
+      state.hasMore = true;
+    },
+    refreshAllData: (state) => {
+      // This will trigger a refresh by components watching the state
+      state.loading = true;
+    },
+  },
+  extraReducers: (builder) => {
+    // Fetch todos
+    builder
+      .addCase(fetchTodos.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchTodos.fulfilled, (state, action) => {
+        const { todos, loadMore } = action.payload;
+        if (loadMore) {
+          state.todos = [...state.todos, ...todos];
+          state.page += 1;
+        } else {
+          state.todos = todos;
+          state.page = 0;
+        }
+        state.hasMore = todos.length === 50;
+        state.loading = false;
+      })
+      .addCase(fetchTodos.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to fetch todos";
+      });
+
+    // Fetch projects
+    builder.addCase(fetchProjects.fulfilled, (state, action) => {
+      state.projects = action.payload;
+    });
+
+    // Fetch labels
+    builder.addCase(fetchLabels.fulfilled, (state, action) => {
+      state.labels = action.payload;
+    });
+
+    // Fetch counts
+    builder.addCase(fetchTodoCounts.fulfilled, (state, action) => {
+      state.counts = action.payload;
+    });
+
+    // Create todo
+    builder.addCase(createTodo.fulfilled, (state, action) => {
+      const newTodo = action.payload;
+
+      // Add to todos list if it matches current filters
+      if (shouldIncludeTodo(newTodo, state.filters)) {
+        state.todos.unshift(newTodo);
+      }
+
+      // Update project count
+      const project = state.projects.find((p) => p.id === newTodo.project_id);
+      if (project) {
+        project.todo_count += 1;
+      }
+
+      // Update label counts
+      newTodo.labels.forEach((label) => {
+        const existingLabel = state.labels.find((l) => l.name === label);
+        if (existingLabel) {
+          existingLabel.count += 1;
+        } else {
+          state.labels.push({ name: label, count: 1 });
+        }
+      });
+    });
+
+    // Update todo
+    builder.addCase(updateTodo.fulfilled, (state, action) => {
+      const updatedTodo = action.payload;
+      const index = state.todos.findIndex((t) => t.id === updatedTodo.id);
+
+      if (index !== -1) {
+        const oldTodo = state.todos[index];
+        state.todos[index] = updatedTodo;
+
+        // Update selected todo if it's the same
+        if (state.selectedTodo?.id === updatedTodo.id) {
+          state.selectedTodo = updatedTodo;
+        }
+
+        // Update project counts if project changed
+        if (oldTodo.project_id !== updatedTodo.project_id) {
+          const oldProject = state.projects.find(
+            (p) => p.id === oldTodo.project_id,
+          );
+          const newProject = state.projects.find(
+            (p) => p.id === updatedTodo.project_id,
+          );
+          if (oldProject) oldProject.todo_count -= 1;
+          if (newProject) newProject.todo_count += 1;
+        }
+      }
+    });
+
+    // Delete todo
+    builder.addCase(deleteTodo.fulfilled, (state, action) => {
+      const todoId = action.payload;
+      const todoIndex = state.todos.findIndex((t) => t.id === todoId);
+
+      if (todoIndex !== -1) {
+        const todo = state.todos[todoIndex];
+        state.todos.splice(todoIndex, 1);
+
+        // Update project count
+        const project = state.projects.find((p) => p.id === todo.project_id);
+        if (project) {
+          project.todo_count -= 1;
+        }
+
+        // Update label counts
+        todo.labels.forEach((label) => {
+          const existingLabel = state.labels.find((l) => l.name === label);
+          if (existingLabel && existingLabel.count > 0) {
+            existingLabel.count -= 1;
+          }
+        });
+
+        // Clear selected todo if it was deleted
+        if (state.selectedTodo?.id === todoId) {
+          state.selectedTodo = null;
+        }
+      }
+    });
+
+    // Handle today todos
+    builder
+      .addCase(fetchTodayTodos.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchTodayTodos.fulfilled, (state, action) => {
+        state.todos = action.payload;
+        state.loading = false;
+        state.hasMore = false;
+      });
+
+    // Handle upcoming todos
+    builder
+      .addCase(fetchUpcomingTodos.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUpcomingTodos.fulfilled, (state, action) => {
+        state.todos = action.payload;
+        state.loading = false;
+        state.hasMore = false;
+      });
+
+    // Handle completed todos
+    builder
+      .addCase(fetchCompletedTodos.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchCompletedTodos.fulfilled, (state, action) => {
+        state.todos = action.payload;
+        state.loading = false;
+        state.hasMore = action.payload.length === 50;
+      });
+
+    // Handle priority todos
+    builder
+      .addCase(fetchTodosByPriority.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchTodosByPriority.fulfilled, (state, action) => {
+        state.todos = action.payload;
+        state.loading = false;
+        state.hasMore = action.payload.length === 50;
+      });
+
+    // Handle project todos
+    builder
+      .addCase(fetchTodosByProject.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchTodosByProject.fulfilled, (state, action) => {
+        state.todos = action.payload;
+        state.loading = false;
+        state.hasMore = action.payload.length === 50;
+      });
+
+    // Handle label todos
+    builder
+      .addCase(fetchTodosByLabel.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchTodosByLabel.fulfilled, (state, action) => {
+        state.todos = action.payload;
+        state.loading = false;
+        state.hasMore = action.payload.length === 50;
+      });
+  },
+});
+
+// Helper function to check if a todo should be included based on filters
+function shouldIncludeTodo(todo: Todo, filters: TodoFilters): boolean {
+  if (filters.completed !== undefined && todo.completed !== filters.completed) {
+    return false;
+  }
+  if (
+    filters.project_id !== undefined &&
+    todo.project_id !== filters.project_id
+  ) {
+    return false;
+  }
+  if (filters.priority && todo.priority !== filters.priority) {
+    return false;
+  }
+  return true;
+}
+
+export const { setSelectedTodo, setFilters, resetTodos, refreshAllData } =
+  todoSlice.actions;
+export default todoSlice.reducer;

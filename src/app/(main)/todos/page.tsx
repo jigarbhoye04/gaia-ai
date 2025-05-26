@@ -1,117 +1,84 @@
 "use client";
 
-import { Spinner } from "@heroui/spinner";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import TodoDetailSheet from "@/components/Todo/TodoDetailSheet";
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
-import { TodoService } from "@/services/todoService";
-import {
-  Priority,
-  Project,
-  Todo,
-  TodoFilters,
-  TodoUpdate,
-} from "@/types/todoTypes";
+import Spinner from "@/components/ui/spinner";
+import { useTodos } from "@/hooks/useTodos";
+import { Priority, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
-  const [todos, setTodos] = useState<Todo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
-  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const ITEMS_PER_PAGE = 50;
+
+  const {
+    todos,
+    projects,
+    selectedTodo,
+    loading,
+    hasMore,
+    loadTodos,
+    modifyTodo,
+    removeTodo,
+    selectTodo,
+  } = useTodos();
 
   // Get filter from URL params
   const projectId = searchParams.get("project");
   const priority = searchParams.get("priority");
   const completed = searchParams.get("completed") === "true";
 
-  useEffect(() => {
-    loadTodos();
-    loadProjects();
-  }, [projectId, priority, completed]);
-
-  const loadProjects = async () => {
-    try {
-      const projectList = await TodoService.getAllProjects();
-      setProjects(projectList);
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-    }
+  // Helper function to validate priority value
+  const getPriorityFilter = (
+    priorityString: string | null,
+  ): Priority | undefined => {
+    if (!priorityString) return undefined;
+    return Object.values(Priority).includes(priorityString as Priority)
+      ? (priorityString as Priority)
+      : undefined;
   };
 
-  const loadTodos = async (loadMore = false) => {
-    if (!loadMore) {
-      setLoading(true);
-      setPage(0);
+  useEffect(() => {
+    const filters: TodoFilters = {
+      project_id: projectId || undefined,
+      priority: getPriorityFilter(priority),
+      completed: completed || undefined,
+    };
+
+    // Default to inbox (no project) if no filters
+    if (!projectId && !priority && !completed) {
+      filters.project_id = undefined;
     }
 
-    try {
-      const filters: TodoFilters = {
-        skip: loadMore ? page * ITEMS_PER_PAGE : 0,
-        limit: ITEMS_PER_PAGE,
-      };
+    loadTodos(filters, false);
+    setPage(0);
+  }, [projectId, priority, completed, loadTodos]);
 
-      // Default to inbox if no project specified
-      if (!projectId && !priority && !completed) {
-        // This will show inbox todos
-        filters.project_id = undefined;
-      } else {
-        if (projectId) filters.project_id = projectId;
-        if (priority) filters.priority = priority as Priority;
-        if (completed) filters.completed = true;
-      }
-
-      const todoList = await TodoService.getAllTodos(filters);
-
-      if (loadMore) {
-        setTodos((prev) => [...prev, ...todoList]);
-      } else {
-        setTodos(todoList);
-      }
-
-      setHasMore(todoList.length === ITEMS_PER_PAGE);
-      if (loadMore) setPage((prev) => prev + 1);
-    } catch (error) {
-      console.error("Failed to load todos:", error);
-    } finally {
-      setLoading(false);
-    }
+  const handleLoadMore = () => {
+    const filters: TodoFilters = {
+      project_id: projectId || undefined,
+      priority: getPriorityFilter(priority),
+      completed: completed || undefined,
+    };
+    loadTodos(filters, true);
+    setPage((prev) => prev + 1);
   };
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
-    try {
-      const updatedTodo = await TodoService.updateTodo(todoId, updates);
-      setTodos((prev) =>
-        prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
-      );
-      // Update the selected todo if it's the one being updated
-      if (selectedTodo && selectedTodo.id === todoId) {
-        setSelectedTodo(updatedTodo);
-      }
-    } catch (error) {
-      console.error("Failed to update todo:", error);
-    }
+    await modifyTodo(todoId, updates);
   };
 
   const handleTodoDelete = async (todoId: string) => {
-    try {
-      await TodoService.deleteTodo(todoId);
-      setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
-    } catch (error) {
-      console.error("Failed to delete todo:", error);
-    }
+    await removeTodo(todoId);
   };
 
-  if (loading) {
+  if (loading && todos.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Spinner size="lg" />
+        <Spinner />
       </div>
     );
   }
@@ -130,7 +97,7 @@ export default function TodosPage() {
             !loading &&
             target.scrollHeight - target.scrollTop <= target.clientHeight + 100
           ) {
-            loadTodos(true);
+            handleLoadMore();
           }
         }}
       >
@@ -138,8 +105,15 @@ export default function TodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoClick={(todo) => setSelectedTodo(todo)}
-          onRefresh={() => loadTodos(false)}
+          onTodoClick={(todo) => selectTodo(todo)}
+          onRefresh={() => {
+            const filters: TodoFilters = {
+              project_id: projectId || undefined,
+              priority: getPriorityFilter(priority),
+              completed: completed || undefined,
+            };
+            loadTodos(filters, false);
+          }}
         />
       </div>
 
@@ -147,7 +121,7 @@ export default function TodosPage() {
       <TodoDetailSheet
         todo={selectedTodo}
         isOpen={!!selectedTodo}
-        onClose={() => setSelectedTodo(null)}
+        onClose={() => selectTodo(null)}
         onUpdate={handleTodoUpdate}
         onDelete={handleTodoDelete}
         projects={projects}

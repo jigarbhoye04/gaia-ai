@@ -1,9 +1,9 @@
-import { Spinner } from "@heroui/spinner";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import StarterText from "@/components/Chat/StarterText";
+import Spinner from "@/components/ui/spinner";
 import { useConversation } from "@/hooks/useConversation";
 import { useConversationList } from "@/hooks/useConversationList";
 import { useLoading } from "@/hooks/useLoading";
@@ -161,11 +161,7 @@ export default function ChatRenderer() {
             className={`animate-spin`}
           /> */}
           <span>{loadingText || "GAIA is thinking..."}</span>
-          <Spinner
-            variant="dots"
-            color="primary"
-            className="relative bottom-1"
-          />
+          <Spinner />
         </div>
       )}
     </>

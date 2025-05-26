@@ -20,7 +20,7 @@ export default function TodoList({
 }: TodoListProps) {
   if (todos.length === 0) {
     return (
-      <div className="flex h-64 flex-col items-center justify-center text-foreground-500">
+      <div className="flex h-64 min-w-5xl flex-col items-center justify-center text-foreground-500">
         <p className="mb-2 text-lg">No tasks found</p>
         <p className="text-sm">Create a new task to get started</p>
       </div>

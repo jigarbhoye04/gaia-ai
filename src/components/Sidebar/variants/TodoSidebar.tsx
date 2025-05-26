@@ -18,8 +18,9 @@ import { useEffect, useState } from "react";
 import { SearchIcon } from "@/components/Misc/icons";
 import AddProjectModal from "@/components/Todo/AddProjectModal";
 import AddTodoModal from "@/components/Todo/AddTodoModal";
-import { TodoService } from "@/services/todoService";
-import { Priority, Project } from "@/types/todoTypes";
+import Spinner from "@/components/ui/spinner";
+import { useTodos } from "@/hooks/useTodos";
+import { Priority } from "@/types/todoTypes";
 
 type MenuItem = {
   label: string;
@@ -95,72 +96,14 @@ export default function TodoSidebar() {
   const pathname = usePathname();
   const [addTodoOpen, setAddTodoOpen] = useState(false);
   const [addProjectOpen, setAddProjectOpen] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [labels, setLabels] = useState<{ name: string; count: number }[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [todoCounts, setTodoCounts] = useState({
-    inbox: 0,
-    today: 0,
-    upcoming: 0,
-    completed: 0,
-  });
+
+  const { projects, labels, counts, loading, refreshAllData } = useTodos();
 
   // Load initial data
   useEffect(() => {
-    loadProjects();
-    loadLabels();
-  }, []);
-
-  // Load counts when projects change
-  useEffect(() => {
-    if (projects.length > 0) {
-      loadTodoCounts();
-    }
-  }, [projects]);
-
-  const loadProjects = async () => {
-    try {
-      const projectList = await TodoService.getAllProjects();
-      setProjects(projectList);
-    } catch (error) {
-      console.error("Failed to load projects:", error);
-    }
-  };
-
-  const loadLabels = async () => {
-    try {
-      const labelList = await TodoService.getAllLabels();
-      setLabels(labelList);
-    } catch (error) {
-      console.error("Failed to load labels:", error);
-    }
-  };
-
-  const loadTodoCounts = async () => {
-    try {
-      // Get stats for overall counts
-      const stats = await TodoService.getTodoStats();
-
-      // Get today's todos
-      const todayTodos = await TodoService.getTodayTodos();
-
-      // Get upcoming todos (next 7 days)
-      const upcomingTodos = await TodoService.getUpcomingTodos(7);
-
-      // Get inbox project ID
-      const inboxProject = projects.find((p) => p.is_default);
-      const inboxCount = inboxProject ? inboxProject.todo_count : 0;
-
-      setTodoCounts({
-        inbox: inboxCount,
-        today: todayTodos.length,
-        upcoming: upcomingTodos.length,
-        completed: stats.completed,
-      });
-    } catch (error) {
-      console.error("Failed to load todo counts:", error);
-    }
-  };
+    refreshAllData();
+  }, [refreshAllData]);
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -178,25 +121,25 @@ export default function TodoSidebar() {
       label: "Inbox",
       icon: Inbox,
       href: "/todos",
-      count: todoCounts.inbox,
+      count: counts.inbox,
     },
     {
       label: "Today",
       icon: CalendarDays,
       href: "/todos/today",
-      count: todoCounts.today,
+      count: counts.today,
     },
     {
       label: "Upcoming",
       icon: Calendar,
       href: "/todos/upcoming",
-      count: todoCounts.upcoming,
+      count: counts.upcoming,
     },
     {
       label: "Completed",
       icon: CheckCircle2,
       href: "/todos/completed",
-      count: todoCounts.completed,
+      count: counts.completed,
     },
   ];
 
@@ -290,127 +233,123 @@ export default function TodoSidebar() {
           />
         </form>
 
-        {/* Main Menu */}
-        <SidebarSection
-          items={mainMenuItems}
-          activeItem={pathname}
-          onItemClick={handleNavigation}
-        />
-
-        <Divider className="my-2" />
-
-        {/* Priorities */}
-        <SidebarSection
-          title="PRIORITIES"
-          items={priorityMenuItems}
-          activeItem={pathname}
-          onItemClick={handleNavigation}
-        />
-
-        <Divider className="my-2" />
-
-        {/* Labels */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between px-2 pb-1">
-            <span className="text-sm font-medium text-foreground-500">
-              LABELS
-            </span>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={() => {
-                // TODO: Implement label creation
-                // For now, users can create labels by adding them to todos
-              }}
-              className="h-6 w-6 min-w-6"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
+        {loading ? (
+          <div className="flex h-[200px] w-full items-center justify-center">
+            <Spinner />
           </div>
-          {labelMenuItems.length > 0 ? (
-            labelMenuItems.map((item) => (
-              <Button
-                key={item.href}
-                fullWidth
-                startContent={<item.icon className="w-[20px]" />}
-                endContent={
-                  item.count !== undefined && (
-                    <span className="ml-auto text-xs text-foreground-500">
-                      {item.count}
-                    </span>
-                  )
-                }
-                className={`justify-start pl-2 text-start ${
-                  pathname === item.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground-600"
-                }`}
-                variant="light"
-                radius="sm"
-                size="sm"
-                onPress={() => handleNavigation(item.href)}
-              >
-                {item.label}
-              </Button>
-            ))
-          ) : (
-            <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
-              No labels yet
-            </div>
-          )}
-        </div>
+        ) : (
+          <>
+            {/* Main Menu */}
+            <SidebarSection
+              items={mainMenuItems}
+              activeItem={pathname}
+              onItemClick={handleNavigation}
+            />
 
-        <Divider className="my-2" />
+            <Divider className="my-2" />
 
-        {/* Projects */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between px-2 pb-1">
-            <span className="text-sm font-medium text-foreground-500">
-              PROJECTS
-            </span>
-            <Button
-              isIconOnly
-              size="sm"
-              variant="light"
-              onPress={() => setAddProjectOpen(true)}
-              className="h-6 w-6 min-w-6"
-            >
-              <Plus className="h-3 w-3" />
-            </Button>
-          </div>
-          {projectMenuItems.length > 0 ? (
-            projectMenuItems.map((item) => (
-              <Button
-                key={item.href}
-                fullWidth
-                startContent={<item.icon />}
-                endContent={
-                  item.count !== undefined && (
-                    <span className="ml-auto text-xs text-foreground-500">
-                      {item.count}
-                    </span>
-                  )
-                }
-                className={`justify-start pl-2 text-start ${
-                  pathname === item.href
-                    ? "bg-primary/10 text-primary"
-                    : "text-foreground-600"
-                }`}
-                variant="light"
-                radius="sm"
-                size="sm"
-                onPress={() => handleNavigation(item.href)}
-              >
-                {item.label}
-              </Button>
-            ))
-          ) : (
-            <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
-              No projects yet
+            {/* Priorities */}
+            <SidebarSection
+              title="PRIORITIES"
+              items={priorityMenuItems}
+              activeItem={pathname}
+              onItemClick={handleNavigation}
+            />
+
+            <Divider className="my-2" />
+
+            {/* Labels */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between px-2 pb-1">
+                <span className="text-xs font-medium text-foreground-400">
+                  LABELS
+                </span>
+              </div>
+              {labelMenuItems.length > 0 ? (
+                labelMenuItems.map((item) => (
+                  <Button
+                    key={item.href}
+                    fullWidth
+                    startContent={<item.icon className="w-[20px]" />}
+                    endContent={
+                      item.count !== undefined && (
+                        <span className="ml-auto text-xs text-foreground-400">
+                          {item.count}
+                        </span>
+                      )
+                    }
+                    className={`justify-start pl-2 text-start ${
+                      pathname === item.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground-600"
+                    }`}
+                    variant="light"
+                    radius="sm"
+                    size="sm"
+                    onPress={() => handleNavigation(item.href)}
+                  >
+                    {item.label}
+                  </Button>
+                ))
+              ) : (
+                <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
+                  No labels yet
+                </div>
+              )}
             </div>
-          )}
-        </div>
+
+            <Divider className="my-2" />
+
+            {/* Projects */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between px-2 pb-1">
+                <span className="text-xs font-medium text-foreground-400">
+                  PROJECTS
+                </span>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="light"
+                  onPress={() => setAddProjectOpen(true)}
+                  className="h-6 w-6 min-w-6"
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {projectMenuItems.length > 0 ? (
+                projectMenuItems.map((item) => (
+                  <Button
+                    key={item.href}
+                    fullWidth
+                    startContent={<item.icon />}
+                    endContent={
+                      item.count !== undefined && (
+                        <span className="ml-auto text-xs text-foreground-500">
+                          {item.count}
+                        </span>
+                      )
+                    }
+                    className={`justify-start pl-2 text-start ${
+                      pathname === item.href
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground-600"
+                    }`}
+                    variant="light"
+                    radius="sm"
+                    size="sm"
+                    onPress={() => handleNavigation(item.href)}
+                  >
+                    {item.label}
+                  </Button>
+                ))
+              ) : (
+                <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
+                  No projects yet
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modals */}
@@ -418,18 +357,14 @@ export default function TodoSidebar() {
         open={addTodoOpen}
         onOpenChange={setAddTodoOpen}
         onSuccess={() => {
-          // Reload all data after adding a todo
-          loadProjects();
-          loadLabels();
-          // Counts will update automatically when projects update
+          // No need to manually refresh - Redux will handle it
         }}
       />
       <AddProjectModal
         open={addProjectOpen}
         onOpenChange={setAddProjectOpen}
         onSuccess={() => {
-          loadProjects();
-          loadLabels();
+          refreshAllData();
         }}
       />
     </>

@@ -10,6 +10,7 @@ import imageDialogReducer from "./slices/imageDialogSlice";
 import loadingReducer from "./slices/loadingSlice";
 import loadingTextReducer from "./slices/loadingTextSlice";
 import loginModalReducer from "./slices/loginModalSlice";
+import todoReducer from "./slices/todoSlice";
 import userReducer from "./slices/userSlice";
 
 export const store = configureStore({
@@ -23,6 +24,7 @@ export const store = configureStore({
     imageDialog: imageDialogReducer,
     calendarModal: calendarModalReducer,
     header: headerReducer,
+    todos: todoReducer,
   },
 });
 

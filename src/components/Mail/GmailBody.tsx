@@ -1,7 +1,7 @@
-import { Spinner } from "@heroui/spinner";
 import DOMPurify from "dompurify";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import Spinner from "@/components/ui/spinner";
 import { EmailData, EmailPart } from "@/types/mailTypes";
 
 export const decodeBase64 = (str: string): string => {
@@ -63,7 +63,7 @@ export default function GmailBody({ email }: { email: EmailData | null }) {
     <div className="relative w-full overflow-auto shadow-md">
       {loading && (
         <div className="absolute inset-0 z-10 flex h-full w-full items-start justify-center bg-black/90 p-10 backdrop-blur-3xl">
-          <Spinner color="primary" className="z-11" size="lg" />
+          <Spinner />
         </div>
       )}
       <div ref={shadowHostRef} className="w-full bg-white p-4 text-black" />

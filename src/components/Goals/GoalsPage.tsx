@@ -2,7 +2,6 @@
 
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { Spinner } from "@heroui/spinner";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import AddGoalDialog from "@/components/Goals/AddGoalDialog";
 import { GoalCard } from "@/components/Goals/GoalCard";
 import { Target04Icon } from "@/components/Misc/icons";
+import Spinner from "@/components/ui/spinner";
 import { apiauth } from "@/utils/apiaxios";
 
 export default function GoalsPage() {

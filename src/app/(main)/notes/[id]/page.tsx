@@ -1,6 +1,5 @@
 "use client";
 
-import { Spinner } from "@heroui/spinner";
 import CharacterCount from "@tiptap/extension-character-count";
 import Highlight from "@tiptap/extension-highlight";
 import TipTapLink from "@tiptap/extension-link";
@@ -20,6 +19,7 @@ import { SaveIcon } from "@/components/Misc/icons";
 import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
 import { MenuBar } from "@/components/Notes/NotesMenuBar";
 import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
 import { useHeader } from "@/hooks/useHeader";
 import { truncateTitle } from "@/lib/utils";
 import { apiauth } from "@/utils/apiaxios";

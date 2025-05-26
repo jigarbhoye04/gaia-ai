@@ -1,6 +1,6 @@
 import { Button } from "@heroui/button";
 import { Loader } from "lucide-react";
-// import { Spinner } from "@heroui/spinner";
+// import Spinner from "@/components/ui/spinner";
 import * as React from "react";
 
 import api from "@/utils/apiaxios";

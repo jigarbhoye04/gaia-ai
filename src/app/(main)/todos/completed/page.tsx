@@ -1,10 +1,10 @@
 "use client";
 
-import { Spinner } from "@heroui/spinner";
 import { useEffect, useState } from "react";
 
 import TodoHeader from "@/components/Todo/TodoHeader";
 import TodoList from "@/components/Todo/TodoList";
+import Spinner from "@/components/ui/spinner";
 import { TodoService } from "@/services/todoService";
 import { Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
 
@@ -60,7 +60,7 @@ export default function CompletedTodosPage() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Spinner size="lg" />
+        <Spinner />
       </div>
     );
   }

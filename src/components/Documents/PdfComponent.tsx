@@ -1,8 +1,9 @@
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-import { Spinner } from "@heroui/spinner";
 import { Document, Page, pdfjs } from "react-pdf";
+
+import Spinner from "@/components/ui/spinner";
 
 import { Pdf02Icon } from "../Misc/icons";
 
@@ -54,11 +55,7 @@ export function PdfComponent({
 
   return (
     <Document file={file}>
-      <Page
-        loading={<Spinner color="primary" />}
-        pageNumber={pageNumber}
-        width={width}
-      />
+      <Page loading={<Spinner />} pageNumber={pageNumber} width={width} />
     </Document>
   );
 }

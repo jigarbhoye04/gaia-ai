@@ -1,12 +1,12 @@
 "use client";
 
-import { Spinner } from "@heroui/spinner";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { GoogleColouredIcon } from "@/components/Misc/icons";
 import { Button } from "@/components/ui/button";
+import Spinner from "@/components/ui/spinner";
 import { useUser } from "@/hooks/useUser";
 
 import { FlickeringGrid } from "../MagicUI/flickering-grid";
@@ -41,7 +41,7 @@ export default function Login() {
         >
           {loading ? (
             <>
-              <Spinner size="sm" />
+              <Spinner />
               <span>Loading ...</span>
             </>
           ) : (

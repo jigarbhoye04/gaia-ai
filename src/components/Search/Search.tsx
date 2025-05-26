@@ -1,13 +1,13 @@
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import { Spinner } from "@heroui/spinner";
 import { ArrowUpRight, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 import { InternetIcon } from "@/components/Misc/icons";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Spinner from "@/components/ui/spinner";
 import { apiauth } from "@/utils/apiaxios";
 import { parseDate } from "@/utils/fetchDate";
 

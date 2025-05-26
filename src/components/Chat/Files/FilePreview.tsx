@@ -1,5 +1,4 @@
 import { Button } from "@heroui/button";
-import { Spinner } from "@heroui/spinner";
 import {
   File,
   FileArchive,
@@ -15,6 +14,7 @@ import {
 import Image from "next/image";
 
 import { Pdf02Icon } from "@/components/Misc/icons";
+import Spinner from "@/components/ui/spinner";
 
 export interface UploadedFilePreview {
   id: string;
@@ -161,7 +161,7 @@ const FilePreview: React.FC<FilePreviewProps> = ({ files, onRemove }) => {
           >
             {file.isUploading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/30">
-                <Spinner variant="simple" color="primary" size="sm" />
+                <Spinner />
               </div>
             )}
 
