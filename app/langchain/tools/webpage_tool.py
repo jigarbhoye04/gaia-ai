@@ -5,26 +5,18 @@ from typing import Annotated, Dict, List, Union
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
+from app.docstrings.langchain.tools.webpage_tool_docs import FETCH_WEBPAGES
+from app.docstrings.utils import with_doc
 from app.langchain.templates.fetch_template import FETCH_TEMPLATE
 from app.utils.search_utils import perform_fetch
 
 
 @tool
+@with_doc(FETCH_WEBPAGES)
 async def fetch_webpages(
     urls: Annotated[List[str], "List of URLs to fetch content from"],
     # state: Annotated[dict, InjectedState],
 ) -> Dict[str, Union[str, List[str]]]:
-    """Fetch content from provided URLs and return a formatted summary.
-
-    This tool retrieves web content from multiple URLs concurrently.
-    It automatically adds 'https://' to URLs missing a protocol prefix.
-
-    Args:
-        urls: A list of website URLs to fetch content from. If not provided, will try to use URLs from the state.
-
-    Returns:
-        A dictionary with either successful webpage data or an error message
-    """
     try:
         if not urls:
             return {"error": "No URLs were provided for fetching."}

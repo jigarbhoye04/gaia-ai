@@ -1,26 +1,16 @@
 from typing import Annotated
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
+from app.docstrings.langchain.tools.weather_tool_docs import GET_WEATHER
+from app.docstrings.utils import with_doc
 from app.utils.weather_utils import user_weather
 
 
 @tool
+@with_doc(GET_WEATHER)
 async def get_weather(
     location: Annotated[str, "Name of the location (e.g. Surat,IN)"],
-) -> dict|str:
-    """
-    Fetches and formats the weather report for a given location.
-
-    This tool queries OpenWeather API using the provided location name and formats
-    the data into a user-friendly weather summary using a prompt template. Designed
-    for LangChain-compatible agents to deliver natural language outputs.
-
-    Args:
-        location (str): The location for which to retrieve the weather report.
-
-    Returns:
-        str: A JSON string containing both the formatted weather text and raw weather data.
-    """
+) -> dict | str:
     writer = get_stream_writer()
     writer({"progress": f"Fetching weather information for {location}..."})
 

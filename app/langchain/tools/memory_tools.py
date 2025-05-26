@@ -10,30 +10,22 @@ from typing import Annotated, Dict, List, Optional
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 
+from app.docstrings.langchain.tools.memory_tool_docs import (
+    ADD_MEMORY,
+    SEARCH_MEMORY,
+    GET_ALL_MEMORY,
+)
+from app.docstrings.utils import with_doc
 from app.services.memory_service import memory_service
 
 
 @tool
+@with_doc(ADD_MEMORY)
 async def add_memory(
     content: Annotated[str, "Memory content to store"],
     metadata: Annotated[Optional[Dict], "Additional metadata for the memory"] = None,
     config: RunnableConfig = None,
 ) -> str:
-    """
-    Store a new memory with associated metadata.
-    
-    This tool stores important information for later retrieval. Use it to remember
-    user preferences, key facts, or conversation history that may be relevant in future
-    interactions.
-    
-    Args:
-        content: The memory content to store
-        metadata: Optional metadata to associate with the memory
-        config: Runtime configuration containing user context
-        
-    Returns:
-        Confirmation message with the memory ID
-    """
     if not config:
         return "Error: Configuration required but not provided"
     
@@ -56,25 +48,12 @@ async def add_memory(
 
 
 @tool
+@with_doc(SEARCH_MEMORY)
 async def search_memory(
     query: Annotated[str, "Query string to search for"],
     limit: Annotated[int, "Maximum number of results to return"] = 5,
-    config: RunnableConfig = None
+    config: RunnableConfig = None,
 ) -> str:
-    """
-    Search stored memories using natural language queries.
-    
-    This tool enables retrieval of previously stored memories that are semantically
-    similar to the query. Use it to recall relevant information from past interactions.
-    
-    Args:
-        query: The search query text
-        limit: Maximum number of results to return
-        config: Runtime configuration containing user context
-        
-    Returns:
-        Formatted string with search results
-    """
     if not config:
         return "Error: Configuration required but not provided"
     
@@ -102,25 +81,12 @@ async def search_memory(
 
 
 @tool
+@with_doc(GET_ALL_MEMORY)
 async def get_all_memory(
     page: Annotated[int, "Page number for pagination"] = 1,
     page_size: Annotated[int, "Number of results per page"] = 10,
-    config: RunnableConfig = None
+    config: RunnableConfig = None,
 ) -> str:
-    """
-    Retrieve all memories matching specified criteria, with pagination.
-    
-    This tool returns all stored memories for the user, organized by pages.
-    Use it to browse through the knowledge base when you need a comprehensive view.
-    
-    Args:
-        page: Page number to retrieve (starting from 1)
-        page_size: Number of results per page
-        config: Runtime configuration containing user context
-        
-    Returns:
-        Formatted string with paginated memory results
-    """
     if not config:
         return "Error: Configuration required but not provided"
     
