@@ -126,7 +126,7 @@ export const useTodos = () => {
           }
           return result;
         }
-        
+
         // Update succeeded
         // Background sync - don't await these
         const needsCountRefresh =
@@ -151,7 +151,7 @@ export const useTodos = () => {
             console.error("Failed to refresh labels:", error);
           });
         }
-        
+
         return result;
       } catch (error) {
         // Revert on error

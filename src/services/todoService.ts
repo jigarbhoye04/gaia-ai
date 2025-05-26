@@ -62,15 +62,18 @@ export const TodoService = {
   updateTodo: async (todoId: string, update: TodoUpdate): Promise<Todo> => {
     try {
       const response = await apiauth.put(`/todos/${todoId}`, update);
-      
+
       // Check if the response has the correct completed status
-      if (update.completed !== undefined && response.data.completed !== update.completed) {
+      if (
+        update.completed !== undefined &&
+        response.data.completed !== update.completed
+      ) {
         console.error("Server returned wrong completed status!", {
           requested: update.completed,
-          received: response.data.completed
+          received: response.data.completed,
         });
       }
-      
+
       toast.success("Task updated successfully");
       return response.data;
     } catch (error) {
@@ -297,6 +300,53 @@ export const TodoService = {
     } catch (error) {
       console.error("Error fetching todos by label:", error);
       toast.error("Failed to fetch todos by label");
+      throw error;
+    }
+  },
+
+  semanticSearchTodos: async (
+    query: string,
+    options?: {
+      limit?: number;
+      project_id?: string;
+      completed?: boolean;
+      priority?: string;
+    },
+  ): Promise<Todo[]> => {
+    try {
+      const params = new URLSearchParams();
+      params.append("q", query);
+
+      if (options?.limit) params.append("limit", String(options.limit));
+      if (options?.project_id) params.append("project_id", options.project_id);
+      if (options?.completed !== undefined)
+        params.append("completed", String(options.completed));
+      if (options?.priority) params.append("priority", options.priority);
+
+      const response = await apiauth.get(
+        `/todos/search/semantic?${params.toString()}`,
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error in semantic search:", error);
+      toast.error("Failed to perform semantic search");
+      throw error;
+    }
+  },
+
+  reindexTodos: async (batchSize?: number): Promise<Todo> => {
+    try {
+      const params = new URLSearchParams();
+      if (batchSize) params.append("batch_size", String(batchSize));
+
+      const response = await apiauth.post(
+        `/todos/reindex?${params.toString()}`,
+      );
+      toast.success("Todo index refreshed successfully");
+      return response.data;
+    } catch (error) {
+      console.error("Error reindexing todos:", error);
+      toast.error("Failed to refresh todo index");
       throw error;
     }
   },

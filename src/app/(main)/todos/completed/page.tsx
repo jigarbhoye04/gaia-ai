@@ -9,13 +9,8 @@ import { useTodos } from "@/hooks/useTodos";
 import { TodoUpdate } from "@/types/todoTypes";
 
 export default function CompletedTodosPage() {
-  const {
-    todos,
-    loading,
-    loadCompletedTodos,
-    modifyTodo,
-    removeTodo,
-  } = useTodos();
+  const { todos, loading, loadCompletedTodos, modifyTodo, removeTodo } =
+    useTodos();
 
   useEffect(() => {
     loadCompletedTodos();
@@ -23,7 +18,7 @@ export default function CompletedTodosPage() {
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     await modifyTodo(todoId, updates);
-    
+
     // If todo was marked incomplete, reload the list
     if (updates.completed === false) {
       await loadCompletedTodos();

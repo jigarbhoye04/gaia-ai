@@ -338,59 +338,65 @@ const todoSlice = createSlice({
       if (index !== -1) {
         const currentTodo = state.todos[index];
         state.todos[index] = originalTodo;
-        
+
         // Revert selected todo if it's the same
         if (state.selectedTodo?.id === todoId) {
           state.selectedTodo = originalTodo;
         }
-        
+
         // Revert count changes if completion status was changed
         if (currentTodo.completed !== originalTodo.completed) {
           if (currentTodo.completed && !originalTodo.completed) {
             // Was marked complete, now reverting to incomplete
             state.counts.completed = Math.max(0, state.counts.completed - 1);
-            
+
             // Restore counts based on todo properties
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (originalTodo.due_date) {
               const dueDate = new Date(originalTodo.due_date);
               dueDate.setHours(0, 0, 0, 0);
-              
+
               if (dueDate.getTime() === today.getTime()) {
                 state.counts.today += 1;
-              } else if (dueDate > today && dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+              } else if (
+                dueDate > today &&
+                dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+              ) {
                 state.counts.upcoming += 1;
               }
             }
-            
+
             // Restore inbox count if in default project
-            const inboxProject = state.projects.find(p => p.is_default);
+            const inboxProject = state.projects.find((p) => p.is_default);
             if (inboxProject && originalTodo.project_id === inboxProject.id) {
               state.counts.inbox += 1;
             }
           } else if (!currentTodo.completed && originalTodo.completed) {
             // Was marked incomplete, now reverting to complete
             state.counts.completed += 1;
-            
+
             // Restore counts based on todo properties
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (originalTodo.due_date) {
               const dueDate = new Date(originalTodo.due_date);
               dueDate.setHours(0, 0, 0, 0);
-              
+
               if (dueDate.getTime() === today.getTime()) {
                 state.counts.today = Math.max(0, state.counts.today - 1);
-              } else if (dueDate > today && dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)) {
+              } else if (
+                dueDate > today &&
+                dueDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+              ) {
                 state.counts.upcoming = Math.max(0, state.counts.upcoming - 1);
               }
             }
-            
+
             // Restore inbox count if in default project
-            const inboxProject = state.projects.find(p => p.is_default);
+            const inboxProject = state.projects.find((p) => p.is_default);
             if (inboxProject && originalTodo.project_id === inboxProject.id) {
               state.counts.inbox = Math.max(0, state.counts.inbox - 1);
             }
@@ -505,63 +511,64 @@ const todoSlice = createSlice({
         // Don't clear pending updates here - wait for fulfilled
       })
       .addCase(updateTodo.fulfilled, (state, action) => {
-      const updatedTodo = action.payload;
-      const todoId = updatedTodo.id;
-      const index = state.todos.findIndex((t) => t.id === todoId);
+        const updatedTodo = action.payload;
+        const todoId = updatedTodo.id;
+        const index = state.todos.findIndex((t) => t.id === todoId);
 
-      if (index !== -1) {
-        const oldTodo = state.todos[index];
-        
-        // Apply the server response
-        state.todos[index] = updatedTodo;
-        
-        // Clear any pending updates for this todo
-        delete state.pendingUpdates[todoId];
+        if (index !== -1) {
+          const oldTodo = state.todos[index];
 
-        // Update selected todo if it's the same
-        if (state.selectedTodo?.id === updatedTodo.id) {
-          state.selectedTodo = updatedTodo;
-        }
+          // Apply the server response
+          state.todos[index] = updatedTodo;
 
-        // Update project counts if project changed or completion status changed
-        if (
-          oldTodo.project_id !== updatedTodo.project_id ||
-          oldTodo.completed !== updatedTodo.completed
-        ) {
-          // Handle old project
-          if (oldTodo.project_id) {
-            const oldProject = state.projects.find(
-              (p) => p.id === oldTodo.project_id,
-            );
-            if (oldProject && oldTodo.project_id !== updatedTodo.project_id) {
-              oldProject.todo_count = Math.max(0, oldProject.todo_count - 1);
-            }
+          // Clear any pending updates for this todo
+          delete state.pendingUpdates[todoId];
+
+          // Update selected todo if it's the same
+          if (state.selectedTodo?.id === updatedTodo.id) {
+            state.selectedTodo = updatedTodo;
           }
 
-          // Handle new project
+          // Update project counts if project changed or completion status changed
           if (
-            updatedTodo.project_id &&
-            oldTodo.project_id !== updatedTodo.project_id
+            oldTodo.project_id !== updatedTodo.project_id ||
+            oldTodo.completed !== updatedTodo.completed
           ) {
-            const newProject = state.projects.find(
-              (p) => p.id === updatedTodo.project_id,
-            );
-            if (newProject) {
-              newProject.todo_count += 1;
+            // Handle old project
+            if (oldTodo.project_id) {
+              const oldProject = state.projects.find(
+                (p) => p.id === oldTodo.project_id,
+              );
+              if (oldProject && oldTodo.project_id !== updatedTodo.project_id) {
+                oldProject.todo_count = Math.max(0, oldProject.todo_count - 1);
+              }
+            }
+
+            // Handle new project
+            if (
+              updatedTodo.project_id &&
+              oldTodo.project_id !== updatedTodo.project_id
+            ) {
+              const newProject = state.projects.find(
+                (p) => p.id === updatedTodo.project_id,
+              );
+              if (newProject) {
+                newProject.todo_count += 1;
+              }
             }
           }
-        }
 
-        // Update label counts if labels changed
-        const oldLabels = oldTodo.labels || [];
-        const newLabels = updatedTodo.labels || [];
-        if (
-          JSON.stringify(oldLabels.sort()) !== JSON.stringify(newLabels.sort())
-        ) {
-          updateLabelCounts(state, newLabels, oldLabels);
+          // Update label counts if labels changed
+          const oldLabels = oldTodo.labels || [];
+          const newLabels = updatedTodo.labels || [];
+          if (
+            JSON.stringify(oldLabels.sort()) !==
+            JSON.stringify(newLabels.sort())
+          ) {
+            updateLabelCounts(state, newLabels, oldLabels);
+          }
         }
-      }
-    })
+      })
       .addCase(updateTodo.rejected, (state, action) => {
         state.error = action.error.message || "Failed to update todo";
       });
