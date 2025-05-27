@@ -213,7 +213,7 @@ export default function ChatsList() {
           {/* Grouped Conversations by Time Frame */}
           {sortedTimeFrames.map(([timeFrame, conversationsGroup]) => (
             <div key={timeFrame}>
-              <div className="sticky top-0 z-1 bg-black px-2 pt-3 pb-1 text-xs font-medium text-foreground-500">
+              <div className="sticky top-0 z-1 bg-zinc-950 px-2 pt-3 pb-1 text-xs font-medium text-foreground-500">
                 {timeFrame}
               </div>
               {conversationsGroup

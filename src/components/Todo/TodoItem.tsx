@@ -87,25 +87,21 @@ export default function TodoItem({
         } ${todo.completed ? "opacity-60" : ""}`}
         isPressable
         shadow="sm"
-        onPress={(e) => {
-          // Don't trigger card click if clicking on interactive elements
-          const target = e.target as HTMLElement;
-          if (target.closest('input, button, [role="checkbox"]')) {
-            return;
-          }
+        onPress={() => {
           onClick?.(todo);
         }}
       >
         <CardBody className="p-3">
           <div className="flex items-center gap-3">
             {/* Complete Checkbox */}
-            <Checkbox
-              isSelected={todo.completed}
-              onChange={handleToggleComplete}
-              size="sm"
-              color="success"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div onClick={(e) => e.stopPropagation()}>
+              <Checkbox
+                isSelected={todo.completed}
+                onChange={handleToggleComplete}
+                size="sm"
+                color="success"
+              />
+            </div>
 
             {/* Main Content */}
             <div className="min-w-0 flex-1">
@@ -161,20 +157,22 @@ export default function TodoItem({
 
                   {/* Subtasks Count */}
                   {todo.subtasks.length > 0 && (
-                    <Button
-                      size="sm"
-                      variant="light"
-                      className="h-6 min-w-0 px-2"
-                      onPress={() => setShowSubtasks(!showSubtasks)}
-                    >
-                      {showSubtasks ? (
-                        <ChevronDown className="h-3 w-3" />
-                      ) : (
-                        <ChevronRight className="h-3 w-3" />
-                      )}
-                      {todo.subtasks.filter((s) => s.completed).length}/
-                      {todo.subtasks.length}
-                    </Button>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        className="h-6 min-w-0 px-2"
+                        onPress={() => setShowSubtasks(!showSubtasks)}
+                      >
+                        {showSubtasks ? (
+                          <ChevronDown className="h-3 w-3" />
+                        ) : (
+                          <ChevronRight className="h-3 w-3" />
+                        )}
+                        {todo.subtasks.filter((s) => s.completed).length}/
+                        {todo.subtasks.length}
+                      </Button>
+                    </div>
                   )}
                 </div>
               )}
@@ -183,7 +181,7 @@ export default function TodoItem({
               {showSubtasks && todo.subtasks.length > 0 && (
                 <div className="mt-3 ml-2 space-y-1">
                   {todo.subtasks.map((subtask) => (
-                    <div key={subtask.id} className="flex items-center gap-2">
+                    <div key={subtask.id} className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         size="sm"
                         isSelected={subtask.completed}
@@ -213,78 +211,82 @@ export default function TodoItem({
                   ))}
 
                   {/* Add Subtask */}
-                  {addingSubtask ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={newSubtaskTitle}
-                        onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleAddSubtask();
-                          if (e.key === "Escape") {
-                            setAddingSubtask(false);
-                            setNewSubtaskTitle("");
-                          }
-                        }}
-                        placeholder="Add subtask..."
-                        className="flex-1 rounded border border-default-200 px-2 py-1 text-xs"
-                        autoFocus
-                      />
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {addingSubtask ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={newSubtaskTitle}
+                          onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleAddSubtask();
+                            if (e.key === "Escape") {
+                              setAddingSubtask(false);
+                              setNewSubtaskTitle("");
+                            }
+                          }}
+                          placeholder="Add subtask..."
+                          className="flex-1 rounded border border-default-200 px-2 py-1 text-xs"
+                          autoFocus
+                        />
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          className="h-6 min-w-0 px-2"
+                          onPress={handleAddSubtask}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
                         size="sm"
-                        variant="flat"
-                        className="h-6 min-w-0 px-2"
-                        onPress={handleAddSubtask}
+                        variant="light"
+                        className="h-6 px-2"
+                        startContent={<Plus className="h-3 w-3" />}
+                        onPress={() => setAddingSubtask(true)}
                       >
-                        Add
+                        Add subtask
                       </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="light"
-                      className="h-6 px-2"
-                      startContent={<Plus className="h-3 w-3" />}
-                      onPress={() => setAddingSubtask(true)}
-                    >
-                      Add subtask
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
             </div>
 
             {/* Actions Menu */}
-            <Dropdown>
-              <DropdownTrigger>
-                <Button
-                  isIconOnly
-                  size="sm"
-                  variant="light"
-                  className="h-6 w-6 min-w-6"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Todo actions">
-                <DropdownItem
-                  key="edit"
-                  startContent={<Edit2 className="h-4 w-4" />}
-                  onPress={() => setEditOpen(true)}
-                >
-                  Edit
-                </DropdownItem>
-                <DropdownItem
-                  key="delete"
-                  startContent={<Trash2 className="h-4 w-4" />}
-                  className="text-danger"
-                  color="danger"
-                  onPress={() => onDelete(todo.id)}
-                >
-                  Delete
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+            <div onClick={(e) => e.stopPropagation()}>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="light"
+                    className="h-6 w-6 min-w-6"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Todo actions">
+                  <DropdownItem
+                    key="edit"
+                    startContent={<Edit2 className="h-4 w-4" />}
+                    onPress={() => setEditOpen(true)}
+                  >
+                    Edit
+                  </DropdownItem>
+                  <DropdownItem
+                    key="delete"
+                    startContent={<Trash2 className="h-4 w-4" />}
+                    className="text-danger"
+                    color="danger"
+                    onPress={() => onDelete(todo.id)}
+                  >
+                    Delete
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
           </div>
         </CardBody>
       </Card>
