@@ -240,21 +240,6 @@ async def bulk_complete_todos(
         )
 
 
-# Search Index Management
-@router.post("/todos/reindex")
-async def reindex_todos(
-    batch_size: int = Query(100, ge=10, le=1000), user: dict = Depends(get_current_user)
-):
-    """Reindex all todos for semantic search."""
-    try:
-        return await TodoService.reindex_todos(user["user_id"], batch_size)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Reindexing failed",
-        )
-
-
 # Project Endpoints
 @router.get("/projects", response_model=List[ProjectResponse])
 async def list_projects(user: dict = Depends(get_current_user)):

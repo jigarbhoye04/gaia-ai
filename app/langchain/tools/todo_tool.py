@@ -3,6 +3,7 @@ from datetime import datetime
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.todo_tool_docs import (
@@ -12,8 +13,6 @@ from app.docstrings.langchain.tools.todo_tool_docs import (
     DELETE_TODO,
     SEARCH_TODOS,
     SEMANTIC_SEARCH_TODOS,
-    HYBRID_SEARCH_TODOS,
-    REINDEX_TODOS,
     GET_TODO_STATS,
     GET_TODAY_TODOS,
     GET_UPCOMING_TODOS,
@@ -113,7 +112,21 @@ async def create_todo(
         )
         
         result = await create_todo_service(todo_data, user_id)
-        return {"todo": result.model_dump(), "error": None}
+        todo_dict = result.model_dump(mode="json")
+
+        # Stream the created todo to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": [todo_dict],
+                    "action": "create",
+                    "message": f"Created task: {title}",
+                }
+            }
+        )
+
+        return {"todo": todo_dict, "error": None}
         
     except Exception as e:
         error_msg = f"Error creating todo: {str(e)}"
@@ -157,13 +170,23 @@ async def list_todos(
             skip=skip,
             limit=limit
         )
-        
-        return {
-            "todos": [todo.model_dump() for todo in results],
-            "count": len(results),
-            "error": None
-        }
-        
+
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream the todo data to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "list",
+                    "message": f"Found {len(results)} task{'s' if len(results) != 1 else ''}",
+                }
+            }
+        )
+
+        return {"todos": todos_data, "count": len(results), "error": None}
+
     except Exception as e:
         error_msg = f"Error listing todos: {str(e)}"
         logger.error(error_msg)
@@ -180,17 +203,19 @@ async def update_todo(
     labels: Annotated[Optional[List[str]], "New list of labels"] = None,
     due_date: Annotated[Optional[datetime], "New due date"] = None,
     due_date_timezone: Annotated[Optional[str], "New timezone for due date"] = None,
-    priority: Annotated[Optional[str], "New priority: high, medium, low, or none"] = None,
+    priority: Annotated[
+        Optional[str], "New priority: high, medium, low, or none"
+    ] = None,
     project_id: Annotated[Optional[str], "Move to different project"] = None,
     completed: Annotated[Optional[bool], "Mark as complete/incomplete"] = None,
 ) -> Dict[str, Any]:
     try:
         logger.info(f"Todo Tool: Updating todo {todo_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todo": None}
-        
+
         # Build update data with only provided fields
         update_data = {}
         if title is not None:
@@ -209,11 +234,11 @@ async def update_todo(
             update_data["project_id"] = project_id
         if completed is not None:
             update_data["completed"] = completed
-        
+
         update_request = UpdateTodoRequest(**update_data)
         result = await update_todo_service(todo_id, update_request, user_id)
-        
-        return {"todo": result.model_dump(), "error": None}
+
+        return {"todo": result.model_dump(mode="json"), "error": None}
         
     except Exception as e:
         error_msg = f"Error updating todo: {str(e)}"
@@ -257,13 +282,22 @@ async def search_todos(
             return {"error": "User authentication required", "todos": []}
         
         results = await search_todos_service(query, user_id)
-        
-        return {
-            "todos": [todo.model_dump() for todo in results],
-            "count": len(results),
-            "error": None
-        }
-        
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream the search results to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "search",
+                    "message": f"Found {len(results)} task{'s' if len(results) != 1 else ''} matching '{query}'",
+                }
+            }
+        )
+
+        return {"todos": todos_data, "count": len(results), "error": None}
+
     except Exception as e:
         error_msg = f"Error searching todos: {str(e)}"
         logger.error(error_msg)
@@ -303,7 +337,7 @@ async def semantic_search_todos(
         )
 
         return {
-            "todos": [todo.model_dump() for todo in results],
+            "todos": [todo.model_dump(mode="json") for todo in results],
             "count": len(results),
             "search_type": "semantic",
             "error": None,
@@ -316,103 +350,31 @@ async def semantic_search_todos(
 
 
 @tool
-@with_doc(HYBRID_SEARCH_TODOS)
-async def hybrid_search_todos(
-    config: RunnableConfig,
-    query: Annotated[str, "Search query string (required)"],
-    limit: Annotated[int, "Maximum number of results to return"] = 20,
-    project_id: Annotated[Optional[str], "Filter by specific project ID"] = None,
-    completed: Annotated[Optional[bool], "Filter by completion status"] = None,
-    priority: Annotated[
-        Optional[str], "Filter by priority: high, medium, low, or none"
-    ] = None,
-    semantic_weight: Annotated[float, "Weight for semantic results (0.0-1.0)"] = 0.7,
-) -> Dict[str, Any]:
-    try:
-        logger.info(
-            f"Todo Tool: Hybrid search for '{query}' with semantic weight {semantic_weight}"
-        )
-        user_id = get_user_id_from_config(config)
-
-        if not user_id:
-            return {"error": "User authentication required", "todos": []}
-
-        # Ensure limit is reasonable
-        if limit > 50:
-            limit = 50
-
-        # Ensure semantic_weight is in valid range
-        if semantic_weight < 0.0:
-            semantic_weight = 0.0
-        elif semantic_weight > 1.0:
-            semantic_weight = 1.0
-
-        results = await hybrid_search_todos_service(
-            query=query,
-            user_id=user_id,
-            limit=limit,
-            project_id=project_id,
-            completed=completed,
-            priority=priority,
-            semantic_weight=semantic_weight,
-        )
-
-        return {
-            "todos": [todo.model_dump() for todo in results],
-            "count": len(results),
-            "search_type": "hybrid",
-            "semantic_weight": semantic_weight,
-            "error": None,
-        }
-
-    except Exception as e:
-        error_msg = f"Error in hybrid search: {str(e)}"
-        logger.error(error_msg)
-        return {"error": error_msg, "todos": []}
-
-
-@tool
-@with_doc(REINDEX_TODOS)
-async def reindex_todos(
-    config: RunnableConfig,
-    batch_size: Annotated[int, "Number of todos to process in each batch"] = 100,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Todo Tool: Reindexing todos with batch size {batch_size}")
-        user_id = get_user_id_from_config(config)
-
-        if not user_id:
-            return {"error": "User authentication required", "result": None}
-
-        # Ensure batch_size is reasonable
-        if batch_size < 1:
-            batch_size = 100
-        elif batch_size > 1000:
-            batch_size = 1000
-
-        result = await bulk_index_existing_todos_service(user_id, batch_size)
-
-        return {"result": result, "batch_size": batch_size, "error": None}
-
-    except Exception as e:
-        error_msg = f"Error reindexing todos: {str(e)}"
-        logger.error(error_msg)
-        return {"error": error_msg, "result": None}
-
-
-@tool
 @with_doc(GET_TODO_STATS)
 async def get_todo_statistics(config: RunnableConfig) -> Dict[str, Any]:
     try:
         logger.info("Todo Tool: Getting todo statistics")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "stats": None}
-        
+
         stats = await get_todo_stats_service(user_id)
+
+        # Stream the stats to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "stats": stats,
+                    "action": "stats",
+                    "message": "Here's your task overview",
+                }
+            }
+        )
+
         return {"stats": stats, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error getting todo statistics: {str(e)}"
         logger.error(error_msg)
@@ -425,22 +387,23 @@ async def get_today_todos(config: RunnableConfig) -> Dict[str, Any]:
     try:
         logger.info("Todo Tool: Getting today's todos")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         from datetime import time
+
         today_start = datetime.combine(datetime.today(), time.min)
         today_end = datetime.combine(datetime.today(), time.max)
-        
+
         results = await get_todos_by_date_range(user_id, today_start, today_end)
-        
+
         return {
-            "todos": [todo.model_dump() for todo in results],
+            "todos": [todo.model_dump(mode="json") for todo in results],
             "count": len(results),
-            "error": None
+            "error": None,
         }
-        
+
     except Exception as e:
         error_msg = f"Error getting today's todos: {str(e)}"
         logger.error(error_msg)
@@ -456,22 +419,23 @@ async def get_upcoming_todos(
     try:
         logger.info(f"Todo Tool: Getting upcoming todos for next {days} days")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         from datetime import timedelta
+
         start_date = datetime.utcnow()
         end_date = start_date + timedelta(days=days)
-        
+
         results = await get_todos_by_date_range(user_id, start_date, end_date)
-        
+
         return {
-            "todos": [todo.model_dump() for todo in results],
+            "todos": [todo.model_dump(mode="json") for todo in results],
             "count": len(results),
-            "error": None
+            "error": None,
         }
-        
+
     except Exception as e:
         error_msg = f"Error getting upcoming todos: {str(e)}"
         logger.error(error_msg)
@@ -489,19 +453,19 @@ async def create_project(
     try:
         logger.info(f"Todo Tool: Creating project '{name}'")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "project": None}
-        
+
         project_data = ProjectCreate(
             name=name,
             description=description,
             color=color,
         )
-        
+
         result = await create_project_service(project_data, user_id)
-        return {"project": result.model_dump(), "error": None}
-        
+        return {"project": result.model_dump(mode="json"), "error": None}
+
     except Exception as e:
         error_msg = f"Error creating project: {str(e)}"
         logger.error(error_msg)
@@ -514,18 +478,27 @@ async def list_projects(config: RunnableConfig) -> Dict[str, Any]:
     try:
         logger.info("Todo Tool: Listing all projects")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "projects": []}
-        
+
         results = await get_all_projects_service(user_id)
-        
-        return {
-            "projects": [project.model_dump() for project in results],
-            "count": len(results),
-            "error": None
-        }
-        
+        projects_data = [project.model_dump(mode="json") for project in results]
+
+        # Stream the projects to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "projects": projects_data,
+                    "action": "list",
+                    "message": f"You have {len(results)} project{'s' if len(results) != 1 else ''}",
+                }
+            }
+        )
+
+        return {"projects": projects_data, "count": len(results), "error": None}
+
     except Exception as e:
         error_msg = f"Error listing projects: {str(e)}"
         logger.error(error_msg)
@@ -544,10 +517,10 @@ async def update_project(
     try:
         logger.info(f"Todo Tool: Updating project {project_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "project": None}
-        
+
         # Build update data with only provided fields
         update_data = {}
         if name is not None:
@@ -556,12 +529,12 @@ async def update_project(
             update_data["description"] = description
         if color is not None:
             update_data["color"] = color
-        
+
         update_request = UpdateProjectRequest(**update_data)
         result = await update_project_service(project_id, update_request, user_id)
-        
-        return {"project": result.model_dump(), "error": None}
-        
+
+        return {"project": result.model_dump(mode="json"), "error": None}
+
     except Exception as e:
         error_msg = f"Error updating project: {str(e)}"
         logger.error(error_msg)
@@ -577,13 +550,13 @@ async def delete_project(
     try:
         logger.info(f"Todo Tool: Deleting project {project_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "success": False}
-        
+
         await delete_project_service(project_id, user_id)
         return {"success": True, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error deleting project: {str(e)}"
         logger.error(error_msg)
@@ -599,18 +572,18 @@ async def get_todos_by_label(
     try:
         logger.info(f"Todo Tool: Getting todos with label '{label}'")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         results = await get_todos_by_label_service(user_id, label)
-        
+
         return {
-            "todos": [todo.model_dump() for todo in results],
+            "todos": [todo.model_dump(mode="json") for todo in results],
             "count": len(results),
-            "error": None
+            "error": None,
         }
-        
+
     except Exception as e:
         error_msg = f"Error getting todos by label: {str(e)}"
         logger.error(error_msg)
@@ -623,13 +596,13 @@ async def get_all_labels(config: RunnableConfig) -> Dict[str, Any]:
     try:
         logger.info("Todo Tool: Getting all labels")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "labels": []}
-        
+
         results = await get_all_labels_service(user_id)
         return {"labels": results, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error getting labels: {str(e)}"
         logger.error(error_msg)
@@ -645,18 +618,18 @@ async def bulk_complete_todos(
     try:
         logger.info(f"Todo Tool: Bulk completing {len(todo_ids)} todos")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         results = await bulk_complete_service(todo_ids, user_id)
-        
+
         return {
-            "todos": [todo.model_dump() for todo in results],
+            "todos": [todo.model_dump(mode="json") for todo in results],
             "count": len(results),
-            "error": None
+            "error": None,
         }
-        
+
     except Exception as e:
         error_msg = f"Error bulk completing todos: {str(e)}"
         logger.error(error_msg)
@@ -673,18 +646,18 @@ async def bulk_move_todos(
     try:
         logger.info(f"Todo Tool: Moving {len(todo_ids)} todos to project {project_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         results = await bulk_move_service(todo_ids, project_id, user_id)
-        
+
         return {
-            "todos": [todo.model_dump() for todo in results],
+            "todos": [todo.model_dump(mode="json") for todo in results],
             "count": len(results),
-            "error": None
+            "error": None,
         }
-        
+
     except Exception as e:
         error_msg = f"Error bulk moving todos: {str(e)}"
         logger.error(error_msg)
@@ -700,13 +673,13 @@ async def bulk_delete_todos(
     try:
         logger.info(f"Todo Tool: Bulk deleting {len(todo_ids)} todos")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "success": False}
-        
+
         await bulk_delete_service(todo_ids, user_id)
         return {"success": True, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error bulk deleting todos: {str(e)}"
         logger.error(error_msg)
@@ -723,30 +696,24 @@ async def add_subtask(
     try:
         logger.info(f"Todo Tool: Adding subtask to todo {todo_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todo": None}
-        
+
         import uuid
-        
+
         # Get the todo first
         todo = await get_todo_service(todo_id, user_id)
-        
+
         # Create new subtask
-        new_subtask = SubTask(
-            id=str(uuid.uuid4()),
-            title=title,
-            completed=False
-        )
-        
+        new_subtask = SubTask(id=str(uuid.uuid4()), title=title, completed=False)
+
         # Update todo with new subtask
-        update_data = UpdateTodoRequest(
-            subtasks=todo.subtasks + [new_subtask]
-        )
-        
+        update_data = UpdateTodoRequest(subtasks=todo.subtasks + [new_subtask])
+
         result = await update_todo_service(todo_id, update_data, user_id)
-        return {"todo": result.model_dump(), "error": None}
-        
+        return {"todo": result.model_dump(mode="json"), "error": None}
+
     except Exception as e:
         error_msg = f"Error adding subtask: {str(e)}"
         logger.error(error_msg)
@@ -765,13 +732,13 @@ async def update_subtask(
     try:
         logger.info(f"Todo Tool: Updating subtask {subtask_id} in todo {todo_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todo": None}
-        
+
         # Get the todo first
         todo = await get_todo_service(todo_id, user_id)
-        
+
         # Find and update the subtask
         updated_subtasks = []
         subtask_found = False
@@ -783,16 +750,16 @@ async def update_subtask(
                 if completed is not None:
                     subtask.completed = completed
             updated_subtasks.append(subtask)
-        
+
         if not subtask_found:
             return {"error": f"Subtask {subtask_id} not found", "todo": None}
-        
+
         # Update todo with modified subtasks
         update_data = UpdateTodoRequest(subtasks=updated_subtasks)
         result = await update_todo_service(todo_id, update_data, user_id)
-        
-        return {"todo": result.model_dump(), "error": None}
-        
+
+        return {"todo": result.model_dump(mode="json"), "error": None}
+
     except Exception as e:
         error_msg = f"Error updating subtask: {str(e)}"
         logger.error(error_msg)
@@ -809,24 +776,24 @@ async def delete_subtask(
     try:
         logger.info(f"Todo Tool: Deleting subtask {subtask_id} from todo {todo_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todo": None}
-        
+
         # Get the todo first
         todo = await get_todo_service(todo_id, user_id)
-        
+
         # Remove the subtask
         updated_subtasks = [s for s in todo.subtasks if s.id != subtask_id]
-        
+
         if len(updated_subtasks) == len(todo.subtasks):
             return {"error": f"Subtask {subtask_id} not found", "todo": None}
-        
+
         # Update todo with remaining subtasks
         update_data = UpdateTodoRequest(subtasks=updated_subtasks)
         result = await update_todo_service(todo_id, update_data, user_id)
-        
-        return {"todo": result.model_dump(), "error": None}
+
+        return {"todo": result.model_dump(mode="json"), "error": None}
         
     except Exception as e:
         error_msg = f"Error deleting subtask: {str(e)}"
@@ -842,8 +809,6 @@ todo_tools = [
     delete_todo,
     search_todos,
     semantic_search_todos,
-    hybrid_search_todos,
-    reindex_todos,
     get_todo_statistics,
     get_today_todos,
     get_upcoming_todos,
