@@ -121,13 +121,17 @@ export default function TodoSection({
           </div>
           {stats.overdue > 0 && (
             <div className="rounded-xl bg-zinc-900 p-3 text-center">
-              <p className="text-xl font-semibold text-red-500">{stats.overdue}</p>
+              <p className="text-xl font-semibold text-red-500">
+                {stats.overdue}
+              </p>
               <p className="text-xs text-zinc-500">Overdue</p>
             </div>
           )}
           {stats.today > 0 && (
             <div className="rounded-xl bg-zinc-900 p-3 text-center">
-              <p className="text-xl font-semibold text-blue-500">{stats.today}</p>
+              <p className="text-xl font-semibold text-blue-500">
+                {stats.today}
+              </p>
               <p className="text-xs text-zinc-500">Today</p>
             </div>
           )}
@@ -150,33 +154,33 @@ export default function TodoSection({
       <div className="mt-3 w-fit min-w-[400px] rounded-2xl rounded-bl-none bg-zinc-800 p-4">
         <div className="mb-3 text-sm">Your Projects</div>
         <div className="space-y-2">
-            {projects.map((project) => (
-              <div
-                key={project.id}
-                className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/80"
-                onClick={() => router.push(`/todos/project/${project.id}`)}
-              >
-                <div className="flex items-center gap-3">
-                  {project.color && (
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: project.color }}
-                    />
-                  )}
-                  <span className="text-sm font-medium text-zinc-100">
-                    {project.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  {project.todo_count !== undefined && (
-                    <span>{project.todo_count} tasks</span>
-                  )}
-                  {project.completion_percentage !== undefined && (
-                    <span>• {Math.round(project.completion_percentage)}%</span>
-                  )}
-                </div>
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/80"
+              onClick={() => router.push(`/todos/project/${project.id}`)}
+            >
+              <div className="flex items-center gap-3">
+                {project.color && (
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: project.color }}
+                  />
+                )}
+                <span className="text-sm font-medium text-zinc-100">
+                  {project.name}
+                </span>
               </div>
-            ))}
+              <div className="flex items-center gap-2 text-xs text-zinc-500">
+                {project.todo_count !== undefined && (
+                  <span>{project.todo_count} tasks</span>
+                )}
+                {project.completion_percentage !== undefined && (
+                  <span>• {Math.round(project.completion_percentage)}%</span>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -188,174 +192,172 @@ export default function TodoSection({
       <div className="mt-3 w-fit min-w-[450px] rounded-2xl rounded-bl-none bg-zinc-800 p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="text-sm">
-            {action === "search" ? "Search Results" : "Tasks"}
+            {action === "search" ? "Search Results" : 
+             action === "create" ? "New Task" :
+             action === "update" ? "Updated Tasks" :
+             "Tasks"}
           </div>
           <span className="text-xs text-zinc-500">
             {todos.length} {todos.length === 1 ? "task" : "tasks"}
           </span>
         </div>
         <div className="space-y-2">
-            {todos.map((todo) => {
-              const isExpanded = expandedTodos.has(todo.id);
-              const hasDetails =
-                todo.description || (todo.subtasks && todo.subtasks.length > 0);
+          {todos.map((todo) => {
+            const isExpanded = expandedTodos.has(todo.id);
+            const hasDetails =
+              todo.description || (todo.subtasks && todo.subtasks.length > 0);
 
-              return (
-                <div
-                  key={todo.id}
-                  className="rounded-xl bg-zinc-900 p-3"
-                >
-                  {/* Todo Header */}
-                  <div className="flex items-start gap-3">
-                    <button
-                      className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-                        todo.completed
-                          ? "border-success bg-success"
-                          : "border-zinc-600 hover:border-zinc-500"
-                      }`}
-                    >
-                      {todo.completed && (
-                        <Check className="h-2.5 w-2.5 text-white" />
-                      )}
-                    </button>
+            return (
+              <div key={todo.id} className="rounded-xl bg-zinc-900 p-3">
+                {/* Todo Header */}
+                <div className="flex items-start gap-3">
+                  <button
+                    className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      todo.completed
+                        ? "border-success bg-success"
+                        : "border-zinc-600 hover:border-zinc-500"
+                    }`}
+                  >
+                    {todo.completed && (
+                      <Check className="h-2.5 w-2.5 text-white" />
+                    )}
+                  </button>
 
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4
-                          className={`text-sm font-medium ${
-                            todo.completed
-                              ? "text-zinc-500 line-through"
-                              : "text-zinc-100"
-                          }`}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h4
+                        className={`text-sm font-medium ${
+                          todo.completed
+                            ? "text-zinc-500 line-through"
+                            : "text-zinc-100"
+                        }`}
+                      >
+                        {todo.title}
+                      </h4>
+                      {hasDetails && (
+                        <button
+                          onClick={() => toggleTodoExpansion(todo.id)}
+                          className="rounded p-1 hover:bg-zinc-700"
                         >
-                          {todo.title}
-                        </h4>
-                        {hasDetails && (
-                          <button
-                            onClick={() => toggleTodoExpansion(todo.id)}
-                            className="rounded p-1 hover:bg-zinc-700"
-                          >
-                            <ChevronRight
-                              className={`h-4 w-4 text-zinc-500 transition-transform ${
-                                isExpanded ? "rotate-90" : ""
-                              }`}
-                            />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Todo Metadata */}
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                        {todo.priority !== Priority.NONE && (
-                          <span
-                            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${priorityConfig[todo.priority].bgColor} ${priorityConfig[todo.priority].textColor}`}
-                          >
-                            {priorityConfig[todo.priority].icon}
-                            {todo.priority}
-                          </span>
-                        )}
-
-                        {todo.due_date && (
-                          <span
-                            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
-                              isOverdue(todo.due_date)
-                                ? "bg-red-500/10 text-red-500"
-                                : "bg-zinc-800 text-zinc-400"
+                          <ChevronRight
+                            className={`h-4 w-4 text-zinc-500 transition-transform ${
+                              isExpanded ? "rotate-90" : ""
                             }`}
-                          >
-                            <Calendar className="h-3 w-3" />
-                            {formatDueDate(todo.due_date)}
-                          </span>
-                        )}
-
-                        {todo.project && (
-                          <span className="flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
-                            {todo.project.color ? (
-                              <div
-                                className="h-2 w-2 rounded-full"
-                                style={{
-                                  backgroundColor: todo.project.color,
-                                }}
-                              />
-                            ) : (
-                              <FolderOpen className="h-3 w-3" />
-                            )}
-                            {todo.project.name}
-                          </span>
-                        )}
-
-                        {todo.labels.map((label) => (
-                          <span
-                            key={label}
-                            className="flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400"
-                          >
-                            <Hash className="h-3 w-3" />
-                            {label}
-                          </span>
-                        ))}
-
-                        {todo.subtasks && todo.subtasks.length > 0 && (
-                          <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
-                            {todo.subtasks.filter((s) => s.completed).length}/
-                            {todo.subtasks.length} subtasks
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Expanded Content */}
-                      {isExpanded && (
-                        <div className="mt-3 space-y-3">
-                          {todo.description && (
-                            <p className="text-sm text-zinc-400">
-                              {todo.description}
-                            </p>
-                          )}
-
-                          {todo.subtasks && todo.subtasks.length > 0 && (
-                            <div className="space-y-1">
-                              <p className="text-xs font-medium text-zinc-500">
-                                Subtasks
-                              </p>
-                              {todo.subtasks.map((subtask) => (
-                                <div
-                                  key={subtask.id}
-                                  className="flex items-center gap-2 pl-2"
-                                >
-                                  <div
-                                    className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
-                                      subtask.completed
-                                        ? "border-success bg-success"
-                                        : "border-zinc-600"
-                                    }`}
-                                  >
-                                    {subtask.completed && (
-                                      <Check className="h-2.5 w-2.5 text-white" />
-                                    )}
-                                  </div>
-                                  <span
-                                    className={`text-xs ${
-                                      subtask.completed
-                                        ? "text-zinc-500 line-through"
-                                        : "text-zinc-300"
-                                    }`}
-                                  >
-                                    {subtask.title}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
+                          />
+                        </button>
                       )}
                     </div>
+
+                    {/* Todo Metadata */}
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      {todo.priority !== Priority.NONE && (
+                        <span
+                          className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${priorityConfig[todo.priority].bgColor} ${priorityConfig[todo.priority].textColor}`}
+                        >
+                          {priorityConfig[todo.priority].icon}
+                          {todo.priority}
+                        </span>
+                      )}
+
+                      {todo.due_date && (
+                        <span
+                          className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
+                            isOverdue(todo.due_date)
+                              ? "bg-red-500/10 text-red-500"
+                              : "bg-zinc-800 text-zinc-400"
+                          }`}
+                        >
+                          <Calendar className="h-3 w-3" />
+                          {formatDueDate(todo.due_date)}
+                        </span>
+                      )}
+
+                      {todo.project && (
+                        <span className="flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
+                          {todo.project.color ? (
+                            <div
+                              className="h-2 w-2 rounded-full"
+                              style={{
+                                backgroundColor: todo.project.color,
+                              }}
+                            />
+                          ) : (
+                            <FolderOpen className="h-3 w-3" />
+                          )}
+                          {todo.project.name}
+                        </span>
+                      )}
+
+                      {todo.labels.map((label) => (
+                        <span
+                          key={label}
+                          className="flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400"
+                        >
+                          <Hash className="h-3 w-3" />
+                          {label}
+                        </span>
+                      ))}
+
+                      {todo.subtasks && todo.subtasks.length > 0 && (
+                        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
+                          {todo.subtasks.filter((s) => s.completed).length}/
+                          {todo.subtasks.length} subtasks
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="mt-3 space-y-3">
+                        {todo.description && (
+                          <p className="text-sm text-zinc-400">
+                            {todo.description}
+                          </p>
+                        )}
+
+                        {todo.subtasks && todo.subtasks.length > 0 && (
+                          <div className="space-y-1">
+                            <p className="text-xs font-medium text-zinc-500">
+                              Subtasks
+                            </p>
+                            {todo.subtasks.map((subtask) => (
+                              <div
+                                key={subtask.id}
+                                className="flex items-center gap-2 pl-2"
+                              >
+                                <div
+                                  className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                                    subtask.completed
+                                      ? "border-success bg-success"
+                                      : "border-zinc-600"
+                                  }`}
+                                >
+                                  {subtask.completed && (
+                                    <Check className="h-2.5 w-2.5 text-white" />
+                                  )}
+                                </div>
+                                <span
+                                  className={`text-xs ${
+                                    subtask.completed
+                                      ? "text-zinc-500 line-through"
+                                      : "text-zinc-300"
+                                  }`}
+                                >
+                                  {subtask.title}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
         </div>
-        {message && (
-          <p className="mt-3 text-xs text-zinc-500">{message}</p>
-        )}
+        {message && <p className="mt-3 text-xs text-zinc-500">{message}</p>}
       </div>
     );
   }
@@ -371,12 +373,15 @@ export default function TodoSection({
     );
   }
 
-  // Success Message
+  // Success/Action Message
   if (message && !todos && !stats && !projects) {
+    const isDeleteAction = action === "delete";
+    const iconColor = isDeleteAction ? "text-red-500" : "text-green-500";
+    
     return (
       <div className="mt-3 w-fit rounded-2xl rounded-bl-none bg-zinc-800 p-4">
         <div className="flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <CheckCircle2 className={`h-4 w-4 ${iconColor}`} />
           <p className="text-sm">{message}</p>
         </div>
       </div>

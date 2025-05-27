@@ -10,7 +10,7 @@ export interface TodoToolData {
   message?: string;
 }
 
-export type TodoAction = "list" | "create" | "update" | "search" | "stats";
+export type TodoAction = "list" | "create" | "update" | "delete" | "search" | "stats";
 
 export interface TodoItem {
   id: string;
