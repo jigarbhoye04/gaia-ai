@@ -10,6 +10,7 @@ import {
   SearchResults,
   WeatherData,
 } from "./convoTypes";
+import { TodoToolData } from "./todoToolTypes";
 
 export interface ChatBubbleUserProps {
   message_id: string;
@@ -52,6 +53,7 @@ export interface ChatBubbleBotProps {
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null;
+  todo_data?: TodoToolData | null;  // Todo data from backend tools
 
   // Memory-related fields
   memory_data?: {

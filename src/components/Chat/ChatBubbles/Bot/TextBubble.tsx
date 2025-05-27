@@ -12,6 +12,7 @@ import CalendarEventSection from "./CalendarEventSection";
 import EmailComposeSection from "./EmailComposeSection";
 import DeepSearchResultsTabs from "./SearchResults/DeepSearchResultsTabs";
 import SearchResultsTabs from "./SearchResults/SearchResultsTabs";
+import TodoSection from "./TodoSection";
 
 export default function TextBubble({
   text,
@@ -22,6 +23,7 @@ export default function TextBubble({
   calendar_options,
   email_compose_data,
   weather_data,
+  todo_data,
   intent,
   search_results,
   deep_search_results,
@@ -110,6 +112,16 @@ export default function TextBubble({
 
       {email_compose_data && (
         <EmailComposeSection email_compose_data={email_compose_data} />
+      )}
+
+      {todo_data && (
+        <TodoSection
+          todos={todo_data.todos}
+          projects={todo_data.projects}
+          stats={todo_data.stats}
+          action={todo_data.action}
+          message={todo_data.message}
+        />
       )}
     </>
   );

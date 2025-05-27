@@ -2,7 +2,6 @@
 
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
-import { Input } from "@heroui/input";
 import {
   Calendar,
   CalendarDays,
@@ -16,7 +15,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
-import { SearchIcon } from "@/components/Misc/icons";
 import AddProjectModal from "@/components/Todo/AddProjectModal";
 import AddTodoModal from "@/components/Todo/AddTodoModal";
 import Spinner from "@/components/ui/spinner";
@@ -247,8 +245,8 @@ export default function TodoSidebar() {
           </Button>
         </div>
 
-        {/* Search */}
-        <form onSubmit={handleSearch} className="mb-4">
+        {/* TODO: fix implementation on backend then integrate. */}
+        {/* <form onSubmit={handleSearch} className="mb-4">
           <Input
             placeholder="Search tasks..."
             value={searchQuery}
@@ -263,7 +261,7 @@ export default function TodoSidebar() {
               inputWrapper: "h-8",
             }}
           />
-        </form>
+        </form> */}
 
         {!isInitialDataLoaded ? (
           <div className="flex h-[400px] w-full items-center justify-center">

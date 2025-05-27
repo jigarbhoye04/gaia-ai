@@ -450,22 +450,4 @@ export const TodoService = {
     }
   },
 
-  reindexTodos: async (
-    batchSize?: number,
-  ): Promise<{ message: string; batch_size: number; total_todos: number }> => {
-    try {
-      const params = new URLSearchParams();
-      if (batchSize) params.append("batch_size", String(batchSize));
-
-      const response = await apiauth.post(
-        `/todos/reindex?${params.toString()}`,
-      );
-      toast.success("Todo index refreshed successfully");
-      return response.data;
-    } catch (error) {
-      console.error("Error reindexing todos:", error);
-      toast.error("Failed to refresh todo index");
-      throw error;
-    }
-  },
 };

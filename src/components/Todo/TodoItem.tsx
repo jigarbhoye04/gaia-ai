@@ -181,7 +181,11 @@ export default function TodoItem({
               {showSubtasks && todo.subtasks.length > 0 && (
                 <div className="mt-3 ml-2 space-y-1">
                   {todo.subtasks.map((subtask) => (
-                    <div key={subtask.id} className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      key={subtask.id}
+                      className="flex items-center gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Checkbox
                         size="sm"
                         isSelected={subtask.completed}
