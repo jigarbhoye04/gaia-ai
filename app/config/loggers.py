@@ -2,7 +2,6 @@ from celery.utils.log import get_task_logger
 
 from app.utils.logging_utils import get_logger
 
-
 # Application loggers - each will be a singleton instance
 app_logger = get_logger(name="main")
 llm_logger = get_logger(name="llm")
@@ -23,6 +22,8 @@ general_logger = get_logger(name="general")
 nltk_logger = get_logger(name="nltk")
 langchain_logger = get_logger(name="langchain")
 request_logger = get_logger(name="requests")
+notification_logger = get_logger(name="notification")
+common_logger = get_logger(name="common")
 
 # Special case for Celery
 celery_logger = get_task_logger(__name__)
