@@ -41,6 +41,7 @@ export interface TodoProject {
   color?: string;
   is_default?: boolean;
   todo_count?: number;
+  completion_percentage?: number;
 }
 
 export interface TodoStats {

@@ -1,9 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/button";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Chip } from "@heroui/chip";
-import { Divider } from "@heroui/divider";
 import { format } from "date-fns";
 import {
   Calendar,
@@ -13,8 +9,6 @@ import {
   Flag,
   FolderOpen,
   Hash,
-  ListTodo,
-  Plus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -106,70 +100,60 @@ export default function TodoSection({
   // Statistics View
   if (action === "stats" && stats) {
     return (
-      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <ListTodo className="h-5 w-5 text-zinc-400" />
-            <h3 className="text-base font-medium text-zinc-200">
-              Task Statistics
-            </h3>
+      <div className="mt-3 w-fit min-w-[400px] rounded-2xl rounded-bl-none bg-zinc-800 p-4">
+        <div className="mb-3 text-sm">Task Overview</div>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="rounded-xl bg-zinc-900 p-3 text-center">
+            <p className="text-xl font-semibold text-zinc-100">{stats.total}</p>
+            <p className="text-xs text-zinc-500">Total</p>
           </div>
-        </CardHeader>
-        <CardBody className="pt-1">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-zinc-100">{stats.total}</p>
-              <p className="text-xs text-zinc-500">Total Tasks</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-500">
-                {stats.completed}
-              </p>
-              <p className="text-xs text-zinc-500">Completed</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-yellow-500">
-                {stats.pending}
-              </p>
-              <p className="text-xs text-zinc-500">Pending</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-500">{stats.overdue}</p>
+          <div className="rounded-xl bg-zinc-900 p-3 text-center">
+            <p className="text-xl font-semibold text-green-500">
+              {stats.completed}
+            </p>
+            <p className="text-xs text-zinc-500">Done</p>
+          </div>
+          <div className="rounded-xl bg-zinc-900 p-3 text-center">
+            <p className="text-xl font-semibold text-yellow-500">
+              {stats.pending}
+            </p>
+            <p className="text-xs text-zinc-500">Pending</p>
+          </div>
+          {stats.overdue > 0 && (
+            <div className="rounded-xl bg-zinc-900 p-3 text-center">
+              <p className="text-xl font-semibold text-red-500">{stats.overdue}</p>
               <p className="text-xs text-zinc-500">Overdue</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-500">{stats.today}</p>
-              <p className="text-xs text-zinc-500">Due Today</p>
+          )}
+          {stats.today > 0 && (
+            <div className="rounded-xl bg-zinc-900 p-3 text-center">
+              <p className="text-xl font-semibold text-blue-500">{stats.today}</p>
+              <p className="text-xs text-zinc-500">Today</p>
             </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-500">
+          )}
+          {stats.upcoming > 0 && (
+            <div className="rounded-xl bg-zinc-900 p-3 text-center">
+              <p className="text-xl font-semibold text-purple-500">
                 {stats.upcoming}
               </p>
-              <p className="text-xs text-zinc-500">Upcoming</p>
+              <p className="text-xs text-zinc-500">Soon</p>
             </div>
-          </div>
-          {message && <p className="mt-4 text-sm text-zinc-400">{message}</p>}
-        </CardBody>
-      </Card>
+          )}
+        </div>
+      </div>
     );
   }
 
   // Projects View
   if (projects && projects.length > 0 && !todos) {
     return (
-      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-zinc-400" />
-            <h3 className="text-base font-semibold text-zinc-200">Projects</h3>
-          </div>
-        </CardHeader>
-        <CardBody className="pt-1">
-          <div className="space-y-2">
+      <div className="mt-3 w-fit min-w-[400px] rounded-2xl rounded-bl-none bg-zinc-800 p-4">
+        <div className="mb-3 text-sm">Your Projects</div>
+        <div className="space-y-2">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-zinc-800/50"
+                className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/80"
                 onClick={() => router.push(`/todos/project/${project.id}`)}
               >
                 <div className="flex items-center gap-3">
@@ -183,29 +167,34 @@ export default function TodoSection({
                     {project.name}
                   </span>
                 </div>
-                {project.todo_count !== undefined && (
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    className="bg-zinc-800 text-zinc-400"
-                  >
-                    {project.todo_count} tasks
-                  </Chip>
-                )}
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  {project.todo_count !== undefined && (
+                    <span>{project.todo_count} tasks</span>
+                  )}
+                  {project.completion_percentage !== undefined && (
+                    <span>• {Math.round(project.completion_percentage)}%</span>
+                  )}
+                </div>
               </div>
             ))}
-          </div>
-        </CardBody>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   // Todos List View
   if (todos && todos.length > 0) {
     return (
-      <Card className="mt-4 border-none bg-zinc-800">
-        <CardBody className="pt-3">
-          <div className="space-y-3">
+      <div className="mt-3 w-fit min-w-[450px] rounded-2xl rounded-bl-none bg-zinc-800 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-sm">
+            {action === "search" ? "Search Results" : "Tasks"}
+          </div>
+          <span className="text-xs text-zinc-500">
+            {todos.length} {todos.length === 1 ? "task" : "tasks"}
+          </span>
+        </div>
+        <div className="space-y-2">
             {todos.map((todo) => {
               const isExpanded = expandedTodos.has(todo.id);
               const hasDetails =
@@ -214,19 +203,19 @@ export default function TodoSection({
               return (
                 <div
                   key={todo.id}
-                  className="rounded-xl border border-zinc-700 bg-zinc-900 p-4"
+                  className="rounded-xl bg-zinc-900 p-3"
                 >
                   {/* Todo Header */}
                   <div className="flex items-start gap-3">
                     <button
-                      className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                      className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                         todo.completed
                           ? "border-success bg-success"
                           : "border-zinc-600 hover:border-zinc-500"
                       }`}
                     >
                       {todo.completed && (
-                        <Check className="h-3 w-3 text-white" />
+                        <Check className="h-2.5 w-2.5 text-white" />
                       )}
                     </button>
 
@@ -258,80 +247,58 @@ export default function TodoSection({
                       {/* Todo Metadata */}
                       <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                         {todo.priority !== Priority.NONE && (
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            className={`${priorityConfig[todo.priority].bgColor} border border-zinc-700`}
-                            startContent={priorityConfig[todo.priority].icon}
+                          <span
+                            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${priorityConfig[todo.priority].bgColor} ${priorityConfig[todo.priority].textColor}`}
                           >
-                            <span
-                              className={
-                                priorityConfig[todo.priority].textColor
-                              }
-                            >
-                              {todo.priority}
-                            </span>
-                          </Chip>
+                            {priorityConfig[todo.priority].icon}
+                            {todo.priority}
+                          </span>
                         )}
 
                         {todo.due_date && (
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            className={
+                          <span
+                            className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
                               isOverdue(todo.due_date)
-                                ? "border border-red-500/20 bg-red-500/10 text-red-500"
-                                : "border border-zinc-700 bg-zinc-800 text-zinc-400"
-                            }
-                            startContent={<Calendar className="h-3 w-3" />}
+                                ? "bg-red-500/10 text-red-500"
+                                : "bg-zinc-800 text-zinc-400"
+                            }`}
                           >
+                            <Calendar className="h-3 w-3" />
                             {formatDueDate(todo.due_date)}
-                          </Chip>
+                          </span>
                         )}
 
                         {todo.project && (
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            className="border border-zinc-700 bg-zinc-800 text-zinc-400"
-                            startContent={
-                              todo.project.color ? (
-                                <div
-                                  className="h-2 w-2 rounded-full"
-                                  style={{
-                                    backgroundColor: todo.project.color,
-                                  }}
-                                />
-                              ) : (
-                                <FolderOpen className="h-3 w-3" />
-                              )
-                            }
-                          >
+                          <span className="flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
+                            {todo.project.color ? (
+                              <div
+                                className="h-2 w-2 rounded-full"
+                                style={{
+                                  backgroundColor: todo.project.color,
+                                }}
+                              />
+                            ) : (
+                              <FolderOpen className="h-3 w-3" />
+                            )}
                             {todo.project.name}
-                          </Chip>
+                          </span>
                         )}
 
                         {todo.labels.map((label) => (
-                          <Chip
+                          <span
                             key={label}
-                            size="sm"
-                            variant="flat"
-                            className="border border-zinc-700 bg-zinc-800 text-zinc-400"
-                            startContent={<Hash className="h-3 w-3" />}
+                            className="flex items-center gap-1 rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400"
                           >
+                            <Hash className="h-3 w-3" />
                             {label}
-                          </Chip>
+                          </span>
                         ))}
 
                         {todo.subtasks && todo.subtasks.length > 0 && (
-                          <Chip
-                            size="sm"
-                            variant="flat"
-                            className="border border-zinc-700 bg-zinc-800 text-zinc-400"
-                          >
+                          <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400">
                             {todo.subtasks.filter((s) => s.completed).length}/
                             {todo.subtasks.length} subtasks
-                          </Chip>
+                          </span>
                         )}
                       </div>
 
@@ -385,72 +352,34 @@ export default function TodoSection({
                 </div>
               );
             })}
-          </div>
-
-          {message && (
-            <>
-              <Divider className="my-3 bg-zinc-700" />
-              <p className="text-sm text-zinc-400">{message}</p>
-            </>
-          )}
-
-          <div className="mt-4 flex gap-2">
-            <Button
-              size="sm"
-              variant="flat"
-              className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
-              startContent={<Plus className="h-4 w-4" />}
-              onPress={() => router.push("/todos")}
-            >
-              Add Task
-            </Button>
-            <Button
-              size="sm"
-              variant="light"
-              className="text-zinc-400 hover:text-zinc-200"
-              onPress={() => router.push("/todos")}
-            >
-              View All Tasks
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
+        </div>
+        {message && (
+          <p className="mt-3 text-xs text-zinc-500">{message}</p>
+        )}
+      </div>
     );
   }
 
   // Empty State
   if (action === "list" && (!todos || todos.length === 0)) {
     return (
-      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
-        <CardBody className="py-8 text-center">
-          <CheckCircle2 className="mx-auto h-12 w-12 text-zinc-600" />
-          <p className="mt-2 text-sm font-medium text-zinc-300">
-            No tasks found
-          </p>
-          {message && <p className="mt-1 text-xs text-zinc-500">{message}</p>}
-          <Button
-            size="sm"
-            variant="flat"
-            className="mt-4 bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
-            startContent={<Plus className="h-4 w-4" />}
-            onPress={() => router.push("/todos")}
-          >
-            Create Your First Task
-          </Button>
-        </CardBody>
-      </Card>
+      <div className="mt-3 w-fit min-w-[300px] rounded-2xl rounded-bl-none bg-zinc-800 p-6 text-center">
+        <CheckCircle2 className="mx-auto h-8 w-8 text-zinc-600" />
+        <p className="mt-2 text-sm text-zinc-300">No tasks found</p>
+        {message && <p className="mt-1 text-xs text-zinc-500">{message}</p>}
+      </div>
     );
   }
 
   // Success Message
   if (message && !todos && !stats && !projects) {
     return (
-      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
-        <CardBody className="flex flex-row items-center gap-3 py-4">
-          <CheckCircle2 className="h-5 w-5 text-green-500" />
-          <p className="text-sm text-zinc-200">{message}</p>
-        </CardBody>
-      </Card>
+      <div className="mt-3 w-fit rounded-2xl rounded-bl-none bg-zinc-800 p-4">
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="h-4 w-4 text-green-500" />
+          <p className="text-sm">{message}</p>
+        </div>
+      </div>
     );
   }
 
