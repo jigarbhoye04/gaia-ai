@@ -106,47 +106,49 @@ export default function TodoSection({
   // Statistics View
   if (action === "stats" && stats) {
     return (
-      <Card className="mt-4 border border-divider bg-background/60 backdrop-blur">
+      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <ListTodo className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-semibold">Todo Statistics</h3>
+            <ListTodo className="h-5 w-5 text-zinc-400" />
+            <h3 className="text-base font-medium text-zinc-200">
+              Task Statistics
+            </h3>
           </div>
         </CardHeader>
         <CardBody className="pt-1">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="text-center">
-              <p className="text-2xl font-bold text-primary">{stats.total}</p>
-              <p className="text-xs text-foreground-500">Total Tasks</p>
+              <p className="text-2xl font-bold text-zinc-100">{stats.total}</p>
+              <p className="text-xs text-zinc-500">Total Tasks</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-success">
+              <p className="text-2xl font-bold text-green-500">
                 {stats.completed}
               </p>
-              <p className="text-xs text-foreground-500">Completed</p>
+              <p className="text-xs text-zinc-500">Completed</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-warning">{stats.pending}</p>
-              <p className="text-xs text-foreground-500">Pending</p>
+              <p className="text-2xl font-bold text-yellow-500">
+                {stats.pending}
+              </p>
+              <p className="text-xs text-zinc-500">Pending</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-danger">{stats.overdue}</p>
-              <p className="text-xs text-foreground-500">Overdue</p>
+              <p className="text-2xl font-bold text-red-500">{stats.overdue}</p>
+              <p className="text-xs text-zinc-500">Overdue</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-primary">{stats.today}</p>
-              <p className="text-xs text-foreground-500">Due Today</p>
+              <p className="text-2xl font-bold text-blue-500">{stats.today}</p>
+              <p className="text-xs text-zinc-500">Due Today</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-secondary">
+              <p className="text-2xl font-bold text-purple-500">
                 {stats.upcoming}
               </p>
-              <p className="text-xs text-foreground-500">Upcoming</p>
+              <p className="text-xs text-zinc-500">Upcoming</p>
             </div>
           </div>
-          {message && (
-            <p className="mt-4 text-sm text-foreground-600">{message}</p>
-          )}
+          {message && <p className="mt-4 text-sm text-zinc-400">{message}</p>}
         </CardBody>
       </Card>
     );
@@ -155,11 +157,11 @@ export default function TodoSection({
   // Projects View
   if (projects && projects.length > 0 && !todos) {
     return (
-      <Card className="mt-4 border border-divider bg-background/60 backdrop-blur">
+      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-semibold">Projects</h3>
+            <FolderOpen className="h-5 w-5 text-zinc-400" />
+            <h3 className="text-base font-semibold text-zinc-200">Projects</h3>
           </div>
         </CardHeader>
         <CardBody className="pt-1">
@@ -167,7 +169,7 @@ export default function TodoSection({
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-default-100"
+                className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-zinc-800/50"
                 onClick={() => router.push(`/todos/project/${project.id}`)}
               >
                 <div className="flex items-center gap-3">
@@ -177,10 +179,16 @@ export default function TodoSection({
                       style={{ backgroundColor: project.color }}
                     />
                   )}
-                  <span className="text-sm font-medium">{project.name}</span>
+                  <span className="text-sm font-medium text-zinc-100">
+                    {project.name}
+                  </span>
                 </div>
                 {project.todo_count !== undefined && (
-                  <Chip size="sm" variant="flat">
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    className="bg-zinc-800 text-zinc-400"
+                  >
                     {project.todo_count} tasks
                   </Chip>
                 )}
@@ -195,21 +203,8 @@ export default function TodoSection({
   // Todos List View
   if (todos && todos.length > 0) {
     return (
-      <Card className="mt-4 border border-divider bg-background/60 backdrop-blur">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ListTodo className="h-5 w-5 text-primary" />
-              <h3 className="text-base font-semibold">
-                {action === "search" ? "Search Results" : "Tasks"}
-              </h3>
-            </div>
-            <Chip size="sm" variant="flat">
-              {todos.length} {todos.length === 1 ? "task" : "tasks"}
-            </Chip>
-          </div>
-        </CardHeader>
-        <CardBody className="pt-1">
+      <Card className="mt-4 border-none bg-zinc-800">
+        <CardBody className="pt-3">
           <div className="space-y-3">
             {todos.map((todo) => {
               const isExpanded = expandedTodos.has(todo.id);
@@ -219,7 +214,7 @@ export default function TodoSection({
               return (
                 <div
                   key={todo.id}
-                  className="rounded-lg border border-divider bg-default-50 p-4"
+                  className="rounded-xl border border-zinc-700 bg-zinc-900 p-4"
                 >
                   {/* Todo Header */}
                   <div className="flex items-start gap-3">
@@ -227,7 +222,7 @@ export default function TodoSection({
                       className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                         todo.completed
                           ? "border-success bg-success"
-                          : "border-default-400 hover:border-default-500"
+                          : "border-zinc-600 hover:border-zinc-500"
                       }`}
                     >
                       {todo.completed && (
@@ -240,8 +235,8 @@ export default function TodoSection({
                         <h4
                           className={`text-sm font-medium ${
                             todo.completed
-                              ? "text-foreground-500 line-through"
-                              : ""
+                              ? "text-zinc-500 line-through"
+                              : "text-zinc-100"
                           }`}
                         >
                           {todo.title}
@@ -249,10 +244,10 @@ export default function TodoSection({
                         {hasDetails && (
                           <button
                             onClick={() => toggleTodoExpansion(todo.id)}
-                            className="rounded p-1 hover:bg-default-100"
+                            className="rounded p-1 hover:bg-zinc-700"
                           >
                             <ChevronRight
-                              className={`h-4 w-4 text-default-500 transition-transform ${
+                              className={`h-4 w-4 text-zinc-500 transition-transform ${
                                 isExpanded ? "rotate-90" : ""
                               }`}
                             />
@@ -266,7 +261,7 @@ export default function TodoSection({
                           <Chip
                             size="sm"
                             variant="flat"
-                            className={priorityConfig[todo.priority].bgColor}
+                            className={`${priorityConfig[todo.priority].bgColor} border border-zinc-700`}
                             startContent={priorityConfig[todo.priority].icon}
                           >
                             <span
@@ -283,8 +278,10 @@ export default function TodoSection({
                           <Chip
                             size="sm"
                             variant="flat"
-                            color={
-                              isOverdue(todo.due_date) ? "danger" : "default"
+                            className={
+                              isOverdue(todo.due_date)
+                                ? "border border-red-500/20 bg-red-500/10 text-red-500"
+                                : "border border-zinc-700 bg-zinc-800 text-zinc-400"
                             }
                             startContent={<Calendar className="h-3 w-3" />}
                           >
@@ -296,6 +293,7 @@ export default function TodoSection({
                           <Chip
                             size="sm"
                             variant="flat"
+                            className="border border-zinc-700 bg-zinc-800 text-zinc-400"
                             startContent={
                               todo.project.color ? (
                                 <div
@@ -318,6 +316,7 @@ export default function TodoSection({
                             key={label}
                             size="sm"
                             variant="flat"
+                            className="border border-zinc-700 bg-zinc-800 text-zinc-400"
                             startContent={<Hash className="h-3 w-3" />}
                           >
                             {label}
@@ -325,7 +324,11 @@ export default function TodoSection({
                         ))}
 
                         {todo.subtasks && todo.subtasks.length > 0 && (
-                          <Chip size="sm" variant="flat">
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            className="border border-zinc-700 bg-zinc-800 text-zinc-400"
+                          >
                             {todo.subtasks.filter((s) => s.completed).length}/
                             {todo.subtasks.length} subtasks
                           </Chip>
@@ -336,14 +339,14 @@ export default function TodoSection({
                       {isExpanded && (
                         <div className="mt-3 space-y-3">
                           {todo.description && (
-                            <p className="text-sm text-foreground-600">
+                            <p className="text-sm text-zinc-400">
                               {todo.description}
                             </p>
                           )}
 
                           {todo.subtasks && todo.subtasks.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-foreground-500">
+                              <p className="text-xs font-medium text-zinc-500">
                                 Subtasks
                               </p>
                               {todo.subtasks.map((subtask) => (
@@ -355,7 +358,7 @@ export default function TodoSection({
                                     className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
                                       subtask.completed
                                         ? "border-success bg-success"
-                                        : "border-default-300"
+                                        : "border-zinc-600"
                                     }`}
                                   >
                                     {subtask.completed && (
@@ -365,8 +368,8 @@ export default function TodoSection({
                                   <span
                                     className={`text-xs ${
                                       subtask.completed
-                                        ? "text-foreground-500 line-through"
-                                        : ""
+                                        ? "text-zinc-500 line-through"
+                                        : "text-zinc-300"
                                     }`}
                                   >
                                     {subtask.title}
@@ -386,8 +389,8 @@ export default function TodoSection({
 
           {message && (
             <>
-              <Divider className="my-3" />
-              <p className="text-sm text-foreground-600">{message}</p>
+              <Divider className="my-3 bg-zinc-700" />
+              <p className="text-sm text-zinc-400">{message}</p>
             </>
           )}
 
@@ -395,7 +398,7 @@ export default function TodoSection({
             <Button
               size="sm"
               variant="flat"
-              color="primary"
+              className="bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
               startContent={<Plus className="h-4 w-4" />}
               onPress={() => router.push("/todos")}
             >
@@ -404,6 +407,7 @@ export default function TodoSection({
             <Button
               size="sm"
               variant="light"
+              className="text-zinc-400 hover:text-zinc-200"
               onPress={() => router.push("/todos")}
             >
               View All Tasks
@@ -417,18 +421,17 @@ export default function TodoSection({
   // Empty State
   if (action === "list" && (!todos || todos.length === 0)) {
     return (
-      <Card className="mt-4 border border-divider bg-background/60 backdrop-blur">
+      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
         <CardBody className="py-8 text-center">
-          <CheckCircle2 className="mx-auto h-12 w-12 text-default-300" />
-          <p className="mt-2 text-sm font-medium">No tasks found</p>
-          {message && (
-            <p className="mt-1 text-xs text-foreground-500">{message}</p>
-          )}
+          <CheckCircle2 className="mx-auto h-12 w-12 text-zinc-600" />
+          <p className="mt-2 text-sm font-medium text-zinc-300">
+            No tasks found
+          </p>
+          {message && <p className="mt-1 text-xs text-zinc-500">{message}</p>}
           <Button
             size="sm"
-            color="primary"
             variant="flat"
-            className="mt-4"
+            className="mt-4 bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
             startContent={<Plus className="h-4 w-4" />}
             onPress={() => router.push("/todos")}
           >
@@ -442,10 +445,10 @@ export default function TodoSection({
   // Success Message
   if (message && !todos && !stats && !projects) {
     return (
-      <Card className="mt-4 border border-divider bg-background/60 backdrop-blur">
+      <Card className="mt-4 border border-zinc-800 bg-zinc-900/80">
         <CardBody className="flex flex-row items-center gap-3 py-4">
-          <CheckCircle2 className="h-5 w-5 text-success" />
-          <p className="text-sm">{message}</p>
+          <CheckCircle2 className="h-5 w-5 text-green-500" />
+          <p className="text-sm text-zinc-200">{message}</p>
         </CardBody>
       </Card>
     );

@@ -449,5 +449,4 @@ export const TodoService = {
       throw error;
     }
   },
-
 };

@@ -53,7 +53,7 @@ export interface ChatBubbleBotProps {
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null;
-  todo_data?: TodoToolData | null;  // Todo data from backend tools
+  todo_data?: TodoToolData | null; // Todo data from backend tools
 
   // Memory-related fields
   memory_data?: {
