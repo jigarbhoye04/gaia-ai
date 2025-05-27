@@ -3,6 +3,8 @@
 
 import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
 
+import { TodoToolData } from "./todoToolTypes";
+
 // Define image data structure for image generation
 export type ImageData = {
   url: string;
@@ -35,6 +37,7 @@ export type MessageType = {
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
+  todo_data?: TodoToolData | null; // Todo data from backend tools
 
   // Memory-related fields
   memory_data?: {

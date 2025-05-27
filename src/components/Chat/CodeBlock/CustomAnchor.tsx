@@ -1,9 +1,9 @@
-import { Spinner } from "@heroui/spinner";
 import { Tooltip } from "@heroui/tooltip";
 import { GlobeIcon } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useEffect, useRef, useState } from "react";
 
+import Spinner from "@/components/ui/spinner";
 import { useLoading } from "@/hooks/useLoading";
 import api from "@/utils/apiaxios";
 
@@ -70,7 +70,7 @@ const CustomAnchor = ({
       content={
         loading ? (
           <div className="flex justify-center p-5">
-            <Spinner color="primary" />
+            <Spinner />
           </div>
         ) : (
           <div className="flex w-full flex-col gap-2">

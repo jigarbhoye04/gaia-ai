@@ -1,11 +1,11 @@
 "use client";
 
 import { Input } from "@heroui/input";
-import { Spinner } from "@heroui/spinner";
 import { DeleteIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { PinCard } from "@/components/Pins/PinCard";
+import Spinner from "@/components/ui/spinner";
 import { PinCardProps } from "@/types/pinTypes";
 import { apiauth } from "@/utils/apiaxios";
 

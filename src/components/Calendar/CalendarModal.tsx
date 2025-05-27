@@ -88,8 +88,9 @@ export default function CalendarModal() {
 
       // For all-day events, we don't need to send start and end
       if (isAllDay && !isTimedEvent(editedEvent)) {
-        // Keep only the necessary fields
-        const { start, end, ...eventWithoutTimes } = eventPayload;
+        // Keep only the necessary fields for all-day events
+
+        const { ...eventWithoutTimes } = eventPayload;
         await apiauth.post("/calendar/event", eventWithoutTimes);
       } else {
         // For time-specific events, include start and end

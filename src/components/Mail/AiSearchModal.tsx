@@ -1,6 +1,5 @@
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/react";
-import { Spinner } from "@heroui/spinner";
 import React, { useState } from "react";
 
 import {
@@ -10,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Spinner from "@/components/ui/spinner";
 import { apiauth } from "@/utils/apiaxios";
 
 import { AiSearch02Icon } from "../Misc/icons";
@@ -116,7 +116,7 @@ export const AiSearchModal: React.FC<AiSearchModalProps> = ({
           />
           <Button type="submit" disabled={loading || !query} color="primary">
             {loading ? (
-              <Spinner size="sm" color="default" />
+              <Spinner />
             ) : (
               <div className="flex items-center gap-1">
                 Search

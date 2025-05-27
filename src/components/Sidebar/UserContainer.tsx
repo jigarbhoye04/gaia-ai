@@ -2,13 +2,13 @@ import { useUser } from "@/hooks/useUser";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import SettingsMenu from "./Settings/SettingsMenu";
-// import { Spinner } from "@heroui/spinner";
+// import Spinner from "@/components/ui/spinner";
 
 export default function UserContainer() {
   const user = useUser();
 
   return (
-    <div className="pointer-events-auto relative flex w-full flex-col justify-center gap-3 bg-black px-2 py-2">
+    <div className="pointer-events-auto relative flex w-full flex-col justify-center gap-3 bg-zinc-950 px-2 py-2">
       {/* <div className="flex relative py-3 px-3 justify-between items-center hover:bg-zinc-900 rounded-xl transition-all bg-black">
       Syncing...
       <Spinner size="sm" />

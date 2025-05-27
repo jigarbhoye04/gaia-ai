@@ -204,7 +204,7 @@
   padding-top: 0.8rem;
 }
 .sidebar {
-  background-color: #020202;
+  /* background-color: #020202; */
   flex-direction: column;
   height: 100dvh;
   justify-content: space-between;

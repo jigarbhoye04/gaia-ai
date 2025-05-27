@@ -31,7 +31,7 @@ export default function SidebarLayout({
   return (
     <div
       ref={sidebarref}
-      className={`sidebar flex ${className}`}
+      className={`sidebar flex bg-zinc-950 ${className}`}
       style={{
         transform: isSidebarVisible ? "translateX(0)" : "translateX(-350px)",
         minWidth: isSidebarVisible ? "250px" : "0",
