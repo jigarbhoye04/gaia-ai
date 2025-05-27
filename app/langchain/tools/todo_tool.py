@@ -46,8 +46,6 @@ from app.services.todo_service import (
     delete_todo as delete_todo_service,
     search_todos as search_todos_service,
     semantic_search_todos as semantic_search_todos_service,
-    hybrid_search_todos as hybrid_search_todos_service,
-    bulk_index_existing_todos as bulk_index_existing_todos_service,
     get_todo_stats as get_todo_stats_service,
     get_todos_by_date_range,
     get_todos_by_label as get_todos_by_label_service,
@@ -237,8 +235,21 @@ async def update_todo(
 
         update_request = UpdateTodoRequest(**update_data)
         result = await update_todo_service(todo_id, update_request, user_id)
+        todo_dict = result.model_dump(mode="json")
 
-        return {"todo": result.model_dump(mode="json"), "error": None}
+        # Stream the updated todo to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": [todo_dict],
+                    "action": "update",
+                    "message": f"Updated task: {result.title}",
+                }
+            }
+        )
+
+        return {"todo": todo_dict, "error": None}
         
     except Exception as e:
         error_msg = f"Error updating todo: {str(e)}"
@@ -259,7 +270,23 @@ async def delete_todo(
         if not user_id:
             return {"error": "User authentication required", "success": False}
         
+        # Get the todo first to show what was deleted
+        todo = await get_todo_service(todo_id, user_id)
+        todo_title = todo.title
+        
         await delete_todo_service(todo_id, user_id)
+        
+        # Stream the deletion confirmation to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "action": "delete",
+                    "message": f"Deleted task: {todo_title}",
+                }
+            }
+        )
+        
         return {"success": True, "error": None}
         
     except Exception as e:
@@ -335,9 +362,23 @@ async def semantic_search_todos(
             completed=completed,
             priority=priority,
         )
+        
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream the semantic search results to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "search",
+                    "message": f"Found {len(results)} task{'s' if len(results) != 1 else ''} using AI search for '{query}'",
+                }
+            }
+        )
 
         return {
-            "todos": [todo.model_dump(mode="json") for todo in results],
+            "todos": todos_data,
             "count": len(results),
             "search_type": "semantic",
             "error": None,
@@ -397,9 +438,22 @@ async def get_today_todos(config: RunnableConfig) -> Dict[str, Any]:
         today_end = datetime.combine(datetime.today(), time.max)
 
         results = await get_todos_by_date_range(user_id, today_start, today_end)
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream today's todos to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "list",
+                    "message": f"Found {len(results)} task{'s' if len(results) != 1 else ''} due today",
+                }
+            }
+        )
 
         return {
-            "todos": [todo.model_dump(mode="json") for todo in results],
+            "todos": todos_data,
             "count": len(results),
             "error": None,
         }
@@ -429,9 +483,22 @@ async def get_upcoming_todos(
         end_date = start_date + timedelta(days=days)
 
         results = await get_todos_by_date_range(user_id, start_date, end_date)
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream upcoming todos to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "list",
+                    "message": f"Found {len(results)} upcoming task{'s' if len(results) != 1 else ''} in the next {days} days",
+                }
+            }
+        )
 
         return {
-            "todos": [todo.model_dump(mode="json") for todo in results],
+            "todos": todos_data,
             "count": len(results),
             "error": None,
         }
@@ -464,7 +531,21 @@ async def create_project(
         )
 
         result = await create_project_service(project_data, user_id)
-        return {"project": result.model_dump(mode="json"), "error": None}
+        project_dict = result.model_dump(mode="json")
+
+        # Stream the created project to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "projects": [project_dict],
+                    "action": "create",
+                    "message": f"Created project: {name}",
+                }
+            }
+        )
+
+        return {"project": project_dict, "error": None}
 
     except Exception as e:
         error_msg = f"Error creating project: {str(e)}"
@@ -532,8 +613,21 @@ async def update_project(
 
         update_request = UpdateProjectRequest(**update_data)
         result = await update_project_service(project_id, update_request, user_id)
+        project_dict = result.model_dump(mode="json")
 
-        return {"project": result.model_dump(mode="json"), "error": None}
+        # Stream the updated project to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "projects": [project_dict],
+                    "action": "update",
+                    "message": f"Updated project: {result.name}",
+                }
+            }
+        )
+
+        return {"project": project_dict, "error": None}
 
     except Exception as e:
         error_msg = f"Error updating project: {str(e)}"
@@ -554,7 +648,24 @@ async def delete_project(
         if not user_id:
             return {"error": "User authentication required", "success": False}
 
+        # Get all projects and find the one being deleted
+        all_projects = await get_all_projects_service(user_id)
+        project = next((p for p in all_projects if p.id == project_id), None)
+        project_name = project.name if project else "Unknown Project"
+        
         await delete_project_service(project_id, user_id)
+        
+        # Stream the deletion confirmation to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "action": "delete",
+                    "message": f"Deleted project: {project_name}",
+                }
+            }
+        )
+        
         return {"success": True, "error": None}
 
     except Exception as e:
@@ -577,9 +688,22 @@ async def get_todos_by_label(
             return {"error": "User authentication required", "todos": []}
 
         results = await get_todos_by_label_service(user_id, label)
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream the labeled todos to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "list",
+                    "message": f"Found {len(results)} task{'s' if len(results) != 1 else ''} with label '{label}'",
+                }
+            }
+        )
 
         return {
-            "todos": [todo.model_dump(mode="json") for todo in results],
+            "todos": todos_data,
             "count": len(results),
             "error": None,
         }
@@ -623,9 +747,22 @@ async def bulk_complete_todos(
             return {"error": "User authentication required", "todos": []}
 
         results = await bulk_complete_service(todo_ids, user_id)
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream the bulk completed todos to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "update",
+                    "message": f"Completed {len(results)} task{'s' if len(results) != 1 else ''}",
+                }
+            }
+        )
 
         return {
-            "todos": [todo.model_dump(mode="json") for todo in results],
+            "todos": todos_data,
             "count": len(results),
             "error": None,
         }
@@ -651,9 +788,22 @@ async def bulk_move_todos(
             return {"error": "User authentication required", "todos": []}
 
         results = await bulk_move_service(todo_ids, project_id, user_id)
+        todos_data = [todo.model_dump(mode="json") for todo in results]
+
+        # Stream the bulk moved todos to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": todos_data,
+                    "action": "update",
+                    "message": f"Moved {len(results)} task{'s' if len(results) != 1 else ''} to project",
+                }
+            }
+        )
 
         return {
-            "todos": [todo.model_dump(mode="json") for todo in results],
+            "todos": todos_data,
             "count": len(results),
             "error": None,
         }
@@ -678,6 +828,18 @@ async def bulk_delete_todos(
             return {"error": "User authentication required", "success": False}
 
         await bulk_delete_service(todo_ids, user_id)
+        
+        # Stream the bulk deletion confirmation to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "action": "delete",
+                    "message": f"Deleted {len(todo_ids)} task{'s' if len(todo_ids) != 1 else ''}",
+                }
+            }
+        )
+        
         return {"success": True, "error": None}
 
     except Exception as e:
@@ -712,7 +874,21 @@ async def add_subtask(
         update_data = UpdateTodoRequest(subtasks=todo.subtasks + [new_subtask])
 
         result = await update_todo_service(todo_id, update_data, user_id)
-        return {"todo": result.model_dump(mode="json"), "error": None}
+        todo_dict = result.model_dump(mode="json")
+
+        # Stream the updated todo with subtask to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": [todo_dict],
+                    "action": "update",
+                    "message": f"Added subtask '{title}' to {result.title}",
+                }
+            }
+        )
+
+        return {"todo": todo_dict, "error": None}
 
     except Exception as e:
         error_msg = f"Error adding subtask: {str(e)}"
@@ -757,8 +933,21 @@ async def update_subtask(
         # Update todo with modified subtasks
         update_data = UpdateTodoRequest(subtasks=updated_subtasks)
         result = await update_todo_service(todo_id, update_data, user_id)
+        todo_dict = result.model_dump(mode="json")
 
-        return {"todo": result.model_dump(mode="json"), "error": None}
+        # Stream the updated todo with modified subtask to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": [todo_dict],
+                    "action": "update",
+                    "message": f"Updated subtask in {result.title}",
+                }
+            }
+        )
+
+        return {"todo": todo_dict, "error": None}
 
     except Exception as e:
         error_msg = f"Error updating subtask: {str(e)}"
@@ -792,8 +981,21 @@ async def delete_subtask(
         # Update todo with remaining subtasks
         update_data = UpdateTodoRequest(subtasks=updated_subtasks)
         result = await update_todo_service(todo_id, update_data, user_id)
+        todo_dict = result.model_dump(mode="json")
 
-        return {"todo": result.model_dump(mode="json"), "error": None}
+        # Stream the updated todo with removed subtask to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "todo_data": {
+                    "todos": [todo_dict],
+                    "action": "update",
+                    "message": f"Removed subtask from {result.title}",
+                }
+            }
+        )
+
+        return {"todo": todo_dict, "error": None}
         
     except Exception as e:
         error_msg = f"Error deleting subtask: {str(e)}"
