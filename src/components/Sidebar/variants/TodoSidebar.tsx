@@ -2,19 +2,19 @@
 
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
-import {
-  Calendar,
-  CalendarDays,
-  CheckCircle2,
-  Folder,
-  Inbox,
-  Plus,
-  Tag,
-} from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
+import {
+  Appointment01Icon,
+  Calendar01Icon,
+  Calendar03Icon,
+  CalendarCheckOut02Icon,
+  Folder02Icon,
+  LabelImportantIcon,
+} from "@/components/Misc/icons";
 import AddProjectModal from "@/components/Todo/AddProjectModal";
 import AddTodoModal from "@/components/Todo/AddTodoModal";
 import Spinner from "@/components/ui/spinner";
@@ -53,7 +53,7 @@ function SidebarSection({
         <Button
           key={item.href}
           fullWidth
-          startContent={<item.icon className="w-[20px]" />}
+          startContent={<item.icon className="w-[20px] text-foreground-500" />}
           endContent={
             item.count !== undefined && (
               <span className="ml-auto text-xs text-foreground-500">
@@ -149,25 +149,25 @@ export default function TodoSidebar() {
   const mainMenuItems: MenuItem[] = [
     {
       label: "Inbox",
-      icon: Inbox,
+      icon: Calendar03Icon,
       href: "/todos",
       count: counts.inbox,
     },
     {
       label: "Today",
-      icon: CalendarDays,
+      icon: Calendar01Icon,
       href: "/todos/today",
       count: counts.today,
     },
     {
       label: "Upcoming",
-      icon: Calendar,
+      icon: CalendarCheckOut02Icon,
       href: "/todos/upcoming",
       count: counts.upcoming,
     },
     {
       label: "Completed",
-      icon: CheckCircle2,
+      icon: Appointment01Icon,
       href: "/todos/completed",
       count: counts.completed,
     },
@@ -177,17 +177,26 @@ export default function TodoSidebar() {
   const priorityMenuItems: MenuItem[] = [
     {
       label: "High Priority",
-      icon: () => <LabelIcon color={priorityColors[Priority.HIGH]} />,
+      icon: () => (
+        <LabelImportantIcon width={19} color={priorityColors[Priority.HIGH]} />
+      ),
       href: "/todos/priority/high",
     },
     {
       label: "Medium Priority",
-      icon: () => <LabelIcon color={priorityColors[Priority.MEDIUM]} />,
+      icon: () => (
+        <LabelImportantIcon
+          width={19}
+          color={priorityColors[Priority.MEDIUM]}
+        />
+      ),
       href: "/todos/priority/medium",
     },
     {
       label: "Low Priority",
-      icon: () => <LabelIcon color={priorityColors[Priority.LOW]} />,
+      icon: () => (
+        <LabelImportantIcon width={19} color={priorityColors[Priority.LOW]} />
+      ),
       href: "/todos/priority/low",
     },
   ];
@@ -207,13 +216,7 @@ export default function TodoSidebar() {
   const ProjectIcon = ({ color }: { color?: string }) => {
     return (
       <div className="flex items-center">
-        {color && (
-          <div
-            className="mr-2 h-3 w-3 rounded-full"
-            style={{ backgroundColor: color }}
-          />
-        )}
-        <Folder className="w-[20px]" />
+        <Folder02Icon className="w-[20px]" style={{ color }} />
       </div>
     );
   };
@@ -280,7 +283,7 @@ export default function TodoSidebar() {
 
             {/* Priorities */}
             <SidebarSection
-              title="PRIORITIES"
+              title="Priorities"
               items={priorityMenuItems}
               activeItem={pathname}
               onItemClick={handleNavigation}
@@ -292,7 +295,7 @@ export default function TodoSidebar() {
             <div className="mb-4">
               <div className="flex items-center justify-between px-2 pb-1">
                 <span className="text-xs font-medium text-foreground-400">
-                  LABELS
+                  Labels
                 </span>
               </div>
               {labelMenuItems.length > 0 ? (
@@ -338,7 +341,7 @@ export default function TodoSidebar() {
             <div className="mb-4">
               <div className="flex items-center justify-between px-2 pb-1">
                 <span className="text-xs font-medium text-foreground-400">
-                  PROJECTS
+                  Projects
                 </span>
                 <Button
                   isIconOnly

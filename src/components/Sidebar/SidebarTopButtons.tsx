@@ -2,11 +2,16 @@
 
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import { CheckSquareIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
-import { CalendarIcon, Mail01Icon, PinIcon, Route02Icon } from "../Misc/icons";
+import {
+  CalendarIcon,
+  Mail01Icon,
+  PinIcon,
+  Route02Icon,
+  CheckmarkSquare03Icon,
+} from "../Misc/icons";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
@@ -25,7 +30,7 @@ export default function SidebarTopButtons() {
     },
     {
       route: "/todos",
-      icon: <CheckSquareIcon height={23} width={23} />,
+      icon: <CheckmarkSquare03Icon height={23} width={23} />,
       label: "Todos",
     },
     {
