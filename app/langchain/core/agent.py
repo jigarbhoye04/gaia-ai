@@ -89,6 +89,7 @@ async def call_agent(
         currently_uploaded_file_ids=request.fileIds,
         user_id=user_id,
         query=request.message,
+        user_name=user.get("name"),
     )
 
     initial_state = {

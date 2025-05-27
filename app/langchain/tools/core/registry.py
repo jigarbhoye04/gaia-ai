@@ -6,6 +6,7 @@ from app.langchain.tools import (
     mail_tool,
     memory_tools,
     search_tool,
+    todo_tool,
     weather_tool,
     webpage_tool,
 )
@@ -22,6 +23,7 @@ ALWAYS_AVAILABLE_TOOLS = [
 # All other tools will be accessible through vector search
 tools = [
     *mail_tool.mail_tools,
+    *todo_tool.todo_tools,
     calendar_tool.fetch_calendar_list,
     calendar_tool.calendar_event,
     flowchart_tool.create_flowchart,

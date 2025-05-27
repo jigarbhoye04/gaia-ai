@@ -21,6 +21,7 @@ from app.api.v1.router import (
     notes,
     oauth,
     search,
+    todos,
     waitlist,
 )
 
@@ -41,4 +42,5 @@ router.include_router(mail.router, tags=["Mail"])
 router.include_router(blog.router, tags=["Blog"])
 router.include_router(file.router, tags=["File"])
 router.include_router(browser.router, tags=["Browser"])
+router.include_router(todos.router, tags=["Todos"])
 # api_router.include_router(audio.router, tags=["Audio"])

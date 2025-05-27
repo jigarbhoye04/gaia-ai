@@ -1,0 +1,311 @@
+from typing import List, Optional
+from datetime import datetime, timezone, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
+
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.models.todo_models import (
+    TodoCreate,
+    TodoResponse,
+    UpdateTodoRequest,
+    ProjectCreate,
+    ProjectResponse,
+    UpdateProjectRequest,
+    TodoListResponse,
+    TodoSearchParams,
+    Priority,
+    SearchMode,
+    BulkUpdateRequest,
+    BulkMoveRequest,
+    BulkOperationResponse,
+)
+from app.services.todo_service import TodoService, ProjectService
+
+router = APIRouter()
+
+
+# Main Todo CRUD Endpoints
+@router.get("/todos", response_model=TodoListResponse)
+async def list_todos(
+    # Search parameters
+    q: Optional[str] = Query(None, description="Search query"),
+    mode: SearchMode = Query(
+        SearchMode.HYBRID, description="Search mode: text, semantic, or hybrid"
+    ),
+    # Filter parameters
+    project_id: Optional[str] = Query(None),
+    completed: Optional[bool] = Query(None),
+    priority: Optional[Priority] = Query(None),
+    has_due_date: Optional[bool] = Query(None),
+    overdue: Optional[bool] = Query(None),
+    labels: Optional[List[str]] = Query(None),
+    # Date range filters
+    due_after: Optional[datetime] = Query(None, description="Due date after this date"),
+    due_before: Optional[datetime] = Query(
+        None, description="Due date before this date"
+    ),
+    # Special date filters
+    due_today: bool = Query(False, description="Only todos due today"),
+    due_this_week: bool = Query(False, description="Only todos due this week"),
+    # Pagination
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=100),
+    # Options
+    include_stats: bool = Query(False, description="Include statistics in response"),
+    user: dict = Depends(get_current_user),
+):
+    """
+    List todos with comprehensive filtering and search options.
+
+    This endpoint consolidates all todo retrieval operations:
+    - Search (text, semantic, or hybrid)
+    - Filtering by various criteria
+    - Date-based queries (today, this week, custom range)
+    - Pagination with metadata
+    - Optional statistics
+    """
+    # Handle special date filters
+    if due_today:
+        today = datetime.now(timezone.utc).date()
+        due_after = datetime.combine(today, datetime.min.time()).replace(
+            tzinfo=timezone.utc
+        )
+        due_before = datetime.combine(today, datetime.max.time()).replace(
+            tzinfo=timezone.utc
+        )
+    elif due_this_week:
+        today = datetime.now(timezone.utc)
+        due_after = today
+        due_before = today + timedelta(days=7)
+
+    params = TodoSearchParams(
+        q=q,
+        mode=mode,
+        project_id=project_id,
+        completed=completed,
+        priority=priority,
+        has_due_date=has_due_date,
+        overdue=overdue,
+        due_date_start=due_after,
+        due_date_end=due_before,
+        labels=labels,
+        page=page,
+        per_page=per_page,
+        include_stats=include_stats,
+    )
+
+    try:
+        return await TodoService.list_todos(user["user_id"], params)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve todos",
+        )
+
+
+@router.post("/todos", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+async def create_todo(todo: TodoCreate, user: dict = Depends(get_current_user)):
+    """Create a new todo. If no project is specified, it will be added to Inbox."""
+    try:
+        return await TodoService.create_todo(todo, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create todo",
+        )
+
+
+@router.get("/todos/{todo_id}", response_model=TodoResponse)
+async def get_todo(todo_id: str, user: dict = Depends(get_current_user)):
+    """Get a specific todo by ID."""
+    try:
+        return await TodoService.get_todo(todo_id, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve todo",
+        )
+
+
+@router.put("/todos/{todo_id}", response_model=TodoResponse)
+async def update_todo(
+    todo_id: str, updates: UpdateTodoRequest, user: dict = Depends(get_current_user)
+):
+    """Update a todo."""
+    try:
+        return await TodoService.update_todo(todo_id, updates, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update todo",
+        )
+
+
+@router.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_todo(todo_id: str, user: dict = Depends(get_current_user)):
+    """Delete a todo."""
+    try:
+        await TodoService.delete_todo(todo_id, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete todo",
+        )
+
+
+# Bulk Operations
+@router.put("/todos/bulk", response_model=BulkOperationResponse)
+async def bulk_update_todos(
+    request: BulkUpdateRequest, user: dict = Depends(get_current_user)
+):
+    """
+    Bulk update multiple todos with the same changes.
+
+    Example:
+    ```json
+    {
+        "todo_ids": ["id1", "id2", "id3"],
+        "updates": {
+            "completed": true,
+            "priority": "high"
+        }
+    }
+    ```
+    """
+    try:
+        return await TodoService.bulk_update_todos(request, user["user_id"])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Bulk update failed",
+        )
+
+
+@router.post("/todos/bulk/move", response_model=BulkOperationResponse)
+async def bulk_move_todos(
+    request: BulkMoveRequest, user: dict = Depends(get_current_user)
+):
+    """Move multiple todos to a different project."""
+    try:
+        return await TodoService.bulk_move_todos(request, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Bulk move failed"
+        )
+
+
+@router.delete("/todos/bulk", response_model=BulkOperationResponse)
+async def bulk_delete_todos(
+    todo_ids: List[str] = Body(..., min_items=1, max_items=100),
+    user: dict = Depends(get_current_user),
+):
+    """Delete multiple todos."""
+    try:
+        return await TodoService.bulk_delete_todos(todo_ids, user["user_id"])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Bulk delete failed",
+        )
+
+
+# Special mark complete endpoint for convenience
+@router.post("/todos/bulk/complete", response_model=BulkOperationResponse)
+async def bulk_complete_todos(
+    todo_ids: List[str] = Body(..., min_items=1, max_items=100),
+    user: dict = Depends(get_current_user),
+):
+    """Mark multiple todos as completed (convenience endpoint)."""
+    request = BulkUpdateRequest(
+        todo_ids=todo_ids, updates=UpdateTodoRequest(completed=True)
+    )
+    try:
+        return await TodoService.bulk_update_todos(request, user["user_id"])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Bulk complete failed",
+        )
+
+
+# Project Endpoints
+@router.get("/projects", response_model=List[ProjectResponse])
+async def list_projects(user: dict = Depends(get_current_user)):
+    """List all projects with todo counts."""
+    try:
+        return await ProjectService.list_projects(user["user_id"])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve projects",
+        )
+
+
+@router.post(
+    "/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED
+)
+async def create_project(
+    project: ProjectCreate, user: dict = Depends(get_current_user)
+):
+    """Create a new project."""
+    try:
+        return await ProjectService.create_project(project, user["user_id"])
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create project",
+        )
+
+
+@router.put("/projects/{project_id}", response_model=ProjectResponse)
+async def update_project(
+    project_id: str,
+    updates: UpdateProjectRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Update a project. Cannot update the default Inbox project."""
+    try:
+        return await ProjectService.update_project(project_id, updates, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST
+            if "Cannot update" in str(e)
+            else status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update project",
+        )
+
+
+@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project(project_id: str, user: dict = Depends(get_current_user)):
+    """Delete a project. All todos will be moved to Inbox. Cannot delete Inbox."""
+    try:
+        await ProjectService.delete_project(project_id, user["user_id"])
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST
+            if "Cannot delete" in str(e)
+            else status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete project",
+        )
