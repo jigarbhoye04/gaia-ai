@@ -192,10 +192,13 @@ export default function TodoSection({
       <div className="mt-3 w-fit min-w-[450px] rounded-2xl rounded-bl-none bg-zinc-800 p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="text-sm">
-            {action === "search" ? "Search Results" : 
-             action === "create" ? "New Task" :
-             action === "update" ? "Updated Tasks" :
-             "Tasks"}
+            {action === "search"
+              ? "Search Results"
+              : action === "create"
+                ? "New Task"
+                : action === "update"
+                  ? "Updated Tasks"
+                  : "Tasks"}
           </div>
           <span className="text-xs text-zinc-500">
             {todos.length} {todos.length === 1 ? "task" : "tasks"}
@@ -377,7 +380,7 @@ export default function TodoSection({
   if (message && !todos && !stats && !projects) {
     const isDeleteAction = action === "delete";
     const iconColor = isDeleteAction ? "text-red-500" : "text-green-500";
-    
+
     return (
       <div className="mt-3 w-fit rounded-2xl rounded-bl-none bg-zinc-800 p-4">
         <div className="flex items-center gap-2">
