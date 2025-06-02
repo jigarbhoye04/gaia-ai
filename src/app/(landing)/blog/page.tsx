@@ -3,7 +3,7 @@ import { Tooltip } from "@heroui/tooltip";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import api from "@/utils/apiaxios";
+import { api } from "@/lib/api";
 
 interface Blog {
   slug: string;

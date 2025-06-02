@@ -3,7 +3,7 @@
 import { Button } from "@heroui/button";
 import { useRouter } from "next/navigation";
 
-import { LinkBackwardIcon } from "@/components/Misc/icons";
+import { LinkBackwardIcon } from "@/components/shared/icons";
 
 export default function PageNotFound() {
   const router = useRouter();

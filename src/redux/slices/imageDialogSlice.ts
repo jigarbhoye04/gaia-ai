@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { ImageResult } from "@/types/convoTypes";
+import { ImageResult } from "@/types/features/convoTypes";
 
 interface ImageDialogState {
   isOpen: boolean;

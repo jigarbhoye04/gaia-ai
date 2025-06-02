@@ -1,6 +1,6 @@
 "use client";
 
-import useAxiosInterceptor from "@/hooks/useAxiosInterceptor";
+import useAxiosInterceptor from "@/hooks/api/useAxiosInterceptor";
 
 const GlobalInterceptor = () => {
   useAxiosInterceptor();

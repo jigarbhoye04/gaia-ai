@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
-import MainChat from "@/components/Chat/MainChat";
+import ChatPage from "@/features/chat/components/interface/ChatPage";
 
 export const metadata: Metadata = {
-  title: "New Chat",
+  title: "New chat",
   description:
     "Start a new conversation with GAIA, your AI assistant designed to help with tasks, answer questions, and boost productivity.",
   openGraph: {
-    title: "New Chat",
+    title: "New chat",
     siteName: "GAIA - Personal Assistant",
     url: "https://heygaia.io/chat/new",
     type: "website",
@@ -17,14 +17,14 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "New Chat",
+    title: "New chat",
     description:
       "Start a new conversation with GAIA, your AI assistant designed to help with tasks, answer questions, and boost productivity.",
     images: ["/landing/screenshot.webp"],
   },
   keywords: [
     "GAIA",
-    "AI Chat",
+    "AI chat",
     "AI Assistant",
     "Chatbot",
     "AI Personal Assistant",
@@ -36,5 +36,5 @@ export const metadata: Metadata = {
 };
 
 export default function CreateNewChatPage() {
-  return <MainChat />;
+  return <ChatPage />;
 }

@@ -2,34 +2,30 @@ import {
   EventSourceMessage,
   fetchEventSource,
 } from "@microsoft/fetch-event-source";
-import { toast } from "sonner";
 
-import { FileData } from "@/components/Chat/SearchBar/MainSearchbar";
-import { MessageType } from "@/types/convoTypes";
-import { apiauth } from "@/utils/apiaxios";
+import { chatApi } from "@/features/chat/api/chatApi";
+import { MessageType } from "@/types/features/convoTypes";
+import { FileData } from "@/types/shared";
 
 export const ApiService = {
   fetchMessages: async (conversationId: string) => {
     if (!conversationId) return;
     try {
-      const response = await apiauth.get(`/conversations/${conversationId}`);
-      return response?.data?.messages;
+      return await chatApi.fetchMessages(conversationId);
     } catch (error) {
       console.error(
         `Error fetching messages for conversation ${conversationId}:`,
         error,
       );
-      toast.error("Error fetching messages. Please try again later.");
       throw error;
     }
   },
 
   deleteAllConversations: async () => {
     try {
-      await apiauth.delete(`/conversations`);
+      await chatApi.deleteAllConversations();
     } catch (error) {
       console.error("Error deleting all conversations:", error);
-      toast.error("Error deleting conversations. Please try again later.");
       throw error;
     }
   },

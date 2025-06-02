@@ -5,7 +5,7 @@ import {
   Home01Icon,
   Idea01Icon,
   MapsIcon,
-} from "@/components/Misc/icons";
+} from "@/components/shared/icons";
 
 export interface NavLink {
   href: string;
@@ -51,13 +51,13 @@ export const mainNavLinks: NavLink[] = [
 export const authNavLinks: NavLink[] = [
   {
     href: "/c",
-    label: "Chat",
+    label: "chat",
     icon: <BubbleConversationChatIcon width={17} color={undefined} />,
     requiresAuth: true,
   },
   {
     href: "/login",
-    label: "Login",
+    label: "login",
     guestOnly: true,
   },
   {

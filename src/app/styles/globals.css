@@ -16,7 +16,7 @@
   flex-direction: column;
   height: fit-content;
   max-width: 30vw;
-  min-width: fit-content;
+  /* min-width: fit-content; */
   padding: 8px 17px;
   user-select: auto;
   width: fit-content;
@@ -204,7 +204,7 @@
   padding-top: 0.8rem;
 }
 .sidebar {
-  background-color: #020202;
+  /* background-color: #020202; */
   flex-direction: column;
   height: 100dvh;
   justify-content: space-between;
@@ -457,17 +457,4 @@ code {
 
 .bobbing {
   animation: rotateBounce 2s ease-in-out infinite;
-}
-
-.fadein-style {
-  /* animation: fade-in 1s; */
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 100;
-  }
 }
