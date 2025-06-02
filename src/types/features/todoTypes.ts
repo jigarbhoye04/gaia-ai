@@ -30,7 +30,7 @@ export interface Todo {
   updated_at: string;
 }
 
-export interface TodoCreate {
+export interface TodoCreate extends Record<string, unknown> {
   title: string;
   description?: string;
   labels: string[];
