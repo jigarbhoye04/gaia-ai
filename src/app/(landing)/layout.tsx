@@ -2,8 +2,8 @@
 
 import { ReactNode } from "react";
 
-import Footer from "@/components/Misc/Footer";
-import Navbar from "@/components/Misc/Navbar";
+import Footer from "@/components/navigation/Footer";
+import Navbar from "@/components/navigation/Navbar";
 
 export default function LandingLayout({ children }: { children: ReactNode }) {
   return (

@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 
-import Notes from "@/components/Notes/NotesPage";
+import Notes from "@/features/notes/components/NotesPage";
 
 export const metadata: Metadata = {
-  title: "Notes",
+  title: "notes",
 };
 
 export default function Page() {

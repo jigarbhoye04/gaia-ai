@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 
-import GoalsPage from "@/components/Goals/GoalsPage";
+import GoalsPage from "@/features/goals/components/GoalsPage";
 
 export const metadata: Metadata = {
-  title: "Goals",
+  title: "goals",
 };
 
 export default function Page() {

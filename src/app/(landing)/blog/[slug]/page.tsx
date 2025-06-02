@@ -6,8 +6,8 @@ import { Calendar, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Markdown from "react-markdown";
 
-import { Separator } from "@/components/ui/separator";
-import api from "@/utils/apiaxios";
+import { Separator } from "@/components/ui/shadcn/separator";
+import { api } from "@/lib/api";
 
 interface BlogPost {
   slug: string;

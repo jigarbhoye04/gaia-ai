@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { CalendarEvent } from "@/types/calendarTypes";
+import { CalendarEvent } from "@/types/features/calendarTypes";
 
 interface CalendarModalState {
   isOpen: boolean;

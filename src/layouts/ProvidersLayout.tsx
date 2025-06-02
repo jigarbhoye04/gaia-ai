@@ -2,19 +2,19 @@
 
 import { ReactNode, Suspense } from "react";
 
-import { Providers } from "@/app/providers";
-import CalendarModal from "@/components/Calendar/CalendarModal";
-import LoginModal from "@/components/Login/LoginModal";
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
-import { Toaster } from "@/components/ui/sonner";
+import SuspenseLoader from "@/components/shared/SuspenseLoader";
+import { Toaster } from "@/components/ui/shadcn/sonner";
+import LoginModal from "@/features/auth/components/LoginModal";
+import CalendarModal from "@/features/calendar/components/CalendarModal";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
+import { HeroUIProvider } from "@/layouts/HeroUIProvider";
 import ReduxProviders from "@/redux/providers";
 
 export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}>
-      <Providers>
+      <HeroUIProvider>
         <ReduxProviders>
           <GlobalInterceptor />
           <GlobalAuth />
@@ -24,7 +24,7 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
           <Toaster closeButton richColors position="top-right" theme="dark" />
           {children}
         </ReduxProviders>
-      </Providers>
+      </HeroUIProvider>
     </Suspense>
   );
 }
