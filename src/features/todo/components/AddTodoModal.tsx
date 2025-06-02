@@ -14,9 +14,9 @@ import {
 import { Select, SelectItem } from "@heroui/select";
 import { parseDate } from "@internationalized/date";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { useTodos } from "@/features/todo/hooks/useTodos";
+import { useModalForm } from "@/hooks/ui/useModalForm";
 import { Priority, TodoCreate } from "@/types/features/todoTypes";
 
 interface AddTodoModalProps {
@@ -39,81 +39,67 @@ export default function AddTodoModal({
   onSuccess,
   initialProjectId,
 }: AddTodoModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<TodoCreate>({
-    title: "",
-    description: "",
-    labels: [],
-    priority: Priority.NONE,
-    project_id: initialProjectId,
-  });
   const [labelInput, setLabelInput] = useState("");
-
   const { projects, addTodo } = useTodos();
 
-  // Projects are loaded via Redux, no need to load here
+  const { formData, setFormData, loading, handleSubmit, updateField } =
+    useModalForm<TodoCreate>({
+      initialData: () => ({
+        title: "",
+        description: "",
+        labels: [],
+        priority: Priority.NONE,
+        project_id: initialProjectId,
+      }),
+      onSubmit: async (data: TodoCreate) => {
+        await addTodo(data);
+      },
+      validate: [
+        {
+          field: "title",
+          required: true,
+          message: "Please enter a task title",
+        },
+      ],
+      onSuccess: () => {
+        setLabelInput("");
+        onOpenChange(false);
+        onSuccess?.();
+      },
+      successMessage: "Task created successfully",
+      resetOnSuccess: true,
+    });
 
+  // Set initial project ID when it changes
   useEffect(() => {
     if (initialProjectId) {
-      setFormData((prev) => ({ ...prev, project_id: initialProjectId }));
+      updateField("project_id", initialProjectId);
     }
-  }, [initialProjectId]);
+  }, [initialProjectId, updateField]);
 
   // Set default project when projects are loaded
   useEffect(() => {
     if (!formData.project_id && projects.length > 0) {
       const inboxProject = projects.find((p) => p.is_default);
       if (inboxProject) {
-        setFormData((prev) => ({ ...prev, project_id: inboxProject.id }));
+        updateField("project_id", inboxProject.id);
       }
     }
-  }, [projects, formData.project_id]);
-
-  const handleSubmit = async () => {
-    if (!formData.title.trim()) {
-      toast.error("Please enter a task title");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await addTodo(formData);
-
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        labels: [],
-        priority: Priority.NONE,
-        project_id: formData.project_id,
-      });
-      setLabelInput("");
-
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error("Failed to create todo:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [projects, formData.project_id, updateField]);
 
   const handleAddLabel = () => {
     const trimmedLabel = labelInput.trim();
     if (trimmedLabel && !formData.labels.includes(trimmedLabel)) {
-      setFormData((prev) => ({
-        ...prev,
-        labels: [...prev.labels, trimmedLabel],
-      }));
+      updateField("labels", [...formData.labels, trimmedLabel]);
       setLabelInput("");
     }
   };
 
   const handleRemoveLabel = (label: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      labels: prev.labels.filter((l) => l !== label),
-    }));
+    updateField(
+      "labels",
+      formData.labels.filter((l) => l !== label),
+    );
   };
 
   const handleDateChange = (date: unknown) => {
@@ -160,9 +146,7 @@ export default function AddTodoModal({
                   label="Task Title"
                   placeholder="Enter task title..."
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, title: e.target.value }))
-                  }
+                  onChange={(e) => updateField("title", e.target.value)}
                   isRequired
                   autoFocus
                 />
@@ -172,12 +156,7 @@ export default function AddTodoModal({
                   label="Description"
                   placeholder="Add a description..."
                   value={formData.description || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => updateField("description", e.target.value)}
                   minRows={2}
                   maxRows={4}
                 />
@@ -190,12 +169,7 @@ export default function AddTodoModal({
                     selectedKeys={
                       formData.project_id ? [formData.project_id] : []
                     }
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        project_id: e.target.value,
-                      }))
-                    }
+                    onChange={(e) => updateField("project_id", e.target.value)}
                     className="flex-1"
                   >
                     {projects.map((project) => (
@@ -208,10 +182,7 @@ export default function AddTodoModal({
                     placeholder="Select priority"
                     selectedKeys={[formData.priority]}
                     onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        priority: e.target.value as Priority,
-                      }))
+                      updateField("priority", e.target.value as Priority)
                     }
                     className="flex-1"
                   >

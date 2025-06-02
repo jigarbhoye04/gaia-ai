@@ -1,5 +1,5 @@
-import { withNextVideo } from "next-video/process";
 import bundleAnalyzer from "@next/bundle-analyzer";
+import { withNextVideo } from "next-video/process";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",

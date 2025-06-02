@@ -1,20 +1,10 @@
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { ButtonGroup } from "@heroui/react";
-import CharacterCount from "@tiptap/extension-character-count";
-import Highlight from "@tiptap/extension-highlight";
-import Link from "@tiptap/extension-link";
-import Placeholder from "@tiptap/extension-placeholder";
-import Typography from "@tiptap/extension-typography";
-import Underline from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Tag, TagInput } from "emblor";
+import { EditorContent } from "@tiptap/react";
+import { TagInput } from "emblor";
 import { AlertCircle, Check, ChevronDown } from "lucide-react";
-import { marked } from "marked";
 import Image from "next/image";
-import { useState } from "react";
-import { toast } from "sonner";
 import { Drawer } from "vaul";
 
 import {
@@ -35,12 +25,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/shadcn/dropdown-menu";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { mailApi } from "@/features/mail/api/mailApi";
+import { useEmailComposition } from "@/features/mail/hooks/useEmailComposition";
 import { MenuBar } from "@/features/notes/components/NotesMenuBar";
 
 import { Button as ShadcnButton } from "../../../components/ui/shadcn/button";
 import { AiSearchModal } from "./AiSearchModal";
-import { EmailSuggestion } from "./EmailChip";
 
 interface MailComposeProps {
   open: boolean;
@@ -51,121 +40,39 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
   console.log("test open");
 
   const user = useUser();
-  const [toEmails, setToEmails] = useState<Tag[]>([]);
-  const [activeTagIndex, setActiveTagIndex] = useState<number | null>(null);
-  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [writingStyle, setWritingStyle] = useState("formal");
-  const [contentLength, setContentLength] = useState("none");
-  const [clarityOption, setClarityOption] = useState("none");
-  const [error, setError] = useState<string | null>(null);
+  const { formState, uiState, actions, editor, options } =
+    useEmailComposition();
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Highlight,
-      Typography,
-      Underline,
-      Link.configure({
-        openOnClick: true,
-        autolink: true,
-        linkOnPaste: true,
-      }),
-      CharacterCount.configure({ limit: 10_000 }),
-      Placeholder.configure({
-        placeholder: () => "Body",
-      }),
-    ],
-    editorProps: {
-      attributes: {
-        class: "h-[50vh] overflow-y-auto",
-      },
-    },
-    content: body,
-    onUpdate: ({ editor }) => {
-      setBody(editor.getHTML());
-    },
-  });
+  // Destructure state and actions for easier access
+  const {
+    toEmails,
+    subject,
+    body,
+    prompt,
+    writingStyle,
+    contentLength,
+    clarityOption,
+  } = formState;
 
-  const writingStyles = [
-    { id: "formal", label: "Formal" },
-    { id: "friendly", label: "Friendly" },
-    { id: "casual", label: "Casual" },
-    { id: "persuasive", label: "Persuasive" },
-    { id: "humorous", label: "Humorous" },
-  ];
+  const { loading, error, isAiModalOpen, activeTagIndex } = uiState;
 
-  const contentLengthOptions = [
-    { id: "none", label: "None" },
-    { id: "shorten", label: "Shorten" },
-    { id: "lengthen", label: "Lengthen" },
-    { id: "summarize", label: "Summarize" },
-  ];
+  const {
+    setToEmails,
+    setSubject,
+    setPrompt,
+    setWritingStyle,
+    setContentLength,
+    setClarityOption,
+    setIsAiModalOpen,
+    setActiveTagIndex,
+    handleAiSelect,
+    handleAskGaia,
+    handleAskGaiaKeyPress,
+  } = actions;
 
-  const clarityOptions = [
-    { id: "none", label: "None" },
-    { id: "simplify", label: "Simplify" },
-    { id: "rephrase", label: "Rephrase" },
-  ];
+  const { writingStyles, contentLengthOptions, clarityOptions } = options;
 
-  const handleAiSelect = (selectedSuggestions: EmailSuggestion[]) => {
-    const newTags: Tag[] = selectedSuggestions.map((s) => ({
-      id: s.email,
-      label: s.email,
-      text: s.email,
-    }));
-    setToEmails((prev) => [...prev, ...newTags]);
-  };
-
-  const handleAskGaia = async (overrideStyle?: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await mailApi.composeWithAI({
-        subject,
-        body,
-        prompt,
-        writingStyle: overrideStyle || writingStyle,
-        contentLength,
-        clarityOption,
-      });
-
-      if (response.content) {
-        const parsedContent = JSON.parse(response.content);
-        if (parsedContent.subject && parsedContent.body) {
-          const formattedBody = marked(
-            parsedContent.body.replace(/\n/g, "<br />"),
-          );
-          if (editor) editor.commands.setContent(formattedBody);
-          setSubject(parsedContent.subject);
-        } else {
-          console.log(`Invalid response format: ${JSON.stringify(response)}`);
-          setError("Invalid response format from server");
-          toast.error("Invalid response format from server");
-        }
-      } else {
-        console.log(`Invalid response format: ${JSON.stringify(response)}`);
-        setError("Invalid response format from server");
-        toast.error("Invalid response format from server");
-      }
-    } catch (error) {
-      console.error("Error processing email:", error);
-      toast.error("Error processing email. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAskGaiaKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (loading) return;
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAskGaia();
-    }
-  };
+  // Remaining original logic that doesn't belong in the hook
 
   return (
     <>

@@ -1,13 +1,14 @@
 "use client";
 
 import { useParams, usePathname, useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import Composer from "@/features/chat/components/composer/Composer";
 import { FileDropModal } from "@/features/chat/components/files/FileDropModal";
 import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { fetchMessages } from "@/features/chat/utils/chatUtils";
+import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
 
 const ChatPage = React.memo(function MainChat() {
   const router = useRouter();
@@ -17,7 +18,6 @@ const ChatPage = React.memo(function MainChat() {
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   // const [isAtBottom, setIsAtBottom] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
   const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
   const fileUploadRef = useRef<{
     openFileUploadModal: () => void;
@@ -35,48 +35,17 @@ const ChatPage = React.memo(function MainChat() {
       chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
-  // Drag and drop handlers
-  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!isDragging) setIsDragging(true);
-    },
-    [isDragging],
-  );
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Only set isDragging to false if we're leaving the main container
-    // rather than entering a child element
-    if (e.currentTarget.contains(e.relatedTarget as Node)) {
-      return;
-    }
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const files = Array.from(e.dataTransfer.files);
+  // Drag and drop functionality
+  const { isDragging, dragHandlers } = useDragAndDrop({
+    onDrop: (files: File[]) => {
       setDroppedFiles(files);
-
       if (fileUploadRef.current) {
         fileUploadRef.current.handleDroppedFiles(files);
         fileUploadRef.current.openFileUploadModal();
       }
-    }
-  }, []);
+    },
+    multiple: true,
+  });
 
   // ! THIS DOESNT CAUSE AN INFINITE LOOP
   useEffect(() => {
@@ -116,10 +85,7 @@ const ChatPage = React.memo(function MainChat() {
     <div className="flex h-full flex-col">
       <div
         className={`relative flex w-full flex-1 justify-center overflow-y-auto ${isDragging ? "bg-zinc-800/30" : ""}`}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        {...dragHandlers}
       >
         <FileDropModal isDragging={isDragging} />
 
