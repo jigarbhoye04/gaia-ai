@@ -8,21 +8,20 @@ import Typography from "@tiptap/extension-typography";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { convert } from "html-to-text";
 import { CircleX, TriangleAlert } from "lucide-react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import NotesHeader from "@/components/Misc/Headers/NotesHeader";
-import { SaveIcon } from "@/components/Misc/icons";
-import BubbleMenuComponent from "@/components/Notes/BubbleMenu";
-import { MenuBar } from "@/components/Notes/NotesMenuBar";
-import { Button } from "@/components/ui/button";
-import Spinner from "@/components/ui/spinner";
-import { useHeader } from "@/hooks/useHeader";
+import NotesHeader from "@/components/layout/headers/NotesHeader";
+import { SaveIcon } from "@/components/shared/icons";
+import { Button } from "@/components/ui/shadcn/button";
+import Spinner from "@/components/ui/shadcn/spinner";
+import { notesApi } from "@/features/notes/api/notesApi";
+import BubbleMenuComponent from "@/features/notes/components/BubbleMenu";
+import { MenuBar } from "@/features/notes/components/NotesMenuBar";
+import { useHeader } from "@/hooks/layout/useHeader";
 import { truncateTitle } from "@/lib/utils";
-import { apiauth } from "@/utils/apiaxios";
 
 interface Note {
   id: string;
@@ -129,11 +128,16 @@ export default function NotesAdd() {
   const fetchNote = useCallback(async () => {
     if (id) {
       try {
-        const response = await apiauth.get(`/notes/${id}`);
-        const fetchedNote = response.data as Note; // Type cast the response
+        const fetchedNote = await notesApi.fetchNoteById(id as string);
 
-        setNote(fetchedNote);
-        setOldNote(fetchedNote);
+        const noteData: Note = {
+          id: fetchedNote.id,
+          title: fetchedNote.title || "",
+          content: fetchedNote.content,
+          plaintext: fetchedNote.plaintext,
+        };
+        setNote(noteData);
+        setOldNote(noteData);
         setHasUnsavedChanges(false);
         editor?.commands.setContent(fetchedNote.content);
       } catch (error) {
@@ -154,26 +158,25 @@ export default function NotesAdd() {
   const saveNote = async () => {
     try {
       setIsSaving(true);
-      // if (pathname === "/notes/new") {
-      // }
-      const method = id ? "PUT" : "POST";
-      const url = !!id && id !== "new" ? `/notes/${id}` : `/notes`;
+      const isCreating = !id || id === "new";
 
-      const response = await apiauth[method.toLowerCase() as "put" | "post"](
-        url,
-        {
+      if (isCreating) {
+        const response = await notesApi.createNote({
           content: note.content,
-          plaintext: convert(note.content),
-        },
-      );
+          title: note.title,
+        });
 
-      toast.success("Note has been saved");
-      setOldNote(note);
-      setHasUnsavedChanges(false);
+        setOldNote(note);
+        setHasUnsavedChanges(false);
+        router.push(`/notes/${response.id}`);
+      } else {
+        await notesApi.updateNote(id as string, {
+          content: note.content,
+          title: note.title,
+        });
 
-      // If this is a new note (POST request), navigate to the new note page
-      if (method === "POST" && response.data && response.data.id) {
-        router.push(`/notes/${response.data.id}`);
+        setOldNote(note);
+        setHasUnsavedChanges(false);
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -194,22 +197,11 @@ export default function NotesAdd() {
 
   const deleteNote = useCallback(async () => {
     try {
-      await apiauth.delete(`/notes/${id}`);
-      toast.success("Note has been deleted");
+      await notesApi.deleteNote(id as string);
       router.push("/notes");
       setHasUnsavedChanges(false);
     } catch (error) {
-      console.error("Error saving note:", error);
-      toast.error("Uh oh! Something went wrong.", {
-        classNames: {
-          toast: "flex items-center p-3 rounded-xl gap-3 w-[350px] toast_error",
-          title: " text-sm",
-          description: "text-sm",
-        },
-        duration: 3000,
-        description:
-          "There was a problem with deleting this Note. Please try again later.\n",
-      });
+      console.error("Error deleting note:", error);
     }
   }, [id, router]);
 

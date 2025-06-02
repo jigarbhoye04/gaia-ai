@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TodoService } from "@/services/todoService";
-import { Todo, TodoListResponse } from "@/types/todoTypes";
+import { Badge } from "@/components/ui/shadcn/badge";
+import { Button } from "@/components/ui/shadcn/button";
+import { Card } from "@/components/ui/shadcn/card";
+import { todoApi } from "@/features/todo/api/todoApi";
+import { Todo, TodoListResponse } from "@/types/features/todoTypes";
 
 export default function TestTodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -35,7 +35,7 @@ export default function TestTodoPage() {
         console.log("✅ New API is working correctly!");
       }
 
-      // Test 2: Search with semantic mode
+      // Test 2: search with semantic mode
       console.log("Testing semantic search...");
       const searchResponse = await fetch(
         "/api/v1/todos?q=important&mode=semantic",
@@ -46,16 +46,16 @@ export default function TestTodoPage() {
         },
       );
       const searchData = await searchResponse.json();
-      console.log("Semantic Search Response:", searchData);
+      console.log("Semantic search Response:", searchData);
 
       // Test 3: Get today's todos
       console.log("Testing today filter...");
-      const todayTodos = await TodoService.getTodayTodos();
+      const todayTodos = await todoApi.getTodayTodos();
       console.log("Today's todos:", todayTodos);
 
       // Test 4: Get stats
       console.log("Testing stats...");
-      const todoStats = await TodoService.getTodoStats();
+      const todoStats = await todoApi.getTodoStats();
       console.log("Stats:", todoStats);
     } catch (error) {
       console.error("Test failed:", error);

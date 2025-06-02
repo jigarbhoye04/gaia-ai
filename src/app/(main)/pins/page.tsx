@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 
-import Pins from "@/components/Pins/PinsPage";
+import Pins from "@/features/pins/components/PinsPage";
 
 export const metadata: Metadata = {
   title: "Pinned Messages",

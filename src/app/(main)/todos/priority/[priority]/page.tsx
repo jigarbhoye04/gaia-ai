@@ -3,11 +3,16 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import TodoHeader from "@/components/Todo/TodoHeader";
-import TodoList from "@/components/Todo/TodoList";
-import Spinner from "@/components/ui/spinner";
-import { TodoService } from "@/services/todoService";
-import { Priority, Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
+import Spinner from "@/components/ui/shadcn/spinner";
+import { todoApi } from "@/features/todo/api/todoApi";
+import TodoHeader from "@/features/todo/components/TodoHeader";
+import TodoList from "@/features/todo/components/TodoList";
+import {
+  Priority,
+  Todo,
+  TodoFilters,
+  TodoUpdate,
+} from "@/types/features/todoTypes";
 
 export default function PriorityTodosPage() {
   const params = useParams();
@@ -28,7 +33,7 @@ export default function PriorityTodosPage() {
       const filters: TodoFilters = {
         priority: priority,
       };
-      const todoList = await TodoService.getAllTodos(filters);
+      const todoList = await todoApi.getAllTodos(filters);
       setTodos(todoList);
     } catch (error) {
       console.error("Failed to load priority todos:", error);
@@ -39,7 +44,7 @@ export default function PriorityTodosPage() {
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
-      const updatedTodo = await TodoService.updateTodo(todoId, updates);
+      const updatedTodo = await todoApi.updateTodo(todoId, updates);
 
       // If the todo's priority changed, remove it from this view
       if (updates.priority && updates.priority !== priority) {
@@ -56,7 +61,7 @@ export default function PriorityTodosPage() {
 
   const handleTodoDelete = async (todoId: string) => {
     try {
-      await TodoService.deleteTodo(todoId);
+      await todoApi.deleteTodo(todoId);
       setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
     } catch (error) {
       console.error("Failed to delete todo:", error);

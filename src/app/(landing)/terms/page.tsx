@@ -3,11 +3,11 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant services.",
+    "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant api.",
   openGraph: {
     title: "Terms of Service",
     description:
-      "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant services.",
+      "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant api.",
     url: "https://heygaia.io/terms",
     images: ["/landing/screenshot.webp"],
     siteName: "GAIA - AI Personal Assistant",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Terms of Service",
     description:
-      "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant services.",
+      "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant api.",
     images: ["/landing/screenshot.webp"],
   },
   keywords: [

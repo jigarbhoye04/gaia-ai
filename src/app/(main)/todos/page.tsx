@@ -3,12 +3,12 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import TodoDetailSheet from "@/components/Todo/TodoDetailSheet";
-import TodoHeader from "@/components/Todo/TodoHeader";
-import TodoList from "@/components/Todo/TodoList";
-import Spinner from "@/components/ui/spinner";
-import { useTodos } from "@/hooks/useTodos";
-import { Priority, TodoFilters, TodoUpdate } from "@/types/todoTypes";
+import Spinner from "@/components/ui/shadcn/spinner";
+import TodoDetailSheet from "@/features/todo/components/TodoDetailSheet";
+import TodoHeader from "@/features/todo/components/TodoHeader";
+import TodoList from "@/features/todo/components/TodoList";
+import { useTodos } from "@/features/todo/hooks/useTodos";
+import { Priority, TodoFilters, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
@@ -156,7 +156,7 @@ export default function TodosPage() {
         />
       </div>
 
-      {/* Todo Detail Sheet */}
+      {/* todo Detail Sheet */}
       <TodoDetailSheet
         todo={selectedTodo}
         isOpen={!!selectedTodo}

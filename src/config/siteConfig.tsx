@@ -17,7 +17,7 @@ import {
   CustomerService01Icon,
   Idea01Icon,
   MapsIcon,
-} from "@/components/Misc/icons";
+} from "@/components/shared/icons";
 
 export const siteConfig = {
   name: "GAIA",
@@ -27,9 +27,9 @@ export const siteConfig = {
     {
       title: "HELLO",
       links: [
-        { label: "Login", href: "/login" },
+        { label: "login", href: "/login" },
         { label: "Get Started", href: "/signup" },
-        { label: "Chat", href: "/c", isLoggedIn: true },
+        { label: "chat", href: "/c", isLoggedIn: true },
       ],
     },
     {
@@ -50,7 +50,7 @@ export const siteConfig = {
           icon: <MapsIcon width={19} />,
         },
         // {
-        //   label: "Pricing",
+        //   label: "pricing",
         //   href: "/pricing",
         //   icon: <CreditCardPosIcon width={19} />,
         // },

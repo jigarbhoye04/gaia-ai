@@ -1,101 +1,131 @@
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LegacyRef, ReactNode, useState } from "react";
+import { ReactNode, useState } from "react";
 
-import { ChatBubbleAddIcon } from "@/components/Misc/icons";
-import SearchCommand from "@/components/Search/SearchCommand";
-import CloseOpenSidebarBtn from "@/components/Sidebar/CloseOpenSidebar";
-import SidebarTopButtons from "@/components/Sidebar/SidebarTopButtons";
-import UserContainer from "@/components/Sidebar/UserContainer";
-import { Button } from "@/components/ui/button";
-import { useConversation } from "@/hooks/useConversation";
+import SidebarTopButtons from "@/components/layout/sidebar/SidebarTopButtons";
+import UserContainer from "@/components/layout/sidebar/UserContainer";
+import {
+  ChatBubbleAddIcon,
+  SidebarLeft01Icon,
+  SidebarRight01Icon,
+} from "@/components/shared/icons";
+import { Button } from "@/components/ui/shadcn/button";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  useSidebar,
+} from "@/components/ui/shadcn/sidebar";
+import { useConversation } from "@/features/chat/hooks/useConversation";
+import SearchCommand from "@/features/search/components/SearchCommand";
 
-export default function SidebarLayout({
-  sidebarref,
-  toggleSidebar,
-  className = "",
-  isSidebarVisible,
-  children,
-}: {
-  sidebarref: LegacyRef<HTMLDivElement>;
-  toggleSidebar: () => void;
-  className?: string;
-  isSidebarVisible: boolean;
+interface SidebarLayoutProps {
   children: ReactNode;
-}) {
+}
+
+// Consistent button component for sidebar header buttons
+const SidebarHeaderButton = ({
+  children,
+  onClick,
+  "aria-label": ariaLabel,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  "aria-label": string;
+}) => (
+  <Button
+    aria-label={ariaLabel}
+    size="icon"
+    variant="ghost"
+    className="h-8 w-8 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+    onClick={onClick}
+  >
+    {children}
+  </Button>
+);
+
+// Custom SidebarTrigger with dynamic icons
+const CustomSidebarTrigger = () => {
+  const { open, toggleSidebar } = useSidebar();
+
+  return (
+    <SidebarHeaderButton onClick={toggleSidebar} aria-label="Toggle Sidebar">
+      {open ? (
+        <SidebarLeft01Icon className="max-h-5 min-h-5 max-w-5 min-w-5" />
+      ) : (
+        <SidebarRight01Icon className="max-h-5 min-h-5 max-w-5 min-w-5" />
+      )}
+    </SidebarHeaderButton>
+  );
+};
+
+export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const { clearMessages } = useConversation();
   const router = useRouter();
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
 
   return (
-    <div
-      ref={sidebarref}
-      className={`sidebar flex bg-zinc-950 ${className}`}
-      style={{
-        transform: isSidebarVisible ? "translateX(0)" : "translateX(-350px)",
-        minWidth: isSidebarVisible ? "250px" : "0",
-        maxWidth: isSidebarVisible ? "fit-content" : "0",
-        transition:
-          "transform 200ms ease-in-out, min-width 200ms ease-in-out, max-width 200ms ease-in-out",
-      }}
+    <Sidebar
+      variant="sidebar"
+      collapsible="offcanvas"
+      className="border-none p-1"
     >
       <SearchCommand
         openSearchDialog={openSearchDialog}
         setOpenSearchDialog={setOpenSearchDialog}
       />
 
-      <div className="flex h-full flex-col">
-        <div className="mr-2 flex-none px-2 pt-3 pb-2 sm:pt-1">
-          <div className="mb-1 flex items-center justify-between">
-            <div className="flex items-center gap-2 pl-1">
-              <Image
-                alt="GAIA Logo"
-                src={"/branding/logo.webp"}
-                width={23}
-                height={23}
+      <SidebarHeader className="p-2">
+        <div className="flex items-center justify-between">
+          <Button className="flex items-center gap-2 rounded-full bg-transparent px-2 hover:bg-foreground/10">
+            <Image
+              alt="GAIA Logo"
+              src="/branding/logo.webp"
+              width={23}
+              height={23}
+            />
+            <span className="font-medium text-sidebar-foreground">gaia</span>
+          </Button>
+          <div className="flex items-center gap-1">
+            <SidebarHeaderButton
+              onClick={() => setOpenSearchDialog(true)}
+              aria-label="Search"
+            >
+              <Search className="max-h-5 min-h-5 max-w-5 min-w-5" />
+            </SidebarHeaderButton>
+            <SidebarHeaderButton
+              onClick={() => {
+                router.push("/c");
+                clearMessages();
+              }}
+              aria-label="New chat"
+            >
+              <ChatBubbleAddIcon
+                className="max-h-5 min-h-5 max-w-5 min-w-5"
+                color={undefined}
               />
-              {/* <span className="text-lg font-medium">gaia</span> */}
-            </div>
-            <div className="flex items-center">
-              <Button
-                aria-label="Create new chat"
-                className={`group rounded-lg hover:bg-[#00bbff]/20`}
-                size="icon"
-                variant={"ghost"}
-                onClick={() => {
-                  setOpenSearchDialog(true);
-                }}
-              >
-                <Search className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
-              </Button>
-
-              <Button
-                aria-label="Create new chat"
-                className={`group rounded-lg hover:bg-[#00bbff]/20`}
-                size="icon"
-                variant={"ghost"}
-                onClick={() => {
-                  router.push("/c");
-                  clearMessages();
-                }}
-              >
-                <ChatBubbleAddIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
-              </Button>
-
-              <CloseOpenSidebarBtn toggleSidebar={toggleSidebar} />
-            </div>
+            </SidebarHeaderButton>
+            <CustomSidebarTrigger />
           </div>
-          <SidebarTopButtons />
         </div>
+        <SidebarTopButtons />
+      </SidebarHeader>
 
-        <div className="relative flex flex-1 flex-col gap-1 overflow-y-auto px-2 pb-[50px]">
-          {children}
-        </div>
-      </div>
-      <div className="absolute right-0 bottom-0 z-10 w-full">
+      <SidebarContent className="flex-1">
+        <SidebarGroup>
+          <SidebarGroupContent className="space-y-1">
+            {children}
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="p-0">
         <UserContainer />
-      </div>
-    </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

@@ -2,7 +2,7 @@
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { MessageType } from "@/types/convoTypes";
+import { MessageType } from "@/types/features/convoTypes";
 
 interface ConversationState {
   messages: MessageType[];

@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { TodoService } from "@/services/todoService";
+import { todoApi } from "@/features/todo/api/todoApi";
 import {
   Priority,
   Project,
@@ -8,7 +8,7 @@ import {
   TodoCreate,
   TodoFilters,
   TodoUpdate,
-} from "@/types/todoTypes";
+} from "@/types/features/todoTypes";
 
 interface TodoState {
   todos: Todo[];
@@ -74,7 +74,7 @@ export const fetchTodos = createAsyncThunk(
   ) => {
     const state = getState() as { todos: TodoState };
     const skip = loadMore ? state.todos.page * 50 : 0;
-    const todos = await TodoService.getAllTodos({
+    const todos = await todoApi.getAllTodos({
       ...filters,
       skip,
       limit: 50,
@@ -86,12 +86,12 @@ export const fetchTodos = createAsyncThunk(
 export const fetchProjects = createAsyncThunk(
   "todos/fetchProjects",
   async () => {
-    return await TodoService.getAllProjects();
+    return await todoApi.getAllProjects();
   },
 );
 
 export const fetchLabels = createAsyncThunk("todos/fetchLabels", async () => {
-  return await TodoService.getAllLabels();
+  return await todoApi.getAllLabels();
 });
 
 export const fetchTodoCounts = createAsyncThunk(
@@ -99,10 +99,10 @@ export const fetchTodoCounts = createAsyncThunk(
   async () => {
     // Fetch all necessary data in parallel
     const [stats, todayTodos, upcomingTodos, projects] = await Promise.all([
-      TodoService.getTodoStats(),
-      TodoService.getTodayTodos(),
-      TodoService.getUpcomingTodos(7),
-      TodoService.getAllProjects(),
+      todoApi.getTodoStats(),
+      todoApi.getTodayTodos(),
+      todoApi.getUpcomingTodos(7),
+      todoApi.getAllProjects(),
     ]);
 
     // Get inbox project and calculate its pending count
@@ -111,7 +111,7 @@ export const fetchTodoCounts = createAsyncThunk(
 
     if (inboxProject) {
       // Fetch only pending todos for inbox
-      const inboxTodos = await TodoService.getAllTodos({
+      const inboxTodos = await todoApi.getAllTodos({
         project_id: inboxProject.id,
         completed: false,
       });
@@ -130,7 +130,7 @@ export const fetchTodoCounts = createAsyncThunk(
 export const createTodo = createAsyncThunk(
   "todos/create",
   async (todoData: TodoCreate) => {
-    const todo = await TodoService.createTodo(todoData);
+    const todo = await todoApi.createTodo(todoData);
     return todo;
   },
 );
@@ -138,7 +138,7 @@ export const createTodo = createAsyncThunk(
 export const updateTodo = createAsyncThunk(
   "todos/update",
   async ({ todoId, updates }: { todoId: string; updates: TodoUpdate }) => {
-    const todo = await TodoService.updateTodo(todoId, updates);
+    const todo = await todoApi.updateTodo(todoId, updates);
     return todo;
   },
 );
@@ -146,7 +146,7 @@ export const updateTodo = createAsyncThunk(
 export const deleteTodo = createAsyncThunk(
   "todos/delete",
   async (todoId: string) => {
-    await TodoService.deleteTodo(todoId);
+    await todoApi.deleteTodo(todoId);
     return todoId;
   },
 );
@@ -154,21 +154,21 @@ export const deleteTodo = createAsyncThunk(
 export const fetchTodayTodos = createAsyncThunk(
   "todos/fetchToday",
   async () => {
-    return await TodoService.getTodayTodos();
+    return await todoApi.getTodayTodos();
   },
 );
 
 export const fetchUpcomingTodos = createAsyncThunk(
   "todos/fetchUpcoming",
   async (days: number = 7) => {
-    return await TodoService.getUpcomingTodos(days);
+    return await todoApi.getUpcomingTodos(days);
   },
 );
 
 export const fetchCompletedTodos = createAsyncThunk(
   "todos/fetchCompleted",
   async ({ skip = 0, limit = 50 }: { skip?: number; limit?: number }) => {
-    return await TodoService.getAllTodos({ completed: true, skip, limit });
+    return await todoApi.getAllTodos({ completed: true, skip, limit });
   },
 );
 
@@ -183,7 +183,7 @@ export const fetchTodosByPriority = createAsyncThunk(
     skip?: number;
     limit?: number;
   }) => {
-    return await TodoService.getAllTodos({ priority, skip, limit });
+    return await todoApi.getAllTodos({ priority, skip, limit });
   },
 );
 
@@ -198,7 +198,7 @@ export const fetchTodosByProject = createAsyncThunk(
     skip?: number;
     limit?: number;
   }) => {
-    return await TodoService.getAllTodos({
+    return await todoApi.getAllTodos({
       project_id: projectId,
       skip,
       limit,
@@ -217,7 +217,7 @@ export const fetchTodosByLabel = createAsyncThunk(
     skip?: number;
     limit?: number;
   }) => {
-    return await TodoService.getTodosByLabel(label, skip, limit);
+    return await todoApi.getTodosByLabel(label, skip, limit);
   },
 );
 
@@ -267,7 +267,7 @@ const todoSlice = createSlice({
           oldTodo.completed !== updates.completed
         ) {
           if (updates.completed) {
-            // Todo marked as completed
+            // todo marked as completed
             state.counts.completed += 1;
 
             // Decrease counts based on todo properties
@@ -294,7 +294,7 @@ const todoSlice = createSlice({
               state.counts.inbox = Math.max(0, state.counts.inbox - 1);
             }
           } else {
-            // Todo marked as incomplete
+            // todo marked as incomplete
             state.counts.completed = Math.max(0, state.counts.completed - 1);
 
             // Increase counts based on todo properties

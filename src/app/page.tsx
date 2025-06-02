@@ -2,36 +2,36 @@
 
 import { lazy, Suspense, useEffect } from "react";
 
-import HeroImage from "@/components/Landing/Sections/HeroImageSection";
-import HeroSection from "@/components/Landing/Sections/HeroSection";
-import SuspenseLoader from "@/components/Misc/SuspenseLoader";
+import SuspenseLoader from "@/components/shared/SuspenseLoader";
+import HeroImage from "@/features/landing/components/hero/HeroImageSection";
+import HeroSection from "@/features/landing/components/hero/HeroSection";
 
 import LandingLayout from "./(landing)/layout";
 
 // Lazy load section components
 const CalendarSection = lazy(
-  () => import("@/components/Landing/Sections/CalendarSection"),
+  () => import("@/features/landing/components/sections/CalendarSection"),
 );
 const DeepSearchSection = lazy(
-  () => import("@/components/Landing/Sections/DeepSearchSection"),
+  () => import("@/features/landing/components/sections/DeepSearchSection"),
 );
 // const FeatureGridSection = lazy(
-//   () => import("@/components/Landing/Sections/FeatureGridSection"),
+//   () => import("@/components/landing/sections/FeatureGridSection"),
 // );
 const FinalSection = lazy(
-  () => import("@/components/Landing/Sections/FinalSection"),
+  () => import("@/features/landing/components/sections/FinalSection"),
 );
 const GoalSection = lazy(
-  () => import("@/components/Landing/Sections/GoalSection"),
+  () => import("@/features/landing/components/sections/GoalSection"),
 );
 const InternetSection = lazy(
-  () => import("@/components/Landing/Sections/InternetSection"),
+  () => import("@/features/landing/components/sections/InternetSection"),
 );
 const MailSection = lazy(
-  () => import("@/components/Landing/Sections/MailSection"),
+  () => import("@/features/landing/components/sections/MailSection"),
 );
 const MobileSection = lazy(
-  () => import("@/components/Landing/Sections/MobileSection"),
+  () => import("@/features/landing/components/sections/MobileSection"),
 );
 
 export default function LandingPage() {

@@ -3,10 +3,10 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import EnhancedTodoSearchBar from "@/components/Todo/EnhancedTodoSearchBar";
-import TodoHeader from "@/components/Todo/TodoHeader";
-import { TodoService } from "@/services/todoService";
-import { Todo, TodoUpdate } from "@/types/todoTypes";
+import { todoApi } from "@/features/todo/api/todoApi";
+import EnhancedTodoSearchBar from "@/features/todo/components/EnhancedTodoSearchBar";
+import TodoHeader from "@/features/todo/components/TodoHeader";
+import { Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function SearchTodosPage() {
   const searchParams = useSearchParams();
@@ -18,8 +18,8 @@ export default function SearchTodosPage() {
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
-      await TodoService.updateTodo(todoId, updates);
-      // Todo update is handled by the search bar component
+      await todoApi.updateTodo(todoId, updates);
+      // todo update is handled by the search bar component
     } catch (error) {
       console.error("Failed to update todo:", error);
     }
@@ -27,10 +27,10 @@ export default function SearchTodosPage() {
 
   const handleTodoDelete = async (todoId: string) => {
     try {
-      await TodoService.deleteTodo(todoId);
+      await todoApi.deleteTodo(todoId);
       selectedTodos.delete(todoId);
       setSelectedTodos(new Set(selectedTodos));
-      // Todo deletion is handled by the search bar component
+      // todo deletion is handled by the search bar component
     } catch (error) {
       console.error("Failed to delete todo:", error);
     }
@@ -38,7 +38,7 @@ export default function SearchTodosPage() {
 
   const handleTodoClick = (todo: Todo) => {
     // Handle todo click if needed
-    console.log("Todo clicked:", todo);
+    console.log("todo clicked:", todo);
   };
 
   const handleBulkComplete = async () => {
@@ -46,7 +46,7 @@ export default function SearchTodosPage() {
 
     try {
       const todoIds = Array.from(selectedTodos);
-      await TodoService.bulkCompleteTodos(todoIds);
+      await todoApi.bulkCompleteTodos(todoIds);
       setSelectedTodos(new Set());
       // Refresh search results will be handled by the search bar
     } catch (error) {
@@ -59,7 +59,7 @@ export default function SearchTodosPage() {
 
     try {
       const todoIds = Array.from(selectedTodos);
-      await TodoService.bulkDeleteTodos(todoIds);
+      await todoApi.bulkDeleteTodos(todoIds);
       setSelectedTodos(new Set());
       // Refresh search results will be handled by the search bar
     } catch (error) {
@@ -88,7 +88,7 @@ export default function SearchTodosPage() {
         className="min-w-5xl flex-1 overflow-y-auto p-4"
         style={{ maxWidth: "1200px", margin: "0 auto" }}
       >
-        {/* Enhanced Search Bar with integrated results */}
+        {/* Enhanced search Bar with integrated results */}
         <EnhancedTodoSearchBar
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}

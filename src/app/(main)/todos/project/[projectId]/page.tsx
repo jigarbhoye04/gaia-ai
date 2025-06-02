@@ -3,11 +3,16 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import TodoHeader from "@/components/Todo/TodoHeader";
-import TodoList from "@/components/Todo/TodoList";
-import Spinner from "@/components/ui/spinner";
-import { TodoService } from "@/services/todoService";
-import { Project, Todo, TodoFilters, TodoUpdate } from "@/types/todoTypes";
+import Spinner from "@/components/ui/shadcn/spinner";
+import { todoApi } from "@/features/todo/api/todoApi";
+import TodoHeader from "@/features/todo/components/TodoHeader";
+import TodoList from "@/features/todo/components/TodoList";
+import {
+  Project,
+  Todo,
+  TodoFilters,
+  TodoUpdate,
+} from "@/types/features/todoTypes";
 
 export default function ProjectTodosPage() {
   const params = useParams();
@@ -27,7 +32,7 @@ export default function ProjectTodosPage() {
     setLoading(true);
     try {
       // Load project details
-      const projects = await TodoService.getAllProjects();
+      const projects = await todoApi.getAllProjects();
       const currentProject = projects.find((p) => p.id === projectId);
       setProject(currentProject || null);
 
@@ -35,7 +40,7 @@ export default function ProjectTodosPage() {
       const filters: TodoFilters = {
         project_id: projectId,
       };
-      const todoList = await TodoService.getAllTodos(filters);
+      const todoList = await todoApi.getAllTodos(filters);
       setTodos(todoList);
     } catch (error) {
       console.error("Failed to load project todos:", error);
@@ -46,7 +51,7 @@ export default function ProjectTodosPage() {
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
-      const updatedTodo = await TodoService.updateTodo(todoId, updates);
+      const updatedTodo = await todoApi.updateTodo(todoId, updates);
 
       // If the todo is moved to a different project, remove it from this view
       if (updates.project_id && updates.project_id !== projectId) {
@@ -63,7 +68,7 @@ export default function ProjectTodosPage() {
 
   const handleTodoDelete = async (todoId: string) => {
     try {
-      await TodoService.deleteTodo(todoId);
+      await todoApi.deleteTodo(todoId);
       setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
     } catch (error) {
       console.error("Failed to delete todo:", error);

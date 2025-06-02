@@ -17,7 +17,7 @@ import Image from "next/image";
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { BrowserSidebar } from "@/components/Sidebar/variants/BrowserSidebar";
+import { BrowserSidebar } from "@/components/layout/sidebar/variants/BrowserSidebar";
 
 interface Thoughts {
   evaluation?: string;
@@ -560,7 +560,7 @@ const BrowserAutomationChat = () => {
                                     <div className="flex flex-col">
                                       <div className="flex items-center gap-1">
                                         <span className="text-sm font-medium text-blue-400">
-                                          Memory:
+                                          memory:
                                         </span>
                                       </div>
                                       <div className="text-md">
@@ -620,7 +620,7 @@ const BrowserAutomationChat = () => {
                                             {action.search_google && (
                                               <>
                                                 <Globe className="h-3.5 w-3.5 text-blue-400" />
-                                                <span>Search Google: </span>
+                                                <span>search Google: </span>
                                                 <span className="italic">
                                                   "{action.search_google.query}"
                                                 </span>

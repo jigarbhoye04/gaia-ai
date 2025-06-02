@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 
-import TodoHeader from "@/components/Todo/TodoHeader";
-import TodoList from "@/components/Todo/TodoList";
-import Spinner from "@/components/ui/spinner";
-import { useTodos } from "@/hooks/useTodos";
-import { TodoUpdate } from "@/types/todoTypes";
+import Spinner from "@/components/ui/shadcn/spinner";
+import TodoHeader from "@/features/todo/components/TodoHeader";
+import TodoList from "@/features/todo/components/TodoList";
+import { useTodos } from "@/features/todo/hooks/useTodos";
+import { TodoUpdate } from "@/types/features/todoTypes";
 
 export default function CompletedTodosPage() {
   const { todos, loading, loadCompletedTodos, modifyTodo, removeTodo } =

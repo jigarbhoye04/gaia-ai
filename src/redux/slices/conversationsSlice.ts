@@ -1,14 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-import { apiauth } from "@/utils/apiaxios";
+import { chatApi, type Conversation } from "@/features/chat/api/chatApi";
 
-// Define the Conversation interface.
-export interface Conversation {
-  conversation_id: string;
-  description: string;
-  starred?: boolean;
-  createdAt: string;
-}
+// Re-export the Conversation type for compatibility
+export type { Conversation };
 
 // Define the Pagination metadata.
 export interface PaginationMeta {
@@ -47,10 +42,7 @@ export const fetchConversations = createAsyncThunk<
   "conversations/fetchConversations",
   async ({ page = 1, limit = 20, append = true }, { rejectWithValue }) => {
     try {
-      const response = await apiauth.get(
-        `/conversations?page=${page}&limit=${limit}`,
-      );
-      const data = response.data;
+      const data = await chatApi.fetchConversations(page, limit);
       return {
         conversations: data.conversations ?? [],
         paginationMeta: {
@@ -105,7 +97,7 @@ const conversationSlice = createSlice({
     });
     builder.addCase(fetchConversations.rejected, (state, action) => {
       state.loading = false;
-      state.error = action.payload || "Error fetching conversations";
+      state.error = action.payload ?? "Error fetching conversations";
     });
   },
 });

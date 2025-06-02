@@ -20,47 +20,19 @@ import { useParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import GoalHeader from "@/components/Misc/Headers/GoalHeader";
-import { BookIcon1 } from "@/components/Misc/icons";
-import { MultiStepLoader } from "@/components/ui/multi-step-loader";
-import { useHeader } from "@/hooks/useHeader";
+import GoalHeader from "@/components/layout/headers/GoalHeader";
+import { BookIcon1 } from "@/components/shared/icons";
+import { MultiStepLoader } from "@/components/ui/shadcn/multi-step-loader";
+import { goalsApi } from "@/features/goals/api/goalsApi";
+import { useHeader } from "@/hooks/layout/useHeader";
 import { truncateTitle } from "@/lib/utils";
-import { apiauth } from "@/utils/apiaxios";
-export interface GoalData {
-  id: string;
-  created_at: Date;
-  title: string;
-  description: string;
-  progress: number;
-  roadmap: {
-    title?: string;
-    description?: string;
-    nodes?: Array<NodeType>;
-    edges?: Array<EdgeType>;
-  };
-}
-
-export interface EdgeType extends Record<string, unknown> {
-  id: string;
-  source: string;
-  target: string;
-}
-
-export interface NodeType {
-  id: string;
-  position: { x: number; y: number };
-  data: NodeData;
-}
-
-export interface NodeData extends Record<string, unknown> {
-  id: string;
-  goalId?: string;
-  label: string;
-  details: string[];
-  estimatedTime: string[];
-  resources: string[];
-  isComplete: boolean;
-}
+import { Goal } from "@/types/api/goalsApiTypes";
+import {
+  EdgeType,
+  GoalData,
+  NodeData,
+  NodeType,
+} from "@/types/features/goalTypes";
 
 export default function GoalPage() {
   const { setHeader } = useHeader();
@@ -72,7 +44,8 @@ export default function GoalPage() {
   const [currentlySelectedNodeId, setCurrentlySelectedNodeId] = useState<
     string | null
   >(null);
-  const { id: goalId } = useParams();
+  const params = useParams();
+  const goalId = typeof params.id === "string" ? params.id : params.id?.[0];
 
   const CustomNode = React.memo(({ data }: { data: NodeData }) => {
     return (
@@ -88,7 +61,7 @@ export default function GoalPage() {
             data.isComplete
               ? "bg-[#00bbff73] line-through outline-[#00bbff30]"
               : "bg-zinc-800"
-          } flex max-w-[250px] min-w-[250px] flex-row items-center justify-center gap-1 rounded-lg p-4 text-center text-white outline outline-[3px] transition-all`}
+          } flex max-w-[250px] min-w-[250px] flex-row items-center justify-center gap-1 rounded-lg p-4 text-center text-white outline-[3px] transition-all`}
           onClick={() => {
             setCurrentlySelectedNodeId(data.id);
             setOpenSidebar(true);
@@ -114,10 +87,17 @@ export default function GoalPage() {
     try {
       if (!goalId) return;
       setLoading(true);
-      const response = await apiauth.get(`/goals/${goalId}`);
-      const goal = response.data;
+      const goal = (await goalsApi.fetchGoalById(goalId as string)) as Goal & {
+        roadmap?: GoalData["roadmap"];
+      };
       if (goal?.roadmap) {
-        setGoalData(goal);
+        setGoalData({
+          ...goal,
+          created_at: new Date(goal.created_at || Date.now()),
+          description: goal.description || "",
+          progress: 0,
+          roadmap: goal.roadmap,
+        });
         setLoading(false);
         const graph = new dagre.graphlib.Graph();
         graph.setGraph({ rankdir: "TD" });
@@ -139,8 +119,10 @@ export default function GoalPage() {
           };
         });
         setNodes(updatedNodes || []);
-        setCurrentlySelectedNodeId(updatedNodes[0]?.id);
-        setOpenSidebar(true);
+        if (updatedNodes && updatedNodes.length > 0) {
+          setCurrentlySelectedNodeId(updatedNodes[0]?.id);
+          setOpenSidebar(true);
+        }
         setEdges(goal.roadmap.edges || []);
       } else {
         console.log("initialising roadmap web socket");
@@ -225,10 +207,15 @@ export default function GoalPage() {
 
     // Update the server state
     try {
-      await apiauth.patch(
-        `/goals/${selectedNode.data.goalId}/roadmap/nodes/${selectedNode.id}`,
-        { is_complete: updatedIsComplete },
-      );
+      await goalsApi.updateGoal(selectedNode.data.goalId || goalId || "", {
+        roadmap: {
+          nodes: nodes.map((node) =>
+            node.id === selectedNode.id
+              ? { ...node.data, is_complete: updatedIsComplete }
+              : node.data,
+          ),
+        },
+      });
 
       toast.success(
         updatedIsComplete ? "Marked as completed!" : "Marked as not completed!",
@@ -278,7 +265,7 @@ export default function GoalPage() {
           <div
             className={`${
               openSidebar ? "visible" : "hidden"
-            } fixed right-3 bottom-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline outline-2 outline-zinc-950`}
+            } fixed right-3 bottom-3 z-10 flex max-w-[350px] flex-col gap-3 rounded-xl bg-zinc-800 p-2 shadow-lg outline-2 outline-zinc-950`}
           >
             <div className="space-y-2 p-4">
               <div className="text-xl font-medium">

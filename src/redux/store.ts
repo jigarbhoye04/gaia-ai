@@ -10,6 +10,7 @@ import imageDialogReducer from "./slices/imageDialogSlice";
 import loadingReducer from "./slices/loadingSlice";
 import loadingTextReducer from "./slices/loadingTextSlice";
 import loginModalReducer from "./slices/loginModalSlice";
+import sidebarReducer from "./slices/sidebarSlice";
 import todoReducer from "./slices/todoSlice";
 import userReducer from "./slices/userSlice";
 
@@ -25,6 +26,7 @@ export const store = configureStore({
     calendarModal: calendarModalReducer,
     header: headerReducer,
     todos: todoReducer,
+    sidebar: sidebarReducer,
   },
 });
 

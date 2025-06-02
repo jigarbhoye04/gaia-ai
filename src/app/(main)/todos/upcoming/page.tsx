@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import TodoHeader from "@/components/Todo/TodoHeader";
-import TodoList from "@/components/Todo/TodoList";
-import Spinner from "@/components/ui/spinner";
-import { TodoService } from "@/services/todoService";
-import { Todo, TodoUpdate } from "@/types/todoTypes";
+import Spinner from "@/components/ui/shadcn/spinner";
+import { todoApi } from "@/features/todo/api/todoApi";
+import TodoHeader from "@/features/todo/components/TodoHeader";
+import TodoList from "@/features/todo/components/TodoList";
+import { Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function UpcomingTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -19,7 +19,7 @@ export default function UpcomingTodosPage() {
   const loadUpcomingTodos = async () => {
     setLoading(true);
     try {
-      const todoList = await TodoService.getUpcomingTodos(7); // Next 7 days
+      const todoList = await todoApi.getUpcomingTodos(7); // Next 7 days
       setTodos(todoList);
     } catch (error) {
       console.error("Failed to load upcoming todos:", error);
@@ -30,7 +30,7 @@ export default function UpcomingTodosPage() {
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {
-      const updatedTodo = await TodoService.updateTodo(todoId, updates);
+      const updatedTodo = await todoApi.updateTodo(todoId, updates);
       setTodos((prev) =>
         prev.map((todo) => (todo.id === todoId ? updatedTodo : todo)),
       );
@@ -41,7 +41,7 @@ export default function UpcomingTodosPage() {
 
   const handleTodoDelete = async (todoId: string) => {
     try {
-      await TodoService.deleteTodo(todoId);
+      await todoApi.deleteTodo(todoId);
       setTodos((prev) => prev.filter((todo) => todo.id !== todoId));
     } catch (error) {
       console.error("Failed to delete todo:", error);
