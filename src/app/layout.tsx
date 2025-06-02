@@ -95,16 +95,6 @@ export default function RootLayout({
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />
 
-        {/* Google Analytics */}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-R6EGV9FG2Q"
-        />
-
-        <Script id="google-analytics">
-          {`window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag("js", new Date()); gtag("config", "G-R6EGV9FG2Q");`}
-        </Script>
-
         {/* JSON-LD Schema */}
         <Script id="json-ld" type="application/ld+json">
           {JSON.stringify({
@@ -116,11 +106,19 @@ export default function RootLayout({
           })}
         </Script>
 
+        {/* Better Stack widget for API Uptime */}
         <Script
           src="https://uptime.betterstack.com/widgets/announcement.js"
           data-id="212836"
           async
           type="text/javascript"
+        />
+
+        {/* Analytics */}
+        <Script
+          src="https://app.rybbit.io/api/script.js"
+          data-site-id="881"
+          defer
         />
       </body>
     </html>
