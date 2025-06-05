@@ -1,10 +1,16 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Kbd } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 
+import {
+  countries,
+  Country,
+  CountrySelector,
+} from "@/components/country-selector";
 import { SentIcon } from "@/components/shared/icons";
 import {
   SimpleChatBubbleBot,
@@ -23,6 +29,7 @@ interface Question {
   question: string;
   placeholder: string;
   fieldName: string;
+  chipOptions?: { label: string; value: string }[];
 }
 
 const questions: Question[] = [
@@ -52,6 +59,13 @@ const questions: Question[] = [
       "How would you like me to respond? Concise and direct, detailed explanations, casual, formal?",
     placeholder: "e.g., Concise and direct...",
     fieldName: "responseStyle",
+    chipOptions: [
+      { label: "Concise & Direct", value: "concise" },
+      { label: "Detailed Explanations", value: "detailed" },
+      { label: "Casual", value: "casual" },
+      { label: "Formal", value: "formal" },
+      { label: "Creative", value: "creative" },
+    ],
   },
   {
     id: "5",
@@ -66,10 +80,15 @@ export default function Onboarding() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [inputValue, setInputValue] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [userResponses, setUserResponses] = useState<Record<string, string>>(
     {},
   );
+  const [selectedChips, setSelectedChips] = useState<Record<string, string[]>>(
+    {},
+  );
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isOnboardingComplete, setIsOnboardingComplete] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -80,6 +99,97 @@ export default function Onboarding() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const submitResponse = (responseText: string, _countryCode?: string) => {
+    if (isProcessing) return;
+
+    setIsProcessing(true);
+    const currentQuestion = questions[currentQuestionIndex];
+
+    // Add user message
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      type: "user",
+      content: responseText,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    // Save user response
+    const newResponses = {
+      ...userResponses,
+      [currentQuestion.fieldName]: responseText,
+    };
+    setUserResponses(newResponses);
+
+    // Clear inputs
+    setInputValue("");
+    setSelectedCountry(null);
+
+    // Process next question or complete onboarding
+    if (currentQuestionIndex < questions.length - 1) {
+      const nextQuestionIndex = currentQuestionIndex + 1;
+
+      // Add greeting after name question
+      if (currentQuestionIndex === 0) {
+        const greetingMessage: Message = {
+          id: `greeting-${Date.now()}`,
+          type: "bot",
+          content: `Nice to meet you, ${newResponses.name}! 😊`,
+        };
+        setMessages((prev) => [...prev, greetingMessage]);
+      }
+
+      // Add next question
+      const nextQuestion = questions[nextQuestionIndex];
+      const botMessage: Message = {
+        id: nextQuestion.id,
+        type: "bot",
+        content: nextQuestion.question,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setCurrentQuestionIndex(nextQuestionIndex);
+    } else {
+      // Onboarding complete
+      const finalMessage: Message = {
+        id: "final",
+        type: "bot",
+        content: `Thank you, ${newResponses.name}! I'm all set up and ready to assist you. Let's get started!`,
+      };
+      setMessages((prev) => [...prev, finalMessage]);
+
+      // TODO: Save user preferences and redirect to main app
+      console.log("User responses:", newResponses);
+    }
+
+    setIsProcessing(false);
+  };
+
+  const handleChipSelect = (questionId: string, chipValue: string) => {
+    if (isProcessing) return;
+
+    const currentQuestion = questions[currentQuestionIndex];
+    setSelectedChips((prev) => ({
+      ...prev,
+      [questionId]: [chipValue],
+    }));
+
+    const selectedChip = currentQuestion.chipOptions?.find(
+      (option) => option.value === chipValue,
+    );
+    if (selectedChip) {
+      submitResponse(selectedChip.label);
+    }
+  };
+
+  const handleCountrySelect = (countryCode: string | null) => {
+    if (isProcessing || !countryCode) return;
+
+    const countryName =
+      countries.find((c: Country) => c.code === countryCode)?.name ||
+      countryCode;
+    submitResponse(countryName, countryCode);
+  };
 
   useEffect(() => {
     // Show first question immediately
@@ -96,98 +206,17 @@ export default function Onboarding() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!inputValue.trim() || isProcessing) return;
-
-    setIsProcessing(true);
     const currentQuestion = questions[currentQuestionIndex];
+    const isCountryQuestion = currentQuestion.fieldName === "country";
 
-    // Add user message
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      type: "user",
-      content: inputValue,
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-
-    // Save user response
-    const newResponses = {
-      ...userResponses,
-      [currentQuestion.fieldName]: inputValue,
-    };
-    setUserResponses(newResponses);
-
-    // Clear input
-    setInputValue("");
-
-    // Process next question after a delay
-    setTimeout(() => {
-      if (currentQuestionIndex < questions.length - 1) {
-        // Special greeting for the first question (name)
-        if (currentQuestionIndex === 0) {
-          const greetingMessage: Message = {
-            id: `greeting-${Date.now()}`,
-            type: "bot",
-            content: `Nice to meet you, ${newResponses.name}! 😊`,
-          };
-          setMessages((prev) => [...prev, greetingMessage]);
-
-          // Add a small delay before the next question
-          setTimeout(() => {
-            const nextQuestion = questions[currentQuestionIndex + 1];
-            let questionText = nextQuestion.question;
-
-            // Replace placeholders with user responses
-            Object.entries(newResponses).forEach(([key, value]) => {
-              questionText = questionText.replace(`{${key}}`, value);
-            });
-
-            const botMessage: Message = {
-              id: nextQuestion.id,
-              type: "bot",
-              content: questionText,
-            };
-
-            setMessages((prev) => [...prev, botMessage]);
-            setCurrentQuestionIndex((prev) => prev + 1);
-          }, 800);
-        } else {
-          const nextQuestion = questions[currentQuestionIndex + 1];
-          let questionText = nextQuestion.question;
-
-          // Replace placeholders with user responses
-          Object.entries(newResponses).forEach(([key, value]) => {
-            questionText = questionText.replace(`{${key}}`, value);
-          });
-
-          const botMessage: Message = {
-            id: nextQuestion.id,
-            type: "bot",
-            content: questionText,
-          };
-
-          setMessages((prev) => [...prev, botMessage]);
-          setCurrentQuestionIndex((prev) => prev + 1);
-        }
-      } else {
-        // Onboarding complete
-        const finalMessage: Message = {
-          id: "final",
-          type: "bot",
-          content: `Thank you, ${newResponses.name}! I'm all set up and ready to assist you. Let's get started!`,
-        };
-
-        setMessages((prev) => [...prev, finalMessage]);
-
-        // TODO: Save user preferences and redirect to main app
-        setTimeout(() => {
-          // Redirect to main app or save preferences
-          console.log("User responses:", newResponses);
-        }, 2000);
-      }
-
-      setIsProcessing(false);
-    }, 1000);
+    if (isCountryQuestion && selectedCountry) {
+      const countryName =
+        countries.find((c: Country) => c.code === selectedCountry)?.name ||
+        selectedCountry;
+      submitResponse(countryName, selectedCountry);
+    } else if (!isCountryQuestion && inputValue.trim()) {
+      submitResponse(inputValue.trim());
+    }
   };
 
   return (
@@ -212,6 +241,41 @@ export default function Onboarding() {
               )}
             </div>
           ))}
+
+          {/* Chip Options for Current Question */}
+          {currentQuestionIndex < questions.length &&
+            questions[currentQuestionIndex].chipOptions && (
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {questions[currentQuestionIndex].chipOptions!.map(
+                    (option) => (
+                      <Chip
+                        key={option.value}
+                        className="cursor-pointer"
+                        color="primary"
+                        size="sm"
+                        variant={
+                          selectedChips[
+                            questions[currentQuestionIndex].id
+                          ]?.includes(option.value)
+                            ? "solid"
+                            : "flat"
+                        }
+                        onClick={() =>
+                          handleChipSelect(
+                            questions[currentQuestionIndex].id,
+                            option.value,
+                          )
+                        }
+                      >
+                        {option.label}
+                      </Chip>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -220,33 +284,43 @@ export default function Onboarding() {
       <div className="relative z-10 mx-auto w-full max-w-lg pb-3">
         <form onSubmit={handleSubmit} className="mx-auto w-full max-w-2xl">
           <div className="relative">
-            <Input
-              ref={inputRef}
-              value={inputValue}
-              radius="full"
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                currentQuestionIndex < questions.length
-                  ? questions[currentQuestionIndex].placeholder
-                  : "Type your message..."
-              }
-              variant="faded"
-              size="lg"
-              classNames={{ inputWrapper: "pr-1" }}
-              endContent={
-                <Button
-                  isIconOnly
-                  type="submit"
-                  disabled={!inputValue.trim() || isProcessing}
-                  color="primary"
-                  radius="full"
-                  aria-label="Send message"
-                  className={cn(isProcessing && "cursor-wait")}
-                >
-                  <SentIcon color="black" />
-                </Button>
-              }
-            />
+            {currentQuestionIndex < questions.length &&
+            questions[currentQuestionIndex].fieldName === "country" ? (
+              <CountrySelector
+                selectedKey={selectedCountry}
+                onSelectionChange={handleCountrySelect}
+                placeholder="Search for your country..."
+                label=""
+              />
+            ) : (
+              <Input
+                ref={inputRef}
+                value={inputValue}
+                radius="full"
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={
+                  currentQuestionIndex < questions.length
+                    ? questions[currentQuestionIndex].placeholder
+                    : "Type your message..."
+                }
+                variant="faded"
+                size="lg"
+                classNames={{ inputWrapper: "pr-1" }}
+                endContent={
+                  <Button
+                    isIconOnly
+                    type="submit"
+                    disabled={!inputValue.trim() || isProcessing}
+                    color="primary"
+                    radius="full"
+                    aria-label="Send message"
+                    className={cn(isProcessing && "cursor-wait")}
+                  >
+                    <SentIcon color="black" />
+                  </Button>
+                }
+              />
+            )}
           </div>
           <p className="mt-2 flex items-center justify-center space-x-1 text-center text-xs text-zinc-500">
             <span>Press</span>
