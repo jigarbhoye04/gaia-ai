@@ -123,7 +123,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
           <SidebarInset className="flex h-screen flex-col">
             <header
-              className="z-50 flex flex-shrink-0 items-start justify-between bg-zinc-900/60 px-4 pt-3 backdrop-blur-sm"
+              className="z-10 flex flex-shrink-0 items-start justify-between bg-zinc-900/60 px-4 pt-3 backdrop-blur-sm"
               onClick={closeOnTouch}
             >
               {!currentOpen && <HeaderSidebarTrigger />}

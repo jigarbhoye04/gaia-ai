@@ -110,7 +110,7 @@ export default function TodosPage() {
   }
 
   return (
-    <div className="flex h-full w-screen max-w-5xl flex-col">
+    <div className="flex h-full w-screen flex-col">
       <TodoHeader title={getPageTitle()} todoCount={todos.length} />
 
       <div
