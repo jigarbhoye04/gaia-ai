@@ -2,7 +2,15 @@ from typing import Annotated, Optional
 from urllib.parse import urlencode, urlparse
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
@@ -11,9 +19,8 @@ from app.config.settings import settings
 from app.models.user_models import UserUpdateResponse
 from app.services.oauth_service import store_user_info
 from app.services.user_service import update_user_profile
-
-# from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
+from app.utils.watch_mail import watch_mail
 
 router = APIRouter()
 
@@ -44,7 +51,9 @@ async def login_google():
 
 
 @router.get("/google/callback", response_class=RedirectResponse)
-async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
+async def callback(
+    code: Annotated[str, "code"], background_tasks: BackgroundTasks
+) -> RedirectResponse:
     try:
         tokens = await get_tokens_from_code(code)
         access_token = tokens.get("access_token")
@@ -63,7 +72,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
         if not user_email:
             raise HTTPException(status_code=400, detail="Email not found in user info")
 
-        await store_user_info(user_name, user_email, user_picture)
+        user_id = await store_user_info(user_name, user_email, user_picture)
 
         # Redirect URL can include tokens if needed
         redirect_url = f"{settings.FRONTEND_URL}?access_token={access_token}&refresh_token={refresh_token}"
@@ -113,6 +122,15 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
                 max_age=refresh_token_max_age,
             )
 
+        # Add background task to register user to watch emails
+        background_tasks.add_task(
+            watch_mail,
+            email=user_email,
+            access_token=access_token,
+            user_id=user_id,
+            refresh_token=refresh_token,
+        )
+
         return response
 
     except HTTPException as e:
@@ -131,8 +149,6 @@ async def get_me(
     Returns the current authenticated user's details.
     Uses the dependency injection to fetch user data.
     """
-    # fetch_last_week_emails.delay(user)
-
     return {"message": "User retrieved successfully", **user}
 
 
@@ -186,10 +202,13 @@ async def update_me(
     Supports updating name and profile picture.
     """
     user_id = user.get("user_id")
-    
+
+    if not user_id or not isinstance(user_id, str):
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+
     # Process profile picture if provided
     picture_data = None
-    if picture and picture.size > 0:
+    if picture and picture.size and picture.size > 0:
         # Validate file type
         allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
         if picture.content_type not in allowed_types:
@@ -197,7 +216,7 @@ async def update_me(
                 status_code=400,
                 detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
             )
-        
+
         # Validate file size (max 5MB)
         max_size = 5 * 1024 * 1024  # 5MB
         if picture.size > max_size:
@@ -205,16 +224,16 @@ async def update_me(
                 status_code=400,
                 detail="File size too large. Maximum size is 5MB"
             )
-        
+
         picture_data = await picture.read()
-    
+
     # Update user profile
     updated_user = await update_user_profile(
         user_id=user_id,
         name=name,
         picture_data=picture_data
     )
-    
+
     return UserUpdateResponse(**updated_user)
 
 

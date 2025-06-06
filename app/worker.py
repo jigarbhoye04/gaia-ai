@@ -1,62 +1,71 @@
-import os
+import asyncio
+import json
+import signal
 
-# Set TOKENIZERS_PARALLELISM environment variable to avoid warnings when forking
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+from aio_pika import connect_robust
+from aio_pika.abc import AbstractIncomingMessage
+from aiolimiter import AsyncLimiter
 
-from celery import Celery
-from celery.signals import worker_init, worker_ready
-
-from app.config.loggers import celery_logger as logger
+from app.config.loggers import worker_logger as logger
 from app.config.settings import settings
-from app.utils.text_utils import get_zero_shot_classifier
 
-broker_url = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//")
-result_backend = os.getenv("CELERY_RESULT_BACKEND", "rpc://")
+# TODO: Analyze the rate limit and adjust based on actual LLM performance
+llm_limiter = AsyncLimiter(10, 1)  # 10 tasks per second
 
-
-# if settings.ENV == "production":
-#     broker_url = os.getenv("CELERY_BROKER_URL", "amqp://guest:guest@localhost:5672//")
-#     result_backend = os.getenv("CELERY_RESULT_BACKEND", "rpc://")
-# else:
-#     broker_url = "memory://"
-#     result_backend = "cache+memory://"
+stop_event = asyncio.Event()
 
 
-celery = Celery(
-    "gaia",
-    broker=broker_url,
-    backend=result_backend,
-    include=["app.tasks.mail_tasks"],
-)
+async def on_message(message: AbstractIncomingMessage):
+    from app.worker_node.process_email import process_emails
 
-celery.conf.update(
-    task_serializer="json",
-    accept_content=["json"],
-    result_serializer="json",
-    timezone="UTC",
-    enable_utc=True,
-    worker_concurrency=4 if settings.ENV == "production" else 1,
-    task_acks_late=True,
-    task_reject_on_worker_lost=True,
-    broker_connection_retry_on_startup=True,
-    worker_prefetch_multiplier=1,
-    task_time_limit=10 * 60,
-    task_soft_time_limit=8 * 60,
-    worker_max_tasks_per_child=100,
-    task_default_rate_limit="30/m",
-)
+    async with message.process():
+        async with llm_limiter:
+            try:
+                data = json.loads(message.body.decode())
+                await process_emails(
+                    history_id=data.get("history_id"), email=data.get("email_address")
+                )
+            except Exception as e:
+                logger.error(f"Failed to process message: {e}")
 
 
-@worker_init.connect
-def startup_message(sender, **kwargs):
-    logger.info("-------  Celery Worker is initializing...  -------")
-    get_zero_shot_classifier()
+async def shutdown(signal_name):
+    logger.info(f"Received exit signal {signal_name}. Shutting down...")
+    stop_event.set()
 
 
-@worker_ready.connect
-def ready_message(sender, **kwargs):
-    logger.info("-------  Celery Worker is ready & waiting for tasks!  -------")
+async def start_worker(queue_name="email-events"):
+    from app.langchain.core.graph_builder import build_mail_processing_graph
+    from app.langchain.core.graph_manager import GraphManager
+
+    connection = await connect_robust(settings.RABBITMQ_URL, timeout=10)
+    channel = await connection.channel()
+    await channel.set_qos(prefetch_count=10)
+
+    queue = await channel.declare_queue(queue_name, durable=True)
+    await queue.consume(on_message)
+
+    # Build the processing graph
+    async with build_mail_processing_graph() as built_graph:
+        GraphManager.set_graph(built_graph, graph_name="mail_processing")
+
+    logger.info(f"Worker started on queue: {queue_name}")
+
+    # Handle shutdown signals
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(
+            sig, lambda s=sig: asyncio.create_task(shutdown(s.name))
+        )
+
+    await stop_event.wait()
+
+    logger.info("Closing connection...")
+    await connection.close()
 
 
 if __name__ == "__main__":
-    celery.start()
+    try:
+        asyncio.run(start_worker())
+    except Exception as e:
+        logger.error(f"Worker encountered an error: {e}", exc_info=True)

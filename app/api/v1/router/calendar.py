@@ -1,22 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 
-from app.models.calendar_models import (
-    EventCreateRequest,
-    CalendarPreferencesUpdateRequest,
-)
-from app.services.calendar_service import (
-    create_calendar_event,
-    get_all_calendar_events,
-    get_calendar_events,
-    get_calendar_events_by_id,
-    get_user_calendar_preferences,
-    list_calendars,
-    update_user_calendar_preferences,
-)
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.api.v1.dependencies.oauth_dependencies import (
     get_current_user,
 )
+from app.models.calendar_models import (
+    CalendarPreferencesUpdateRequest,
+    EventCreateRequest,
+)
+from app.services import calendar_service
 
 router = APIRouter()
 
@@ -34,7 +27,7 @@ async def get_calendar_list(current_user: dict = Depends(get_current_user)):
     """
     try:
         # Using the valid access token from the dependency. The refresh token is handled in the dependency.
-        return await list_calendars(current_user["access_token"], None)
+        return await calendar_service.list_calendars(current_user["access_token"], None)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -59,7 +52,7 @@ async def get_events(
         HTTPException: If event retrieval fails.
     """
     try:
-        return await get_calendar_events(
+        return await calendar_service.get_calendar_events(
             user_id=current_user["user_id"],
             access_token=current_user["access_token"],
             refresh_token=None,  # Already handled by the dependency
@@ -96,7 +89,7 @@ async def get_events_by_calendar(
         HTTPException: If the event retrieval process encounters an error.
     """
     try:
-        return await get_calendar_events_by_id(
+        return await calendar_service.get_calendar_events_by_id(
             calendar_id=calendar_id,
             access_token=current_user["access_token"],
             refresh_token=None,  # Already handled
@@ -127,7 +120,9 @@ async def create_event(
         HTTPException: If event creation fails.
     """
     try:
-        return await create_calendar_event(event, current_user["access_token"], None)
+        return await calendar_service.create_calendar_event(
+            event, current_user["access_token"], None
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -148,7 +143,7 @@ async def get_all_events(
         HTTPException: If event retrieval fails.
     """
     try:
-        return await get_all_calendar_events(
+        return await calendar_service.get_all_calendar_events(
             current_user["access_token"], None, time_min, time_max
         )
     except Exception as e:
@@ -167,7 +162,9 @@ async def get_calendar_preferences(current_user: dict = Depends(get_current_user
         HTTPException: If the user is not authenticated or preferences are not found.
     """
     try:
-        return await get_user_calendar_preferences(current_user["user_id"])
+        return await calendar_service.get_user_calendar_preferences(
+            current_user["user_id"]
+        )
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -192,7 +189,7 @@ async def update_calendar_preferences(
         HTTPException: If the user is not authenticated.
     """
     try:
-        return await update_user_calendar_preferences(
+        return await calendar_service.update_user_calendar_preferences(
             current_user["user_id"], preferences.selected_calendars
         )
     except Exception as e:
