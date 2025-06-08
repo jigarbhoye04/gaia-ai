@@ -19,11 +19,11 @@ export interface OnboardingState {
     text: string;
     selectedCountry: string | null;
     selectedProfession: string | null;
-    selectedChips: Record<string, string[]>;
   };
   userResponses: Record<string, string>;
   isProcessing: boolean;
   isOnboardingComplete: boolean;
+  hasAnsweredCurrentQuestion: boolean;
 }
 
 export interface ProfessionOption {

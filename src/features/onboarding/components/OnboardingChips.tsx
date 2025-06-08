@@ -15,7 +15,9 @@ export const OnboardingChips = ({
 }: OnboardingChipsProps) => {
   if (
     onboardingState.currentQuestionIndex >= questions.length ||
-    !questions[onboardingState.currentQuestionIndex].chipOptions
+    !questions[onboardingState.currentQuestionIndex].chipOptions ||
+    onboardingState.isProcessing ||
+    onboardingState.hasAnsweredCurrentQuestion
   ) {
     return null;
   }
@@ -24,7 +26,7 @@ export const OnboardingChips = ({
 
   return (
     <motion.div
-      key={`chips-${onboardingState.currentQuestionIndex}`}
+      key={`chips-${currentQuestion.id}`}
       className="mb-4"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -51,13 +53,7 @@ export const OnboardingChips = ({
               className="cursor-pointer"
               color="primary"
               size="sm"
-              variant={
-                onboardingState.currentInputs.selectedChips[
-                  currentQuestion.id
-                ]?.includes(option.value)
-                  ? "solid"
-                  : "flat"
-              }
+              variant="flat"
               onClick={() => onChipSelect(currentQuestion.id, option.value)}
             >
               {option.label}

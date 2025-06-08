@@ -1,13 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 import {
   OnboardingChips,
   OnboardingComplete,
   OnboardingInput,
   OnboardingMessages,
 } from "@/features/onboarding/components";
+import { OnboardingBackground } from "@/features/onboarding/components/OnboardingBackground";
 import { useOnboarding } from "@/features/onboarding/hooks/useOnboarding";
 
 export default function Onboarding() {
@@ -26,21 +25,7 @@ export default function Onboarding() {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black backdrop-blur-2xl">
-      {/* Animated Background Gradient */}
-      <motion.div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `radial-gradient(100% 125% at 50% 100%, #000000 50%, #00bbffAA)`,
-        }}
-        animate={{
-          opacity: [0.8, 1, 0.8],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
+      <OnboardingBackground />
 
       {/* Messages Container */}
       <div className="relative z-10 flex-1 overflow-y-auto px-4 py-32">

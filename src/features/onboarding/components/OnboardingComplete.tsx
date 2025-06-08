@@ -18,25 +18,13 @@ export const OnboardingComplete = ({ onLetsGo }: OnboardingCompleteProps) => {
       }}
     >
       <Button
-        onClick={onLetsGo}
+        onPress={onLetsGo}
         color="primary"
         size="lg"
         radius="full"
-        className="relative px-12 py-4 text-lg font-bold shadow-lg shadow-primary/25 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/40"
+        className="font-medium transition-transform duration-400 hover:scale-125 hover:bg-primary/90"
       >
-        <span className="flex items-center gap-2">
-          Let's Go
-          <motion.span
-            animate={{ x: [0, 4, 0] }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            🚀
-          </motion.span>
-        </span>
+        <span className="flex items-center gap-2">Let's Go!</span>
       </Button>
     </motion.div>
   );

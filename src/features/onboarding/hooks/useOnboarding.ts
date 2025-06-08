@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { countries, Country } from "@/components/country-selector";
 
 import { FIELD_NAMES, professionOptions, questions } from "../constants";
-import { Message,OnboardingState } from "../types";
+import { Message, OnboardingState } from "../types";
 
 export const useOnboarding = () => {
   const [onboardingState, setOnboardingState] = useState<OnboardingState>({
@@ -13,11 +13,11 @@ export const useOnboarding = () => {
       text: "",
       selectedCountry: null,
       selectedProfession: null,
-      selectedChips: {},
     },
     userResponses: {},
     isProcessing: false,
     isOnboardingComplete: false,
+    hasAnsweredCurrentQuestion: false,
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,6 +62,7 @@ export const useOnboarding = () => {
       setOnboardingState((prev) => {
         const newState = { ...prev };
         newState.isProcessing = true;
+        newState.hasAnsweredCurrentQuestion = true;
 
         const userMessage: Message = {
           id: `user-${Date.now()}`,
@@ -80,7 +81,6 @@ export const useOnboarding = () => {
           text: "",
           selectedCountry: null,
           selectedProfession: null,
-          selectedChips: {},
         };
 
         if (prev.currentQuestionIndex < questions.length - 1) {
@@ -104,6 +104,7 @@ export const useOnboarding = () => {
 
           newState.messages = [...newState.messages, botMessage];
           newState.currentQuestionIndex = nextQuestionIndex;
+          newState.hasAnsweredCurrentQuestion = false;
         } else {
           const finalMessage: Message = {
             id: "final",
@@ -112,8 +113,6 @@ export const useOnboarding = () => {
           };
           newState.messages = [...newState.messages, finalMessage];
           newState.isOnboardingComplete = true;
-
-          console.log("User responses:", newResponses);
         }
 
         newState.isProcessing = false;
@@ -125,20 +124,16 @@ export const useOnboarding = () => {
 
   const handleChipSelect = useCallback(
     (questionId: string, chipValue: string) => {
-      if (onboardingState.isProcessing) return;
+      if (
+        onboardingState.isProcessing ||
+        onboardingState.hasAnsweredCurrentQuestion
+      )
+        return;
 
       const currentQuestion = questions[onboardingState.currentQuestionIndex];
 
-      setOnboardingState((prev) => ({
-        ...prev,
-        currentInputs: {
-          ...prev.currentInputs,
-          selectedChips: {
-            ...prev.currentInputs.selectedChips,
-            [questionId]: [chipValue],
-          },
-        },
-      }));
+      // Ensure we're selecting from the current question only
+      if (currentQuestion.id !== questionId) return;
 
       const selectedChip = currentQuestion.chipOptions?.find(
         (option) => option.value === chipValue,
@@ -156,6 +151,7 @@ export const useOnboarding = () => {
     [
       onboardingState.isProcessing,
       onboardingState.currentQuestionIndex,
+      onboardingState.hasAnsweredCurrentQuestion,
       submitResponse,
     ],
   );
@@ -255,7 +251,7 @@ export const useOnboarding = () => {
   );
 
   const handleLetsGo = () => {
-    console.log("Navigating to main app...");
+    // TODO: Navigate to main app or dashboard
   };
 
   useEffect(() => {
