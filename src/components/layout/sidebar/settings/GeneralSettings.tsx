@@ -12,12 +12,12 @@ export default function GeneralSection({
     <div className="w-full space-y-6">
       {/* Clear Chats Card */}
       <div className="rounded-2xl bg-zinc-900 p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-500/10">
               <Trash2 className="h-5 w-5 text-red-400" />
             </div>
-            <div className="space-y-1">
+            <div>
               <h3 className="font-medium text-white">Clear Chat History</h3>
               <p className="text-sm text-zinc-400">
                 Permanently delete all your conversations and chat history

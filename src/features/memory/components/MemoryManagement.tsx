@@ -167,12 +167,7 @@ export default function MemoryManagement({
 
   return (
     <div className={`flex h-full flex-col gap-2 ${className}`}>
-      <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
-          {onClose
-            ? "GAIA remembers important information from our conversations"
-            : "Manage the information GAIA remembers from your conversations"}
-        </p>
+      <div className="mb-4 flex items-center justify-end">
         <div className="flex gap-2">
           <Button
             size="sm"

@@ -7,6 +7,7 @@ import {
   SharedSelection,
   Textarea,
 } from "@heroui/react";
+import { Globe, MessageSquare, User } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -164,9 +165,17 @@ export default function PreferencesSettings() {
   return (
     <div className="w-full space-y-6">
       <div className="rounded-2xl bg-zinc-900 p-6">
-        <h3 className="mb-6 text-lg font-medium text-white">
-          Personal Information
-        </h3>
+        <div className="mb-6 flex items-center space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10">
+            <User className="h-5 w-5 text-blue-400" />
+          </div>
+          <div>
+            <h3 className="font-medium text-white">Personal Information</h3>
+            <p className="text-sm text-zinc-400">
+              Configure your personal details and location
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
@@ -222,9 +231,17 @@ export default function PreferencesSettings() {
 
       {/* Communication Style */}
       <div className="rounded-2xl bg-zinc-900 p-6">
-        <h3 className="mb-6 text-lg font-medium text-white">
-          Communication Style
-        </h3>
+        <div className="mb-6 flex items-center space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-500/10">
+            <MessageSquare className="h-5 w-5 text-green-400" />
+          </div>
+          <div>
+            <h3 className="font-medium text-white">Communication Style</h3>
+            <p className="text-sm text-zinc-400">
+              Customize how GAIA responds to your messages
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
@@ -242,6 +259,7 @@ export default function PreferencesSettings() {
                     : new Set(["other"])
                   : new Set()
               }
+              disallowEmptySelection={false}
               onSelectionChange={handleResponseStyleChange}
               isDisabled={isUpdating}
               classNames={{
@@ -253,7 +271,12 @@ export default function PreferencesSettings() {
               }}
             >
               {responseStyleOptions.map((style) => (
-                <SelectItem key={style.value}>
+                <SelectItem
+                  key={style.value}
+                  textValue={
+                    style.value.charAt(0).toUpperCase() + style.value.slice(1)
+                  }
+                >
                   <div>
                     <div className="font-medium">
                       {style.value.charAt(0).toUpperCase() +
@@ -293,9 +316,17 @@ export default function PreferencesSettings() {
 
       {/* Custom Instructions */}
       <div className="rounded-2xl bg-zinc-900 p-6">
-        <h3 className="mb-6 text-lg font-medium text-white">
-          Custom Instructions
-        </h3>
+        <div className="mb-6 flex items-center space-x-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/10">
+            <Globe className="h-5 w-5 text-purple-400" />
+          </div>
+          <div>
+            <h3 className="font-medium text-white">Custom Instructions</h3>
+            <p className="text-sm text-zinc-400">
+              Add personalized instructions for GAIA to follow
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <Textarea
