@@ -469,11 +469,17 @@ async def create_calendar_event(
     if event.is_all_day:
         # For all-day events, use date format without time component
         if event.start and event.end:
-            # If start and end times are provided, extract the date parts
+            # If start and end dates are provided, extract the date parts
             start_date = event.start.split("T")[0] if "T" in event.start else event.start
             end_date = event.end.split("T")[0] if "T" in event.end else event.end
+        elif event.start:
+            # If only start date is provided, end date is the next day
+            from datetime import datetime, timedelta
+            start_date = event.start.split("T")[0] if "T" in event.start else event.start
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = (start_dt + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
-            # If not provided, default to today for start and tomorrow for end
+            # If no dates provided, default to today for start and tomorrow for end
             from datetime import datetime, timedelta
             today = datetime.now()
             start_date = today.strftime("%Y-%m-%d")

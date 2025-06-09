@@ -9,8 +9,8 @@ class CalendarPreferencesUpdateRequest(BaseModel):
 class EventCreateRequest(BaseModel):
     summary: str = Field(..., title="Event Summary")
     description: str = Field("", title="Event Description")
-    start: Optional[str] = Field(None, title="Start Time in ISO 8601 format")
-    end: Optional[str] = Field(None, title="End Time in ISO 8601 format")
+    start: Optional[str] = Field(None, title="Start Time in ISO 8601 format or date for all-day events")
+    end: Optional[str] = Field(None, title="End Time in ISO 8601 format or date for all-day events")
     is_all_day: bool = Field(False, title="Is All Day Event")
     timezone: str = Field(
         "UTC", title="Event Timezone that comes from the client ex- Asia/Calcutta"
@@ -18,6 +18,16 @@ class EventCreateRequest(BaseModel):
     calendar_id: Optional[str] = Field(None, title="Calendar ID")
     calendar_name: Optional[str] = None  # Name of the calendar for display purposes
     calendar_color: Optional[str] = "#00bbff"
+    
+    def model_post_init(self, __context) -> None:
+        """
+        Validate event data based on event type after model initialization.
+        """
+        if not self.is_all_day:
+            # For timed events, both start and end are required
+            if not self.start or not self.end:
+                raise ValueError("Start and end times are required for timed events")
+        # For all-day events, start and end are optional (will default to today if not provided)
     
     @property
     def event_date(self) -> str:
@@ -31,4 +41,6 @@ class EventCreateRequest(BaseModel):
         elif self.start:
             # Extract date part from ISO datetime string
             return self.start.split("T")[0] if "T" in self.start else self.start
-        return None
+        # Fallback to today's date
+        from datetime import datetime
+        return datetime.now().strftime("%Y-%m-%d")
