@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { apiService } from "@/lib/api";
 import { Calendar, CalendarEventsResponse } from "@/types/api/calendarApiTypes";
 import {
+  EventCreatePayload,
   GoogleCalendar,
   GoogleCalendarEvent,
 } from "@/types/features/calendarTypes";
@@ -164,7 +165,7 @@ export const calendarApi = {
 
   // Create event without specifying calendar ID (uses default calendar)
   createEventDefault: async (
-    event: Record<string, unknown> & { fixedTime?: boolean; timezone?: string },
+    event: EventCreatePayload,
   ): Promise<GoogleCalendarEvent> => {
     return apiService.post<GoogleCalendarEvent>("/calendar/event", event, {
       successMessage: "Event added to calendar!",
