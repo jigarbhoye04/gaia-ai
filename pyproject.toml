@@ -79,6 +79,7 @@ dependencies = [
   "langgraph-bigtool>=0.0.2",
   "mem0ai>=0.1.101",
   "pycountry>=24.6.1",
+  "rizaio>=0.11.0",
 ]
 
 [dependency-groups]

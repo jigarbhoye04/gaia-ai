@@ -118,6 +118,9 @@ class Settings(BaseSettings):
     MEM0_ORG_ID: str
     MEM0_PROJECT_ID: str
 
+    # Code Execution
+    RIZA_API_KEY: str
+
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only if explicitly enabled in production."""
