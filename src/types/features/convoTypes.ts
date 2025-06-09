@@ -63,10 +63,11 @@ export type MessageType = {
 };
 
 export type CalendarOptions = {
-  summary: string | undefined;
-  description: string | undefined;
-  start: string | undefined;
-  end: string | undefined;
+  summary: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  is_all_day?: boolean;
 };
 
 // Email compose data structure for email intent

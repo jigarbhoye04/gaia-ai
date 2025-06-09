@@ -11,7 +11,13 @@ import {
   TimedEvent,
   UnifiedCalendarEventsListProps,
 } from "@/types/features/calendarTypes";
-import { parsingDate } from "@/utils/date/dateUtils";
+import {
+  formatAllDayDate,
+  formatAllDayDateRange,
+  formatTimedEventDate,
+  getEventDurationText,
+  isDateOnly,
+} from "@/utils/date/calendarDateUtils";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
@@ -50,18 +56,28 @@ export function CalendarEventCard({
       return;
     }
 
-    if (!isTimedEvent(event)) {
-      toast.error("Real events require start and end times.");
-      return;
-    }
-
     setStatus("loading");
     try {
       const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      await calendarApi.createEventDefault({
-        ...event,
-        timezone: userTimeZone,
-      });
+
+      // Handle different event types properly
+      if (isTimedEvent(event)) {
+        // Timed event with start and end times
+        await calendarApi.createEventDefault({
+          ...event,
+          timezone: userTimeZone,
+          is_all_day: event.is_all_day || false,
+        });
+      } else {
+        // Single time event or all-day event
+        await calendarApi.createEventDefault({
+          summary: event.summary,
+          description: event.description,
+          is_all_day: true, // Assume single time events are all-day
+          timezone: userTimeZone,
+        });
+      }
+
       toast.success("Added event to calendar!", {
         description: event.description,
       });
@@ -69,7 +85,6 @@ export function CalendarEventCard({
     } catch (error) {
       toast.error("Failed to add event!");
       console.error(error);
-    } finally {
       setStatus("idle");
     }
   }, [event, isDummy, onDummyAddEvent]);
@@ -84,19 +99,66 @@ export function CalendarEventCard({
           </div>
           <div className="text-xs text-primary">
             {isTimedEvent(event) ? (
-              <>
-                <div className="flex items-center">
-                  <span className="w-9 min-w-9 font-medium">Start: </span>
-                  {parsingDate(event.start)}
+              event.is_all_day ? (
+                // All-day event display
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
+                      All Day
+                    </span>
+                  </div>
+                  <div className="font-medium">
+                    {event.start && event.end
+                      ? isDateOnly(event.start) && isDateOnly(event.end)
+                        ? formatAllDayDateRange(event.start, event.end)
+                        : formatAllDayDateRange(
+                            event.start.split("T")[0],
+                            event.end.split("T")[0],
+                          )
+                      : event.start
+                        ? formatAllDayDate(
+                            isDateOnly(event.start)
+                              ? event.start
+                              : event.start.split("T")[0],
+                          )
+                        : "Date TBD"}
+                  </div>
+                  {event.start && event.end && (
+                    <div className="text-xs opacity-70">
+                      Duration: {getEventDurationText(event.start, event.end)}
+                    </div>
+                  )}
                 </div>
-
-                <div className="flex items-center">
-                  <span className="w-9 min-w-9 font-medium">End: </span>
-                  {parsingDate(event.end)}
+              ) : (
+                // Timed event display
+                <div className="space-y-1">
+                  <div className="flex items-center">
+                    <span className="w-9 min-w-9 font-medium">Start:</span>
+                    <span className="ml-1">
+                      {formatTimedEventDate(event.start)}
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="w-9 min-w-9 font-medium">End:</span>
+                    <span className="ml-1">
+                      {formatTimedEventDate(event.end)}
+                    </span>
+                  </div>
+                  <div className="text-xs opacity-70">
+                    Duration: {getEventDurationText(event.start, event.end)}
+                  </div>
                 </div>
-              </>
+              )
             ) : (
-              event.time
+              // Single time event (fallback)
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
+                    All Day
+                  </span>
+                </div>
+                <div className="font-medium">{event.time || "Time TBD"}</div>
+              </div>
             )}
           </div>
         </div>

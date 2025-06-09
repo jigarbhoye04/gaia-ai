@@ -25,7 +25,10 @@ import {
   formatEventDate,
   getEventIcon,
 } from "@/features/calendar/utils/calendarUtils";
-import { CalendarEventDialogProps } from "@/types/features/calendarTypes";
+import {
+  CalendarEventDialogProps,
+  EventCreatePayload,
+} from "@/types/features/calendarTypes";
 
 import {
   Dialog,
@@ -44,6 +47,7 @@ export default function CalendarEventDialog({
   const [description, setDescription] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [isAllDay, setIsAllDay] = useState(false);
   const [errors, setErrors] = useState<{
     summary?: string;
     date?: string;
@@ -56,6 +60,7 @@ export default function CalendarEventDialog({
       setDescription("");
       setStart("");
       setEnd("");
+      setIsAllDay(false);
       setErrors({});
     }
   }, [open]);
@@ -88,19 +93,23 @@ export default function CalendarEventDialog({
         newErrors.summary = "Summary is required";
       }
 
-      if (start && end) {
-        const startDate = new Date(start);
-        const endDate = new Date(end);
-        if (isNaN(startDate.getTime())) {
-          newErrors.date = "Invalid start date";
-        } else if (isNaN(endDate.getTime())) {
-          newErrors.date = "Invalid end date";
-        } else if (endDate <= startDate) {
-          newErrors.date = "End time must be after start time";
+      if (!isAllDay) {
+        // For timed events, both start and end are required
+        if (!start || !end) {
+          newErrors.date = "Start and end times are required for timed events";
+        } else {
+          const startDate = new Date(start);
+          const endDate = new Date(end);
+          if (isNaN(startDate.getTime())) {
+            newErrors.date = "Invalid start date";
+          } else if (isNaN(endDate.getTime())) {
+            newErrors.date = "Invalid end date";
+          } else if (endDate <= startDate) {
+            newErrors.date = "End time must be after start time";
+          }
         }
-      } else {
-        newErrors.date = "Start and end times are required";
       }
+      // For all-day events, dates are optional (backend will default to today)
 
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
@@ -111,17 +120,28 @@ export default function CalendarEventDialog({
       if (!validateForm()) return;
 
       try {
-        const event = {
+        const eventPayload: EventCreatePayload = {
           summary,
           description,
-          start: { dateTime: new Date(start).toISOString() },
-          end: { dateTime: new Date(end).toISOString() },
+          is_all_day: isAllDay,
         };
 
-        await calendarApi.createEventDefault({
-          ...event,
-          fixedTime: true,
-        });
+        if (isAllDay) {
+          // For all-day events, send date strings only if provided
+          if (start) {
+            eventPayload.start = start.split("T")[0]; // Extract date part
+          }
+          if (end) {
+            eventPayload.end = end.split("T")[0]; // Extract date part
+          }
+        } else {
+          // For timed events, send full datetime with timezone
+          eventPayload.start = new Date(start).toISOString();
+          eventPayload.end = new Date(end).toISOString();
+          eventPayload.fixedTime = true;
+        }
+
+        await calendarApi.createEventDefault(eventPayload);
 
         toast.success("Event created successfully!");
         onOpenChange(false);
@@ -178,42 +198,97 @@ export default function CalendarEventDialog({
                 rows={3}
               />
             </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="mb-1 block font-medium text-zinc-300">
-                  Start*
-                </label>
+            <div className="mb-4">
+              <div className="flex items-center gap-2">
                 <input
-                  type="datetime-local"
-                  value={start}
+                  type="checkbox"
+                  id="isAllDay"
+                  className="h-4 w-4 rounded border-zinc-700 bg-zinc-800"
+                  checked={isAllDay}
                   onChange={(e) => {
-                    setStart(e.target.value);
+                    setIsAllDay(e.target.checked);
                     if (errors.date) setErrors({ ...errors, date: undefined });
                   }}
-                  className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
-                    errors.date ? "border border-red-500" : ""
-                  }`}
-                  required
                 />
-              </div>
-              <div className="flex-1">
-                <label className="mb-1 block font-medium text-zinc-300">
-                  End*
+                <label htmlFor="isAllDay" className="text-sm text-zinc-300">
+                  All-day event
                 </label>
-                <input
-                  type="datetime-local"
-                  value={end}
-                  onChange={(e) => {
-                    setEnd(e.target.value);
-                    if (errors.date) setErrors({ ...errors, date: undefined });
-                  }}
-                  className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
-                    errors.date ? "border border-red-500" : ""
-                  }`}
-                  required
-                />
               </div>
             </div>
+            {!isAllDay && (
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="mb-1 block font-medium text-zinc-300">
+                    Start*
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={start}
+                    onChange={(e) => {
+                      setStart(e.target.value);
+                      if (errors.date)
+                        setErrors({ ...errors, date: undefined });
+                    }}
+                    className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
+                      errors.date ? "border border-red-500" : ""
+                    }`}
+                    required={!isAllDay}
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 block font-medium text-zinc-300">
+                    End*
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={end}
+                    onChange={(e) => {
+                      setEnd(e.target.value);
+                      if (errors.date)
+                        setErrors({ ...errors, date: undefined });
+                    }}
+                    className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
+                      errors.date ? "border border-red-500" : ""
+                    }`}
+                    required={!isAllDay}
+                  />
+                </div>
+              </div>
+            )}
+            {isAllDay && (
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="mb-1 block font-medium text-zinc-300">
+                    Start Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={start ? start.split("T")[0] : ""}
+                    onChange={(e) => {
+                      setStart(e.target.value + "T00:00");
+                      if (errors.date)
+                        setErrors({ ...errors, date: undefined });
+                    }}
+                    className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1 block font-medium text-zinc-300">
+                    End Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={end ? end.split("T")[0] : ""}
+                    onChange={(e) => {
+                      setEnd(e.target.value + "T23:59");
+                      if (errors.date)
+                        setErrors({ ...errors, date: undefined });
+                    }}
+                    className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                  />
+                </div>
+              </div>
+            )}
             {errors.date && (
               <span className="mt-1 block text-sm text-red-500">
                 {errors.date}
