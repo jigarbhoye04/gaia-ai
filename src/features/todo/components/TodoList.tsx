@@ -33,7 +33,7 @@ export default function TodoList({
   }
 
   return (
-    <div className="w-screen max-w-5xl space-y-4 p-4">
+    <div className="w-screen max-w-xl space-y-4 p-4">
       {Object.entries(groupedTodos).map(([date, todosForDate]) => (
         <div key={date}>
           {date !== "No Due Date" && (

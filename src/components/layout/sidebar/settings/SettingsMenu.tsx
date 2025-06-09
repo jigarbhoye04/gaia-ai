@@ -23,8 +23,6 @@ import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useFetchConversations } from "@/features/chat/hooks/useConversationList";
 import { clearConversations } from "@/redux/slices/conversationsSlice";
 
-import SettingsModal from "./SettingsModal";
-
 // Only allow these values in our modal state.
 export type ModalAction = "clear_chats" | "logout";
 
@@ -41,7 +39,6 @@ export default function SettingsMenu() {
   const dispatch = useDispatch();
   const fetchConversations = useFetchConversations();
   const { updateConvoMessages } = useConversation();
-  const [openSettings, setOpenSettings] = useState(false);
   const [modalAction, setModalAction] = useState<ModalAction | null>(null);
   // either "clear_chats", "logout", or null (closed)
 
@@ -92,7 +89,7 @@ export default function SettingsMenu() {
           Settings
         </div>
       ),
-      action: () => setOpenSettings(true),
+      action: () => router.push("/settings"),
     },
     {
       key: "logout",
@@ -109,12 +106,6 @@ export default function SettingsMenu() {
 
   return (
     <>
-      <SettingsModal
-        openSettings={openSettings}
-        setModalAction={setModalAction}
-        setOpenSettings={setOpenSettings}
-      />
-
       <Modal
         isOpen={modalAction !== null}
         backdrop="blur"

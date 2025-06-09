@@ -7,7 +7,6 @@ import { useDispatch, useSelector } from "react-redux";
 
 import HeaderManager from "@/components/layout/headers/HeaderManager";
 import Sidebar from "@/components/layout/sidebar/MainSidebar";
-import EmailSidebar from "@/components/layout/sidebar/variants/MailSidebar";
 import { SidebarRight01Icon } from "@/components/shared/icons";
 import { Button } from "@/components/ui/shadcn/button";
 import {
@@ -16,6 +15,7 @@ import {
   useSidebar,
 } from "@/components/ui/shadcn/sidebar";
 import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
+import { useOnboardingGuard } from "@/features/auth/hooks/useOnboardingGuard";
 import { useIsMobile } from "@/hooks/ui/useMobile";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import {
@@ -49,6 +49,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   );
   const isMobile = useIsMobile();
   const [defaultOpen, setDefaultOpen] = useState(true);
+
+  // Check if user needs onboarding
+  useOnboardingGuard();
 
   // Auto-close sidebar on mobile when pathname changes
   useEffect(() => {
@@ -118,18 +121,18 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           {...bind()}
         >
           <SidebarLayout>
-            {pathname.startsWith("/mail") ? <EmailSidebar /> : <Sidebar />}
+            <Sidebar />
           </SidebarLayout>
 
           <SidebarInset className="flex h-screen flex-col">
             <header
-              className="z-50 flex flex-shrink-0 items-start justify-between bg-zinc-900/60 px-4 pt-3 backdrop-blur-sm"
+              className="z-10 flex flex-shrink-0 items-start justify-between bg-zinc-900/80 px-4 pt-3 backdrop-blur-sm"
               onClick={closeOnTouch}
             >
               {!currentOpen && <HeaderSidebarTrigger />}
               <HeaderManager />
             </header>
-            <main className="flex flex-1 flex-col overflow-hidden bg-zinc-900/60">
+            <main className="flex flex-1 flex-col overflow-hidden bg-zinc-900/80">
               {children}
             </main>
           </SidebarInset>

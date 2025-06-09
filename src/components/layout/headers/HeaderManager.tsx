@@ -10,6 +10,7 @@ import BrowserHeader from "./BrowserHeader";
 import ChatHeader from "./ChatHeader";
 import DefaultHeader from "./DefaultHeader";
 import MailHeader from "./MailHeader";
+import SettingsHeader from "./SettingsHeader";
 
 // Declare the global window interface to include our custom property
 declare global {
@@ -38,7 +39,9 @@ export default function HeaderManager() {
         (previousPath.startsWith("/calendar") &&
           !pathname.startsWith("/calendar")) ||
         (previousPath.startsWith("/browser") &&
-          !pathname.startsWith("/browser")));
+          !pathname.startsWith("/browser")) ||
+        (previousPath.startsWith("/settings") &&
+          !pathname.startsWith("/settings")));
 
     // Always reset custom headers when changing major sections
     if (
@@ -52,6 +55,7 @@ export default function HeaderManager() {
     else if (pathname.startsWith("/mail")) componentType = "mail";
     else if (pathname.startsWith("/calendar")) componentType = "calendar";
     else if (pathname.startsWith("/browser")) componentType = "browser";
+    else if (pathname.startsWith("/settings")) componentType = "settings";
     else if (pathname === "/notes") componentType = "notes";
     else if (pathname === "/goals") componentType = "goals";
     // Don't override custom headers set by other components if still on the same section
@@ -82,6 +86,8 @@ export default function HeaderManager() {
       return <ChatHeader {...componentSpecificProps} />;
     case "mail":
       return <MailHeader {...componentSpecificProps} />;
+    case "settings":
+      return <SettingsHeader {...componentSpecificProps} />;
     case "goals":
     case "notes":
       return <></>;
