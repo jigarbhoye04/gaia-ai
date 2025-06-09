@@ -24,7 +24,6 @@ from app.services.calendar_service import (
 )
 from app.langchain.templates.calendar_template import (
     CALENDAR_PROMPT_TEMPLATE,
-    CALENDAR_LIST_TEMPLATE,
 )
 
 
@@ -210,6 +209,10 @@ async def fetch_calendar_list(
             logger.error("Missing access token in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": "Fetching your calendars..."})
+
         calendars = await list_calendars(access_token=access_token, short=True)
         if calendars is None:
             logger.error("Unable to fetch calendars - no data returned")
@@ -250,6 +253,11 @@ async def fetch_calendar_events(
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
         logger.info(f"Fetching calendar events for user {user_id}")
+
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": "Fetching your calendar events..."})
+
         events_data = await get_calendar_events(
             user_id=user_id,
             access_token=access_token,
@@ -300,6 +308,10 @@ async def search_calendar_events(
 
         logger.info(f"Searching calendar events for query: {query}")
 
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Searching calendar events for '{query}'..."})
+
         # Use the new search function with Google Calendar API's native search
         search_results = await search_calendar_events_native(
             query=query,
@@ -314,7 +326,15 @@ async def search_calendar_events(
             f"Found {len(search_results.get('matching_events', []))} matching events for query: {query}"
         )
 
-        return json.dumps(search_results)
+        # Send search results to frontend via writer using grouped structure
+        writer(
+            {
+                "calendar_data": {"calendar_search_results": search_results},
+                "intent": "search_calendar_events",
+            }
+        )
+
+        return "Calendar search results sent to frontend"
 
     except Exception as e:
         error_msg = f"Error searching calendar events: {str(e)}"
@@ -339,6 +359,10 @@ async def view_calendar_event(
         if not access_token:
             logger.error("Missing access token in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": "Fetching event details..."})
 
         # Fetch specific event using Google Calendar API
         url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{event_id}"
