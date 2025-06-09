@@ -1,4 +1,3 @@
-import asyncio
 import json
 from datetime import datetime, timezone
 
@@ -6,35 +5,13 @@ from app.config.loggers import llm_logger as logger
 from app.langchain.core.graph_manager import GraphManager
 from app.langchain.core.messages import construct_langchain_messages
 from app.models.message_models import MessageRequestWithHistory
-from app.services.memory_service import memory_service
+from app.utils.memory_utils import (
+    await_remaining_memory_task,
+    check_memory_task_yield,
+    start_memory_task,
+)
 from langchain_core.messages import AIMessageChunk
 from langsmith import traceable
-
-
-async def store_user_message_memory(user_id: str, message: str, conversation_id: str):
-    """Store user message in memory and return formatted data if successful."""
-    try:
-        result = await memory_service.store_memory(
-            content=message,
-            user_id=user_id,
-            metadata={
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "conversation_id": conversation_id,
-                "type": "user_message",
-            },
-        )
-
-        if result:
-            return {
-                "type": "memory_stored",
-                "content": f"Stored message: {message[:50]}...",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "conversation_id": conversation_id,
-            }
-    except Exception as e:
-        logger.error(f"Error storing memory: {e}")
-
-    return None
 
 
 @traceable
@@ -76,10 +53,7 @@ async def call_agent(
         }
 
         # Start memory storage in parallel
-        if user_id and request.message:
-            memory_task = asyncio.create_task(
-                store_user_message_memory(user_id, request.message, conversation_id)
-            )
+        memory_task = start_memory_task(user_id, request.message, conversation_id)
 
         async for event in graph.astream(
             initial_state,
@@ -97,15 +71,9 @@ async def call_agent(
             },
         ):
             # Check if memory task is done and yield result
-            if memory_task and memory_task.done() and not memory_yielded:
-                try:
-                    memory_stored = memory_task.result()
-                    if memory_stored:
-                        yield f"data: {json.dumps({'memory_data': memory_stored})}\n\n"
-                    memory_yielded = True
-                except Exception as e:
-                    logger.error(f"Error getting memory task result: {e}")
-                    memory_yielded = True
+            memory_data, memory_yielded = check_memory_task_yield(memory_task, memory_yielded)
+            if memory_data:
+                yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
 
             stream_mode, payload = event
             if stream_mode == "messages":
@@ -124,13 +92,9 @@ async def call_agent(
                 yield f"data: {json.dumps(payload)}\n\n"
 
         # Yield memory data if task completed after streaming finished
-        if memory_task and not memory_yielded:
-            try:
-                memory_stored = await memory_task
-                if memory_stored:
-                    yield f"data: {json.dumps({'memory_data': memory_stored})}\n\n"
-            except Exception as e:
-                logger.error(f"Error awaiting memory task: {e}")
+        remaining_memory_data = await await_remaining_memory_task(memory_task, memory_yielded)
+        if remaining_memory_data:
+            yield f"data: {json.dumps({'memory_data': remaining_memory_data})}\n\n"
 
         yield f"nostream: {json.dumps({'complete_message': complete_message})}"
         yield "data: [DONE]\n\n"
