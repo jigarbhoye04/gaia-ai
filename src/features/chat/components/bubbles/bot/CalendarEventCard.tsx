@@ -77,10 +77,6 @@ export function CalendarEventCard({
           timezone: userTimeZone,
         });
       }
-
-      toast.success("Added event to calendar!", {
-        description: event.description,
-      });
       setStatus("added");
     } catch (error) {
       toast.error("Failed to add event!");
