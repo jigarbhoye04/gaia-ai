@@ -17,6 +17,14 @@ interface CountrySelectorProps {
   isDisabled?: boolean;
   isRequired?: boolean;
   errorMessage?: string;
+  variant?: "flat" | "bordered" | "faded" | "underlined";
+  radius?: "none" | "sm" | "md" | "lg" | "full";
+  classNames?: {
+    base?: string;
+    popoverContent?: string;
+    listboxWrapper?: string;
+    selectorButton?: string;
+  };
 }
 
 // List of countries with their codes
@@ -267,6 +275,12 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
   onSelectionChange,
   label = "Country",
   placeholder = "Search for a country or code",
+  isDisabled,
+  isRequired,
+  errorMessage,
+  variant = "faded",
+  radius = "full",
+  classNames,
 }) => {
   const [inputValue, setInputValue] = React.useState("");
 
@@ -309,10 +323,13 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
           e.stopPropagation();
         }
       }}
+      isDisabled={isDisabled}
+      isRequired={isRequired}
+      errorMessage={errorMessage}
       className="max-w-full"
-      variant="faded"
+      variant={variant}
       size="lg"
-      radius="full"
+      radius={radius}
       startContent={
         selectedKey ? (
           <div className="flex items-center justify-center">
@@ -321,8 +338,10 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
         ) : null
       }
       classNames={{
-        base: "max-w-full",
-        listboxWrapper: "max-h-[300px]",
+        base: classNames?.base || "max-w-full",
+        popoverContent: classNames?.popoverContent,
+        listboxWrapper: classNames?.listboxWrapper || "max-h-[300px]",
+        selectorButton: classNames?.selectorButton,
       }}
     >
       {(country) => (

@@ -1,10 +1,16 @@
 "use client";
 
-import { Input, Select, SelectItem, Textarea } from "@heroui/react";
+import {
+  Input,
+  Select,
+  SelectItem,
+  SharedSelection,
+  Textarea,
+} from "@heroui/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { countries, Country } from "@/components/country-selector";
+import { CountrySelector } from "@/components/country-selector";
 import { authApi } from "@/features/auth/api/authApi";
 import { useUser } from "@/features/auth/hooks/useUser";
 
@@ -105,25 +111,33 @@ export default function PreferencesSettings() {
     };
   }, []);
 
-  const handleCountryChange = (countryCode: string) => {
-    const updatedPreferences = { ...preferences, country: countryCode };
-    setPreferences(updatedPreferences);
-    debouncedUpdate(updatedPreferences);
+  const handleCountryChange = (countryCode: string | null) => {
+    if (countryCode) {
+      const updatedPreferences = { ...preferences, country: countryCode };
+      setPreferences(updatedPreferences);
+      debouncedUpdate(updatedPreferences);
+    }
   };
 
-  const handleProfessionChange = (profession: string) => {
-    const updatedPreferences = { ...preferences, profession };
-    setPreferences(updatedPreferences);
-    debouncedUpdate(updatedPreferences);
+  const handleProfessionChange = (keys: SharedSelection) => {
+    if (keys !== "all" && keys.size > 0) {
+      const profession = Array.from(keys)[0] as string;
+      const updatedPreferences = { ...preferences, profession };
+      setPreferences(updatedPreferences);
+      debouncedUpdate(updatedPreferences);
+    }
   };
 
-  const handleResponseStyleChange = (responseStyle: string) => {
-    const updatedPreferences = {
-      ...preferences,
-      response_style: responseStyle,
-    };
-    setPreferences(updatedPreferences);
-    debouncedUpdate(updatedPreferences);
+  const handleResponseStyleChange = (keys: SharedSelection) => {
+    if (keys !== "all" && keys.size > 0) {
+      const responseStyle = Array.from(keys)[0] as string;
+      const updatedPreferences = {
+        ...preferences,
+        response_style: responseStyle === "other" ? "custom" : responseStyle,
+      };
+      setPreferences(updatedPreferences);
+      debouncedUpdate(updatedPreferences);
+    }
   };
 
   const handleCustomResponseStyleChange = (customStyle: string) => {
@@ -148,138 +162,158 @@ export default function PreferencesSettings() {
   };
 
   return (
-    <div className="flex min-h-full flex-col gap-4">
-      <h3 className="mb-3">Preferences</h3>
-
-      {/* Personal Information */}
-      <div className="flex w-full flex-col gap-4 rounded-2xl bg-black/40 p-4">
-        <h4 className="text-sm font-medium text-foreground-500">
+    <div className="w-full space-y-6">
+      <div className="rounded-2xl bg-zinc-900 p-6">
+        <h3 className="mb-6 text-lg font-medium text-white">
           Personal Information
-        </h4>
+        </h3>
 
         <div className="space-y-4">
-          <Select
-            label="Country"
-            placeholder="Select your country"
-            selectedKeys={preferences.country ? [preferences.country] : []}
-            onChange={(e) => handleCountryChange(e.target.value)}
-            isDisabled={isUpdating}
-            classNames={{
-              trigger: "bg-zinc-800 border-zinc-700 hover:bg-zinc-700",
-              popoverContent: "bg-zinc-800 border-zinc-700",
-              listbox: "bg-zinc-800",
-            }}
-          >
-            {countries.map((country: Country) => (
-              <SelectItem key={country.code} value={country.code}>
-                {country.name}
-              </SelectItem>
-            ))}
-          </Select>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">Country</label>
+            <CountrySelector
+              selectedKey={preferences.country}
+              onSelectionChange={handleCountryChange}
+              placeholder="Select your country"
+              label=""
+              isDisabled={isUpdating}
+              variant="bordered"
+              radius="lg"
+              classNames={{
+                base: "w-full",
+                popoverContent: "bg-zinc-800 border-zinc-700",
+                listboxWrapper: "bg-zinc-800",
+                selectorButton:
+                  "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 data-[hover=true]:bg-zinc-700",
+              }}
+            />
+          </div>
 
-          <Select
-            label="Profession"
-            placeholder="Select your profession"
-            selectedKeys={
-              preferences.profession ? [preferences.profession] : []
-            }
-            onChange={(e) => handleProfessionChange(e.target.value)}
-            isDisabled={isUpdating}
-            classNames={{
-              trigger: "bg-zinc-800 border-zinc-700 hover:bg-zinc-700",
-              popoverContent: "bg-zinc-800 border-zinc-700",
-              listbox: "bg-zinc-800",
-            }}
-          >
-            {professionOptions.map((profession) => (
-              <SelectItem key={profession.value} value={profession.value}>
-                {profession.label}
-              </SelectItem>
-            ))}
-          </Select>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">
+              Profession
+            </label>
+            <Select
+              placeholder="Select your profession"
+              selectedKeys={
+                preferences.profession
+                  ? new Set([preferences.profession])
+                  : new Set()
+              }
+              onSelectionChange={handleProfessionChange}
+              isDisabled={isUpdating}
+              classNames={{
+                trigger:
+                  "bg-zinc-800 hover:bg-zinc-700 cursor-pointer min-h-[44px]",
+                popoverContent: "bg-zinc-800 z-50",
+                listbox: "bg-zinc-800",
+                value: "text-white",
+              }}
+            >
+              {professionOptions.map((profession) => (
+                <SelectItem key={profession.value}>
+                  {profession.label}
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
         </div>
       </div>
 
       {/* Communication Style */}
-      <div className="flex w-full flex-col gap-4 rounded-2xl bg-black/40 p-4">
-        <h4 className="text-sm font-medium text-foreground-500">
+      <div className="rounded-2xl bg-zinc-900 p-6">
+        <h3 className="mb-6 text-lg font-medium text-white">
           Communication Style
-        </h4>
+        </h3>
 
         <div className="space-y-4">
-          <Select
-            label="Response Style"
-            placeholder="Select response style"
-            selectedKeys={
-              responseStyleOptions.some(
-                (option) => option.value === preferences.response_style,
-              )
-                ? [preferences.response_style]
-                : ["other"]
-            }
-            onChange={(e) => handleResponseStyleChange(e.target.value)}
-            isDisabled={isUpdating}
-            classNames={{
-              trigger: "bg-zinc-800 border-zinc-700 hover:bg-zinc-700",
-              popoverContent: "bg-zinc-800 border-zinc-700",
-              listbox: "bg-zinc-800",
-            }}
-          >
-            {responseStyleOptions.map((style) => (
-              <SelectItem key={style.value} value={style.value}>
-                <div>
-                  <div className="font-medium">
-                    {style.value.charAt(0).toUpperCase() + style.value.slice(1)}
-                  </div>
-                  <div className="text-xs text-foreground-400">
-                    {style.label.split(" - ")[1]}
-                  </div>
-                </div>
-              </SelectItem>
-            ))}
-          </Select>
-
-          {/* Custom response style input */}
-          {(preferences.response_style === "other" ||
-            !responseStyleOptions.some(
-              (option) => option.value === preferences.response_style,
-            )) && (
-            <Input
-              label="Custom Response Style"
-              placeholder="Describe your preferred response style..."
-              value={
-                responseStyleOptions.some(
-                  (option) => option.value === preferences.response_style,
-                )
-                  ? ""
-                  : preferences.response_style
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-zinc-300">
+              Response Style
+            </label>
+            <Select
+              placeholder="Select response style"
+              selectedKeys={
+                preferences.response_style
+                  ? responseStyleOptions.some(
+                      (option) => option.value === preferences.response_style,
+                    )
+                    ? new Set([preferences.response_style])
+                    : new Set(["other"])
+                  : new Set()
               }
-              onChange={(e) => handleCustomResponseStyleChange(e.target.value)}
+              onSelectionChange={handleResponseStyleChange}
               isDisabled={isUpdating}
               classNames={{
-                input: "bg-zinc-800 border-zinc-700",
-                inputWrapper: "bg-zinc-800 border-zinc-700 hover:bg-zinc-700",
+                trigger:
+                  "bg-zinc-800 hover:bg-zinc-700 cursor-pointer min-h-[44px]",
+                popoverContent: "bg-zinc-800 z-50",
+                listbox: "bg-zinc-800",
+                value: "text-white",
               }}
-            />
-          )}
+            >
+              {responseStyleOptions.map((style) => (
+                <SelectItem key={style.value}>
+                  <div>
+                    <div className="font-medium">
+                      {style.value.charAt(0).toUpperCase() +
+                        style.value.slice(1)}
+                    </div>
+                    <div className="text-xs text-foreground-400">
+                      {style.label.split(" - ")[1]}
+                    </div>
+                  </div>
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
+
+          {/* Custom response style input */}
+          {preferences.response_style &&
+            !responseStyleOptions.some(
+              (option) => option.value === preferences.response_style,
+            ) && (
+              <div className="space-y-2">
+                <Input
+                  placeholder="Describe your preferred response style..."
+                  value={preferences.response_style || ""}
+                  onChange={(e) =>
+                    handleCustomResponseStyleChange(e.target.value)
+                  }
+                  isDisabled={isUpdating}
+                  classNames={{
+                    input: "bg-zinc-800 min-h-[44px]",
+                    inputWrapper: "bg-zinc-800 hover:bg-zinc-700",
+                  }}
+                />
+              </div>
+            )}
         </div>
       </div>
 
       {/* Custom Instructions */}
-      <div className="flex w-full flex-col gap-4 rounded-2xl bg-black/40 p-4">
-        <h4 className="text-sm font-medium text-foreground-500">
+      <div className="rounded-2xl bg-zinc-900 p-6">
+        <h3 className="mb-6 text-lg font-medium text-white">
           Custom Instructions
-        </h4>
+        </h3>
 
-        <Textarea
-          label="Special Instructions"
-          placeholder="Add any specific instructions for how GAIA should assist you..."
-          value={preferences.custom_instructions || ""}
-          onChange={(e) => handleCustomInstructionsChange(e.target.value)}
-          isDisabled={isUpdating}
-          minRows={3}
-          description="These instructions will be included in every conversation to personalize GAIA's responses."
-        />
+        <div className="space-y-2">
+          <Textarea
+            placeholder="Add any specific instructions for how GAIA should assist you..."
+            value={preferences.custom_instructions || ""}
+            onChange={(e) => handleCustomInstructionsChange(e.target.value)}
+            isDisabled={isUpdating}
+            minRows={4}
+            classNames={{
+              input: "bg-zinc-800",
+              inputWrapper: "bg-zinc-800 hover:bg-zinc-700",
+            }}
+          />
+          <p className="text-xs text-zinc-400">
+            These instructions will be included in every conversation to
+            personalize GAIA's responses.
+          </p>
+        </div>
       </div>
 
       {/* Status indicator */}

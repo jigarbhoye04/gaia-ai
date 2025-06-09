@@ -73,7 +73,7 @@ export const authApi = {
     custom_instructions?: string | null;
   }): Promise<{ success: boolean; message: string; user?: UserInfo }> => {
     return apiService.patch("/oauth/onboarding/preferences", preferences, {
-      successMessage: "Preferences updated successfully",
+      silent: true,
       errorMessage: "Failed to update preferences",
     });
   },

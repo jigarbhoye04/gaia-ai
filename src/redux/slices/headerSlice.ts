@@ -9,6 +9,7 @@ export type HeaderComponentType =
   | "calendar"
   | "browser"
   | "notes"
+  | "settings"
   | "custom"
   | "default";
 

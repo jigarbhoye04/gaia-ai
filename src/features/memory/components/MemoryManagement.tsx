@@ -166,7 +166,7 @@ export default function MemoryManagement({
   );
 
   return (
-    <div className={`flex flex-col gap-2 ${className}`}>
+    <div className={`flex h-full flex-col gap-2 ${className}`}>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           {onClose
@@ -222,7 +222,7 @@ export default function MemoryManagement({
           </p>
         </div>
       ) : (
-        <div className="max-h-[330px] space-y-2 overflow-y-auto pr-4">
+        <div className="flex-1 space-y-2 overflow-y-auto pr-4">
           {memories.map((memory) => (
             <MemoryCard key={memory.id} memory={memory} />
           ))}

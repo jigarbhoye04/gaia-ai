@@ -1,14 +1,6 @@
-import { Avatar } from "@heroui/avatar";
-import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
+import { Camera, Edit3, LogOut, Mail, User } from "lucide-react";
 import React, { useRef, useState } from "react";
 
-import {
-  Logout02Icon,
-  Mail01Icon,
-  PencilEdit02Icon,
-  UserIcon,
-} from "@/components/shared/icons";
 import { authApi } from "@/features/auth/api/authApi";
 import { useUser, useUserActions } from "@/features/auth/hooks/useUser";
 
@@ -74,111 +66,122 @@ export default function AccountSection({
   };
 
   return (
-    <div className="flex min-h-full flex-col gap-2">
-      <h3 className="mb-3">Account</h3>
-
-      <div className="flex w-full items-center justify-between gap-5">
-        <div className="flex w-full flex-col gap-2 rounded-2xl bg-black/40 p-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <Mail01Icon className="text-foreground-300" />
-            </div>
-            <div className="flex items-center gap-3 text-foreground-500">
-              {user?.email || "Loading..."}
-            </div>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <UserIcon className="text-foreground-300" />
-            </div>
-            {isEditing ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  size="sm"
-                  value={editedName}
-                  onChange={(e) => setEditedName(e.target.value)}
-                  className="max-w-[200px]"
-                  variant="bordered"
+    <div className="w-full space-y-6">
+      {/* Profile Section */}
+      <div className="rounded-2xl bg-zinc-900 p-6">
+        <div className="flex items-start space-x-6">
+          {/* Avatar */}
+          <div className="relative">
+            <div className="h-20 w-20 overflow-hidden rounded-full bg-zinc-800">
+              {user?.profilePicture ? (
+                <img
+                  src={user.profilePicture}
+                  alt={user?.name || "Profile"}
+                  className="h-full w-full object-cover"
                 />
-                <Button
-                  size="sm"
-                  color="primary"
-                  onPress={handleSave}
-                  isLoading={isLoading}
-                >
-                  Save
-                </Button>
-                <Button
-                  size="sm"
-                  variant="flat"
-                  onPress={() => {
-                    setIsEditing(false);
-                    setEditedName(user?.name || "");
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <span className="text-foreground-500">
-                  {user?.name || "Not set"}
-                </span>
-                <Button
-                  size="sm"
-                  variant="light"
-                  isIconOnly
-                  onPress={() => setIsEditing(true)}
-                >
-                  <PencilEdit02Icon className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <User className="h-8 w-8 text-zinc-400" />
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 transition-colors duration-200 hover:bg-blue-600"
+            >
+              <Camera className="h-4 w-4 text-white" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
           </div>
-        </div>
 
-        <div className="flex h-[86px] items-center gap-3 rounded-2xl bg-black/40 p-3">
-          <Avatar
-            className="aspect-square"
-            size="lg"
-            src={
-              user?.profilePicture ||
-              "https://links.aryanranderiya.com/l/default_user"
-            }
-          />
+          {/* User Info */}
+          <div className="flex-1 space-y-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">Name</label>
+              {isEditing ? (
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="flex-1 rounded-2xl bg-zinc-800 px-3 py-2 text-white placeholder-zinc-400 focus:bg-zinc-700 focus:outline-none"
+                    placeholder="Enter your name"
+                  />
+                  <button
+                    onClick={handleSave}
+                    disabled={isLoading}
+                    className="rounded-lg bg-zinc-700 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-zinc-600 disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditedName(user?.name || "");
+                    }}
+                    className="rounded-lg bg-zinc-800 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-zinc-700"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="text-white">
+                    {user?.name || "Loading..."}
+                  </span>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="rounded-lg p-1 transition-colors duration-200 hover:bg-zinc-800"
+                  >
+                    <Edit3 className="h-4 w-4 text-zinc-400" />
+                  </button>
+                </div>
+              )}
+            </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
-            onChange={handleImageChange}
-            className="hidden"
-          />
-          <Button
-            size="sm"
-            variant="flat"
-            onPress={() => fileInputRef.current?.click()}
-            isLoading={isLoading}
-          >
-            Change image
-          </Button>
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-zinc-300">Email</label>
+              <div className="flex items-center space-x-3">
+                <Mail className="h-4 w-4 text-zinc-400" />
+                <span className="text-white">
+                  {user?.email || "Loading..."}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="mt-auto flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Logout02Icon className="text-foreground-300" color={undefined} />
-          Logout
+      {/* Logout Section */}
+      <div className="rounded-2xl bg-zinc-900 p-6">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-500/10">
+              <LogOut className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="font-medium text-white">Sign Out</h3>
+              <p className="text-sm text-zinc-400">
+                Sign out of your account on this device
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setModalAction("logout")}
+            className="rounded-lg bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition-colors duration-200 hover:bg-red-500/20"
+          >
+            Sign Out
+          </button>
         </div>
-        <Button
-          className="w-1/5"
-          color="danger"
-          radius="sm"
-          variant="flat"
-          onPress={() => setModalAction("logout")}
-        >
-          Logout
-        </Button>
       </div>
     </div>
   );

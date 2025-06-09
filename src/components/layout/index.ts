@@ -11,4 +11,5 @@ export * from "./headers/HeaderComponent";
 export * from "./headers/HeaderManager";
 export * from "./headers/MailHeader";
 export * from "./headers/NotesHeader";
+export * from "./headers/SettingsHeader";
 export * from "./sidebar/index";
