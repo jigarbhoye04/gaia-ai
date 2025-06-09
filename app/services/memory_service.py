@@ -181,13 +181,15 @@ class MemoryService:
             return False
 
         try:
+            # Store only user message for better memory inference
+            # Assistant responses are not needed for memory storage
             messages = [
                 {"role": "user", "content": conversation.user_message},
-                {"role": "assistant", "content": conversation.assistant_response},
             ]
 
             metadata = {
                 "conversation_id": conversation.conversation_id,
+                "type": "user_message",
                 **conversation.metadata,
             }
 
