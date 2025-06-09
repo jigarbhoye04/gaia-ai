@@ -151,3 +151,76 @@ Args:
 Returns:
     str: JSON string containing complete event details including all metadata
 """
+
+DELETE_CALENDAR_EVENT = """
+Delete a calendar event after searching and finding it by name or description.
+
+This tool allows users to delete calendar events using non-exact event names. It performs the 
+following steps:
+1. Search for events matching the provided query
+2. Find the best matching event 
+3. Send the event details to the frontend for user confirmation
+4. Delete the event only after user confirmation
+
+IMPORTANT: This tool does NOT directly delete events. Instead, it finds the event and sends
+deletion confirmation options to the frontend. The user must click a confirmation button 
+to actually delete the event.
+
+Use this tool when a user wants to:
+- Delete an event by mentioning its name (even if not exact)
+- Remove a meeting or appointment 
+- Cancel an event they reference by description
+- Delete events like "delete my meeting with John" or "cancel the dentist appointment"
+
+The tool supports fuzzy matching, so users can say:
+- "Delete my meeting with Sarah" (will find "Team Meeting with Sarah and Mike")
+- "Cancel the dentist appointment" (will find "Dentist - Annual Checkup")
+- "Remove the 3pm call" (will find events around that time)
+
+Args:
+    query (str): Search query to find the event to delete (e.g., "meeting with John", "dentist appointment")
+    user_id (str): The user's unique identifier
+
+Returns:
+    str: Confirmation message or JSON string containing event deletion options for user confirmation.
+"""
+
+EDIT_CALENDAR_EVENT = """
+Edit/update a calendar event after searching and finding it by name or description.
+
+This tool allows users to edit calendar events using non-exact event names. It performs the 
+following steps:
+1. Search for events matching the provided query
+2. Find the best matching event
+3. Apply the requested changes
+4. Send the updated event details to the frontend for user confirmation  
+5. Update the event only after user confirmation
+
+IMPORTANT: This tool does NOT directly update events. Instead, it finds the event, applies
+changes, and sends update confirmation options to the frontend. The user must click a 
+confirmation button to actually update the event.
+
+Use this tool when a user wants to:
+- Update an event by mentioning its name (even if not exact)
+- Change the time, description, or title of a meeting
+- Modify event details they reference by description
+- Edit events like "move my meeting with John to 3pm" or "change the dentist appointment to tomorrow"
+
+The tool supports fuzzy matching and partial updates:
+- "Move my meeting with Sarah to 3pm" (will find and update the time)
+- "Change the dentist appointment to tomorrow" (will find and update the date)
+- "Update the project meeting description" (will find and update description)
+
+Args:
+    query (str): Search query to find the event to edit (e.g., "meeting with John", "dentist appointment")
+    user_id (str): The user's unique identifier
+    summary (str, optional): New event title/summary
+    description (str, optional): New event description  
+    start (str, optional): New start time in ISO 8601 format
+    end (str, optional): New end time in ISO 8601 format
+    is_all_day (bool, optional): Whether to make it an all-day event
+    timezone (str, optional): New timezone for the event
+
+Returns:
+    str: Confirmation message or JSON string containing event update options for user confirmation.
+"""

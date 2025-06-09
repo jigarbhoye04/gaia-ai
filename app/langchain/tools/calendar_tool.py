@@ -15,6 +15,8 @@ from app.docstrings.langchain.tools.calendar_tool_docs import (
     FETCH_CALENDAR_EVENTS,
     SEARCH_CALENDAR_EVENTS,
     VIEW_CALENDAR_EVENT,
+    DELETE_CALENDAR_EVENT,
+    EDIT_CALENDAR_EVENT,
 )
 from app.docstrings.utils import with_doc
 from app.services.calendar_service import (
@@ -24,6 +26,7 @@ from app.services.calendar_service import (
 )
 from app.langchain.templates.calendar_template import (
     CALENDAR_PROMPT_TEMPLATE,
+    CALENDAR_LIST_TEMPLATE,
 )
 
 
@@ -395,9 +398,187 @@ async def view_calendar_event(
         return error_msg
 
 
+@tool(parse_docstring=True)
+@with_doc(DELETE_CALENDAR_EVENT)
+async def delete_calendar_event(
+    query: str,
+    user_id: str,
+    config: RunnableConfig,
+) -> str:
+    try:
+        logger.info("===== DELETE CALENDAR EVENT TOOL CALLED =====")
+        logger.info(f"Searching for event to delete with query: {query}")
+
+        if not config:
+            logger.error("Missing configuration data")
+            return "Unable to access calendar configuration. Please try again."
+
+        access_token = config.get("configurable", {}).get("access_token")
+        refresh_token = config.get("configurable", {}).get("refresh_token")
+
+        if not access_token:
+            logger.error("Missing access token in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Searching for event '{query}' to delete..."})
+
+        # Search for events matching the query
+        search_results = await search_calendar_events_native(
+            query=query,
+            user_id=user_id,
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+
+        matching_events = search_results.get("matching_events", [])
+        
+        if not matching_events:
+            logger.info(f"No events found matching query: {query}")
+            return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
+
+        # For simplicity, take the first (most relevant) match
+        # In production, you might want to implement more sophisticated matching
+        target_event = matching_events[0]
+        
+        logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
+
+        # Prepare deletion confirmation data
+        delete_option = {
+            "action": "delete",
+            "event_id": target_event.get("id"),
+            "calendar_id": target_event.get("calendarId", "primary"),
+            "summary": target_event.get("summary", ""),
+            "description": target_event.get("description", ""),
+            "start": target_event.get("start", {}),
+            "end": target_event.get("end", {}),
+            "original_query": query,
+        }
+
+        # Send deletion options to frontend via writer
+        writer({
+            "calendar_delete_options": [delete_option],
+            "intent": "delete_calendar_event"
+        })
+
+        logger.info("Calendar event deletion options sent to frontend")
+        return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Please confirm the deletion."
+
+    except Exception as e:
+        error_msg = f"Error searching for calendar event to delete: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+@tool(parse_docstring=True)
+@with_doc(EDIT_CALENDAR_EVENT)
+async def edit_calendar_event(
+    query: str,
+    user_id: str,
+    config: RunnableConfig,
+    summary: Optional[str] = None,
+    description: Optional[str] = None,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    is_all_day: Optional[bool] = None,
+    timezone: Optional[str] = None,
+) -> str:
+    try:
+        logger.info("===== EDIT CALENDAR EVENT TOOL CALLED =====")
+        logger.info(f"Searching for event to edit with query: {query}")
+
+        if not config:
+            logger.error("Missing configuration data")
+            return "Unable to access calendar configuration. Please try again."
+
+        access_token = config.get("configurable", {}).get("access_token")
+        refresh_token = config.get("configurable", {}).get("refresh_token")
+
+        if not access_token:
+            logger.error("Missing access token in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Searching for event '{query}' to edit..."})
+
+        # Search for events matching the query
+        search_results = await search_calendar_events_native(
+            query=query,
+            user_id=user_id,
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+
+        matching_events = search_results.get("matching_events", [])
+        
+        if not matching_events:
+            logger.info(f"No events found matching query: {query}")
+            return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
+
+        # For simplicity, take the first (most relevant) match
+        target_event = matching_events[0]
+        
+        logger.info(f"Found event to edit: {target_event.get('summary', 'Unknown')}")
+
+        # Prepare the updated event data
+        edit_option = {
+            "action": "edit",
+            "event_id": target_event.get("id"),
+            "calendar_id": target_event.get("calendarId", "primary"),
+            "original_summary": target_event.get("summary", ""),
+            "original_description": target_event.get("description", ""),
+            "original_start": target_event.get("start", {}),
+            "original_end": target_event.get("end", {}),
+            "original_query": query,
+        }
+
+        # Add updated fields only if they are provided
+        if summary is not None:
+            edit_option["summary"] = summary
+        if description is not None:
+            edit_option["description"] = description
+        if start is not None:
+            edit_option["start"] = start
+        if end is not None:
+            edit_option["end"] = end
+        if is_all_day is not None:
+            edit_option["is_all_day"] = is_all_day
+        if timezone is not None:
+            edit_option["timezone"] = timezone
+
+        # Send edit options to frontend via writer
+        writer({
+            "calendar_edit_options": [edit_option],
+            "intent": "edit_calendar_event"
+        })
+
+        logger.info("Calendar event edit options sent to frontend")
+        changes_summary = []
+        if summary is not None:
+            changes_summary.append(f"title to '{summary}'")
+        if description is not None:
+            changes_summary.append(f"description to '{description}'")
+        if start is not None or end is not None:
+            changes_summary.append("time/date")
+        if is_all_day is not None:
+            changes_summary.append(f"all-day status to {is_all_day}")
+        
+        changes_text = ", ".join(changes_summary) if changes_summary else "the specified fields"
+        return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Ready to update {changes_text}. Please confirm the changes."
+
+    except Exception as e:
+        error_msg = f"Error searching for calendar event to edit: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
 tools = [
     fetch_calendar_list,
     create_calendar_event,
+    delete_calendar_event,
+    edit_calendar_event,
     fetch_calendar_events,
     search_calendar_events,
     view_calendar_event,

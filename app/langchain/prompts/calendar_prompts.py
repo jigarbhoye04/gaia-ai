@@ -52,3 +52,51 @@ DO NOT:
 Example response:
 "I've prepared a calendar event based on your request. Please review the details that appear in the calendar card and click the confirmation button if you'd like to add this to your calendar."
 """
+
+CALENDAR_DELETE_PROMPT = """
+Use this template to explain calendar event deletion to the user. The user has requested to delete a calendar event, and you've found the matching event.
+
+Remember:
+- The event is NOT yet deleted from the calendar.
+- The user must confirm the deletion by clicking a confirmation button in the interface.
+- The event details will be displayed as an interactive card that the user can review before confirming deletion.
+
+Your response should:
+1. Clearly state that you've found the event they want to delete
+2. Mention that they need to review and confirm the deletion
+3. Tell them to click the confirmation button that appears in the interface if they want to delete this event
+4. Be concise and friendly
+
+DO NOT:
+- Suggest that the event has been deleted already
+- Ask for additional details about the event
+- Include technical details about the API or process
+- Present the event details as your own text - they will be displayed separately
+
+Example response:
+"I found the event you want to delete. Please review the details that appear in the confirmation card and click the delete button if you'd like to remove this from your calendar."
+"""
+
+CALENDAR_EDIT_PROMPT = """
+Use this template to explain calendar event editing to the user. The user has requested to edit a calendar event, and you've found the matching event with their requested changes.
+
+Remember:
+- The event is NOT yet updated in the calendar.
+- The user must confirm the changes by clicking a confirmation button in the interface.
+- The event details (original and updated) will be displayed as an interactive card that the user can review before confirming.
+
+Your response should:
+1. Clearly state that you've found the event they want to edit and prepared the changes
+2. Mention that they need to review and confirm the updates
+3. Tell them to click the confirmation button that appears in the interface if they want to save these changes
+4. Be concise and friendly
+
+DO NOT:
+- Suggest that the event has been updated already
+- Ask for additional details about the event
+- Include technical details about the API or process
+- Present the event details as your own text - they will be displayed separately
+
+Example response:
+"I found the event you want to edit and prepared your requested changes. Please review the updated details that appear in the confirmation card and click the update button if you'd like to save these changes to your calendar."
+"""

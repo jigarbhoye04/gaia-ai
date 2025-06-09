@@ -6,6 +6,24 @@ class CalendarPreferencesUpdateRequest(BaseModel):
     selected_calendars: List[str]
 
 
+class EventDeleteRequest(BaseModel):
+    event_id: str = Field(..., title="Event ID to delete")
+    calendar_id: str = Field("primary", title="Calendar ID containing the event")
+    summary: Optional[str] = Field(None, title="Event summary for confirmation")
+    
+
+class EventUpdateRequest(BaseModel):
+    event_id: str = Field(..., title="Event ID to update")
+    calendar_id: str = Field("primary", title="Calendar ID containing the event")
+    summary: Optional[str] = Field(None, title="Updated event summary")
+    description: Optional[str] = Field(None, title="Updated event description")
+    start: Optional[str] = Field(None, title="Updated start time in ISO 8601 format")
+    end: Optional[str] = Field(None, title="Updated end time in ISO 8601 format")
+    is_all_day: Optional[bool] = Field(None, title="Updated all-day status")
+    timezone: Optional[str] = Field(None, title="Updated timezone")
+    original_summary: Optional[str] = Field(None, title="Original event summary for confirmation")
+
+
 class EventCreateRequest(BaseModel):
     summary: str = Field(..., title="Event Summary")
     description: str = Field("", title="Event Description")
