@@ -47,6 +47,7 @@ async def chat_stream(
         conversation_id=conversation_id,
         access_token=user.get("access_token"),
         refresh_token=user.get("refresh_token"),
+        background_tasks=background_tasks,
     ):
         # Process complete message marker
         if chunk.startswith("nostream: "):
