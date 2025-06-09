@@ -10,7 +10,7 @@ export const authPages = ["/login", "/signup", "/signup"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];
 
 const useFetchUser = () => {
-  const { updateUser, clearUser } = useUserActions();
+  const { setUser, clearUser } = useUserActions();
   const searchParams = useSearchParams();
   const router = useRouter();
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -23,7 +23,7 @@ const useFetchUser = () => {
 
       const data = await authApi.fetchUserInfo();
 
-      updateUser({
+      setUser({
         name: data?.name,
         email: data?.email,
         profilePicture: data?.picture,
@@ -47,7 +47,7 @@ const useFetchUser = () => {
       console.error("Error fetching user info:", e);
       clearUser();
     }
-  }, [searchParams, updateUser, clearUser, router]);
+  }, [searchParams, setUser, clearUser, router]);
 
   useEffect(() => {
     // Debounce the fetch to prevent excessive calls

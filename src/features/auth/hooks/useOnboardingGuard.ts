@@ -9,8 +9,8 @@ export const useOnboardingGuard = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    // If user data is loaded
-    if (user.email) {
+    // Only proceed if user data is loaded with email and onboarding data is available
+    if (user.email && user.onboarding !== undefined) {
       const isOnboardingCompleted = user.onboarding?.completed;
 
       if (pathname === "/onboarding") {
@@ -25,5 +25,5 @@ export const useOnboardingGuard = () => {
         }
       }
     }
-  }, [user, router, pathname]);
+  }, [user.email, user.onboarding?.completed, router, pathname]);
 };

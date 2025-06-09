@@ -37,6 +37,21 @@ const userSlice = createSlice({
       state.email = action.payload.email;
       state.onboarding = action.payload.onboarding;
     },
+    // Updates user information partially (preserves existing onboarding state)
+    updateUser(state, action: PayloadAction<Partial<UserState>>) {
+      if (action.payload.profilePicture !== undefined) {
+        state.profilePicture = action.payload.profilePicture;
+      }
+      if (action.payload.name !== undefined) {
+        state.name = action.payload.name;
+      }
+      if (action.payload.email !== undefined) {
+        state.email = action.payload.email;
+      }
+      if (action.payload.onboarding !== undefined) {
+        state.onboarding = action.payload.onboarding;
+      }
+    },
     // Clears user information
     clearUser(state) {
       state.profilePicture = "";
@@ -47,5 +62,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { setUser, clearUser } = userSlice.actions;
+export const { setUser, updateUser, clearUser } = userSlice.actions;
 export default userSlice.reducer;

@@ -316,7 +316,9 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       inputValue={inputValue}
       selectedKey={selectedKey}
       onInputChange={setInputValue}
-      onSelectionChange={(key) => onSelectionChange(key as string)}
+      onSelectionChange={(key) =>
+        onSelectionChange(key ? (key as string).toUpperCase() : null)
+      }
       onKeyDown={(e) => {
         // Prevent form submission when Enter is pressed on autocomplete
         if (e.key === "Enter" && filteredCountries.length > 0) {

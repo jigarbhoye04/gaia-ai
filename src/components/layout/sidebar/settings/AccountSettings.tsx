@@ -27,6 +27,7 @@ export default function AccountSection({
       // Use the consolidated name update endpoint
       const response = await authApi.updateName(editedName);
 
+      // Use partial update to preserve onboarding state
       updateUser({
         name: response.name,
         email: response.email,
@@ -56,6 +57,7 @@ export default function AccountSection({
 
       const response = await authApi.updateProfile(formData);
 
+      // Use partial update to preserve onboarding state
       updateUser({
         name: response.name,
         email: response.email,
