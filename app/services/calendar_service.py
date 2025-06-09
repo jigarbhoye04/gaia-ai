@@ -298,14 +298,6 @@ async def get_calendar_events(
         if not next_page_token and result_dict.get("nextPageToken"):
             next_page_token = result_dict["nextPageToken"]
 
-    # Optionally sort events here if needed.
-    all_events.sort(
-        key=lambda e: datetime.fromisoformat(
-            e["start"].get("dateTime", e["start"].get("date", ""))
-            or "1970-01-01T00:00:00"
-        )
-    )
-
     return {
         "events": all_events,
         "nextPageToken": next_page_token,
@@ -470,17 +462,23 @@ async def create_calendar_event(
         # For all-day events, use date format without time component
         if event.start and event.end:
             # If start and end dates are provided, extract the date parts
-            start_date = event.start.split("T")[0] if "T" in event.start else event.start
+            start_date = (
+                event.start.split("T")[0] if "T" in event.start else event.start
+            )
             end_date = event.end.split("T")[0] if "T" in event.end else event.end
         elif event.start:
             # If only start date is provided, end date is the next day
             from datetime import datetime, timedelta
-            start_date = event.start.split("T")[0] if "T" in event.start else event.start
+
+            start_date = (
+                event.start.split("T")[0] if "T" in event.start else event.start
+            )
             start_dt = datetime.strptime(start_date, "%Y-%m-%d")
             end_date = (start_dt + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             # If no dates provided, default to today for start and tomorrow for end
             from datetime import datetime, timedelta
+
             today = datetime.now()
             start_date = today.strftime("%Y-%m-%d")
             end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -493,10 +491,10 @@ async def create_calendar_event(
             # Both start and end times are required for time-specific events
             if not event.start or not event.end:
                 raise HTTPException(
-                    status_code=400, 
-                    detail="Start and end times are required for time-specific events"
+                    status_code=400,
+                    detail="Start and end times are required for time-specific events",
                 )
-                
+
             canonical_timezone = resolve_timezone(event.timezone or "UTC")
             user_tz = ZoneInfo(canonical_timezone)
 
@@ -618,3 +616,150 @@ async def update_user_calendar_preferences(
         return {"message": "Calendar preferences updated successfully"}
     else:
         return {"message": "No changes made to calendar preferences"}
+
+
+async def search_calendar_events_native(
+    query: str,
+    user_id: str,
+    access_token: str,
+    refresh_token: Optional[str] = None,
+    time_min: Optional[str] = None,
+    time_max: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Search calendar events using Google Calendar API's native search functionality.
+    This is much more efficient than fetching all events and filtering locally.
+
+    Args:
+        query (str): Search query string
+        user_id (str): User identifier
+        access_token (str): Access token
+        refresh_token (Optional[str]): Refresh token
+        time_min (Optional[str]): Start time filter
+        time_max (Optional[str]): End time filter
+
+    Returns:
+        dict: Search results with matching events
+    """
+    if not time_min:
+        time_min = datetime.now(timezone.utc).isoformat()
+
+    # Get user's selected calendars
+    try:
+        calendar_list_data = await fetch_calendar_list(access_token)
+        valid_token = access_token
+    except HTTPException as e:
+        if e.status_code == 401 and refresh_token:
+            token_data = await refresh_access_token(refresh_token)
+            new_access_token = token_data.get("access_token")
+            if new_access_token:
+                valid_token = new_access_token
+                calendar_list_data = await fetch_calendar_list(valid_token)
+            else:
+                raise e
+            access_token = valid_token
+        else:
+            raise e
+
+    calendars = calendar_list_data.get("items", [])
+
+    # Get user's calendar preferences
+    user_selected_calendars: List[str] = []
+    preferences = await calendars_collection.find_one({"user_id": user_id})
+    if preferences and preferences.get("selected_calendars"):
+        user_selected_calendars = preferences["selected_calendars"]
+    else:
+        # Default to primary calendar if no preferences set
+        primary_calendar = next((cal for cal in calendars if cal.get("primary")), None)
+        if primary_calendar:
+            user_selected_calendars = [primary_calendar["id"]]
+
+    # Filter the calendars to only those that are selected
+    selected_cal_objs = [
+        cal for cal in calendars if cal["id"] in user_selected_calendars
+    ]
+
+    # Create tasks for searching events concurrently across selected calendars
+    tasks = [
+        search_events_in_calendar(cal["id"], query, valid_token, time_min, time_max)
+        for cal in selected_cal_objs
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    all_matching_events = []
+    total_events_searched = 0
+
+    # Process results from all calendars
+    for cal, result in zip(selected_cal_objs, results):
+        if isinstance(result, Exception):
+            logger.error(f"Error searching events in calendar {cal['id']}: {result}")
+            continue
+
+        # Cast result to a dictionary explicitly
+        result_dict = cast(Dict[str, Any], result)
+
+        events = result_dict.get("items", [])
+        for event in events:
+            event["calendarId"] = cal["id"]
+            event["calendarTitle"] = cal.get("summary", "")
+
+        filtered_events = filter_events(events)
+        all_matching_events.extend(filtered_events)
+
+        # Add to total count for statistics
+        total_events_searched += len(filtered_events)
+
+    return {
+        "query": query,
+        "matching_events": all_matching_events,
+        "total_matches": len(all_matching_events),
+        "total_events_searched": total_events_searched,
+        "searched_calendars": [cal["summary"] for cal in selected_cal_objs],
+    }
+
+
+async def search_events_in_calendar(
+    calendar_id: str,
+    query: str,
+    access_token: str,
+    time_min: Optional[str] = None,
+    time_max: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Search events in a specific calendar using Google Calendar API's native search.
+
+    Args:
+        calendar_id (str): Calendar identifier
+        query (str): Search query string
+        access_token (str): Access token
+        time_min (Optional[str]): Start time filter
+        time_max (Optional[str]): End time filter
+
+    Returns:
+        dict: Search results from the specific calendar
+    """
+    url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    params = {
+        "q": query,  # This is the key parameter for native search
+        "maxResults": 50,
+        "singleEvents": True,
+        "orderBy": "startTime",
+        "timeMin": time_min,
+    }
+
+    if time_max:
+        params["timeMax"] = time_max
+
+    try:
+        response = await http_async_client.get(url, headers=headers, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            error_detail = (
+                response.json().get("error", {}).get("message", "Unknown error")
+            )
+            raise HTTPException(status_code=response.status_code, detail=error_detail)
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"HTTP search request failed: {e}")

@@ -1,6 +1,6 @@
 from langchain_openai import ChatOpenAI
 
-MODEL = "gpt-4o-mini"
+MODEL = "gpt-4o"
 
 
 def init_llm():

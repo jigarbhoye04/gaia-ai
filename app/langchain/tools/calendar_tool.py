@@ -20,6 +20,7 @@ from app.docstrings.utils import with_doc
 from app.services.calendar_service import (
     list_calendars,
     get_calendar_events,
+    search_calendar_events_native,
 )
 from app.langchain.templates.calendar_template import (
     CALENDAR_PROMPT_TEMPLATE,
@@ -231,10 +232,10 @@ async def fetch_calendar_list(
 @with_doc(FETCH_CALENDAR_EVENTS)
 async def fetch_calendar_events(
     user_id: str,
+    config: RunnableConfig,
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
     selected_calendars: Optional[List[str]] = None,
-    config: Optional[RunnableConfig] = None,
 ) -> str:
     try:
         if not config:
@@ -281,9 +282,9 @@ async def fetch_calendar_events(
 async def search_calendar_events(
     query: str,
     user_id: str,
+    config: RunnableConfig,
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
-    config: Optional[RunnableConfig] = None,
 ) -> str:
     try:
         if not config:
@@ -298,7 +299,10 @@ async def search_calendar_events(
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
         logger.info(f"Searching calendar events for query: {query}")
-        events_data = await get_calendar_events(
+
+        # Use the new search function with Google Calendar API's native search
+        search_results = await search_calendar_events_native(
+            query=query,
             user_id=user_id,
             access_token=access_token,
             refresh_token=refresh_token,
@@ -306,30 +310,11 @@ async def search_calendar_events(
             time_max=time_max,
         )
 
-        events = events_data.get("events", [])
-        query_lower = query.lower()
-
-        # Filter events based on search query
-        matching_events = [
-            event
-            for event in events
-            if (
-                query_lower in event.get("summary", "").lower()
-                or query_lower in event.get("description", "").lower()
-                or query_lower in event.get("calendarTitle", "").lower()
-            )
-        ]
-
-        logger.info(f"Found {len(matching_events)} matching events for query: {query}")
-
-        return json.dumps(
-            {
-                "query": query,
-                "matching_events": matching_events,
-                "total_matches": len(matching_events),
-                "total_events_searched": len(events),
-            }
+        logger.info(
+            f"Found {len(search_results.get('matching_events', []))} matching events for query: {query}"
         )
+
+        return json.dumps(search_results)
 
     except Exception as e:
         error_msg = f"Error searching calendar events: {str(e)}"
@@ -341,8 +326,8 @@ async def search_calendar_events(
 @with_doc(VIEW_CALENDAR_EVENT)
 async def view_calendar_event(
     event_id: str,
+    config: RunnableConfig,
     calendar_id: str = "primary",
-    config: Optional[RunnableConfig] = None,
 ) -> str:
     try:
         if not config:
