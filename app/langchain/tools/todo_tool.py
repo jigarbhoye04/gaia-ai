@@ -1004,7 +1004,7 @@ async def delete_subtask(
 
 
 # Export all todo tools as a list for easy registration
-todo_tools = [
+tools = [
     create_todo,
     list_todos,
     update_todo,

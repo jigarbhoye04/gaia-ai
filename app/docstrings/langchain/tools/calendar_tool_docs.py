@@ -45,3 +45,64 @@ Use this tool when a user asks to:
 Returns:
     str: Instructions on what to do next or an error message if the calendar list cannot be fetched.
 """
+
+FETCH_CALENDAR_EVENTS = """
+Fetch calendar events from the user's selected calendars.
+
+This tool retrieves events from the user's calendar based on optional filters like time range
+and specific calendar selection. It uses the user's access token to securely fetch events.
+
+Use this tool when a user wants to:
+- View their upcoming events
+- Check their schedule for a specific time period
+- See events from specific calendars
+
+Args:
+    user_id (str): The user's unique identifier
+    time_min (str, optional): Start time filter in ISO 8601 format (e.g., "2023-12-01T00:00:00Z")
+    time_max (str, optional): End time filter in ISO 8601 format (e.g., "2023-12-31T23:59:59Z")
+    selected_calendars (List[str], optional): List of calendar IDs to fetch events from
+
+Returns:
+    str: JSON string containing events data, total count, selected calendars, and pagination token
+"""
+
+SEARCH_CALENDAR_EVENTS = """
+Search for specific calendar events based on a text query.
+
+This tool searches through the user's calendar events to find matches based on event titles,
+descriptions, or calendar names. It performs case-insensitive text matching.
+
+Use this tool when a user wants to:
+- Find events containing specific keywords
+- Search for meetings with certain people
+- Look for events related to specific topics
+
+Args:
+    query (str): Search query text to match against event titles, descriptions, and calendar names
+    user_id (str): The user's unique identifier
+    time_min (str, optional): Start time filter in ISO 8601 format
+    time_max (str, optional): End time filter in ISO 8601 format
+
+Returns:
+    str: JSON string containing matching events, search query, and result counts
+"""
+
+VIEW_CALENDAR_EVENT = """
+Retrieve detailed information about a specific calendar event.
+
+This tool fetches complete details for a single calendar event using its event ID and calendar ID.
+It provides comprehensive information about the event including all metadata.
+
+Use this tool when a user wants to:
+- View full details of a specific event
+- Get comprehensive information about an event they mentioned
+- Check event details before making modifications
+
+Args:
+    event_id (str): The unique identifier of the calendar event
+    calendar_id (str): The calendar ID containing the event (defaults to "primary")
+
+Returns:
+    str: JSON string containing the complete event details, event ID, and calendar ID
+"""

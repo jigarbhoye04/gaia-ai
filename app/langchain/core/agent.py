@@ -116,7 +116,7 @@ async def call_agent(
                     "refresh_token": refresh_token,
                     "email": user.get("email"),
                 },
-                "recursion_limit": 7,
+                "recursion_limit": 15,
                 "metadata": {"user_id": user_id},
             },
         ):

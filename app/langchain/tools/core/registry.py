@@ -22,14 +22,11 @@ ALWAYS_AVAILABLE_TOOLS = [
 
 # All other tools will be accessible through vector search
 tools = [
-    *mail_tool.mail_tools,
-    *todo_tool.todo_tools,
-    calendar_tool.fetch_calendar_list,
-    calendar_tool.calendar_event,
+    *mail_tool.tools,
+    *todo_tool.tools,
+    *calendar_tool.tools,
+    *memory_tools.tools,
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
     weather_tool.get_weather,
-    memory_tools.add_memory,
-    memory_tools.search_memory,
-    memory_tools.get_all_memory,
 ]

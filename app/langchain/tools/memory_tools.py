@@ -28,22 +28,20 @@ async def add_memory(
 ) -> str:
     if not config:
         return "Error: Configuration required but not provided"
-    
+
     metadata = metadata or {}
     user_id = config.get("metadata", {}).get("user_id")
-    
+
     if not user_id:
         return "Error: User ID is required but not found in configuration"
-    
+
     memory = await memory_service.store_memory(
-        content=content,
-        user_id=user_id,
-        metadata=metadata
+        content=content, user_id=user_id, metadata=metadata
     )
-    
+
     if not memory:
         return "Failed to store memory"
-    
+
     return f"Memory stored successfully with ID: {memory.id}"
 
 
@@ -56,27 +54,27 @@ async def search_memory(
 ) -> str:
     if not config:
         return "Error: Configuration required but not provided"
-    
+
     user_id = config.get("metadata", {}).get("user_id")
-    
+
     if not user_id:
         return "Error: User ID is required but not found in configuration"
-    
+
     results = await memory_service.search_memories(
-        query=query,
-        user_id=user_id,
-        limit=limit
+        query=query, user_id=user_id, limit=limit
     )
-    
+
     if not results.memories:
         return "No matching memories found"
-    
+
     # Format the results
     formatted_results = "Found the following memories:\n\n"
     for i, memory in enumerate(results.memories, 1):
-        score = f" (score: {memory.relevance_score:.2f})" if memory.relevance_score else ""
+        score = (
+            f" (score: {memory.relevance_score:.2f})" if memory.relevance_score else ""
+        )
         formatted_results += f"{i}. {memory.content}{score}\n\n"
-    
+
     return formatted_results
 
 
@@ -89,30 +87,34 @@ async def get_all_memory(
 ) -> str:
     if not config:
         return "Error: Configuration required but not provided"
-    
+
     user_id = config.get("metadata", {}).get("user_id")
-    
+
     if not user_id:
         return "Error: User ID is required but not found in configuration"
-    
+
     results = await memory_service.get_all_memories(
-        user_id=user_id,
-        page=page,
-        page_size=page_size
+        user_id=user_id, page=page, page_size=page_size
     )
-    
+
     if not results.memories:
         return "No memories found"
-    
+
     # Format the results
-    formatted_results = f"Showing page {page} of memories (total: {results.total_count}):\n\n"
-    
+    formatted_results = (
+        f"Showing page {page} of memories (total: {results.total_count}):\n\n"
+    )
+
     for i, memory in enumerate(results.memories, 1):
         formatted_results += f"{i}. {memory.content}\n\n"
-    
+
     # Add pagination info
     if results.has_next:
-        formatted_results += f"\nMore memories available. Use page={page+1} to see more."
-    
+        formatted_results += (
+            f"\nMore memories available. Use page={page + 1} to see more."
+        )
+
     return formatted_results
 
+
+tools = [add_memory, search_memory, get_all_memory]
