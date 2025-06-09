@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import List, Optional
 
 
@@ -19,7 +19,8 @@ class EventCreateRequest(BaseModel):
     calendar_name: Optional[str] = None  # Name of the calendar for display purposes
     calendar_color: Optional[str] = "#00bbff"
     
-    def model_post_init(self, __context) -> None:
+    @model_validator(mode='after')
+    def validate_event_times(self) -> 'EventCreateRequest':
         """
         Validate event data based on event type after model initialization.
         """
@@ -28,6 +29,7 @@ class EventCreateRequest(BaseModel):
             if not self.start or not self.end:
                 raise ValueError("Start and end times are required for timed events")
         # For all-day events, start and end are optional (will default to today if not provided)
+        return self
     
     @property
     def event_date(self) -> str:

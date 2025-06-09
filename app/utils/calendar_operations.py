@@ -4,7 +4,6 @@ This module provides centralized functions for calendar operations with
 proper error handling, validation, and timezone management.
 """
 
-import asyncio
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
@@ -275,52 +274,6 @@ async def make_calendar_request(
         raise CalendarNetworkError(f"Request failed: {e}")
 
 
-async def retry_with_exponential_backoff(
-    func,
-    max_retries: int = 3,
-    base_delay: float = 1.0,
-    max_delay: float = 60.0,
-    *args,
-    **kwargs
-):
-    """
-    Retry a function with exponential backoff.
-    
-    Args:
-        func: Function to retry
-        max_retries: Maximum number of retry attempts
-        base_delay: Initial delay between retries
-        max_delay: Maximum delay between retries
-        
-    Returns:
-        Function result if successful
-        
-    Raises:
-        The last exception if all retries fail
-    """
-    last_exception: Optional[Exception] = None
-    
-    for attempt in range(max_retries + 1):
-        try:
-            return await func(*args, **kwargs)
-        except (CalendarNetworkError, httpx.RequestError) as e:
-            last_exception = e
-            if attempt == max_retries:
-                logger.error(f"All retry attempts failed. Last error: {e}")
-                break
-            
-            delay = min(base_delay * (2 ** attempt), max_delay)
-            logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {delay}s...")
-            await asyncio.sleep(delay)
-        except Exception as e:
-            # Don't retry for non-network errors
-            logger.error(f"Non-retryable error: {e}")
-            raise
-    
-    if last_exception is not None:
-        raise last_exception
-    else:
-        raise CalendarNetworkError("All retry attempts failed with unknown error")
 
 
 class CalendarOperations:
@@ -361,11 +314,10 @@ class CalendarOperations:
             # Validate and prepare event payload
             payload = await create_event_payload(event)
             
-            # Make API request with retry logic
+            # Make API request
             url = f"{self.base_url}/calendars/{calendar_id}/events"
             
-            result = await retry_with_exponential_backoff(
-                make_calendar_request,
+            result = await make_calendar_request(
                 method="POST",
                 url=url,
                 headers=self.headers,
@@ -418,8 +370,7 @@ class CalendarOperations:
             query_string = "&".join([f"{k}={v}" for k, v in params.items()])
             full_url = f"{url}?{query_string}"
             
-            result = await retry_with_exponential_backoff(
-                make_calendar_request,
+            result = await make_calendar_request(
                 method="GET",
                 url=full_url,
                 headers=self.headers
@@ -447,8 +398,7 @@ class CalendarOperations:
         try:
             url = f"{self.base_url}/users/me/calendarList"
             
-            result = await retry_with_exponential_backoff(
-                make_calendar_request,
+            result = await make_calendar_request(
                 method="GET",
                 url=url,
                 headers=self.headers

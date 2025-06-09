@@ -217,7 +217,7 @@ class TodoSearchParams(BaseModel):
 
 
 class BulkOperationRequest(BaseModel):
-    todo_ids: List[str] = Field(..., min_items=1, max_items=100)
+    todo_ids: List[str] = Field(..., min_length=1, max_length=100)
 
 
 class BulkUpdateRequest(BulkOperationRequest):

@@ -2,10 +2,12 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 import re
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class CurrentUserModel(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    
     user_id: str = Field(..., description="Unique identifier for the user")
     name: str = Field(..., description="Name of the user")
     email: str = Field(..., description="Email address of the user")
@@ -17,9 +19,6 @@ class CurrentUserModel(BaseModel):
         default=None, description="URL of the user's profile picture"
     )
     is_active: bool = Field(default=True, description="Indicates if the user is active")
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class UserUpdateRequest(BaseModel):
