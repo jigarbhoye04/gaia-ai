@@ -7,6 +7,7 @@ from app.config.loggers import llm_logger as logger
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
 from app.services.memory_service import MemorySearchResult, memory_service
 from app.models.message_models import FileData, MessageDict
+from app.services.onboarding_service import get_user_preferences_for_agent
 
 
 async def construct_langchain_messages(
@@ -35,10 +36,19 @@ async def construct_langchain_messages(
 
     # Format the list of files if any
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
+    
+    # Get user preferences for the agent if user_id is provided
+    user_preferences_str = ""
+    if user_id:
+        user_preferences_str = await get_user_preferences_for_agent(user_id) or ""
+        if user_preferences_str:
+            user_preferences_str = f"\n{user_preferences_str}\n"
 
-    # Create the system prompt with the current time
+    # Create the system prompt with the current time and user preferences
     system_prompt = AGENT_PROMPT_TEMPLATE.format(
-        current_datetime=formatted_time, user_name=user_name
+        current_datetime=formatted_time, 
+        user_name=user_name,
+        user_preferences=user_preferences_str
     )
 
     chain_msgs: List[AnyMessage] = [SystemMessage(content=system_prompt)]

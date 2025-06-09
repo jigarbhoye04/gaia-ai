@@ -78,6 +78,7 @@ dependencies = [
   "fastapi-mcp>=0.3.3",
   "langgraph-bigtool>=0.0.2",
   "mem0ai>=0.1.101",
+  "pycountry>=24.6.1",
 ]
 
 [dependency-groups]

@@ -2,15 +2,33 @@ from typing import Annotated, Optional
 from urllib.parse import urlencode, urlparse
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
-from app.models.user_models import UserUpdateResponse
+from app.models.user_models import (
+    UserUpdateResponse,
+    OnboardingRequest,
+    OnboardingResponse,
+    OnboardingPreferences,
+)
 from app.services.oauth_service import store_user_info
 from app.services.user_service import update_user_profile
+from app.services.onboarding_service import (
+    complete_onboarding,
+    get_user_onboarding_status,
+    update_onboarding_preferences,
+)
 
 # from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
@@ -133,7 +151,14 @@ async def get_me(
     """
     # fetch_last_week_emails.delay(user)
 
-    return {"message": "User retrieved successfully", **user}
+    # Get onboarding status
+    onboarding_status = await get_user_onboarding_status(user["user_id"])
+
+    return {
+        "message": "User retrieved successfully",
+        **user,
+        "onboarding": onboarding_status,
+    }
 
 
 # async def me(access_token: str = Cookie(None)):
@@ -186,7 +211,7 @@ async def update_me(
     Supports updating name and profile picture.
     """
     user_id = user.get("user_id")
-    
+
     # Process profile picture if provided
     picture_data = None
     if picture and picture.size > 0:
@@ -195,27 +220,96 @@ async def update_me(
         if picture.content_type not in allowed_types:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}",
             )
-        
+
         # Validate file size (max 5MB)
         max_size = 5 * 1024 * 1024  # 5MB
         if picture.size > max_size:
             raise HTTPException(
-                status_code=400,
-                detail="File size too large. Maximum size is 5MB"
+                status_code=400, detail="File size too large. Maximum size is 5MB"
             )
-        
+
         picture_data = await picture.read()
-    
+
     # Update user profile
     updated_user = await update_user_profile(
-        user_id=user_id,
-        name=name,
-        picture_data=picture_data
+        user_id=user_id, name=name, picture_data=picture_data
     )
-    
+
     return UserUpdateResponse(**updated_user)
+
+
+@router.post("/onboarding", response_model=OnboardingResponse)
+async def complete_user_onboarding(
+    onboarding_data: OnboardingRequest, user: dict = Depends(get_current_user)
+):
+    """
+    Complete user onboarding by storing preferences.
+    This endpoint should be called when the user completes the onboarding flow.
+    """
+    try:
+        updated_user = await complete_onboarding(user["user_id"], onboarding_data)
+
+        return OnboardingResponse(
+            success=True, message="Onboarding completed successfully", user=updated_user
+        )
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error completing onboarding: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to complete onboarding")
+
+
+@router.get("/onboarding/status", response_model=dict)
+async def get_onboarding_status(user: dict = Depends(get_current_user)):
+    """
+    Get the current user's onboarding status and preferences.
+    """
+    status = await get_user_onboarding_status(user["user_id"])
+    return status
+
+
+@router.patch("/onboarding/preferences", response_model=dict)
+async def update_user_preferences(
+    preferences: OnboardingPreferences, user: dict = Depends(get_current_user)
+):
+    """
+    Update user's onboarding preferences.
+    This can be used from the settings page to update preferences after onboarding.
+    """
+    try:
+        updated_user = await update_onboarding_preferences(user["user_id"], preferences)
+
+        return {
+            "success": True,
+            "message": "Preferences updated successfully",
+            "user": updated_user,
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error updating preferences: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update preferences")
+
+
+@router.patch("/name", response_model=UserUpdateResponse)
+async def update_user_name(
+    name: str = Form(...),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Update the user's name. This is the consolidated endpoint for name updates.
+    """
+    try:
+        user_id = user.get("user_id")
+        updated_user = await update_user_profile(user_id=user_id, name=name)
+        return UserUpdateResponse(**updated_user)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error updating user name: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update name")
 
 
 @router.post("/logout")

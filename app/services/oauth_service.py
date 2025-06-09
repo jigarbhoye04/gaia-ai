@@ -33,9 +33,33 @@ async def store_user_info(name: str, email: str, picture_url: str):
     expected_prefix = "https://res.cloudinary.com"
     current_time = datetime.now(timezone.utc)
     
+    # Check if user already exists
+    existing_user = await users_collection.find_one({"email": email})
+    
     # Process the picture URL
     cloudinary_picture_url = None
-    if picture_url and not picture_url.startswith(expected_prefix):
+    
+    # Only process picture if:
+    # 1. User is new (no existing_user), OR
+    # 2. User exists but has no picture stored, OR
+    # 3. User exists but the Google picture URL has changed
+    should_process_picture = False
+    
+    if existing_user:
+        current_picture = existing_user.get("picture", "")
+        # If user has no picture, or if Google is providing a picture, we might need to process
+        if not current_picture and picture_url:
+            should_process_picture = True
+            logger.info(f"User {email} has no picture stored, will process Google picture")
+        else:
+            logger.info(f"User {email} already has picture stored, skipping re-upload")
+    else:
+        # New user - process picture if provided
+        should_process_picture = bool(picture_url)
+        if should_process_picture:
+            logger.info(f"New user {email}, will process Google picture")
+    
+    if should_process_picture and picture_url and not picture_url.startswith(expected_prefix):
         try:
             response = requests.get(picture_url, timeout=10)
             response.raise_for_status()
@@ -55,23 +79,23 @@ async def store_user_info(name: str, email: str, picture_url: str):
         # Picture is already on Cloudinary
         cloudinary_picture_url = picture_url
 
-    existing_user = await users_collection.find_one({"email": email})
-
     if existing_user:
         update_data = {
             "name": name,
             "updated_at": current_time,
         }
 
-        # Update picture if:
+        # Only update picture if:
         # 1. We have a new Cloudinary URL (successful upload)
-        # 2. OR the existing picture is different from what Google provided
+        # 2. OR the user has no picture and we couldn't get one from Google
+        # 3. OR Google no longer provides a picture (clear it)
         current_picture = existing_user.get("picture", "")
         if cloudinary_picture_url is not None:
             update_data["picture"] = cloudinary_picture_url
         elif not picture_url and current_picture:
             # Google no longer provides a picture, clear it
             update_data["picture"] = ""
+        # If user already has a picture and we didn't process a new one, keep the existing picture
 
         await users_collection.update_one({"email": email}, {"$set": update_data})
         return existing_user["_id"]
