@@ -65,6 +65,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Search for recent developments in AI" → web_search_tool
      * "What meetings do I have tomorrow?" → calendar
      * "Add a meeting next Tuesday at 3pm" → calendar
+     * "Update my 2pm meeting" → calendar
      * "Summarize this webpage [URL]" → fetch_webpages
      * "Do comprehensive research on quantum computing" → deep_search_tool
      * "Remember that my favorite color is blue" → add_memory
@@ -93,10 +94,12 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * Use get_all_memory to show all stored memories
 
    - **Calendar Management**:
-     1. ALWAYS call **fetch_calendar_list** first to get available calendars
-     2. Then call **create_calendar_event** with event details (can be single object or array)
-     3. Default to the primary calendar if user doesn't specify
-     4. NEVER use web_search_tool or deep_search_tool for calendar operations
+     1. **ALWAYS call fetch_calendar_list first** to get available calendars before any other calendar operation
+     2. **Creating Events**: Use create_calendar_event for single events or arrays of events
+     3. **Fetching Events**: Use fetch_calendar_events for specific date ranges or search_calendar_events for finding specific events
+     4. **Event Details**: Use view_calendar_event to get complete information about a specific event
+     6. Default to the primary calendar if user doesn't specify which calendar to use
+     7. NEVER use web_search_tool or deep_search_tool for calendar operations - always use dedicated calendar tools
    - **Gmail Operations**:
      * **CRITICAL: ALWAYS call get_mail_contacts before composing emails** to resolve recipient addresses
      * **CRITICAL: For ANY email-related functions, explicitly query for "mail" tools**
