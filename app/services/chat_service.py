@@ -138,6 +138,10 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         # Extract todo data
         elif "todo_data" in data:
             tool_data["todo_data"] = data["todo_data"]
+        
+        # Extract code execution data
+        elif "code_data" in data:
+            tool_data["code_data"] = data["code_data"]
 
         return tool_data
     except json.JSONDecodeError:

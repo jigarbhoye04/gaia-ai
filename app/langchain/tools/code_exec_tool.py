@@ -37,9 +37,29 @@ async def execute_code(
         writer = get_stream_writer()
         writer({"progress": f"Executing {language} code in secure sandbox..."})
 
+        # Send code data to frontend for display
+        code_data = {
+            "code_data": {
+                "language": language,
+                "code": code,
+                "output": None,  # Will be populated after execution
+                "status": "executing"
+            }
+        }
+        writer(code_data)
+
         result = riza_client.command.exec(language=language.lower(), code=code)
 
-        # Format output
+        # Update code data with output
+        code_data["code_data"]["output"] = {
+            "stdout": result.stdout or "",
+            "stderr": result.stderr or "",
+            "exit_code": result.exit_code
+        }
+        code_data["code_data"]["status"] = "completed"
+        writer(code_data)
+
+        # Format output for return
         output = []
         if result.stdout:
             output.append(f"Output:\n{result.stdout}")
@@ -53,4 +73,19 @@ async def execute_code(
     except Exception as e:
         error_msg = f"Error executing code: {str(e)}"
         logger.error(error_msg)
+        
+        # Send error state to frontend
+        writer({
+            "code_data": {
+                "language": language,
+                "code": code,
+                "output": {
+                    "stdout": "",
+                    "stderr": str(e),
+                    "exit_code": -1
+                },
+                "status": "error"
+            }
+        })
+        
         return error_msg
