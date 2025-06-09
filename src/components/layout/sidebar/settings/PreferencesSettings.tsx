@@ -114,7 +114,9 @@ export default function PreferencesSettings() {
 
   const handleCountryChange = (countryCode: string | null) => {
     if (countryCode) {
-      const updatedPreferences = { ...preferences, country: countryCode };
+      // Ensure country code is uppercase
+      const normalizedCode = countryCode.toUpperCase();
+      const updatedPreferences = { ...preferences, country: normalizedCode };
       setPreferences(updatedPreferences);
       debouncedUpdate(updatedPreferences);
     }
@@ -186,7 +188,7 @@ export default function PreferencesSettings() {
               placeholder="Select your country"
               label=""
               isDisabled={isUpdating}
-              variant="bordered"
+              variant="flat"
               radius="lg"
               classNames={{
                 base: "w-full",

@@ -164,8 +164,10 @@ export const useOnboarding = () => {
     (countryCode: string | null) => {
       if (onboardingState.isProcessing || !countryCode) return;
 
-      const countryName = getDisplayText("country", countryCode);
-      submitResponse(countryName, countryCode);
+      // Ensure country code is uppercase for consistency
+      const normalizedCode = countryCode.toUpperCase();
+      const countryName = getDisplayText("country", normalizedCode);
+      submitResponse(countryName, normalizedCode);
     },
     [onboardingState.isProcessing, submitResponse, getDisplayText],
   );
@@ -279,7 +281,7 @@ export const useOnboarding = () => {
       const instructions = onboardingState.userResponses.instructions?.trim();
       const onboardingData = {
         name: onboardingState.userResponses.name.trim(),
-        country: onboardingState.userResponses.country,
+        country: onboardingState.userResponses.country.toUpperCase(), // Ensure uppercase
         profession: onboardingState.userResponses.profession,
         response_style: onboardingState.userResponses.responseStyle,
         instructions: instructions || null,

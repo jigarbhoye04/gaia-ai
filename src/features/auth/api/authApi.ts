@@ -43,6 +43,16 @@ export const authApi = {
     });
   },
 
+  // Update user name only
+  updateName: async (name: string): Promise<UserInfo> => {
+    const formData = new FormData();
+    formData.append("name", name);
+    return apiService.patch<UserInfo>("/oauth/name", formData, {
+      successMessage: "Name updated successfully",
+      errorMessage: "Failed to update name",
+    });
+  },
+
   // Logout user
   logout: async (): Promise<void> => {
     return apiService.post("/oauth/logout", undefined, {

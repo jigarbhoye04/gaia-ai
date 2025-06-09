@@ -24,12 +24,8 @@ export default function AccountSection({
       setIsLoading(true);
       toast.loading("Updating name...", { id: "update-name" });
 
-      const formData = new FormData();
-      if (editedName !== user?.name) {
-        formData.append("name", editedName);
-      }
-
-      const response = await authApi.updateProfile(formData);
+      // Use the consolidated name update endpoint
+      const response = await authApi.updateName(editedName);
 
       updateUser({
         name: response.name,

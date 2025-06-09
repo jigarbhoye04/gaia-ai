@@ -13,7 +13,6 @@ export * from "./settings/LogoutModal";
 export * from "./settings/MemorySettings";
 export * from "./settings/PreferencesSettings";
 export * from "./settings/SettingsMenu";
-export * from "./settings/SettingsModal";
 export * from "./SidebarTopButtons";
 export * from "./TopWebsiteName";
 export * from "./UserContainer";
