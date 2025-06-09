@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import AccountSection from "./AccountSettings";
 import GeneralSection from "./GeneralSettings";
 import MemorySettings from "./MemorySettings";
+import PreferencesSettings from "./PreferencesSettings";
 import { ModalAction } from "./SettingsMenu";
 
 interface SidebarItem {
@@ -14,6 +15,7 @@ interface SidebarItem {
 
 const sidebarItems: SidebarItem[] = [
   { key: "account", label: "Account" },
+  { key: "preferences", label: "Preferences" },
   { key: "chats", label: "Chats" },
   { key: "memory", label: "Memory" },
 ];
@@ -34,6 +36,8 @@ export default function SettingsModal({
     switch (activeSection) {
       case "account":
         return <AccountSection setModalAction={setModalAction} />;
+      case "preferences":
+        return <PreferencesSettings />;
       case "chats":
         return <GeneralSection setModalAction={setModalAction} />;
       case "memory":

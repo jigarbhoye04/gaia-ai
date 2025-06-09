@@ -63,6 +63,7 @@ export const questions: Question[] = [
       { label: "Detailed", value: "detailed" },
       { label: "Casual", value: "casual" },
       { label: "Professional", value: "professional" },
+      { label: "Other", value: "other" },
     ],
   },
   {

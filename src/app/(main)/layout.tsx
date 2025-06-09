@@ -16,6 +16,7 @@ import {
   useSidebar,
 } from "@/components/ui/shadcn/sidebar";
 import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
+import { useOnboardingGuard } from "@/features/auth/hooks/useOnboardingGuard";
 import { useIsMobile } from "@/hooks/ui/useMobile";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import {
@@ -49,6 +50,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   );
   const isMobile = useIsMobile();
   const [defaultOpen, setDefaultOpen] = useState(true);
+
+  // Check if user needs onboarding
+  useOnboardingGuard();
 
   // Auto-close sidebar on mobile when pathname changes
   useEffect(() => {

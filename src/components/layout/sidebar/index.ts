@@ -10,6 +10,7 @@ export * from "./MainSidebar";
 export * from "./settings/AccountSettings";
 export * from "./settings/GeneralSettings";
 export * from "./settings/MemorySettings";
+export * from "./settings/PreferencesSettings";
 export * from "./settings/SettingsMenu";
 export * from "./settings/SettingsModal";
 export * from "./SidebarTopButtons";

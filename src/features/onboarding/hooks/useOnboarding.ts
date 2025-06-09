@@ -1,11 +1,15 @@
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { countries, Country } from "@/components/country-selector";
+import { authApi } from "@/features/auth/api/authApi";
 
 import { FIELD_NAMES, professionOptions, questions } from "../constants";
 import { Message, OnboardingState } from "../types";
 
 export const useOnboarding = () => {
+  const router = useRouter();
   const [onboardingState, setOnboardingState] = useState<OnboardingState>({
     messages: [],
     currentQuestionIndex: 0,
@@ -250,8 +254,96 @@ export const useOnboarding = () => {
     ],
   );
 
-  const handleLetsGo = () => {
-    // TODO: Navigate to main app or dashboard
+  const handleLetsGo = async () => {
+    // Prevent multiple submissions
+    if (onboardingState.isProcessing) return;
+
+    try {
+      // Set loading state
+      setOnboardingState((prev) => ({ ...prev, isProcessing: true }));
+
+      // Validate required fields
+      const requiredFields = ["name", "country", "profession", "responseStyle"];
+      const missingFields = requiredFields.filter(
+        (field) => !onboardingState.userResponses[field],
+      );
+
+      if (missingFields.length > 0) {
+        toast.error(
+          `Please complete all required fields: ${missingFields.join(", ")}`,
+        );
+        return;
+      }
+
+      // Prepare the onboarding data
+      const instructions = onboardingState.userResponses.instructions?.trim();
+      const onboardingData = {
+        name: onboardingState.userResponses.name.trim(),
+        country: onboardingState.userResponses.country,
+        profession: onboardingState.userResponses.profession,
+        response_style: onboardingState.userResponses.responseStyle,
+        instructions: instructions || null,
+      };
+
+      // Send onboarding data to backend with retry logic
+      let retryCount = 0;
+      const maxRetries = 3;
+      let response;
+
+      while (retryCount < maxRetries) {
+        try {
+          response = await authApi.completeOnboarding(onboardingData);
+          break; // Success, exit retry loop
+        } catch (error: unknown) {
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            throw error; // Re-throw if max retries reached
+          }
+
+          // Wait before retrying (exponential backoff)
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * retryCount),
+          );
+        }
+      }
+
+      if (response?.success) {
+        toast.success("Welcome! Your preferences have been saved.");
+
+        // Navigate to the main chat page
+        router.push("/c");
+      } else {
+        throw new Error("Failed to complete onboarding");
+      }
+    } catch (error: unknown) {
+      console.error("Error completing onboarding:", error);
+
+      // Provide specific error messages
+      const errorObj = error as {
+        response?: { status?: number };
+        message?: string;
+        code?: string;
+      };
+
+      if (errorObj?.response?.status === 409) {
+        toast.error("Onboarding has already been completed.");
+        router.push("/c");
+      } else if (errorObj?.response?.status === 422) {
+        toast.error("Please check your input and try again.");
+      } else if (
+        errorObj?.message?.includes("network") ||
+        errorObj?.code === "NETWORK_ERROR"
+      ) {
+        toast.error(
+          "Network error. Please check your connection and try again.",
+        );
+      } else {
+        toast.error("Failed to save your preferences. Please try again.");
+      }
+    } finally {
+      // Clear loading state
+      setOnboardingState((prev) => ({ ...prev, isProcessing: false }));
+    }
   };
 
   useEffect(() => {
