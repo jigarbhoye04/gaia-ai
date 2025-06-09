@@ -40,6 +40,16 @@ export type MessageType = {
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
   todo_data?: TodoToolData | null; // todo data from backend tools
+  code_data?: {
+    language: string;
+    code: string;
+    output?: {
+      stdout: string;
+      stderr: string;
+      exit_code: number;
+    } | null;
+    status?: "executing" | "completed" | "error";
+  } | null; // code execution data from backend
 
   // memory-related fields
   memory_data?: {

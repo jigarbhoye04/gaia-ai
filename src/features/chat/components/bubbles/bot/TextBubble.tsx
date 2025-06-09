@@ -13,6 +13,7 @@ import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";
 import CalendarEventSection from "./CalendarEventSection";
+import CodeExecutionSection from "./CodeExecutionSection";
 import EmailComposeSection from "./EmailComposeSection";
 import TodoSection from "./TodoSection";
 
@@ -28,6 +29,7 @@ export default function TextBubble({
   email_compose_data,
   weather_data,
   todo_data,
+  code_data,
   intent,
   search_results,
   deep_search_results,
@@ -137,6 +139,8 @@ export default function TextBubble({
           message={todo_data.message}
         />
       )}
+
+      {code_data && <CodeExecutionSection code_data={code_data} />}
     </>
   );
 }

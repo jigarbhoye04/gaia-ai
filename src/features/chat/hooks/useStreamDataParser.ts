@@ -89,6 +89,10 @@ export function parseStreamData(
     result.todo_data = streamChunk.todo_data;
   }
 
+  if (streamChunk.code_data !== undefined) {
+    result.code_data = streamChunk.code_data;
+  }
+
   // Include other stream-specific fields
   if (streamChunk.searchWeb !== undefined) {
     result.searchWeb = streamChunk.searchWeb;
