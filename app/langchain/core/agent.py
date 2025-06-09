@@ -1,3 +1,4 @@
+import asyncio
 import json
 from datetime import datetime, timezone
 
@@ -5,11 +6,7 @@ from app.config.loggers import llm_logger as logger
 from app.langchain.core.graph_manager import GraphManager
 from app.langchain.core.messages import construct_langchain_messages
 from app.models.message_models import MessageRequestWithHistory
-from app.utils.memory_utils import (
-    await_remaining_memory_task,
-    check_memory_task_yield,
-    start_memory_task,
-)
+from app.utils.memory_utils import store_user_message_memory
 from langchain_core.messages import AIMessageChunk
 from langsmith import traceable
 
@@ -26,21 +23,38 @@ async def call_agent(
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""
-    memory_yielded = False
-    memory_task = None
+    memory_stored_event = asyncio.Event()
+
+    async def store_memory():
+        """Store memory in background and signal completion."""
+        try:
+            if user_id and request.message:
+                memory_data = await store_user_message_memory(
+                    user_id, request.message, conversation_id
+                )
+                return memory_data
+        except Exception as e:
+            logger.error(f"Error in background memory storage: {e}")
+        finally:
+            memory_stored_event.set()  # Always signal completion
+        return None
 
     try:
-        # Construct LangChain messages with memory retrieval
-        history = await construct_langchain_messages(
-            messages,
-            files_data=request.fileData,
-            currently_uploaded_file_ids=request.fileIds,
-            user_id=user_id,
-            query=request.message,
-            user_name=user.get("name"),
+        # First gather: Setup operations that can run in parallel
+        history, graph = await asyncio.gather(
+            construct_langchain_messages(
+                messages,
+                files_data=request.fileData,
+                currently_uploaded_file_ids=request.fileIds,
+                user_id=user_id,
+                query=request.message,
+                user_name=user.get("name"),
+            ),
+            GraphManager.get_graph(),
         )
 
-        graph = await GraphManager.get_graph()
+        # Start memory storage in background
+        memory_task = asyncio.create_task(store_memory())
 
         initial_state = {
             "query": request.message,
@@ -52,9 +66,7 @@ async def call_agent(
             "conversation_id": conversation_id,
         }
 
-        # Start memory storage in parallel
-        memory_task = start_memory_task(user_id, request.message, conversation_id)
-
+        # Begin streaming the AI output
         async for event in graph.astream(
             initial_state,
             stream_mode=["messages", "custom"],
@@ -70,11 +82,6 @@ async def call_agent(
                 "metadata": {"user_id": user_id},
             },
         ):
-            # Check if memory task is done and yield result
-            memory_data, memory_yielded = check_memory_task_yield(memory_task, memory_yielded)
-            if memory_data:
-                yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
-
             stream_mode, payload = event
             if stream_mode == "messages":
                 chunk, metadata = payload
@@ -91,12 +98,16 @@ async def call_agent(
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"
 
-        # Yield memory data if task completed after streaming finished
-        remaining_memory_data = await await_remaining_memory_task(memory_task, memory_yielded)
-        if remaining_memory_data:
-            yield f"data: {json.dumps({'memory_data': remaining_memory_data})}\n\n"
-
+        # After streaming, yield complete message in order to store in db
         yield f"nostream: {json.dumps({'complete_message': complete_message})}"
+
+        # Wait until memory is stored before yielding the confirmation
+        await memory_stored_event.wait()
+        # Get the memory result and yield if successful
+        memory_data = await memory_task
+        if memory_data:
+            yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
+
         yield "data: [DONE]\n\n"
 
     except Exception as e:

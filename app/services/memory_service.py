@@ -1,5 +1,6 @@
 """Memory service layer for handling all memory operations."""
 
+import asyncio
 from typing import Any, Dict, List, Optional
 
 from app.config.loggers import llm_logger as logger
@@ -116,7 +117,9 @@ class MemoryService:
             
         try:
             # Store as a simple user message for mem0 to infer memory from
-            result = self.client.add(
+            # Use asyncio.to_thread to run synchronous Mem0 client in thread pool
+            result = await asyncio.to_thread(
+                self.client.add,
                 messages=[{"role": "user", "content": content}],
                 user_id=user_id,
                 metadata=metadata or {},
@@ -247,7 +250,8 @@ class MemoryService:
             return MemorySearchResult()
             
         try:
-            results = self.client.search(
+            results = await asyncio.to_thread(
+                self.client.search,
                 query=query,
                 user_id=user_id,
                 limit=limit,
@@ -298,7 +302,10 @@ class MemoryService:
             return MemorySearchResult()
             
         try:
-            all_memories = self.client.get_all(user_id=user_id)
+            all_memories = await asyncio.to_thread(
+                self.client.get_all,
+                user_id=user_id
+            )
 
             # Log the raw response
             self.logger.info(f"Raw memory response: {all_memories}")
@@ -342,7 +349,10 @@ class MemoryService:
             
         try:
             # Mem0 cloud API doesn't require user_id for delete
-            self.client.delete(memory_id=memory_id)
+            await asyncio.to_thread(
+                self.client.delete,
+                memory_id=memory_id
+            )
             self.logger.info(f"Memory {memory_id} deleted for user {user_id}")
             return True
             
