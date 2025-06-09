@@ -717,7 +717,7 @@ async def get_mail_contacts(
         return {"success": False, "error": error_msg, "contacts": []}
 
 
-mail_tools = [
+tools = [
     # list_gmail_labels,
     fetch_gmail_messages,
     search_gmail_messages,

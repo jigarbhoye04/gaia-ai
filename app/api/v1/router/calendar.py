@@ -3,10 +3,14 @@ from typing import List, Optional
 
 from app.models.calendar_models import (
     EventCreateRequest,
+    EventDeleteRequest,
+    EventUpdateRequest,
     CalendarPreferencesUpdateRequest,
 )
 from app.services.calendar_service import (
     create_calendar_event,
+    delete_calendar_event,
+    update_calendar_event,
     get_all_calendar_events,
     get_calendar_events,
     get_calendar_events_by_id,
@@ -195,5 +199,52 @@ async def update_calendar_preferences(
         return await update_user_calendar_preferences(
             current_user["user_id"], preferences.selected_calendars
         )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/calendar/event", summary="Delete a Calendar Event")
+async def delete_event(
+    event: EventDeleteRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Delete a calendar event. This endpoint requires the event ID and optionally the calendar ID.
+
+    Args:
+        event (EventDeleteRequest): The event deletion request details.
+
+    Returns:
+        A confirmation message indicating successful deletion.
+
+    Raises:
+        HTTPException: If event deletion fails.
+    """
+    try:
+        return await delete_calendar_event(event, current_user["access_token"], None)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/calendar/event", summary="Update a Calendar Event")
+async def update_event(
+    event: EventUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Update a calendar event. This endpoint allows partial updates of event fields.
+    Only provided fields will be updated, preserving existing values for omitted fields.
+
+    Args:
+        event (EventUpdateRequest): The event update request details.
+
+    Returns:
+        The details of the updated event.
+
+    Raises:
+        HTTPException: If event update fails.
+    """
+    try:
+        return await update_calendar_event(event, current_user["access_token"], None)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -116,7 +116,7 @@ async def call_agent(
                     "refresh_token": refresh_token,
                     "email": user.get("email"),
                 },
-                "recursion_limit": 7,
+                "recursion_limit": 15,
                 "metadata": {"user_id": user_id},
             },
         ):
@@ -132,7 +132,6 @@ async def call_agent(
                     if content:
                         yield f"data: {json.dumps({'response': content})}\n\n"
                         complete_message += content
-
 
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"
@@ -150,6 +149,6 @@ async def call_agent(
         yield "data: [DONE]\n\n"
 
     except Exception as e:
-        logger.error(f"Error fetching messages: {e}")
-        yield "data: {'error': 'Error fetching messages'}\n\n"
+        logger.error(f"Error when calling agent: {e}")
+        yield "data: {'error': 'Error when calling agent:  {e}'}\n\n"
         yield "data: [DONE]\n\n"

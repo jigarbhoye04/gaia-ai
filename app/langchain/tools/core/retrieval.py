@@ -2,7 +2,7 @@ from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 from typing_extensions import Annotated
 
-from app.langchain.tools.core.registry   import ALWAYS_AVAILABLE_TOOLS
+from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS
 
 
 def retrieve_tools(
@@ -11,7 +11,7 @@ def retrieve_tools(
 ) -> list[str]:
     """Retrieve a tool to use, given a search query."""
     # Search for matching tools based on query
-    results = store.search(("tools",), query=query, limit=3)
+    results = store.search(("tools",), query=query, limit=5)
     tool_ids = [result.key for result in results]
 
     # Get the always available tools

@@ -208,7 +208,7 @@ async def bulk_move_todos(
 
 @router.delete("/todos/bulk", response_model=BulkOperationResponse)
 async def bulk_delete_todos(
-    todo_ids: List[str] = Body(..., min_items=1, max_items=100),
+    todo_ids: List[str] = Body(..., min_length=1, max_length=100),
     user: dict = Depends(get_current_user),
 ):
     """Delete multiple todos."""
@@ -224,7 +224,7 @@ async def bulk_delete_todos(
 # Special mark complete endpoint for convenience
 @router.post("/todos/bulk/complete", response_model=BulkOperationResponse)
 async def bulk_complete_todos(
-    todo_ids: List[str] = Body(..., min_items=1, max_items=100),
+    todo_ids: List[str] = Body(..., min_length=1, max_length=100),
     user: dict = Depends(get_current_user),
 ):
     """Mark multiple todos as completed (convenience endpoint)."""
