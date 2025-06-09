@@ -7,7 +7,7 @@ import { useState } from "react";
 import {
   BubbleConversationChatIcon,
   Calendar01Icon,
-  GoogleCalendar as GoogleCalendarIcon,
+  GoogleCalendarIcon,
 } from "@/components/shared/icons";
 import CalendarCard from "@/features/calendar/components/CalendarCard";
 import CalendarMessages from "@/features/landing/components/demo/CalendarMessages";

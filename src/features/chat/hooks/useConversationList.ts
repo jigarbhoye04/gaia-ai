@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
+  type ConversationPaginationMeta,
   fetchConversations,
-  type PaginationMeta,
 } from "@/redux/slices/conversationsSlice";
 import type { AppDispatch, RootState } from "@/redux/store";
 
@@ -17,7 +17,7 @@ export const useConversationList = () => {
   const error = useSelector((state: RootState) => state.conversations.error);
   const paginationMeta = useSelector(
     (state: RootState) => state.conversations.paginationMeta,
-  ) as PaginationMeta | null;
+  ) as ConversationPaginationMeta | null;
 
   return { conversations, loading, error, paginationMeta };
 };

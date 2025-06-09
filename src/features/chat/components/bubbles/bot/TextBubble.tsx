@@ -10,6 +10,8 @@ import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
 import MarkdownRenderer from "../../interface/MarkdownRenderer";
+import { CalendarDeleteSection } from "./CalendarDeleteSection";
+import { CalendarEditSection } from "./CalendarEditSection";
 import CalendarEventSection from "./CalendarEventSection";
 import EmailComposeSection from "./EmailComposeSection";
 import TodoSection from "./TodoSection";
@@ -21,6 +23,8 @@ export default function TextBubble({
   pageFetchURLs,
   disclaimer,
   calendar_options,
+  calendar_delete_options,
+  calendar_edit_options,
   email_compose_data,
   weather_data,
   todo_data,
@@ -108,6 +112,16 @@ export default function TextBubble({
 
       {intent === "calendar" && calendar_options && (
         <CalendarEventSection calendar_options={calendar_options} />
+      )}
+
+      {intent === "delete_calendar_event" && calendar_delete_options && (
+        <CalendarDeleteSection
+          calendar_delete_options={calendar_delete_options}
+        />
+      )}
+
+      {intent === "edit_calendar_event" && calendar_edit_options && (
+        <CalendarEditSection calendar_edit_options={calendar_edit_options} />
       )}
 
       {email_compose_data && (

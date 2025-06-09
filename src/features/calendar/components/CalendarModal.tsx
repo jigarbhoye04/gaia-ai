@@ -22,7 +22,11 @@ import {
   updateEditedEvent,
 } from "@/redux/slices/calendarModalSlice";
 import { RootState } from "@/redux/store";
-import { CalendarEvent, TimedEvent } from "@/types/features/calendarTypes";
+import {
+  CalendarEvent,
+  EventCreatePayload,
+  TimedEvent,
+} from "@/types/features/calendarTypes";
 
 const isTimedEvent = (event: CalendarEvent): event is TimedEvent =>
   "start" in event && "end" in event;
@@ -80,22 +84,36 @@ export default function CalendarModal() {
     const isAllDay = Boolean(editedEvent.is_all_day);
 
     try {
-      const eventPayload = {
-        ...editedEvent,
+      const eventPayload: EventCreatePayload = {
+        summary: editedEvent.summary,
+        description: editedEvent.description,
         is_all_day: isAllDay,
-        fixedTime: !isAllDay,
       };
 
-      // For all-day events, we don't need to send start and end
-      if (isAllDay && !isTimedEvent(editedEvent)) {
-        // Keep only the necessary fields for all-day events
-
-        const { ...eventWithoutTimes } = eventPayload;
-        await calendarApi.createEventDefault(eventWithoutTimes);
+      if (isAllDay) {
+        // For all-day events, send only date strings if available
+        if (isTimedEvent(editedEvent)) {
+          // Extract date parts from datetime strings
+          if (editedEvent.start) {
+            eventPayload.start = editedEvent.start.split("T")[0];
+          }
+          if (editedEvent.end) {
+            eventPayload.end = editedEvent.end.split("T")[0];
+          }
+        }
+        // If no dates provided, backend will default to today
       } else {
-        // For time-specific events, include start and end
-        await calendarApi.createEventDefault(eventPayload);
+        // For time-specific events, include full datetime
+        if (isTimedEvent(editedEvent)) {
+          eventPayload.start = editedEvent.start;
+          eventPayload.end = editedEvent.end;
+          eventPayload.fixedTime = true;
+        } else {
+          throw new Error("Start and end times are required for timed events");
+        }
       }
+
+      await calendarApi.createEventDefault(eventPayload);
       onEventSuccess?.();
       handleClose();
     } catch (error) {

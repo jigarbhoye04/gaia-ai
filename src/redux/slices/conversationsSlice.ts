@@ -5,8 +5,8 @@ import { chatApi, type Conversation } from "@/features/chat/api/chatApi";
 // Re-export the Conversation type for compatibility
 export type { Conversation };
 
-// Define the Pagination metadata.
-export interface PaginationMeta {
+// Define the Pagination metadata for conversations.
+export interface ConversationPaginationMeta {
   total: number;
   page: number;
   limit: number;
@@ -16,7 +16,7 @@ export interface PaginationMeta {
 // Define the slice state.
 interface ConversationState {
   conversations: Conversation[];
-  paginationMeta: PaginationMeta | null;
+  paginationMeta: ConversationPaginationMeta | null;
   loading: boolean;
   error: string | null;
 }
@@ -33,7 +33,7 @@ const initialState: ConversationState = {
 export const fetchConversations = createAsyncThunk<
   {
     conversations: Conversation[];
-    paginationMeta: PaginationMeta;
+    paginationMeta: ConversationPaginationMeta;
     append: boolean;
   },
   { page?: number; limit?: number; append?: boolean },

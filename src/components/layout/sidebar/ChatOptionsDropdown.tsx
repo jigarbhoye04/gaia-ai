@@ -91,10 +91,10 @@ export default function ChatOptionsDropdown({
       clearMessages();
       await chatApi.deleteConversation(chatId);
       setIsOpen(false);
-      toast.success("Successfully deleted conversation");
+      // Toast is already shown by the API service
       await fetchConversations(1, 20, false);
     } catch (error) {
-      toast.error("Could not delete conversation ");
+      // Error toast is already shown by the API service
       console.error("Failed to delete chat", error);
     }
   };

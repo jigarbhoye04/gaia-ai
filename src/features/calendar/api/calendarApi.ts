@@ -1,8 +1,12 @@
 import { toast } from "sonner";
 
 import { apiService } from "@/lib/api";
-import { Calendar, CalendarEventsResponse } from "@/types/api/calendarApiTypes";
 import {
+  CalendarEventsResponse,
+  CalendarItem,
+} from "@/types/api/calendarApiTypes";
+import {
+  EventCreatePayload,
   GoogleCalendar,
   GoogleCalendarEvent,
 } from "@/types/features/calendarTypes";
@@ -69,7 +73,7 @@ export const calendarApi = {
   },
 
   // Fetch available calendars
-  fetchCalendars: async (): Promise<Calendar[]> => {
+  fetchCalendars: async (): Promise<CalendarItem[]> => {
     const response = await apiService.get<{ items: GoogleCalendar[] }>(
       "/calendar/list",
       {
@@ -164,11 +168,49 @@ export const calendarApi = {
 
   // Create event without specifying calendar ID (uses default calendar)
   createEventDefault: async (
-    event: Record<string, unknown> & { fixedTime?: boolean; timezone?: string },
+    event: EventCreatePayload,
   ): Promise<GoogleCalendarEvent> => {
     return apiService.post<GoogleCalendarEvent>("/calendar/event", event, {
       successMessage: "Event added to calendar!",
       errorMessage: "Failed to add event",
     });
+  },
+
+  // Delete event via agent tool (unified endpoint)
+  deleteEventByAgent: async (deletePayload: {
+    event_id: string;
+    calendar_id: string;
+    summary?: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    return apiService.delete<{ success: boolean; message: string }>(
+      "/calendar/event",
+      deletePayload,
+      {
+        successMessage: "Event deleted successfully!",
+        errorMessage: "Failed to delete event",
+      },
+    );
+  },
+
+  // Update event via agent tool (unified endpoint)
+  updateEventByAgent: async (updatePayload: {
+    event_id: string;
+    calendar_id: string;
+    summary?: string;
+    description?: string;
+    start?: string;
+    end?: string;
+    is_all_day?: boolean;
+    timezone?: string;
+    original_summary?: string;
+  }): Promise<GoogleCalendarEvent> => {
+    return apiService.put<GoogleCalendarEvent>(
+      "/calendar/event",
+      updatePayload,
+      {
+        successMessage: "Event updated successfully!",
+        errorMessage: "Failed to update event",
+      },
+    );
   },
 };

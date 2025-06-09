@@ -121,3 +121,13 @@ export interface UnifiedCalendarEventsListProps {
   onDummyAddEvent?: (index: number) => void;
   disableAnimation?: boolean;
 }
+
+export interface EventCreatePayload {
+  summary: string;
+  description: string;
+  is_all_day: boolean;
+  start?: string;
+  end?: string;
+  fixedTime?: boolean;
+  timezone?: string;
+}
