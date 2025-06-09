@@ -1384,7 +1384,7 @@ export const FallingStarIcon: React.FC<IconProps> = (props) => (
   </svg>
 );
 
-export const GoogleCalendar: React.FC<IconProps> = (props) => {
+export const GoogleCalendarIcon: React.FC<IconProps> = (props) => {
   return (
     <svg
       height="100"
@@ -1559,7 +1559,6 @@ export const ComputerIcon: React.FC<IconProps> = (props) => (
     />
   </svg>
 );
-// export const GoogleCalendar: React.FC<IconProps> = (props)=> {};
 
 export const Gmail: React.FC<IconProps> = (props) => {
   return (

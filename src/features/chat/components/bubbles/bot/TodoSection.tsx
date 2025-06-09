@@ -17,14 +17,14 @@ import {
   TodoAction,
   TodoItem,
   TodoProject,
-  TodoStats,
+  TodoToolStats,
 } from "@/types/features/todoToolTypes";
 import { Priority } from "@/types/features/todoTypes";
 
 interface TodoSectionProps {
   todos?: TodoItem[];
   projects?: TodoProject[];
-  stats?: TodoStats;
+  stats?: TodoToolStats;
   action?: TodoAction;
   message?: string;
 }

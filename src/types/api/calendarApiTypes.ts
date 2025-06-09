@@ -5,7 +5,7 @@ export interface CalendarEventsResponse {
   nextPageToken: string | null;
 }
 
-export interface Calendar {
+export interface CalendarItem {
   id: string;
   name: string;
   summary: string;

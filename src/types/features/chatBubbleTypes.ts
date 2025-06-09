@@ -3,6 +3,8 @@ import React, { Dispatch } from "react";
 import { FileData } from "@/types/shared/fileTypes";
 
 import {
+  CalendarDeleteOptions,
+  CalendarEditOptions,
   CalendarOptions,
   DeepSearchResults,
   EmailComposeData,
@@ -48,6 +50,8 @@ export interface ChatBubbleBotProps {
 
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  calendar_delete_options?: CalendarDeleteOptions[] | null;
+  calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;

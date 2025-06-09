@@ -5,7 +5,7 @@ import { Priority } from "./todoTypes";
 export interface TodoToolData {
   todos?: TodoItem[];
   projects?: TodoProject[];
-  stats?: TodoStats;
+  stats?: TodoToolStats;
   action?: TodoAction;
   message?: string;
 }
@@ -50,7 +50,7 @@ export interface TodoProject {
   completion_percentage?: number;
 }
 
-export interface TodoStats {
+export interface TodoToolStats {
   total: number;
   completed: number;
   pending: number;

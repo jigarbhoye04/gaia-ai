@@ -57,6 +57,14 @@ export function parseStreamData(
     result.calendar_options = streamChunk.calendar_options;
   }
 
+  if (streamChunk.calendar_delete_options !== undefined) {
+    result.calendar_delete_options = streamChunk.calendar_delete_options;
+  }
+
+  if (streamChunk.calendar_edit_options !== undefined) {
+    result.calendar_edit_options = streamChunk.calendar_edit_options;
+  }
+
   if (streamChunk.email_compose_data !== undefined) {
     result.email_compose_data = streamChunk.email_compose_data;
   }

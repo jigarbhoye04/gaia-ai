@@ -32,6 +32,8 @@ export type MessageType = {
   fileData?: FileData[];
   intent?: string;
   calendar_options?: CalendarOptions[] | null;
+  calendar_delete_options?: CalendarDeleteOptions[] | null;
+  calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
@@ -68,6 +70,42 @@ export type CalendarOptions = {
   start?: string;
   end?: string;
   is_all_day?: boolean;
+};
+
+// Calendar event date/time structure from Google Calendar API
+export type CalendarEventDateTime = {
+  date?: string; // For all-day events (YYYY-MM-DD format)
+  dateTime?: string; // For timed events (RFC3339 format)
+  timeZone?: string; // Timezone identifier
+};
+
+export type CalendarDeleteOptions = {
+  action: "delete";
+  event_id: string;
+  calendar_id: string;
+  summary: string;
+  description?: string;
+  start?: CalendarEventDateTime;
+  end?: CalendarEventDateTime;
+  original_query: string;
+};
+
+export type CalendarEditOptions = {
+  action: "edit";
+  event_id: string;
+  calendar_id: string;
+  original_summary: string;
+  original_description?: string;
+  original_start?: CalendarEventDateTime;
+  original_end?: CalendarEventDateTime;
+  original_query: string;
+  // Updated fields (optional)
+  summary?: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  is_all_day?: boolean;
+  timezone?: string;
 };
 
 // Email compose data structure for email intent
@@ -149,6 +187,8 @@ export type ConversationType = {
 export interface IntentType {
   intent: string | undefined;
   calendar_options?: CalendarOptions[] | null;
+  calendar_delete_options?: CalendarDeleteOptions[] | null;
+  calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
 }
