@@ -30,11 +30,15 @@ async def complete_onboarding(user_id: str, onboarding_data: OnboardingRequest) 
         user_object_id = ObjectId(user_id)
         
         # Prepare onboarding preferences
+        custom_instructions = onboarding_data.instructions.strip() if onboarding_data.instructions else None
+        if custom_instructions == "":
+            custom_instructions = None
+            
         preferences = OnboardingPreferences(
             country=onboarding_data.country,
             profession=onboarding_data.profession,
             response_style=onboarding_data.response_style,
-            custom_instructions=onboarding_data.instructions or ""
+            custom_instructions=custom_instructions
         )
         
         # Prepare onboarding data

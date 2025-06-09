@@ -64,8 +64,9 @@ class OnboardingPreferences(BaseModel):
     def validate_response_style(cls, v):
         if v is not None:
             valid_styles = {'brief', 'detailed', 'casual', 'professional'}
-            if v not in valid_styles:
-                raise ValueError(f'Response style must be one of: {", ".join(valid_styles)}')
+            # Allow custom response styles (anything that's not in the predefined list)
+            if v not in valid_styles and len(v.strip()) == 0:
+                raise ValueError('Response style cannot be empty')
         return v
     
     @field_validator('custom_instructions')
@@ -120,8 +121,9 @@ class OnboardingRequest(BaseModel):
     @classmethod
     def validate_response_style(cls, v):
         valid_styles = {'brief', 'detailed', 'casual', 'professional'}
-        if v not in valid_styles:
-            raise ValueError(f'Response style must be one of: {", ".join(valid_styles)}')
+        # Allow custom response styles (anything that's not in the predefined list)
+        if v not in valid_styles and len(v.strip()) == 0:
+            raise ValueError('Response style cannot be empty')
         return v
     
     @field_validator('instructions')
