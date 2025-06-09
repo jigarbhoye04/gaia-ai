@@ -40,7 +40,7 @@ const StandardCodeBlock: React.FC<StandardCodeBlockProps> = ({
           ) : (
             <div className="flex flex-row items-center gap-1">
               <Task01Icon color="foreground" width={21} />
-              <p>Copy Code</p>
+              <p>Copy</p>
             </div>
           )}
         </Button>
