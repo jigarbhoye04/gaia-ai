@@ -35,17 +35,20 @@ async def upload_file_endpoint(
     Returns:
         File metadata including ID, URL, and auto-generated description
     """
+    user_id = user.get("user_id", None)
+    if not user_id:
+        return {"error": "User ID is required"}
+
     result = await upload_file_service(
         file=file,
-        user_id=user.get("user_id", None),
+        user_id=user_id,
         conversation_id=conversation_id,
     )
 
     return FileData(
-        fileId=result["fileId"],
+        fileId=result["file_id"],
         url=result["url"],
         filename=result["filename"],
-        description=result.get("description"),
         message="File uploaded successfully",
         type=result.get("type", "file"),
     )
@@ -71,9 +74,13 @@ async def update_file_endpoint(
     Returns:
         Updated file metadata
     """
+    user_id = user.get("user_id", None)
+    if not user_id:
+        return {"error": "User ID is required"}
+
     result = await update_file_service(
         file_id=file_id,
-        user_id=user.get("user_id", None),
+        user_id=user_id,
         update_data=update_data,
     )
 

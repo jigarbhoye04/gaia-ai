@@ -1,7 +1,8 @@
 import os
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import computed_field
+
 from infisical_sdk import InfisicalSDKClient
+from pydantic import computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class InfisicalConfigError(Exception):
@@ -107,6 +108,15 @@ class Settings(BaseSettings):
     HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
     HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
     HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
+
+    # Miscellaneous
+    LLAMA_INDEX_KEY: str
+    OPENAI_API_KEY: str
+
+    # Memory Configuration
+    MEM0_API_KEY: str
+    MEM0_ORG_ID: str
+    MEM0_PROJECT_ID: str
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:

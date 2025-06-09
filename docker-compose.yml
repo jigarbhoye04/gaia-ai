@@ -4,6 +4,7 @@ services:
   # FastAPI Application
   gaia:
     container_name: gaia
+    # image: ghcr.io/hey-gaia/gaia-backend
     build: .
     image: gaia
     working_dir: /app
@@ -100,6 +101,8 @@ services:
     volumes:
       - redis_data:/data
     restart: on-failure
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s

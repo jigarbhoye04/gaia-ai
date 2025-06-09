@@ -1,62 +1,63 @@
 import json
 import pprint
-from typing import Annotated, List
+from typing import List
 
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 from app.models.calendar_models import EventCreateRequest
 
 from app.config.loggers import chat_logger as logger
+from app.docstrings.langchain.tools.calendar_tool_docs import (
+    CALENDAR_EVENT,
+    FETCH_CALENDAR_LIST,
+)
+from app.docstrings.utils import with_doc
 from app.services.calendar_service import list_calendars
-from app.langchain.templates.calendar_template import CALENDAR_PROMPT_TEMPLATE
+from app.langchain.templates.calendar_template import (
+    CALENDAR_PROMPT_TEMPLATE,
+    CALENDAR_LIST_TEMPLATE,
+)
 
 
-@tool
+@tool(parse_docstring=True)
+@with_doc(CALENDAR_EVENT)
 async def calendar_event(
-    event_data: Annotated[
-        List[EventCreateRequest],
-        "Array of calendar event data with fields: summary, description, start, end, is_all_day, calendar_id, calendar_name, calendar_color",
-    ],
+    event_data: List[EventCreateRequest] | EventCreateRequest,
+    config: RunnableConfig,
 ) -> str:
-    """
-    Create calendar events from structured data provided by the LLM.
-
-    This tool processes calendar event information and returns a structured JSON response
-    that can be displayed to the user as calendar event options.
-
-    IMPORTANT: This tool does NOT directly add events to the calendar. Instead, it creates
-    a prompt on the frontend that the user must interact with. The user will need to click
-    a confirmation button to actually add the event to their calendar.
-
-    Use this tool when a user wants to schedule a meeting, appointment, call, or any time-based event.
-
-    Always provide event data as an array, even if there's only one event.
-
-    Args:
-        event_data (List[EventCreateRequest]): Array of dictionaries containing calendar event details with fields:
-            - summary (str): Event title or name (required)
-            - description (str): Detailed description of the event (optional)
-            - start (str): Start time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required)
-            - end (str): End time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS±HH:MM) (required)
-            - is_all_day (bool): Boolean indicating if this is an all-day event (required)
-            - calendar_id (str, optional): ID of the specific calendar to add event to
-            - calendar_name (str, optional): Display name of the calendar
-            - calendar_color (str, optional): Color code for the calendar in hex format (e.g. "#00bbff")
-
-    Returns:
-        JSON string containing formatted calendar event options for user confirmation.
-    """
     try:
         logger.info("===== CALENDAR EVENT TOOL CALLED =====")
         logger.info("Processing calendar event with data:")
         logger.info(pprint.pformat(event_data, indent=2, width=100))
 
-        # Validate the event data structure
-        if not event_data or not isinstance(event_data, list):
-            logger.error("Invalid calendar event data format - must be a list")
+        # Normalize input to always work with a list
+        if isinstance(event_data, EventCreateRequest):
+            # Single event object - convert to list
+            event_list = [event_data]
+            logger.info("Received single event object, converting to list")
+        elif isinstance(event_data, list):
+            # Already a list
+            event_list = event_data
+            logger.info(f"Received list with {len(event_list)} events")
+        else:
+            # Invalid type
+            logger.error(f"Invalid event data type: {type(event_data)}")
             return json.dumps(
                 {
-                    "error": "Calendar event data must be provided as an array",
+                    "error": "Calendar event data must be an EventCreateRequest object or a list of EventCreateRequest objects",
+                    "intent": "calendar",
+                    "calendar_options": [],
+                    "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
+                }
+            )
+
+        # Validate non-empty
+        if not event_list:
+            logger.error("Empty event list provided")
+            return json.dumps(
+                {
+                    "error": "At least one calendar event must be provided",
                     "intent": "calendar",
                     "calendar_options": [],
                     "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
@@ -66,11 +67,21 @@ async def calendar_event(
         calendar_options = []
         validation_errors = []
 
-        logger.info(f"Processing {len(event_data)} calendar events")
+        logger.info(f"Processing {len(event_list)} calendar events")
 
         # Process each event with validation
-        for event in event_data:
+        for event in event_list:
             try:
+                # Validate event fields based on whether it's an all-day event
+                if event.is_all_day:
+                    # For all-day events, start and end are optional
+                    # They'll be handled in the service with defaults if missing
+                    pass
+                else:
+                    # For time-specific events, both start and end are required
+                    if not event.start or not event.end:
+                        raise ValueError("Start and end times are required for time-specific events")
+                
                 # Add the validated event
                 calendar_options.append(event.model_dump())
                 logger.info(f"Added calendar event: {event.summary}")
@@ -94,19 +105,14 @@ async def calendar_event(
             )
 
         # Return the successfully processed events
-        response = {
-            "intent": "calendar",
-            "calendar_options": calendar_options,
-            "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
-        }
+        writer = get_stream_writer()
 
-        # Include any validation warnings if some events had issues
-        if validation_errors:
-            response["warnings"] = validation_errors
+        # Send calendar options to frontend via writer
+        writer({"calendar_options": calendar_options, "intent": "calendar"})
 
         logger.info("Calendar event processing successful")
-        logger.info(pprint.pformat(response, indent=2, width=100))
-        return json.dumps(response)
+        logger.info(f"Sent {len(calendar_options)} calendar options to frontend")
+        return "Calendar options sent to frontend"
 
     except Exception as e:
         error_msg = f"Error processing calendar event: {e}"
@@ -123,46 +129,34 @@ async def calendar_event(
 
 
 @tool
+@with_doc(FETCH_CALENDAR_LIST)
 async def fetch_calendar_list(
     config: RunnableConfig,
-):
-    """
-    Retrieves the user's available calendars using their access token.
-
-    This tool securely accesses the user's access token from the config metadata
-    and calls the calendar service to fetch all available calendars.
-
-    Use this tool when a user asks to:
-    - View their calendar list
-    - Choose a calendar for adding events
-    - Verify which calendars are connected
-
-    Returns:
-        str: JSON-formatted string containing the user's calendar list, or an error message.
-    """
+) -> str | dict:
     try:
-        logger.info("===== FETCH CALENDAR LIST TOOL CALLED =====")
-
         if not config:
             logger.error("Missing configuration data")
-            return {"error": "Missing configuration", "calendars": []}
+            return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
-        logger.info(f"Access token available: {bool(access_token)}")
 
         if not access_token:
             logger.error("Missing access token in config")
-            return {"error": "Missing access token", "calendars": []}
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
         calendars = await list_calendars(access_token=access_token, short=True)
         if calendars is None:
             logger.error("Unable to fetch calendars - no data returned")
-            return {"error": "Unable to fetch calendars", "calendars": []}
+            return "Unable to fetch your calendars. Please ensure your calendar is connected."
 
         logger.info(f"Fetched {len(calendars)} calendars")
-        logger.info(pprint.pformat(calendars, indent=2, width=100))
-        return {"calendars": calendars}
+
+        formatted_response = CALENDAR_LIST_TEMPLATE.format(
+            calendars=json.dumps(calendars)
+        )
+
+        return formatted_response
     except Exception as e:
         error_msg = f"Error fetching calendars: {str(e)}"
         logger.error(error_msg)
-        return {"error": error_msg, "calendars": []}
+        return f"Error fetching calendars: {str(e)}"

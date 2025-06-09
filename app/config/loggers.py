@@ -23,6 +23,7 @@ general_logger = get_logger(name="general")
 nltk_logger = get_logger(name="nltk")
 langchain_logger = get_logger(name="langchain")
 request_logger = get_logger(name="requests")
+todos_logger = get_logger(name="todos")
 
 # Special case for Celery
 celery_logger = get_task_logger(__name__)

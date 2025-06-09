@@ -74,7 +74,6 @@ async def fetch_calendar_list(access_token: str, short: bool = False) -> Any:
                     "id": c.get("id"),
                     "summary": c.get("summary"),
                     "description": c.get("description"),
-                    "timeZone": c.get("timeZone"),
                     "backgroundColor": c.get("backgroundColor"),
                 }
                 for c in data.get("items", [])
@@ -469,16 +468,29 @@ async def create_calendar_event(
     # Handle different event types (all-day vs. time-specific)
     if event.is_all_day:
         # For all-day events, use date format without time component
-        # Convert ISO string to date string format "YYYY-MM-DD"
-        # Event.start is a string, so we extract the date part
-        start_date = event.start.split("T")[0]
-        end_date = event.end.split("T")[0]
+        if event.start and event.end:
+            # If start and end times are provided, extract the date parts
+            start_date = event.start.split("T")[0] if "T" in event.start else event.start
+            end_date = event.end.split("T")[0] if "T" in event.end else event.end
+        else:
+            # If not provided, default to today for start and tomorrow for end
+            from datetime import datetime, timedelta
+            today = datetime.now()
+            start_date = today.strftime("%Y-%m-%d")
+            end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
 
         event_payload["start"] = {"date": start_date}
         event_payload["end"] = {"date": end_date}
     else:
         # For time-specific events, use datetime with timezone
         try:
+            # Both start and end times are required for time-specific events
+            if not event.start or not event.end:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Start and end times are required for time-specific events"
+                )
+                
             canonical_timezone = resolve_timezone(event.timezone or "UTC")
             user_tz = ZoneInfo(canonical_timezone)
 

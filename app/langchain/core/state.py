@@ -26,3 +26,7 @@ class State(DictLikeModel):
     force_web_search: bool = False
     force_deep_search: bool = False
     current_datetime: Optional[str] = None
+    mem0_user_id: Optional[str] = None
+    memories: List[str] = Field(default_factory=list)
+    memories_stored: bool = False
+    conversation_id: Optional[str] = None

@@ -32,7 +32,9 @@ async def store_user_info(name: str, email: str, picture_url: str):
 
     expected_prefix = "https://res.cloudinary.com"
     current_time = datetime.now(timezone.utc)
-
+    
+    # Process the picture URL
+    cloudinary_picture_url = None
     if picture_url and not picture_url.startswith(expected_prefix):
         try:
             response = requests.get(picture_url, timeout=10)
@@ -41,15 +43,17 @@ async def store_user_info(name: str, email: str, picture_url: str):
 
             public_id = f"user_{email.replace('@', '_at_').replace('.', '_dot_')}"
 
-            picture_url = await upload_user_picture(image_bytes, public_id)
+            cloudinary_picture_url = await upload_user_picture(image_bytes, public_id)
 
         except requests.RequestException as e:
             logger.error(
                 f"Error downloading image from URL {picture_url}: {str(e)}",
                 exc_info=True,
             )
-
-            picture_url = ""
+            # Keep cloudinary_picture_url as None to indicate failure
+    elif picture_url and picture_url.startswith(expected_prefix):
+        # Picture is already on Cloudinary
+        cloudinary_picture_url = picture_url
 
     existing_user = await users_collection.find_one({"email": email})
 
@@ -59,11 +63,15 @@ async def store_user_info(name: str, email: str, picture_url: str):
             "updated_at": current_time,
         }
 
-        if picture_url and (
-            not existing_user.get("picture")
-            or not existing_user["picture"].startswith(expected_prefix)
-        ):
-            update_data["picture"] = picture_url
+        # Update picture if:
+        # 1. We have a new Cloudinary URL (successful upload)
+        # 2. OR the existing picture is different from what Google provided
+        current_picture = existing_user.get("picture", "")
+        if cloudinary_picture_url is not None:
+            update_data["picture"] = cloudinary_picture_url
+        elif not picture_url and current_picture:
+            # Google no longer provides a picture, clear it
+            update_data["picture"] = ""
 
         await users_collection.update_one({"email": email}, {"$set": update_data})
         return existing_user["_id"]
@@ -71,7 +79,7 @@ async def store_user_info(name: str, email: str, picture_url: str):
         user_data = {
             "name": name,
             "email": email,
-            "picture": picture_url or "",
+            "picture": cloudinary_picture_url or "",
             "created_at": current_time,
             "updated_at": current_time,
         }

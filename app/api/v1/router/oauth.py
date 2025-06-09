@@ -1,14 +1,16 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from urllib.parse import urlencode, urlparse
 
 import httpx
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
+from app.models.user_models import UserUpdateResponse
 from app.services.oauth_service import store_user_info
+from app.services.user_service import update_user_profile
 
 # from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
@@ -171,6 +173,49 @@ async def get_me(
 # except Exception as e:
 #     logger.error(f"Unexpected error: {str(e)}")
 #     raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.patch("/me", response_model=UserUpdateResponse)
+async def update_me(
+    name: Optional[str] = Form(None),
+    picture: Optional[UploadFile] = File(None),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Update the current user's profile information.
+    Supports updating name and profile picture.
+    """
+    user_id = user.get("user_id")
+    
+    # Process profile picture if provided
+    picture_data = None
+    if picture and picture.size > 0:
+        # Validate file type
+        allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+        if picture.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+            )
+        
+        # Validate file size (max 5MB)
+        max_size = 5 * 1024 * 1024  # 5MB
+        if picture.size > max_size:
+            raise HTTPException(
+                status_code=400,
+                detail="File size too large. Maximum size is 5MB"
+            )
+        
+        picture_data = await picture.read()
+    
+    # Update user profile
+    updated_user = await update_user_profile(
+        user_id=user_id,
+        name=name,
+        picture_data=picture_data
+    )
+    
+    return UserUpdateResponse(**updated_user)
 
 
 @router.post("/logout")
