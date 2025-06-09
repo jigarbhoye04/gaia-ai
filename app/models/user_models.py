@@ -44,6 +44,8 @@ class OnboardingPreferences(BaseModel):
     @classmethod
     def validate_country(cls, v):
         if v is not None:
+            # Ensure country code is uppercase and valid format
+            v = v.upper().strip()
             if not re.match(r'^[A-Z]{2}$', v):
                 raise ValueError('Country must be a valid ISO 3166-1 alpha-2 code (e.g., US, GB, DE)')
         return v
@@ -105,6 +107,8 @@ class OnboardingRequest(BaseModel):
     @field_validator('country')
     @classmethod
     def validate_country(cls, v):
+        # Ensure country code is uppercase and valid format
+        v = v.upper().strip()
         if not re.match(r'^[A-Z]{2}$', v):
             raise ValueError('Country must be a valid ISO 3166-1 alpha-2 code (e.g., US, GB, DE)')
         return v

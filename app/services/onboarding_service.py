@@ -8,6 +8,7 @@ from pymongo import ReturnDocument
 from app.config.loggers import app_logger as logger
 from app.db.collections import users_collection
 from app.models.user_models import OnboardingRequest, OnboardingData, OnboardingPreferences
+from app.utils.user_preferences_utils import format_user_preferences_for_agent
 
 
 async def complete_onboarding(user_id: str, onboarding_data: OnboardingRequest) -> Dict[str, Any]:
@@ -199,32 +200,8 @@ async def get_user_preferences_for_agent(user_id: str) -> Optional[str]:
         if not prefs:
             return None
         
-        # Format preferences for the agent
-        parts = []
-        
-        if prefs.get("country"):
-            parts.append(f"User Location: {prefs['country']}")
-        
-        if prefs.get("profession"):
-            parts.append(f"User Profession: {prefs['profession']}")
-        
-        if prefs.get("response_style"):
-            style_map = {
-                "brief": "Keep responses brief and to the point",
-                "detailed": "Provide detailed and comprehensive responses",
-                "casual": "Use a casual and friendly tone",
-                "professional": "Maintain a professional and formal tone"
-            }
-            style_instruction = style_map.get(prefs["response_style"], prefs["response_style"])
-            parts.append(f"Communication Style: {style_instruction}")
-        
-        if prefs.get("custom_instructions"):
-            parts.append(f"Special Instructions: {prefs['custom_instructions']}")
-        
-        if parts:
-            return "\n".join(parts)
-        
-        return None
+        # Use the modular utility function to format preferences
+        return format_user_preferences_for_agent(prefs)
         
     except Exception as e:
         logger.error(f"Error getting user preferences for agent: {str(e)}", exc_info=True)

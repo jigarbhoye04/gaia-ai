@@ -293,6 +293,25 @@ async def update_user_preferences(
         raise HTTPException(status_code=500, detail="Failed to update preferences")
 
 
+@router.patch("/name", response_model=UserUpdateResponse)
+async def update_user_name(
+    name: str = Form(...),
+    user: dict = Depends(get_current_user),
+):
+    """
+    Update the user's name. This is the consolidated endpoint for name updates.
+    """
+    try:
+        user_id = user.get("user_id")
+        updated_user = await update_user_profile(user_id=user_id, name=name)
+        return UserUpdateResponse(**updated_user)
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Error updating user name: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to update name")
+
+
 @router.post("/logout")
 async def logout():
     response = JSONResponse(content={"detail": "Logged out successfully"})
