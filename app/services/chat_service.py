@@ -47,6 +47,7 @@ async def chat_stream(
         conversation_id=conversation_id,
         access_token=user.get("access_token"),
         refresh_token=user.get("refresh_token"),
+        background_tasks=background_tasks,
     ):
         # Process complete message marker
         if chunk.startswith("nostream: "):
@@ -133,6 +134,10 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         # Extract memory data
         elif "memory_data" in data:
             tool_data["memory_data"] = data["memory_data"]
+        
+        # Extract todo data
+        elif "todo_data" in data:
+            tool_data["todo_data"] = data["todo_data"]
 
         return tool_data
     except json.JSONDecodeError:

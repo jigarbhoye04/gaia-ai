@@ -80,6 +80,7 @@ dependencies = [
   "mem0ai>=0.1.101",
   "aio-pika>=9.5.5",
   "aiolimiter>=1.2.1",
+  "pycountry>=24.6.1",
 ]
 
 [dependency-groups]

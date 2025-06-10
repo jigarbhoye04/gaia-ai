@@ -24,3 +24,7 @@ request_logger = get_logger(name="requests")
 notification_logger = get_logger(name="notification")
 mail_webhook_logger = get_logger(name="mail_webhook")
 common_logger = get_logger(name="common")
+todos_logger = get_logger(name="todos")
+
+# Special case for Celery
+celery_logger = get_task_logger(__name__)

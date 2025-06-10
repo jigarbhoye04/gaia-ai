@@ -1,8 +1,6 @@
+import asyncio
 import json
 from datetime import datetime, timezone
-
-from langchain_core.messages import AIMessageChunk
-from langsmith import traceable
 
 from app.config.loggers import llm_logger as logger
 from app.langchain.core.graph_manager import GraphManager
@@ -13,65 +11,9 @@ from app.langchain.prompts.mail_agent_prompt import (
 )
 from app.models.memory_models import ConversationMemory
 from app.models.message_models import MessageRequestWithHistory
-from app.services.memory_service import memory_service
-
-
-async def store_conversation_memory(
-    user_id, user_message, assistant_response, conversation_id
-):
-    """
-    Store a conversation memory with user message and assistant response.
-
-    Args:
-        user_id: The user's ID
-        user_message: The user's message
-        assistant_response: The assistant's response
-        conversation_id: The conversation ID
-
-    Returns:
-        tuple: (success_flag, memory_data_event)
-    """
-    # Skip if any required parameter is missing
-    if (
-        not user_id
-        or not user_message
-        or not user_message.strip()
-        or not assistant_response
-        or not assistant_response.strip()
-    ):
-        logger.info("Skipping memory storage - missing required parameters")
-        return False, None
-
-    try:
-        # Create conversation memory
-        conversation_memory = ConversationMemory(
-            user_message=user_message,
-            assistant_response=assistant_response,
-            conversation_id=conversation_id,
-            user_id=user_id,
-            metadata={
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            },
-        )
-
-        result = await memory_service.store_conversation(conversation_memory)
-
-        if result:
-            logger.info("Conversation memory stored successfully")
-            memory_data = {
-                "type": "memory_stored",
-                "content": f"Stored conversation: {user_message[:50]}...",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "conversation_id": conversation_id,
-            }
-            return True, memory_data
-        else:
-            logger.info("Memory service declined to store memory")
-            return False, None
-
-    except Exception as e:
-        logger.error(f"Error storing conversation memory: {e}")
-        return False, None
+from app.utils.memory_utils import store_user_message_memory
+from langchain_core.messages import AIMessageChunk
+from langsmith import traceable
 
 
 @traceable
@@ -81,33 +23,55 @@ async def call_agent(
     user,
     access_token=None,
     refresh_token=None,
+    background_tasks=None,
 ):
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""
+    memory_stored_event = asyncio.Event()
 
-    # Construct LangChain messages with memory retrieval
-    history = await construct_langchain_messages(
-        messages,
-        files_data=request.fileData,
-        currently_uploaded_file_ids=request.fileIds,
-        user_id=user_id,
-        query=request.message,
-    )
-
-    initial_state = {
-        "query": request.message,
-        "messages": history,
-        "force_web_search": request.search_web,
-        "force_deep_search": request.deep_search,
-        "current_datetime": datetime.now(timezone.utc).isoformat(),
-        "mem0_user_id": user_id,
-        "conversation_id": conversation_id,
-    }
+    async def store_memory():
+        """Store memory in background and signal completion."""
+        try:
+            if user_id and request.message:
+                memory_data = await store_user_message_memory(
+                    user_id, request.message, conversation_id
+                )
+                return memory_data
+        except Exception as e:
+            logger.error(f"Error in background memory storage: {e}")
+        finally:
+            memory_stored_event.set()  # Always signal completion
+        return None
 
     try:
-        graph = await GraphManager.get_graph()
+        # First gather: Setup operations that can run in parallel
+        history, graph = await asyncio.gather(
+            construct_langchain_messages(
+                messages,
+                files_data=request.fileData,
+                currently_uploaded_file_ids=request.fileIds,
+                user_id=user_id,
+                query=request.message,
+                user_name=user.get("name"),
+            ),
+            GraphManager.get_graph(),
+        )
 
+        # Start memory storage in background
+        memory_task = asyncio.create_task(store_memory())
+
+        initial_state = {
+            "query": request.message,
+            "messages": history,
+            "force_web_search": request.search_web,
+            "force_deep_search": request.deep_search,
+            "current_datetime": datetime.now(timezone.utc).isoformat(),
+            "mem0_user_id": user_id,
+            "conversation_id": conversation_id,
+        }
+
+        # Begin streaming the AI output
         async for event in graph.astream(
             initial_state,
             stream_mode=["messages", "custom"],
@@ -119,7 +83,7 @@ async def call_agent(
                     "refresh_token": refresh_token,
                     "email": user.get("email"),
                 },
-                "recursion_limit": 7,
+                "recursion_limit": 15,
                 "metadata": {"user_id": user_id},
             },
         ):
@@ -139,21 +103,21 @@ async def call_agent(
             elif stream_mode == "custom":
                 yield f"data: {json.dumps(payload)}\n\n"
 
-        # Update the conversation in memory with complete response
-        if user_id and complete_message and request.message:
-            success, memory_data = await store_conversation_memory(
-                user_id, request.message, complete_message, conversation_id
-            )
-
-            if success and memory_data:
-                yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
-
+        # After streaming, yield complete message in order to store in db
         yield f"nostream: {json.dumps({'complete_message': complete_message})}"
+
+        # Wait until memory is stored before yielding the confirmation
+        await memory_stored_event.wait()
+        # Get the memory result and yield if successful
+        memory_data = await memory_task
+        if memory_data:
+            yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
+
         yield "data: [DONE]\n\n"
 
     except Exception as e:
-        logger.error(f"Error fetching messages: {e}")
-        yield "data: {'error': 'Error fetching messages'}\n\n"
+        logger.error(f"Error when calling agent: {e}")
+        yield "data: {'error': 'Error when calling agent:  {e}'}\n\n"
         yield "data: [DONE]\n\n"
 
 

@@ -1,5 +1,5 @@
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from bson import ObjectId
 
 
@@ -28,9 +28,10 @@ class BlogPostUpdate(BaseModel):
 
 
 class BlogPost(BlogPostBase):
+    model_config = ConfigDict(
+        json_encoders={ObjectId: str},
+        populate_by_name=True
+    )
+    
     slug: str
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
-
-    class Config:
-        json_encoders = {ObjectId: str}
-        populate_by_name = True
