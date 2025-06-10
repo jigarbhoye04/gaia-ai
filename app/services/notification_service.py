@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from fastapi import Request
+
 from app.models.notification.notification_models import (
     ActionResult,
     BulkActions,
@@ -36,10 +38,14 @@ class NotificationService:
         return await self.orchestrator.create_notification(request)
 
     async def execute_action(
-        self, notification_id: str, action_id: str, user_id: str
+        self,
+        notification_id: str,
+        action_id: str,
+        user_id: str,
+        request: Optional[Request],
     ) -> ActionResult:
         return await self.orchestrator.execute_action(
-            notification_id, action_id, user_id
+            notification_id, action_id, user_id, request=request
         )
 
     async def mark_as_read(self, notification_id: str, user_id: str) -> bool:
@@ -58,9 +64,14 @@ class NotificationService:
         status: Optional[NotificationStatus] = None,
         limit: int = 50,
         offset: int = 0,
+        channel_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         return await self.orchestrator.get_user_notifications(
-            user_id, status, limit, offset
+            user_id,
+            status,
+            limit,
+            offset,
+            channel_type,
         )
 
     async def get_notification(
@@ -68,16 +79,19 @@ class NotificationService:
     ) -> Optional[Dict[str, Any]]:
         """Get a specific notification by ID for a user"""
         return await self.orchestrator.get_notification(
-            notification_id=notification_id, user_id=user_id
+            notification_id=notification_id,
+            user_id=user_id,
         )
 
     async def get_user_notifications_count(
-        self, user_id: str, status: Optional[NotificationStatus] = None
+        self,
+        user_id: str,
+        status: Optional[NotificationStatus] = None,
+        channel_type: Optional[str] = None,
     ) -> int:
         """Get the count of notifications for a user"""
         return await self.orchestrator.storage.get_notification_count(
-            user_id,
-            status,
+            user_id, status, channel_type
         )
 
     async def bulk_actions(
@@ -101,3 +115,7 @@ class NotificationService:
 
     def register_source(self, source: NotificationSource) -> None:
         self.orchestrator.register_source(source)
+
+
+# Global instance of the notification service
+notification_service = NotificationService()

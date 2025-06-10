@@ -81,7 +81,6 @@ async def _process_email(
         f"Processing email for user {user_id}: subject={subject}, sender={sender}, date={date}, "
         f"labels={labels}"
     )
-    logger.info(f"Message content: {content}")
 
     # Create email metadata
     email_metadata = {
@@ -155,19 +154,22 @@ async def process_emails_by_user_id(history_id: int, user_id: str, email: str):
             if "messagesAdded" in item:
                 added_messages.extend(item["messagesAdded"])
 
+        logger.info(
+            f"Found {len(added_messages)} new messages for user {user_id} with history ID {history_id}"
+        )
+
         full_messages = await fetch_all_messages(
             service=service,
             user_id="me",
             message_ids=[msg["message"]["id"] for msg in added_messages],
         )
 
-        # Process the messages with user context
-        processing_results = []
-        for message in full_messages:
-            if not message:
-                continue
-            result = await _process_email(message, user_id, access_token, refresh_token)
-            processing_results.append(result)
+        logger.info(
+            f"Fetched {len(full_messages)} full messages for user {user_id} with history ID {history_id}"
+        )        # Process the messages with user context in batches
+        processing_results = await _process_emails_batch(
+            full_messages, user_id, access_token, refresh_token
+        )
 
         # Update the history ID after processing
         await _update_history_id_by_user_id(user_id, history_id)
@@ -184,6 +186,62 @@ async def process_emails_by_user_id(history_id: int, user_id: str, email: str):
     except Exception as e:
         logger.error(f"Error processing email for user {user_id}: {e}", exc_info=True)
         return {"error": str(e), "status": "failed", "user_id": user_id}
+
+
+async def _process_emails_batch(
+    messages: list[dict | None],
+    user_id: str,
+    access_token: str,
+    refresh_token: str,
+    batch_size: int = 5,
+) -> list[dict]:
+    """
+    Process emails in batches using asyncio.gather for concurrent processing.
+    
+    Args:
+        messages: List of email messages to process
+        user_id: The user ID
+        access_token: OAuth access token
+        refresh_token: OAuth refresh token
+        batch_size: Number of emails to process concurrently in each batch
+        
+    Returns:
+        list[dict]: List of processing results
+    """
+    processing_results = []
+    
+    # Filter out None messages
+    valid_messages = [msg for msg in messages if msg is not None]
+    
+    # Process messages in batches
+    for i in range(0, len(valid_messages), batch_size):
+        batch = valid_messages[i:i + batch_size]
+        
+        logger.info(f"Processing batch {i//batch_size + 1} with {len(batch)} messages for user {user_id}")
+        
+        # Create tasks for concurrent processing within the batch
+        tasks = [
+            _process_email(message, user_id, access_token, refresh_token)
+            for message in batch
+        ]
+        
+        # Execute batch concurrently
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Handle results and exceptions
+        for j, result in enumerate(batch_results):
+            if isinstance(result, Exception):
+                logger.error(f"Error processing message in batch {i//batch_size + 1}, position {j}: {result}")
+                processing_results.append({
+                    "status": "error",
+                    "error": str(result),
+                    "message_id": batch[j].get("id", "unknown")
+                })
+            else:
+                processing_results.append(result)
+    
+    logger.info(f"Completed batch processing {len(processing_results)} messages for user {user_id}")
+    return processing_results
 
 
 # ============================================================================

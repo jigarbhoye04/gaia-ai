@@ -16,14 +16,17 @@ stop_event = asyncio.Event()
 
 
 async def on_message(message: AbstractIncomingMessage):
-    from app.worker_node.process_email import process_emails
+    import app.worker_node.process_email as process_emails
 
     async with message.process():
         async with llm_limiter:
             try:
                 data = json.loads(message.body.decode())
-                await process_emails(
+                await process_emails.process_emails(
                     history_id=data.get("history_id"), email=data.get("email_address")
+                )
+                logger.info(
+                    f"Processing message: {data.get('history_id')} - {data.get('email_address')}"
                 )
             except Exception as e:
                 logger.error(f"Failed to process message: {e}")

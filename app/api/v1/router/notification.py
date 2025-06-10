@@ -9,6 +9,7 @@ from fastapi import (
     HTTPException,
     Path,
     Query,
+    Request,
 )
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
@@ -18,26 +19,27 @@ from app.models.notification.notification_models import (
 )
 from app.models.notification.request_models import (
     BulkActionRequest,
-    ExecuteActionRequest,
     NotificationResponse,
     PaginatedNotificationsResponse,
     SnoozeRequest,
 )
-from app.services.notification_service import NotificationService
-
-# Initialize notification service
-notification_service = NotificationService()
+from app.services.notification_service import notification_service
 
 router = APIRouter()
 
 
 @router.get("/notifications", response_model=PaginatedNotificationsResponse)
 async def get_notifications(
-    status: Optional[NotificationStatus] = Query(None, description="Filter by status"),
+    status: Optional[NotificationStatus] = Query(
+        NotificationStatus.DELIVERED, description="Filter by status"
+    ),
     limit: int = Query(
         50, ge=1, le=100, description="Number of notifications to return"
     ),
-    offset: int = Query(0, ge=0, description="Number of notifications to skip"),
+    offset: int = Query(default=0, ge=0, description="Number of notifications to skip"),
+    channel_type: Optional[str] = Query(
+        "inapp", description="Filter by channel type (e.g., email, sms)"
+    ),
     current_user: dict = Depends(get_current_user),
 ):
     """Get user's notifications with pagination"""
@@ -51,9 +53,11 @@ async def get_notifications(
     try:
         notifications, notification_count = await asyncio.gather(
             notification_service.get_user_notifications(
-                user_id, status, limit + 1, offset
+                user_id, status, limit + 1, offset, channel_type
             ),
-            notification_service.get_user_notifications_count(user_id, status),
+            notification_service.get_user_notifications_count(
+                user_id, status, channel_type
+            ),
         )
 
         return PaginatedNotificationsResponse(
@@ -102,9 +106,9 @@ async def get_notification(
 
 @router.post("/notifications/{notification_id}/actions/{action_id}/execute")
 async def execute_action(
+    request: Request,
     notification_id: str = Path(..., description="Notification ID"),
     action_id: str = Path(..., description="Action ID"),
-    request: ExecuteActionRequest = Body(default=ExecuteActionRequest()),
     current_user: dict = Depends(get_current_user),
 ):
     """Execute a notification action"""
@@ -117,7 +121,7 @@ async def execute_action(
     try:
 
         result = await notification_service.execute_action(
-            notification_id, action_id, user_id
+            notification_id, action_id, user_id, request=request
         )
 
         if not result.success:

@@ -37,12 +37,16 @@ class NotificationStorage(ABC):
         status: Optional[NotificationStatus] = None,
         limit: int = 50,
         offset: int = 0,
+        channel_type: Optional[str] = None,
     ) -> List[NotificationRecord]:
         pass
 
     @abstractmethod
     async def get_notification_count(
-        self, user_id: str, status: Optional[NotificationStatus] = None
+        self,
+        user_id: str,
+        status: Optional[NotificationStatus] = None,
+        channel_type: Optional[str] = None,
     ) -> int:
         """Get count of notifications for a user with optional status filtering"""
         pass
@@ -83,11 +87,16 @@ class MongoDBNotificationStorage(NotificationStorage):
         status: Optional[NotificationStatus] = None,
         limit: int = 50,
         offset: int = 0,
+        channel_type: Optional[str] = None,
     ) -> List[NotificationRecord]:
         """Get user's notifications with optional filtering"""
         query = {"user_id": user_id}
         if status is not None:
             query["status"] = status
+
+        # Filter by channel type if specified
+        if channel_type is not None:
+            query["channels.channel_type"] = channel_type
 
         cursor = notifications_collection.find(query)
         cursor = cursor.sort("created_at", -1).skip(offset).limit(limit)
@@ -96,11 +105,16 @@ class MongoDBNotificationStorage(NotificationStorage):
         return [NotificationRecord.model_validate(doc) for doc in results]
 
     async def get_notification_count(
-        self, user_id: str, status: Optional[NotificationStatus] = None
+        self,
+        user_id: str,
+        status: Optional[NotificationStatus] = None,
+        channel_type: Optional[str] = None,
     ) -> int:
         """Get count of notifications for a user with optional status filtering"""
         query = {"user_id": user_id}
         if status is not None:
             query["status"] = status
+        if channel_type is not None:
+            query["channels.channel_type"] = channel_type
 
         return await notifications_collection.count_documents(query)

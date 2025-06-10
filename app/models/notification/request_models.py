@@ -15,12 +15,6 @@ class CreateNotificationRequest(BaseModel):
     notification_request: NotificationRequest
 
 
-class ExecuteActionRequest(BaseModel):
-    """Request model for executing actions"""
-
-    confirmation_token: Optional[str] = None
-
-
 class BulkActionRequest(BaseModel):
     """Request model for bulk actions"""
 

@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class NotificationType(str, Enum):
@@ -47,6 +47,7 @@ class ApiCallConfig(BaseModel):
     headers: Optional[Dict[str, str]] = None
     success_message: Optional[str] = None
     error_message: Optional[str] = None
+    is_internal: Optional[bool] = False
 
 
 class WorkflowConfig(BaseModel):
@@ -65,26 +66,20 @@ class ActionConfig(BaseModel):
     workflow: Optional[WorkflowConfig] = None
     modal: Optional[ModalConfig] = None
 
-    @field_validator(
-        "redirect",
-        "api_call",
-        "workflow",
-        "modal",
-        mode="before",
-    )
-    def validate_single_config(cls, v, values):
+    @model_validator(mode="after")
+    def validate_single_config(self):
         """Ensure only one action config is set"""
         configs = [
-            values.get("redirect"),
-            values.get("api_call"),
-            values.get("workflow"),
-            values.get("modal"),
+            self.redirect,
+            self.api_call,
+            self.workflow,
+            self.modal,
         ]
         non_none_configs = [c for c in configs if c is not None]
 
         if len(non_none_configs) > 1:
             raise ValueError("Only one action config should be specified")
-        return v
+        return self
 
 
 class NotificationAction(BaseModel):
@@ -228,71 +223,3 @@ class UserNotificationPreferences(BaseModel):
             return start <= now <= end
         else:
             return now >= start or now <= end
-
-
-# Example notification for email draft scenario
-def create_email_draft_notification(
-    user_id: str, draft_id: str, original_email_id: str
-) -> NotificationRequest:
-    """Create notification for AI-drafted email"""
-    return NotificationRequest(
-        user_id=user_id,
-        source="ai-email-draft",
-        type=NotificationType.INFO,
-        priority=2,
-        channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
-        content=NotificationContent(
-            title="Email draft ready for review",
-            body="I've drafted a response to John's email about the project timeline. Would you like to review and send?",
-            actions=[
-                NotificationAction(
-                    type=ActionType.API_CALL,
-                    label="Send Now",
-                    style=ActionStyle.PRIMARY,
-                    requires_confirmation=True,
-                    confirmation_message="Are you sure you want to send this email?",
-                    config=ActionConfig(
-                        api_call=ApiCallConfig(
-                            endpoint="/api/emails/send",
-                            method="POST",
-                            payload={"draft_id": draft_id},
-                            success_message="Email sent successfully!",
-                            error_message="Failed to send email",
-                        )
-                    ),
-                ),
-                NotificationAction(
-                    type=ActionType.REDIRECT,
-                    label="Review in Gmail",
-                    style=ActionStyle.SECONDARY,
-                    config=ActionConfig(
-                        redirect=RedirectConfig(
-                            url=f"https://mail.google.com/mail/u/0/#drafts/{draft_id}",
-                            open_in_new_tab=True,
-                            close_notification=False,
-                        )
-                    ),
-                ),
-                NotificationAction(
-                    type=ActionType.MODAL,
-                    label="Edit Here",
-                    style=ActionStyle.SECONDARY,
-                    config=ActionConfig(
-                        modal=ModalConfig(
-                            component="EmailEditModal", props={"draft_id": draft_id}
-                        )
-                    ),
-                ),
-            ],
-        ),
-        metadata={
-            "draft_id": draft_id,
-            "original_email_id": original_email_id,
-            "ai_confidence": 0.85,
-            "email_subject": "Re: Project Timeline Discussion",
-            "recipient": "john@example.com",
-        },
-        rules=NotificationRules(
-            max_retries=2, expire_after_hours=24, respect_quiet_hours=True
-        ),
-    )

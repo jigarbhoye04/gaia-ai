@@ -3,6 +3,8 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+from fastapi import Request
+
 from app.models.notification.notification_models import (
     ActionResult,
     BulkActions,
@@ -23,6 +25,7 @@ from app.utils.notification.channels import (
     InAppChannelAdapter,
 )
 from app.utils.notification.sources import (
+    AIEmailCalendarSource,
     AIEmailDraftSource,
     NotificationSource,
 )
@@ -60,6 +63,7 @@ class NotificationOrchestrator:
 
         # Sources
         self.register_source(AIEmailDraftSource())
+        self.register_source(AIEmailCalendarSource())
 
     def register_channel_adapter(self, adapter: ChannelAdapter) -> None:
         """Register a new channel adapter"""
@@ -213,7 +217,11 @@ class NotificationOrchestrator:
             )
 
     async def execute_action(
-        self, notification_id: str, action_id: str, user_id: str
+        self,
+        notification_id: str,
+        action_id: str,
+        user_id: str,
+        request: Optional[Request],
     ) -> ActionResult:
         """Execute a notification action"""
         logger.info(f"Executing action {action_id} for notification {notification_id}")
@@ -247,7 +255,7 @@ class NotificationOrchestrator:
             )
 
         # Execute action
-        result = await handler.execute(action, notification, user_id)
+        result = await handler.execute(action, notification, user_id, request=request)
 
         # Update notification if needed
         if result.update_notification:
@@ -345,10 +353,11 @@ class NotificationOrchestrator:
         status: Optional[NotificationStatus] = None,
         limit: int = 50,
         offset: int = 0,
+        channel_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Get notifications for a user"""
+        """Get notifications for a user with optional status and channel filtering"""
         notifications = await self.storage.get_user_notifications(
-            user_id, status, limit, offset
+            user_id, status, limit, offset, channel_type
         )
         return [await self._serialize_notification(n) for n in notifications]
 

@@ -1,8 +1,10 @@
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+from typing import Optional
 
 import httpx
+from fastapi import Request
 
 from app.models.notification.notification_models import (
     ActionResult,
@@ -27,7 +29,11 @@ class ActionHandler(ABC):
 
     @abstractmethod
     async def execute(
-        self, action: NotificationAction, notification: NotificationRecord, user_id: str
+        self,
+        action: NotificationAction,
+        notification: NotificationRecord,
+        user_id: str,
+        request: Optional[Request],
     ) -> ActionResult:
         pass
 
@@ -44,7 +50,11 @@ class ApiCallActionHandler(ActionHandler):
         return action.type == ActionType.API_CALL and action.config.api_call is not None
 
     async def execute(
-        self, action: NotificationAction, notification: NotificationRecord, user_id: str
+        self,
+        action: NotificationAction,
+        notification: NotificationRecord,
+        user_id: str,
+        request: Optional[Request],
     ) -> ActionResult:
         api_config = action.config.api_call
 
@@ -83,6 +93,9 @@ class ApiCallActionHandler(ActionHandler):
                     headers=headers,
                     json=payload,
                     timeout=30.0,
+                    cookies=(
+                        request.cookies if request and api_config.is_internal else None
+                    ),
                 )
 
                 response.raise_for_status()
@@ -129,7 +142,11 @@ class RedirectActionHandler(ActionHandler):
         return action.type == ActionType.REDIRECT and action.config.redirect is not None
 
     async def execute(
-        self, action: NotificationAction, notification: NotificationRecord, user_id: str
+        self,
+        action: NotificationAction,
+        notification: NotificationRecord,
+        user_id: str,
+        request: Optional[Request],
     ) -> ActionResult:
         redirect_config = action.config.redirect
 

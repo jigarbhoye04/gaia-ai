@@ -237,6 +237,7 @@ async def call_mail_processing_agent(
                     "user_id": user_id,
                     "access_token": access_token,
                     "refresh_token": refresh_token,
+                    "initiator": "backend",  # This will be used to identify either to send notification or stream to the user
                 },
                 "recursion_limit": 5,  # Lower limit for email processing
                 "metadata": {
