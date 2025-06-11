@@ -1,6 +1,9 @@
-from typing import List, Optional, Union
+import base64
+import json
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import List, Optional, Union
+
+from pydantic import BaseModel, Field, model_validator
 
 
 class EmailRequest(BaseModel):
@@ -85,3 +88,43 @@ class DraftRequest(BaseModel):
     cc: Optional[List[str]] = None
     bcc: Optional[List[str]] = None
     is_html: Optional[bool] = False
+
+
+class EmailWebhookMessage(BaseModel):
+    """
+    Model for the message part of the webhook request.
+    The `data` field is a base64 encoded JSON string containing `emailAddress` and `historyId`.
+    """
+
+    messageId: str
+    publishTime: str
+    data: str = Field(
+        ...,
+        description="Base64 encoded string of the email data. Contains emailAddress and historyId.",
+    )
+
+    # Decoded fields extracted from data
+    emailAddress: Optional[str] = None
+    historyId: Optional[int] = None
+
+    @model_validator(mode="before")
+    def decode_data(cls, values):
+        try:
+            encoded = values.get("data")
+            decoded_bytes = base64.urlsafe_b64decode(encoded + "==")
+            decoded_str = decoded_bytes.decode("utf-8")
+            decoded_json = json.loads(decoded_str)
+
+            values["emailAddress"] = decoded_json.get("emailAddress")
+            values["historyId"] = decoded_json.get("historyId")
+        except Exception as e:
+            raise ValueError(f"Failed to decode message data: {str(e)}")
+
+        return values
+
+
+class EmailWebhookRequest(BaseModel):
+    """Request model for handling email webhooks."""
+
+    message: EmailWebhookMessage
+    subscription: str
