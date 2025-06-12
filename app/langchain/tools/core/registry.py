@@ -1,5 +1,6 @@
 from app.langchain.tools import (
     calendar_tool,
+    document_tool,
     file_tools,
     flowchart_tool,
     image_tool,
@@ -10,7 +11,6 @@ from app.langchain.tools import (
     weather_tool,
     webpage_tool,
 )
-
 
 # Define tools that should always be accessible to the agent directly
 ALWAYS_AVAILABLE_TOOLS = [
@@ -29,4 +29,5 @@ tools = [
     flowchart_tool.create_flowchart,
     image_tool.generate_image,
     weather_tool.get_weather,
+    document_tool.generate_document,
 ]

@@ -49,7 +49,9 @@ Complete Tool List:
 • create_flowchart - Generate Mermaid.js flowcharts from descriptions
 • generate_image - Create images from text prompts    
 • query_file - Search within user-uploaded files
-• get_weather
+• get_weather - Fetch current weather information
+• generate_document - Create documents from structured data
+• retrieve_tools - Automatically find relevant tools based on user queries
 
 Flow: Analyze intent → Vector search for relevant tools → Execute with parameters → Integrate results into response
 
