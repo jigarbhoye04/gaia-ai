@@ -9,9 +9,9 @@ from langgraph.prebuilt import ToolNode
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
+import app.langchain.tools.calendar_tool as calendar_tool
 from app.config.settings import settings
 from app.langchain.llm.client import init_llm
-from app.langchain.tools.calendar_tool import calendar_event
 from app.langchain.tools.core.injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
@@ -20,7 +20,8 @@ from app.langchain.tools.core.injectors import (
 from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS, tools
 from app.langchain.tools.core.retrieval import retrieve_tools
 from app.langchain.tools.mail_tool import compose_email
-from app.langchain.tools.memory_tools import add_memory
+from app.langchain.tools.memory_tools import add_memory, search_memory
+from app.langchain.tools.todo_tool import create_todo
 
 llm = init_llm()
 
@@ -86,13 +87,15 @@ async def build_graph():
         yield graph
 
 
-mail_processing_tools = [
+proactive_tools = [
     compose_email,
-    calendar_event,
+    calendar_tool.create_calendar_event,
     add_memory,
+    search_memory,
+    create_todo,
 ]
 
-llm_with_tools = llm.bind_tools(tools=mail_processing_tools)
+llm_with_tools = llm.bind_tools(tools=proactive_tools)
 
 
 # Define the LLM agent node
@@ -128,7 +131,7 @@ async def build_mail_processing_graph():
     workflow.add_node(
         "tools",
         ToolNode(
-            tools=mail_processing_tools,
+            tools=proactive_tools,
         ),
     )
 
