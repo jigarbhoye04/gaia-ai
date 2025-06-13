@@ -128,7 +128,14 @@ async def create_goal_service(goal: GoalCreate, user: dict) -> GoalResponse:
         result = await goals_collection.insert_one(goal_data)
         new_goal = await goals_collection.find_one({"_id": result.inserted_id})
 
+        # Invalidate user's goals list cache and statistics
+        cache_key_goals = f"goals_cache:{user_id}"
+        cache_key_stats = f"goal_stats_cache:{user_id}"
+        await delete_cache(cache_key_goals)
+        await delete_cache(cache_key_stats)
+
         formatted_goal = goal_helper(new_goal)
+        logger.info(f"Goal created successfully for user {user_id}. Cache invalidated.")
         return GoalResponse(**formatted_goal)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create goal {e}")
@@ -245,8 +252,10 @@ async def delete_goal_service(goal_id: str, user: dict) -> dict:
 
     cache_key_goal = f"goal_cache:{goal_id}"
     cache_key_goals = f"goals_cache:{user_id}"
+    cache_key_stats = f"goal_stats_cache:{user_id}"
     await delete_cache(cache_key_goal)
     await delete_cache(cache_key_goals)
+    await delete_cache(cache_key_stats)
 
     logger.info(f"Goal {goal_id} deleted successfully by user {user_id}.")
     return goal_helper(goal)
@@ -297,8 +306,10 @@ async def update_node_status_service(
 
     cache_key_goal = f"goal_cache:{goal_id}"
     cache_key_goals = f"goals_cache:{user_id}"
+    cache_key_stats = f"goal_stats_cache:{user_id}"
     await delete_cache(cache_key_goal)
     await delete_cache(cache_key_goals)
+    await delete_cache(cache_key_stats)
 
     logger.info(f"Node status updated for node {node_id} in goal {goal_id}.")
     return goal_helper(updated_goal)
@@ -515,8 +526,10 @@ async def sync_subtask_to_goal_completion(
         goal_id = str(goal["_id"])
         cache_key_goal = f"goal_cache:{goal_id}"
         cache_key_goals = f"goals_cache:{user_id}"
+        cache_key_stats = f"goal_stats_cache:{user_id}"
         await delete_cache(cache_key_goal)
         await delete_cache(cache_key_goals)
+        await delete_cache(cache_key_stats)
 
         logger.info(
             f"Synced subtask {subtask_id} completion back to goal {goal_id}: {is_complete}"
@@ -563,9 +576,11 @@ async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> 
             if user_id:
                 cache_key_goal = f"goal_cache:{goal_id}"
                 cache_key_goals = f"goals_cache:{user_id}"
+                cache_key_stats = f"goal_stats_cache:{user_id}"
                 await delete_cache(cache_key_goal)
                 await delete_cache(cache_key_goals)
-                logger.info(f"Cache invalidated for goal {goal_id} and user {user_id}")
+                await delete_cache(cache_key_stats)
+                logger.info(f"Goal caches invalidated for goal {goal_id} and user {user_id}")
 
             logger.info(
                 f"Goal {goal_id} successfully updated with roadmap and todo project {project_id}"

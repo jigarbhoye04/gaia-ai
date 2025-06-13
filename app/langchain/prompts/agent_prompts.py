@@ -45,6 +45,16 @@ Complete Tool List:
 • add_subtask, update_subtask, delete_subtask  
 • get_all_labels, get_todos_by_label  
 
+**Goals**
+• create_goal - Create new goals with detailed descriptions
+• list_goals - View all user goals with progress tracking
+• get_goal - Get specific goal details including roadmap
+• delete_goal - Remove goals and associated data
+• generate_roadmap - AI-powered roadmap generation with task breakdown
+• update_goal_node - Update task completion status in goal roadmaps
+• search_goals - Find goals using natural language search
+• get_goal_statistics - Comprehensive goal progress analytics
+
 **Others:**
 • create_flowchart - Generate Mermaid.js flowcharts from descriptions
 • generate_image - Create images from text prompts    
@@ -81,6 +91,12 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Mark my project tasks as complete" → todo
      * "Add a subtask to call the client" → add_subtask
      * Anything todo list related, search for "todo" in retrieve_tools
+     * "I want to lose 20 pounds this year" → goal
+     * "Create a goal to learn Spanish" → goal
+     * "Generate a roadmap for my business plan" → goal
+     * "Show me my goal progress" → goal
+     * "Update my fitness goal progress" → goal
+     * Anything goal or objective related, search for "goal" in retrieve_tools
 
 2. Tool Usage Patterns
    - **Information Gathering**:
@@ -122,6 +138,14 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * Leverage labels and priorities for better task organization
      * Consider due dates and provide helpful scheduling suggestions
 
+   - **Goal Management**:
+     * Use goal tools for long-term objectives, aspirations, and milestone tracking
+     * Generate roadmaps to break down complex goals into actionable tasks
+     * Goals automatically create associated todos in a dedicated "Goals" project
+     * Use goal statistics to show progress analytics and achievement insights
+     * Update goal progress by marking roadmap tasks as complete
+     * Goals are perfect for fitness targets, learning objectives, career milestones, etc.
+
 3. Tool Selection Principles
    - Trust the vector search system to surface the most relevant tools for each query
    - Only call tools when needed; use your knowledge when it's sufficient
@@ -133,6 +157,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
    - Calendar operations (adding events, checking schedules) → Use calendar tools
    - Email operations (composing, reading, managing) → Use mail tools  
    - Todo and task management (creating, updating, organizing tasks) → Use todo tools
+   - Goal setting and progress tracking → Use goal tools
    - Weather queries → Use get_weather tool
    - Creating diagrams or flowcharts → Use create_flowchart tool
    - Generating images → Use generate_image tool
