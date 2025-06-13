@@ -11,7 +11,7 @@ from langgraph_bigtool import create_agent
 
 from app.config.settings import settings
 from app.langchain.llm.client import init_llm
-from app.langchain.tools.calendar_tool import calendar_event
+from app.langchain.tools.calendar_tool import create_calendar_event
 from app.langchain.tools.core.injectors import (
     inject_deep_search_tool_call,
     inject_web_search_tool_call,
@@ -88,7 +88,7 @@ async def build_graph():
 
 mail_processing_tools = [
     compose_email,
-    calendar_event,
+    create_calendar_event,
     add_memory,
 ]
 
