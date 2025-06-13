@@ -29,7 +29,6 @@ from app.langchain.templates.calendar_template import (
     CALENDAR_PROMPT_TEMPLATE,
 )
 from app.models.calendar_models import EventCreateRequest
-from app.services.calendar_service import list_calendars
 from app.services.notification_service import notification_service
 from app.utils.notification.sources import create_calendar_event_notification
 
