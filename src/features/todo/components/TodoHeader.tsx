@@ -8,7 +8,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from "@heroui/dropdown";
-import { CheckCircle, MoreHorizontal, Trash2 } from "lucide-react";
+import { CheckCircle, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 
 interface TodoHeaderProps {
   title: string;
@@ -18,6 +18,7 @@ interface TodoHeaderProps {
   onSelectAll?: () => void;
   onBulkComplete?: () => void;
   onBulkDelete?: () => void;
+  onAddTodo?: () => void;
 }
 
 export default function TodoHeader({
@@ -28,6 +29,7 @@ export default function TodoHeader({
   onSelectAll,
   onBulkComplete,
   onBulkDelete,
+  onAddTodo,
 }: TodoHeaderProps) {
   const showBulkActions =
     selectedCount !== undefined &&
@@ -57,39 +59,53 @@ export default function TodoHeader({
           </div>
         </div>
 
-        {hasSelection && showBulkActions && (
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="flat"
-              startContent={<CheckCircle className="h-4 w-4" />}
-              onPress={onBulkComplete}
-            >
-              Complete
-            </Button>
-            <Button
-              size="sm"
-              variant="flat"
-              color="danger"
-              startContent={<Trash2 className="h-4 w-4" />}
-              onPress={onBulkDelete}
-            >
-              Delete
-            </Button>
-            <Dropdown>
-              <DropdownTrigger>
-                <Button isIconOnly size="sm" variant="flat">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Bulk actions">
-                <DropdownItem key="move">Move to project...</DropdownItem>
-                <DropdownItem key="priority">Set priority...</DropdownItem>
-                <DropdownItem key="labels">Add labels...</DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {hasSelection && showBulkActions ? (
+            <>
+              <Button
+                size="sm"
+                variant="flat"
+                startContent={<CheckCircle className="h-4 w-4" />}
+                onPress={onBulkComplete}
+              >
+                Complete
+              </Button>
+              <Button
+                size="sm"
+                variant="flat"
+                color="danger"
+                startContent={<Trash2 className="h-4 w-4" />}
+                onPress={onBulkDelete}
+              >
+                Delete
+              </Button>
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button isIconOnly size="sm" variant="flat">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Bulk actions">
+                  <DropdownItem key="move">Move to project...</DropdownItem>
+                  <DropdownItem key="priority">Set priority...</DropdownItem>
+                  <DropdownItem key="labels">Add labels...</DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </>
+          ) : (
+            onAddTodo && (
+              <Button
+                isIconOnly
+                size="sm"
+                variant="flat"
+                onPress={onAddTodo}
+                className="text-primary"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            )
+          )}
+        </div>
       </div>
     </div>
   );
