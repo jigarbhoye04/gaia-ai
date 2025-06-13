@@ -58,6 +58,7 @@ export default function HeaderManager() {
     else if (pathname.startsWith("/settings")) componentType = "settings";
     else if (pathname === "/notes") componentType = "notes";
     else if (pathname === "/goals") componentType = "goals";
+    else if (pathname.startsWith("/goals")) componentType = "todos";
     // Don't override custom headers set by other components if still on the same section
     // BUT don't skip setting header if we're coming from a different section
     else if (
@@ -96,6 +97,8 @@ export default function HeaderManager() {
     case "browser":
       return <BrowserHeader {...componentSpecificProps} />;
     case "default":
+    case "todos":
+      return <></>;
     default:
       return <DefaultHeader />;
   }

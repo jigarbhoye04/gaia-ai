@@ -53,13 +53,12 @@ export default function TodoItem({
   return (
     <>
       <div
-        className={`pointer-events-auto w-full cursor-pointer rounded-lg border border-default-200 bg-content1 p-3 shadow-sm transition-all ${
+        className={`pointer-events-auto w-full cursor-pointer rounded-xl bg-content2 p-3 shadow-sm transition-all ${
           isSelected
             ? "bg-primary/5 ring-2 ring-primary"
-            : "hover:bg-default-50"
-        } ${todo.completed ? "opacity-60" : ""}`}
+            : "hover:bg-content2/70"
+        } ${todo.completed ? "opacity-30" : ""}`}
         onClick={() => {
-          console.log("TodoItem clicked:", todo.title);
           onClick?.(todo);
         }}
       >
