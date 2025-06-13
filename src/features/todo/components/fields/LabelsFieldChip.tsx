@@ -5,9 +5,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/shadcn/badge";
 import { Button } from "@/components/ui/shadcn/button";
-import {
-  DropdownMenuItem,
-} from "@/components/ui/shadcn/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/shadcn/dropdown-menu";
 import { Input } from "@/components/ui/shadcn/input";
 
 import BaseFieldChip from "./BaseFieldChip";

@@ -23,12 +23,23 @@ export default function ProjectFieldChip({
   const selectedProject = projects.find((project) => project.id === value);
   const displayValue = selectedProject?.name;
 
+  // Create a custom display value with project color indicator
+  const displayValueWithColor = selectedProject ? (
+    <div className="flex items-center gap-2">
+      <div
+        className="h-3 w-3 flex-shrink-0 rounded-full border-0"
+        style={{ backgroundColor: selectedProject.color || "#71717a" }}
+      />
+      <span className="truncate text-zinc-200">{selectedProject.name}</span>
+    </div>
+  ) : undefined;
+
   return (
     <BaseFieldChip
       label="Project"
-      value={displayValue}
+      value={displayValueWithColor || displayValue}
       placeholder="Project"
-      icon={<Folder size={14} />}
+      icon={!selectedProject ? <Folder size={14} /> : undefined}
       variant={selectedProject ? "primary" : "default"}
       className={className}
     >
