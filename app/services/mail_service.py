@@ -4,7 +4,7 @@ import time
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from fastapi import UploadFile
 from google.oauth2.credentials import Credentials
@@ -12,8 +12,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import BatchHttpRequest
 
-from app.config.settings import settings
 from app.config.loggers import general_logger as logger
+from app.config.settings import settings
 from app.utils.general_utils import transform_gmail_message
 
 
@@ -24,6 +24,10 @@ def get_gmail_service(refresh_token: str, access_token: str):
         token_uri=settings.GOOGLE_TOKEN_URL,
         client_id=settings.GOOGLE_CLIENT_ID,
         client_secret=settings.GOOGLE_CLIENT_SECRET,
+        scopes=[
+            "https://www.googleapis.com/auth/gmail.modify",
+            "https://www.googleapis.com/auth/gmail.send",
+        ],
     )
     return build("gmail", "v1", credentials=creds)
 
@@ -88,13 +92,17 @@ def create_message(
             #     or "application/octet-stream"
             # )
 
+            file_name = attachment.filename
+            if not file_name:
+                file_name = "attachment"
+
             attachment_part = MIMEApplication(
-                attachment.file.read(), Name=os.path.basename(attachment.filename)
+                attachment.file.read(), Name=os.path.basename(file_name)
             )
 
             # Add header to attachment
             attachment_part["Content-Disposition"] = (
-                f'attachment; filename="{os.path.basename(attachment.filename)}"'
+                f'attachment; filename="{os.path.basename(file_name)}"'
             )
             message.attach(attachment_part)
 

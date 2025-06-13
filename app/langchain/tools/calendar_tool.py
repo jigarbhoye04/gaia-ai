@@ -1,3 +1,4 @@
+import asyncio
 import json
 import pprint
 from typing import Any, Dict, List, Optional, Union
@@ -6,7 +7,6 @@ import httpx
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
-from app.models.calendar_models import EventCreateRequest
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.calendar_tool_docs import (
@@ -25,9 +25,12 @@ from app.services.calendar_service import (
     search_calendar_events_native,
 )
 from app.langchain.templates.calendar_template import (
-    CALENDAR_PROMPT_TEMPLATE,
     CALENDAR_LIST_TEMPLATE,
+    CALENDAR_PROMPT_TEMPLATE,
 )
+from app.models.calendar_models import EventCreateRequest
+from app.services.notification_service import notification_service
+from app.utils.notification.sources import create_calendar_event_notification
 
 
 @tool(parse_docstring=True)
@@ -171,6 +174,46 @@ async def create_calendar_event(
                     "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
             )
+
+        configurable = config.get("configurable", {})
+        if not configurable:
+            logger.error("Missing 'configurable' section in config")
+            return json.dumps(
+                {
+                    "error": "Configuration data is missing",
+                    "intent": "calendar",
+                    "calendar_options": [],
+                    "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
+                }
+            )
+
+        # If initiated by backend then create notification
+        if configurable.get("initiator") == "backend":
+            user_id = configurable.get("user_id")
+            if not user_id:
+                logger.error("Missing user_id in configuration")
+                return json.dumps(
+                    {
+                        "error": "User ID is required to create calendar notification",
+                        "intent": "calendar",
+                        "calendar_options": [],
+                        "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
+                    }
+                )
+
+            # Create a notification for the user
+            notifications = create_calendar_event_notification(
+                user_id=user_id,
+                notification_data=event_list,
+            )
+            await asyncio.gather(
+                *[
+                    notification_service.create_notification(notification)
+                    for notification in notifications
+                ]
+            )
+
+            return "Calendar notification created successfully. Please check your frontend for options."
 
         # Return the successfully processed events
         writer = get_stream_writer()

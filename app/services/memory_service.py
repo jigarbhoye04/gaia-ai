@@ -4,23 +4,23 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from app.config.loggers import llm_logger as logger
+from app.db.redis import ONE_HOUR_TTL, Cacheable, CacheInvalidator, delete_cache
 from app.memory.client import get_memory_client
 from app.models.memory_models import (
     ConversationMemory,
     MemoryEntry,
     MemorySearchResult,
 )
-from app.db.redis import Cacheable, CacheInvalidator, ONE_HOUR_TTL, delete_cache
 
 
 class MemoryService:
     """Service class for managing memory operations."""
-    
+
     def __init__(self):
         """Initialize the memory service."""
         self.client = get_memory_client()
         self.logger = logger
-        
+
     def _validate_user_id(self, user_id: Optional[str]) -> Optional[str]:
         """
         Validate and return user_id.
@@ -34,14 +34,14 @@ class MemoryService:
         if not user_id:
             self.logger.warning("No user_id provided for memory operation")
             return None
-        
+
         # Handle different user_id formats
         if isinstance(user_id, dict):
             # If user_id is accidentally a user object
             user_id = user_id.get("user_id") or user_id.get("id")
-            
+
         return str(user_id) if user_id else None
-    
+
     def _parse_memory_result(self, result: Dict[str, Any]) -> Optional[MemoryEntry]:
         """
         Parse a single memory result from Mem0 API response.
@@ -74,7 +74,7 @@ class MemoryService:
             deleted_at=result.get("deleted_at"),
             relevance_score=result.get("score") or result.get("relevance_score"),
         )
-    
+
     def _parse_memory_list(self, memories: List[Dict[str, Any]], user_id: str) -> List[MemoryEntry]:
         """
         Parse a list of memory results.
@@ -92,7 +92,7 @@ class MemoryService:
                 memory_entry.user_id = user_id
                 parsed_memories.append(memory_entry)
         return parsed_memories
-    
+
     @CacheInvalidator(key_patterns=["memory:user:{user_id}:*", "memory:all:{user_id}:*"])
     async def store_memory(
         self,
@@ -114,7 +114,7 @@ class MemoryService:
         user_id = self._validate_user_id(user_id)
         if not user_id:
             return None
-            
+
         try:
             # Store as a simple user message for mem0 to infer memory from
             # Use asyncio.to_thread to run synchronous Mem0 client in thread pool
@@ -125,18 +125,18 @@ class MemoryService:
                 metadata=metadata or {},
                 infer=True
             )
-            
+
             self.logger.info(f"Memory stored for user {user_id}")
-            
+
             # Mem0 cloud API returns a dict with 'results' array
             if not isinstance(result, dict) or "results" not in result:
                 self.logger.warning(f"Unexpected response format from mem0: {result}")
                 return None
-                
+
             results = result.get("results", [])
             if not results:
                 return None
-                
+
             # Get the first result (usually only one when inferring)
             first_result = results[0]
 
@@ -154,11 +154,11 @@ class MemoryService:
                     memory_entry.metadata = metadata
 
             return memory_entry
-            
+
         except Exception as e:
             self.logger.error(f"Error storing memory: {e}")
             return None
-    
+
     async def store_conversation(
         self, conversation: ConversationMemory
     ) -> bool:
@@ -218,11 +218,11 @@ class MemoryService:
             self.logger.info(f"Memory storage result: {result}")
             self.logger.info(f"Conversation stored for user {user_id}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error storing conversation: {e}")
             return False
-    
+
     @Cacheable(
         key_pattern="memory:search:{user_id}:{query}:{limit}", 
         ttl=ONE_HOUR_TTL,
@@ -248,7 +248,7 @@ class MemoryService:
         user_id = self._validate_user_id(user_id)
         if not user_id:
             return MemorySearchResult()
-            
+
         try:
             results = await asyncio.to_thread(
                 self.client.search,
@@ -256,25 +256,25 @@ class MemoryService:
                 user_id=user_id,
                 limit=limit,
             )
-            
+
             # Mem0 cloud API returns dict with 'results' key
             if not isinstance(results, dict) or "results" not in results:
                 self.logger.warning(f"Unexpected search result format: {results}")
                 return MemorySearchResult()
-            
-            memories = self._parse_memory_list(results["results"], user_id)
-            
+
+            memories = self._parse_memory_list(memories=results, user_id=user_id)
+
             return MemorySearchResult(
                 memories=memories,
                 total_count=len(memories),
                 page=1,
                 page_size=limit,
             )
-            
+
         except Exception as e:
             self.logger.error(f"Error searching memories: {e}")
             return MemorySearchResult()
-    
+
     @Cacheable(
         key_pattern="memory:all:{user_id}:{page}:{page_size}", 
         ttl=ONE_HOUR_TTL,
@@ -300,7 +300,7 @@ class MemoryService:
         user_id = self._validate_user_id(user_id)
         if not user_id:
             return MemorySearchResult()
-            
+
         try:
             all_memories = await asyncio.to_thread(
                 self.client.get_all,
@@ -316,7 +316,7 @@ class MemoryService:
                 memory_entry = self._parse_memory_result(memory)
                 if memory_entry:
                     memory_entries.append(memory_entry)
-            
+
             return MemorySearchResult(
                 memories=memory_entries,
                 total_count=len(memory_entries),
@@ -324,11 +324,11 @@ class MemoryService:
                 page_size=page_size,
                 has_next=len(memory_entries) > page * page_size,
             )
-            
+
         except Exception as e:
             self.logger.error(f"Error retrieving all memories: {e}")
             return MemorySearchResult()
-    
+
     @CacheInvalidator(key_patterns=["memory:user:{user_id}:*", "memory:all:{user_id}:*"])
     async def delete_memory(
         self, memory_id: str, user_id: Optional[str]
@@ -346,7 +346,7 @@ class MemoryService:
         user_id = self._validate_user_id(user_id)
         if not user_id:
             return False
-            
+
         try:
             # Mem0 cloud API doesn't require user_id for delete
             await asyncio.to_thread(
@@ -355,7 +355,7 @@ class MemoryService:
             )
             self.logger.info(f"Memory {memory_id} deleted for user {user_id}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Error deleting memory {memory_id}: {e}")
             return False

@@ -32,6 +32,7 @@ from app.services.onboarding_service import (
 
 # from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
+from app.utils.watch_mail import watch_mail
 
 router = APIRouter()
 
@@ -62,7 +63,9 @@ async def login_google():
 
 
 @router.get("/google/callback", response_class=RedirectResponse)
-async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
+async def callback(
+    code: Annotated[str, "code"], background_tasks: BackgroundTasks
+) -> RedirectResponse:
     try:
         tokens = await get_tokens_from_code(code)
         access_token = tokens.get("access_token")
@@ -81,7 +84,7 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
         if not user_email:
             raise HTTPException(status_code=400, detail="Email not found in user info")
 
-        await store_user_info(user_name, user_email, user_picture)
+        user_id = await store_user_info(user_name, user_email, user_picture)
 
         # Redirect URL can include tokens if needed
         redirect_url = f"{settings.FRONTEND_URL}?access_token={access_token}&refresh_token={refresh_token}"
@@ -130,6 +133,15 @@ async def callback(code: Annotated[str, "code"]) -> RedirectResponse:
                 samesite="lax",
                 max_age=refresh_token_max_age,
             )
+
+        # Add background task to register user to watch emails
+        background_tasks.add_task(
+            watch_mail,
+            email=user_email,
+            access_token=access_token,
+            user_id=user_id,
+            refresh_token=refresh_token,
+        )
 
         return response
 
@@ -212,9 +224,12 @@ async def update_me(
     """
     user_id = user.get("user_id")
 
+    if not user_id or not isinstance(user_id, str):
+        raise HTTPException(status_code=400, detail="Invalid user ID")
+
     # Process profile picture if provided
     picture_data = None
-    if picture and picture.size > 0:
+    if picture and picture.size and picture.size > 0:
         # Validate file type
         allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
         if picture.content_type not in allowed_types:

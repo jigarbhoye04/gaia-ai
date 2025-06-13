@@ -1,6 +1,6 @@
 import asyncio
 import time
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import cloudinary
@@ -16,7 +16,6 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
 from app.config.loggers import app_logger as logger
-from app.config.settings import settings
 
 load_dotenv()
 
@@ -25,7 +24,7 @@ router = APIRouter()
 
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-exp", api_key=settings.GEMINI_API_KEY
+    model="gemini-2.0-flash-exp", api_key="api_key_placeholder"
 )
 
 

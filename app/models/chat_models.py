@@ -45,7 +45,10 @@ class MessageModel(BaseModel):
     email_compose_data: Optional[dict] = None  # Email compose data from mail_tool
     memory_data: Optional[dict] = None  # Complete memory operation data
     todo_data: Optional[dict] = None  # Data related to todo operations
-    code_data: Optional[dict] = None  # Code execution data with language, code, and output
+    goal_data: Optional[dict] = None  # Data related to goal operations
+    code_data: Optional[dict] = (
+        None  # Code execution data with language, code, and output
+    )
 
 
 class ConversationModel(BaseModel):

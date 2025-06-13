@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
+from app.db.rabbitmq import publisher
 from app.db.todo_indexes import create_todo_indexes
 from app.langchain.core.graph_builder import build_graph
 from app.langchain.core.graph_manager import GraphManager
@@ -28,12 +29,16 @@ async def lifespan(app: FastAPI):
         # Create todo indexes
         await create_todo_indexes()
 
+        await publisher.connect()
+
         # Initialize the graph and store in GraphManager
         async with build_graph() as built_graph:
             GraphManager.set_graph(built_graph)
             yield
+
     except Exception as e:
         logger.error(f"Error during startup: {e}")
         raise RuntimeError("Startup failed") from e
     finally:
         logger.info("Shutting down the API...")
+        await publisher.close()
