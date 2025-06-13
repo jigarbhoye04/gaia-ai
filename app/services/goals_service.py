@@ -16,6 +16,8 @@ from app.langchain.prompts.goal_prompts import (
     ROADMAP_GENERATOR,
 )
 from app.langchain.llm.client import init_llm
+from app.services.todo_service import ProjectService, TodoService
+from app.models.todo_models import ProjectCreate, TodoCreate, Priority
 
 
 async def generate_roadmap_with_llm_stream(title: str):
@@ -280,6 +282,10 @@ async def update_node_status_service(
     await goals_collection.update_one(
         {"_id": ObjectId(goal_id)}, {"$set": {"roadmap.nodes": nodes}}
     )
+    
+    # Sync completion status with corresponding todo
+    await sync_goal_node_completion(goal_id, node_id, update_data.is_complete, user_id)
+    
     updated_goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
 
     cache_key_goal = f"goal_cache:{goal_id}"
@@ -291,9 +297,178 @@ async def update_node_status_service(
     return goal_helper(updated_goal)
 
 
+async def create_goal_project_and_todos(goal_id: str, goal_title: str, roadmap_data: dict, user_id: str) -> str:
+    """
+    Create a project in the todo system for the goal and convert roadmap nodes to todos.
+    
+    Args:
+        goal_id (str): The goal ID
+        goal_title (str): The goal title
+        roadmap_data (dict): The roadmap data with nodes and edges
+        user_id (str): The user ID
+        
+    Returns:
+        str: The created project ID
+    """
+    try:
+        # Create a project for this goal
+        project = ProjectCreate(
+            name=f"🎯 {goal_title}",
+            description=f"Goal roadmap tasks for: {goal_title}",
+            color="#8B5CF6"  # Purple color for goals
+        )
+        
+        created_project = await ProjectService.create_project(project, user_id)
+        project_id = created_project.id
+        
+        # Create todos for each roadmap node
+        nodes = roadmap_data.get("nodes", [])
+        todo_ids = []
+        
+        for node in nodes:
+            node_data = node.get("data", {})
+            
+            # Skip start/end nodes typically used in flowcharts
+            if node_data.get("type") in ["start", "end"]:
+                continue
+                
+            todo = TodoCreate(
+                title=node_data.get("title", node_data.get("label", "Untitled Task")),
+                description=node_data.get("description", ""),
+                project_id=project_id,
+                priority=Priority.MEDIUM,
+                labels=["goal", goal_id]  # Add goal ID as label for linking
+            )
+            
+            created_todo = await TodoService.create_todo(todo, user_id)
+            todo_ids.append(created_todo.id)
+            
+            # Store the todo_id in the node data for future syncing
+            node_data["todo_id"] = created_todo.id
+        
+        # Update the goal with the modified roadmap (now contains todo_ids)
+        await goals_collection.update_one(
+            {"_id": ObjectId(goal_id)},
+            {
+                "$set": {
+                    "roadmap": roadmap_data,
+                    "todo_project_id": project_id
+                }
+            }
+        )
+        
+        logger.info(f"Created goal project {project_id} with {len(todo_ids)} todos for goal {goal_id}")
+        return project_id
+        
+    except Exception as e:
+        logger.error(f"Error creating goal project and todos: {str(e)}")
+        raise
+
+
+async def sync_goal_node_completion(goal_id: str, node_id: str, is_complete: bool, user_id: str) -> bool:
+    """
+    Sync completion status between goal roadmap node and corresponding todo.
+    
+    Args:
+        goal_id (str): The goal ID
+        node_id (str): The roadmap node ID
+        is_complete (bool): The completion status
+        user_id (str): The user ID
+        
+    Returns:
+        bool: True if sync was successful
+    """
+    try:
+        # Get the goal to find the todo_id
+        goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
+        if not goal:
+            return False
+            
+        roadmap = goal.get("roadmap", {})
+        nodes = roadmap.get("nodes", [])
+        
+        # Find the node and get its todo_id
+        node = next((n for n in nodes if n["id"] == node_id), None)
+        if not node:
+            return False
+            
+        todo_id = node.get("data", {}).get("todo_id")
+        if not todo_id:
+            return False
+            
+        # Update the todo completion status
+        from app.models.todo_models import UpdateTodoRequest
+        await TodoService.update_todo(
+            todo_id, 
+            UpdateTodoRequest(completed=is_complete), 
+            user_id
+        )
+        
+        logger.info(f"Synced completion status for node {node_id} <-> todo {todo_id}: {is_complete}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error syncing goal node completion: {str(e)}")
+        return False
+
+
+async def sync_todo_to_goal_completion(todo_id: str, is_complete: bool, user_id: str) -> bool:
+    """
+    Sync completion status from todo back to goal roadmap node.
+    
+    Args:
+        todo_id (str): The todo ID
+        is_complete (bool): The completion status
+        user_id (str): The user ID
+        
+    Returns:
+        bool: True if sync was successful
+    """
+    try:
+        # Find the goal that contains this todo_id in its roadmap
+        goal = await goals_collection.find_one({
+            "user_id": user_id,
+            "roadmap.nodes.data.todo_id": todo_id
+        })
+        
+        if not goal:
+            return False
+            
+        # Find and update the specific node
+        roadmap = goal.get("roadmap", {})
+        nodes = roadmap.get("nodes", [])
+        
+        for node in nodes:
+            if node.get("data", {}).get("todo_id") == todo_id:
+                node["data"]["isComplete"] = is_complete
+                break
+        else:
+            return False
+            
+        # Update the goal with the modified roadmap
+        await goals_collection.update_one(
+            {"_id": goal["_id"]},
+            {"$set": {"roadmap.nodes": nodes}}
+        )
+        
+        # Invalidate caches
+        goal_id = str(goal["_id"])
+        cache_key_goal = f"goal_cache:{goal_id}"
+        cache_key_goals = f"goals_cache:{user_id}"
+        await delete_cache(cache_key_goal)
+        await delete_cache(cache_key_goals)
+        
+        logger.info(f"Synced todo {todo_id} completion back to goal {goal_id}: {is_complete}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error syncing todo to goal completion: {str(e)}")
+        return False
+
+
 async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> bool:
     """
-    Update a goal with generated roadmap data and invalidate caches.
+    Update a goal with generated roadmap data, create todo project, and invalidate caches.
     
     Args:
         goal_id (str): The ID of the goal to update
@@ -309,15 +484,20 @@ async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> 
             logger.error(f"Goal {goal_id} not found for roadmap update")
             return False
             
-        # Update the goal document with the roadmap
-        result = await goals_collection.update_one(
-            {"_id": ObjectId(goal_id)},
-            {"$set": {"roadmap": roadmap_data}},
+        user_id = goal.get("user_id")
+        goal_title = goal.get("title", "Untitled Goal")
+        
+        # Create project and todos for the roadmap
+        project_id = await create_goal_project_and_todos(
+            goal_id, goal_title, roadmap_data, user_id
         )
         
-        if result.modified_count > 0:
+        # The roadmap has been updated by create_goal_project_and_todos
+        # with todo_ids, so we need to get the updated goal
+        updated_goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
+        
+        if updated_goal:
             # Invalidate relevant caches
-            user_id = goal.get("user_id")
             if user_id:
                 cache_key_goal = f"goal_cache:{goal_id}"
                 cache_key_goals = f"goals_cache:{user_id}"
@@ -325,10 +505,10 @@ async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> 
                 await delete_cache(cache_key_goals)
                 logger.info(f"Cache invalidated for goal {goal_id} and user {user_id}")
             
-            logger.info(f"Goal {goal_id} successfully updated with roadmap")
+            logger.info(f"Goal {goal_id} successfully updated with roadmap and todo project {project_id}")
             return True
         else:
-            logger.error(f"Failed to update goal {goal_id} with roadmap - no documents modified")
+            logger.error(f"Failed to update goal {goal_id} with roadmap")
             return False
             
     except Exception as e:

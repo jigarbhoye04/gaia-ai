@@ -22,6 +22,7 @@ def goal_helper(goal, has_roadmap=True) -> dict:
         "created_at": created_at,
         "progress": progress,
         "user_id": goal.get("user_id", STATIC_USER_ID),
+        "todo_project_id": goal.get("todo_project_id"),
     }
 
     if has_roadmap:

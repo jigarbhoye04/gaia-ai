@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Dict, Any
+from typing import List, Optional
 import uuid
 import math
 
@@ -8,7 +8,7 @@ from pymongo import ReturnDocument
 
 from app.config.loggers import todos_logger
 from app.db.collections import todos_collection, projects_collection
-from app.db.redis import get_cache, set_cache, delete_cache_by_pattern, CACHE_TTL, STATS_CACHE_TTL
+from app.db.redis import get_cache, set_cache, delete_cache_by_pattern, STATS_CACHE_TTL
 from app.db.utils import serialize_document
 from app.models.todo_models import (
     TodoCreate,
@@ -342,6 +342,15 @@ class TodoService:
             await update_todo_embedding(todo_id, updated, user_id)
         except Exception as e:
             todos_logger.warning(f"Failed to update index: {str(e)}")
+
+        # Sync completion status back to goals if this is a goal-related todo
+        if "completed" in update_dict:
+            try:
+                # Import here to avoid circular import
+                from app.services.goals_service import sync_todo_to_goal_completion
+                await sync_todo_to_goal_completion(todo_id, update_dict["completed"], user_id)
+            except Exception as e:
+                todos_logger.warning(f"Failed to sync todo completion to goal: {str(e)}")
 
         await cls._invalidate_cache(user_id)
 
