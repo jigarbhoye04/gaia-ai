@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime
 
 from bson import ObjectId
@@ -151,7 +152,11 @@ async def get_goal_service(goal_id: str, user: dict) -> dict:
     cached_goal = await get_cache(cache_key)
     if cached_goal:
         logger.info(f"Goal {goal_id} fetched from cache.")
-        return json.loads(cached_goal)
+        # Handle both string and dict cached data
+        if isinstance(cached_goal, str):
+            return json.loads(cached_goal)
+        else:
+            return cached_goal
 
     goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
     if not goal:
@@ -168,7 +173,7 @@ async def get_goal_service(goal_id: str, user: dict) -> dict:
         }
 
     goal_helper_result = goal_helper(goal)
-    await set_cache(cache_key, goal_helper_result, ONE_YEAR_TTL)
+    await set_cache(cache_key, json.dumps(goal_helper_result), ONE_YEAR_TTL)
     logger.info(f"Goal {goal_id} details fetched successfully.")
     return goal_helper_result
 
@@ -297,9 +302,9 @@ async def update_node_status_service(
     return goal_helper(updated_goal)
 
 
-async def create_goal_project_and_todos(goal_id: str, goal_title: str, roadmap_data: dict, user_id: str) -> str:
+async def create_goal_project_and_todo(goal_id: str, goal_title: str, roadmap_data: dict, user_id: str) -> str:
     """
-    Create a project in the todo system for the goal and convert roadmap nodes to todos.
+    Create a project in the todo system for the goal and a single todo with subtasks for roadmap nodes.
     
     Args:
         goal_id (str): The goal ID
@@ -314,16 +319,16 @@ async def create_goal_project_and_todos(goal_id: str, goal_title: str, roadmap_d
         # Create a project for this goal
         project = ProjectCreate(
             name=f"🎯 {goal_title}",
-            description=f"Goal roadmap tasks for: {goal_title}",
+            description="Goal roadmap management",
             color="#8B5CF6"  # Purple color for goals
         )
         
         created_project = await ProjectService.create_project(project, user_id)
         project_id = created_project.id
         
-        # Create todos for each roadmap node
+        # Create subtasks for each roadmap node
         nodes = roadmap_data.get("nodes", [])
-        todo_ids = []
+        subtasks = []
         
         for node in nodes:
             node_data = node.get("data", {})
@@ -331,43 +336,55 @@ async def create_goal_project_and_todos(goal_id: str, goal_title: str, roadmap_d
             # Skip start/end nodes typically used in flowcharts
             if node_data.get("type") in ["start", "end"]:
                 continue
-                
-            todo = TodoCreate(
+            
+            # Generate subtask ID and store in node for syncing
+            subtask_id = str(uuid.uuid4())
+            node_data["subtask_id"] = subtask_id
+            
+            # Create subtask
+            from app.models.todo_models import SubTask
+            subtask = SubTask(
+                id=subtask_id,
                 title=node_data.get("title", node_data.get("label", "Untitled Task")),
-                description=node_data.get("description", ""),
-                project_id=project_id,
-                priority=Priority.MEDIUM,
-                labels=["goal", goal_id]  # Add goal ID as label for linking
+                completed=node_data.get("isComplete", False)
             )
-            
-            created_todo = await TodoService.create_todo(todo, user_id)
-            todo_ids.append(created_todo.id)
-            
-            # Store the todo_id in the node data for future syncing
-            node_data["todo_id"] = created_todo.id
+            subtasks.append(subtask)
         
-        # Update the goal with the modified roadmap (now contains todo_ids)
+        # Create a single todo with all roadmap nodes as subtasks
+        todo = TodoCreate(
+            title=goal_title,
+            description=f"Goal: {goal_title}",
+            project_id=project_id,
+            priority=Priority.HIGH,
+            labels=["goal", goal_id],
+            subtasks=subtasks
+        )
+        
+        created_todo = await TodoService.create_todo(todo, user_id)
+        
+        # Update the goal with the modified roadmap (now contains subtask_ids) and todo info
         await goals_collection.update_one(
             {"_id": ObjectId(goal_id)},
             {
                 "$set": {
                     "roadmap": roadmap_data,
-                    "todo_project_id": project_id
+                    "todo_project_id": project_id,
+                    "todo_id": created_todo.id
                 }
             }
         )
         
-        logger.info(f"Created goal project {project_id} with {len(todo_ids)} todos for goal {goal_id}")
+        logger.info(f"Created goal project {project_id} with todo {created_todo.id} and {len(subtasks)} subtasks for goal {goal_id}")
         return project_id
         
     except Exception as e:
-        logger.error(f"Error creating goal project and todos: {str(e)}")
+        logger.error(f"Error creating goal project and todo: {str(e)}")
         raise
 
 
 async def sync_goal_node_completion(goal_id: str, node_id: str, is_complete: bool, user_id: str) -> bool:
     """
-    Sync completion status between goal roadmap node and corresponding todo.
+    Sync completion status between goal roadmap node and corresponding subtask.
     
     Args:
         goal_id (str): The goal ID
@@ -379,7 +396,7 @@ async def sync_goal_node_completion(goal_id: str, node_id: str, is_complete: boo
         bool: True if sync was successful
     """
     try:
-        # Get the goal to find the todo_id
+        # Get the goal to find the subtask_id and todo_id
         goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
         if not goal:
             return False
@@ -387,24 +404,35 @@ async def sync_goal_node_completion(goal_id: str, node_id: str, is_complete: boo
         roadmap = goal.get("roadmap", {})
         nodes = roadmap.get("nodes", [])
         
-        # Find the node and get its todo_id
+        # Find the node and get its subtask_id
         node = next((n for n in nodes if n["id"] == node_id), None)
         if not node:
             return False
             
-        todo_id = node.get("data", {}).get("todo_id")
-        if not todo_id:
+        subtask_id = node.get("data", {}).get("subtask_id")
+        todo_id = goal.get("todo_id")
+        if not subtask_id or not todo_id:
             return False
             
-        # Update the todo completion status
+        # Get the current todo to update its subtasks
+        todo = await TodoService.get_todo(todo_id, user_id)
+        
+        # Update the specific subtask completion status
+        updated_subtasks = []
+        for subtask in todo.subtasks:
+            if subtask.id == subtask_id:
+                subtask.completed = is_complete
+            updated_subtasks.append(subtask)
+        
+        # Update the todo with modified subtasks
         from app.models.todo_models import UpdateTodoRequest
         await TodoService.update_todo(
             todo_id, 
-            UpdateTodoRequest(completed=is_complete), 
+            UpdateTodoRequest(subtasks=updated_subtasks), 
             user_id
         )
         
-        logger.info(f"Synced completion status for node {node_id} <-> todo {todo_id}: {is_complete}")
+        logger.info(f"Synced completion status for node {node_id} <-> subtask {subtask_id}: {is_complete}")
         return True
         
     except Exception as e:
@@ -412,12 +440,13 @@ async def sync_goal_node_completion(goal_id: str, node_id: str, is_complete: boo
         return False
 
 
-async def sync_todo_to_goal_completion(todo_id: str, is_complete: bool, user_id: str) -> bool:
+async def sync_subtask_to_goal_completion(todo_id: str, subtask_id: str, is_complete: bool, user_id: str) -> bool:
     """
-    Sync completion status from todo back to goal roadmap node.
+    Sync completion status from subtask back to goal roadmap node.
     
     Args:
         todo_id (str): The todo ID
+        subtask_id (str): The subtask ID
         is_complete (bool): The completion status
         user_id (str): The user ID
         
@@ -425,21 +454,21 @@ async def sync_todo_to_goal_completion(todo_id: str, is_complete: bool, user_id:
         bool: True if sync was successful
     """
     try:
-        # Find the goal that contains this todo_id in its roadmap
+        # Find the goal that contains this todo_id
         goal = await goals_collection.find_one({
             "user_id": user_id,
-            "roadmap.nodes.data.todo_id": todo_id
+            "todo_id": todo_id
         })
         
         if not goal:
             return False
             
-        # Find and update the specific node
+        # Find and update the specific node by subtask_id
         roadmap = goal.get("roadmap", {})
         nodes = roadmap.get("nodes", [])
         
         for node in nodes:
-            if node.get("data", {}).get("todo_id") == todo_id:
+            if node.get("data", {}).get("subtask_id") == subtask_id:
                 node["data"]["isComplete"] = is_complete
                 break
         else:
@@ -458,11 +487,11 @@ async def sync_todo_to_goal_completion(todo_id: str, is_complete: bool, user_id:
         await delete_cache(cache_key_goal)
         await delete_cache(cache_key_goals)
         
-        logger.info(f"Synced todo {todo_id} completion back to goal {goal_id}: {is_complete}")
+        logger.info(f"Synced subtask {subtask_id} completion back to goal {goal_id}: {is_complete}")
         return True
         
     except Exception as e:
-        logger.error(f"Error syncing todo to goal completion: {str(e)}")
+        logger.error(f"Error syncing subtask to goal completion: {str(e)}")
         return False
 
 
@@ -487,13 +516,13 @@ async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> 
         user_id = goal.get("user_id")
         goal_title = goal.get("title", "Untitled Goal")
         
-        # Create project and todos for the roadmap
-        project_id = await create_goal_project_and_todos(
+        # Create project and todo with subtasks for the roadmap
+        project_id = await create_goal_project_and_todo(
             goal_id, goal_title, roadmap_data, user_id
         )
         
-        # The roadmap has been updated by create_goal_project_and_todos
-        # with todo_ids, so we need to get the updated goal
+        # The roadmap has been updated by create_goal_project_and_todo
+        # with subtask_ids, so we need to get the updated goal
         updated_goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
         
         if updated_goal:

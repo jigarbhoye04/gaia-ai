@@ -16,6 +16,7 @@ class GoalResponse(BaseModel):
     user_id: str
     created_at: str
     todo_project_id: Optional[str] = None
+    todo_id: Optional[str] = None
 
 
 class RoadmapUnavailableResponse(BaseModel):

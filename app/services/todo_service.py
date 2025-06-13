@@ -343,14 +343,25 @@ class TodoService:
         except Exception as e:
             todos_logger.warning(f"Failed to update index: {str(e)}")
 
-        # Sync completion status back to goals if this is a goal-related todo
-        if "completed" in update_dict:
+        # Sync subtask changes back to goals if this is a goal-related todo
+        if "subtasks" in update_dict:
             try:
                 # Import here to avoid circular import
-                from app.services.goals_service import sync_todo_to_goal_completion
-                await sync_todo_to_goal_completion(todo_id, update_dict["completed"], user_id)
+                from app.services.goals_service import sync_subtask_to_goal_completion
+                
+                # Compare old vs new subtasks to find what changed
+                for new_subtask_dict in update_dict["subtasks"]:
+                    new_subtask_id = new_subtask_dict.get("id")
+                    new_completed = new_subtask_dict.get("completed", False)
+                    
+                    old_subtask = next((s for s in existing["subtasks"] if s["id"] == new_subtask_id), None)
+                    if old_subtask and old_subtask["completed"] != new_completed:
+                        # Subtask completion status changed, sync to goal
+                        await sync_subtask_to_goal_completion(
+                            todo_id, new_subtask_id, new_completed, user_id
+                        )
             except Exception as e:
-                todos_logger.warning(f"Failed to sync todo completion to goal: {str(e)}")
+                todos_logger.warning(f"Failed to sync subtask completion to goal: {str(e)}")
 
         await cls._invalidate_cache(user_id)
 
