@@ -85,9 +85,8 @@ export default function TodoItem({
             ? "bg-primary/5 ring-2 ring-primary"
             : "hover:bg-default-50"
         } ${todo.completed ? "opacity-60" : ""}`}
-        isPressable
         shadow="sm"
-        onPress={() => {
+        onClick={() => {
           onClick?.(todo);
         }}
       >

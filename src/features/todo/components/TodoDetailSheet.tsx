@@ -24,6 +24,7 @@ import {
 } from "@/types/features/todoTypes";
 
 import EditTodoModal from "./EditTodoModal";
+import SubtaskManager from "./shared/SubtaskManager";
 
 interface TodoDetailSheetProps {
   todo: Todo | null;
@@ -94,8 +95,9 @@ export default function TodoDetailSheet({
     onClose();
   };
 
-  const completedSubtasks = todo.subtasks.filter((s) => s.completed).length;
-  const totalSubtasks = todo.subtasks.length;
+  const handleSubtasksChange = (subtasks: typeof todo.subtasks) => {
+    onUpdate(todo.id, { subtasks });
+  };
 
   // Format due date
   const formatDueDate = (date: string) => {
@@ -282,59 +284,14 @@ export default function TodoDetailSheet({
               </div>
 
               {/* Subtasks Section */}
-              {todo.subtasks.length > 0 && (
-                <div className="border-t border-zinc-800">
-                  <div className="px-6 py-4">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-sm font-medium text-zinc-200">
-                        Subtasks
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-500">
-                          {completedSubtasks} of {totalSubtasks}
-                        </span>
-                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-zinc-800">
-                          <div
-                            className="h-full bg-green-500 transition-all"
-                            style={{
-                              width: `${(completedSubtasks / totalSubtasks) * 100}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      {todo.subtasks.map((subtask) => (
-                        <div
-                          key={subtask.id}
-                          className="group flex cursor-pointer items-center gap-3 rounded-lg p-3 hover:bg-zinc-900"
-                        >
-                          <button
-                            className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition-colors ${
-                              subtask.completed
-                                ? "border-green-500 bg-green-500"
-                                : "border-zinc-600 group-hover:border-zinc-500"
-                            }`}
-                          >
-                            {subtask.completed && (
-                              <Check className="h-3 w-3 text-white" />
-                            )}
-                          </button>
-                          <span
-                            className={`text-sm ${
-                              subtask.completed
-                                ? "text-zinc-500 line-through"
-                                : "text-zinc-300"
-                            }`}
-                          >
-                            {subtask.title}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              <div className="border-t border-zinc-800">
+                <div className="px-6 py-4">
+                  <SubtaskManager
+                    subtasks={todo.subtasks}
+                    onSubtasksChange={handleSubtasksChange}
+                  />
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </SheetContent>
