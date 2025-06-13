@@ -25,7 +25,7 @@ import { CalendarIcon } from "@/components/shared/icons";
 import { todoApi } from "@/features/todo/api/todoApi";
 import { Priority, Todo, TodoUpdate } from "@/types/features/todoTypes";
 
-import EditTodoModal from "./EditTodoModal";
+import TodoModal from "./TodoModal";
 
 interface TodoItemProps {
   todo: Todo;
@@ -295,12 +295,12 @@ export default function TodoItem({
       </Card>
 
       {/* Edit Modal */}
-      <EditTodoModal
+      <TodoModal
+        mode="edit"
         todo={todo}
         open={editOpen}
         onOpenChange={setEditOpen}
-        onSuccess={(updatedTodo) => {
-          onUpdate(todo.id, updatedTodo);
+        onSuccess={() => {
           setEditOpen(false);
         }}
       />

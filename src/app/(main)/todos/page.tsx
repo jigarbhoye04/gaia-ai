@@ -110,12 +110,14 @@ export default function TodosPage() {
   }
 
   return (
-    <div className="flex h-full w-screen flex-col">
-      <TodoHeader title={getPageTitle()} todoCount={todos.length} />
+    <div className="flex h-full w-full flex-col">
+      <div className="w-full" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <TodoHeader title={getPageTitle()} todoCount={todos.length} />
+      </div>
 
       <div
-        className="flex-1 overflow-y-auto"
-        style={{ maxWidth: "1200px", margin: "0 auto" }}
+        className="flex-1 overflow-y-auto px-4"
+        style={{ maxWidth: "1200px", margin: "0 auto", width: "100%" }}
         onScroll={(e) => {
           const target = e.target as HTMLDivElement;
           if (

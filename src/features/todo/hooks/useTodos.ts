@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useEffect,useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -34,6 +34,7 @@ import {
 export const useTodos = () => {
   const dispatch = useDispatch<AppDispatch>();
   const todoState = useSelector((state: RootState) => state.todos);
+  const refreshDebounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadTodos = useCallback(
     async (filters: TodoFilters, loadMore = false) => {
@@ -97,12 +98,20 @@ export const useTodos = () => {
     async (todoData: TodoCreate) => {
       const result = await dispatch(createTodo(todoData));
       if (createTodo.fulfilled.match(result)) {
-        // Refresh counts and metadata in parallel to avoid race conditions
-        await Promise.all([
-          dispatch(fetchTodoCounts()),
-          dispatch(fetchProjects()),
-          dispatch(fetchLabels()),
-        ]);
+        // Debounced refresh to avoid multiple rapid requests
+        if (refreshDebounceRef.current) {
+          clearTimeout(refreshDebounceRef.current);
+        }
+        refreshDebounceRef.current = setTimeout(async () => {
+          await Promise.all([
+            dispatch(fetchTodoCounts()),
+            dispatch(fetchProjects()),
+            // Only refresh labels if the new todo has labels
+            ...(todoData.labels && todoData.labels.length > 0
+              ? [dispatch(fetchLabels())]
+              : []),
+          ]);
+        }, 500); // 500ms debounce
       }
       return result;
     },
@@ -128,29 +137,50 @@ export const useTodos = () => {
         }
 
         // Update succeeded
-        // Background sync - don't await these
-        const needsCountRefresh =
-          (updates.completed !== undefined &&
-            originalTodo?.completed !== updates.completed) ||
-          (updates.project_id !== undefined &&
-            originalTodo?.project_id !== updates.project_id);
-
-        if (needsCountRefresh) {
-          // Fire and forget - refresh in background
-          Promise.all([
-            dispatch(fetchTodoCounts()),
-            dispatch(fetchProjects()),
-          ]).catch((error) => {
-            console.error("Failed to refresh counts:", error);
-          });
+        // Debounced background sync
+        if (refreshDebounceRef.current) {
+          clearTimeout(refreshDebounceRef.current);
         }
 
-        // Refresh labels if labels changed
-        if (updates.labels !== undefined) {
-          dispatch(fetchLabels()).catch((error) => {
-            console.error("Failed to refresh labels:", error);
-          });
-        }
+        refreshDebounceRef.current = setTimeout(async () => {
+          const refreshTasks = [];
+
+          // Only refresh what's needed based on the update
+          const needsCountRefresh =
+            (updates.completed !== undefined &&
+              originalTodo?.completed !== updates.completed) ||
+            (updates.project_id !== undefined &&
+              originalTodo?.project_id !== updates.project_id);
+
+          if (needsCountRefresh) {
+            refreshTasks.push(dispatch(fetchTodoCounts()));
+
+            // Only refresh projects if project was changed
+            if (
+              updates.project_id !== undefined &&
+              originalTodo?.project_id !== updates.project_id
+            ) {
+              refreshTasks.push(dispatch(fetchProjects()));
+            }
+          }
+
+          // Refresh labels only if labels changed
+          if (
+            updates.labels !== undefined &&
+            JSON.stringify(originalTodo?.labels || []) !==
+              JSON.stringify(updates.labels)
+          ) {
+            refreshTasks.push(dispatch(fetchLabels()));
+          }
+
+          if (refreshTasks.length > 0) {
+            try {
+              await Promise.all(refreshTasks);
+            } catch (error) {
+              console.error("Failed to refresh data:", error);
+            }
+          }
+        }, 500); // 500ms debounce
 
         return result;
       } catch (error) {
@@ -175,12 +205,20 @@ export const useTodos = () => {
       try {
         const result = await dispatch(deleteTodo(todoId));
         if (deleteTodo.fulfilled.match(result)) {
-          // Refresh counts and metadata in parallel
-          await Promise.all([
-            dispatch(fetchTodoCounts()),
-            dispatch(fetchProjects()),
-            dispatch(fetchLabels()),
-          ]);
+          // Debounced refresh after delete
+          if (refreshDebounceRef.current) {
+            clearTimeout(refreshDebounceRef.current);
+          }
+          refreshDebounceRef.current = setTimeout(async () => {
+            await Promise.all([
+              dispatch(fetchTodoCounts()),
+              dispatch(fetchProjects()),
+              // Only refresh labels if the deleted todo had labels
+              ...(originalTodo?.labels && originalTodo.labels.length > 0
+                ? [dispatch(fetchLabels())]
+                : []),
+            ]);
+          }, 500); // 500ms debounce
         } else {
           // Revert on failure
           if (originalTodo) {
@@ -218,6 +256,11 @@ export const useTodos = () => {
   }, [dispatch]);
 
   const refreshAllData = useCallback(async () => {
+    // Clear any pending debounced refreshes
+    if (refreshDebounceRef.current) {
+      clearTimeout(refreshDebounceRef.current);
+    }
+
     // Fetch all data including counts
     await Promise.all([
       dispatch(fetchProjects()),
@@ -225,6 +268,15 @@ export const useTodos = () => {
       dispatch(fetchTodoCounts()),
     ]);
   }, [dispatch]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshDebounceRef.current) {
+        clearTimeout(refreshDebounceRef.current);
+      }
+    };
+  }, []);
 
   return {
     // State

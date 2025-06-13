@@ -57,10 +57,15 @@ export default function UpcomingTodosPage() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <TodoHeader title="Upcoming" todoCount={todos.length} />
+    <div className="flex h-full w-full flex-col">
+      <div className="w-full" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <TodoHeader title="Upcoming" todoCount={todos.length} />
+      </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div
+        className="flex-1 overflow-y-auto px-4"
+        style={{ maxWidth: "1200px", margin: "0 auto", width: "100%" }}
+      >
         <TodoList
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
