@@ -14,6 +14,7 @@ import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";
 import CalendarEventSection from "./CalendarEventSection";
 import EmailComposeSection from "./EmailComposeSection";
+import GoalSection, { type GoalAction } from "./GoalSection";
 import TodoSection from "./TodoSection";
 
 export default function TextBubble({
@@ -28,6 +29,7 @@ export default function TextBubble({
   email_compose_data,
   weather_data,
   todo_data,
+  goal_data,
   intent,
   search_results,
   deep_search_results,
@@ -135,6 +137,18 @@ export default function TextBubble({
           stats={todo_data.stats}
           action={todo_data.action}
           message={todo_data.message}
+        />
+      )}
+
+      {goal_data && (
+        <GoalSection
+          goals={goal_data.goals}
+          stats={goal_data.stats}
+          action={goal_data.action as GoalAction}
+          message={goal_data.message}
+          goal_id={goal_data.goal_id}
+          deleted_goal_id={goal_data.deleted_goal_id}
+          error={goal_data.error}
         />
       )}
     </>
