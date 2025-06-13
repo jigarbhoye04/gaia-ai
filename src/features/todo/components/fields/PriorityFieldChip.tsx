@@ -1,8 +1,8 @@
 "use client";
 
-import { DropdownItem } from "@heroui/dropdown";
 import { Flag } from "lucide-react";
 
+import { DropdownMenuItem } from "@/components/ui/shadcn/dropdown-menu";
 import { Priority } from "@/types/features/todoTypes";
 
 import BaseFieldChip from "./BaseFieldChip";
@@ -42,15 +42,25 @@ export default function PriorityFieldChip({
       className={className}
     >
       {priorityOptions.map((option) => (
-        <DropdownItem
+        <DropdownMenuItem
           key={option.value}
-          onPress={() => onChange(option.value)}
-          className="gap-2"
-          startContent={<Flag size={14} />}
-          color={option.color}
+          onClick={() => onChange(option.value)}
+          className="cursor-pointer gap-2 border-0 text-zinc-300 outline-none hover:bg-zinc-800 focus:outline-none"
         >
+          <Flag
+            size={14}
+            className={
+              option.value === Priority.HIGH
+                ? "text-red-400"
+                : option.value === Priority.MEDIUM
+                  ? "text-yellow-400"
+                  : option.value === Priority.LOW
+                    ? "text-blue-400"
+                    : "text-zinc-500"
+            }
+          />
           {option.label}
-        </DropdownItem>
+        </DropdownMenuItem>
       ))}
     </BaseFieldChip>
   );

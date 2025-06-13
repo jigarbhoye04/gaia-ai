@@ -1,8 +1,8 @@
 "use client";
 
-import { DropdownItem } from "@heroui/dropdown";
 import { Folder } from "lucide-react";
 
+import { DropdownMenuItem } from "@/components/ui/shadcn/dropdown-menu";
 import { Project } from "@/types/features/todoTypes";
 
 import BaseFieldChip from "./BaseFieldChip";
@@ -29,23 +29,21 @@ export default function ProjectFieldChip({
       value={displayValue}
       placeholder="Project"
       icon={<Folder size={14} />}
-      variant="secondary"
+      variant={selectedProject ? "primary" : "default"}
       className={className}
     >
       {projects.map((project) => (
-        <DropdownItem
+        <DropdownMenuItem
           key={project.id}
-          onPress={() => onChange(project.id)}
-          className="gap-2"
-          startContent={
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: project.color || "#6b7280" }}
-            />
-          }
+          onClick={() => onChange(project.id)}
+          className="cursor-pointer gap-2 border-0 text-zinc-300 outline-none hover:bg-zinc-800 focus:outline-none"
         >
-          {project.name}
-        </DropdownItem>
+          <div
+            className="h-3 w-3 flex-shrink-0 rounded-full border-0"
+            style={{ backgroundColor: project.color || "#71717a" }}
+          />
+          <span className="truncate">{project.name}</span>
+        </DropdownMenuItem>
       ))}
     </BaseFieldChip>
   );

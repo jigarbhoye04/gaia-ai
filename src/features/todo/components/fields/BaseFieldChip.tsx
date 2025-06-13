@@ -1,14 +1,15 @@
 "use client";
 
-import { Button } from "@heroui/button";
-import {
-  Dropdown,
-  DropdownMenu,
-  DropdownTrigger,
-} from "@heroui/dropdown";
-import { cn } from "@heroui/theme";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+
+import { Button } from "@/components/ui/shadcn/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/shadcn/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface BaseFieldChipProps {
   label: string;
@@ -24,7 +25,7 @@ interface BaseFieldChipProps {
     | "danger";
   isActive?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
-  children: React.ReactNode; // Dropdown content
+  children: React.ReactNode;
   className?: string;
 }
 
@@ -48,34 +49,44 @@ export default function BaseFieldChip({
 
   const hasValue = value !== undefined && value !== null && value !== "";
 
+  // Flat design with consistent zinc background
+  const getButtonClassName = () => {
+    const baseClasses = "border-0 shadow-none outline-none focus:outline-none";
+
+    if (hasValue) {
+      switch (variant) {
+        case "success":
+          return `${baseClasses} bg-zinc-800 text-green-400 hover:bg-zinc-700`;
+        case "primary":
+          return `${baseClasses} bg-zinc-800 text-blue-400 hover:bg-zinc-700`;
+        case "warning":
+          return `${baseClasses} bg-zinc-800 text-yellow-400 hover:bg-zinc-700`;
+        case "danger":
+          return `${baseClasses} bg-zinc-800 text-red-400 hover:bg-zinc-700`;
+        default:
+          return `${baseClasses} bg-zinc-800 text-zinc-200 hover:bg-zinc-700`;
+      }
+    }
+    return `${baseClasses} bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-400`;
+  };
+
   return (
-    <Dropdown
-      isOpen={isOpen}
-      onOpenChange={handleOpenChange}
-      placement="bottom-start"
-      offset={4}
-    >
-      <DropdownTrigger>
+    <DropdownMenu open={isOpen} onOpenChange={handleOpenChange}>
+      <DropdownMenuTrigger asChild>
         <Button
-          variant={hasValue ? "flat" : "bordered"}
-          color={hasValue ? variant : "default"}
+          variant="ghost"
           size="sm"
           className={cn(
-            "h-8 min-w-0 gap-1 px-3 font-normal transition-all",
-            isOpen && "ring-2 ring-primary/20",
-            isActive && "ring-2 ring-primary/30",
-            !hasValue && "text-default-500",
+            "h-8 min-w-0 gap-1 border-0 px-3 font-normal ring-0 transition-all outline-none focus:ring-0 focus:outline-none",
+            isOpen && "ring-0",
+            isActive && "ring-0",
+            !hasValue && "text-zinc-500",
+            getButtonClassName(),
             className,
           )}
-          startContent={icon}
-          endContent={
-            <ChevronDown
-              size={14}
-              className={cn("transition-transform", isOpen && "rotate-180")}
-            />
-          }
         >
-          <span className="truncate">
+          {icon}
+          <span className="max-w-[120px] truncate">
             {hasValue ? (
               typeof value === "string" ? (
                 value
@@ -83,18 +94,18 @@ export default function BaseFieldChip({
                 value
               )
             ) : (
-              <span className="text-default-400">{placeholder}</span>
+              <span className="text-zinc-400">{placeholder}</span>
             )}
           </span>
+          <ChevronDown
+            size={14}
+            className={cn("transition-transform", isOpen && "rotate-180")}
+          />
         </Button>
-      </DropdownTrigger>
-      <DropdownMenu
-        aria-label={`${label} options`}
-        className="min-w-[200px]"
-        disallowEmptySelection={false}
-      >
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="min-w-[200px] rounded-lg border-0 bg-zinc-900 shadow-xl backdrop-blur-none">
         {children}
-      </DropdownMenu>
-    </Dropdown>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

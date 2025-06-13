@@ -1,11 +1,12 @@
 "use client";
 
-import { Checkbox } from "@heroui/checkbox";
-import { Input } from "@heroui/input";
-import { cn } from "@heroui/theme";
-import { ChevronDown, Plus, Trash2, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/shadcn/button";
+import { Checkbox } from "@/components/ui/shadcn/checkbox";
+import { Input } from "@/components/ui/shadcn/input";
+import { cn } from "@/lib/utils";
 import { SubTask } from "@/types/features/todoTypes";
 
 interface SubtaskManagerProps {
@@ -19,19 +20,15 @@ export default function SubtaskManager({
   onSubtasksChange,
   className,
 }: SubtaskManagerProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState("");
   const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
-
-  const completedCount = subtasks.filter((subtask) => subtask.completed).length;
-  const totalCount = subtasks.length;
 
   const handleAddSubtask = () => {
     if (!newSubtaskTitle.trim()) return;
 
     const newSubtask: SubTask = {
-      id: Date.now().toString(), // Simple ID generation
+      id: Date.now().toString(),
       title: newSubtaskTitle.trim(),
       completed: false,
       created_at: new Date().toISOString(),
@@ -98,168 +95,94 @@ export default function SubtaskManager({
 
   return (
     <div className={cn("space-y-3", className)}>
-      {/* Subtasks Header */}
-      <div className="flex items-center justify-between">
-        <div
-          className={cn(
-            "flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 font-medium transition-all hover:bg-default-100",
-            isExpanded && "text-primary",
-          )}
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <ChevronDown
-            size={16}
-            className={cn("transition-transform", isExpanded && "rotate-180")}
+      {/* Add New Subtask */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Input
+            placeholder="Add a subtask..."
+            value={newSubtaskTitle}
+            onChange={(e) => setNewSubtaskTitle(e.target.value)}
+            onKeyDown={(e) => handleKeyDown(e, "add")}
+            className="h-9 border-0 bg-zinc-800 text-sm text-zinc-200 placeholder:text-zinc-500 hover:bg-zinc-700 focus:ring-0 focus:outline-none"
           />
-          <span>Subtasks</span>
-          {totalCount > 0 && (
-            <span className="text-xs text-default-500">
-              ({completedCount}/{totalCount})
-            </span>
-          )}
         </div>
-
-        {isExpanded && (
-          <div
-            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-primary transition-colors hover:bg-primary/10"
-            onClick={() => {
-              setIsExpanded(true);
-              // Focus the input after a brief delay
-              setTimeout(() => {
-                const input = document.querySelector(
-                  "[data-subtask-input]",
-                ) as HTMLInputElement;
-                input?.focus();
-              }, 100);
-            }}
-          >
-            <Plus size={16} />
-          </div>
-        )}
+        <Button
+          size="sm"
+          onClick={handleAddSubtask}
+          disabled={!newSubtaskTitle.trim()}
+          className={`h-9 w-9 border-0 p-0 ${
+            !newSubtaskTitle.trim()
+              ? "bg-zinc-800 text-zinc-600 hover:bg-zinc-700"
+              : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+          }`}
+        >
+          <Plus size={16} />
+        </Button>
       </div>
 
-      {/* Expandable Content */}
-      {isExpanded && (
-        <div className="space-y-3">
-          {/* Add New Subtask */}
-          <div className="flex gap-2">
-            <Input
-              data-subtask-input
-              placeholder="Add a subtask..."
-              value={newSubtaskTitle}
-              onChange={(e) => setNewSubtaskTitle(e.target.value)}
-              onKeyDown={(e) => handleKeyDown(e, "add")}
-              size="sm"
-              className="flex-1"
-              classNames={{
-                input: "text-sm",
-                inputWrapper: "h-8",
-              }}
-            />
+      {/* Existing Subtasks */}
+      {subtasks.length > 0 && (
+        <div className="space-y-2">
+          {subtasks.map((subtask) => (
             <div
-              className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-md transition-colors ${
-                !newSubtaskTitle.trim()
-                  ? "bg-default-100 text-default-400"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-              onClick={handleAddSubtask}
+              key={subtask.id}
+              className="group flex items-center gap-3 rounded-lg border-0 bg-zinc-800 p-2 transition-colors hover:bg-zinc-700"
             >
-              <Plus size={14} />
-            </div>
-          </div>
+              <Checkbox
+                checked={subtask.completed}
+                onCheckedChange={() => handleToggleSubtask(subtask.id)}
+                className="flex-shrink-0 border-zinc-600 data-[state=checked]:border-zinc-600 data-[state=checked]:bg-zinc-600"
+              />
 
-          {/* Existing Subtasks */}
-          {subtasks.length > 0 && (
-            <div className="space-y-2">
-              {subtasks.map((subtask) => (
-                <div
-                  key={subtask.id}
-                  className={cn(
-                    "group flex items-center gap-2 rounded-lg border border-transparent p-2 transition-colors",
-                    "hover:border-default-200 hover:bg-default-50",
-                  )}
-                >
-                  <Checkbox
-                    isSelected={subtask.completed}
-                    onValueChange={() => handleToggleSubtask(subtask.id)}
-                    size="sm"
-                    className="flex-shrink-0"
+              {editingSubtaskId === subtask.id ? (
+                <div className="flex flex-1 gap-2">
+                  <Input
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(e, "edit")}
+                    className="h-7 flex-1 border-0 bg-zinc-700 text-sm text-zinc-200 focus:ring-0 focus:outline-none"
+                    autoFocus
                   />
-
-                  {editingSubtaskId === subtask.id ? (
-                    <div className="flex flex-1 gap-2">
-                      <Input
-                        value={editingTitle}
-                        onChange={(e) => setEditingTitle(e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(e, "edit")}
-                        size="sm"
-                        className="flex-1"
-                        autoFocus
-                        classNames={{
-                          input: "text-sm",
-                          inputWrapper: "h-7",
-                        }}
-                      />
-                      <div
-                        className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded text-xs transition-colors ${
-                          !editingTitle.trim()
-                            ? "bg-default-100 text-default-400"
-                            : "bg-success text-white hover:bg-success/90"
-                        }`}
-                        onClick={handleSaveEdit}
-                      >
-                        ✓
-                      </div>
-                      <div
-                        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded bg-default-100 text-default-600 transition-colors hover:bg-default-200"
-                        onClick={handleCancelEdit}
-                      >
-                        <X size={12} />
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <span
-                        className={cn(
-                          "flex-1 cursor-pointer text-sm select-none",
-                          subtask.completed && "text-default-400 line-through",
-                        )}
-                        onClick={() => handleStartEdit(subtask)}
-                      >
-                        {subtask.title}
-                      </span>
-                      <div
-                        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded text-danger opacity-0 transition-all group-hover:opacity-100 hover:bg-danger/10"
-                        onClick={() => handleDeleteSubtask(subtask.id)}
-                      >
-                        <Trash2 size={12} />
-                      </div>
-                    </>
-                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleSaveEdit}
+                    disabled={!editingTitle.trim()}
+                    className="h-7 w-7 border-0 bg-zinc-700 p-0 text-xs text-zinc-200 hover:bg-zinc-600"
+                  >
+                    ✓
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelEdit}
+                    className="h-7 w-7 border-0 p-0 text-zinc-400 hover:bg-zinc-600 hover:text-zinc-200"
+                  >
+                    <X size={12} />
+                  </Button>
                 </div>
-              ))}
+              ) : (
+                <>
+                  <span
+                    className={cn(
+                      "flex-1 cursor-pointer text-sm text-zinc-200 select-none",
+                      subtask.completed && "text-zinc-500 line-through",
+                    )}
+                    onClick={() => handleStartEdit(subtask)}
+                  >
+                    {subtask.title}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDeleteSubtask(subtask.id)}
+                    className="h-7 w-7 border-0 p-0 text-zinc-500 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-zinc-600 hover:text-red-400"
+                  >
+                    <X size={14} />
+                  </Button>
+                </>
+              )}
             </div>
-          )}
-
-          {/* Progress Summary */}
-          {totalCount > 0 && (
-            <div className="rounded-lg bg-default-100 p-2">
-              <div className="mb-1 flex justify-between text-xs">
-                <span className="text-default-600">Progress</span>
-                <span className="font-medium">
-                  {completedCount}/{totalCount} completed
-                </span>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-default-200">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{
-                    width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
+          ))}
         </div>
       )}
     </div>
