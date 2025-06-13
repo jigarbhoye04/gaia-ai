@@ -11,7 +11,8 @@ export type HeaderComponentType =
   | "notes"
   | "settings"
   | "custom"
-  | "default";
+  | "default"
+  | "todos";
 
 // Define a proper type for header props
 export interface HeaderProps {

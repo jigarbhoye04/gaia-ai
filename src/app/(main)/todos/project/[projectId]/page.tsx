@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
 import { todoApi } from "@/features/todo/api/todoApi";
+import TodoDetailSheet from "@/features/todo/components/TodoDetailSheet";
 import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
 import {
@@ -21,6 +22,8 @@ export default function ProjectTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     if (projectId) {
@@ -31,9 +34,10 @@ export default function ProjectTodosPage() {
   const loadProjectData = async () => {
     setLoading(true);
     try {
-      // Load project details
-      const projects = await todoApi.getAllProjects();
-      const currentProject = projects.find((p) => p.id === projectId);
+      // Load project details and all projects
+      const allProjects = await todoApi.getAllProjects();
+      setProjects(allProjects);
+      const currentProject = allProjects.find((p) => p.id === projectId);
       setProject(currentProject || null);
 
       // Load todos for this project
@@ -100,9 +104,26 @@ export default function ProjectTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoClick={(todo) => setSelectedTodo(todo)}
           onRefresh={loadProjectData}
         />
       </div>
+
+      {/* Todo Detail Sheet */}
+      <TodoDetailSheet
+        todo={selectedTodo}
+        isOpen={!!selectedTodo}
+        onClose={() => setSelectedTodo(null)}
+        onUpdate={(todoId, updates) => {
+          handleTodoUpdate(todoId, updates);
+          setSelectedTodo((prev) => (prev ? { ...prev, ...updates } : null));
+        }}
+        onDelete={(todoId) => {
+          handleTodoDelete(todoId);
+          setSelectedTodo(null);
+        }}
+        projects={projects}
+      />
     </div>
   );
 }

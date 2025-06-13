@@ -91,13 +91,13 @@ export default function HeaderManager() {
       return <SettingsHeader {...componentSpecificProps} />;
     case "goals":
     case "notes":
+    case "todos":
       return <></>;
     case "calendar":
       return <DefaultHeader />;
     case "browser":
       return <BrowserHeader {...componentSpecificProps} />;
     case "default":
-    case "todos":
       return <></>;
     default:
       return <DefaultHeader />;
