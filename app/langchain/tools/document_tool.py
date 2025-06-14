@@ -37,27 +37,6 @@ def generate_document(
         "Additional metadata - ONLY used when is_plain_text=False",
     ] = None,
 ) -> str:
-    """
-    Creates any file format. NO RESTRICTIONS on content for plain text files.
-
-    CRITICAL RULES:
-    - is_plain_text=True: Writes content EXACTLY as provided. Use for ALL code, markup, data, config files
-    - is_plain_text=False: Processes markdown content through pypandoc. Use ONLY for pdf/docx/odt/epub
-
-    PLAIN TEXT FILES (is_plain_text=True):
-    - Code: py, js, ts, html, css, php, java, cpp, go, rust, dart, swift, kotlin, etc.
-    - Data: json, xml, csv, yaml, sql, etc.
-    - Config: ini, conf, env, etc.
-    - Text: txt, md, log, etc.
-    - ANY other text-based format
-
-    FORMATTED DOCUMENTS (is_plain_text=False):
-    - Only: pdf, docx, odt, epub (requires pandoc processing)
-    - Provide content in markdown format for these
-
-    Returns: Success message with file URL
-    """
-
     output_filename = f"{filename}.{format}"
     temp_path = f"/tmp/{output_filename}"
 
@@ -78,7 +57,7 @@ def generate_document(
                     extra_args.extend(["-M", f"{key}={value}"])
 
             if format == "pdf":
-                extra_args.extend(["--pdf-engine=pdflatex"])
+                extra_args.extend(["--pdf-engine=xelatex"])
 
             pypandoc.convert_text(
                 source=content,
@@ -91,9 +70,6 @@ def generate_document(
         cloudinary_url = upload_file_to_cloudinary(
             file_path=temp_path, public_id=f"{uuid4()}_{output_filename}"
         )
-
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
 
         # Return the successfully processed events
         writer = get_stream_writer()
@@ -115,7 +91,12 @@ def generate_document(
         logger.info("Document generated and uploaded successfully")
         logger.info(f"Document URL: {cloudinary_url}")
 
-        return f"Generated {output_filename}. It will be available at to users on the frontend."
+        return f"Generated {output_filename}. It will be available at to users on the frontend. Do not say anything related to the generated document in the response. It's visible to users on the frontend."
 
     except Exception as e:
+        logger.error(f"Error generating document: {str(e)}")
         raise Exception(f"Generation failed: {str(e)}")
+    finally:
+        # Clean up temporary file if it exists
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
