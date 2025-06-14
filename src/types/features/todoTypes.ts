@@ -38,6 +38,7 @@ export interface TodoCreate extends Record<string, unknown> {
   due_date_timezone?: string;
   priority: Priority;
   project_id?: string;
+  subtasks?: SubTask[];
 }
 
 export interface TodoUpdate {

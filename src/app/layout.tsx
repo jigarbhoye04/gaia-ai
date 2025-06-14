@@ -90,8 +90,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${creato.variable} dark`}>
       <body className="dark">
-        <ProvidersLayout>{children}</ProvidersLayout>
-
+        <main>
+          <ProvidersLayout>{children}</ProvidersLayout>
+        </main>
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />
 

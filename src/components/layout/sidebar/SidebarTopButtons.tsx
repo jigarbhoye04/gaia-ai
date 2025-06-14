@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@heroui/button";
+// import { Button } from "@heroui/button";
+
 import { Tooltip } from "@heroui/tooltip";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
@@ -12,6 +13,7 @@ import {
   PinIcon,
   Route02Icon,
 } from "@/components/shared/icons";
+import { Button } from "@/components/ui/shadcn/button";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
@@ -66,10 +68,8 @@ export default function SidebarTopButtons() {
         >
           <Button
             className="aspect-square w-full"
-            isIconOnly
-            color={pathname === route ? "primary" : "default"}
-            variant={pathname === route ? "solid" : "flat"}
-            onPress={() => router.push(route)}
+            variant={pathname === route ? "default" : "ghost"}
+            onClick={() => router.push(route)}
           >
             {React.cloneElement(icon, {
               color: pathname === route ? "#000000AA" : "#FFFFFFAA",

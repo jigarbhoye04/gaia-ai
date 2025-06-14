@@ -72,7 +72,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
     <Sidebar
       variant="sidebar"
       collapsible="offcanvas"
-      className="border-none p-1"
+      className="border-none! p-1"
     >
       <SearchCommand
         openSearchDialog={openSearchDialog}
