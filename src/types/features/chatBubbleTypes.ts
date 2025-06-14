@@ -7,6 +7,7 @@ import {
   CalendarEditOptions,
   CalendarOptions,
   DeepSearchResults,
+  DocumentData,
   EmailComposeData,
   ImageData,
   SearchResults,
@@ -56,6 +57,7 @@ export interface ChatBubbleBotProps {
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
+  document_data?: DocumentData | null; // document data from backend tools
   image_data?: ImageData | null;
   todo_data?: TodoToolData | null; // todo data from backend tools
 

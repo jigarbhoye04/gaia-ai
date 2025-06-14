@@ -12,6 +12,37 @@ export type ImageData = {
   improved_prompt?: string | null;
 };
 
+// Define document data structure for document processing
+export type DocumentData = {
+  filename: string;
+  url: string;
+  is_plain_text: boolean;
+  title: string;
+  metadata: Record<string, unknown>;
+};
+
+// Define memory data structure for memory operations
+export type MemoryData = {
+  operation?: string;
+  status?: string;
+  results?: Array<{
+    id: string;
+    content: string;
+    relevance_score?: number;
+    metadata?: Record<string, unknown>;
+  }>;
+  memories?: Array<{
+    id: string;
+    content: string;
+    metadata?: Record<string, unknown>;
+    created_at?: string;
+  }>;
+  count?: number;
+  content?: string;
+  memory_id?: string;
+  error?: string;
+};
+
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
 export type MessageType = {
   message_id: string;
@@ -40,28 +71,10 @@ export type MessageType = {
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
   todo_data?: TodoToolData | null; // todo data from backend tools
+  document_data?: DocumentData | null;
 
   // memory-related fields
-  memory_data?: {
-    operation?: string;
-    status?: string;
-    results?: Array<{
-      id: string;
-      content: string;
-      relevance_score?: number;
-      metadata?: Record<string, unknown>;
-    }>;
-    memories?: Array<{
-      id: string;
-      content: string;
-      metadata?: Record<string, unknown>;
-      created_at?: string;
-    }>;
-    count?: number;
-    content?: string;
-    memory_id?: string;
-    error?: string;
-  } | null;
+  memory_data?: MemoryData | null;
 };
 
 export type CalendarOptions = {

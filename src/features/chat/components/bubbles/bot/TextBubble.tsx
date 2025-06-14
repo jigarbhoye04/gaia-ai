@@ -13,6 +13,7 @@ import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";
 import CalendarEventSection from "./CalendarEventSection";
+import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import TodoSection from "./TodoSection";
 
@@ -31,6 +32,7 @@ export default function TextBubble({
   intent,
   search_results,
   deep_search_results,
+  document_data,
 }: ChatBubbleBotProps) {
   return (
     <>
@@ -137,6 +139,8 @@ export default function TextBubble({
           message={todo_data.message}
         />
       )}
+
+      {document_data && <DocumentSection document_data={document_data} />}
     </>
   );
 }

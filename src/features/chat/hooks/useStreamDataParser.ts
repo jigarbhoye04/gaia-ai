@@ -111,5 +111,9 @@ export function parseStreamData(
     result.memory_data = streamChunk.memory_data;
   }
 
+  if (streamChunk.document_data !== undefined) {
+    result.document_data = streamChunk.document_data;
+  }
+
   return result;
 }

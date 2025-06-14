@@ -136,6 +136,7 @@ export default function ChatRenderer() {
               image_data={message.image_data}
               memory_data={message.memory_data}
               todo_data={message.todo_data}
+              document_data={message.document_data}
               onOpenMemoryModal={() => setOpenMemoryModal(true)}
             />
           </div>
