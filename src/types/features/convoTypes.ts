@@ -44,7 +44,7 @@ export type MemoryData = {
 };
 
 // Define goal data structure for goal operations
-export type GoalData = {
+export type GoalDataMessageType = {
   goals?: Array<{
     id: string;
     title: string;
@@ -125,7 +125,7 @@ export type MessageType = {
   memory_data?: MemoryData | null;
 
   // goal-related fields
-  goal_data?: GoalData | null;
+  goal_data?: GoalDataMessageType | null;
 };
 
 export type CalendarOptions = {
