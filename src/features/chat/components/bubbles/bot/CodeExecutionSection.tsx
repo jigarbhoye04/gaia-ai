@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/shadcn/accordion";
 import CodeBlock from "@/features/chat/components/code-block/CodeBlock";
 
+import ChartDisplay from "./ChartDisplay";
 import CodeExecutionOutput from "./CodeExecutionOutput";
 
 interface CodeExecutionSectionProps {
@@ -11,8 +18,14 @@ interface CodeExecutionSectionProps {
     output?: {
       stdout: string;
       stderr: string;
-      exit_code: number;
+      results: string[];
+      error: string | null;
     } | null;
+    charts?: Array<{
+      id: string;
+      url: string;
+      text: string;
+    }> | null;
     status?: "executing" | "completed" | "error";
   };
 }
@@ -50,7 +63,11 @@ const CodeExecutionSection: React.FC<CodeExecutionSectionProps> = ({
   const languageDisplay = getLanguageDisplay(code_data.language);
 
   const handleCopyOutput = createCopyHandler(
-    [code_data.output?.stdout, code_data.output?.stderr]
+    [
+      code_data.output?.stdout,
+      code_data.output?.stderr,
+      ...(code_data.output?.results || []),
+    ]
       .filter(Boolean)
       .join("\n"),
     setOutputCopied,
@@ -59,28 +76,44 @@ const CodeExecutionSection: React.FC<CodeExecutionSectionProps> = ({
   return (
     <div className="mt-3 w-full max-w-[30vw] rounded-3xl rounded-bl-none bg-zinc-800 p-4">
       <div className="space-y-4">
-        <div className="w-full max-w-[30vw] overflow-hidden rounded-[15px] rounded-b-[20px]">
-          <div className="px-1 pt-1 pb-2 text-sm font-medium text-gray-300">
-            Executed Code
-          </div>
-          <CodeBlock className={`language-${code_data.language}`}>
-            {code_data.code}
-          </CodeBlock>
-        </div>
+        <Accordion type="multiple" defaultValue={["output"]} className="w-full">
+          {/* Executed Code Section */}
+          <AccordionItem value="code" className="border-none">
+            <AccordionTrigger className="text-sm font-medium text-gray-300 hover:text-white">
+              Executed Code
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="w-full max-w-[30vw] overflow-hidden rounded-[15px] rounded-b-[20px]">
+                <CodeBlock className={`language-${code_data.language}`}>
+                  {code_data.code}
+                </CodeBlock>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-        {/* Output Component */}
-        <div className="w-full">
-          <div className="px-1 py-2 text-sm font-medium text-gray-300">
-            Output
+          {/* Output Section */}
+          <AccordionItem value="output" className="border-none">
+            <AccordionTrigger className="text-sm font-medium text-gray-300 hover:text-white">
+              Output
+            </AccordionTrigger>
+            <AccordionContent>
+              <CodeExecutionOutput
+                output={code_data.output}
+                status={code_data.status}
+                language={code_data.language}
+                onCopy={handleCopyOutput}
+                copied={outputCopied}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* Charts Component */}
+        {code_data.charts && code_data.charts.length > 0 && (
+          <div className="w-full">
+            <ChartDisplay charts={code_data.charts} />
           </div>
-          <CodeExecutionOutput
-            output={code_data.output}
-            status={code_data.status}
-            language={code_data.language}
-            onCopy={handleCopyOutput}
-            copied={outputCopied}
-          />
-        </div>
+        )}
       </div>
     </div>
   );

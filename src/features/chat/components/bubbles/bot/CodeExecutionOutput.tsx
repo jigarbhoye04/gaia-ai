@@ -7,7 +7,8 @@ interface CodeExecutionOutputProps {
   output?: {
     stdout: string;
     stderr: string;
-    exit_code: number;
+    results: string[];
+    error: string | null;
   } | null;
   status?: "executing" | "completed" | "error";
   language: string;
@@ -28,10 +29,10 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
         <div className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
       );
     }
-    if (status === "error" || (output && output.exit_code !== 0)) {
+    if (status === "error" || output?.error) {
       return <XCircle className="h-3 w-3 text-red-400" />;
     }
-    if (status === "completed" && output && output.exit_code === 0) {
+    if (status === "completed" && output && !output.error) {
       return <CheckCircle className="h-3 w-3 text-green-400" />;
     }
     return <Terminal className="h-3 w-3 text-gray-400" />;
@@ -39,14 +40,13 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
 
   const getStatusText = () => {
     if (status === "executing") return "Running";
-    if (status === "error" || (output && output.exit_code !== 0))
-      return "Failed";
-    if (status === "completed" && output && output.exit_code === 0)
-      return "Success";
+    if (status === "error" || output?.error) return "Failed";
+    if (status === "completed" && output && !output.error) return "Success";
     return "Output";
   };
 
-  const shouldShowCopyButton = output && (output.stdout || output.stderr);
+  const shouldShowCopyButton =
+    output && (output.stdout || output.stderr || output.results?.length);
 
   return (
     <div className="w-full overflow-hidden rounded-2xl bg-zinc-800">
@@ -79,6 +79,20 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
               </div>
             )}
 
+            {/* Results Output */}
+            {output.results && output.results.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-gray-500">RESULTS</div>
+                <div className="bg-black p-3 font-mono text-sm text-blue-400">
+                  {output.results.map((result, index) => (
+                    <pre key={index} className="whitespace-pre-wrap">
+                      {result}
+                    </pre>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Standard Error */}
             {output.stderr && (
               <div className="space-y-2">
@@ -89,10 +103,22 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
               </div>
             )}
 
-            {/* Exit Code */}
+            {/* Execution Error */}
+            {output.error && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-gray-500">
+                  EXECUTION ERROR
+                </div>
+                <div className="bg-black p-3 font-mono text-sm text-red-400">
+                  <pre className="whitespace-pre-wrap">{output.error}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* Status */}
             <div className="flex items-center justify-between border-t border-zinc-700 pt-3 text-xs text-gray-500">
-              <span>Exit code: {output.exit_code}</span>
-              {output.exit_code === 0 ? (
+              <span>Status: {status || "unknown"}</span>
+              {!output.error && !output.stderr ? (
                 <span className="text-green-400">Success</span>
               ) : (
                 <span className="text-red-400">Failed</span>
@@ -100,11 +126,14 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
             </div>
 
             {/* No output message */}
-            {!output.stdout && !output.stderr && (
-              <div className="py-4 text-center text-sm text-gray-500">
-                No output produced
-              </div>
-            )}
+            {!output.stdout &&
+              !output.stderr &&
+              !output.results?.length &&
+              !output.error && (
+                <div className="py-4 text-center text-sm text-gray-500">
+                  No output produced
+                </div>
+              )}
           </div>
         ) : (
           <div className="py-4 text-center text-sm text-gray-500">

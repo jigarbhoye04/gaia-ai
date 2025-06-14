@@ -46,8 +46,14 @@ export type MessageType = {
     output?: {
       stdout: string;
       stderr: string;
-      exit_code: number;
+      results: string[];
+      error: string | null;
     } | null;
+    charts?: Array<{
+      id: string;
+      url: string;
+      text: string;
+    }> | null;
     status?: "executing" | "completed" | "error";
   } | null; // code execution data from backend
 
