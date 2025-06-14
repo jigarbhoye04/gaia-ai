@@ -25,11 +25,14 @@ async def lifespan(app: FastAPI):
         download_nltk_resources()
         get_zero_shot_classifier()
         init_cloudinary()
-        
+
         # Create todo indexes
         await create_todo_indexes()
 
-        await publisher.connect()
+        try:
+            await publisher.connect()
+        except Exception as e:
+            logger.error(f"Failed to connect to RabbitMQ: {e}")
 
         # Initialize the graph and store in GraphManager
         async with build_graph() as built_graph:
