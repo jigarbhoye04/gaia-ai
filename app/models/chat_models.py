@@ -46,6 +46,7 @@ class MessageModel(BaseModel):
     memory_data: Optional[dict] = None  # Complete memory operation data
     todo_data: Optional[dict] = None  # Data related to todo operations
     document_data: Optional[dict] = None  # Data related to todo operations
+    goal_data: Optional[dict] = None  # Data related to goal operations
 
 
 class ConversationModel(BaseModel):

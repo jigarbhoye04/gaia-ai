@@ -14,15 +14,15 @@ from app.config.settings import settings
 ONE_YEAR_TTL = 31_536_000
 ONE_HOUR_TTL = 3600
 CACHE_TTL = ONE_HOUR_TTL  # Default cache TTL for todos
-STATS_CACHE_TTL = 5 * 60  # 5 minutes for stats
+STATS_CACHE_TTL = 30 * 60  # 30 minutes for stats (increased from 5)
 
 
 class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder that handles datetime objects."""
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+        return super().default(o)
 
 class RedisCache:
     def __init__(self, redis_url="redis://localhost:6379", default_ttl=3600):
