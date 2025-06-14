@@ -43,6 +43,54 @@ export type MemoryData = {
   error?: string;
 };
 
+// Define goal data structure for goal operations
+export type GoalData = {
+  goals?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    progress?: number;
+    roadmap?: {
+      nodes: Array<{
+        id: string;
+        data: {
+          title?: string;
+          label?: string;
+          isComplete?: boolean;
+          type?: string;
+          subtask_id?: string;
+        };
+      }>;
+      edges: Array<{
+        id: string;
+        source: string;
+        target: string;
+      }>;
+    };
+    created_at?: string;
+    todo_project_id?: string;
+    todo_id?: string;
+  }>;
+  action?: string;
+  message?: string;
+  goal_id?: string;
+  deleted_goal_id?: string;
+  stats?: {
+    total_goals: number;
+    goals_with_roadmaps: number;
+    total_tasks: number;
+    completed_tasks: number;
+    overall_completion_rate: number;
+    active_goals: Array<{
+      id: string;
+      title: string;
+      progress: number;
+    }>;
+    active_goals_count: number;
+  };
+  error?: string;
+};
+
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
 export type MessageType = {
   message_id: string;
@@ -77,52 +125,7 @@ export type MessageType = {
   memory_data?: MemoryData | null;
 
   // goal-related fields
-  goal_data?: {
-    goals?: Array<{
-      id: string;
-      title: string;
-      description?: string;
-      progress?: number;
-      roadmap?: {
-        nodes: Array<{
-          id: string;
-          data: {
-            title?: string;
-            label?: string;
-            isComplete?: boolean;
-            type?: string;
-            subtask_id?: string;
-          };
-        }>;
-        edges: Array<{
-          id: string;
-          source: string;
-          target: string;
-        }>;
-      };
-      created_at?: string;
-      todo_project_id?: string;
-      todo_id?: string;
-    }>;
-    action?: string;
-    message?: string;
-    goal_id?: string;
-    deleted_goal_id?: string;
-    stats?: {
-      total_goals: number;
-      goals_with_roadmaps: number;
-      total_tasks: number;
-      completed_tasks: number;
-      overall_completion_rate: number;
-      active_goals: Array<{
-        id: string;
-        title: string;
-        progress: number;
-      }>;
-      active_goals_count: number;
-    };
-    error?: string;
-  } | null;
+  goal_data?: GoalData | null;
 };
 
 export type CalendarOptions = {
