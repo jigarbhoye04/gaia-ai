@@ -1,7 +1,7 @@
-"""Docstrings for Riza AI code execution tool."""
+"""Docstrings for E2B code execution tool."""
 
 CODE_EXECUTION_TOOL = """
-Execute code safely in an isolated sandbox environment using Riza AI.
+Execute code safely in an isolated E2B sandbox environment.
 
 This tool provides a simple, direct way to run code in a secure WebAssembly-based 
 sandbox. It executes the provided code and returns stdout, stderr, and exit code.

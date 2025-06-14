@@ -81,7 +81,7 @@ dependencies = [
   "aio-pika>=9.5.5",
   "aiolimiter>=1.2.1",
   "pycountry>=24.6.1",
-  "rizaio>=0.11.0",
+  "e2b-code-interpreter>=1.2.0",
 ]
 
 [dependency-groups]
