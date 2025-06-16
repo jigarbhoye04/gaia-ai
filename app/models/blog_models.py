@@ -16,14 +16,11 @@ class AuthorDetails(BaseModel):
 
 class BlogPostBase(BaseModel):
     title: str
-    description: Optional[str] = None
     date: str
     authors: List[str]  # Team member IDs
-    readTime: Optional[str] = None
-    category: Optional[str] = None
+    category: str
     content: str
     image: Optional[str] = None
-    tags: Optional[List[str]] = None
 
 
 class BlogPostCreate(BlogPostBase):
@@ -32,23 +29,29 @@ class BlogPostCreate(BlogPostBase):
 
 class BlogPostUpdate(BaseModel):
     title: Optional[str] = None
-    description: Optional[str] = None
     date: Optional[str] = None
     authors: Optional[List[str]] = None
-    readTime: Optional[str] = None
     category: Optional[str] = None
     content: Optional[str] = None
     image: Optional[str] = None
-    tags: Optional[List[str]] = None
 
 
 class BlogPost(BlogPostBase):
+    """Blog post response model with proper ID handling."""
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
         populate_by_name=True,
         arbitrary_types_allowed=True,
+        from_attributes=True
     )
 
     slug: str
-    id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: str = Field(description="Unique identifier for the blog post")
     author_details: Optional[List[AuthorDetails]] = None
+    
+    @classmethod
+    def from_mongo(cls, data: dict) -> "BlogPost":
+        """Create BlogPost instance from MongoDB document."""
+        if "_id" in data:
+            data["id"] = str(data["_id"])
+        return cls(**data)

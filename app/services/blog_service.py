@@ -47,13 +47,10 @@ class BlogService:
             "id": {"$toString": "$_id"},
             "slug": 1,
             "title": 1,
-            "description": 1,
             "date": 1,
             "authors": 1,
-            "readTime": 1,
             "category": 1,
             "image": 1,
-            "tags": 1,
         }
 
         if include_content:
@@ -208,7 +205,6 @@ class BlogService:
     @CacheInvalidator(
         key_patterns=[
             "blogs:all:*",
-            "blog:{slug}",
         ]
     )
     async def create_blog(blog_data: BlogPostCreate) -> BlogPost:
@@ -356,13 +352,10 @@ class BlogService:
             "id": {"$toString": "$_id"},
             "slug": 1,
             "title": 1,
-            "description": 1,
             "date": 1,
             "authors": 1,
-            "readTime": 1,
             "category": 1,
             "image": 1,
-            "tags": 1,
         }
 
         if include_content:
@@ -375,7 +368,6 @@ class BlogService:
                     "$or": [
                         {"$text": {"$search": query}},
                         {"title": {"$regex": query, "$options": "i"}},
-                        {"tags": {"$in": [query]}},
                         {"category": {"$regex": query, "$options": "i"}},
                     ]
                 }

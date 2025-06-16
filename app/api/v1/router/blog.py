@@ -1,8 +1,22 @@
 from typing import List, Optional
-from fastapi import APIRouter, Query, status, Depends
+from fastapi import (
+    APIRouter,
+    Query,
+    status,
+    Depends,
+    UploadFile,
+    File,
+    Form,
+    HTTPException,
+)
+import json
+import cloudinary
+import cloudinary.uploader
+import io
 
 from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
 from app.services.blog_service import BlogService
+from app.config.cloudinary import init_cloudinary
 from app.api.v1.dependencies.blog_auth import verify_blog_token
 
 router = APIRouter()
@@ -40,28 +54,91 @@ async def get_blog(slug: str):
 
 @router.post("/blogs", response_model=BlogPost, status_code=status.HTTP_201_CREATED)
 async def create_blog(
-    blog: BlogPostCreate,
-    token: str = Depends(verify_blog_token)
+    title: str = Form(...),
+    slug: str = Form(...),
+    content: str = Form(...),
+    category: str = Form(...),
+    date: str = Form(...),
+    authors: str = Form(...),  # JSON string
+    image: Optional[UploadFile] = File(None),
+    _token: str = Depends(verify_blog_token),
 ):
-    """Create a new blog post. Requires bearer token authentication."""
-    return await BlogService.create_blog(blog)
+    """Create a new blog post with optional image upload. Requires bearer token authentication."""
+
+    # Parse authors from JSON string
+    try:
+        authors_list = json.loads(authors)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid authors format. Must be a JSON array.",
+        )
+
+    # Handle image upload if provided
+    image_url = None
+    if image and image.filename:
+        try:
+            # Validate file
+            if not image.content_type or not image.content_type.startswith("image/"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="File must be an image",
+                )
+
+            # Read file content
+            contents = await image.read()
+
+            # Upload to cloudinary
+            upload_result = cloudinary.uploader.upload(
+                io.BytesIO(contents),
+                resource_type="image",
+                folder="blog/banners",
+                transformation=[
+                    {
+                        "width": 1200,
+                        "height": 630,
+                        "crop": "fill",
+                        "quality": "auto",
+                        "format": "webp",
+                    }
+                ],
+                overwrite=True,
+                tags=["blog", "banner"],
+            )
+
+            image_url = upload_result.get("secure_url")
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to upload image: {str(e)}",
+            )
+
+    # Create blog post data
+    blog_data = BlogPostCreate(
+        title=title,
+        slug=slug,
+        content=content,
+        category=category,
+        date=date,
+        authors=authors_list,
+        image=image_url,
+    )
+
+    return await BlogService.create_blog(blog_data)
 
 
 @router.put("/blogs/{slug}", response_model=BlogPost)
 async def update_blog(
-    slug: str,
-    blog: BlogPostUpdate,
-    token: str = Depends(verify_blog_token)
+    slug: str, blog: BlogPostUpdate, _token: str = Depends(verify_blog_token)
 ):
     """Update a blog post. Requires bearer token authentication."""
     return await BlogService.update_blog(slug, blog)
 
 
 @router.delete("/blogs/{slug}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_blog(
-    slug: str,
-    token: str = Depends(verify_blog_token)
-):
+async def delete_blog(slug: str, _token: str = Depends(verify_blog_token)):
     """Delete a blog post. Requires bearer token authentication."""
     await BlogService.delete_blog(slug)
     return
