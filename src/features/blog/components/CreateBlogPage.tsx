@@ -7,18 +7,11 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CalendarIcon,
-  FileTextIcon,
-  PlusIcon,
-  TagIcon,
-  UserIcon,
-} from "lucide-react";
+import { CalendarIcon, FileTextIcon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -41,44 +34,21 @@ const blogSchema = z.object({
       /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
       "Slug must be lowercase, alphanumeric with hyphens only",
     ),
-  description: z
-    .string()
-    .max(500, "Description must be less than 500 characters")
-    .optional(),
   content: z.string().min(1, "Content is required"),
   category: z.string().min(1, "Category is required"),
   authors: z.array(z.string()).min(1, "At least one author is required"),
-  readTime: z.string().optional(),
-  image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
-  tags: z.array(z.string()).optional(),
+  image: z.any().optional(),
   date: z.string().min(1, "Date is required"),
 });
 
 type BlogFormData = z.infer<typeof blogSchema>;
 
-const categories = [
-  "Product Update",
-  "Tips & Tricks",
-  "Security",
-  "AI Technology",
-  "AI Research",
-  "AI Ethics",
-  "Technology",
-  "Enterprise",
-  "Safety",
-  "Developer Tools",
-  "Industry Insights",
-  "Customer Stories",
-  "Accessibility",
-];
-
 export default function CreateBlogPage() {
   const router = useRouter();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [selectedAuthors, setSelectedAuthors] = useState<TeamMember[]>([]);
-  const [tags, setTags] = useState<string[]>([]);
-  const [currentTag, setCurrentTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const {
     register,
@@ -92,7 +62,6 @@ export default function CreateBlogPage() {
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
       authors: [],
-      tags: [],
       content: `# Welcome to our blog
 
 This is a sample blog post to demonstrate the markdown capabilities.
@@ -156,10 +125,10 @@ Happy writing! 🚀`,
     );
   }, [selectedAuthors, setValue]);
 
-  // Update form when tags change
+  // Update form when image file changes
   useEffect(() => {
-    setValue("tags", tags);
-  }, [tags, setValue]);
+    setValue("image", selectedFile);
+  }, [selectedFile, setValue]);
 
   const handleAuthorSelect = (authorId: string) => {
     const author = teamMembers.find((member) => member.id === authorId);
@@ -177,15 +146,20 @@ Happy writing! 🚀`,
     );
   };
 
-  const addTag = () => {
-    if (currentTag.trim() && !tags.includes(currentTag.trim())) {
-      setTags((prev) => [...prev, currentTag.trim()]);
-      setCurrentTag("");
-    }
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setSelectedFile(file);
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setTags((prev) => prev.filter((tag) => tag !== tagToRemove));
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    // Reset the file input
+    const fileInput = document.getElementById(
+      "image-upload",
+    ) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   // Check if bearer token is configured
@@ -195,7 +169,25 @@ Happy writing! 🚀`,
     setIsSubmitting(true);
 
     try {
-      await blogApi.createBlogWithAuth(data, bearerToken!);
+      // Create FormData to handle file upload
+      const formData = new FormData();
+
+      // Add all blog data
+      formData.append("title", data.title);
+      formData.append("slug", data.slug);
+      formData.append("content", data.content);
+      formData.append("category", data.category);
+      formData.append("date", data.date);
+
+      // Add authors as JSON string
+      formData.append("authors", JSON.stringify(data.authors));
+
+      // Add image file if selected
+      if (selectedFile) {
+        formData.append("image", selectedFile);
+      }
+
+      await blogApi.createBlogWithFormData(formData, bearerToken!);
       toast.success("Blog post created successfully!");
       router.push("/blog");
     } catch (error) {
@@ -274,60 +266,27 @@ Happy writing! 🚀`,
               />
             </div>
 
-            {/* Description */}
-            <Textarea
-              label="Description"
-              placeholder="Brief description of the blog post (optional)"
-              description="This will be shown in previews and search results"
-              isInvalid={!!errors.description}
-              errorMessage={errors.description?.message}
-              {...register("description")}
-            />
-
             {/* Category & Date */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Controller
-                name="category"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Category"
-                    placeholder="Select a category"
-                    isRequired
-                    isInvalid={!!errors.category}
-                    errorMessage={errors.category?.message}
-                    selectedKeys={field.value ? [field.value] : []}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      field.onChange(selected);
-                    }}
-                  >
-                    {categories.map((category) => (
-                      <SelectItem key={category}>{category}</SelectItem>
-                    ))}
-                  </Select>
-                )}
+              <Input
+                label="Category"
+                placeholder="Enter category (e.g., AI Technology, Product Update)"
+                isRequired
+                isInvalid={!!errors.category}
+                errorMessage={errors.category?.message}
+                {...register("category")}
               />
-
-              <div className="flex gap-2">
-                <Input
-                  label="Date"
-                  type="date"
-                  isRequired
-                  isInvalid={!!errors.date}
-                  errorMessage={errors.date?.message}
-                  startContent={
-                    <CalendarIcon className="h-4 w-4 text-foreground-400" />
-                  }
-                  {...register("date")}
-                />
-                <Input
-                  label="Read Time"
-                  placeholder="5 min read"
-                  description="Optional"
-                  {...register("readTime")}
-                />
-              </div>
+              <Input
+                label="Date"
+                type="date"
+                isRequired
+                isInvalid={!!errors.date}
+                errorMessage={errors.date?.message}
+                startContent={
+                  <CalendarIcon className="h-4 w-4 text-foreground-400" />
+                }
+                {...register("date")}
+              />
             </div>
 
             {/* Authors */}
@@ -399,62 +358,76 @@ Happy writing! 🚀`,
               )}
             </div>
 
-            {/* Image URL */}
-            <Input
-              label="Featured Image URL"
-              placeholder="https://example.com/image.jpg"
-              description="Optional featured image for the blog post"
-              isInvalid={!!errors.image}
-              errorMessage={errors.image?.message}
-              {...register("image")}
-            />
-
-            {/* Tags */}
+            {/* Featured Image Upload */}
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
-                Tags (Optional)
+                Featured Image (Optional)
               </label>
 
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add a tag"
-                  value={currentTag}
-                  onChange={(e) => setCurrentTag(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addTag();
-                    }
-                  }}
-                  startContent={
-                    <TagIcon className="h-4 w-4 text-foreground-400" />
-                  }
-                />
-                <Button
-                  isIconOnly
-                  color="primary"
-                  variant="flat"
-                  onPress={addTag}
-                  isDisabled={!currentTag.trim()}
-                >
-                  <PlusIcon className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {/* Selected Tags */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {tags.map((tag) => (
-                    <Chip
-                      key={tag}
-                      onClose={() => removeTag(tag)}
+              {selectedFile ? (
+                <Card className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded bg-primary/10">
+                        <FileTextIcon className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{selectedFile.name}</p>
+                        <p className="text-sm text-foreground-500">
+                          {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                    <Button
                       variant="flat"
-                      color="secondary"
+                      color="danger"
+                      size="sm"
+                      onPress={handleRemoveFile}
+                      isDisabled={isSubmitting}
                     >
-                      {tag}
-                    </Chip>
-                  ))}
+                      Remove
+                    </Button>
+                  </div>
+                </Card>
+              ) : (
+                <div className="rounded-lg border-2 border-dashed border-foreground-300 p-8 text-center transition-colors hover:border-primary">
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={isSubmitting}
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="flex cursor-pointer flex-col items-center gap-3"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground-100">
+                      <FileTextIcon className="h-6 w-6 text-foreground-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Click to upload image</p>
+                      <p className="text-sm text-foreground-500">
+                        PNG, JPG, WebP or GIF up to 10MB
+                      </p>
+                    </div>
+                  </label>
                 </div>
+              )}
+
+              <p className="text-xs text-foreground-500">
+                Upload a banner image for your blog post. Recommended:
+                1200×630px for optimal display.
+              </p>
+              {errors.image && (
+                <p className="text-xs text-danger">
+                  {typeof errors.image === "object" &&
+                  errors.image !== null &&
+                  "message" in errors.image
+                    ? String(errors.image.message)
+                    : "Invalid image file"}
+                </p>
               )}
             </div>
 

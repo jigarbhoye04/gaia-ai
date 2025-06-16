@@ -68,14 +68,6 @@ export default async function BlogPostPage({ params }: PageProps) {
                 <div className="text-muted-foreground flex items-center text-sm">
                   <Calendar className="mr-1 h-4 w-4" />
                   <span className="text-foreground-500">{blog.date}</span>
-                  {blog.readTime && (
-                    <>
-                      <span className="mx-2">•</span>
-                      <span className="text-foreground-500">
-                        {blog.readTime}
-                      </span>
-                    </>
-                  )}
                 </div>
               </div>
             </div>

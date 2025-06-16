@@ -15,40 +15,31 @@ export interface BlogPost {
   id: string;
   slug: string;
   title: string;
-  description?: string;
   date: string;
   authors: string[];
   author_details?: TeamMember[];
-  readTime?: string;
-  category?: string;
+  category: string;
   content: string;
   image?: string;
-  tags?: string[];
 }
 
 export interface BlogPostCreate {
   slug: string;
   title: string;
-  description?: string;
   date: string;
   authors: string[];
-  readTime?: string;
-  category?: string;
+  category: string;
   content: string;
   image?: string;
-  tags?: string[];
 }
 
 export interface BlogPostUpdate {
   title?: string;
-  description?: string;
   date?: string;
   authors?: string[];
-  readTime?: string;
   category?: string;
   content?: string;
   image?: string;
-  tags?: string[];
 }
 
 export const blogApi = {
@@ -64,22 +55,17 @@ export const blogApi = {
     return response.data;
   },
 
-  createBlog: async (blog: BlogPostCreate): Promise<BlogPost> => {
-    const response = await api.post<BlogPost>("/blogs", blog);
-    return response.data;
-  },
-
-  createBlogWithAuth: async (
-    blog: BlogPostCreate,
+  createBlogWithFormData: async (
+    formData: FormData,
     bearerToken: string,
   ): Promise<BlogPost> => {
     const response = await axios.post<BlogPost>(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/blogs`,
-      blog,
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}blogs`,
+      formData,
       {
         headers: {
           Authorization: `Bearer ${bearerToken}`,
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       },
     );
