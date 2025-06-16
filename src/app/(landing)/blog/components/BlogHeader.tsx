@@ -1,8 +1,15 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
 
 export function BlogHeader() {
+  // Check if bearer token is configured in client-side environment
+  const hasBearerToken =
+    typeof window !== "undefined" &&
+    !!process.env.NEXT_PUBLIC_BLOG_BEARER_TOKEN;
+
   return (
     <div className="mb-8 flex items-center justify-between px-6">
       <div className="flex-1 text-center">
@@ -13,7 +20,7 @@ export function BlogHeader() {
       </div>
 
       {/* Show create button only if bearer token is configured */}
-      {process.env.NEXT_PUBLIC_BLOG_BEARER_TOKEN && (
+      {hasBearerToken && (
         <Button
           as={Link}
           href="/blog/create"
