@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 
 import { AuthorTooltip } from "@/features/blog/components/AuthorTooltip";
-import { api } from "@/lib/api";
 import type { AboutData, Author } from "@/types/api/aboutApiTypes";
-
 export const metadata: Metadata = {
   title: "About",
   description:
@@ -41,32 +40,33 @@ export const metadata: Metadata = {
 };
 
 export default async function About() {
-  let aboutData: AboutData | null = null;
-
-  try {
-    const response = await api.get<AboutData>("/about");
-    aboutData = response.data;
-  } catch (error) {
-    console.error("Error fetching about data:", error);
-  }
-
-  if (!aboutData) {
-    return (
-      <div className="flex min-h-screen w-screen justify-center pt-28">
-        <div className="max-w-(--breakpoint-md) space-y-4">
-          <p className="text-center text-foreground-400">
-            Unable to load about information.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const aboutData: AboutData | null = {
+    content:
+      "Hey, I’m building GAIA because I’ve always wanted a personal assistant that actually does things for me—not just answer questions or pretend to help. The truth is, tools like Siri, Alexa, and even ChatGPT are helpful in small ways, but they’re not real assistants.\n\nThey don’t remember you, they don’t handle your work, and they don’t make your life easier the way a human would.\n\nGAIA is our attempt to change that.\n\nWe’re building a general-purpose personal assistant that’s always by your side. It connects to your digital life, learns how you work, and starts taking care of the boring stuff—emails, meetings, scheduling, reminders, calls, your goals, your habits—so you can focus on what actually matters.\n\nIt’s not a chatbot. It’s an assistant that gets things done.\n\nI envision a world where everyone has their own personal AI assistant—something like Jarvis from Iron Man. Not just a tool, but a proactive, intelligent presence that knows you, helps you, and works with you. That’s the kind of future I want to help build.\n\nGAIA was founded by me and [Dhruv](https://www.linkedin.com/in/dhruvmaradiya/). As of June 2025, we’re a really small team of under 5 people—building fast, learning fast, and trying to solve one of the hardest and most exciting problems in tech today.\n\nWe’re just getting started, and there’s a lot more to come. I hope you find what we’re building useful, thoughtful, and maybe even a little magical. Thanks for being here.",
+    authors: [
+      {
+        name: "Aryan Randeriya",
+        avatar: "https://github.com/aryanranderiya.png",
+        role: "Founder & CEO",
+        linkedin: "https://www.linkedin.com/in/aryanranderiya/",
+        twitter: "https://twitter.com/aryanranderiya",
+      },
+    ],
+  };
 
   return (
-    <div className="flex min-h-screen w-screen justify-center px-6 pt-28">
+    <div className="flex min-h-screen w-screen justify-center px-6 py-28">
       <div className="max-w-(--breakpoint-md) space-y-8">
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="prose prose-zinc dark:prose-invert max-w-none">
+          <div className="flex justify-center">
+            <Image
+              src="/branding/logo.webp"
+              alt="GAIA Logo"
+              width={150}
+              height={150}
+            />
+          </div>
+          <div className="prose prose-zinc dark:prose-invert max-w-xl">
             <ReactMarkdown
               components={{
                 h1: ({ children }) => (
@@ -85,7 +85,7 @@ export default async function About() {
                   </h3>
                 ),
                 p: ({ children }) => (
-                  <p className="mb-4 text-justify leading-relaxed text-foreground-600">
+                  <p className="mb-4 text-justify text-lg leading-relaxed text-foreground-600">
                     {children}
                   </p>
                 ),
@@ -100,10 +100,10 @@ export default async function About() {
                     {children}
                   </strong>
                 ),
-                code: ({ children }) => (
-                  <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm dark:bg-zinc-800">
+                a: ({ children }) => (
+                  <a className="cursor-pointer text-primary hover:underline">
                     {children}
-                  </code>
+                  </a>
                 ),
               }}
             >
@@ -112,7 +112,7 @@ export default async function About() {
           </div>
         </Suspense>
 
-        <div className="flex items-center justify-center gap-3 border-t border-zinc-200 py-6 dark:border-zinc-800">
+        <div className="flex items-start">
           <div className="flex items-center -space-x-2">
             {aboutData.authors.map((author: Author) => (
               <AuthorTooltip

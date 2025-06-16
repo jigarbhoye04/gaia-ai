@@ -12,4 +12,5 @@ export * from "./headers/HeaderManager";
 export * from "./headers/MailHeader";
 export * from "./headers/NotesHeader";
 export * from "./headers/SettingsHeader";
+export * from "./LegalLayout";
 export * from "./sidebar/index";
