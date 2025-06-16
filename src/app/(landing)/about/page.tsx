@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import ReactMarkdown from "react-markdown";
 
+import { AuthorTooltip } from "@/features/blog/components/AuthorTooltip";
 import { api } from "@/lib/api";
 import type { AboutData, Author } from "@/types/api/aboutApiTypes";
-
-import { AuthorTooltip } from "../blog/components/AuthorTooltip";
 
 export const metadata: Metadata = {
   title: "About",

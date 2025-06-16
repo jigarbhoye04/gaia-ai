@@ -2,11 +2,10 @@ import type { Metadata } from "next";
 
 import { Separator } from "@/components";
 import { blogApi, type BlogPost } from "@/features/blog/api/blogApi";
-
-import { BlogCard } from "./components/BlogCard";
-import { BlogHeader } from "./components/BlogHeader";
-import { BlogListItem } from "./components/BlogListItem";
-import { Blog, dummyBlogData } from "./dummy-blog-data";
+import { BlogCard } from "@/features/blog/components/BlogCard";
+import { BlogHeader } from "@/features/blog/components/BlogHeader";
+import { BlogListItem } from "@/features/blog/components/BlogListItem";
+import { Blog, dummyBlogData } from "@/features/blog/data/dummy-blog-data";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -72,13 +71,13 @@ export default async function BlogList() {
   const remainingPosts = displayBlogs.slice(5);
 
   return (
-    <div className="flex min-h-screen w-screen justify-center px-6 pt-28">
+    <div className="flex w-screen justify-center px-6 pt-28">
       <div className="w-full max-w-(--breakpoint-lg)">
         <BlogHeader />
 
         {/* Latest Posts Grid */}
         {latestPosts.length > 0 && (
-          <div className="mb-12 px-6">
+          <div className="mb-12 px-3 sm:px-6">
             <div className="mb-6 grid gap-6">
               {/* First row - 2 posts */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

@@ -8,9 +8,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/shadcn/breadcrumb";
 import { blogApi } from "@/features/blog/api/blogApi";
-
-import BlogMetadata from "./BlogMetadata";
-import MarkdownWrapper from "./MarkdownWrapper";
+import BlogMetadata from "@/features/blog/components/BlogMetadata";
+import MarkdownWrapper from "@/features/blog/components/MarkdownWrapper";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -32,7 +31,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
     return (
       <div className="flex h-fit min-h-screen w-screen justify-center overflow-y-auto pt-28">
-        <div className="mx-auto w-full">
+        <div className="mx-auto w-full px-5 sm:p-0">
           <div className="mb-8 flex flex-col items-center">
             <div className="mb-5 flex w-full justify-center text-foreground-400">
               <Breadcrumb>
@@ -48,7 +47,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               </Breadcrumb>
             </div>
 
-            <h1 className="text-center text-5xl font-medium tracking-tight">
+            <h1 className="text-center text-4xl font-medium tracking-tight sm:text-5xl">
               {blog.title}
             </h1>
 
@@ -59,7 +58,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                   alt={blog.title}
                   width={1920}
                   height={1080}
-                  className="max-w-5xl object-cover"
+                  className="object-cover sm:max-w-5xl"
                 />
               )}
             </div>

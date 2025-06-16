@@ -1,9 +1,6 @@
-import {
-  type Author,
-  AuthorTooltip,
-} from "@/app/(landing)/blog/components/AuthorTooltip";
 import { formatRelativeDate } from "@/utils/dateUtils";
 
+import { type Author, AuthorTooltip } from "./AuthorTooltip";
 import CopyLinkButton from "./CopyLinkButton";
 
 interface TeamMember {

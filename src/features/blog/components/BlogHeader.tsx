@@ -12,7 +12,7 @@ export function BlogHeader() {
 
   return (
     <div className="relative mb-8 flex items-center justify-between px-6">
-      <div className="flex-1 text-center">
+      <div className="flex-1">
         <h1 className="text-4xl font-bold tracking-tight">Blog</h1>
       </div>
 
