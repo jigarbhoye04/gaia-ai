@@ -1,13 +1,7 @@
 """E2B code execution tool with chart detection and streaming support."""
 
-import base64
-import io
-import re
-import time
-import uuid
 from typing import Annotated, Literal
 
-import cloudinary.uploader
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 from e2b_code_interpreter import Sandbox
@@ -16,44 +10,7 @@ from app.config.loggers import chat_logger as logger
 from app.config.settings import settings
 from app.docstrings.langchain.tools.code_exec_docs import CODE_EXECUTION_TOOL
 from app.docstrings.utils import with_doc
-
-
-async def upload_chart_to_cloudinary(
-    chart_bytes: bytes, chart_title: str = "chart", user_id: str | None = None
-) -> str | None:
-    """Upload a chart image to Cloudinary and return the secure URL."""
-    try:
-        chart_id = str(uuid.uuid4())
-        timestamp = int(time.time())
-
-        # Create a clean slug from chart title
-        clean_title = re.sub(r"[^a-zA-Z0-9\s]", "", chart_title)
-        slug = re.sub(r"\s+", "_", clean_title.lower())[:30]
-
-        # Create public_id with proper organization
-        if user_id:
-            public_id = f"charts/{user_id}/{timestamp}_{slug}_{chart_id}"
-        else:
-            public_id = f"charts/{timestamp}_{slug}_{chart_id}"
-
-        upload_result = cloudinary.uploader.upload(
-            io.BytesIO(chart_bytes),
-            resource_type="image",
-            public_id=public_id,
-            overwrite=True,
-        )
-
-        image_url = upload_result.get("secure_url")
-        if image_url:
-            logger.info(f"Chart uploaded successfully. URL: {image_url}")
-            return image_url
-        else:
-            logger.error("Missing secure_url in Cloudinary upload response")
-            return None
-
-    except Exception as e:
-        logger.error(f"Failed to upload chart to Cloudinary: {str(e)}", exc_info=True)
-        return None
+from app.utils.chart_utils import process_chart_results, validate_chart_data
 
 
 @tool
@@ -64,8 +21,21 @@ async def execute_code(
         "Programming language to use for code execution",
     ],
     code: Annotated[str, "The code to execute in the secure sandbox environment"],
+    user_id: Annotated[str, "User ID for chart uploads"] = "anonymous",
 ) -> str:
     """Execute code safely in an isolated E2B sandbox with chart detection."""
+
+    # Input validation
+    if not code or not code.strip():
+        return "Error: Code cannot be empty."
+
+    if len(code) > 50000:  # 50KB limit
+        return "Error: Code exceeds maximum length of 50,000 characters."
+
+    # Validate language
+    valid_languages = ["python", "javascript", "typescript", "r", "java", "bash"]
+    if language.lower() not in valid_languages:
+        return f"Error: Unsupported language '{language}'. Supported: {', '.join(valid_languages)}"
 
     if not hasattr(settings, "E2B_API_KEY") or not settings.E2B_API_KEY:
         return "Error: E2B API key not configured. Please set E2B_API_KEY in environment variables."
@@ -89,79 +59,72 @@ async def execute_code(
 
         # Create and execute in sandbox
         sbx = Sandbox()
-        try:
-            # Execute the code
-            execution = sbx.run_code(code, language=language)
-            
-            # Process charts if any were generated
-            charts = []
-            if execution.results:
-                for i, result in enumerate(execution.results):
-                    # Check for static chart (PNG base64)
-                    if hasattr(result, 'png') and result.png:
-                        try:
-                            chart_bytes = base64.b64decode(result.png)
-                            chart_url = await upload_chart_to_cloudinary(
-                                chart_bytes,
-                                f"chart_{i}",
-                                "anonymous"
-                            )
-                            if chart_url:
-                                charts.append({
-                                    "id": f"chart_{i}",
-                                    "url": chart_url,
-                                    "text": f"Chart {i + 1}"
-                                })
-                        except Exception:
-                            pass  # Skip failed charts
+        # Execute the code
+        execution = sbx.run_code(code, language=language)
 
-            # Update code data with results
-            code_data["code_data"]["output"] = {
-                "stdout": "\n".join(execution.logs.stdout)
-                if execution.logs.stdout
-                else "",
-                "stderr": "\n".join(execution.logs.stderr)
-                if execution.logs.stderr
-                else "",
-                "results": [str(result) for result in execution.results]
-                if execution.results
-                else [],
-                "error": str(execution.error) if execution.error else None,
-            }
+        # Process charts if any were generated
+        charts, chart_errors = process_chart_results(execution.results, user_id)
 
-            if charts:
-                code_data["code_data"]["charts"] = charts
+        # Validate chart data
+        if charts:
+            charts = validate_chart_data(charts)
 
-            code_data["code_data"]["status"] = "completed"
-            writer(code_data)
+        # Update code data with results
+        code_data["code_data"]["output"] = {
+            "stdout": "\n".join(execution.logs.stdout) if execution.logs.stdout else "",
+            "stderr": "\n".join(execution.logs.stderr) if execution.logs.stderr else "",
+            "results": [str(result) for result in execution.results]
+            if execution.results
+            else [],
+            "error": str(execution.error) if execution.error else None,
+        }
 
-            # Format output for return
-            output_parts = []
+        if charts:
+            code_data["code_data"]["charts"] = charts
 
-            if execution.logs.stdout:
-                output_parts.append(f"Output:\n{chr(10).join(execution.logs.stdout)}")
+        # Include chart processing errors in output if any
+        if chart_errors:
+            if code_data["code_data"]["output"]["stderr"]:
+                code_data["code_data"]["output"]["stderr"] += (
+                    "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
+                )
+            else:
+                code_data["code_data"]["output"]["stderr"] = (
+                    "Chart Processing Warnings:\n" + "\n".join(chart_errors)
+                )
 
-            if execution.results:
-                results_text = "\n".join(str(result) for result in execution.results)
-                output_parts.append(f"Results:\n{results_text}")
+        code_data["code_data"]["status"] = "completed"
+        writer(code_data)
 
-            if execution.logs.stderr:
-                output_parts.append(f"Errors:\n{chr(10).join(execution.logs.stderr)}")
+        # Format output for return
+        output_parts = []
 
-            if execution.error:
-                output_parts.append(f"Execution Error: {execution.error}")
+        if execution.logs.stdout:
+            output_parts.append(f"Output:\n{chr(10).join(execution.logs.stdout)}")
 
-            if charts:
-                output_parts.append(f"Generated {len(charts)} chart(s)")
-            return (
-                "\n\n".join(output_parts)
-                if output_parts
-                else "Code executed successfully (no output)"
+        if execution.results:
+            results_text = "\n".join(str(result) for result in execution.results)
+            output_parts.append(f"Results:\n{results_text}")
+
+        if execution.logs.stderr:
+            output_parts.append(f"Errors:\n{chr(10).join(execution.logs.stderr)}")
+
+        if execution.error:
+            output_parts.append(f"Execution Error: {execution.error}")
+
+        if charts:
+            output_parts.append(f"Generated {len(charts)} chart(s)")
+
+        if chart_errors:
+            output_parts.append(
+                f"Chart processing warnings: {len(chart_errors)} issue(s)"
             )
 
-        finally:
-            # E2B sandbox cleanup is automatic
-            pass
+        return (
+            "\n\n".join(output_parts)
+            if output_parts
+            else "Code executed successfully (no output)"
+        )
 
     except Exception as e:
         error_msg = f"Error executing code: {str(e)}"
@@ -186,7 +149,11 @@ async def execute_code(
                         }
                     }
                 )
-            except Exception:
-                pass  # Ignore streaming errors during error handling
+            except Exception as streaming_error:
+                # Log streaming errors but don't mask the original error
+                logger.error(
+                    f"Failed to send error state to frontend: {str(streaming_error)}",
+                    exc_info=True,
+                )
 
         return error_msg
