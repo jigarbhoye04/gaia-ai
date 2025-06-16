@@ -1,13 +1,17 @@
 import { Avatar, AvatarGroup } from "@heroui/avatar";
-import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import { Calendar, ChevronLeft } from "lucide-react";
-import Link from "next/link";
+import Image from "next/image";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 
-import { Separator } from "@/components/ui/shadcn/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/shadcn/breadcrumb";
 import { blogApi } from "@/features/blog/api/blogApi";
 
 interface PageProps {
@@ -32,22 +36,37 @@ export default async function BlogPostPage({ params }: PageProps) {
       <div className="flex h-fit min-h-screen w-screen justify-center overflow-y-auto pt-28">
         <div className="mx-auto w-full max-w-(--breakpoint-md)">
           <div className="mb-8">
-            <Button
-              variant="light"
-              className="mb-4 font-medium"
-              as={Link}
-              href="/blog"
-              size="sm"
-              startContent={<ChevronLeft />}
-            >
-              Blog
-            </Button>
+            <div className="mb-5 flex w-full justify-center text-foreground-400">
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="/blog">Blog</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink>{blog.category}</BreadcrumbLink>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
 
-            <h1 className="mb-4 text-2xl font-bold tracking-tight">
+            <h1 className="text-center text-5xl font-medium tracking-tight">
               {blog.title}
             </h1>
 
-            <div className="mb-6 flex items-center space-x-4">
+            <div className="flex h-fit max-w-3xl items-center justify-center">
+              {blog.image && (
+                <Image
+                  src={blog.image}
+                  alt={blog.title}
+                  width={1920}
+                  height={1080}
+                  className="max-w-3xl object-cover"
+                />
+              )}
+            </div>
+
+            <div className="mb-10 flex items-center justify-center space-x-4">
               <AvatarGroup>
                 {(blog.author_details || []).map((author) => (
                   <Tooltip
@@ -59,20 +78,13 @@ export default async function BlogPostPage({ params }: PageProps) {
                   </Tooltip>
                 ))}
               </AvatarGroup>
+              <div>·</div>
               <div>
-                <p className="font-medium">
-                  {(blog.author_details || [])
-                    .map((author) => author.name)
-                    .join(", ")}
-                </p>
                 <div className="text-muted-foreground flex items-center text-sm">
-                  <Calendar className="mr-1 h-4 w-4" />
                   <span className="text-foreground-500">{blog.date}</span>
                 </div>
               </div>
             </div>
-
-            <Separator className="my-6 bg-zinc-700" />
 
             <div className="prose prose-lg dark:prose-invert max-w-none">
               <Markdown

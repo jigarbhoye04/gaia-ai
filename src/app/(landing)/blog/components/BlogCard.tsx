@@ -23,7 +23,7 @@ export function BlogCard({ blog, variant = "large" }: BlogCardProps) {
   return (
     <Link href={`/blog/${blog.slug}`} className="block">
       <div
-        className={`group h-full overflow-hidden rounded-xl bg-zinc-900 p-6 outline-1 outline-zinc-800 transition-all hover:bg-zinc-800 ${isLarge ? "p-7" : "p-4"} `}
+        className={`group h-full overflow-hidden rounded-xl bg-zinc-950 p-6 outline-1 outline-zinc-800 transition-all hover:bg-zinc-800 ${isLarge ? "p-7" : "p-4"} `}
       >
         <div className="relative mb-6 aspect-video">
           <Image
