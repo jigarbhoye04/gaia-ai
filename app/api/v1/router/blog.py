@@ -1,8 +1,9 @@
 from typing import List, Optional
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, Query, status, Depends
 
 from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
 from app.services.blog_service import BlogService
+from app.api.v1.dependencies.blog_auth import verify_blog_token
 
 router = APIRouter()
 
@@ -38,20 +39,30 @@ async def get_blog(slug: str):
 
 
 @router.post("/blogs", response_model=BlogPost, status_code=status.HTTP_201_CREATED)
-async def create_blog(blog: BlogPostCreate):
-    """Create a new blog post."""
+async def create_blog(
+    blog: BlogPostCreate,
+    token: str = Depends(verify_blog_token)
+):
+    """Create a new blog post. Requires bearer token authentication."""
     return await BlogService.create_blog(blog)
 
 
 @router.put("/blogs/{slug}", response_model=BlogPost)
-async def update_blog(slug: str, blog: BlogPostUpdate):
-    """Update a blog post."""
+async def update_blog(
+    slug: str,
+    blog: BlogPostUpdate,
+    token: str = Depends(verify_blog_token)
+):
+    """Update a blog post. Requires bearer token authentication."""
     return await BlogService.update_blog(slug, blog)
 
 
 @router.delete("/blogs/{slug}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_blog(slug: str):
-    """Delete a blog post."""
+async def delete_blog(
+    slug: str,
+    token: str = Depends(verify_blog_token)
+):
+    """Delete a blog post. Requires bearer token authentication."""
     await BlogService.delete_blog(slug)
     return
 
