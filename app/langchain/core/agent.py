@@ -2,17 +2,18 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
+from langchain_core.messages import AIMessageChunk
+from langsmith import traceable
+
 from app.config.loggers import llm_logger as logger
 from app.langchain.core.graph_manager import GraphManager
 from app.langchain.core.messages import construct_langchain_messages
-from app.langchain.prompts.mail_agent_prompt import (
-    EMAIL_AGENT_SYSTEM_PROMPT,
-    MESSAGE_PROMPT,
+from app.langchain.prompts.proactive_agent_prompt import (
+    PROACTIVE_AGENT_MESSAGE_PROMPT,
+    PROACTIVE_AGENT_SYSTEM_PROMPT,
 )
 from app.models.message_models import MessageRequestWithHistory
 from app.utils.memory_utils import store_user_message_memory
-from langchain_core.messages import AIMessageChunk
-from langsmith import traceable
 
 
 @traceable
@@ -149,10 +150,10 @@ async def call_mail_processing_agent(
 
     # Construct the message with system prompt and email content
     messages = [
-        {"role": "system", "content": EMAIL_AGENT_SYSTEM_PROMPT},
+        {"role": "system", "content": PROACTIVE_AGENT_SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": MESSAGE_PROMPT.format(
+            "content": PROACTIVE_AGENT_MESSAGE_PROMPT.format(
                 email_content=email_content,
                 subject=email_metadata.get("subject", "No Subject"),
                 sender=email_metadata.get("sender", "Unknown Sender"),
