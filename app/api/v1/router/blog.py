@@ -1,50 +1,151 @@
-from typing import List
-from fastapi import APIRouter, HTTPException, status
-from fastapi.encoders import jsonable_encoder
-from app.db.collections import blog_collection
+from typing import List, Optional
+from fastapi import (
+    APIRouter,
+    Query,
+    status,
+    Depends,
+    UploadFile,
+    File,
+    Form,
+    HTTPException,
+)
+import json
+import cloudinary
+import cloudinary.uploader
+import io
+
 from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
+from app.services.blog_service import BlogService
+from app.config.cloudinary import init_cloudinary
+from app.api.v1.dependencies.blog_auth import verify_blog_token
 
 router = APIRouter()
 
 
 @router.get("/blogs", response_model=List[BlogPost])
-async def get_blogs():
-    blogs = await blog_collection.find().to_list(100)
-    return blogs
+async def get_blogs(
+    page: int = Query(1, ge=1, description="Page number (starting from 1)"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Number of blogs per page (1-100)"
+    ),
+    search: Optional[str] = Query(
+        None, description="Search query for title, content, or tags"
+    ),
+    include_content: bool = Query(
+        False,
+        description="Include blog content in response (for list views, set to false for better performance)",
+    ),
+):
+    """Get all blog posts with pagination and populated author details."""
+    if search:
+        return await BlogService.search_blogs(
+            search, page=page, limit=limit, include_content=include_content
+        )
+    return await BlogService.get_all_blogs(
+        page=page, limit=limit, include_content=include_content
+    )
 
 
 @router.get("/blogs/{slug}", response_model=BlogPost)
 async def get_blog(slug: str):
-    blog = await blog_collection.find_one({"slug": slug})
-    if not blog:
-        raise HTTPException(status_code=404, detail="Blog post not found")
-    return blog
+    """Get a specific blog post with populated author details."""
+    return await BlogService.get_blog_by_slug(slug)
 
 
 @router.post("/blogs", response_model=BlogPost, status_code=status.HTTP_201_CREATED)
-async def create_blog(blog: BlogPostCreate):
-    blog_data = jsonable_encoder(blog)
-    result = await blog_collection.insert_one(blog_data)
-    created_blog = await blog_collection.find_one({"_id": result.inserted_id})
-    return created_blog
+async def create_blog(
+    title: str = Form(...),
+    slug: str = Form(...),
+    content: str = Form(...),
+    category: str = Form(...),
+    date: str = Form(...),
+    authors: str = Form(...),  # JSON string
+    image: Optional[UploadFile] = File(None),
+    _token: str = Depends(verify_blog_token),
+):
+    """Create a new blog post with optional image upload. Requires bearer token authentication."""
+
+    # Parse authors from JSON string
+    try:
+        authors_list = json.loads(authors)
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid authors format. Must be a JSON array.",
+        )
+
+    # Handle image upload if provided
+    image_url = None
+    if image and image.filename:
+        try:
+            # Validate file
+            if not image.content_type or not image.content_type.startswith("image/"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="File must be an image",
+                )
+
+            # Read file content
+            contents = await image.read()
+
+            # Upload to cloudinary
+            upload_result = cloudinary.uploader.upload(
+                io.BytesIO(contents),
+                resource_type="image",
+                folder="blog/banners",
+                transformation=[
+                    {
+                        "width": 1200,
+                        "height": 630,
+                        "crop": "fill",
+                        "quality": "auto",
+                        "format": "webp",
+                    }
+                ],
+                overwrite=True,
+                tags=["blog", "banner"],
+            )
+
+            image_url = upload_result.get("secure_url")
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to upload image: {str(e)}",
+            )
+
+    # Create blog post data
+    blog_data = BlogPostCreate(
+        title=title,
+        slug=slug,
+        content=content,
+        category=category,
+        date=date,
+        authors=authors_list,
+        image=image_url,
+    )
+
+    return await BlogService.create_blog(blog_data)
 
 
 @router.put("/blogs/{slug}", response_model=BlogPost)
-async def update_blog(slug: str, blog: BlogPostUpdate):
-    update_data = {k: v for k, v in blog.dict().items() if v is not None}
-    if update_data:
-        result = await blog_collection.update_one({"slug": slug}, {"$set": update_data})
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Blog post not found")
-    updated_blog = await blog_collection.find_one({"slug": slug})
-    if not updated_blog:
-        raise HTTPException(status_code=404, detail="Blog post not found")
-    return updated_blog
+async def update_blog(
+    slug: str, blog: BlogPostUpdate, _token: str = Depends(verify_blog_token)
+):
+    """Update a blog post. Requires bearer token authentication."""
+    return await BlogService.update_blog(slug, blog)
 
 
 @router.delete("/blogs/{slug}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_blog(slug: str):
-    result = await blog_collection.delete_one({"slug": slug})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+async def delete_blog(slug: str, _token: str = Depends(verify_blog_token)):
+    """Delete a blog post. Requires bearer token authentication."""
+    await BlogService.delete_blog(slug)
     return
+
+
+@router.get("/blogs/count", response_model=dict)
+async def get_blog_count():
+    """Get total count of blog posts."""
+    count = await BlogService.get_blog_count()
+    return {"count": count}

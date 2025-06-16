@@ -2,9 +2,7 @@
 Simple calendar caching utilities for improved performance.
 """
 
-import asyncio
 import json
-from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
 from app.config.loggers import calendar_logger as logger
