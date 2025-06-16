@@ -1,24 +1,54 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from app.db.collections import blog_collection
+from app.db.collections import blog_collection, team_collection
 from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
 
 router = APIRouter()
 
 
+async def populate_blog_authors(blogs):
+    """Populate blog authors with team member data."""
+    for blog in blogs:
+        if blog.get("authors"):
+            author_details = []
+            for author_id in blog["authors"]:
+                team_member = await team_collection.find_one({"_id": author_id})
+                if team_member:
+                    author_details.append({
+                        "id": str(team_member["_id"]),
+                        "name": team_member["name"],
+                        "role": team_member["role"],
+                        "avatar": team_member.get("avatar"),
+                        "email": team_member["email"],
+                        "linkedin": team_member.get("linkedin"),
+                        "twitter": team_member.get("twitter"),
+                        "bio": team_member.get("bio")
+                    })
+                else:
+                    # Fallback for string author names
+                    author_details.append({"name": author_id, "role": "Author"})
+            blog["author_details"] = author_details
+    return blogs
+
+
 @router.get("/blogs", response_model=List[BlogPost])
 async def get_blogs():
+    """Get all blog posts with populated author details."""
     blogs = await blog_collection.find().to_list(100)
+    blogs = await populate_blog_authors(blogs)
     return blogs
 
 
 @router.get("/blogs/{slug}", response_model=BlogPost)
 async def get_blog(slug: str):
+    """Get a specific blog post with populated author details."""
     blog = await blog_collection.find_one({"slug": slug})
     if not blog:
         raise HTTPException(status_code=404, detail="Blog post not found")
-    return blog
+    
+    blogs = await populate_blog_authors([blog])
+    return blogs[0]
 
 
 @router.post("/blogs", response_model=BlogPost, status_code=status.HTTP_201_CREATED)

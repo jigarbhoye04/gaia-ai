@@ -7,10 +7,12 @@ class BlogPostBase(BaseModel):
     title: str
     description: Optional[str] = None
     date: str
-    authors: List[str]
+    authors: List[str]  # Team member IDs
     readTime: Optional[str] = None
     category: Optional[str] = None
     content: str
+    image: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 
 class BlogPostCreate(BlogPostBase):
@@ -18,13 +20,15 @@ class BlogPostCreate(BlogPostBase):
 
 
 class BlogPostUpdate(BaseModel):
-    title: Optional[str]
-    description: Optional[str]
-    date: Optional[str]
-    authors: Optional[List[str]]
-    readTime: Optional[str]
-    category: Optional[str]
-    content: Optional[str]
+    title: Optional[str] = None
+    description: Optional[str] = None
+    date: Optional[str] = None
+    authors: Optional[List[str]] = None
+    readTime: Optional[str] = None
+    category: Optional[str] = None
+    content: Optional[str] = None
+    image: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 
 class BlogPost(BlogPostBase):
