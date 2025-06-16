@@ -3,6 +3,17 @@ from pydantic import BaseModel, Field, ConfigDict
 from bson import ObjectId
 
 
+class AuthorDetails(BaseModel):
+    """Author details model for populated team member information."""
+
+    id: Optional[str] = None
+    name: str
+    role: str
+    avatar: Optional[str] = None
+    linkedin: Optional[str] = None
+    twitter: Optional[str] = None
+
+
 class BlogPostBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -34,8 +45,10 @@ class BlogPostUpdate(BaseModel):
 class BlogPost(BlogPostBase):
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
-        populate_by_name=True
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
     )
-    
+
     slug: str
     id: str = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    author_details: Optional[List[AuthorDetails]] = None

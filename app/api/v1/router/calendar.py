@@ -9,22 +9,11 @@ from app.models.calendar_models import (
     CalendarPreferencesUpdateRequest,
 )
 from app.services.calendar_service import (
-    create_calendar_event,
     delete_calendar_event,
     update_calendar_event,
-    get_all_calendar_events,
-    get_calendar_events,
-    get_calendar_events_by_id,
-    get_user_calendar_preferences,
-    list_calendars,
-    update_user_calendar_preferences,
 )
 from app.api.v1.dependencies.oauth_dependencies import (
     get_current_user,
-)
-from app.models.calendar_models import (
-    CalendarPreferencesUpdateRequest,
-    EventCreateRequest,
 )
 from app.services import calendar_service
 

@@ -9,7 +9,6 @@ from app.langchain.prompts.mail_agent_prompt import (
     EMAIL_AGENT_SYSTEM_PROMPT,
     MESSAGE_PROMPT,
 )
-from app.models.memory_models import ConversationMemory
 from app.models.message_models import MessageRequestWithHistory
 from app.utils.memory_utils import store_user_message_memory
 from langchain_core.messages import AIMessageChunk

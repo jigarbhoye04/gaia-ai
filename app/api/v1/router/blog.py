@@ -1,80 +1,63 @@
-from typing import List
-from fastapi import APIRouter, HTTPException, status
-from fastapi.encoders import jsonable_encoder
-from app.db.collections import blog_collection, team_collection
+from typing import List, Optional
+from fastapi import APIRouter, Query, status
+
 from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
+from app.services.blog_service import BlogService
 
 router = APIRouter()
 
 
-async def populate_blog_authors(blogs):
-    """Populate blog authors with team member data."""
-    for blog in blogs:
-        if blog.get("authors"):
-            author_details = []
-            for author_id in blog["authors"]:
-                team_member = await team_collection.find_one({"_id": author_id})
-                if team_member:
-                    author_details.append({
-                        "id": str(team_member["_id"]),
-                        "name": team_member["name"],
-                        "role": team_member["role"],
-                        "avatar": team_member.get("avatar"),
-                        "email": team_member["email"],
-                        "linkedin": team_member.get("linkedin"),
-                        "twitter": team_member.get("twitter"),
-                        "bio": team_member.get("bio")
-                    })
-                else:
-                    # Fallback for string author names
-                    author_details.append({"name": author_id, "role": "Author"})
-            blog["author_details"] = author_details
-    return blogs
-
-
 @router.get("/blogs", response_model=List[BlogPost])
-async def get_blogs():
-    """Get all blog posts with populated author details."""
-    blogs = await blog_collection.find().to_list(100)
-    blogs = await populate_blog_authors(blogs)
-    return blogs
+async def get_blogs(
+    page: int = Query(1, ge=1, description="Page number (starting from 1)"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Number of blogs per page (1-100)"
+    ),
+    search: Optional[str] = Query(
+        None, description="Search query for title, content, or tags"
+    ),
+    include_content: bool = Query(
+        False,
+        description="Include blog content in response (for list views, set to false for better performance)",
+    ),
+):
+    """Get all blog posts with pagination and populated author details."""
+    if search:
+        return await BlogService.search_blogs(
+            search, page=page, limit=limit, include_content=include_content
+        )
+    return await BlogService.get_all_blogs(
+        page=page, limit=limit, include_content=include_content
+    )
 
 
 @router.get("/blogs/{slug}", response_model=BlogPost)
 async def get_blog(slug: str):
     """Get a specific blog post with populated author details."""
-    blog = await blog_collection.find_one({"slug": slug})
-    if not blog:
-        raise HTTPException(status_code=404, detail="Blog post not found")
-    
-    blogs = await populate_blog_authors([blog])
-    return blogs[0]
+    return await BlogService.get_blog_by_slug(slug)
 
 
 @router.post("/blogs", response_model=BlogPost, status_code=status.HTTP_201_CREATED)
 async def create_blog(blog: BlogPostCreate):
-    blog_data = jsonable_encoder(blog)
-    result = await blog_collection.insert_one(blog_data)
-    created_blog = await blog_collection.find_one({"_id": result.inserted_id})
-    return created_blog
+    """Create a new blog post."""
+    return await BlogService.create_blog(blog)
 
 
 @router.put("/blogs/{slug}", response_model=BlogPost)
 async def update_blog(slug: str, blog: BlogPostUpdate):
-    update_data = {k: v for k, v in blog.dict().items() if v is not None}
-    if update_data:
-        result = await blog_collection.update_one({"slug": slug}, {"$set": update_data})
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail="Blog post not found")
-    updated_blog = await blog_collection.find_one({"slug": slug})
-    if not updated_blog:
-        raise HTTPException(status_code=404, detail="Blog post not found")
-    return updated_blog
+    """Update a blog post."""
+    return await BlogService.update_blog(slug, blog)
 
 
 @router.delete("/blogs/{slug}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_blog(slug: str):
-    result = await blog_collection.delete_one({"slug": slug})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Blog post not found")
+    """Delete a blog post."""
+    await BlogService.delete_blog(slug)
     return
+
+
+@router.get("/blogs/count", response_model=dict)
+async def get_blog_count():
+    """Get total count of blog posts."""
+    count = await BlogService.get_blog_count()
+    return {"count": count}
