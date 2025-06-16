@@ -1,3 +1,5 @@
+"use client";
+
 import type {
   CreateTypes as ConfettiInstance,
   GlobalOptions as ConfettiGlobalOptions,

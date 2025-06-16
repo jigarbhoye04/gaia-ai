@@ -1,5 +1,6 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
 import { withNextVideo } from "next-video/process";
+import createMDX from "@next/mdx";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -49,6 +50,7 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   },
+  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
   // modularizeImports: {
   //   "@radix-ui/react-icons": {
   //     transform: "@radix-ui/react-icons/dist/{{member}}",
@@ -56,4 +58,8 @@ const nextConfig = {
   // },
 };
 
-export default withNextVideo(withBundleAnalyzer(nextConfig));
+const withMDX = createMDX({
+  // Add markdown plugins here, as desired
+});
+
+export default withNextVideo(withBundleAnalyzer(withMDX(nextConfig)));

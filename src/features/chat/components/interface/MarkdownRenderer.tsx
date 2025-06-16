@@ -40,7 +40,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           ),
           blockquote: ({ ...props }) => (
             <blockquote
-              className="my-4 border-l-4 border-gray-300 pl-4 italic"
+              className="my-8 border-l-3 border-gray-300 bg-gray-300/10 py-5 pl-4 italic"
               {...props}
             />
           ),
@@ -51,8 +51,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
               alt="image"
               className="my-4 object-contain"
               src={props.src as string}
-              // {...props}
             />
+          ),
+          pre: ({ ...props }) => (
+            <pre className="font-serif! text-wrap" {...props} />
           ),
           table: ({ ...props }) => (
             <div className="overflow-x-auto">

@@ -1,3 +1,4 @@
+"use client";
 import { Star } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";

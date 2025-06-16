@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import { isToday, isYesterday, subDays } from "date-fns";
 import { Loader } from "lucide-react";
