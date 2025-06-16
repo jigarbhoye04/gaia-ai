@@ -5,3 +5,4 @@
 export * from "./date/calendarDateUtils";
 export * from "./date/dateUtils";
 export * from "./dateUtils";
+export * from "./seoUtils";

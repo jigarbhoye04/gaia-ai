@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Separator } from "@/components";
 import { blogApi, type BlogPost } from "@/features/blog/api/blogApi";
-import {BlogCard } from "@/features/blog/components/BlogCard";
+import { BlogCard } from "@/features/blog/components/BlogCard";
 import { BlogHeader } from "@/features/blog/components/BlogHeader";
 import { BlogListItem } from "@/features/blog/components/BlogListItem";
 
