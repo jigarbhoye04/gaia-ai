@@ -4,31 +4,25 @@ export interface TeamMember {
   id: string;
   name: string;
   role: string;
-  email: string;
   avatar?: string;
   linkedin?: string;
   twitter?: string;
-  bio?: string;
 }
 
 export interface TeamMemberCreate {
   name: string;
   role: string;
-  email: string;
   avatar?: string;
   linkedin?: string;
   twitter?: string;
-  bio?: string;
 }
 
 export interface TeamMemberUpdate {
   name?: string;
   role?: string;
-  email?: string;
   avatar?: string;
   linkedin?: string;
   twitter?: string;
-  bio?: string;
 }
 
 export const teamApi = {

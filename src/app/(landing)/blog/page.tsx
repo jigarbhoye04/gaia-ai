@@ -36,7 +36,7 @@ export default async function BlogList() {
   let fallbackBlogs: Blog[] = [];
 
   try {
-    blogs = await blogApi.getBlogs();
+    blogs = await blogApi.getBlogs(false); // Don't include content for list view - better performance
   } catch (error) {
     console.error("Error fetching blogs:", error);
     fallbackBlogs = dummyBlogData;

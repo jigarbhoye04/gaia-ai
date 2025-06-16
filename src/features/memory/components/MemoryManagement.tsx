@@ -16,7 +16,7 @@ export interface MemoryManagementProps {
 
 export default function MemoryManagement({
   className = "",
-  onClose,
+  onClose: _onClose,
   autoFetch = true,
   onFetch,
 }: MemoryManagementProps) {
