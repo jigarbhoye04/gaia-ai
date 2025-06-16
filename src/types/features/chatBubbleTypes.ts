@@ -7,6 +7,7 @@ import {
   CalendarEditOptions,
   CalendarOptions,
   DeepSearchResults,
+  DocumentData,
   EmailComposeData,
   ImageData,
   SearchResults,
@@ -56,6 +57,7 @@ export interface ChatBubbleBotProps {
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
+  document_data?: DocumentData | null; // document data from backend tools
   image_data?: ImageData | null;
   todo_data?: TodoToolData | null; // todo data from backend tools
   code_data?: {
@@ -98,6 +100,54 @@ export interface ChatBubbleBotProps {
     error?: string;
     timestamp?: string;
     conversation_id?: string;
+  } | null;
+
+  // goal-related fields
+  goal_data?: {
+    goals?: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      progress?: number;
+      roadmap?: {
+        nodes: Array<{
+          id: string;
+          data: {
+            title?: string;
+            label?: string;
+            isComplete?: boolean;
+            type?: string;
+            subtask_id?: string;
+          };
+        }>;
+        edges: Array<{
+          id: string;
+          source: string;
+          target: string;
+        }>;
+      };
+      created_at?: string;
+      todo_project_id?: string;
+      todo_id?: string;
+    }>;
+    action?: string;
+    message?: string;
+    goal_id?: string;
+    deleted_goal_id?: string;
+    stats?: {
+      total_goals: number;
+      goals_with_roadmaps: number;
+      total_tasks: number;
+      completed_tasks: number;
+      overall_completion_rate: number;
+      active_goals: Array<{
+        id: string;
+        title: string;
+        progress: number;
+      }>;
+      active_goals_count: number;
+    };
+    error?: string;
   } | null;
 
   // Function to open the shared memory modal

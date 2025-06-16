@@ -32,6 +32,22 @@ export const goalsApi = {
     });
   },
 
+  // Update node status in a goal's roadmap
+  updateNodeStatus: async (
+    goalId: string,
+    nodeId: string,
+    isComplete: boolean,
+  ): Promise<Goal> => {
+    return apiService.patch<Goal>(
+      `/goals/${goalId}/roadmap/nodes/${nodeId}`,
+      { is_complete: isComplete },
+      {
+        successMessage: "Node status updated successfully!",
+        errorMessage: "Failed to update node status",
+      },
+    );
+  },
+
   // Delete a goal
   deleteGoal: async (id: string): Promise<void> => {
     return apiService.delete(`/goals/${id}`, {

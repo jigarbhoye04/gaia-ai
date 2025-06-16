@@ -207,15 +207,11 @@ export default function GoalPage() {
 
     // Update the server state
     try {
-      await goalsApi.updateGoal(selectedNode.data.goalId || goalId || "", {
-        roadmap: {
-          nodes: nodes.map((node) =>
-            node.id === selectedNode.id
-              ? { ...node.data, is_complete: updatedIsComplete }
-              : node.data,
-          ),
-        },
-      });
+      await goalsApi.updateNodeStatus(
+        selectedNode.data.goalId || goalId || "",
+        currentlySelectedNodeId,
+        updatedIsComplete,
+      );
 
       toast.success(
         updatedIsComplete ? "Marked as completed!" : "Marked as not completed!",

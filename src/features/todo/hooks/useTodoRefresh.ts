@@ -30,8 +30,8 @@ export const useTodoRefresh = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const shouldRefetch = () => {
-    // Don't refetch if less than 30 seconds have passed
-    const minRefetchInterval = 30000; // 30 seconds
+    // Reduced minimum refetch interval for better responsiveness
+    const minRefetchInterval = 5000; // 5 seconds (reduced from 30)
     const timeSinceLastRefetch = Date.now() - lastRefetchTime.current;
     return timeSinceLastRefetch >= minRefetchInterval;
   };

@@ -12,6 +12,85 @@ export type ImageData = {
   improved_prompt?: string | null;
 };
 
+// Define document data structure for document processing
+export type DocumentData = {
+  filename: string;
+  url: string;
+  is_plain_text: boolean;
+  title: string;
+  metadata: Record<string, unknown>;
+};
+
+// Define memory data structure for memory operations
+export type MemoryData = {
+  operation?: string;
+  status?: string;
+  results?: Array<{
+    id: string;
+    content: string;
+    relevance_score?: number;
+    metadata?: Record<string, unknown>;
+  }>;
+  memories?: Array<{
+    id: string;
+    content: string;
+    metadata?: Record<string, unknown>;
+    created_at?: string;
+  }>;
+  count?: number;
+  content?: string;
+  memory_id?: string;
+  error?: string;
+};
+
+// Define goal data structure for goal operations
+export type GoalDataMessageType = {
+  goals?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    progress?: number;
+    roadmap?: {
+      nodes: Array<{
+        id: string;
+        data: {
+          title?: string;
+          label?: string;
+          isComplete?: boolean;
+          type?: string;
+          subtask_id?: string;
+        };
+      }>;
+      edges: Array<{
+        id: string;
+        source: string;
+        target: string;
+      }>;
+    };
+    created_at?: string;
+    todo_project_id?: string;
+    todo_id?: string;
+  }>;
+  action?: string;
+  message?: string;
+  goal_id?: string;
+  deleted_goal_id?: string;
+  stats?: {
+    total_goals: number;
+    goals_with_roadmaps: number;
+    total_tasks: number;
+    completed_tasks: number;
+    overall_completion_rate: number;
+    active_goals: Array<{
+      id: string;
+      title: string;
+      progress: number;
+    }>;
+    active_goals_count: number;
+  };
+  error?: string;
+};
+
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
 export type MessageType = {
   message_id: string;
@@ -40,6 +119,7 @@ export type MessageType = {
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
   todo_data?: TodoToolData | null; // todo data from backend tools
+  document_data?: DocumentData | null;
   code_data?: {
     language: string;
     code: string;
@@ -58,26 +138,10 @@ export type MessageType = {
   } | null; // code execution data from backend
 
   // memory-related fields
-  memory_data?: {
-    operation?: string;
-    status?: string;
-    results?: Array<{
-      id: string;
-      content: string;
-      relevance_score?: number;
-      metadata?: Record<string, unknown>;
-    }>;
-    memories?: Array<{
-      id: string;
-      content: string;
-      metadata?: Record<string, unknown>;
-      created_at?: string;
-    }>;
-    count?: number;
-    content?: string;
-    memory_id?: string;
-    error?: string;
-  } | null;
+  memory_data?: MemoryData | null;
+
+  // goal-related fields
+  goal_data?: GoalDataMessageType | null;
 };
 
 export type CalendarOptions = {
