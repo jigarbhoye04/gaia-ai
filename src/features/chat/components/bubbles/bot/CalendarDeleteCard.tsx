@@ -8,7 +8,7 @@ import { MotionContainer } from "@/layouts/MotionContainer";
 import {
   CalendarDeleteOptions,
   CalendarEventDateTime,
-} from "@/types/features/convoTypes";
+} from "@/types/features/calendarTypes";
 import {
   formatAllDayDate,
   formatAllDayDateRange,

@@ -6,10 +6,19 @@ import { FileData } from "@/types/shared/fileTypes";
 import {
   CalendarDeleteOptions,
   CalendarEditOptions,
+  CalendarEventDateTime,
   CalendarOptions,
 } from "./calendarTypes";
 import { EmailComposeData } from "./mailTypes";
-import { DeepSearchResults,SearchResults } from "./searchTypes";
+import {
+  DeepSearchResults,
+  EnhancedWebResult,
+  ImageResult,
+  NewsResult,
+  SearchResults,
+  VideoResult,
+  WebResult,
+} from "./searchTypes";
 import { TodoToolData } from "./todoToolTypes";
 import {
   CodeData,
@@ -19,6 +28,28 @@ import {
   MemoryData,
 } from "./toolDataTypes";
 import { WeatherData } from "./weatherTypes";
+
+// Re-export types for external consumption
+export type {
+  CalendarDeleteOptions,
+  CalendarEditOptions,
+  CalendarEventDateTime,
+  CalendarOptions,
+  CodeData,
+  DeepSearchResults,
+  DocumentData,
+  EmailComposeData,
+  EnhancedWebResult,
+  GoalDataMessageType,
+  ImageData,
+  ImageResult,
+  MemoryData,
+  NewsResult,
+  SearchResults,
+  VideoResult,
+  WeatherData,
+  WebResult,
+};
 
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
 export type MessageType = {
