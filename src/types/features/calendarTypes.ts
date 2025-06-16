@@ -131,3 +131,48 @@ export interface EventCreatePayload {
   fixedTime?: boolean;
   timezone?: string;
 }
+
+// Calendar types for conversation messages
+export type CalendarOptions = {
+  summary: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  is_all_day?: boolean;
+};
+
+// Calendar event date/time structure from Google Calendar API
+export type CalendarEventDateTime = {
+  date?: string; // For all-day events (YYYY-MM-DD format)
+  dateTime?: string; // For timed events (RFC3339 format)
+  timeZone?: string; // Timezone identifier
+};
+
+export type CalendarDeleteOptions = {
+  action: "delete";
+  event_id: string;
+  calendar_id: string;
+  summary: string;
+  description?: string;
+  start?: CalendarEventDateTime;
+  end?: CalendarEventDateTime;
+  original_query: string;
+};
+
+export type CalendarEditOptions = {
+  action: "edit";
+  event_id: string;
+  calendar_id: string;
+  original_summary: string;
+  original_description?: string;
+  original_start?: CalendarEventDateTime;
+  original_end?: CalendarEventDateTime;
+  original_query: string;
+  // Updated fields (optional)
+  summary?: string;
+  description?: string;
+  start?: string;
+  end?: string;
+  is_all_day?: boolean;
+  timezone?: string;
+};
