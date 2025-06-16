@@ -130,11 +130,11 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         # Extract email compose data
         elif "email_compose_data" in data:
             tool_data["email_compose_data"] = data["email_compose_data"]
-                
+
         # Extract memory data
         elif "memory_data" in data:
             tool_data["memory_data"] = data["memory_data"]
-        
+
         # Extract todo data
         elif "todo_data" in data:
             tool_data["todo_data"] = data["todo_data"]
@@ -143,6 +143,10 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         elif "code_data" in data:
             tool_data["code_data"] = data["code_data"]
 
+        # Extract document tool data
+        elif "document_data" in data:
+            tool_data["document_data"] = data["document_data"]
+            
         # Extract goal data
         elif "goal_data" in data:
             tool_data["goal_data"] = data["goal_data"]

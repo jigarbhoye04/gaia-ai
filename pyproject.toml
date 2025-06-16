@@ -82,6 +82,9 @@ dependencies = [
   "aiolimiter>=1.2.1",
   "pycountry>=24.6.1",
   "e2b-code-interpreter>=1.2.0",
+  "pypandoc>=1.15",
+  "markdown2>=2.5.3",
+  "pandas>=2.3.0",
 ]
 
 [dependency-groups]

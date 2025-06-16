@@ -90,6 +90,9 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
 
+    # Blog Management
+    BLOG_BEARER_TOKEN: str  # Bearer token for blog management operations
+
     # Service URL's
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
     BING_SEARCH_URL: str = "https://api.bing.microsoft.com/v7.0/search"
