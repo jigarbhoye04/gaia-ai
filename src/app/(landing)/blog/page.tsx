@@ -2,20 +2,19 @@ import type { Metadata } from "next";
 
 import { Separator } from "@/components";
 import { blogApi, type BlogPost } from "@/features/blog/api/blogApi";
-import { BlogCard } from "@/features/blog/components/BlogCard";
+import {BlogCard } from "@/features/blog/components/BlogCard";
 import { BlogHeader } from "@/features/blog/components/BlogHeader";
 import { BlogListItem } from "@/features/blog/components/BlogListItem";
-import { Blog, dummyBlogData } from "@/features/blog/data/dummy-blog-data";
 
 export const metadata: Metadata = {
   title: "Blog",
   description:
-    "Explore the latest posts from GAIA, the creators of an advanced AI personal assistant",
+    "Explore the latest posts from GAIA, the creators of the AI personal assistant",
 
   openGraph: {
     title: "Blog",
     description:
-      "Explore the latest posts from GAIA, the creators of an advanced AI personal assistant",
+      "Explore the latest posts from GAIA, the creators of the AI personal assistant",
     url: "https://heygaia.io/blog",
     images: ["/landing/screenshot.webp"],
     siteName: "GAIA - Your Personal Assistant",
@@ -25,47 +24,43 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Blog",
     description:
-      "Explore the latest posts from GAIA, the creators of an advanced AI personal assistant",
+      "Explore the latest posts from GAIA, the creators of the AI personal assistant",
     images: ["/landing/screenshot.webp"],
   },
 };
 
 export default async function BlogList() {
   let blogs: BlogPost[] = [];
-  let fallbackBlogs: Blog[] = [];
 
   try {
     blogs = await blogApi.getBlogs(false); // Don't include content for list view - better performance
   } catch (error) {
     console.error("Error fetching blogs:", error);
-    fallbackBlogs = dummyBlogData;
   }
 
   // Convert BlogPost to Blog format for compatibility
-  const displayBlogs =
-    blogs.length > 0
-      ? blogs.map((blog) => ({
-          slug: blog.slug,
-          title: blog.title,
-          category: blog.category || "Uncategorized",
-          date: blog.date,
-          image: blog.image || "/media/glass.png",
-          authors:
-            blog.author_details?.map((author) => ({
-              name: author.name,
-              role: author.role,
-              avatar:
-                author.avatar || `https://i.pravatar.cc/150?u=${author.name}`,
-              linkedin: author.linkedin,
-              twitter: author.twitter,
-            })) ||
-            blog.authors.map((name) => ({
-              name: typeof name === "string" ? name : name,
-              role: "Author",
-              avatar: `https://i.pravatar.cc/150?u=${name}`,
-            })),
-        }))
-      : fallbackBlogs;
+  const displayBlogs = blogs.map((blog) => ({
+    slug: blog.slug,
+    title: blog.title,
+    category: blog.category || "Uncategorized",
+    date: blog.date,
+    image: blog.image || "/media/glass.png",
+    authors:
+      blog.author_details?.map((author) => ({
+        name: author.name,
+        role: author.role,
+        avatar:
+          author.avatar ||
+          `https://api.dicebear.com/9.x/notionists/svg?seed=${author.name}`,
+        linkedin: author.linkedin,
+        twitter: author.twitter,
+      })) ||
+      blog.authors.map((name) => ({
+        name,
+        role: "Author",
+        avatar: `https://api.dicebear.com/9.x/notionists/svg?seed=${name}`,
+      })),
+  }));
 
   const latestPosts = displayBlogs.slice(0, 5);
   const remainingPosts = displayBlogs.slice(5);
