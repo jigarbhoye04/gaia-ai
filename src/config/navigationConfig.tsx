@@ -51,18 +51,18 @@ export const mainNavLinks: NavLink[] = [
 export const authNavLinks: NavLink[] = [
   {
     href: "/c",
-    label: "chat",
+    label: "Chat",
     icon: <BubbleConversationChatIcon width={17} color={undefined} />,
     requiresAuth: true,
   },
   {
     href: "/login",
-    label: "login",
+    label: "Login",
     guestOnly: true,
   },
   {
     href: "/signup",
-    label: "Get Started",
+    label: "Signup",
     guestOnly: true,
   },
 ];

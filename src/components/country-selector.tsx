@@ -1,3 +1,5 @@
+"use client";
+
 import { Autocomplete, AutocompleteItem } from "@heroui/react";
 import { Icon } from "@iconify/react";
 import React from "react";
