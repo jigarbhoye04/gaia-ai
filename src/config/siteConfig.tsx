@@ -18,7 +18,9 @@ import {
   CustomerService01Icon,
   GlobalIcon,
   Idea01Icon,
+  LinkedinIcon,
   MapsIcon,
+  TwitterIcon,
 } from "@/components/shared/icons";
 
 export const siteConfig = {
@@ -27,15 +29,15 @@ export const siteConfig = {
   domain: "heygaia.io",
   pageSections: [
     {
-      title: "Hello",
+      title: "Get Started",
       links: [
         { label: "Login", href: "/login" },
         { label: "Signup", href: "/signup" },
-        { label: "chat", href: "/c", isLoggedIn: true },
+        { label: "New Chat", href: "/c", isLoggedIn: true },
       ],
     },
     {
-      title: "Sitemap",
+      title: "Explore",
       links: [
         { label: "About", href: "/about", icon: <GlobalIcon width={19} /> },
         { label: "Blog", href: "/blog", icon: <BookOpen02Icon width={19} /> },
@@ -58,14 +60,31 @@ export const siteConfig = {
         //   icon: <CreditCardPosIcon width={19} />,
         // },
         {
-          label: "Contact",
+          label: "Status",
+          href: "https://status.heygaia.io",
+          icon: <BookOpen02Icon width={19} />,
+        },
+      ],
+    },
+    {
+      title: "Connect",
+      links: [
+        {
+          label: "Contact Us",
           href: "/contact",
           icon: <CustomerService01Icon width={19} />,
         },
         {
-          label: "Status",
-          href: "https://status.heygaia.io",
-          icon: <BookOpen02Icon width={19} />,
+          label: "LinkedIn",
+          href: "https://www.linkedin.com/company/heygaia",
+          external: true,
+          icon: <LinkedinIcon width={19} />,
+        },
+        {
+          label: "X (Twitter)",
+          href: "https://x.com/heygaia_io",
+          external: true,
+          icon: <TwitterIcon width={19} />,
         },
       ],
     },

@@ -19,8 +19,7 @@ export const dummyBlogData: Blog[] = [
     title: "Introducing GAIA v2.0: The Future of AI Personal Assistants",
     category: "Product Update",
     date: "2025-06-15",
-    image:
-      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Sarah Chen",
@@ -43,8 +42,7 @@ export const dummyBlogData: Blog[] = [
     title: "10 Ways AI Can Supercharge Your Daily Productivity",
     category: "Tips & Tricks",
     date: "2025-06-10",
-    image:
-      "https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Maya Patel",
@@ -60,8 +58,7 @@ export const dummyBlogData: Blog[] = [
     title: "Privacy-First AI: How GAIA Keeps Your Data Secure",
     category: "Security",
     date: "2025-06-05",
-    image:
-      "https://images.unsplash.com/photo-1563206767-5b18f218e8de?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "David Kim",
@@ -84,8 +81,7 @@ export const dummyBlogData: Blog[] = [
     title: "The Evolution of Natural Language Processing in Personal AI",
     category: "AI Technology",
     date: "2025-05-28",
-    image:
-      "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "James Wilson",
@@ -115,8 +111,7 @@ export const dummyBlogData: Blog[] = [
     title: "The Future of AI Assistants: Beyond Simple Commands",
     category: "AI Research",
     date: "2025-05-20",
-    image:
-      "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Dr. Jennifer Martinez",
@@ -132,8 +127,7 @@ export const dummyBlogData: Blog[] = [
     title: "Building Responsible AI: Our Commitment to Ethical Development",
     category: "AI Ethics",
     date: "2025-05-15",
-    image:
-      "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Dr. Amelia Foster",
@@ -156,8 +150,7 @@ export const dummyBlogData: Blog[] = [
     title: "Breaking Barriers: Our Latest Voice Recognition Technology",
     category: "Technology",
     date: "2025-05-08",
-    image:
-      "https://images.unsplash.com/photo-1589254065878-42c9da997008?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Dr. Sophia Lee",
@@ -173,8 +166,7 @@ export const dummyBlogData: Blog[] = [
     title: "GAIA Goes Mobile: Introducing Our New iOS and Android Apps",
     category: "Product Update",
     date: "2025-04-30",
-    image:
-      "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Kevin Park",
@@ -197,8 +189,7 @@ export const dummyBlogData: Blog[] = [
     title: "How AI is Transforming the Modern Workplace",
     category: "Industry Insights",
     date: "2025-04-22",
-    image:
-      "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Thomas Anderson",
@@ -214,8 +205,7 @@ export const dummyBlogData: Blog[] = [
     title: "Under the Hood: The Machine Learning Models Powering GAIA",
     category: "AI Technology",
     date: "2025-04-15",
-    image:
-      "https://images.unsplash.com/photo-1555255707-c07966088b7b?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Dr. Rachel Green",
@@ -238,8 +228,7 @@ export const dummyBlogData: Blog[] = [
     title: "Real Stories: How GAIA is Changing Lives Around the World",
     category: "Customer Stories",
     date: "2025-04-08",
-    image:
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Maria Santos",
@@ -255,8 +244,7 @@ export const dummyBlogData: Blog[] = [
     title: "Making AI Accessible: Our Commitment to Inclusive Design",
     category: "Accessibility",
     date: "2025-04-01",
-    image:
-      "https://images.unsplash.com/photo-1573164713988-8665fc963095?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Dr. Michael Thompson",
@@ -279,8 +267,7 @@ export const dummyBlogData: Blog[] = [
     title: "GAIA for Enterprise: Scaling AI Assistance for Large Organizations",
     category: "Enterprise",
     date: "2025-03-25",
-    image:
-      "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Robert Chen",
@@ -296,8 +283,7 @@ export const dummyBlogData: Blog[] = [
     title: "Keeping AI Safe: Our Multi-Layered Approach to AI Safety",
     category: "Safety",
     date: "2025-03-18",
-    image:
-      "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Dr. Elena Vasquez",
@@ -320,8 +306,7 @@ export const dummyBlogData: Blog[] = [
     title: "Empowering Developers: GAIA API Now Available in Public Beta",
     category: "Developer Tools",
     date: "2025-03-10",
-    image:
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&h=400&fit=crop&crop=smart",
+    image: "/media/glass.png",
     authors: [
       {
         name: "Samuel Kim",

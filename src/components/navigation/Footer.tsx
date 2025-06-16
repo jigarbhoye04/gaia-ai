@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <div className="m-0!">
       <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20 sm:pb-5">
-        <div className="grid w-full max-w-(--breakpoint-lg) grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid w-full max-w-(--breakpoint-lg) grid-cols-2 gap-8 sm:grid-cols-5">
           <div className="flex h-full w-fit flex-col gap-1 text-foreground-600">
             <Image
               src="/branding/logo.webp"
@@ -33,7 +33,7 @@ export default function Footer() {
               key={section.title}
               className="flex h-full w-fit flex-col text-foreground-500"
             >
-              <div className="font- normal mb-3 pl-2 text-foreground">
+              <div className="mb-3 pl-2 text-sm text-foreground">
                 {section.title}
               </div>
               {section.links
