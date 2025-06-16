@@ -7,7 +7,6 @@ This package contains the API routes and dependencies for version 1 of the GAIA 
 from fastapi import APIRouter
 
 from app.api.v1.router import (
-    about,
     blog,
     browser,
     calendar,
@@ -46,7 +45,6 @@ router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
 router.include_router(mail.router, tags=["Mail"])
 router.include_router(blog.router, tags=["Blog"])
 router.include_router(team.router, tags=["Team"])
-router.include_router(about.router, tags=["About"])
 router.include_router(file.router, tags=["File"])
 router.include_router(browser.router, tags=["Browser"])
 router.include_router(notification.router, tags=["Notification"])
