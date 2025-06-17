@@ -7,27 +7,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/shadcn/accordion";
 import CodeBlock from "@/features/chat/components/code-block/CodeBlock";
+import { CodeData } from "@/types/features/toolDataTypes";
 
 import ChartDisplay from "./ChartDisplay";
 import CodeExecutionOutput from "./CodeExecutionOutput";
 
 interface CodeExecutionSectionProps {
-  code_data: {
-    language: string;
-    code: string;
-    output?: {
-      stdout: string;
-      stderr: string;
-      results: string[];
-      error: string | null;
-    } | null;
-    charts?: Array<{
-      id: string;
-      url: string;
-      text: string;
-    }> | null;
-    status?: "executing" | "completed" | "error";
-  };
+  code_data: CodeData;
 }
 
 // Language display configuration
@@ -59,8 +45,6 @@ const CodeExecutionSection: React.FC<CodeExecutionSectionProps> = ({
   code_data,
 }) => {
   const [outputCopied, setOutputCopied] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const languageDisplay = getLanguageDisplay(code_data.language);
 
   const handleCopyOutput = createCopyHandler(
     [

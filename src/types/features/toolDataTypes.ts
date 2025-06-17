@@ -100,6 +100,22 @@ export type CodeData = {
     id: string;
     url: string;
     text: string;
+    type?: string;
+    title?: string;
+    description?: string;
+    chart_data?: {
+      type: string;
+      title: string;
+      x_label: string;
+      y_label: string;
+      x_unit?: string | null;
+      y_unit?: string | null;
+      elements: Array<{
+        label: string;
+        value: number;
+        group: string;
+      }>;
+    };
   }> | null;
   status?: "executing" | "completed" | "error";
 };
