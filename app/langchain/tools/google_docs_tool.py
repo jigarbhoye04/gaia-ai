@@ -63,6 +63,10 @@ async def create_google_doc_tool(
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
 
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Creating Google Doc '{title}'..."})
+
         result = await create_google_doc(
             refresh_token=auth["refresh_token"],
             access_token=auth["access_token"],
@@ -80,11 +84,11 @@ async def create_google_doc_tool(
                         "title": result["title"],
                         "url": result["url"],
                         "content": content or "Empty document created",
-                        "type": "google_doc"
+                        "type": "google_doc",
                     },
                     "action": "create",
                     "message": f"Created Google Doc: {result['title']}",
-                    "type": "create"
+                    "type": "create",
                 }
             }
         )
@@ -96,7 +100,9 @@ async def create_google_doc_tool(
             title=result["title"],
             document_id=result["document_id"],
             url=result["url"],
-            content=f"Initial content: {content}" if content else "Empty document ready for editing."
+            content=f"Initial content: {content}"
+            if content
+            else "Empty document ready for editing.",
         )
 
     except Exception as e:
@@ -131,19 +137,21 @@ async def list_google_docs_tool(
 
         # Send structured data to frontend
         writer = get_stream_writer()
-        
+
         # Format documents for better frontend display
         formatted_docs = []
         for doc in docs:
-            formatted_docs.append({
-                "id": doc["document_id"],
-                "title": doc["title"],
-                "url": doc["url"],
-                "created_time": doc.get("created_time"),
-                "modified_time": doc.get("modified_time"),
-                "type": "google_doc"
-            })
-        
+            formatted_docs.append(
+                {
+                    "id": doc["document_id"],
+                    "title": doc["title"],
+                    "url": doc["url"],
+                    "created_time": doc.get("created_time"),
+                    "modified_time": doc.get("modified_time"),
+                    "type": "google_doc",
+                }
+            )
+
         writer(
             {
                 "google_docs_data": {
@@ -151,8 +159,9 @@ async def list_google_docs_tool(
                     "count": len(docs),
                     "query": query,
                     "action": "list",
-                    "message": f"Found {len(docs)} document{'s' if len(docs) != 1 else ''}" + (f" matching '{query}'" if query else ""),
-                    "type": "list"
+                    "message": f"Found {len(docs)} document{'s' if len(docs) != 1 else ''}"
+                    + (f" matching '{query}'" if query else ""),
+                    "type": "list",
                 }
             }
         )
@@ -164,21 +173,23 @@ async def list_google_docs_tool(
             return f"No Google Docs found{query_text}."
 
         # Format docs list for template
-        docs_list = "\n".join([
-            f"• **{doc['title']}** - [Open]({doc['url']})" 
-            for doc in docs[:5]  # Show first 5 docs
-        ])
+        docs_list = "\n".join(
+            [
+                f"• **{doc['title']}** - [Open]({doc['url']})"
+                for doc in docs[:5]  # Show first 5 docs
+            ]
+        )
         if len(docs) > 5:
             docs_list += f"\n... and {len(docs) - 5} more documents"
-        
+
         query_text = f' matching "{query}"' if query else ""
-        
+
         # Return formatted response using template
         return GOOGLE_DOCS_LIST_TEMPLATE.format(
             count=len(docs),
             plural="s" if len(docs) != 1 else "",
             query_text=query_text,
-            docs_list=docs_list
+            docs_list=docs_list,
         )
 
     except Exception as e:
@@ -199,6 +210,10 @@ async def get_google_doc_tool(
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
 
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": "Retrieving Google Doc content..."})
+
         doc = await get_google_doc(
             refresh_token=auth["refresh_token"],
             access_token=auth["access_token"],
@@ -215,11 +230,11 @@ async def get_google_doc_tool(
                         "title": doc["title"],
                         "url": doc["url"],
                         "content": doc["content"],
-                        "type": "google_doc"
+                        "type": "google_doc",
                     },
                     "action": "get",
                     "message": f"Retrieved document: {doc['title']}",
-                    "type": "retrieve"
+                    "type": "retrieve",
                 }
             }
         )
@@ -227,14 +242,18 @@ async def get_google_doc_tool(
         logger.info(f"Retrieved Google Doc: {document_id}")
 
         # Truncate content for preview
-        content_preview = doc["content"][:500] + "..." if len(doc["content"]) > 500 else doc["content"]
-        
+        content_preview = (
+            doc["content"][:500] + "..."
+            if len(doc["content"]) > 500
+            else doc["content"]
+        )
+
         # Return formatted response using template
         return GOOGLE_DOCS_GET_TEMPLATE.format(
             title=doc["title"],
             document_id=document_id,
             url=doc["url"],
-            content_preview=content_preview
+            content_preview=content_preview,
         )
 
     except Exception as e:
@@ -259,6 +278,13 @@ async def update_google_doc_tool(
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
 
+        # Send progress update
+        writer = get_stream_writer()
+        action_type = (
+            "Appending content to" if insert_at_end else "Replacing content in"
+        )
+        writer({"progress": f"{action_type} Google Doc..."})
+
         result = await update_google_doc_content(
             refresh_token=auth["refresh_token"],
             access_token=auth["access_token"],
@@ -271,7 +297,7 @@ async def update_google_doc_tool(
         doc_info = await get_google_doc(
             auth["refresh_token"], auth["access_token"], document_id
         )
-        
+
         # Send structured data to frontend
         writer = get_stream_writer()
         writer(
@@ -281,7 +307,9 @@ async def update_google_doc_tool(
                     "url": result["url"],
                     "document_id": document_id,
                     "action": "update",
-                    "content_preview": content[:200] + "..." if len(content) > 200 else content
+                    "content_preview": content[:200] + "..."
+                    if len(content) > 200
+                    else content,
                 }
             }
         )
@@ -290,13 +318,13 @@ async def update_google_doc_tool(
 
         action_text = "appended to" if insert_at_end else "replaced in"
         content_preview = content[:200] + "..." if len(content) > 200 else content
-        
+
         # Return formatted response using template
         return GOOGLE_DOCS_UPDATE_TEMPLATE.format(
             document_id=document_id,
             action=action_text,
             url=result["url"],
-            content_preview=content_preview
+            content_preview=content_preview,
         )
 
     except Exception as e:
@@ -326,6 +354,10 @@ async def format_google_doc_tool(
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
 
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": "Applying formatting to Google Doc..."})
+
         formatting = {}
         if bold is not None:
             formatting["bold"] = bold
@@ -351,7 +383,7 @@ async def format_google_doc_tool(
         doc_info = await get_google_doc(
             auth["refresh_token"], auth["access_token"], document_id
         )
-        
+
         # Send structured data to frontend
         writer = get_stream_writer()
         writer(
@@ -362,7 +394,7 @@ async def format_google_doc_tool(
                     "document_id": document_id,
                     "action": "format",
                     "formatting": formatting,
-                    "range": f"{start_index}-{end_index}"
+                    "range": f"{start_index}-{end_index}",
                 }
             }
         )
@@ -381,15 +413,17 @@ async def format_google_doc_tool(
             format_parts.append(f"font size {font_size}pt")
         if foreground_color:
             format_parts.append("text color")
-            
-        formatting_text = ", ".join(format_parts) if format_parts else "custom formatting"
-        
+
+        formatting_text = (
+            ", ".join(format_parts) if format_parts else "custom formatting"
+        )
+
         # Return formatted response using template
         return GOOGLE_DOCS_FORMAT_TEMPLATE.format(
             document_id=document_id,
             formatting=formatting_text,
             range=f"characters {start_index}-{end_index}",
-            url=result["url"]
+            url=result["url"],
         )
 
     except Exception as e:
@@ -413,6 +447,10 @@ async def share_google_doc_tool(
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
 
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Sharing Google Doc with {email}..."})
+
         result = await share_google_doc(
             refresh_token=auth["refresh_token"],
             access_token=auth["access_token"],
@@ -426,7 +464,7 @@ async def share_google_doc_tool(
         doc_info = await get_google_doc(
             auth["refresh_token"], auth["access_token"], document_id
         )
-        
+
         # Send structured data to frontend
         writer = get_stream_writer()
         writer(
@@ -438,7 +476,7 @@ async def share_google_doc_tool(
                     "action": "share",
                     "shared_with": email,
                     "role": role,
-                    "notification_sent": send_notification
+                    "notification_sent": send_notification,
                 }
             }
         )
@@ -446,14 +484,14 @@ async def share_google_doc_tool(
         logger.info(f"Shared Google Doc {document_id} with {email}")
 
         notification_text = "with" if send_notification else "without"
-        
+
         # Return formatted response using template
         return GOOGLE_DOCS_SHARE_TEMPLATE.format(
             email=email,
             role=role,
             document_id=document_id,
             notification=notification_text,
-            url=result["url"]
+            url=result["url"],
         )
 
     except Exception as e:
@@ -488,19 +526,21 @@ async def search_google_docs_tool(
 
         # Send structured data to frontend
         writer = get_stream_writer()
-        
+
         # Format documents for better frontend display
         formatted_docs = []
         for doc in docs:
-            formatted_docs.append({
-                "id": doc["document_id"],
-                "title": doc["title"],
-                "url": doc["url"],
-                "created_time": doc.get("created_time"),
-                "modified_time": doc.get("modified_time"),
-                "type": "google_doc"
-            })
-        
+            formatted_docs.append(
+                {
+                    "id": doc["document_id"],
+                    "title": doc["title"],
+                    "url": doc["url"],
+                    "created_time": doc.get("created_time"),
+                    "modified_time": doc.get("modified_time"),
+                    "type": "google_doc",
+                }
+            )
+
         writer(
             {
                 "google_docs_data": {
@@ -509,7 +549,7 @@ async def search_google_docs_tool(
                     "count": len(docs),
                     "action": "search",
                     "message": f"Found {len(docs)} document{'s' if len(docs) != 1 else ''} matching '{query}'",
-                    "type": "search"
+                    "type": "search",
                 }
             }
         )
@@ -520,19 +560,21 @@ async def search_google_docs_tool(
             return f"No Google Docs found matching '{query}'."
 
         # Format search results for template
-        docs_list = "\n".join([
-            f"• **{doc['title']}** - [Open]({doc['url']})" 
-            for doc in docs[:5]  # Show first 5 results
-        ])
+        docs_list = "\n".join(
+            [
+                f"• **{doc['title']}** - [Open]({doc['url']})"
+                for doc in docs[:5]  # Show first 5 results
+            ]
+        )
         if len(docs) > 5:
             docs_list += f"\n... and {len(docs) - 5} more results"
-        
+
         # Return formatted response using template
         return GOOGLE_DOCS_SEARCH_TEMPLATE.format(
             query=query,
             count=len(docs),
             plural="s" if len(docs) != 1 else "",
-            docs_list=docs_list
+            docs_list=docs_list,
         )
 
     except Exception as e:
