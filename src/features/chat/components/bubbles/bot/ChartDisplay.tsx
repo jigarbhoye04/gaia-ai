@@ -1,4 +1,4 @@
-import { Download, Maximize2, X } from "lucide-react";
+import { BarChart3, Download, ImageIcon, Maximize2, X } from "lucide-react";
 import React, { useState } from "react";
 import {
   Bar,
@@ -13,10 +13,18 @@ import {
 } from "recharts";
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/shadcn/accordion";
+import {
+  ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/shadcn/chart";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/shadcn/tabs";
 
 interface ChartData {
   id: string;
@@ -44,29 +52,39 @@ interface ChartDisplayProps {
   charts: ChartData[];
 }
 
-const InteractiveChart: React.FC<{ chart: ChartData }> = ({ chart }) => {
-  if (!chart.chart_data) return null;
+// Chart configuration
+const createChartConfig = (yLabel: string): ChartConfig => ({
+  value: {
+    label: yLabel || "Value",
+    color: "hsl(var(--chart-1))",
+  },
+});
 
-  const { chart_data } = chart;
-  const chartConfig = {
-    value: {
-      label: chart_data.y_label || "Value",
-      color: "hsl(var(--chart-1))",
-    },
-  };
-
-  // Transform data for recharts
-  const data = chart_data.elements.map((element) => ({
+// Transform data for recharts
+const transformChartData = (
+  elements: Array<{ label: string; value: number; group: string }>,
+) =>
+  elements.map((element) => ({
     name: element.label,
     value: element.value,
     group: element.group,
   }));
 
+// Interactive chart renderer
+const InteractiveChart: React.FC<{ chart: ChartData }> = ({ chart }) => {
+  if (!chart.chart_data) return null;
+
+  const { chart_data } = chart;
+  const chartConfig = createChartConfig(chart_data.y_label);
+  const data = transformChartData(chart_data.elements);
+
   const renderChart = () => {
+    const commonProps = { data, config: chartConfig, className: "h-64 w-full" };
+
     switch (chart_data.type) {
       case "bar":
         return (
-          <ChartContainer config={chartConfig} className="h-64 w-full">
+          <ChartContainer {...commonProps}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -78,7 +96,7 @@ const InteractiveChart: React.FC<{ chart: ChartData }> = ({ chart }) => {
         );
       case "line":
         return (
-          <ChartContainer config={chartConfig} className="h-64 w-full">
+          <ChartContainer {...commonProps}>
             <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
@@ -94,7 +112,7 @@ const InteractiveChart: React.FC<{ chart: ChartData }> = ({ chart }) => {
         );
       case "pie":
         return (
-          <ChartContainer config={chartConfig} className="h-64 w-full">
+          <ChartContainer {...commonProps}>
             <PieChart>
               <Pie
                 data={data}
@@ -111,42 +129,151 @@ const InteractiveChart: React.FC<{ chart: ChartData }> = ({ chart }) => {
         );
       default:
         return (
-          <div className="flex h-64 w-full items-center justify-center rounded bg-gray-100">
-            <p className="text-gray-500">
-              Unsupported chart type: {chart_data.type}
-            </p>
+          <div className="flex h-64 w-full items-center justify-center rounded-lg bg-zinc-900">
+            <p className="text-sm text-zinc-500">Unsupported chart type</p>
           </div>
         );
     }
   };
 
-  return (
-    <div className="w-full">
-      <div className="mb-2 text-sm font-medium text-gray-700">
-        {chart_data.title}
-      </div>
-      {renderChart()}
-    </div>
-  );
+  return <div className="w-full">{renderChart()}</div>;
 };
 
+// Static chart component
+const StaticChartItem: React.FC<{
+  chart: ChartData;
+  onFullscreen: () => void;
+  onDownload: () => void;
+}> = ({ chart, onFullscreen, onDownload }) => (
+  <div className="group relative space-y-2 rounded-lg bg-zinc-800/50 p-3 backdrop-blur-sm transition-colors hover:bg-zinc-800/70">
+    {chart.title && (
+      <h3 className="text-sm font-medium text-zinc-200">{chart.title}</h3>
+    )}
+
+    <div className="relative">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={chart.url}
+        alt={chart.text}
+        className="h-auto w-full cursor-pointer rounded-lg transition-opacity hover:opacity-90"
+        onClick={onFullscreen}
+      />
+
+      {/* Action buttons */}
+      <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          onClick={onFullscreen}
+          className="rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+          title="View fullscreen"
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={onDownload}
+          className="rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+          title="Download"
+        >
+          <Download className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Dynamic chart component
+const DynamicChartItem: React.FC<{
+  chart: ChartData;
+  onFullscreen: () => void;
+}> = ({ chart, onFullscreen }) => (
+  <div className="group relative m-1 mb-5 space-y-2 rounded-lg p-3 outline-1 outline-zinc-600 backdrop-blur-sm transition-colors">
+    {chart.title && (
+      <h3 className="text-sm font-medium text-zinc-200">{chart.title}</h3>
+    )}
+
+    <div className="relative">
+      <InteractiveChart chart={chart} />
+
+      {/* Action buttons */}
+      <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
+        <button
+          onClick={onFullscreen}
+          className="rounded-lg bg-black/50 p-1.5 text-white backdrop-blur-sm transition-colors hover:bg-black/70"
+          title="View fullscreen"
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+
+    {chart.description && (
+      <p className="line-clamp-2 text-xs text-zinc-400">{chart.description}</p>
+    )}
+  </div>
+);
+
+// Modal component
+const ChartModal: React.FC<{
+  chart: ChartData;
+  onClose: () => void;
+  onDownload: (chart: ChartData) => void;
+}> = ({ chart, onClose, onDownload }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <div className="relative max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl bg-zinc-900 shadow-2xl">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
+        <div>
+          <h3 className="font-medium text-zinc-100">
+            {chart.title || chart.text}
+          </h3>
+          {chart.description && (
+            <p className="mt-1 text-sm text-zinc-400">{chart.description}</p>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => onDownload(chart)}
+            className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+            title="Download"
+          >
+            <Download className="h-4 w-4" />
+          </button>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-2 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-300"
+            title="Close"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="p-6">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={chart.url}
+          alt={chart.text}
+          className="h-auto w-full rounded-lg"
+        />
+      </div>
+    </div>
+  </div>
+);
+
+// Main component
 const ChartDisplay: React.FC<ChartDisplayProps> = ({ charts }) => {
   const [selectedChart, setSelectedChart] = useState<ChartData | null>(null);
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [viewMode, setViewMode] = useState<"static" | "dynamic">("static");
 
   if (!charts || charts.length === 0) {
     return null;
   }
 
-  const handleImageLoad = (chartId: string) => {
-    setLoadingStates((prev) => ({ ...prev, [chartId]: false }));
-  };
-
-  const handleImageError = (chartId: string) => {
-    setLoadingStates((prev) => ({ ...prev, [chartId]: false }));
-  };
+  const staticCharts = charts.filter(
+    (chart) => chart.url && chart.url.trim() !== "",
+  ); // Only charts with valid URLs
+  const dynamicCharts = charts.filter((chart) => chart.chart_data); // Only charts with interactive data
+  const hasAnyInteractiveData = dynamicCharts.length > 0;
 
   const handleDownload = async (chart: ChartData) => {
     try {
@@ -167,152 +294,85 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ charts }) => {
 
   return (
     <>
-      <div className="mt-4 space-y-4">
-        <div className="text-sm font-medium text-gray-300">
-          Generated {charts.length} Chart{charts.length > 1 ? "s" : ""}
-        </div>
+      <div>
+        <Accordion type="single" collapsible defaultValue="charts">
+          <AccordionItem value="charts" className="border-zinc-800">
+            <AccordionTrigger className="py-2 text-sm font-medium text-zinc-300 hover:text-zinc-200">
+              {charts.length} Chart{charts.length > 1 ? "s" : ""}
+            </AccordionTrigger>
+            <AccordionContent className="pb-0">
+              {hasAnyInteractiveData ? (
+                <>
+                  <Tabs
+                    value={viewMode}
+                    onValueChange={(value) =>
+                      setViewMode(value as "static" | "dynamic")
+                    }
+                    className="mb-3 w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-2 bg-zinc-700/50">
+                      <TabsTrigger
+                        value="static"
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        <ImageIcon className="h-3.5 w-3.5" />
+                        Static ({staticCharts.length})
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="dynamic"
+                        className="flex items-center gap-2 text-xs"
+                      >
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        Dynamic ({dynamicCharts.length})
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
 
-        {/* Grid layout for multiple charts */}
-        <div className={`flex flex-col gap-3`}>
-          {charts.map((chart) => (
-            <div
-              key={chart.id}
-              className="group relative rounded-lg bg-white p-2 shadow-sm transition-shadow hover:shadow-md"
-            >
-              {/* Chart Title */}
-              {chart.title && (
-                <div className="mb-2 truncate text-sm font-medium text-gray-700">
-                  {chart.title}
-                </div>
-              )}
-
-              {/* Render based on chart type */}
-              {chart.type === "interactive" && chart.chart_data ? (
-                /* Interactive Chart */
-                <div className="relative">
-                  <InteractiveChart chart={chart} />
-                  {/* Actions for interactive charts */}
-                  <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedChart(chart);
-                      }}
-                      className="rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
-                      title="View fullscreen"
-                    >
-                      <Maximize2 className="h-3 w-3" />
-                    </button>
+                  <div className="space-y-2">
+                    {viewMode === "static"
+                      ? // Show only charts with valid URLs
+                        staticCharts.map((chart) => (
+                          <StaticChartItem
+                            key={chart.id}
+                            chart={chart}
+                            onFullscreen={() => setSelectedChart(chart)}
+                            onDownload={() => handleDownload(chart)}
+                          />
+                        ))
+                      : // Show only dynamic charts
+                        dynamicCharts.map((chart) => (
+                          <DynamicChartItem
+                            key={chart.id}
+                            chart={chart}
+                            onFullscreen={() => setSelectedChart(chart)}
+                          />
+                        ))}
                   </div>
-                </div>
+                </>
               ) : (
-                /* Static Chart Image */
-                <div className="relative overflow-hidden rounded">
-                  {loadingStates[chart.id] !== false && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-500" />
-                    </div>
-                  )}
-
-                  <img
-                    src={chart.url}
-                    alt={chart.text}
-                    className="h-auto w-full cursor-pointer rounded"
-                    onLoad={() => handleImageLoad(chart.id)}
-                    onError={() => handleImageError(chart.id)}
-                    onClick={() => setSelectedChart(chart)}
-                  />
-
-                  {/* Hover Actions */}
-                  <div className="absolute top-2 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedChart(chart);
-                      }}
-                      className="rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
-                      title="View fullscreen"
-                    >
-                      <Maximize2 className="h-3 w-3" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload(chart);
-                      }}
-                      className="rounded-full bg-black/50 p-1.5 text-white transition-colors hover:bg-black/70"
-                      title="Download chart"
-                    >
-                      <Download className="h-3 w-3" />
-                    </button>
-                  </div>
+                // No interactive data - just show static charts with valid URLs
+                <div className="space-y-3">
+                  {staticCharts.map((chart) => (
+                    <StaticChartItem
+                      key={chart.id}
+                      chart={chart}
+                      onFullscreen={() => setSelectedChart(chart)}
+                      onDownload={() => handleDownload(chart)}
+                    />
+                  ))}
                 </div>
               )}
-
-              {/* Chart Description */}
-              {chart.description && (
-                <div className="mt-2 line-clamp-2 text-xs text-gray-600">
-                  {chart.description}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
 
-      {/* Fullscreen Modal */}
       {selectedChart && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="relative max-h-[90vh] max-w-[90vw] overflow-auto rounded-lg bg-white">
-            {/* Modal Header */}
-            <div className="sticky top-0 flex items-center justify-between border-b bg-white px-4 py-3">
-              <div>
-                <h3 className="font-medium text-gray-900">
-                  {selectedChart.title || selectedChart.text}
-                </h3>
-                {selectedChart.description && (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {selectedChart.description}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                {selectedChart.type !== "interactive" && (
-                  <button
-                    onClick={() => handleDownload(selectedChart)}
-                    className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                    title="Download chart"
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
-                )}
-                <button
-                  onClick={() => setSelectedChart(null)}
-                  className="rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                  title="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-4">
-              {selectedChart.type === "interactive" &&
-              selectedChart.chart_data ? (
-                <div className="h-96 w-full">
-                  <InteractiveChart chart={selectedChart} />
-                </div>
-              ) : (
-                <img
-                  src={selectedChart.url}
-                  alt={selectedChart.text}
-                  className="h-auto w-full rounded"
-                />
-              )}
-            </div>
-          </div>
-        </div>
+        <ChartModal
+          chart={selectedChart}
+          onClose={() => setSelectedChart(null)}
+          onDownload={handleDownload}
+        />
       )}
     </>
   );
