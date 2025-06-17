@@ -17,6 +17,7 @@ import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import GoalSection, { type GoalAction } from "./GoalSection";
+import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
 
 export default function TextBubble({
@@ -37,6 +38,7 @@ export default function TextBubble({
   search_results,
   deep_search_results,
   document_data,
+  google_docs_data,
 }: ChatBubbleBotProps) {
   return (
     <>
@@ -145,6 +147,10 @@ export default function TextBubble({
       )}
 
       {document_data && <DocumentSection document_data={document_data} />}
+
+      {google_docs_data && (
+        <GoogleDocsSection google_docs_data={google_docs_data} />
+      )}
 
       {goal_data && (
         <GoalSection
