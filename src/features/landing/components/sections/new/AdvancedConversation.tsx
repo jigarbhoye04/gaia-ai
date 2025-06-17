@@ -1,5 +1,11 @@
-
-
+import {
+  AiImageIcon,
+  AiSearch02Icon,
+  FileUploadIcon,
+  FlowchartIcon,
+  PinIcon,
+  StarsIcon,
+} from "@/components/shared/icons";
 
 import { FeatureCard } from "../../shared/FeatureCard";
 import LargeHeader from "../../shared/LargeHeader";
@@ -10,7 +16,7 @@ const featureCards = [
     title: "Upload & Understand Files",
     description:
       "Drop in PDFs, docs, or images—GAIA reads and extracts the key insights instantly.",
-    icon: "📄",
+    icon: <FileUploadIcon className="h-5 w-5" style={{ color: "#00bbff" }} />,
   },
   {
     imageSrc: "/landing/mail.png",
@@ -18,14 +24,14 @@ const featureCards = [
     description:
       "Turn natural language into visual concepts without leaving the conversation.",
     reverse: true,
-    icon: "🎨",
+    icon: <AiImageIcon className="h-5 w-5" style={{ color: "#00bbff" }} />,
   },
   {
     imageSrc: "/landing/mail.png",
     title: "Create Flowcharts Instantly",
     description:
       "Describe any logic or process—GAIA transforms it into clean, structured diagrams.",
-    icon: "📊",
+    icon: <FlowchartIcon className="h-5 w-5" style={{ color: "#00bbff" }} />,
   },
   {
     imageSrc: "/landing/mail.png",
@@ -33,19 +39,27 @@ const featureCards = [
     description:
       "Save critical conversations and reference them easily anytime.",
     reverse: true,
-    icon: "⭐",
+    icon: (
+      <StarsIcon
+        className="h-5 w-5"
+        fill={undefined}
+        style={{ color: "#00bbff" }}
+      />
+    ),
   },
   {
     imageSrc: "/landing/mail.png",
     title: "Pin Key Messages",
     description:
       "Keep your most relevant messages front and center—never lose track again.",
+    icon: <PinIcon className="h-5 w-5" style={{ color: "#00bbff" }} />,
   },
   {
     imageSrc: "/landing/mail.png",
     title: "Search Across Conversations",
     description:
       "Quickly find past messages, files, or threads with intelligent memory search.",
+    icon: <AiSearch02Icon className="h-5 w-5" style={{ color: "#00bbff" }} />,
   },
 ];
 

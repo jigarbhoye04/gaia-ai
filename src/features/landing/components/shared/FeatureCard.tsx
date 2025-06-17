@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ReactNode } from "react";
 
 interface FeatureCardProps {
   imageSrc: string;
@@ -7,7 +8,7 @@ interface FeatureCardProps {
   imageAlt?: string;
   small?: boolean;
   reverse?: boolean;
-  icon?: string;
+  icon?: ReactNode;
 }
 
 export function FeatureCard({
@@ -31,7 +32,9 @@ export function FeatureCard({
       <div className="flex flex-col gap-1">
         {icon && (
           <div className="mb-2">
-            <div className={`${small ? "text-2xl" : "text-4xl"}`}>{icon}</div>
+            <div className={`${small ? "text-2xl" : "text-4xl"} text-white`}>
+              {icon}
+            </div>
           </div>
         )}
         <div
