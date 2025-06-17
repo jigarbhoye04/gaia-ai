@@ -122,7 +122,17 @@ export type CodeData = {
 
 // Define Google Docs data structure for Google Docs operations
 export type GoogleDocsData = {
-  title: string;
-  url: string;
-  action?: string;
+  documents: Array<{
+    id: string;
+    title: string;
+    url: string;
+    created_time: string;
+    modified_time: string;
+    type: string;
+  }>;
+  count: number;
+  query?: string | null;
+  action: string;
+  message: string;
+  type: string;
 };
