@@ -3,7 +3,7 @@ Team service with Redis caching and proper error handling.
 """
 
 import logging
-from typing import List, Optional
+from typing import List
 from fastapi import HTTPException, status
 from bson import ObjectId
 from app.db.collections import team_collection

@@ -16,7 +16,6 @@ import io
 
 from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
 from app.services.blog_service import BlogService
-from app.config.cloudinary import init_cloudinary
 from app.api.v1.dependencies.blog_auth import verify_blog_token
 
 router = APIRouter()

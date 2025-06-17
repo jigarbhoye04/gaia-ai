@@ -5,7 +5,7 @@ import io
 import re
 import time
 import uuid
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import cloudinary.uploader
 
@@ -116,7 +116,6 @@ async def process_chart_results(
                         }
                     )
                     logger.info(f"Successfully processed static chart {i + 1}")
-                    chart_processed = True
                 else:
                     error_msg = f"Failed to upload static chart {i + 1} to Cloudinary"
                     chart_errors.append(error_msg)
