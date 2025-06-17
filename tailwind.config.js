@@ -11,7 +11,7 @@ const config = {
   theme: {
     extend: {
       fontFamily: {
-        creato: "var(--font-creato), sans-serif",
+        switzer: "var(--font-switzer), sans-serif",
       },
       command: {
         bg: "#1E293B",

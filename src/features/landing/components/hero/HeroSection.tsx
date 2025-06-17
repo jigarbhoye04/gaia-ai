@@ -1,14 +1,8 @@
-// import GradualSpacing from "../magic-ui/gradual-spacing";
-// import WaitlistOnlyInput from "./WaitListIOnlyInput";
-// import { Avatar, AvatarGroup } from "@heroui/avatar";
-// import { cn } from "@/lib/utils";
-import { AnimatedShinyText } from "@/components/ui/shadcn/animated-shiny-text";
 import { Spotlight } from "@/components/ui/shadcn/spotlight-new";
 import { cn } from "@/lib/utils";
 
 import { MotionContainer } from "../../../../layouts/MotionContainer";
 import GetStartedButton from "../shared/GetStartedButton";
-// import { AnimatedShinyText } from "../../ui/animated-shiny-text";
 
 export default function HeroSection() {
   return (
@@ -17,20 +11,12 @@ export default function HeroSection() {
         <Spotlight duration={15} />
       </div>
       <MotionContainer className="relative z-2 flex h-full flex-col items-center justify-center">
-        {/* <div className="tracking-[1rem] text-transparent bg-linear-to-r via-white  bg-clip-text to-zinc-400 from-zinc-400">
-          {/* INTRODUCING{"  "}GAIA 
-        </div> 
-          */}
-
+        {/* Gradient for text. */}
         <div
           className={cn(
             "group rounded-full border border-white/5 bg-neutral-900 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-800",
           )}
-        >
-          <AnimatedShinyText className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-400 hover:duration-300">
-            Currently in beta
-          </AnimatedShinyText>
-        </div>
+        />
 
         <MotionContainer
           className="max-w-(--breakpoint-lg) bg-linear-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-[2.8rem] leading-none font-medium text-transparent sm:-my-2 sm:text-8xl"
