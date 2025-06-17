@@ -6,19 +6,19 @@ from bson import ObjectId
 from fastapi import HTTPException
 from langchain_core.messages import HumanMessage
 
-from app.db.collections import goals_collection
-from app.db.redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
-from app.models.goals_models import GoalCreate, UpdateNodeRequest, GoalResponse
-from app.utils.goals_utils import goal_helper
 from app.config.loggers import goals_logger as logger
-from app.langchain.prompts.goal_prompts import (
-    ROADMAP_JSON_STRUCTURE,
-    ROADMAP_INSTRUCTIONS,
-    ROADMAP_GENERATOR,
-)
+from app.db.mongodb.collections import goals_collection
+from app.db.redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
 from app.langchain.llm.client import init_llm
+from app.langchain.prompts.goal_prompts import (
+    ROADMAP_GENERATOR,
+    ROADMAP_INSTRUCTIONS,
+    ROADMAP_JSON_STRUCTURE,
+)
+from app.models.goals_models import GoalCreate, GoalResponse, UpdateNodeRequest
+from app.models.todo_models import Priority, TodoCreate
 from app.services.todo_service import TodoService
-from app.models.todo_models import TodoCreate, Priority
+from app.utils.goals_utils import goal_helper
 
 
 async def generate_roadmap_with_llm_stream(title: str):
@@ -317,7 +317,7 @@ async def update_node_status_service(
 
 async def _get_or_create_goals_project(user_id: str) -> str:
     """Get or create the shared 'Goals' project for a user."""
-    from app.db.collections import projects_collection
+    from app.db.mongodb.collections import projects_collection
 
     existing = await projects_collection.find_one(
         {"user_id": user_id, "name": "Goals", "color": "#8B5CF6"}

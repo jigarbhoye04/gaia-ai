@@ -1,40 +1,51 @@
+import math
+import uuid
 from datetime import datetime, timezone
 from typing import List, Optional
-import uuid
-import math
 
 from bson import ObjectId
 from pymongo import ReturnDocument
 
 from app.config.loggers import todos_logger
-from app.db.collections import todos_collection, projects_collection
-from app.db.redis import get_cache, set_cache, delete_cache, delete_cache_by_pattern, STATS_CACHE_TTL, CACHE_TTL
+from app.db.mongodb.collections import projects_collection, todos_collection
+from app.db.redis import (
+    CACHE_TTL,
+    STATS_CACHE_TTL,
+    delete_cache,
+    delete_cache_by_pattern,
+    get_cache,
+    set_cache,
+)
 from app.db.utils import serialize_document
 from app.models.todo_models import (
-    TodoCreate,
-    TodoResponse,
-    UpdateTodoRequest,
-    ProjectCreate,
-    ProjectResponse,
-    UpdateProjectRequest,
-    SubTask,
-    TodoListResponse,
-    PaginationMeta,
-    TodoStats,
-    TodoSearchParams,
-    SearchMode,
+    BulkMoveRequest,
     BulkOperationResponse,
     BulkUpdateRequest,
-    BulkMoveRequest,
+    PaginationMeta,
     Priority,
+    ProjectCreate,
+    ProjectResponse,
+    SearchMode,
+    SubTask,
+    TodoCreate,
+    TodoListResponse,
+    TodoResponse,
+    TodoSearchParams,
+    TodoStats,
+    UpdateProjectRequest,
+    UpdateTodoRequest,
 )
 from app.utils.todo_vector_utils import (
+    bulk_index_todos,
+    delete_todo_embedding,
     store_todo_embedding,
     update_todo_embedding,
-    delete_todo_embedding,
-    semantic_search_todos as vector_search,
+)
+from app.utils.todo_vector_utils import (
     hybrid_search_todos as vector_hybrid_search,
-    bulk_index_todos,
+)
+from app.utils.todo_vector_utils import (
+    semantic_search_todos as vector_search,
 )
 
 # Special constants

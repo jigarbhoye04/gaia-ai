@@ -9,7 +9,7 @@ from bson import ObjectId
 
 from app.api.v1.dependencies.oauth_dependencies import get_valid_access_token
 from app.config.loggers import worker_logger as logger
-from app.db.collections import users_collection
+from app.db.mongodb.collections import users_collection
 from app.db.redis import get_cache, set_cache
 from app.langchain.core.agent import call_mail_processing_agent
 from app.services.mail_service import (

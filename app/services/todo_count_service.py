@@ -2,10 +2,11 @@
 Service for managing todo counts and ensuring consistency.
 """
 from typing import Optional
+
 from bson import ObjectId
 
-from app.db.collections import todos_collection, projects_collection
 from app.config.loggers import todos_logger
+from app.db.mongodb.collections import projects_collection, todos_collection
 
 
 async def update_project_todo_count(project_id: str, user_id: str) -> None:

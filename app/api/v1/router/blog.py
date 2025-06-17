@@ -1,8 +1,10 @@
 from typing import List
+
 from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from app.db.collections import blog_collection
-from app.models.blog_models import BlogPostCreate, BlogPostUpdate, BlogPost
+
+from app.db.mongodb.collections import blog_collection
+from app.models.blog_models import BlogPost, BlogPostCreate, BlogPostUpdate
 
 router = APIRouter()
 

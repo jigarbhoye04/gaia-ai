@@ -8,8 +8,12 @@ from fastapi import HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import refresh_access_token
 from app.config.loggers import calendar_logger as logger
-from app.db.collections import calendars_collection
-from app.models.calendar_models import EventCreateRequest, EventDeleteRequest, EventUpdateRequest
+from app.db.mongodb.collections import calendars_collection
+from app.models.calendar_models import (
+    EventCreateRequest,
+    EventDeleteRequest,
+    EventUpdateRequest,
+)
 from app.utils.calendar_utils import resolve_timezone
 
 http_async_client = httpx.AsyncClient()

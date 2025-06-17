@@ -5,22 +5,15 @@ Reminder scheduler for managing reminder tasks.
 from datetime import datetime, timezone
 from typing import List, Optional
 
+from arq import create_pool
+from arq.connections import RedisSettings
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.config.loggers import general_logger as logger
 from app.config.settings import settings
-from app.db.mongodb.mongodb import get_database
+from app.db.mongodb.collections import reminders_collection
 from app.models.reminder_models import ReminderModel, ReminderStatus
 from app.utils.cron import get_next_run_time
-
-try:
-    from arq import create_pool
-    from arq.connections import RedisSettings
-
-    ARQ_AVAILABLE = True
-except ImportError:
-    logger.warning("ARQ not available. Install with: pip install arq")
-    ARQ_AVAILABLE = False
 
 
 class ReminderScheduler:
@@ -36,22 +29,21 @@ class ReminderScheduler:
             redis_settings: Redis connection settings for ARQ
         """
         self.redis_settings = redis_settings or RedisSettings.from_dsn(
-            settings.REDIS_URL or "redis://localhost:6379"
+            settings.REDIS_URL
         )
         self.db: Optional[AsyncIOMotorDatabase] = None
         self.arq_pool = None
 
     async def initialize(self):
         """Initialize database connection and ARQ pool."""
-        self.db = await get_database()
         self.arq_pool = await create_pool(self.redis_settings)
         logger.info("ReminderScheduler initialized")
 
     async def close(self):
         """Close connections."""
         if self.arq_pool:
-            self.arq_pool.close()
-            await self.arq_pool.wait_closed()
+            await self.arq_pool.close()
+
         logger.info("ReminderScheduler closed")
 
     async def create_reminder(self, reminder_data: dict) -> str:
@@ -75,7 +67,9 @@ class ReminderScheduler:
                 reminder.scheduled_at = datetime.now(timezone.utc)
 
         # Insert into MongoDB
-        result = await self.db.reminders.insert_one(reminder.model_dump(by_alias=True))
+        result = await reminders_collection.insert_one(
+            reminder.model_dump(by_alias=True)
+        )
         reminder_id = str(result.inserted_id)
 
         # Schedule the task in ARQ
@@ -100,7 +94,7 @@ class ReminderScheduler:
         # Add updated_at timestamp
         update_data["updated_at"] = datetime.now(timezone.utc)
 
-        result = await self.db.reminders.update_one(
+        result = await reminders_collection.update_one(
             {"_id": reminder_id}, {"$set": update_data}
         )
 
@@ -128,7 +122,7 @@ class ReminderScheduler:
         Returns:
             True if cancelled successfully
         """
-        result = await self.db.reminders.update_one(
+        result = await reminders_collection.update_one(
             {"_id": reminder_id},
             {
                 "$set": {
@@ -154,7 +148,7 @@ class ReminderScheduler:
         Returns:
             Reminder model or None if not found
         """
-        doc = await self.db.reminders.find_one({"_id": reminder_id})
+        doc = await reminders_collection.find_one({"_id": reminder_id})
         if doc:
             return ReminderModel(**doc)
         return None
@@ -182,7 +176,7 @@ class ReminderScheduler:
         if status:
             query["status"] = status
 
-        cursor = self.db.reminders.find(query).skip(skip).limit(limit)
+        cursor = reminders_collection.find(query).skip(skip).limit(limit)
         docs = await cursor.to_list(length=limit)
 
         return [ReminderModel(**doc) for doc in docs]
@@ -195,7 +189,7 @@ class ReminderScheduler:
         now = datetime.now(timezone.utc)
 
         # Find all scheduled reminders that should run in the future
-        cursor = self.db.reminders.find(
+        cursor = reminders_collection.find(
             {"status": ReminderStatus.SCHEDULED, "scheduled_at": {"$gte": now}}
         )
 
@@ -322,6 +316,10 @@ class ReminderScheduler:
         job = await self.arq_pool.enqueue_job(
             "process_reminder", reminder_id, _defer_until=scheduled_at
         )
+
+        if not job:
+            logger.error(f"Failed to enqueue reminder {reminder_id}")
+            return
 
         logger.debug(f"Enqueued reminder {reminder_id} with job ID {job.job_id}")
 

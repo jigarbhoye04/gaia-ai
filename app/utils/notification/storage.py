@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from app.db.collections import (
+from app.db.mongodb.collections import (
     notifications_collection,
 )
 from app.models.notification.notification_models import (

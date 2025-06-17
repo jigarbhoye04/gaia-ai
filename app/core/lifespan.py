@@ -6,7 +6,6 @@ from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
 from app.db.rabbitmq import publisher
-from app.db.todo_indexes import create_todo_indexes
 from app.langchain.core.graph_builder import build_graph
 from app.langchain.core.graph_manager import GraphManager
 from app.utils.nltk_utils import download_nltk_resources
@@ -26,8 +25,27 @@ async def lifespan(app: FastAPI):
         get_zero_shot_classifier()
         init_cloudinary()
 
-        # Create todo indexes
-        await create_todo_indexes()
+        # Create all database indexes
+        try:
+            from app.db.mongodb.mongodb import init_mongodb
+
+            mongo_client = init_mongodb()
+
+            await mongo_client._initialize_indexes()
+        except Exception as e:
+            logger.error(f"Failed to create database indexes: {e}")
+
+        # Initialize reminder scheduler and scan for pending reminders
+        try:
+            from app.services.scheduler import initialize_scheduler
+
+            scheduler = await initialize_scheduler()
+            await scheduler.scan_and_schedule_pending_reminders()
+            logger.info(
+                "Reminder scheduler initialized and pending reminders scheduled"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize reminder scheduler: {e}")
 
         try:
             await publisher.connect()
@@ -44,4 +62,14 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("Startup failed") from e
     finally:
         logger.info("Shutting down the API...")
+
+        # Close reminder scheduler
+        try:
+            from app.services.scheduler import close_scheduler
+
+            await close_scheduler()
+            logger.info("Reminder scheduler closed")
+        except Exception as e:
+            logger.error(f"Error closing reminder scheduler: {e}")
+
         await publisher.close()

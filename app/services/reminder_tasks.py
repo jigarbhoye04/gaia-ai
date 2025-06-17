@@ -163,7 +163,7 @@ async def handle_goal_checkin(reminder: ReminderModel):
 
 
 # Utility function to send notifications (placeholder)
-async def send_notification(user_id: str, title: str, message: str = None):
+async def send_notification(user_id: str, title: str, message: str):
     """
     Send a notification to a user.
 

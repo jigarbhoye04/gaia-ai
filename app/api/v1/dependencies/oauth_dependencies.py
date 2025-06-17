@@ -6,7 +6,7 @@ import httpx
 from fastapi import Cookie, HTTPException
 
 from app.config.settings import settings
-from app.db.collections import users_collection
+from app.db.mongodb.collections import users_collection
 from app.db.redis import get_cache, set_cache
 
 logger = logging.getLogger(__name__)

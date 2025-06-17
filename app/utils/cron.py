@@ -59,10 +59,10 @@ def get_next_run_time(cron_expr: str, base_time: Optional[datetime] = None) -> d
         next_time = cron.get_next(datetime)
 
         # Ensure we return UTC timezone-aware datetime
-        if next_time.tzinfo is None:
-            next_time = next_time.replace(tzinfo=timezone.utc)
+        if next_time.tzinfo is None:  # type: ignore
+            next_time = next_time.replace(tzinfo=timezone.utc)  # type: ignore
 
-        return next_time
+        return next_time  # type: ignore
     except Exception as e:
         raise CronError(f"Failed to calculate next run time: {str(e)}")
 
@@ -137,8 +137,8 @@ def calculate_next_occurrences(
 
         for _ in range(count):
             next_time = cron.get_next(datetime)
-            if next_time.tzinfo is None:
-                next_time = next_time.replace(tzinfo=timezone.utc)
+            if next_time.tzinfo is None:  # type: ignore
+                next_time = next_time.replace(tzinfo=timezone.utc)  # type: ignore
             occurrences.append(next_time)
 
         return occurrences

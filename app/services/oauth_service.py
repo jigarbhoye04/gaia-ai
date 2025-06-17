@@ -4,7 +4,7 @@ import requests
 from fastapi import HTTPException
 
 from app.config.loggers import app_logger as logger
-from app.db.collections import users_collection
+from app.db.mongodb.collections import users_collection
 from app.utils.oauth_utils import upload_user_picture
 
 
