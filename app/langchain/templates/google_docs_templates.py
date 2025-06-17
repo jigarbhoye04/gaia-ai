@@ -13,7 +13,7 @@ GOOGLE_DOCS_CREATE_TEMPLATE = """
 GOOGLE_DOCS_LIST_TEMPLATE = """
 📋 **Google Docs List**
 
-Found **{count}** document{'s' if {count} != 1 else ''}{query_text}:
+Found **{count}** document{plural}{query_text}:
 
 {docs_list}
 """
@@ -63,7 +63,7 @@ GOOGLE_DOCS_SEARCH_TEMPLATE = """
 🔍 **Search Results**
 
 **Query:** "{query}"
-**Found:** {count} document{'s' if {count} != 1 else ''}
+**Found:** {count} document{plural}
 
 {docs_list}
 """
