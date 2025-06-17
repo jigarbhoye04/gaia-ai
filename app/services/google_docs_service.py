@@ -70,6 +70,28 @@ async def create_google_doc(
         doc_id = result.get("documentId")
         logger.info(f"Created Google Doc with ID: {doc_id}")
 
+        # Set default margins (1 inch = 72 points)
+        if doc_id:
+            margin_requests = [
+                {
+                    "updateDocumentStyle": {
+                        "documentStyle": {
+                            "marginTop": {"magnitude": 72, "unit": "PT"},
+                            "marginBottom": {"magnitude": 72, "unit": "PT"},
+                            "marginLeft": {"magnitude": 72, "unit": "PT"},
+                            "marginRight": {"magnitude": 72, "unit": "PT"},
+                        },
+                        "fields": "marginTop,marginBottom,marginLeft,marginRight",
+                    }
+                }
+            ]
+            
+            docs_service.documents().batchUpdate(
+                documentId=doc_id, body={"requests": margin_requests}
+            ).execute()
+            
+            logger.info(f"Applied default margins to Google Doc {doc_id}")
+
         # Add initial content if provided
         if content and doc_id:
             await update_google_doc_content(
