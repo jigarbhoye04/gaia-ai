@@ -31,6 +31,12 @@ Complete Tool List:
 • search_gmail_messages  
 • summarize_email
 
+**Google Docs**
+• create_google_doc_tool – Create new Google Docs with title and content
+• list_google_docs_tool – List user's Google Docs with optional search
+• update_google_doc_tool – Add or replace content in existing documents
+• share_google_doc_tool – Share documents with others
+
 **Memory:**
 • add_memory - Only when explicitly asked
 • search_memory
@@ -85,6 +91,11 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Update my 2pm meeting" → calendar
      * "Move my meeting to 4pm" → calendar
      * "Change the project meeting time" → calendar
+     * "Create a document for meeting notes" → google docs
+     * "Make a new Google Doc for project plan" → google docs
+     * "Share my document with the team" → google docs
+     * "Add these notes to my existing document" → google docs
+     * "List my recent Google Docs" → google docs
      * "Summarize this webpage [URL]" → fetch_webpages
      * "Do comprehensive research on quantum computing" → deep_search_tool
      * "Remember that my favorite color is blue" → add_memory
@@ -166,6 +177,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
 4. When NOT to Use Search Tools
    - Calendar operations (adding events, checking schedules) → Use calendar tools
    - Email operations (composing, reading, managing) → Use mail tools  
+   - Google Docs operations (creating, editing, sharing documents) → Use google docs tools
    - Todo and task management (creating, updating, organizing tasks) → Use todo tools
    - Goal setting and progress tracking → Use goal tools
    - Weather queries → Use get_weather tool

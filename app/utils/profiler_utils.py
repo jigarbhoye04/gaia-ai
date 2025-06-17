@@ -66,9 +66,6 @@ def profile_celery_task(print_lines=7):
                 )
                 ps.print_stats(print_lines)
 
-                # Log the profiling output
-                profiling_output = s.getvalue()
-
             return result
 
         return wrapper
