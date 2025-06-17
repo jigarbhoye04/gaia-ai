@@ -5,7 +5,7 @@ import React from "react";
 import { toast } from "sonner";
 
 import { DownloadSquare01Icon } from "@/components/shared/icons";
-import { ImageData } from "@/types/features/convoTypes";
+import { ImageData } from "@/types/features/toolDataTypes";
 
 interface ChatBubbleActionsImageProps {
   fullWidth?: boolean;

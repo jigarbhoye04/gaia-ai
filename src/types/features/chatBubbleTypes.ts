@@ -60,6 +60,22 @@ export interface ChatBubbleBotProps {
   document_data?: DocumentData | null; // document data from backend tools
   image_data?: ImageData | null;
   todo_data?: TodoToolData | null; // todo data from backend tools
+  code_data?: {
+    language: string;
+    code: string;
+    output?: {
+      stdout: string;
+      stderr: string;
+      results: string[];
+      error: string | null;
+    } | null;
+    charts?: Array<{
+      id: string;
+      url: string;
+      text: string;
+    }> | null;
+    status?: "executing" | "completed" | "error";
+  } | null; // code execution data from backend
 
   // memory-related fields
   memory_data?: {
