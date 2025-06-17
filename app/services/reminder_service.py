@@ -12,7 +12,10 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.config.loggers import general_logger as logger
 from app.config.settings import settings
 from app.db.mongodb.collections import reminders_collection
-from app.models.reminder_models import ReminderModel, ReminderStatus
+from app.models.reminder_models import (
+    ReminderModel,
+    ReminderStatus,
+)
 from app.utils.cron_utils import get_next_run_time
 
 
@@ -51,12 +54,12 @@ class ReminderScheduler:
         Create a new reminder and schedule it.
 
         Args:
-            reminder_data: Reminder data dictionary
+            reminder_data: Dictionary containing reminder data including user_id
 
         Returns:
             Created reminder ID
         """
-        # Create reminder model
+        # Build the reminder model from the data
         reminder = ReminderModel(**reminder_data)
 
         # Set scheduled_at if not provided
@@ -86,14 +89,14 @@ class ReminderScheduler:
 
         Args:
             reminder_id: Reminder ID to update
-            update_data: Fields to update
+            update_data: Dictionary containing fields to update
 
         Returns:
             True if updated successfully
         """
-        # Add updated_at timestamp
         update_data["updated_at"] = datetime.now(timezone.utc)
 
+        # Update the reminder
         result = await reminders_collection.update_one(
             {"_id": reminder_id}, {"$set": update_data}
         )
@@ -101,12 +104,13 @@ class ReminderScheduler:
         if result.modified_count > 0:
             logger.info(f"Updated reminder {reminder_id}")
 
-            # If scheduled_at was updated, reschedule the task
-            if "scheduled_at" in update_data and "status" in update_data:
-                if update_data["status"] == ReminderStatus.SCHEDULED:
-                    await self._enqueue_reminder(
-                        reminder_id, update_data["scheduled_at"]
-                    )
+            # If scheduled_at and status updated, reschedule
+            if (
+                "scheduled_at" in update_data
+                and "status" in update_data
+                and update_data["status"] == ReminderStatus.SCHEDULED
+            ):
+                await self._enqueue_reminder(reminder_id, update_data["scheduled_at"])
 
             return True
 

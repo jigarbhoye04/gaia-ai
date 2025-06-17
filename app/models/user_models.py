@@ -1,18 +1,19 @@
-from datetime import datetime
-from typing import Optional, Dict, Any
 import re
+from datetime import datetime
+from time import timezone
+from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class CurrentUserModel(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    
+
     user_id: str = Field(..., description="Unique identifier for the user")
     name: str = Field(..., description="Name of the user")
     email: str = Field(..., description="Email address of the user")
     cached_at: datetime = Field(
-        default_factory=datetime.utcnow,
+        default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp when the user data was cached",
     )
     picture: str = Field(

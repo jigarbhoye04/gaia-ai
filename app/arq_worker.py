@@ -3,7 +3,7 @@ ARQ worker for processing reminder tasks.
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from arq import cron
 from arq.connections import RedisSettings
@@ -109,7 +109,7 @@ async def cleanup_expired_reminders(ctx: dict) -> str:
 
     try:
         # Remove completed reminders older than 30 days
-        cutoff_date = datetime.utcnow() - timedelta(days=30)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
 
         result = await reminders_collection.delete_many(
             {

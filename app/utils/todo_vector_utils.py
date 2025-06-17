@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from bson import ObjectId
@@ -71,47 +71,59 @@ async def store_todo_embedding(todo_id: str, todo_data: dict, user_id: str) -> b
     try:
         # Create content for embedding
         content = create_todo_content_for_embedding(todo_data)
-        
+
         # Get ChromaDB collection
         chroma_collection = await ChromaClient.get_langchain_client(
             collection_name="todos",
             create_if_not_exists=True
         )
-        
+
         # Prepare metadata (ChromaDB requires booleans as lowercase strings)
         metadata = {
             "user_id": str(user_id),
             "todo_id": str(todo_id),
-            "title": todo_data.get('title', ''),
-            "priority": todo_data.get('priority', 'none'),
-            "completed": str(todo_data.get('completed', False)).lower(),  # Convert to "true" or "false"
-            "created_at": todo_data.get('created_at', datetime.utcnow()).isoformat() if isinstance(todo_data.get('created_at'), datetime) else str(todo_data.get('created_at', '')),
-            "updated_at": todo_data.get('updated_at', datetime.utcnow()).isoformat() if isinstance(todo_data.get('updated_at'), datetime) else str(todo_data.get('updated_at', '')),
-            "has_due_date": str(bool(todo_data.get('due_date'))).lower(),  # Convert to "true" or "false"
-            "labels_count": str(len(todo_data.get('labels', []))),
-            "subtasks_count": str(len(todo_data.get('subtasks', [])))
+            "title": todo_data.get("title", ""),
+            "priority": todo_data.get("priority", "none"),
+            "completed": str(
+                todo_data.get("completed", False)
+            ).lower(),  # Convert to "true" or "false"
+            "created_at": (
+                todo_data.get("created_at", datetime.now(timezone.utc)).isoformat()
+                if isinstance(todo_data.get("created_at"), datetime)
+                else str(todo_data.get("created_at", ""))
+            ),
+            "updated_at": (
+                todo_data.get("updated_at", datetime.now(timezone.utc)).isoformat()
+                if isinstance(todo_data.get("updated_at"), datetime)
+                else str(todo_data.get("updated_at", ""))
+            ),
+            "has_due_date": str(
+                bool(todo_data.get("due_date"))
+            ).lower(),  # Convert to "true" or "false"
+            "labels_count": str(len(todo_data.get("labels", []))),
+            "subtasks_count": str(len(todo_data.get("subtasks", []))),
         }
-        
+
         # Add optional fields to metadata
         if todo_data.get('project_id'):
             metadata["project_id"] = str(todo_data['project_id'])
-        
+
         if todo_data.get('labels'):
             metadata["labels"] = ", ".join(todo_data['labels'])
-        
+
         if todo_data.get('due_date'):
             metadata["due_date"] = todo_data['due_date'].isoformat() if isinstance(todo_data['due_date'], datetime) else str(todo_data['due_date'])
-        
+
         # Store in ChromaDB (LangChain Chroma handles embedding generation automatically)
         chroma_collection.add_texts(
             texts=[content],
             metadatas=[metadata],
             ids=[str(todo_id)]
         )
-        
+
         logger.info(f"Stored embedding for todo {todo_id}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Error storing embedding for todo {todo_id}: {str(e)}")
         return False

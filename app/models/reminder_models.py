@@ -2,11 +2,11 @@
 Reminder models for task scheduling system.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ReminderStatus(str, Enum):
@@ -53,16 +53,19 @@ class ReminderModel(BaseModel):
         None, description="Maximum number of executions (optional)"
     )
     stop_after: Optional[datetime] = Field(
-        None, description="Stop executing after this date (optional)"
+        default=datetime.now(timezone.utc) + timedelta(days=180),
+        description="Stop executing after this date (optional), defaults to 6 months from now",
     )
     payload: Dict[str, Any] = Field(
         default_factory=dict, description="Task-specific data"
     )
     created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Creation timestamp",
     )
     updated_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Last update timestamp"
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="Last update timestamp",
     )
 
     class Config:
@@ -75,7 +78,6 @@ class ReminderModel(BaseModel):
 class CreateReminderRequest(BaseModel):
     """Request model for creating a new reminder."""
 
-    user_id: str = Field(..., description="User ID who owns this reminder")
     type: ReminderType = Field(..., description="Type of reminder task")
     repeat: Optional[str] = Field(
         None, description="Cron expression for recurring tasks (optional)"
@@ -92,6 +94,28 @@ class CreateReminderRequest(BaseModel):
     payload: Dict[str, Any] = Field(
         default_factory=dict, description="Task-specific data"
     )
+
+    @field_validator("repeat")
+    def check_repeat_cron(cls, v):
+        from app.utils.cron_utils import validate_cron_expression
+
+        if v is not None and not validate_cron_expression(v):
+            raise ValueError(f"Invalid cron expression: {v}")
+        return v
+
+    @field_validator("max_occurrences")
+    def check_max_occurrences(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("max_occurrences must be greater than 0")
+        return v
+
+    @field_validator("stop_after")
+    def check_stop_after_future(cls, v):
+        from datetime import datetime
+
+        if v is not None and v <= datetime.now(timezone.utc):
+            raise ValueError("stop_after must be in the future")
+        return v
 
 
 class UpdateReminderRequest(BaseModel):
@@ -110,6 +134,36 @@ class UpdateReminderRequest(BaseModel):
         None, description="Stop executing after this date"
     )
     payload: Optional[Dict[str, Any]] = Field(None, description="Task-specific data")
+
+    @field_validator("type")
+    def check_type(cls, v):
+        if v is None:
+            return v
+        if v not in list(ReminderType):
+            raise ValueError(f"Invalid reminder type: {v}")
+        return v
+
+    @field_validator("repeat")
+    def check_repeat_cron(cls, v):
+        from app.utils.cron_utils import validate_cron_expression
+
+        if v is not None and not validate_cron_expression(v):
+            raise ValueError(f"Invalid cron expression: {v}")
+        return v
+
+    @field_validator("max_occurrences")
+    def check_max_occurrences(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("max_occurrences must be greater than 0")
+        return v
+
+    @field_validator("stop_after")
+    def check_stop_after_future(cls, v):
+        from datetime import datetime
+
+        if v is not None and v <= datetime.now(timezone.utc):
+            raise ValueError("stop_after must be in the future")
+        return v
 
 
 class ReminderResponse(BaseModel):

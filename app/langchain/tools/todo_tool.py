@@ -1,5 +1,5 @@
+from datetime import datetime, timezone
 from typing import Annotated, Any, Dict, List, Optional
-from datetime import datetime
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -7,58 +7,90 @@ from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.todo_tool_docs import (
+    ADD_SUBTASK,
+    BULK_COMPLETE_TODOS,
+    BULK_DELETE_TODOS,
+    BULK_MOVE_TODOS,
+    CREATE_PROJECT,
     CREATE_TODO,
-    LIST_TODOS,
-    UPDATE_TODO,
+    DELETE_PROJECT,
+    DELETE_SUBTASK,
     DELETE_TODO,
+    GET_ALL_LABELS,
+    GET_TODAY_TODOS,
+    GET_TODO_STATS,
+    GET_TODOS_BY_LABEL,
+    GET_UPCOMING_TODOS,
+    LIST_PROJECTS,
+    LIST_TODOS,
     SEARCH_TODOS,
     SEMANTIC_SEARCH_TODOS,
-    GET_TODO_STATS,
-    GET_TODAY_TODOS,
-    GET_UPCOMING_TODOS,
-    CREATE_PROJECT,
-    LIST_PROJECTS,
     UPDATE_PROJECT,
-    DELETE_PROJECT,
-    GET_TODOS_BY_LABEL,
-    GET_ALL_LABELS,
-    BULK_COMPLETE_TODOS,
-    BULK_MOVE_TODOS,
-    BULK_DELETE_TODOS,
-    ADD_SUBTASK,
     UPDATE_SUBTASK,
-    DELETE_SUBTASK,
+    UPDATE_TODO,
 )
 from app.docstrings.utils import with_doc
 from app.models.todo_models import (
-    TodoCreate,
-    UpdateTodoRequest,
-    ProjectCreate,
-    UpdateProjectRequest,
     Priority,
+    ProjectCreate,
     SubTask,
-)
-from app.services.todo_service import (
-    create_todo as create_todo_service,
-    get_todo as get_todo_service,
-    get_all_todos as get_all_todos_service,
-    update_todo as update_todo_service,
-    delete_todo as delete_todo_service,
-    search_todos as search_todos_service,
-    semantic_search_todos as semantic_search_todos_service,
-    get_todo_stats as get_todo_stats_service,
-    get_todos_by_date_range,
-    get_todos_by_label as get_todos_by_label_service,
-    get_all_labels as get_all_labels_service,
-    create_project as create_project_service,
-    get_all_projects as get_all_projects_service,
-    update_project as update_project_service,
-    delete_project as delete_project_service,
+    TodoCreate,
+    UpdateProjectRequest,
+    UpdateTodoRequest,
 )
 from app.services.todo_bulk_service import (
     bulk_complete_todos as bulk_complete_service,
-    bulk_move_todos as bulk_move_service,
+)
+from app.services.todo_bulk_service import (
     bulk_delete_todos as bulk_delete_service,
+)
+from app.services.todo_bulk_service import (
+    bulk_move_todos as bulk_move_service,
+)
+from app.services.todo_service import (
+    create_project as create_project_service,
+)
+from app.services.todo_service import (
+    create_todo as create_todo_service,
+)
+from app.services.todo_service import (
+    delete_project as delete_project_service,
+)
+from app.services.todo_service import (
+    delete_todo as delete_todo_service,
+)
+from app.services.todo_service import (
+    get_all_labels as get_all_labels_service,
+)
+from app.services.todo_service import (
+    get_all_projects as get_all_projects_service,
+)
+from app.services.todo_service import (
+    get_all_todos as get_all_todos_service,
+)
+from app.services.todo_service import (
+    get_todo as get_todo_service,
+)
+from app.services.todo_service import (
+    get_todo_stats as get_todo_stats_service,
+)
+from app.services.todo_service import (
+    get_todos_by_date_range,
+)
+from app.services.todo_service import (
+    get_todos_by_label as get_todos_by_label_service,
+)
+from app.services.todo_service import (
+    search_todos as search_todos_service,
+)
+from app.services.todo_service import (
+    semantic_search_todos as semantic_search_todos_service,
+)
+from app.services.todo_service import (
+    update_project as update_project_service,
+)
+from app.services.todo_service import (
+    update_todo as update_todo_service,
 )
 
 
@@ -479,7 +511,7 @@ async def get_upcoming_todos(
 
         from datetime import timedelta
 
-        start_date = datetime.utcnow()
+        start_date = datetime.now(timezone.utc)
         end_date = start_date + timedelta(days=days)
 
         results = await get_todos_by_date_range(user_id, start_date, end_date)

@@ -2,7 +2,7 @@
 Optimized bulk operations for todos.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from bson import ObjectId
@@ -29,45 +29,42 @@ async def bulk_complete_todos(todo_ids: List[str], user_id: str) -> List[TodoRes
     try:
         # Convert string IDs to ObjectIds
         object_ids = [ObjectId(todo_id) for todo_id in todo_ids]
-        
+
         # Perform bulk update
         result = await todos_collection.update_many(
-            {
-                "_id": {"$in": object_ids},
-                "user_id": user_id
-            },
+            {"_id": {"$in": object_ids}, "user_id": user_id},
             {
                 "$set": {
                     "completed": True,
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.now(timezone.utc),
                 }
-            }
+            },
         )
-        
+
         if result.modified_count == 0:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No todos found or already completed"
             )
-        
+
         # Fetch updated todos
         cursor = todos_collection.find({
             "_id": {"$in": object_ids},
             "user_id": user_id
         })
         todos = await cursor.to_list(length=None)
-        
+
         # Clear cache
         await delete_cache(f"todos:{user_id}")
         for todo in todos:
             await delete_cache(f"todo:{user_id}:{todo['_id']}")
             if todo.get("project_id"):
                 await delete_cache(f"todos:{user_id}:project:{todo['project_id']}")
-        
+
         todos_logger.info(f"Bulk completed {result.modified_count} todos for user {user_id}")
-        
+
         return [TodoResponse(**serialize_document(todo)) for todo in todos]
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -118,16 +115,13 @@ async def bulk_move_todos(todo_ids: List[str], project_id: str, user_id: str) ->
 
         # Perform bulk update
         result = await todos_collection.update_many(
-            {
-                "_id": {"$in": object_ids},
-                "user_id": user_id
-            },
+            {"_id": {"$in": object_ids}, "user_id": user_id},
             {
                 "$set": {
                     "project_id": project_id,
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.now(timezone.utc),
                 }
-            }
+            },
         )
 
         if result.modified_count == 0:
