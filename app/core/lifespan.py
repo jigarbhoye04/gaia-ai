@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
 
         # Initialize reminder scheduler and scan for pending reminders
         try:
-            from app.services.scheduler import initialize_scheduler
+            from app.services.reminder_service import initialize_scheduler
 
             scheduler = await initialize_scheduler()
             await scheduler.scan_and_schedule_pending_reminders()
@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI):
 
         # Close reminder scheduler
         try:
-            from app.services.scheduler import close_scheduler
+            from app.services.reminder_service import close_scheduler
 
             await close_scheduler()
             logger.info("Reminder scheduler closed")

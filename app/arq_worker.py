@@ -11,7 +11,7 @@ from arq.connections import RedisSettings
 from app.config.loggers import arq_worker_logger as logger
 from app.config.settings import settings
 from app.db.mongodb.collections import reminders_collection
-from app.services.scheduler import process_reminder_task
+from app.services.reminder_service import process_reminder_task
 
 
 async def startup(ctx: dict):

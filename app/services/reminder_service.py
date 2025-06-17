@@ -13,7 +13,7 @@ from app.config.loggers import general_logger as logger
 from app.config.settings import settings
 from app.db.mongodb.collections import reminders_collection
 from app.models.reminder_models import ReminderModel, ReminderStatus
-from app.utils.cron import get_next_run_time
+from app.utils.cron_utils import get_next_run_time
 
 
 class ReminderScheduler:
@@ -331,7 +331,7 @@ class ReminderScheduler:
             reminder: Reminder to execute
         """
         # Import here to avoid circular imports
-        from app.services.reminder_tasks import execute_reminder_by_type
+        from app.tasks.reminder_tasks import execute_reminder_by_type
 
         await execute_reminder_by_type(reminder)
 
