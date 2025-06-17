@@ -62,12 +62,20 @@ async def execute_code(
         # Execute the code
         execution = sbx.run_code(code, language=language)
 
-        # Process charts if any were generated
-        charts, chart_errors = process_chart_results(execution.results, user_id)
+        charts, chart_errors = await process_chart_results(execution.results, user_id)
+
+        logger.info(
+            f"Charts processed: {len(charts) if charts else 0}, errors: {len(chart_errors) if chart_errors else 0}"
+        )
+        if charts:
+            logger.info(f"Raw charts before validation: {charts}")
 
         # Validate chart data
         if charts:
             charts = validate_chart_data(charts)
+            logger.info(f"Charts after validation: {len(charts) if charts else 0}")
+            if charts:
+                logger.info(f"Validated charts: {charts}")
 
         # Update code data with results
         code_data["code_data"]["output"] = {
@@ -81,6 +89,9 @@ async def execute_code(
 
         if charts:
             code_data["code_data"]["charts"] = charts
+            logger.info(f"Adding {len(charts)} charts to code_data")
+        else:
+            logger.info("No charts to add to code_data")
 
         # Include chart processing errors in output if any
         if chart_errors:
@@ -94,6 +105,7 @@ async def execute_code(
                 )
 
         code_data["code_data"]["status"] = "completed"
+        logger.info(f"Streaming final code_data: {code_data}")
         writer(code_data)
 
         # Format output for return
