@@ -223,16 +223,31 @@ async def update_google_doc_content(
                 }
             ]
         else:
-            # Replace all content
-            requests = [
-                {"deleteContentRange": {"range": {"startIndex": 1, "endIndex": -1}}},
-                {
-                    "insertText": {
-                        "location": {"index": 1},
-                        "text": content,
-                    }
-                },
-            ]
+            # Replace all content - first get current document to find actual end index
+            doc = docs_service.documents().get(documentId=document_id).execute()
+            doc_end_index = doc.get("body", {}).get("content", [{}])[-1].get("endIndex", 1)
+            
+            # Only delete if there's content to delete (avoid empty documents)
+            if doc_end_index > 1:
+                requests = [
+                    {"deleteContentRange": {"range": {"startIndex": 1, "endIndex": doc_end_index - 1}}},
+                    {
+                        "insertText": {
+                            "location": {"index": 1},
+                            "text": content,
+                        }
+                    },
+                ]
+            else:
+                # Document is empty, just insert content
+                requests = [
+                    {
+                        "insertText": {
+                            "location": {"index": 1},
+                            "text": content,
+                        }
+                    },
+                ]
 
         docs_service.documents().batchUpdate(
             documentId=document_id, body={"requests": requests}

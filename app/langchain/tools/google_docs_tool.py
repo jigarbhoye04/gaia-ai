@@ -15,15 +15,17 @@ from app.docstrings.langchain.tools.google_docs_tool_docs import (
     SEARCH_GOOGLE_DOCS,
 )
 from app.docstrings.utils import with_doc
-from app.langchain.templates.google_docs_templates import (
-    GOOGLE_DOCS_CREATE_TEMPLATE,
-    GOOGLE_DOCS_LIST_TEMPLATE,
-    GOOGLE_DOCS_GET_TEMPLATE,
-    GOOGLE_DOCS_UPDATE_TEMPLATE,
-    GOOGLE_DOCS_FORMAT_TEMPLATE,
-    GOOGLE_DOCS_SHARE_TEMPLATE,
-    GOOGLE_DOCS_SEARCH_TEMPLATE,
-)
+
+# Templates not currently used in streaming, but available for future use
+# from app.langchain.templates.google_docs_templates import (
+#     GOOGLE_DOCS_CREATE_TEMPLATE,
+#     GOOGLE_DOCS_LIST_TEMPLATE,
+#     GOOGLE_DOCS_GET_TEMPLATE,
+#     GOOGLE_DOCS_UPDATE_TEMPLATE,
+#     GOOGLE_DOCS_FORMAT_TEMPLATE,
+#     GOOGLE_DOCS_SHARE_TEMPLATE,
+#     GOOGLE_DOCS_SEARCH_TEMPLATE,
+# )
 from app.services.google_docs_service import (
     create_google_doc,
     list_google_docs,
@@ -33,19 +35,34 @@ from app.services.google_docs_service import (
     share_google_doc,
     search_google_docs,
 )
-from app.utils.langchain_utils import get_auth_from_config
+
+
+def get_auth_from_config(config: RunnableConfig) -> Dict[str, str]:
+    """Extract access and refresh tokens from the config."""
+    if not config:
+        logger.error("Google Docs tool called without config")
+        return {"access_token": "", "refresh_token": ""}
+
+    configurable = config.get("configurable", {})
+    return {
+        "access_token": configurable.get("access_token", ""),
+        "refresh_token": configurable.get("refresh_token", ""),
+    }
 
 
 @tool
 @with_doc(CREATE_GOOGLE_DOC)
 async def create_google_doc_tool(
+    config: RunnableConfig,
     title: Annotated[str, "Title of the new Google Doc"],
     content: Annotated[Optional[str], "Initial content for the document"] = None,
-    config: RunnableConfig = None,
 ) -> str:
     """Create a new Google Doc with the specified title and optional initial content."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         result = await create_google_doc(
             refresh_token=auth["refresh_token"],
@@ -54,19 +71,17 @@ async def create_google_doc_tool(
             content=content,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            await stream_writer(
-                "google_docs_create",
-                GOOGLE_DOCS_CREATE_TEMPLATE.format(
-                    title=result["title"],
-                    document_id=result["document_id"],
-                    url=result["url"],
-                    content=result.get("content", "")[:200]
-                    + ("..." if len(result.get("content", "")) > 200 else ""),
-                ),
-            )
+        # Send data to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "google_docs_data": {
+                    "title": result["title"],
+                    "url": result["url"],
+                    "action": "create",
+                }
+            }
+        )
 
         logger.info(f"Created Google Doc: {result['document_id']}")
 
@@ -80,13 +95,16 @@ async def create_google_doc_tool(
 @tool
 @with_doc(LIST_GOOGLE_DOCS)
 async def list_google_docs_tool(
+    config: RunnableConfig,
     limit: Annotated[int, "Maximum number of documents to return"] = 10,
     query: Annotated[Optional[str], "Search query to filter documents"] = None,
-    config: RunnableConfig = None,
 ) -> str:
     """List the user's Google Docs with optional filtering."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         docs = await list_google_docs(
             refresh_token=auth["refresh_token"],
@@ -95,21 +113,17 @@ async def list_google_docs_tool(
             query=query,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            await stream_writer(
-                "google_docs_list",
-                GOOGLE_DOCS_LIST_TEMPLATE.format(
-                    count=len(docs),
-                    query_text=f" matching '{query}'" if query else "",
-                    docs_list="\n".join(
-                        [
-                            f"• {doc['title']} (ID: {doc['document_id']}) - Modified: {doc.get('modified_time', 'Unknown')}"
-                            for doc in docs[:5]  # Show first 5 in stream
-                        ]
-                    ),
-                ),
+        # Send data to frontend - show first document if any
+        writer = get_stream_writer()
+        if docs:
+            writer(
+                {
+                    "google_docs_data": {
+                        "title": docs[0]["title"],
+                        "url": docs[0]["url"],
+                        "action": "list",
+                    }
+                }
             )
 
         logger.info(f"Listed {len(docs)} Google Docs")
@@ -118,20 +132,8 @@ async def list_google_docs_tool(
             query_text = f' matching "{query}"' if query else ""
             return f"No Google Docs found{query_text}."
 
-        doc_list = []
-        for doc in docs:
-            doc_list.append(
-                f"• **{doc['title']}**\n"
-                f"  - ID: {doc['document_id']}\n"
-                f"  - Modified: {doc.get('modified_time', 'Unknown')}\n"
-                f"  - URL: {doc['url']}"
-            )
-
         query_text = f' matching "{query}"' if query else ""
-        return (
-            f"Found {len(docs)} Google Doc{'s' if len(docs) != 1 else ''}{query_text}:\n\n"
-            + "\n\n".join(doc_list)
-        )
+        return f"Found {len(docs)} Google Doc{'s' if len(docs) != 1 else ''}{query_text}. Check the frontend for the list."
 
     except Exception as e:
         logger.error(f"Error listing Google Docs: {e}")
@@ -142,11 +144,14 @@ async def list_google_docs_tool(
 @with_doc(GET_GOOGLE_DOC)
 async def get_google_doc_tool(
     document_id: Annotated[str, "ID of the document to retrieve"],
-    config: RunnableConfig = None,
+    config: RunnableConfig,
 ) -> str:
     """Retrieve the content and metadata of a specific Google Doc."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         doc = await get_google_doc(
             refresh_token=auth["refresh_token"],
@@ -154,19 +159,17 @@ async def get_google_doc_tool(
             document_id=document_id,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            await stream_writer(
-                "google_docs_get",
-                GOOGLE_DOCS_GET_TEMPLATE.format(
-                    title=doc["title"],
-                    document_id=doc["document_id"],
-                    url=doc["url"],
-                    content_preview=doc["content"][:300]
-                    + ("..." if len(doc["content"]) > 300 else ""),
-                ),
-            )
+        # Send data to frontend
+        writer = get_stream_writer()
+        writer(
+            {
+                "google_docs_data": {
+                    "title": doc["title"],
+                    "url": doc["url"],
+                    "action": "get",
+                }
+            }
+        )
 
         logger.info(f"Retrieved Google Doc: {document_id}")
 
@@ -180,16 +183,19 @@ async def get_google_doc_tool(
 @tool
 @with_doc(UPDATE_GOOGLE_DOC)
 async def update_google_doc_tool(
+    config: RunnableConfig,
     document_id: Annotated[str, "ID of the document to update"],
     content: Annotated[str, "Content to add or replace"],
     insert_at_end: Annotated[
         bool, "Whether to append at end or replace all content"
     ] = True,
-    config: RunnableConfig = None,
 ) -> str:
     """Update the content of an existing Google Doc."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         result = await update_google_doc_content(
             refresh_token=auth["refresh_token"],
@@ -199,19 +205,24 @@ async def update_google_doc_tool(
             insert_at_end=insert_at_end,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            await stream_writer(
-                "google_docs_update",
-                GOOGLE_DOCS_UPDATE_TEMPLATE.format(
-                    document_id=result["document_id"],
-                    url=result["url"],
-                    action="appended to" if insert_at_end else "replaced in",
-                    content_preview=content[:200]
-                    + ("..." if len(content) > 200 else ""),
-                ),
-            )
+        # Send data to frontend
+        writer = get_stream_writer()
+        # Get document title for display
+        doc_title = f"Document {document_id[:8]}..."  # Fallback title
+        doc_info = await get_google_doc(
+            auth["refresh_token"], auth["access_token"], document_id
+        )
+        doc_title = doc_info["title"]
+
+        writer(
+            {
+                "google_docs_data": {
+                    "title": doc_title,
+                    "url": result["url"],
+                    "action": "update",
+                }
+            }
+        )
 
         logger.info(f"Updated Google Doc: {document_id}")
 
@@ -229,6 +240,7 @@ async def format_google_doc_tool(
     document_id: Annotated[str, "ID of the document to format"],
     start_index: Annotated[int, "Start position for formatting"],
     end_index: Annotated[int, "End position for formatting"],
+    config: RunnableConfig,
     bold: Annotated[Optional[bool], "Apply bold formatting"] = None,
     italic: Annotated[Optional[bool], "Apply italic formatting"] = None,
     underline: Annotated[Optional[bool], "Apply underline formatting"] = None,
@@ -236,11 +248,13 @@ async def format_google_doc_tool(
     foreground_color: Annotated[
         Optional[Dict[str, float]], "Text color as RGB values (0-1)"
     ] = None,
-    config: RunnableConfig = None,
 ) -> str:
     """Apply formatting to a specific range of text in a Google Doc."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         formatting = {}
         if bold is not None:
@@ -263,30 +277,24 @@ async def format_google_doc_tool(
             formatting=formatting,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            format_list = []
-            if bold:
-                format_list.append("bold")
-            if italic:
-                format_list.append("italic")
-            if underline:
-                format_list.append("underline")
-            if font_size:
-                format_list.append(f"font size {font_size}pt")
+        # Send data to frontend
+        writer = get_stream_writer()
+        # Get document title for display
+        doc_title = f"Document {document_id[:8]}..."  # Fallback title
+        doc_info = await get_google_doc(
+            auth["refresh_token"], auth["access_token"], document_id
+        )
+        doc_title = doc_info["title"]
 
-            await stream_writer(
-                "google_docs_format",
-                GOOGLE_DOCS_FORMAT_TEMPLATE.format(
-                    document_id=result["document_id"],
-                    url=result["url"],
-                    formatting=", ".join(format_list)
-                    if format_list
-                    else "custom formatting",
-                    range=f"characters {start_index}-{end_index}",
-                ),
-            )
+        writer(
+            {
+                "google_docs_data": {
+                    "title": doc_title,
+                    "url": result["url"],
+                    "action": "format",
+                }
+            }
+        )
 
         logger.info(f"Applied formatting to Google Doc: {document_id}")
 
@@ -312,13 +320,16 @@ async def format_google_doc_tool(
 async def share_google_doc_tool(
     document_id: Annotated[str, "ID of the document to share"],
     email: Annotated[str, "Email address to share with"],
+    config: RunnableConfig,
     role: Annotated[str, "Permission level (reader, writer, owner)"] = "writer",
     send_notification: Annotated[bool, "Whether to send email notification"] = True,
-    config: RunnableConfig = None,
 ) -> str:
     """Share a Google Doc with another user."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         result = await share_google_doc(
             refresh_token=auth["refresh_token"],
@@ -329,19 +340,24 @@ async def share_google_doc_tool(
             send_notification=send_notification,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            await stream_writer(
-                "google_docs_share",
-                GOOGLE_DOCS_SHARE_TEMPLATE.format(
-                    email=result["shared_with"],
-                    role=result["role"],
-                    document_id=result["document_id"],
-                    url=result["url"],
-                    notification="with" if send_notification else "without",
-                ),
-            )
+        # Send data to frontend
+        writer = get_stream_writer()
+        # Get document title for display
+        doc_title = f"Document {document_id[:8]}..."  # Fallback title
+        doc_info = await get_google_doc(
+            auth["refresh_token"], auth["access_token"], document_id
+        )
+        doc_title = doc_info["title"]
+
+        writer(
+            {
+                "google_docs_data": {
+                    "title": doc_title,
+                    "url": result["url"],
+                    "action": "share",
+                }
+            }
+        )
 
         logger.info(f"Shared Google Doc {document_id} with {email}")
 
@@ -356,12 +372,15 @@ async def share_google_doc_tool(
 @with_doc(SEARCH_GOOGLE_DOCS)
 async def search_google_docs_tool(
     query: Annotated[str, "Search terms to look for"],
+    config: RunnableConfig,
     limit: Annotated[int, "Maximum number of results"] = 10,
-    config: RunnableConfig = None,
 ) -> str:
     """Search through the user's Google Docs by title and content."""
     try:
         auth = get_auth_from_config(config)
+
+        if not auth["access_token"] or not auth["refresh_token"]:
+            return "Authentication credentials not provided"
 
         docs = await search_google_docs(
             refresh_token=auth["refresh_token"],
@@ -370,21 +389,17 @@ async def search_google_docs_tool(
             limit=limit,
         )
 
-        # Stream the result for real-time UI updates
-        stream_writer = get_stream_writer(config)
-        if stream_writer:
-            await stream_writer(
-                "google_docs_search",
-                GOOGLE_DOCS_SEARCH_TEMPLATE.format(
-                    query=query,
-                    count=len(docs),
-                    docs_list="\n".join(
-                        [
-                            f"• {doc['title']} (Modified: {doc.get('modified_time', 'Unknown')})"
-                            for doc in docs[:5]  # Show first 5 in stream
-                        ]
-                    ),
-                ),
+        # Send data to frontend - show first document if any
+        writer = get_stream_writer()
+        if docs:
+            writer(
+                {
+                    "google_docs_data": {
+                        "title": docs[0]["title"],
+                        "url": docs[0]["url"],
+                        "action": "search",
+                    }
+                }
             )
 
         logger.info(f"Found {len(docs)} Google Docs matching query: {query}")
@@ -392,19 +407,7 @@ async def search_google_docs_tool(
         if not docs:
             return f"No Google Docs found matching '{query}'."
 
-        doc_list = []
-        for doc in docs:
-            doc_list.append(
-                f"• **{doc['title']}**\n"
-                f"  - ID: {doc['document_id']}\n"
-                f"  - Modified: {doc.get('modified_time', 'Unknown')}\n"
-                f"  - URL: {doc['url']}"
-            )
-
-        return (
-            f"Found {len(docs)} Google Doc{'s' if len(docs) != 1 else ''} matching '{query}':\n\n"
-            + "\n\n".join(doc_list)
-        )
+        return f"Found {len(docs)} Google Doc{'s' if len(docs) != 1 else ''} matching '{query}'. Check the frontend for the list."
 
     except Exception as e:
         logger.error(f"Error searching Google Docs: {e}")
