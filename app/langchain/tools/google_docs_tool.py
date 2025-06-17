@@ -75,11 +75,16 @@ async def create_google_doc_tool(
         writer(
             {
                 "google_docs_data": {
-                    "title": result["title"],
-                    "url": result["url"],
-                    "document_id": result["document_id"],
+                    "document": {
+                        "id": result["document_id"],
+                        "title": result["title"],
+                        "url": result["url"],
+                        "content": content or "Empty document created",
+                        "type": "google_doc"
+                    },
                     "action": "create",
-                    "content": content or "Empty document created"
+                    "message": f"Created Google Doc: {result['title']}",
+                    "type": "create"
                 }
             }
         )
@@ -103,7 +108,7 @@ async def create_google_doc_tool(
 @with_doc(LIST_GOOGLE_DOCS)
 async def list_google_docs_tool(
     config: RunnableConfig,
-    limit: Annotated[int, "Maximum number of documents to return"] = 10,
+    limit: Annotated[int, "Maximum number of documents to return"] = 50,
     query: Annotated[Optional[str], "Search query to filter documents"] = None,
 ) -> str:
     """List the user's Google Docs with optional filtering."""
@@ -112,6 +117,10 @@ async def list_google_docs_tool(
 
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
+
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": "Fetching your Google Docs..."})
 
         docs = await list_google_docs(
             refresh_token=auth["refresh_token"],
@@ -122,13 +131,28 @@ async def list_google_docs_tool(
 
         # Send structured data to frontend
         writer = get_stream_writer()
+        
+        # Format documents for better frontend display
+        formatted_docs = []
+        for doc in docs:
+            formatted_docs.append({
+                "id": doc["document_id"],
+                "title": doc["title"],
+                "url": doc["url"],
+                "created_time": doc.get("created_time"),
+                "modified_time": doc.get("modified_time"),
+                "type": "google_doc"
+            })
+        
         writer(
             {
                 "google_docs_data": {
-                    "docs": docs,
+                    "documents": formatted_docs,
                     "count": len(docs),
                     "query": query,
-                    "action": "list"
+                    "action": "list",
+                    "message": f"Found {len(docs)} document{'s' if len(docs) != 1 else ''}" + (f" matching '{query}'" if query else ""),
+                    "type": "list"
                 }
             }
         )
@@ -186,11 +210,16 @@ async def get_google_doc_tool(
         writer(
             {
                 "google_docs_data": {
-                    "title": doc["title"],
-                    "url": doc["url"],
-                    "document_id": document_id,
-                    "content": doc["content"],
-                    "action": "get"
+                    "document": {
+                        "id": document_id,
+                        "title": doc["title"],
+                        "url": doc["url"],
+                        "content": doc["content"],
+                        "type": "google_doc"
+                    },
+                    "action": "get",
+                    "message": f"Retrieved document: {doc['title']}",
+                    "type": "retrieve"
                 }
             }
         )
@@ -437,7 +466,7 @@ async def share_google_doc_tool(
 async def search_google_docs_tool(
     query: Annotated[str, "Search terms to look for"],
     config: RunnableConfig,
-    limit: Annotated[int, "Maximum number of results"] = 10,
+    limit: Annotated[int, "Maximum number of results"] = 50,
 ) -> str:
     """Search through the user's Google Docs by title and content."""
     try:
@@ -445,6 +474,10 @@ async def search_google_docs_tool(
 
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
+
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Searching Google Docs for '{query}'..."})
 
         docs = await search_google_docs(
             refresh_token=auth["refresh_token"],
@@ -455,13 +488,28 @@ async def search_google_docs_tool(
 
         # Send structured data to frontend
         writer = get_stream_writer()
+        
+        # Format documents for better frontend display
+        formatted_docs = []
+        for doc in docs:
+            formatted_docs.append({
+                "id": doc["document_id"],
+                "title": doc["title"],
+                "url": doc["url"],
+                "created_time": doc.get("created_time"),
+                "modified_time": doc.get("modified_time"),
+                "type": "google_doc"
+            })
+        
         writer(
             {
                 "google_docs_data": {
-                    "docs": docs,
+                    "documents": formatted_docs,
                     "query": query,
                     "count": len(docs),
-                    "action": "search"
+                    "action": "search",
+                    "message": f"Found {len(docs)} document{'s' if len(docs) != 1 else ''} matching '{query}'",
+                    "type": "search"
                 }
             }
         )

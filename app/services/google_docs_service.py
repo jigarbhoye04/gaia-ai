@@ -18,6 +18,7 @@ def get_docs_service(refresh_token: str, access_token: str):
         client_secret=settings.GOOGLE_CLIENT_SECRET,
         scopes=[
             "https://www.googleapis.com/auth/documents",
+            "https://www.googleapis.com/auth/drive",
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/drive.readonly",
         ],
@@ -35,6 +36,7 @@ def get_drive_service(refresh_token: str, access_token: str):
         client_secret=settings.GOOGLE_CLIENT_SECRET,
         scopes=[
             "https://www.googleapis.com/auth/documents",
+            "https://www.googleapis.com/auth/drive",
             "https://www.googleapis.com/auth/drive.file",
             "https://www.googleapis.com/auth/drive.readonly",
         ],
@@ -132,22 +134,32 @@ async def list_google_docs(
         drive_service = get_drive_service(refresh_token, access_token)
 
         # Build query to filter for Google Docs
-        drive_query = "mimeType='application/vnd.google-apps.document'"
+        drive_query = "mimeType='application/vnd.google-apps.document' and trashed=false"
         if query:
             drive_query += f" and name contains '{query}'"
 
+        logger.info(f"Querying Google Drive with: q='{drive_query}', pageSize={limit}")
+        
+        # Use max pageSize allowed by Google Drive API (1000) if limit is higher
+        api_page_size = min(limit, 1000)
+        
         results = (
             drive_service.files()
             .list(
                 q=drive_query,
-                pageSize=limit,
-                fields="nextPageToken, files(id, name, createdTime, modifiedTime, webViewLink)",
+                pageSize=api_page_size,
+                fields="nextPageToken, files(id, name, createdTime, modifiedTime, webViewLink, parents)",
                 orderBy="modifiedTime desc",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
             )
             .execute()
         )
 
         files = results.get("files", [])
+        next_page_token = results.get("nextPageToken")
+        
+        logger.info(f"Google Drive API returned {len(files)} files, nextPageToken: {next_page_token}")
 
         docs_list = []
         for file in files:
@@ -161,7 +173,7 @@ async def list_google_docs(
                 }
             )
 
-        logger.info(f"Retrieved {len(docs_list)} Google Docs")
+        logger.info(f"Retrieved {len(docs_list)} Google Docs total")
         return docs_list
 
     except HttpError as e:
@@ -437,15 +449,20 @@ async def search_google_docs(
         drive_service = get_drive_service(refresh_token, access_token)
 
         # Search in both title and full text
-        drive_query = f"mimeType='application/vnd.google-apps.document' and (name contains '{query}' or fullText contains '{query}')"
+        drive_query = f"mimeType='application/vnd.google-apps.document' and trashed=false and (name contains '{query}' or fullText contains '{query}')"
+
+        # Use max pageSize allowed by Google Drive API (1000) if limit is higher
+        api_page_size = min(limit, 1000)
 
         results = (
             drive_service.files()
             .list(
                 q=drive_query,
-                pageSize=limit,
+                pageSize=api_page_size,
                 fields="nextPageToken, files(id, name, createdTime, modifiedTime, webViewLink)",
                 orderBy="modifiedTime desc",
+                supportsAllDrives=True,
+                includeItemsFromAllDrives=True,
             )
             .execute()
         )
