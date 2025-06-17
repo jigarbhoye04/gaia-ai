@@ -3,7 +3,7 @@ import GetStartedButton from "../shared/GetStartedButton";
 
 export default function FinalSection() {
   return (
-    <div className="relative z-1 m-0! flex min-h-[80vh] w-screen flex-col items-center justify-center bg-linear-to-t from-[#00bbff50] p-5 sm:min-h-fit sm:p-36">
+    <div className="relative z-1 m-0! flex min-h-[80vh] w-screen flex-col items-center justify-center p-5 sm:min-h-fit sm:p-36">
       <MotionContainer className="flex w-full flex-col items-center justify-center gap-3">
         <div className="text-center text-5xl font-bold sm:text-6xl">
           Get Started for Free
@@ -14,7 +14,7 @@ export default function FinalSection() {
           Experience the future of AI-driven assistance today.
         </div>
 
-        <GetStartedButton />
+        <GetStartedButton small_text />
       </MotionContainer>
     </div>
   );

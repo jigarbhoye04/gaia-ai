@@ -30,7 +30,7 @@ export default function LargeHeader({
         {headingText}
       </h2>
       {!!subHeadingText && (
-        <div className={`px-10 text-lg text-foreground-500`}>
+        <div className={`px-10 text-lg text-foreground-400`}>
           {subHeadingText}
         </div>
       )}
