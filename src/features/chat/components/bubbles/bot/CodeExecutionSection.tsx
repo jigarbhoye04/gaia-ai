@@ -1,11 +1,6 @@
+import { Accordion, AccordionItem } from "@heroui/react";
 import React, { useState } from "react";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/shadcn/accordion";
 import CodeBlock from "@/features/chat/components/code-block/CodeBlock";
 import { CodeData } from "@/types/features/toolDataTypes";
 
@@ -58,47 +53,65 @@ const CodeExecutionSection: React.FC<CodeExecutionSectionProps> = ({
   );
 
   return (
-    <div className="mt-3 w-full max-w-[30vw] rounded-3xl rounded-bl-none bg-zinc-800 p-4">
-      <div className="space-y-4">
-        <Accordion type="multiple" defaultValue={["output"]} className="w-full">
-          {/* Executed Code Section */}
-          <AccordionItem value="code" className="border-none">
-            <AccordionTrigger className="text-sm font-medium text-gray-300 hover:text-white">
-              Executed Code
-            </AccordionTrigger>
-            <AccordionContent>
-              <div className="w-full max-w-[30vw] overflow-hidden rounded-[15px] rounded-b-[20px]">
-                <CodeBlock className={`language-${code_data.language}`}>
-                  {code_data.code}
-                </CodeBlock>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+    <div className="w-full max-w-[30vw] rounded-3xl rounded-l-none bg-zinc-800 px-3 py-4">
+      <Accordion
+        selectionMode="multiple"
+        defaultExpandedKeys={["output", "charts"]}
+        className="w-full"
+        variant="shadow"
+      >
+        <AccordionItem
+          key="code"
+          aria-label="Executed Code"
+          title="Executed Code"
+          classNames={{
+            trigger: "text-sm font-medium text-gray-300 hover:text-white",
+            content: "pt-0",
+          }}
+        >
+          <div className="w-full max-w-[30vw] overflow-hidden rounded-[15px] rounded-b-[20px]">
+            <CodeBlock className={`language-${code_data.language}`}>
+              {code_data.code}
+            </CodeBlock>
+          </div>
+        </AccordionItem>
 
-          {/* Output Section */}
-          <AccordionItem value="output" className="border-none">
-            <AccordionTrigger className="text-sm font-medium text-gray-300 hover:text-white">
-              Output
-            </AccordionTrigger>
-            <AccordionContent>
-              <CodeExecutionOutput
-                output={code_data.output}
-                status={code_data.status}
-                language={code_data.language}
-                onCopy={handleCopyOutput}
-                copied={outputCopied}
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        {/* Output Section */}
+        <AccordionItem
+          key="output"
+          aria-label="Output"
+          title="Output"
+          classNames={{
+            trigger: "text-sm font-medium text-gray-300 hover:text-white",
+            content: "pt-0",
+          }}
+        >
+          <CodeExecutionOutput
+            output={code_data.output}
+            status={code_data.status}
+            language={code_data.language}
+            onCopy={handleCopyOutput}
+            copied={outputCopied}
+          />
+        </AccordionItem>
 
         {/* Charts Component */}
-        {code_data.charts && code_data.charts.length > 0 && (
-          <div className="w-full">
+        {code_data.charts && code_data.charts.length > 0 ? (
+          <AccordionItem
+            key="charts"
+            aria-label="Charts"
+            title="Charts"
+            classNames={{
+              trigger: "text-sm font-medium text-gray-300 hover:text-white",
+              content: "pt-0",
+            }}
+          >
             <ChartDisplay charts={code_data.charts} />
-          </div>
+          </AccordionItem>
+        ) : (
+          <></>
         )}
-      </div>
+      </Accordion>
     </div>
   );
 };

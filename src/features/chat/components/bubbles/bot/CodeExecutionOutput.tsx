@@ -81,8 +81,7 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
 
             {/* Results Output */}
             {output.results && output.results.length > 0 && (
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-gray-500">RESULTS</div>
+              <div>
                 <div className="bg-black p-3 font-mono text-sm text-blue-400">
                   {output.results.map((result, index) => (
                     <pre key={index} className="whitespace-pre-wrap">
@@ -95,8 +94,7 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
 
             {/* Standard Error */}
             {output.stderr && (
-              <div className="space-y-2">
-                <div className="text-xs font-medium text-gray-500">ERROR</div>
+              <div>
                 <div className="bg-black p-3 font-mono text-sm text-red-400">
                   <pre className="whitespace-pre-wrap">{output.stderr}</pre>
                 </div>
@@ -116,7 +114,7 @@ const CodeExecutionOutput: React.FC<CodeExecutionOutputProps> = ({
             )}
 
             {/* Status */}
-            <div className="flex items-center justify-between border-t border-zinc-700 pt-3 text-xs text-gray-500">
+            <div className="flex items-center justify-between pb-3 text-xs text-gray-500">
               <span>Status: {status || "unknown"}</span>
               {!output.error && !output.stderr ? (
                 <span className="text-green-400">Success</span>

@@ -1,4 +1,5 @@
-import { BarChart3, Download, ImageIcon, Maximize2, X } from "lucide-react";
+import { Tab,Tabs } from "@heroui/react";
+import { BarChart3, Download, Maximize2, X } from "lucide-react";
 import React, { useState } from "react";
 import {
   Bar,
@@ -12,19 +13,13 @@ import {
   YAxis,
 } from "recharts";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/shadcn/accordion";
+import { Image02Icon } from "@/components/shared/icons";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/shadcn/chart";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/shadcn/tabs";
 
 interface ChartData {
   id: string;
@@ -145,7 +140,7 @@ const StaticChartItem: React.FC<{
   onFullscreen: () => void;
   onDownload: () => void;
 }> = ({ chart, onFullscreen, onDownload }) => (
-  <div className="group relative space-y-2 rounded-lg bg-zinc-800/50 p-3 backdrop-blur-sm transition-colors hover:bg-zinc-800/70">
+  <div className="group relative space-y-2 rounded-lg p-3 transition-colors">
     {chart.title && (
       <h3 className="text-sm font-medium text-zinc-200">{chart.title}</h3>
     )}
@@ -295,76 +290,78 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({ charts }) => {
   return (
     <>
       <div>
-        <Accordion type="single" collapsible defaultValue="charts">
-          <AccordionItem value="charts" className="border-zinc-800">
-            <AccordionTrigger className="py-2 text-sm font-medium text-zinc-300 hover:text-zinc-200">
-              {charts.length} Chart{charts.length > 1 ? "s" : ""}
-            </AccordionTrigger>
-            <AccordionContent className="pb-0">
-              {hasAnyInteractiveData ? (
-                <>
-                  <Tabs
-                    value={viewMode}
-                    onValueChange={(value) =>
-                      setViewMode(value as "static" | "dynamic")
-                    }
-                    className="mb-3 w-full"
-                  >
-                    <TabsList className="grid w-full grid-cols-2 bg-zinc-700/50">
-                      <TabsTrigger
-                        value="static"
-                        className="flex items-center gap-2 text-xs"
-                      >
-                        <ImageIcon className="h-3.5 w-3.5" />
-                        Static ({staticCharts.length})
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="dynamic"
-                        className="flex items-center gap-2 text-xs"
-                      >
-                        <BarChart3 className="h-3.5 w-3.5" />
-                        Dynamic ({dynamicCharts.length})
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-
-                  <div className="space-y-2">
-                    {viewMode === "static"
-                      ? // Show only charts with valid URLs
-                        staticCharts.map((chart) => (
-                          <StaticChartItem
-                            key={chart.id}
-                            chart={chart}
-                            onFullscreen={() => setSelectedChart(chart)}
-                            onDownload={() => handleDownload(chart)}
-                          />
-                        ))
-                      : // Show only dynamic charts
-                        dynamicCharts.map((chart) => (
-                          <DynamicChartItem
-                            key={chart.id}
-                            chart={chart}
-                            onFullscreen={() => setSelectedChart(chart)}
-                          />
-                        ))}
+        {hasAnyInteractiveData ? (
+          <>
+            <Tabs
+              selectedKey={viewMode}
+              onSelectionChange={(key) =>
+                setViewMode(key as "static" | "dynamic")
+              }
+              variant="light"
+              classNames={{ tabList: "w-full" }}
+              className="mb-3 w-full"
+              aria-label="Chart view options"
+            >
+              <Tab
+                key="static"
+                title={
+                  <div className="flex items-center gap-2">
+                    <Image02Icon className="h-5 w-5" color={undefined} />
+                    Static
+                    <div className="flex aspect-square min-h-3 min-w-3 items-center justify-center rounded-full bg-primary/90 p-1.5 text-sm font-medium text-black">
+                      {staticCharts.length}
+                    </div>
                   </div>
-                </>
-              ) : (
-                // No interactive data - just show static charts with valid URLs
-                <div className="space-y-3">
-                  {staticCharts.map((chart) => (
+                }
+              />
+              <Tab
+                key="dynamic"
+                title={
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Dynamic
+                    <div className="flex aspect-square min-h-3 min-w-3 items-center justify-center rounded-full bg-primary/90 p-1.5 text-sm font-medium text-black">
+                      {dynamicCharts.length}
+                    </div>
+                  </div>
+                }
+              />
+            </Tabs>
+
+            <div className="space-y-2">
+              {viewMode === "static"
+                ? // Show only charts with valid URLs
+                  staticCharts.map((chart) => (
                     <StaticChartItem
                       key={chart.id}
                       chart={chart}
                       onFullscreen={() => setSelectedChart(chart)}
                       onDownload={() => handleDownload(chart)}
                     />
+                  ))
+                : // Show only dynamic charts
+                  dynamicCharts.map((chart) => (
+                    <DynamicChartItem
+                      key={chart.id}
+                      chart={chart}
+                      onFullscreen={() => setSelectedChart(chart)}
+                    />
                   ))}
-                </div>
-              )}
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </div>
+          </>
+        ) : (
+          // No interactive data - just show static charts with valid URLs
+          <div className="space-y-3">
+            {staticCharts.map((chart) => (
+              <StaticChartItem
+                key={chart.id}
+                chart={chart}
+                onFullscreen={() => setSelectedChart(chart)}
+                onDownload={() => handleDownload(chart)}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {selectedChart && (
