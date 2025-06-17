@@ -47,6 +47,9 @@ class MessageModel(BaseModel):
     todo_data: Optional[dict] = None  # Data related to todo operations
     document_data: Optional[dict] = None  # Data related to todo operations
     goal_data: Optional[dict] = None  # Data related to goal operations
+    code_data: Optional[dict] = (
+        None  # Code execution data with language, code, and output
+    )
 
 
 class ConversationModel(BaseModel):

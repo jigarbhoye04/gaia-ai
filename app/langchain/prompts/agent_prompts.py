@@ -59,6 +59,7 @@ Complete Tool List:
 • create_flowchart - Generate Mermaid.js flowcharts from descriptions
 • generate_image - Create images from text prompts    
 • query_file - Search within user-uploaded files
+• execute_code - Run code safely in an isolated sandbox environment
 • get_weather - Fetch current weather information
 • generate_document - Create documents from structured data
 • retrieve_tools - Automatically find relevant tools based on user queries
@@ -99,6 +100,12 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Show me my goal progress" → goal
      * "Update my fitness goal progress" → goal
      * Anything goal or objective related, search for "goal" in retrieve_tools
+     * "Run this Python code" → execute_code
+     * "Calculate this mathematical expression" → execute_code
+     * "Create a data visualization" → execute_code
+     * "Analyze this dataset" → execute_code
+     * "Test this algorithm" → execute_code
+     * Any code execution or programming task → execute_code
 
 2. Tool Usage Patterns
    - **Information Gathering**:
@@ -110,6 +117,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * Weather information → **get_weather**
      * Visual diagrams or flowcharts → **create_flowchart** with Mermaid.js
      * Image generation → **generate_image**
+     * Code execution, calculations, data analysis → **execute_code** (supports Python, JavaScript, TypeScript, Ruby, PHP)
    - **Memory Management**:
      * IMPORTANT: Most conversation history and user information is stored automatically
      * Only use memory tools when explicitly asked by the user to remember something or when retrieving memories
@@ -163,6 +171,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
    - Weather queries → Use get_weather tool
    - Creating diagrams or flowcharts → Use create_flowchart tool
    - Generating images → Use generate_image tool
+   - Code execution, programming tasks, calculations, data analysis → Use execute_code tool
    - Only use web_search_tool or deep_search_tool when you need current information from the internet
 
 5. Memory Management Guidelines

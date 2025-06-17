@@ -124,6 +124,9 @@ class Settings(BaseSettings):
     # Celery Configuration
     RABBITMQ_URL: str
 
+    # Code Execution
+    E2B_API_KEY: str
+
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only if explicitly enabled in production."""
