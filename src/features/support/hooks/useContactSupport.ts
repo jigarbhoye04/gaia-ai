@@ -72,7 +72,10 @@ export function useContactSupport() {
       const response = await supportApi.submitRequest(requestData);
 
       if (response.success) {
-        toast.success(TOAST_MESSAGES.SUCCESS);
+        const successMessage = response.ticket_id
+          ? `${TOAST_MESSAGES.SUCCESS} Ticket ID: ${response.ticket_id}`
+          : TOAST_MESSAGES.SUCCESS;
+        toast.success(successMessage);
         resetForm();
         return true;
       } else {

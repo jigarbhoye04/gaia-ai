@@ -16,7 +16,9 @@ export default function ContactSupport() {
         >
           <div className="flex items-center gap-4">
             <div className="flex w-full flex-col justify-center py-3">
-              <div className="text-left text-sm font-medium">Get in Touch</div>
+              <div className="text-left text-sm font-medium">
+                Contact Support
+              </div>
               <div className="line-clamp-2 text-left text-xs text-wrap text-foreground-500">
                 Need help or wish a feature existed?
               </div>
