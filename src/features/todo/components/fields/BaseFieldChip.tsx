@@ -30,7 +30,7 @@ interface BaseFieldChipProps {
 }
 
 export default function BaseFieldChip({
-  label,
+  label: _label,
   value,
   placeholder,
   icon,

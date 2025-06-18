@@ -13,9 +13,11 @@ import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";
 import CalendarEventSection from "./CalendarEventSection";
+import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import GoalSection, { type GoalAction } from "./GoalSection";
+import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
 
 export default function TextBubble({
@@ -31,10 +33,12 @@ export default function TextBubble({
   weather_data,
   todo_data,
   goal_data,
+  code_data,
   intent,
   search_results,
   deep_search_results,
   document_data,
+  google_docs_data,
 }: ChatBubbleBotProps) {
   return (
     <>
@@ -144,6 +148,10 @@ export default function TextBubble({
 
       {document_data && <DocumentSection document_data={document_data} />}
 
+      {google_docs_data && (
+        <GoogleDocsSection google_docs_data={google_docs_data} />
+      )}
+
       {goal_data && (
         <GoalSection
           goals={goal_data.goals}
@@ -155,6 +163,8 @@ export default function TextBubble({
           error={goal_data.error}
         />
       )}
+
+      {code_data && <CodeExecutionSection code_data={code_data} />}
     </>
   );
 }

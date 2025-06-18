@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@heroui/button";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import Link from "next/link";

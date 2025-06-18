@@ -14,31 +14,36 @@ export interface Section {
 import { ReactElement } from "react";
 
 import {
+  BookOpen02Icon,
   CustomerService01Icon,
+  GlobalIcon,
   Idea01Icon,
+  LinkedinIcon,
   MapsIcon,
+  TwitterIcon,
 } from "@/components/shared/icons";
 
 export const siteConfig = {
   name: "GAIA",
-  copyright: "© 2024 GAIA",
+  copyright: "© 202 GAIA",
   domain: "heygaia.io",
   pageSections: [
     {
-      title: "HELLO",
+      title: "Get Started",
       links: [
-        { label: "login", href: "/login" },
-        { label: "Get Started", href: "/signup" },
-        { label: "chat", href: "/c", isLoggedIn: true },
+        { label: "Login", href: "/login" },
+        { label: "Signup", href: "/signup" },
+        { label: "New Chat", href: "/c", isLoggedIn: true },
       ],
     },
     {
-      title: "Sitemap",
+      title: "Explore",
       links: [
-        // { label: "About", href: "/about", icon: <GlobalIcon width={19} /> },
-        // { label: "Blog", href: "/blog", icon: <BookOpen02Icon width={19} /> },
+        { label: "About", href: "/about", icon: <GlobalIcon width={19} /> },
+        { label: "Blog", href: "/blog", icon: <BookOpen02Icon width={19} /> },
+
         {
-          label: "Request a Feature",
+          label: "Feature Request",
           href: "https://gaia.featurebase.app",
           external: true,
           icon: <Idea01Icon width={19} />,
@@ -55,9 +60,31 @@ export const siteConfig = {
         //   icon: <CreditCardPosIcon width={19} />,
         // },
         {
-          label: "Contact",
+          label: "Status",
+          href: "https://status.heygaia.io",
+          icon: <BookOpen02Icon width={19} />,
+        },
+      ],
+    },
+    {
+      title: "Connect",
+      links: [
+        {
+          label: "Contact Us",
           href: "/contact",
           icon: <CustomerService01Icon width={19} />,
+        },
+        {
+          label: "LinkedIn",
+          href: "https://www.linkedin.com/company/heygaia",
+          external: true,
+          icon: <LinkedinIcon width={19} />,
+        },
+        {
+          label: "X (Twitter)",
+          href: "https://x.com/heygaia_io",
+          external: true,
+          icon: <TwitterIcon width={19} />,
         },
       ],
     },

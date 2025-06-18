@@ -1,3 +1,5 @@
+"use client";
+
 import { Camera, Edit3, LogOut, Mail, User } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";

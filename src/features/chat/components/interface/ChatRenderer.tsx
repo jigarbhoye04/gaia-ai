@@ -118,6 +118,8 @@ export default function ChatRenderer() {
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
+              calendar_delete_options={message.calendar_delete_options}
+              calendar_edit_options={message.calendar_edit_options}
               email_compose_data={message.email_compose_data}
               intent={message.intent}
               loading={message.loading}
@@ -137,7 +139,9 @@ export default function ChatRenderer() {
               memory_data={message.memory_data}
               todo_data={message.todo_data}
               document_data={message.document_data}
+              code_data={message.code_data}
               onOpenMemoryModal={() => setOpenMemoryModal(true)}
+              google_docs_data={message.google_docs_data}
             />
           </div>
         ) : (

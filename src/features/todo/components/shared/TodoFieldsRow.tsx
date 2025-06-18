@@ -28,7 +28,7 @@ export default function TodoFieldsRow({
   projectId,
   projects,
   dueDate,
-  dueDateTimezone,
+  dueDateTimezone: _dueDateTimezone,
   labels,
   onPriorityChange,
   onProjectChange,

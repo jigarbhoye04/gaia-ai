@@ -40,10 +40,9 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
                   as={Link}
                   className="p-0 px-4 font-semibold"
                   color={link.href === "/signup" ? "primary" : "primary"}
-                  radius="lg"
                   size="md"
                   href={link.href}
-                  variant={link.href === "/signup" ? "shadow" : "light"}
+                  variant={link.href === "/signup" ? "solid" : "light"}
                 >
                   {link.label}
                 </Button>

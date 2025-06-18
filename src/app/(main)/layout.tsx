@@ -2,7 +2,7 @@
 
 import { useDrag } from "@use-gesture/react";
 import { usePathname } from "next/navigation";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import HeaderManager from "@/components/layout/headers/HeaderManager";
@@ -49,6 +49,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   );
   const isMobile = useIsMobile();
   const [defaultOpen, setDefaultOpen] = useState(true);
+  const dragRef = useRef<HTMLDivElement>(null);
 
   // Check if user needs onboarding
   useOnboardingGuard();
@@ -86,7 +87,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
   // Get the current open state based on mobile/desktop
   const currentOpen = isMobile ? isMobileOpen : isOpen;
 
-  const bind = useDrag(
+  // @warning: Removing the `target` option from useDrag will cause the HeroUI Buttons to not work properly.
+  // For more details, see: https://github.com/hey-gaia/gaia/issues/44
+  useDrag(
     ({ movement: [mx, my], last, tap }) => {
       // If this is just a tap, do nothing—allow click events to proceed.
       if (tap || !isMobile) return;
@@ -105,6 +108,9 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       filterTaps: true, // Taps are ignored for swipe detection.
       threshold: 10, // Minimal movement before detecting a swipe.
       axis: "x", // Only track horizontal swipes.
+      target: dragRef,
+      // preventDefault: false, // Prevent default touch actions to avoid conflicts.
+      // eventOptions: { passive: false }, // Ensure we can prevent default behavior.
     },
   );
 
@@ -118,7 +124,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         <div
           className="flex min-h-screen w-full dark"
           style={{ touchAction: "pan-y" }}
-          {...bind()}
+          ref={dragRef}
         >
           <SidebarLayout>
             <Sidebar />
