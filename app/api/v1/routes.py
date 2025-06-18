@@ -24,6 +24,7 @@ from app.api.v1.router import (
     notification,
     oauth,
     search,
+    support,
     todos,
     waitlist,
     websocket,
@@ -51,4 +52,5 @@ router.include_router(notification.router, tags=["Notification"])
 router.include_router(websocket.router, tags=["WebSocket"])
 router.include_router(mail_webhook.router, tags=["Mail Webhook"])
 router.include_router(todos.router, tags=["Todos"])
+router.include_router(support.router, tags=["Support"])
 # api_router.include_router(audio.router, tags=["Audio"])
