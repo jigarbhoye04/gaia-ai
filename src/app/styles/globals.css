@@ -232,15 +232,12 @@
 }
 .user_container_inner {
   align-items: center;
-  background-color: #141414;
-  border-radius: 15px;
   display: flex;
   flex-direction: row;
   height: fit-content;
   justify-content: space-between;
   min-height: 50px;
   overflow: hidden;
-  padding: 0.5em;
   width: 100%;
 }
 ::selection {
