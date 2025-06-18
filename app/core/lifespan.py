@@ -6,7 +6,7 @@ from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
 from app.db.rabbitmq import publisher
-from app.db.todo_indexes import create_todo_indexes
+from app.db.indexes import create_all_indexes, log_index_summary
 from app.langchain.core.graph_builder import build_graph
 from app.langchain.core.graph_manager import GraphManager
 from app.utils.nltk_utils import download_nltk_resources
@@ -25,9 +25,8 @@ async def lifespan(app: FastAPI):
         download_nltk_resources()
         get_zero_shot_classifier()
         init_cloudinary()
-        
-        # Create todo indexes
-        await create_todo_indexes()
+        await create_all_indexes()
+        # await log_index_summary() # for logging purposes
 
         await publisher.connect()
 
