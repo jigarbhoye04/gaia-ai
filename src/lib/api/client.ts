@@ -24,6 +24,12 @@ if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
 axios.defaults.timeout = 300_000;
 
 /**
+ * Global axios headers configuration
+ */
+axios.defaults.headers["x-timezone"] =
+  Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/**
  * Base axios instance for public API calls
  * Used for endpoints that don't require authentication
  */
