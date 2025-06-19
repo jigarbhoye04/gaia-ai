@@ -10,11 +10,20 @@ from arq.connections import RedisSettings
 
 from app.config.loggers import arq_worker_logger as logger
 from app.config.settings import settings
-from app.db.mongodb.collections import reminders_collection
+from app.langchain.llm.client import init_llm
+from app.models.reminder_models import ReminderProcessingAgentResult
 from app.services.reminder_service import process_reminder_task
 
 
 async def startup(ctx: dict):
+    from app.langchain.core.graph_builder.build_graph import build_graph
+    from app.langchain.core.graph_manager import GraphManager
+    from app.langchain.tools.reminder_tool import (
+        create_reminder_tool,
+        delete_reminder_tool,
+        update_reminder_tool,
+    )
+
     """ARQ worker startup function."""
     logger.info("ARQ worker starting up...")
 
@@ -23,6 +32,19 @@ async def startup(ctx: dict):
     ctx["startup_time"] = asyncio.get_event_loop().time()
     logger.info("ARQ worker startup complete")
 
+    llm = init_llm()
+    llm = llm.with_structured_output(schema=ReminderProcessingAgentResult)
+
+    # Register and Build the processing graph
+    async with build_graph(
+        chat_llm=llm,  # type: ignore[call-arg]
+        exclude_tools=[
+            create_reminder_tool.name,
+            update_reminder_tool.name,
+            delete_reminder_tool.name,
+        ],
+    ) as built_graph:
+        GraphManager.set_graph(built_graph, graph_name="reminder_processing")
 
 async def shutdown(ctx: dict):
     """ARQ worker shutdown function."""
@@ -61,40 +83,6 @@ async def process_reminder(ctx: dict, reminder_id: str) -> str:
         raise
 
 
-async def process_batch_reminders(ctx: dict, reminder_ids: list[str]) -> str:
-    """
-    Process multiple reminder tasks in batch.
-
-    Args:
-        ctx: ARQ context
-        reminder_ids: List of reminder IDs to process
-
-    Returns:
-        Processing result message
-    """
-    logger.info(f"Processing batch of {len(reminder_ids)} reminders")
-
-    results = []
-    errors = []
-
-    for reminder_id in reminder_ids:
-        try:
-            result = await process_reminder(ctx, reminder_id)
-            results.append(result)
-        except Exception as e:
-            error = f"Failed to process reminder {reminder_id}: {str(e)}"
-            errors.append(error)
-            logger.error(error)
-
-    summary = f"Processed {len(results)} reminders successfully, {len(errors)} failed"
-    logger.info(summary)
-
-    if errors:
-        logger.error(f"Batch processing errors: {errors}")
-
-    return summary
-
-
 async def cleanup_expired_reminders(ctx: dict) -> str:
     """
     Cleanup expired or completed reminders (scheduled task).
@@ -105,6 +93,8 @@ async def cleanup_expired_reminders(ctx: dict) -> str:
     Returns:
         Cleanup result message
     """
+    from app.db.mongodb.collections import reminders_collection
+
     logger.info("Running cleanup of expired reminders")
 
     try:
@@ -128,44 +118,32 @@ async def cleanup_expired_reminders(ctx: dict) -> str:
         raise
 
 
-workerSettings = {
-    "redis_settings": RedisSettings.from_dsn(settings.REDIS_URL),
-    # Task functions
-    "functions": [
+class WorkerSettings:
+    """
+    ARQ worker settings configuration.
+    This class defines the settings for the ARQ worker, including Redis connection,
+    task functions, scheduled jobs, and performance settings.
+    """
+
+    redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
+    functions = [
         process_reminder,
-        process_batch_reminders,
         cleanup_expired_reminders,
-    ],
-    # Scheduled tasks (cron jobs)
-    "cron_jobs": [
-        # Cleanup expired reminders daily at 2 AM
-        cron(cleanup_expired_reminders, hour=2, minute=0),
-    ],
-    # Worker configuration
-    "on_startup": startup,
-    "on_shutdown": shutdown,
-    # Performance settings
-    "max_jobs": 10,
-    "job_timeout": 300,  # 5 minutes
-    "keep_result": 3600,  # Keep results for 1 hour
-    # Logging
-    "log_results": True,
-    # Health check settings
-    "health_check_interval": 30,
-    "health_check_key": "arq:health",
-}
-
-
-async def run_worker():
-    """Run the ARQ worker."""
-    from arq import run_worker as arq_run_worker
-
-    logger.info("Starting ARQ worker...")
-    arq_run_worker(settings_cls=workerSettings)
-
-
-def main():
-    """Main entry point for running the worker."""
-
-    # Run the worker
-    asyncio.run(run_worker())
+    ]
+    cron_jobs = [
+        cron(
+            cleanup_expired_reminders,
+            hour=0,  # At midnight
+            minute=0,  # At the start of the hour
+            second=0,  # At the start of the minute
+        ),
+    ]
+    on_startup = startup
+    on_shutdown = shutdown
+    max_jobs = 10
+    job_timeout = 300  # 5 minutes
+    keep_result = 0  # Don't keep results in Redis
+    log_results = True
+    health_check_interval = 30  # seconds
+    health_check_key = "arq:health"
+    allow_abort_jobs = True

@@ -38,7 +38,9 @@ async def shutdown(signal_name):
 
 
 async def start_worker(queue_name="email-events"):
-    from app.langchain.core.graph_builder import build_mail_processing_graph
+    from app.langchain.core.graph_builder.build_mail_processing_graph import (
+        build_mail_processing_graph,
+    )
     from app.langchain.core.graph_manager import GraphManager
 
     connection = await connect_robust(settings.RABBITMQ_URL, timeout=10)

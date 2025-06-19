@@ -7,7 +7,6 @@ from fastapi import HTTPException
 from app.config.loggers import app_logger as logger
 from app.db.mongodb.collections import users_collection
 from app.db.redis import set_cache
-from app.utils.oauth_utils import upload_user_picture
 
 
 async def get_user_by_id(user_id: str) -> Optional[dict]:
@@ -51,6 +50,8 @@ async def update_user_profile(
     Returns:
         Updated user data
     """
+    from app.utils.oauth_utils import upload_user_picture
+
     try:
         user = await users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:

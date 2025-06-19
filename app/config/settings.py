@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from infisical_sdk import InfisicalSDKClient
@@ -135,6 +136,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="allow",
     )
+
+    MAX_REMINDER_DURATION: datetime.timedelta = datetime.timedelta(days=180)
 
 
 inject_infisical_secrets()

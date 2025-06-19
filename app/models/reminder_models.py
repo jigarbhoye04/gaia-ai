@@ -4,7 +4,7 @@ Reminder models for task scheduling system.
 
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -18,15 +18,26 @@ class ReminderStatus(str, Enum):
     PAUSED = "paused"
 
 
-class ReminderType(str, Enum):
-    """Type of reminder tasks."""
+class AgentType(str, Enum):
+    """Agent type handling the reminder task."""
 
-    DAILY_QUOTE = "daily_quote"
-    WEATHER_UPDATE = "weather_update"
-    CALENDAR_REMINDER = "calendar_reminder"
-    TASK_REMINDER = "task_reminder"
-    CUSTOM_NOTIFICATION = "custom_notification"
-    GOAL_CHECKIN = "goal_checkin"
+    STATIC = "static"
+    AI_AGENTS = "ai_agents"
+
+
+class StaticReminderPayload(BaseModel):
+    """Payload for STATIC agent reminders."""
+
+    title: str = Field(..., description="Notification title")
+    body: str = Field(..., description="Notification body")
+
+
+class AIAgentReminderPayload(BaseModel):
+    """Payload for AI_AGENTS reminders."""
+
+    instructions: str = Field(
+        ..., description="Special instructions for reminder generation"
+    )
 
 
 class ReminderModel(BaseModel):
@@ -38,7 +49,9 @@ class ReminderModel(BaseModel):
 
     id: Optional[str] = Field(None, alias="_id")
     user_id: str = Field(..., description="User ID who owns this reminder")
-    type: ReminderType = Field(..., description="Type of reminder task")
+    agent: AgentType = Field(
+        ..., description="Agent responsible for this reminder task"
+    )
     repeat: Optional[str] = Field(
         None, description="Cron expression for recurring tasks"
     )
@@ -56,8 +69,8 @@ class ReminderModel(BaseModel):
         default=datetime.now(timezone.utc) + timedelta(days=180),
         description="Stop executing after this date (optional), defaults to 6 months from now",
     )
-    payload: Dict[str, Any] = Field(
-        default_factory=dict, description="Task-specific data"
+    payload: Union[StaticReminderPayload, AIAgentReminderPayload, Dict[str, Any]] = (
+        Field(..., description="Task-specific data based on agent type")
     )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -78,12 +91,14 @@ class ReminderModel(BaseModel):
 class CreateReminderRequest(BaseModel):
     """Request model for creating a new reminder."""
 
-    type: ReminderType = Field(..., description="Type of reminder task")
+    agent: AgentType = Field(
+        ..., description="Agent handling the reminder task (static or ai_agents)"
+    )
     repeat: Optional[str] = Field(
         None, description="Cron expression for recurring tasks (optional)"
     )
     scheduled_at: Optional[datetime] = Field(
-        None, description="First execution time (optional, defaults to now)"
+        None, description="First execution time (optional, defaults to None)"
     )
     max_occurrences: Optional[int] = Field(
         None, description="Maximum number of executions (optional)"
@@ -91,8 +106,12 @@ class CreateReminderRequest(BaseModel):
     stop_after: Optional[datetime] = Field(
         None, description="Stop executing after this date (optional)"
     )
-    payload: Dict[str, Any] = Field(
-        default_factory=dict, description="Task-specific data"
+    payload: Union[StaticReminderPayload, AIAgentReminderPayload] = Field(
+        ..., description="Task-specific data based on agent type"
+    )
+    base_time: Optional[datetime] = Field(
+        None,
+        description="Base time for handling time zones and scheduling (optional, defaults to None)",
     )
 
     @field_validator("repeat")
@@ -121,7 +140,9 @@ class CreateReminderRequest(BaseModel):
 class UpdateReminderRequest(BaseModel):
     """Request model for updating an existing reminder."""
 
-    type: Optional[ReminderType] = Field(None, description="Type of reminder task")
+    agent: Optional[AgentType] = Field(
+        None, description="Agent handling the reminder task (optional)"
+    )
     repeat: Optional[str] = Field(
         None, description="Cron expression for recurring tasks"
     )
@@ -133,15 +154,9 @@ class UpdateReminderRequest(BaseModel):
     stop_after: Optional[datetime] = Field(
         None, description="Stop executing after this date"
     )
-    payload: Optional[Dict[str, Any]] = Field(None, description="Task-specific data")
-
-    @field_validator("type")
-    def check_type(cls, v):
-        if v is None:
-            return v
-        if v not in list(ReminderType):
-            raise ValueError(f"Invalid reminder type: {v}")
-        return v
+    payload: Optional[Union[StaticReminderPayload, AIAgentReminderPayload]] = Field(
+        None, description="Task-specific data (optional)"
+    )
 
     @field_validator("repeat")
     def check_repeat_cron(cls, v):
@@ -171,7 +186,9 @@ class ReminderResponse(BaseModel):
 
     id: str = Field(..., description="Reminder ID")
     user_id: str = Field(..., description="User ID who owns this reminder")
-    type: ReminderType = Field(..., description="Type of reminder task")
+    agent: AgentType = Field(
+        ..., description="Agent responsible for this reminder task"
+    )
     repeat: Optional[str] = Field(
         None, description="Cron expression for recurring tasks"
     )
@@ -186,6 +203,15 @@ class ReminderResponse(BaseModel):
     stop_after: Optional[datetime] = Field(
         None, description="Stop executing after this date"
     )
-    payload: Dict[str, Any] = Field(..., description="Task-specific data")
+    payload: Union[StaticReminderPayload, AIAgentReminderPayload, Dict[str, Any]] = (
+        Field(..., description="Task-specific data")
+    )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
+
+
+class ReminderProcessingAgentResult(BaseModel):
+    """Result model for reminder processing by AI agents."""
+
+    title: str = Field(..., description="Title of notification")
+    body: str = Field(..., description="Body of notification")

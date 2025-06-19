@@ -13,6 +13,7 @@ from app.config.loggers import general_logger as logger
 from app.config.settings import settings
 from app.db.mongodb.collections import reminders_collection
 from app.models.reminder_models import (
+    CreateReminderRequest,
     ReminderModel,
     ReminderStatus,
 )
@@ -49,29 +50,35 @@ class ReminderScheduler:
 
         logger.info("ReminderScheduler closed")
 
-    async def create_reminder(self, reminder_data: dict) -> str:
+    async def create_reminder(
+        self, reminder_data: CreateReminderRequest, user_id: str
+    ) -> str:
         """
         Create a new reminder and schedule it.
 
         Args:
-            reminder_data: Dictionary containing reminder data including user_id
+            reminder_data: Reminder data dictionary
 
         Returns:
             Created reminder ID
         """
-        # Build the reminder model from the data
-        reminder = ReminderModel(**reminder_data)
-
         # Set scheduled_at if not provided
-        if not reminder.scheduled_at:
-            if reminder.repeat:
-                reminder.scheduled_at = get_next_run_time(reminder.repeat)
+        if not reminder_data.scheduled_at:
+            repeat = reminder_data.repeat
+            if repeat:
+                reminder_data.scheduled_at = get_next_run_time(
+                    cron_expr=repeat, base_time=reminder_data.base_time
+                )
             else:
-                reminder.scheduled_at = datetime.now(timezone.utc)
+                raise ValueError(
+                    "scheduled_at must be provided or repeat must be specified"
+                )
+
+        reminder = ReminderModel(**reminder_data.model_dump(), user_id=user_id)
 
         # Insert into MongoDB
         result = await reminders_collection.insert_one(
-            reminder.model_dump(by_alias=True)
+            document=self._serialize_reminder(reminder)
         )
         reminder_id = str(result.inserted_id)
 
@@ -83,40 +90,43 @@ class ReminderScheduler:
         )
         return reminder_id
 
-    async def update_reminder(self, reminder_id: str, update_data: dict) -> bool:
+    async def update_reminder(
+        self, reminder_id: str, update_data: dict, user_id: str
+    ) -> bool:
         """
         Update an existing reminder.
 
         Args:
             reminder_id: Reminder ID to update
-            update_data: Dictionary containing fields to update
+            update_data: Fields to update
 
         Returns:
             True if updated successfully
         """
+        # Add updated_at timestamp
         update_data["updated_at"] = datetime.now(timezone.utc)
 
-        # Update the reminder
-        result = await reminders_collection.update_one(
-            {"_id": reminder_id}, {"$set": update_data}
-        )
+        filters = {"_id": reminder_id}
+        if user_id:
+            filters["user_id"] = user_id
+
+        result = await reminders_collection.update_one(filters, {"$set": update_data})
 
         if result.modified_count > 0:
             logger.info(f"Updated reminder {reminder_id}")
 
-            # If scheduled_at and status updated, reschedule
-            if (
-                "scheduled_at" in update_data
-                and "status" in update_data
-                and update_data["status"] == ReminderStatus.SCHEDULED
-            ):
-                await self._enqueue_reminder(reminder_id, update_data["scheduled_at"])
+            # If scheduled_at was updated, reschedule the task
+            if "scheduled_at" in update_data and "status" in update_data:
+                if update_data["status"] == ReminderStatus.SCHEDULED:
+                    await self._enqueue_reminder(
+                        reminder_id, update_data["scheduled_at"]
+                    )
 
             return True
 
         return False
 
-    async def cancel_reminder(self, reminder_id: str) -> bool:
+    async def cancel_reminder(self, reminder_id: str, user_id: str) -> bool:
         """
         Cancel a reminder.
 
@@ -126,8 +136,12 @@ class ReminderScheduler:
         Returns:
             True if cancelled successfully
         """
+        filters = {"_id": reminder_id}
+        if user_id:
+            filters["user_id"] = user_id
+
         result = await reminders_collection.update_one(
-            {"_id": reminder_id},
+            filters,
             {
                 "$set": {
                     "status": ReminderStatus.CANCELLED,
@@ -142,7 +156,9 @@ class ReminderScheduler:
 
         return False
 
-    async def get_reminder(self, reminder_id: str) -> Optional[ReminderModel]:
+    async def get_reminder(
+        self, reminder_id: str, user_id: Optional[str] = None
+    ) -> Optional[ReminderModel]:
         """
         Get a reminder by ID.
 
@@ -152,7 +168,11 @@ class ReminderScheduler:
         Returns:
             Reminder model or None if not found
         """
-        doc = await reminders_collection.find_one({"_id": reminder_id})
+        filters = {"_id": reminder_id}
+        if user_id:
+            filters["user_id"] = user_id
+
+        doc = await reminders_collection.find_one(filters)
         if doc:
             return ReminderModel(**doc)
         return None
@@ -224,7 +244,7 @@ class ReminderScheduler:
             )
             return
 
-        logger.info(f"Processing reminder {reminder_id} of type {reminder.type}")
+        logger.info(f"Processing reminder {reminder_id} of type {reminder.agent}")
 
         try:
             # Execute the reminder task based on type
@@ -267,6 +287,7 @@ class ReminderScheduler:
                             "occurrence_count": occurrence_count,
                             "status": ReminderStatus.SCHEDULED,
                         },
+                        reminder.user_id,
                     )
                     await self._enqueue_reminder(reminder_id, next_run)
                     logger.info(
@@ -280,6 +301,7 @@ class ReminderScheduler:
                             "occurrence_count": occurrence_count,
                             "status": ReminderStatus.COMPLETED,
                         },
+                        reminder.user_id,
                     )
                     logger.info(f"Completed recurring reminder {reminder_id}")
             else:
@@ -290,6 +312,7 @@ class ReminderScheduler:
                         "occurrence_count": occurrence_count,
                         "status": ReminderStatus.COMPLETED,
                     },
+                    reminder.user_id,
                 )
                 logger.info(f"Completed one-time reminder {reminder_id}")
 
@@ -302,6 +325,7 @@ class ReminderScheduler:
                     "status": ReminderStatus.CANCELLED,  # or create a FAILED status
                     "updated_at": datetime.now(timezone.utc),
                 },
+                reminder.user_id,
             )
 
     async def _enqueue_reminder(self, reminder_id: str, scheduled_at: datetime):
@@ -335,9 +359,27 @@ class ReminderScheduler:
             reminder: Reminder to execute
         """
         # Import here to avoid circular imports
-        from app.tasks.reminder_tasks import execute_reminder_by_type
+        from app.tasks.reminder_tasks import execute_reminder_by_agent
 
-        await execute_reminder_by_type(reminder)
+        await execute_reminder_by_agent(reminder)
+
+    def _serialize_reminder(self, reminder: ReminderModel) -> dict:
+        """
+        Serialize a ReminderModel to a dictionary for MongoDB storage.
+
+        Args:
+            reminder: ReminderModel instance
+
+        Returns:
+            Dictionary representation of the reminder
+        """
+        reminder_dict = reminder.model_dump(by_alias=True)
+        if reminder_dict.get("_id") is None:
+            # Ensure to remove _id if it was not set
+            reminder_dict.pop("_id", None)
+
+        print(reminder_dict)
+        return reminder_dict
 
 
 # Global scheduler instance
@@ -372,28 +414,30 @@ async def close_scheduler():
 
 
 # Convenience functions that use the global scheduler
-async def create_reminder(reminder_data: dict) -> str:
+async def create_reminder(reminder_data: CreateReminderRequest, user_id: str) -> str:
     """Create a reminder using the global scheduler."""
     scheduler = await get_scheduler()
-    return await scheduler.create_reminder(reminder_data)
+    return await scheduler.create_reminder(reminder_data, user_id=user_id)
 
 
-async def get_reminder(reminder_id: str) -> Optional[ReminderModel]:
+async def get_reminder(
+    reminder_id: str, user_id: Optional[str]
+) -> Optional[ReminderModel]:
     """Get a reminder using the global scheduler."""
     scheduler = await get_scheduler()
-    return await scheduler.get_reminder(reminder_id)
+    return await scheduler.get_reminder(reminder_id, user_id)
 
 
-async def update_reminder(reminder_id: str, update_data: dict) -> bool:
+async def update_reminder(reminder_id: str, update_data: dict, user_id: str) -> bool:
     """Update a reminder using the global scheduler."""
     scheduler = await get_scheduler()
-    return await scheduler.update_reminder(reminder_id, update_data)
+    return await scheduler.update_reminder(reminder_id, update_data, user_id)
 
 
-async def cancel_reminder(reminder_id: str) -> bool:
+async def cancel_reminder(reminder_id: str, user_id: str) -> bool:
     """Cancel a reminder using the global scheduler."""
     scheduler = await get_scheduler()
-    return await scheduler.cancel_reminder(reminder_id)
+    return await scheduler.cancel_reminder(reminder_id, user_id)
 
 
 async def list_user_reminders(

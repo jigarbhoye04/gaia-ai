@@ -1,13 +1,11 @@
 import asyncio
 import base64
-import json
 from html import unescape
 from typing import Any
 
 from bs4 import BeautifulSoup
 from bson import ObjectId
 
-from app.api.v1.dependencies.oauth_dependencies import get_valid_access_token
 from app.config.loggers import worker_logger as logger
 from app.db.mongodb.collections import users_collection
 from app.db.redis import get_cache, set_cache
@@ -16,6 +14,7 @@ from app.services.mail_service import (
     get_gmail_service,
 )
 from app.services.user_service import get_user_by_email, get_user_by_id
+from app.utils.oauth_utils import get_tokens_by_user_id
 
 # ============================================================================
 # Main Processing
@@ -125,9 +124,7 @@ async def process_emails_by_user_id(history_id: int, user_id: str, email: str):
             logger.error(f"Previous History ID not found for user: {user_id}")
             return {"error": "History not found", "status": "failed"}
 
-        access_token, refresh_token, tokens_valid = await _get_tokens_by_user_id(
-            user_id
-        )
+        access_token, refresh_token, tokens_valid = await get_tokens_by_user_id(user_id)
         if not tokens_valid:
             return {"error": "Authentication failed", "status": "failed"}
 
@@ -530,65 +527,6 @@ async def _update_history_id_by_user_id(user_id: str, history_id: int) -> None:
 
     except Exception as e:
         logger.error(f"Error updating history ID for user {user_id}: {e}")
-
-
-async def _get_tokens_by_user_id(user_id: str) -> tuple[str, str, bool]:
-    """
-    Get valid access and refresh tokens for the user by user ID.
-
-    Args:
-        user_id: The user's ID
-
-    Returns:
-        tuple: (access_token, refresh_token, success_flag)
-    """
-
-    # Get user to find email for token operations
-    user = await get_user_by_id(user_id)
-    if not user:
-        logger.error(f"User not found for ID: {user_id}")
-        return "", "", False
-
-    email = user.get("email")
-    if not email:
-        logger.error(f"No email found for user_id: {user_id}")
-        return "", "", False
-
-    # Get refresh token from cache (still using email as cache key for now)
-    cache_key = f"user_refresh:{email}"
-    cached_data = await get_cache(cache_key)
-
-    if not cached_data:
-        logger.error(f"Refresh token not found in cache for user: {user_id}")
-        return "", "", False
-
-    # Parse the cached token based on its type
-    if isinstance(cached_data, str):
-        try:
-            parsed_data = json.loads(cached_data)
-            refresh_token = parsed_data.get("refresh_token")
-        except json.JSONDecodeError:
-            refresh_token = None
-    elif isinstance(cached_data, dict):
-        refresh_token = cached_data.get("refresh_token")
-    else:
-        refresh_token = None
-
-    if not refresh_token:
-        logger.error(f"Invalid or missing refresh token for user: {user_id}")
-        return "", "", False
-
-    # Get access token using the refresh token
-    access_token, _ = await get_valid_access_token(
-        user_email=email,
-        refresh_token=refresh_token,
-    )
-
-    if not access_token:
-        logger.error(f"Failed to get access token for user: {user_id}")
-        return "", refresh_token, False
-
-    return access_token, refresh_token, True
 
 
 async def _fetch_messages_by_history(history_id: int, service: Any) -> dict:

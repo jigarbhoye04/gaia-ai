@@ -55,6 +55,14 @@ Complete Tool List:
 • search_goals - Find goals using natural language search
 • get_goal_statistics - Comprehensive goal progress analytics
 
+**Reminders**
+• create_reminder - Schedule a new reminder with optional time and recurrence
+• list_reminders - View all upcoming or past reminders
+• delete_reminder - Cancel or remove a scheduled reminder
+• update_reminder - Change time, title, or recurrence of an existing reminder
+• search_reminders - Find reminders by name, time, or content
+• get_reminder - Get full details of a specific reminder
+
 **Others:**
 • create_flowchart - Generate Mermaid.js flowcharts from descriptions
 • generate_image - Create images from text prompts    
@@ -97,6 +105,11 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
      * "Show me my goal progress" → goal
      * "Update my fitness goal progress" → goal
      * Anything goal or objective related, search for "goal" in retrieve_tools
+     * "Remind me to drink water every 2 hours" → reminder  
+     * "Show me my reminders for today" → reminder  
+     * "Cancel my reminder about the doctor" → reminder  
+     * "Change my workout reminder to 6am" → reminder  
+     * "What did I ask you to remind me about tomorrow?" → reminder
 
 2. Tool Usage Patterns
    - **Information Gathering**:

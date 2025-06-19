@@ -6,7 +6,7 @@ from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
 from app.db.rabbitmq import publisher
-from app.langchain.core.graph_builder import build_graph
+from app.langchain.core.graph_builder.build_graph import build_graph
 from app.langchain.core.graph_manager import GraphManager
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.text_utils import get_zero_shot_classifier
