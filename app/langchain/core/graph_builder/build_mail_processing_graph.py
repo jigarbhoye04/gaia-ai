@@ -5,26 +5,30 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
+import app.langchain.tools.calendar_tool as calendar_tool
 from app.langchain.llm.client import init_llm
-from app.langchain.tools.calendar_tool import create_calendar_event
 from app.langchain.tools.mail_tool import compose_email
-from app.langchain.tools.memory_tools import add_memory
+from app.langchain.tools.memory_tools import add_memory, search_memory
+from app.langchain.tools.todo_tool import create_todo
 
 llm = init_llm()
 
 
-mail_processing_tools = [
+proactive_tools = [
     compose_email,
-    create_calendar_event,
+    calendar_tool.create_calendar_event,
     add_memory,
+    search_memory,
+    create_todo,
 ]
-mail_processing_llm = llm.bind_tools(tools=mail_processing_tools)
+
+llm_with_tools = llm.bind_tools(tools=proactive_tools)
 
 
 # Define the LLM agent node
 def call_model(state: MessagesState):
     messages = state["messages"]
-    response = mail_processing_llm.invoke(messages)
+    response = llm_with_tools.invoke(messages)
     return {"messages": [response]}
 
 
@@ -54,7 +58,7 @@ async def build_mail_processing_graph():
     workflow.add_node(
         "tools",
         ToolNode(
-            tools=mail_processing_tools,
+            tools=proactive_tools,
         ),
     )
 

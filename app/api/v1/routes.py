@@ -14,6 +14,7 @@ from app.api.v1.router import (
     conversations,
     feedback,
     file,
+    team,
     goals,
     image,
     mail,
@@ -44,6 +45,7 @@ router.include_router(goals.router, tags=["Goals"])
 router.include_router(oauth.router, prefix="/oauth", tags=["OAuth"])
 router.include_router(mail.router, tags=["Mail"])
 router.include_router(blog.router, tags=["Blog"])
+router.include_router(team.router, tags=["Team"])
 router.include_router(file.router, tags=["File"])
 router.include_router(browser.router, tags=["Browser"])
 router.include_router(notification.router, tags=["Notification"])

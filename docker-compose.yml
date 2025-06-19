@@ -155,12 +155,7 @@ services:
     working_dir: /app
     env_file:
       - .env
-    command:
-      [
-        "python",
-        "-m",
-        "app.worker",
-      ]
+    command: ["python", "-m", "app.worker"]
     restart: always
     volumes:
       - .:/app
@@ -182,13 +177,7 @@ services:
     working_dir: /app
     env_file:
       - .env
-    command:
-      [
-        "python",
-        "-m",
-        "arq",
-        "app.arq_worker.WorkerSettings",
-      ]
+    command: ["python", "-m", "arq", "app.arq_worker.WorkerSettings"]
     restart: always
     volumes:
       - .:/app

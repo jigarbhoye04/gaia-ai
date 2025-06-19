@@ -46,11 +46,11 @@ class MongoDB:
 
     async def _initialize_indexes(self):
         try:
-            from app.db.mongodb.create_indexes import create_all_indexes
+            from app.db.mongodb.indexes import create_all_indexes, log_index_summary
 
             logger.info("Initializing all indexes in MongoDB...")
             await create_all_indexes()
-            logger.info("All indexes initialized successfully.")
+            await log_index_summary()
         except Exception as e:
             logger.error(f"Error while initializing indexes: {e}")
 
@@ -67,7 +67,6 @@ def init_mongodb():
         app (FastAPI): The FastAPI application instance.
     """
     logger.info("Initializing MongoDB...")
-
     mongodb_instance = MongoDB(uri=settings.MONGO_DB, db_name="GAIA")
     logger.info("Created MongoDB instance")
     mongodb_instance.ping()

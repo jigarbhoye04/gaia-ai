@@ -5,11 +5,7 @@ import threading
 from contextlib import contextmanager
 from functools import wraps
 
-from celery.utils.log import get_task_logger
-
 from app.config.loggers import profiler_logger as logger
-
-celery_logger = get_task_logger(__name__)
 
 _local = threading.local()
 
@@ -69,12 +65,6 @@ def profile_celery_task(print_lines=7):
                     pstats.SortKey.CUMULATIVE
                 )
                 ps.print_stats(print_lines)
-
-                # Log the profiling output
-                profiling_output = s.getvalue()
-                celery_logger.info(
-                    f"Profiling results for {func.__name__}:\n{profiling_output}"
-                )
 
             return result
 

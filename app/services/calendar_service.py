@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, cast
 from zoneinfo import ZoneInfo
 
@@ -472,7 +472,6 @@ async def create_calendar_event(
             end_date = event.end.split("T")[0] if "T" in event.end else event.end
         elif event.start:
             # If only start date is provided, end date is the next day
-            from datetime import datetime, timedelta
 
             start_date = (
                 event.start.split("T")[0] if "T" in event.start else event.start
@@ -481,8 +480,6 @@ async def create_calendar_event(
             end_date = (start_dt + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             # If no dates provided, default to today for start and tomorrow for end
-            from datetime import datetime, timedelta
-
             today = datetime.now()
             start_date = today.strftime("%Y-%m-%d")
             end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -790,7 +787,7 @@ async def delete_calendar_event(
     """
     calendar_id = event.calendar_id or "primary"
     url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{event.event_id}"
-    
+
     headers = {"Authorization": f"Bearer {access_token}"}
 
     try:
@@ -801,8 +798,7 @@ async def delete_calendar_event(
             return {"success": True, "message": "Event deleted successfully"}
         elif response.status_code == 404:
             raise HTTPException(
-                status_code=404,
-                detail="Event not found or already deleted"
+                status_code=404, detail="Event not found or already deleted"
             )
         elif response.status_code == 401 and refresh_token:
             # Try refreshing the token and retrying
@@ -814,11 +810,13 @@ async def delete_calendar_event(
                     async with httpx.AsyncClient() as client:
                         retry_response = await client.delete(url, headers=headers)
                     if retry_response.status_code == 204:
-                        return {"success": True, "message": "Event deleted successfully"}
+                        return {
+                            "success": True,
+                            "message": "Event deleted successfully",
+                        }
                     elif retry_response.status_code == 404:
                         raise HTTPException(
-                            status_code=404,
-                            detail="Event not found or already deleted"
+                            status_code=404, detail="Event not found or already deleted"
                         )
                     else:
                         error_msg = "Unknown error occurred during deletion"
@@ -826,8 +824,10 @@ async def delete_calendar_event(
                             try:
                                 error_json = retry_response.json()
                                 if isinstance(error_json, dict):
-                                    error_msg = error_json.get("error", {}).get("message", error_msg)
-                            except:
+                                    error_msg = error_json.get("error", {}).get(
+                                        "message", error_msg
+                                    )
+                            except Exception:
                                 pass
                         raise HTTPException(
                             status_code=retry_response.status_code, detail=error_msg
@@ -844,8 +844,10 @@ async def delete_calendar_event(
                 try:
                     error_json = response.json()
                     if isinstance(error_json, dict):
-                        error_msg = error_json.get("error", {}).get("message", error_msg)
-                except:
+                        error_msg = error_json.get("error", {}).get(
+                            "message", error_msg
+                        )
+                except Exception:
                     pass
             raise HTTPException(status_code=response.status_code, detail=error_msg)
     except httpx.RequestError as e:
@@ -873,7 +875,7 @@ async def update_calendar_event(
     """
     calendar_id = event.calendar_id or "primary"
     url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{event.event_id}"
-    
+
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
@@ -882,56 +884,79 @@ async def update_calendar_event(
     # First, get the existing event to preserve fields that weren't updated
     try:
         async with httpx.AsyncClient() as client:
-            get_response = await client.get(url, headers={"Authorization": f"Bearer {access_token}"})
-        
+            get_response = await client.get(
+                url, headers={"Authorization": f"Bearer {access_token}"}
+            )
+
         if get_response.status_code != 200:
             raise HTTPException(
-                status_code=404,
-                detail="Event not found or access denied"
+                status_code=404, detail="Event not found or access denied"
             )
-        
+
         existing_event = get_response.json()
-        
+
     except httpx.RequestError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch existing event: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to fetch existing event: {str(e)}"
+        )
 
     # Create the update payload, preserving existing values for unspecified fields
     event_payload = {
-        "summary": event.summary if event.summary is not None else existing_event.get("summary", ""),
-        "description": event.description if event.description is not None else existing_event.get("description", ""),
+        "summary": (
+            event.summary
+            if event.summary is not None
+            else existing_event.get("summary", "")
+        ),
+        "description": (
+            event.description
+            if event.description is not None
+            else existing_event.get("description", "")
+        ),
     }
 
     # Handle time updates
     if event.start is not None or event.end is not None or event.is_all_day is not None:
-        is_all_day = event.is_all_day if event.is_all_day is not None else existing_event.get("start", {}).get("date") is not None
-        
+        is_all_day = (
+            event.is_all_day
+            if event.is_all_day is not None
+            else existing_event.get("start", {}).get("date") is not None
+        )
+
         if is_all_day:
             # Handle all-day event updates
             if event.start is not None:
-                start_date = event.start.split("T")[0] if "T" in event.start else event.start
+                start_date = (
+                    event.start.split("T")[0] if "T" in event.start else event.start
+                )
             else:
                 start_date = existing_event.get("start", {}).get("date", "")
-                
+
             if event.end is not None:
                 end_date = event.end.split("T")[0] if "T" in event.end else event.end
             else:
                 end_date = existing_event.get("end", {}).get("date", "")
-                
+
             event_payload["start"] = {"date": start_date}
             event_payload["end"] = {"date": end_date}
         else:
             # Handle time-specific event updates
             try:
-                timezone = event.timezone or existing_event.get("start", {}).get("timeZone", "UTC")
+                timezone = event.timezone or existing_event.get("start", {}).get(
+                    "timeZone", "UTC"
+                )
                 canonical_timezone = resolve_timezone(timezone)
                 user_tz = ZoneInfo(canonical_timezone)
 
                 if event.start is not None:
-                    start_dt = datetime.fromisoformat(event.start).replace(tzinfo=user_tz)
+                    start_dt = datetime.fromisoformat(event.start).replace(
+                        tzinfo=user_tz
+                    )
                 else:
                     # Parse existing start time
                     existing_start = existing_event.get("start", {}).get("dateTime", "")
-                    start_dt = datetime.fromisoformat(existing_start.replace("Z", "+00:00"))
+                    start_dt = datetime.fromisoformat(
+                        existing_start.replace("Z", "+00:00")
+                    )
 
                 if event.end is not None:
                     end_dt = datetime.fromisoformat(event.end).replace(tzinfo=user_tz)
@@ -950,7 +975,8 @@ async def update_calendar_event(
                 }
             except Exception as e:
                 raise HTTPException(
-                    status_code=400, detail=f"Invalid timezone or datetime format: {str(e)}"
+                    status_code=400,
+                    detail=f"Invalid timezone or datetime format: {str(e)}",
                 )
     else:
         # Preserve existing start/end times
@@ -966,8 +992,7 @@ async def update_calendar_event(
             return response.json()
         elif response.status_code == 404:
             raise HTTPException(
-                status_code=404,
-                detail="Event not found or access denied"
+                status_code=404, detail="Event not found or access denied"
             )
         elif response.status_code == 401 and refresh_token:
             # Try refreshing the token and retrying
@@ -980,13 +1005,17 @@ async def update_calendar_event(
                         "Content-Type": "application/json",
                     }
                     async with httpx.AsyncClient() as client:
-                        retry_response = await client.put(url, headers=headers, json=event_payload)
+                        retry_response = await client.put(
+                            url, headers=headers, json=event_payload
+                        )
                     if retry_response.status_code == 200:
                         return retry_response.json()
                     else:
                         error_json = retry_response.json()
                         if isinstance(error_json, dict):
-                            error_msg = error_json.get("error", {}).get("message", "Unknown error")
+                            error_msg = error_json.get("error", {}).get(
+                                "message", "Unknown error"
+                            )
                         else:
                             error_msg = "Unknown error"
                         raise HTTPException(
@@ -1001,7 +1030,9 @@ async def update_calendar_event(
         else:
             response_json = response.json()
             if isinstance(response_json, dict):
-                error_detail = response_json.get("error", {}).get("message", "Unknown error")
+                error_detail = response_json.get("error", {}).get(
+                    "message", "Unknown error"
+                )
             else:
                 error_detail = "Unknown error"
             raise HTTPException(status_code=response.status_code, detail=error_detail)

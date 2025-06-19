@@ -82,6 +82,10 @@ dependencies = [
   "pycountry>=24.6.1",
   "arq>=0.26.0",
   "croniter>=3.0.0",
+  "e2b-code-interpreter>=1.2.0",
+  "pypandoc>=1.15",
+  "markdown2>=2.5.3",
+  "pandas>=2.3.0",
 ]
 
 [dependency-groups]

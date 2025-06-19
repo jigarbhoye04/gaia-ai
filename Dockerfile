@@ -12,7 +12,14 @@ RUN apt-get update && \
   libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
   libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
   libgbm1 libasound2 curl unzip tesseract-ocr libpq-dev \
-  libdbus-1-3 && \
+  libdbus-1-3 \
+  pandoc \
+  texlive-xetex \
+  texlive-fonts-recommended \
+  texlive-latex-recommended \
+  texlive-latex-extra \
+  lmodern \
+  texlive-plain-generic && \
   rm -rf /var/lib/apt/lists/*
 
 # ---- Extraction Stage: Extract heavy dependencies ----
