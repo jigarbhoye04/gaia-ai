@@ -54,6 +54,7 @@ export const ApiService = {
         headers: {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
+          "x-timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         credentials: "include",
         signal: controller.signal,
