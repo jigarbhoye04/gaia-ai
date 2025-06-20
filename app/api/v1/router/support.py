@@ -23,7 +23,7 @@ router = APIRouter()
     "/support/requests",
     response_model=SupportRequestSubmissionResponse,
     summary="Submit a support or feature request",
-    description="Create a new support request or feature request. Sends email notifications to support team and user confirmation.",
+    description="Create a new support request or feature request. Sends email notifications to support team and support to user.",
 )
 @limiter.limit("5/hour")  # 5 support requests per hour per user
 @limiter.limit("10/day")  # 10 support requests per day per user

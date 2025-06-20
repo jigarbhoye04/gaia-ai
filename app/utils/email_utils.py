@@ -50,13 +50,13 @@ async def send_support_team_notification(
         raise
 
 
-async def send_user_confirmation_email(
+async def send_support_to_user_email(
     notification_data: SupportEmailNotification,
 ) -> None:
-    """Send confirmation email to user that support request has been created."""
+    """Send confirmation email to user that support request has been received."""
     try:
         subject = f"[{notification_data.ticket_id}] Your {notification_data.type.value} request has been received"
-        html_content = generate_user_confirmation_email_html(notification_data)
+        html_content = generate_support_to_user_email_html(notification_data)
 
         resend.Emails.send(
             {
@@ -91,6 +91,7 @@ def generate_support_team_email_html(data: SupportEmailNotification) -> str:
             description=data.description,
             user_name=data.user_name,
             user_email=data.user_email,
+            admin_url=f"{settings.FRONTEND_URL}/admin/support/{data.ticket_id}",
         )
 
         return html_content
@@ -99,14 +100,11 @@ def generate_support_team_email_html(data: SupportEmailNotification) -> str:
         raise
 
 
-def generate_user_confirmation_email_html(data: SupportEmailNotification) -> str:
-    """Generate HTML email content for user confirmation using Jinja2 template."""
+def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
+    """Generate HTML email content for support to user using Jinja2 template."""
     try:
-        template = jinja_env.get_template("user_confirmation.html")
+        template = jinja_env.get_template("support_to_user.html")
 
-        request_type_color = (
-            "#2563eb" if data.type == SupportRequestType.SUPPORT else "#7c3aed"
-        )
         request_type_label = (
             "Support Request"
             if data.type == SupportRequestType.SUPPORT
@@ -116,16 +114,14 @@ def generate_user_confirmation_email_html(data: SupportEmailNotification) -> str
         # Render template with data
         html_content = template.render(
             request_type_label=request_type_label,
-            request_type_label_lower=request_type_label.lower(),
-            request_type_label_upper=request_type_label.upper(),
-            request_type_color=request_type_color,
             user_name=data.user_name,
-            title=data.title,
             ticket_id=data.ticket_id,
-            created_at=data.created_at.strftime("%B %d, %Y at %I:%M %p UTC"),
+            title=data.title,
+            description=data.description,
+            expected_response_time="24 hours",
         )
 
         return html_content
     except Exception as e:
-        logger.error(f"Error generating user confirmation email HTML: {str(e)}")
+        logger.error(f"Error generating support to user email HTML: {str(e)}")
         raise

@@ -19,7 +19,7 @@ from app.models.support_models import (
 )
 from app.utils.email_utils import (
     send_support_team_notification,
-    send_user_confirmation_email,
+    send_support_to_user_email,
 )
 
 # Support team emails
@@ -141,7 +141,7 @@ async def _send_support_email_notifications(
     notification_data: SupportEmailNotification,
 ) -> None:
     """
-    Send email notifications to support team and user confirmation.
+    Send email notifications to support team and support to user.
 
     Args:
         notification_data: Email notification data
@@ -150,8 +150,8 @@ async def _send_support_email_notifications(
         # Send to support team
         await send_support_team_notification(notification_data)
 
-        # Send user confirmation email
-        await send_user_confirmation_email(notification_data)
+        # Send support to user email
+        await send_support_to_user_email(notification_data)
 
     except Exception as e:
         logger.error(f"Error sending email notifications: {str(e)}")
