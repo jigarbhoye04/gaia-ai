@@ -92,6 +92,7 @@ def generate_support_team_email_html(data: SupportEmailNotification) -> str:
             user_name=data.user_name,
             user_email=data.user_email,
             admin_url=f"{settings.FRONTEND_URL}/admin/support/{data.ticket_id}",
+            attachments=data.attachments,
         )
 
         return html_content
@@ -119,6 +120,7 @@ def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
             title=data.title,
             description=data.description,
             expected_response_time="24 hours",
+            attachments=data.attachments,
         )
 
         return html_content

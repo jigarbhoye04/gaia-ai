@@ -120,3 +120,4 @@ class SupportEmailNotification(BaseModel):
     description: str
     created_at: datetime
     support_emails: List[EmailStr]
+    attachments: List[SupportAttachment] = []

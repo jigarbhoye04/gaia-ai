@@ -1,5 +1,6 @@
 """Support service for handling support requests and email notifications."""
 
+import asyncio
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
@@ -60,6 +61,79 @@ async def _delete_uploaded_files(attachment_urls: List[str], ticket_id: str) -> 
                         logger.info(f"Successfully deleted file from Cloudinary: {public_id}")
         except Exception as e:
             logger.error(f"Error deleting file from Cloudinary {url}: {str(e)}")
+
+
+async def _upload_single_attachment(
+    attachment: UploadFile,
+    ticket_id: str,
+    current_time: datetime,
+    allowed_types: List[str],
+    max_file_size: int,
+) -> tuple[str, dict]:
+    """
+    Upload a single attachment file and return its URL and metadata.
+    
+    Args:
+        attachment: The file to upload
+        ticket_id: Ticket ID for public_id construction
+        current_time: Current timestamp
+        allowed_types: List of allowed content types
+        max_file_size: Maximum file size in bytes
+        
+    Returns:
+        Tuple of (file_url, attachment_metadata_dict)
+        
+    Raises:
+        HTTPException: If validation or upload fails
+    """
+    # Validate file type
+    if attachment.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only image files are supported. File type {attachment.content_type} not allowed. Please use JPG, PNG, or WebP.",
+        )
+
+    # Validate filename
+    if not attachment.filename:
+        raise HTTPException(
+            status_code=400, detail="All images must have filenames"
+        )
+
+    # Read and validate file size
+    content = await attachment.read()
+    if len(content) > max_file_size:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File {attachment.filename} exceeds maximum size of 10MB",
+        )
+
+    # Upload to Cloudinary
+    public_id = f"support/{ticket_id}_{attachment.filename}"
+    try:
+        # Run the synchronous upload function in a thread pool to avoid blocking
+        loop = asyncio.get_event_loop()
+        file_url = await loop.run_in_executor(
+            None, 
+            lambda: upload_file_to_cloudinary(public_id=public_id, file_data=content)
+        )
+
+        # Create attachment metadata
+        attachment_info = SupportAttachment(
+            filename=attachment.filename,
+            file_size=len(content),
+            content_type=attachment.content_type or "application/octet-stream",
+            file_url=file_url,
+            uploaded_at=current_time,
+        )
+        
+        return file_url, attachment_info.dict()
+
+    except Exception as e:
+        logger.error(f"Failed to upload image {attachment.filename}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upload image {attachment.filename}",
+        )
 
 
 async def create_support_request(
@@ -135,6 +209,7 @@ async def create_support_request(
                     description=request_data.description,
                     created_at=current_time,
                     support_emails=SUPPORT_EMAILS,
+                    attachments=[],
                 )
             )
             logger.info(f"Email notifications sent successfully for ticket: {ticket_id}")
@@ -155,7 +230,7 @@ async def create_support_request(
             # Raise the original email error
             raise HTTPException(
                 status_code=500, 
-                detail=f"Failed to send email notifications. Support request was not created. Please try again."
+                detail="Failed to send email notifications. Support request was not created. Please try again."
             )
 
         # Create response object
@@ -260,58 +335,37 @@ async def create_support_request_with_attachments(
                     detail=f"Maximum {MAX_ATTACHMENTS} images allowed",
                 )
 
-            for attachment in attachments:
-                # Validate file type
-                if attachment.content_type not in ALLOWED_TYPES:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Only image files are supported. File type {attachment.content_type} not allowed. Please use JPG, PNG, or WebP.",
+            # Upload all files in parallel using asyncio.gather()
+            try:
+                upload_tasks = [
+                    _upload_single_attachment(
+                        attachment=attachment,
+                        ticket_id=ticket_id,
+                        current_time=current_time,
+                        allowed_types=ALLOWED_TYPES,
+                        max_file_size=MAX_FILE_SIZE,
                     )
-
-                # Validate file size
-                content = await attachment.read()
-                if len(content) > MAX_FILE_SIZE:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"File {attachment.filename} exceeds maximum size of 10MB",
-                    )
-
-                # Upload to Cloudinary
-                if not attachment.filename:
-                    raise HTTPException(
-                        status_code=400, detail="All images must have filenames"
-                    )
-
-                public_id = f"support/{ticket_id}_{attachment.filename}"
-                try:
-                    file_url = upload_file_to_cloudinary(
-                        public_id=public_id, file_data=content
-                    )
+                    for attachment in attachments
+                ]
+                
+                # Execute all uploads in parallel
+                upload_results = await asyncio.gather(*upload_tasks)
+                
+                # Extract URLs and attachment metadata from results
+                for file_url, attachment_metadata in upload_results:
                     attachment_urls.append(file_url)
+                    processed_attachments.append(attachment_metadata)
+                
+                logger.info(f"Successfully uploaded {len(attachment_urls)} files in parallel for ticket {ticket_id}")
 
-                    # Create attachment metadata
-                    attachment_info = SupportAttachment(
-                        filename=attachment.filename,
-                        file_size=len(content),
-                        content_type=attachment.content_type
-                        or "application/octet-stream",
-                        file_url=file_url,
-                        uploaded_at=current_time,
-                    )
-                    processed_attachments.append(attachment_info.dict())
-
-                except Exception as e:
-                    # Clean up any files uploaded so far
-                    if attachment_urls:
-                        await _delete_uploaded_files(attachment_urls, ticket_id)
-                    
-                    logger.error(
-                        f"Failed to upload image {attachment.filename}: {str(e)}"
-                    )
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"Failed to upload image {attachment.filename}",
-                    )
+            except Exception as e:
+                # Clean up any files that were successfully uploaded before the failure
+                if attachment_urls:
+                    logger.info(f"Cleaning up {len(attachment_urls)} partially uploaded files for ticket {ticket_id}")
+                    await _delete_uploaded_files(attachment_urls, ticket_id)
+                
+                # Re-raise the original exception (could be HTTPException from validation or upload error)
+                raise
 
         # Create support request document
         support_request_doc = {
@@ -361,6 +415,7 @@ async def create_support_request_with_attachments(
                 description=request_data.description,
                 created_at=current_time,
                 support_emails=SUPPORT_EMAILS,
+                attachments=[SupportAttachment(**att) for att in processed_attachments],
             )
 
             await _send_support_email_notifications(notification_data)
@@ -390,7 +445,7 @@ async def create_support_request_with_attachments(
             # Raise the original email error
             raise HTTPException(
                 status_code=500, 
-                detail=f"Failed to send email notifications. Support request was not created. Please try again."
+                detail="Failed to send email notifications. Support request was not created. Please try again."
             )
 
         # Create response object
