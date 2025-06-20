@@ -36,7 +36,7 @@ async def construct_langchain_messages(
 
     # Format the list of files if any
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
-    
+
     # Get user preferences for the agent if user_id is provided
     user_preferences_str = ""
     if user_id:
@@ -46,9 +46,9 @@ async def construct_langchain_messages(
 
     # Create the system prompt with the current time and user preferences
     system_prompt = AGENT_PROMPT_TEMPLATE.format(
-        current_datetime=formatted_time, 
+        current_datetime=formatted_time,
         user_name=user_name,
-        user_preferences=user_preferences_str
+        user_preferences=user_preferences_str,
     )
 
     chain_msgs: List[AnyMessage] = [SystemMessage(content=system_prompt)]
@@ -57,9 +57,11 @@ async def construct_langchain_messages(
     if user_id and query:
         try:
             # Search for relevant memories
-            memory_results: MemorySearchResult = await memory_service.search_memories(
+            memory_results = await memory_service.search_memories(
                 query=query, user_id=user_id, limit=5
             )
+
+            logger.info(f"ARYANARYAN {memory_results}")
 
             # If we have memories, add them as a system message
             if (

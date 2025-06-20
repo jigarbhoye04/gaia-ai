@@ -4,10 +4,8 @@ import asyncio
 from typing import Any, Dict, List, Optional
 
 from app.config.loggers import llm_logger as logger
-from app.db.redis import ONE_HOUR_TTL, Cacheable, CacheInvalidator, delete_cache
 from app.memory.client import get_memory_client
 from app.models.memory_models import (
-    ConversationMemory,
     MemoryEntry,
     MemorySearchResult,
 )
@@ -65,7 +63,7 @@ class MemoryService:
             id=result.get("id"),
             content=content,
             user_id=result.get("user_id", ""),
-            metadata=result.get("metadata", {}),
+            metadata=result.get("metadata") or {},
             categories=result.get("categories", []),
             created_at=result.get("created_at"),
             updated_at=result.get("updated_at"),
@@ -95,9 +93,6 @@ class MemoryService:
                 parsed_memories.append(memory_entry)
         return parsed_memories
 
-    @CacheInvalidator(
-        key_patterns=["memory:user:{user_id}:*", "memory:all:{user_id}:*"]
-    )
     async def store_memory(
         self,
         content: str,
@@ -165,74 +160,6 @@ class MemoryService:
             self.logger.error(f"Error storing memory: {e}")
             return None
 
-    async def store_conversation(self, conversation: ConversationMemory) -> bool:
-        """
-        Store a conversation exchange.
-
-        Args:
-            conversation: Conversation memory to store
-
-        Returns:
-            True if successful, False otherwise
-        """
-        user_id = self._validate_user_id(conversation.user_id)
-        if not user_id:
-            return False
-
-        # Skip storing if both messages are empty
-        if (
-            not conversation.user_message.strip()
-            and not conversation.assistant_response.strip()
-        ):
-            self.logger.info(f"Skipping empty conversation for user {user_id}")
-            return False
-
-        try:
-            # Store only user message for better memory inference
-            # Assistant responses are not needed for memory storage
-            messages = [
-                {"role": "user", "content": conversation.user_message},
-            ]
-
-            metadata = {
-                "conversation_id": conversation.conversation_id,
-                "type": "user_message",
-                **conversation.metadata,
-            }
-
-            result = await asyncio.to_thread(
-                self.client.add,
-                messages=messages,
-                user_id=user_id,
-                metadata=metadata,
-            )
-
-            # Check if result is empty or contains empty results
-            if (
-                isinstance(result, dict)
-                and "results" in result
-                and not result["results"]
-            ) or len(result) == 0:
-                self.logger.warning(f"No memory was stored for user {user_id}")
-                return False
-
-            # Invalidate cache after storing conversation
-            await delete_cache(f"memory:user:{user_id}:*")
-            await delete_cache(f"memory:all:{user_id}:*")
-
-            self.logger.info(f"Memory storage result: {result}")
-            self.logger.info(f"Conversation stored for user {user_id}")
-            return True
-
-        except Exception as e:
-            self.logger.error(f"Error storing conversation: {e}")
-            return False
-
-    @Cacheable(
-        key_pattern="memory:search:{user_id}:{query}:{limit}",
-        ttl=ONE_HOUR_TTL,
-        deserializer=lambda data: MemorySearchResult(**data) if data else None,
-    )
     async def search_memories(
         self,
         query: str,
@@ -262,11 +189,6 @@ class MemoryService:
                 limit=limit,
             )
 
-            # Mem0 cloud API returns dict with 'results' key
-            if not isinstance(results, dict) or "results" not in results:
-                self.logger.warning("Unexpected search result format with memories")
-                return MemorySearchResult()
-
             memories = self._parse_memory_list(memories=results, user_id=user_id)
 
             return MemorySearchResult(
@@ -280,11 +202,6 @@ class MemoryService:
             self.logger.error(f"Error searching memories: {e}")
             return MemorySearchResult()
 
-    @Cacheable(
-        key_pattern="memory:all:{user_id}:{page}:{page_size}",
-        ttl=ONE_HOUR_TTL,
-        deserializer=lambda data: MemorySearchResult(**data) if data else None,
-    )
     async def get_all_memories(
         self,
         user_id: Optional[str],
@@ -331,9 +248,6 @@ class MemoryService:
             self.logger.error(f"Error retrieving all memories: {e}")
             return MemorySearchResult()
 
-    @CacheInvalidator(
-        key_patterns=["memory:user:{user_id}:*", "memory:all:{user_id}:*"]
-    )
     async def delete_memory(self, memory_id: str, user_id: Optional[str]) -> bool:
         """
         Delete a specific memory.
