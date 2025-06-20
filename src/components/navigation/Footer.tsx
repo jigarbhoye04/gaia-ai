@@ -10,7 +10,7 @@ export default function Footer() {
   const isAuthenticated = user?.email;
 
   return (
-    <div className="m-0! border-t-1 border-t-zinc-800">
+    <div className="m-0! border-t-1 border-t-zinc-800 bg-gradient-to-t from-black to-zinc-950">
       <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20 sm:pb-5">
         <div className="grid w-full max-w-(--breakpoint-lg) grid-cols-2 gap-8 sm:grid-cols-5">
           <div className="flex h-full w-fit flex-col gap-1 text-foreground-600">

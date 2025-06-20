@@ -10,7 +10,7 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
 
   if (scrolled)
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         {isAuthenticated ? (
           // Show auth links that require login
           authNavLinks

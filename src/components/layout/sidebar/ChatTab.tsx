@@ -28,7 +28,7 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
 
   return (
     <div
-      className="relative flex"
+      className="relative z-0 flex"
       onMouseOut={() => setButtonHovered(false)}
       onMouseOver={() => setButtonHovered(true)}
     >

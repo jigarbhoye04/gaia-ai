@@ -166,45 +166,35 @@ export default function ChatsList() {
             </Button>
           </div>
 
-          <Accordion
-            type="single"
-            collapsible
-            className="w-full p-0"
-            defaultValue="item-1"
-          >
-            <AccordionItem
-              value="item-1"
-              className="mt-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 pt-0 pb-1"
+          {starredConversations.length > 0 && (
+            <Accordion
+              type="single"
+              collapsible
+              className="w-full p-0"
+              defaultValue="item-1"
             >
-              <AccordionTrigger className="w-full px-3 pt-3 pb-2 text-xs">
-                Starred Chats
-              </AccordionTrigger>
-              <AccordionContent className="w-full p-0!">
-                <div className="-mr-4 flex w-full flex-col">
-                  {starredConversations.length > 0 ? (
-                    starredConversations.map((conversation: Conversation) => (
+              <AccordionItem
+                value="item-1"
+                className="mt-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 pt-0 pb-1"
+              >
+                <AccordionTrigger className="w-full px-3 pt-3 pb-2 text-xs">
+                  Starred Chats
+                </AccordionTrigger>
+                <AccordionContent className="w-full p-0!">
+                  <div className="-mr-4 flex w-full flex-col">
+                    {starredConversations.map((conversation: Conversation) => (
                       <ChatTab
                         key={conversation.conversation_id}
                         id={conversation.conversation_id}
                         name={conversation.description || "New chat"}
                         starred={conversation.starred || false}
                       />
-                    ))
-                  ) : (
-                    <div className="w-full pt-2 pb-3 text-center text-xs text-nowrap text-foreground-500">
-                      No Starred Chats yet.
-                    </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          {/* <div className="bg-zinc-900 min-h-fit pt-3 pb-1 mt-2 flex items-start justify-start rounded-lg flex-col overflow-hidden w-full">
-              <div className="font-medium text-xs flex items-center gap-1 px-3 pb-1">
-                Starred Chats
-              </div>
-            </div> */}
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
           {/* Grouped Conversations by Time Frame */}
           {sortedTimeFrames.map(([timeFrame, conversationsGroup]) => (

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 
+import ContactSupport from "@/components/layout/sidebar/ContactSupport";
 import SidebarTopButtons from "@/components/layout/sidebar/SidebarTopButtons";
 import UserContainer from "@/components/layout/sidebar/UserContainer";
 import {
@@ -74,6 +75,8 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       collapsible="offcanvas"
       className="border-none! p-1"
     >
+      <div className="pointer-events-none absolute right-0 bottom-16 left-0 z-1 h-1/3 w-full bg-gradient-to-b from-transparent to-black" />
+
       <SearchCommand
         openSearchDialog={openSearchDialog}
         setOpenSearchDialog={setOpenSearchDialog}
@@ -123,7 +126,8 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-0">
+      <SidebarFooter className="relative z-[4] p-2">
+        <ContactSupport />
         <UserContainer />
       </SidebarFooter>
     </Sidebar>

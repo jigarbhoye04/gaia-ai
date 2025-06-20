@@ -66,7 +66,7 @@ export default async function BlogList() {
   const remainingPosts = displayBlogs.slice(5);
 
   return (
-    <div className="flex w-screen justify-center px-6 pt-28">
+    <div className="flex min-h-screen w-screen justify-center px-6 pt-28">
       <div className="w-full max-w-(--breakpoint-lg)">
         <BlogHeader />
 

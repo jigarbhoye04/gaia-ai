@@ -1,10 +1,12 @@
 "use client";
 
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, useEffect } from "react";
 
-import SuspenseLoader from "@/components/shared/SuspenseLoader";
-import HeroImage from "@/features/landing/components/hero/HeroImageSection";
 import HeroSection from "@/features/landing/components/hero/HeroSection";
+import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
+import Personalised from "@/features/landing/components/sections/new/Personalised";
+import Proactive from "@/features/landing/components/sections/new/Proactive";
+import Productivity from "@/features/landing/components/sections/new/Productivity";
 
 import LandingLayout from "./(landing)/layout";
 
@@ -45,13 +47,21 @@ export default function LandingPage() {
 
   return (
     <LandingLayout>
-      <div className="relative min-h-screen overflow-hidden">
+      <div className="relative overflow-hidden">
         <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-linear-to-b" />
 
         <HeroSection />
-        <HeroImage />
+        {/* <HeroImage /> */}
 
-        <div className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]">
+        <div
+        // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
+        >
+          <Productivity />
+          <Proactive />
+          <Personalised />
+          <AdvancedConversation />
+          {/* <Integrations /> */}
+          {/* 
           <Suspense fallback={<SuspenseLoader />}>
             <CalendarSection />
           </Suspense>
@@ -71,10 +81,9 @@ export default function LandingPage() {
           <Suspense fallback={<SuspenseLoader />}>
             <MailSection />
           </Suspense>
-          {/* 
           <Suspense fallback={<SuspenseLoader />}>
             <FeatureGridSection />
-          </Suspense> */}
+          </Suspense> 
 
           <Suspense fallback={<SuspenseLoader />}>
             <MobileSection />
@@ -82,7 +91,7 @@ export default function LandingPage() {
 
           <Suspense fallback={<SuspenseLoader />}>
             <FinalSection />
-          </Suspense>
+          </Suspense> */}
         </div>
       </div>
     </LandingLayout>

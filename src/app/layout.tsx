@@ -62,33 +62,24 @@ export const viewport: Viewport = {
   themeColor: "#00bbff",
 };
 
-const creato = localFont({
+const switzer = localFont({
   src: [
     {
-      path: "./fonts/CreatoDisplay-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/CreatoDisplay-Bold.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./fonts/CreatoDisplay-ExtraBold.woff2",
-      weight: "700",
+      path: "./fonts/switzer/Switzer-Variable.woff2",
+      weight: "100 900",
       style: "normal",
     },
   ],
   preload: true,
-  variable: "--font-creato",
+  variable: "--font-switzer",
+  display: "swap",
 });
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${creato.variable} dark`}>
+    <html lang="en" className={`${switzer.variable} dark`}>
       <body className="dark">
         <main>
           <ProvidersLayout>{children}</ProvidersLayout>
