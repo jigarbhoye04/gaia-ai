@@ -1,14 +1,15 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import {
-  Brain,
-  ChevronLeft,
-  MessageSquare,
-  Settings,
-  User,
-} from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+
+import {
+  AiBrain01Icon,
+  MessageMultiple02Icon,
+  Settings01Icon,
+  UserIcon,
+} from "@/components/shared/icons";
 
 type MenuItem = {
   label: string;
@@ -28,22 +29,22 @@ export default function SettingsSidebar() {
   const settingsMenuItems: MenuItem[] = [
     {
       label: "General",
-      icon: Settings,
+      icon: Settings01Icon,
       href: "/settings?section=general",
     },
     {
       label: "Account",
-      icon: User,
+      icon: UserIcon,
       href: "/settings?section=account",
     },
     {
       label: "Chat",
-      icon: MessageSquare,
+      icon: MessageMultiple02Icon,
       href: "/settings?section=preferences",
     },
     {
       label: "Memory",
-      icon: Brain,
+      icon: AiBrain01Icon,
       href: "/settings?section=memory",
     },
   ];
@@ -63,7 +64,7 @@ export default function SettingsSidebar() {
         </Button>
       </div>
 
-      <nav className="mt-5 flex-1 space-y-2">
+      <nav className="mt-5 flex-1 space-y-1">
         {settingsMenuItems.map((item) => {
           const isActive = currentSection === item.href.split("section=")[1];
           const Icon = item.icon;
@@ -77,7 +78,9 @@ export default function SettingsSidebar() {
               color={isActive ? "primary" : "default"}
               className={`group ${isActive ? "text-primary" : ""} flex w-full justify-start`}
             >
-              <Icon className={`mr-3 h-5 w-5 transition-colors`} />
+              <Icon
+                className={`mr-1 h-5 w-5 transition-colors ${isActive ? "" : "text-foreground-500"}`}
+              />
               <span className="text-sm">{item.label}</span>
             </Button>
           );

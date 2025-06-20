@@ -112,7 +112,7 @@ export default function ChatRenderer() {
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "animate-spin" : ""} relative`}
+                className={`${isLoading ? "opacity-0" : "opacity-100"} relative transition duration-150`}
               />
             </div>
 

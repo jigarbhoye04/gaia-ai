@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { Brain } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import { AiBrain01Icon } from "@/components/shared/icons";
 
 interface MemoryResult {
   id: string;
@@ -101,7 +102,7 @@ export default function MemoryIndicator({
           variant="flat"
           radius="full"
           className="w-fit text-gray-500"
-          startContent={<Brain className="h-4 w-4" />}
+          startContent={<AiBrain01Icon className="h-4 w-4" />}
           onPress={onOpenModal}
         >
           {displayText}

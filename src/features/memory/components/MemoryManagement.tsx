@@ -1,9 +1,10 @@
 import { Button, Card, CardBody, Pagination } from "@heroui/react";
-import { Brain, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { AiBrain01Icon } from "@/components/shared/icons";
 import { type Memory, memoryApi } from "@/features/memory/api/memoryApi";
 import AddMemoryModal from "@/features/memory/components/AddMemoryModal";
 
@@ -210,14 +211,14 @@ export default function MemoryManagement({
         </div>
       ) : memories.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center text-gray-500">
-          <Brain className="mb-3 h-12 w-12 opacity-30" />
+          <AiBrain01Icon className="mb-3 h-12 w-12 opacity-30" />
           <p>No memories yet</p>
           <p className="text-sm">
             Start a conversation and GAIA will remember important details
           </p>
         </div>
       ) : (
-        <div className="flex-1 space-y-2 overflow-y-auto pr-4">
+        <div className="flex-1 space-y-2 overflow-y-auto pr-1">
           {memories.map((memory) => (
             <MemoryCard key={memory.id} memory={memory} />
           ))}
