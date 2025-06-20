@@ -2,13 +2,14 @@
 
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 
 from app.config.loggers import app_logger as logger
 from app.db.collections import support_collection
 from app.models.support_models import (
+    SupportAttachment,
     SupportEmailNotification,
     SupportRequestCreate,
     SupportRequestResponse,
@@ -17,6 +18,7 @@ from app.models.support_models import (
     SupportRequestType,
     SupportRequestPriority,
 )
+from app.services.upload_service import upload_file_to_cloudinary
 from app.utils.email_utils import (
     send_support_team_notification,
     send_support_to_user_email,
@@ -132,6 +134,191 @@ async def create_support_request(
 
     except Exception as e:
         logger.error(f"Error creating support request: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create support request: {str(e)}"
+        )
+
+
+async def create_support_request_with_attachments(
+    request_data: SupportRequestCreate,
+    attachments: List[UploadFile],
+    user_id: str,
+    user_email: str,
+    user_name: Optional[str] = None,
+) -> SupportRequestSubmissionResponse:
+    """
+    Create a new support request with file attachments and send email notifications.
+
+    Args:
+        request_data: Support request data
+        attachments: List of uploaded files
+        user_id: ID of the user creating the request
+        user_email: Email of the user
+        user_name: Name of the user (optional)
+
+    Returns:
+        SupportRequestSubmissionResponse with success status and ticket ID
+    """
+    try:
+        # Generate unique IDs
+        request_id = str(uuid.uuid4())
+        ticket_id = (
+            f"GAIA-{datetime.now().strftime('%Y%m%d')}-{str(uuid.uuid4())[:8].upper()}"
+        )
+
+        current_time = datetime.now(timezone.utc)
+
+        # Process attachments
+        processed_attachments = []
+        attachment_urls = []
+
+        if attachments:
+            # Validate file constraints
+            ALLOWED_TYPES = [
+                "image/jpeg",
+                "image/jpg",
+                "image/png",
+                "image/webp",
+            ]
+            MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+            MAX_ATTACHMENTS = 5
+
+            if len(attachments) > MAX_ATTACHMENTS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Maximum {MAX_ATTACHMENTS} images allowed",
+                )
+
+            for attachment in attachments:
+                # Validate file type
+                if attachment.content_type not in ALLOWED_TYPES:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Only image files are supported. File type {attachment.content_type} not allowed. Please use JPG, PNG, or WebP.",
+                    )
+
+                # Validate file size
+                content = await attachment.read()
+                if len(content) > MAX_FILE_SIZE:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"File {attachment.filename} exceeds maximum size of 10MB",
+                    )
+
+                # Upload to Cloudinary
+                if not attachment.filename:
+                    raise HTTPException(
+                        status_code=400, detail="All images must have filenames"
+                    )
+
+                public_id = f"support/{ticket_id}_{attachment.filename}"
+                try:
+                    file_url = upload_file_to_cloudinary(
+                        public_id=public_id, file_data=content
+                    )
+                    attachment_urls.append(file_url)
+
+                    # Create attachment metadata
+                    attachment_info = SupportAttachment(
+                        filename=attachment.filename,
+                        file_size=len(content),
+                        content_type=attachment.content_type
+                        or "application/octet-stream",
+                        file_url=file_url,
+                        uploaded_at=current_time,
+                    )
+                    processed_attachments.append(attachment_info.dict())
+
+                except Exception as e:
+                    logger.error(
+                        f"Failed to upload image {attachment.filename}: {str(e)}"
+                    )
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to upload image {attachment.filename}",
+                    )
+
+        # Create support request document
+        support_request_doc = {
+            "_id": request_id,
+            "ticket_id": ticket_id,
+            "user_id": user_id,
+            "user_email": user_email,
+            "user_name": user_name,
+            "type": request_data.type.value,
+            "title": request_data.title,
+            "description": request_data.description,
+            "status": SupportRequestStatus.OPEN.value,
+            "priority": SupportRequestPriority.MEDIUM.value,
+            "created_at": current_time,
+            "updated_at": current_time,
+            "resolved_at": None,
+            "tags": [],
+            "attachments": processed_attachments,
+            "metadata": {
+                "source": "web_form_with_images",
+                "user_agent": None,
+                "image_count": len(processed_attachments),
+            },
+        }
+
+        # Store in database
+        result = await support_collection.insert_one(support_request_doc)
+
+        if not result.inserted_id:
+            raise HTTPException(
+                status_code=500, detail="Failed to create support request"
+            )
+
+        # Send email notifications with attachments
+        notification_data = SupportEmailNotification(
+            user_name=user_name or "User",
+            user_email=user_email,
+            ticket_id=ticket_id,
+            type=request_data.type,
+            title=request_data.title,
+            description=request_data.description,
+            created_at=current_time,
+            support_emails=SUPPORT_EMAILS,
+        )
+
+        await _send_support_email_notifications(notification_data)
+
+        # Create response object
+        support_request_response = SupportRequestResponse(
+            id=request_id,
+            ticket_id=ticket_id,
+            user_id=user_id,
+            user_email=user_email,
+            user_name=user_name,
+            type=request_data.type,
+            title=request_data.title,
+            description=request_data.description,
+            status=SupportRequestStatus.OPEN,
+            priority=SupportRequestPriority.MEDIUM,
+            created_at=current_time,
+            updated_at=current_time,
+            resolved_at=None,
+            tags=[],
+            attachments=[SupportAttachment(**att) for att in processed_attachments],
+            metadata=support_request_doc["metadata"],
+        )
+
+        logger.info(
+            f"Support request with {len(processed_attachments)} images created successfully: {ticket_id} for user {user_id}"
+        )
+
+        return SupportRequestSubmissionResponse(
+            success=True,
+            message="Support request with images submitted successfully. You will receive an email confirmation shortly.",
+            ticket_id=ticket_id,
+            support_request=support_request_response,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating support request with images: {str(e)}")
         raise HTTPException(
             status_code=500, detail=f"Failed to create support request: {str(e)}"
         )

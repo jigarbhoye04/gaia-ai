@@ -32,6 +32,18 @@ class SupportRequestPriority(str, Enum):
     URGENT = "urgent"
 
 
+class SupportAttachment(BaseModel):
+    """Model for support request attachments."""
+
+    filename: str = Field(..., description="Original filename")
+    file_size: int = Field(..., description="File size in bytes")
+    content_type: str = Field(..., description="MIME type of the file")
+    file_url: Optional[str] = Field(None, description="URL to access the file")
+    uploaded_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Upload timestamp"
+    )
+
+
 class SupportRequestCreate(BaseModel):
     """Request model for creating a support request."""
 
@@ -72,6 +84,9 @@ class SupportRequestResponse(BaseModel):
     resolved_at: Optional[datetime] = Field(None, description="Resolution timestamp")
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
     metadata: Dict = Field(default_factory=dict, description="Additional metadata")
+    attachments: List[SupportAttachment] = Field(
+        default_factory=list, description="File attachments"
+    )
 
 
 class SupportRequestUpdate(BaseModel):

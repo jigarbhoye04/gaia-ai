@@ -1,8 +1,17 @@
 """Support API router for handling support requests."""
 
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+)
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.middleware.rate_limiter import limiter
@@ -10,10 +19,12 @@ from app.models.support_models import (
     SupportRequestCreate,
     SupportRequestStatus,
     SupportRequestSubmissionResponse,
+    SupportRequestType,
 )
 from app.services.support_service import (
     create_support_request,
     get_user_support_requests,
+    create_support_request_with_attachments,
 )
 
 router = APIRouter()
@@ -58,6 +69,82 @@ async def submit_support_request(
 
         return await create_support_request(
             request_data=request_data,
+            user_id=user_id,
+            user_email=user_email,
+            user_name=user_name,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Failed to submit support request: {str(e)}"
+        )
+
+
+@router.post(
+    "/support/requests/with-attachments",
+    response_model=SupportRequestSubmissionResponse,
+    summary="Submit a support or feature request with images",
+    description="Create a new support request or feature request with image attachments. Sends email notifications to support team and user.",
+)
+@limiter.limit("5/hour")  # 5 support requests per hour per user
+@limiter.limit("10/day")  # 10 support requests per day per user
+async def submit_support_request_with_attachments(
+    request: Request,
+    type: str = Form(...),
+    title: str = Form(...),
+    description: str = Form(...),
+    attachments: List[UploadFile] = File(default=[]),
+    current_user: dict = Depends(get_current_user),
+) -> SupportRequestSubmissionResponse:
+    """
+    Submit a new support or feature request with image attachments.
+
+    This endpoint:
+    - Creates a support request in the database
+    - Uploads image attachments to storage
+    - Generates a unique ticket ID
+    - Sends email notification to support team with images
+    - Sends confirmation email to the user
+
+    Args:
+        type: Type of request (support or feature)
+        title: Title of the request
+        description: Description of the request
+        attachments: List of uploaded image files (JPG, PNG, WebP only)
+        current_user: Current authenticated user
+
+    Returns:
+        SupportRequestSubmissionResponse with success status and ticket ID
+    """
+    try:
+        user_id = current_user.get("user_id")
+        user_email = current_user.get("email")
+        user_name = current_user.get("name")
+
+        if not user_id or not user_email:
+            raise HTTPException(status_code=401, detail="User authentication required")
+
+        # Validate request type
+        try:
+            request_type = SupportRequestType(type)
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid request type. Must be one of: {', '.join([t.value for t in SupportRequestType])}",
+            )
+
+        # Create request data
+        request_data = SupportRequestCreate(
+            type=request_type,
+            title=title,
+            description=description,
+        )
+
+        return await create_support_request_with_attachments(
+            request_data=request_data,
+            attachments=attachments,
             user_id=user_id,
             user_email=user_email,
             user_name=user_name,
