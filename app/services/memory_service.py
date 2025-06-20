@@ -8,6 +8,7 @@ from app.memory.client import get_memory_client
 from app.models.memory_models import (
     MemoryEntry,
     MemorySearchResult,
+    MemoryRelation,
 )
 
 
@@ -145,6 +146,54 @@ class MemoryService:
         self.logger.warning(f"Unexpected response format: {type(response)}")
         return []
 
+    def _extract_relationships_from_response(
+        self, response: Any
+    ) -> List[Dict[str, Any]]:
+        """
+        Extract relationships list from API response.
+
+        Args:
+            response: API response in various formats
+
+        Returns:
+            List of relationship dictionaries
+        """
+        if isinstance(response, dict) and "relations" in response:
+            return response.get("relations", [])
+        return []
+
+    def _parse_relationships(
+        self, relations: List[Dict[str, Any]]
+    ) -> List[MemoryRelation]:
+        """
+        Parse relationships from Mem0 API response.
+
+        Args:
+            relations: List of relationship dictionaries
+
+        Returns:
+            List of MemoryRelation objects
+        """
+        parsed_relations = []
+        for relation_data in relations:
+            try:
+                relation = MemoryRelation(
+                    source=relation_data.get("source", ""),
+                    source_type=relation_data.get("source_type", ""),
+                    relationship=relation_data.get("relationship", ""),
+                    target=relation_data.get("target", ""),
+                    target_type=relation_data.get("target_type", ""),
+                )
+                parsed_relations.append(relation)
+            except Exception as e:
+                self.logger.warning(f"Failed to parse relationship: {e}")
+                continue
+
+        self.logger.debug(
+            f"Successfully parsed {len(parsed_relations)}/{len(relations)} relationships"
+        )
+        return parsed_relations
+
     async def store_memory(
         self,
         content: str,
@@ -279,13 +328,15 @@ class MemoryService:
                 enable_graph=True,
                 user_id=user_id,
                 output_format="v1.1",
-            )
-
-            # Extract memories from response
+            )  # Extract memories from response
             memories_list = self._extract_memories_from_response(response)
 
-            # Parse memories
+            # Extract relationships from response (if available)
+            relations_list = self._extract_relationships_from_response(response)
+
+            # Parse memories and relationships
             memory_entries = self._parse_memory_list(memories_list, user_id)
+            relationships = self._parse_relationships(relations_list)
 
             # Calculate pagination
             start_index = (page - 1) * page_size
@@ -293,12 +344,13 @@ class MemoryService:
             paginated_memories = memory_entries[start_index:end_index]
 
             self.logger.info(
-                f"Successfully processed {len(memory_entries)} memories for user {user_id}, "
+                f"Successfully processed {len(memory_entries)} memories and {len(relationships)} relationships for user {user_id}, "
                 f"returning page {page} ({len(paginated_memories)} items)"
             )
 
             return MemorySearchResult(
                 memories=paginated_memories,
+                relations=relationships,
                 total_count=len(memory_entries),
                 page=page,
                 page_size=page_size,
