@@ -2,12 +2,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { supportApi, type SupportRequest } from "../api/supportApi";
-import { FORM_VALIDATION, TOAST_MESSAGES } from "../constants/supportConstants";
+import {
+  ALLOWED_FILE_TYPES,
+  FORM_VALIDATION,
+  TOAST_MESSAGES,
+} from "../constants/supportConstants";
 
 export interface ContactFormData {
   type: string;
   title: string;
   description: string;
+  attachments: File[];
 }
 
 export function useContactSupport() {
@@ -15,6 +20,7 @@ export function useContactSupport() {
     type: "",
     title: "",
     description: "",
+    attachments: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,11 +31,26 @@ export function useContactSupport() {
     }));
   };
 
+  const handleFileChange = (files: File[]) => {
+    setFormData((prev) => ({
+      ...prev,
+      attachments: files,
+    }));
+  };
+
+  const removeFile = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
+  };
+
   const resetForm = () => {
     setFormData({
       type: "",
       title: "",
       description: "",
+      attachments: [],
     });
   };
 
@@ -52,6 +73,31 @@ export function useContactSupport() {
       return false;
     }
 
+    // Validate attachments
+    if (formData.attachments.length > FORM_VALIDATION.MAX_ATTACHMENTS) {
+      toast.error(`Maximum ${FORM_VALIDATION.MAX_ATTACHMENTS} images allowed`);
+      return false;
+    }
+
+    // Validate individual files
+    for (const file of formData.attachments) {
+      if (file.size > FORM_VALIDATION.MAX_FILE_SIZE) {
+        toast.error(
+          `Image "${file.name}" exceeds maximum size of ${FORM_VALIDATION.MAX_FILE_SIZE / (1024 * 1024)}MB`,
+        );
+        return false;
+      }
+
+      if (
+        !ALLOWED_FILE_TYPES.includes(
+          file.type as (typeof ALLOWED_FILE_TYPES)[number],
+        )
+      ) {
+        toast.error(`Only image files are supported for "${file.name}"`);
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -67,6 +113,7 @@ export function useContactSupport() {
         type: formData.type as "support" | "feature",
         title: formData.title.trim(),
         description: formData.description.trim(),
+        attachments: formData.attachments,
       };
 
       const response = await supportApi.submitRequest(requestData);
@@ -98,6 +145,8 @@ export function useContactSupport() {
     isSubmitting,
     isFormValid,
     handleInputChange,
+    handleFileChange,
+    removeFile,
     submitRequest,
     resetForm,
   };
