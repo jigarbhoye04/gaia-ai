@@ -4,7 +4,7 @@ from pydantic import SecretStr
 
 from app.config.settings import settings
 
-MODEL = "gpt-4o"
+MODEL = "gpt-4o-mini"
 
 
 def init_llm():
