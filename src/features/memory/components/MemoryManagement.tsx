@@ -233,9 +233,9 @@ export default function MemoryManagement({
             variant="underlined"
             classNames={{
               tabList:
-                "gap-6 w-full relative rounded-none p-0 border-b border-divider",
+                "gap-6 w-full relative rounded-none p-0 border-b border-divider flex justify-center",
               cursor: "w-full bg-primary",
-              tab: "max-w-fit px-0 h-12",
+              tab: "max-w-fit px-0",
               tabContent: "group-data-[selected=true]:text-primary",
             }}
           >
