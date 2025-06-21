@@ -2,6 +2,7 @@ import { Card, CardBody } from "@heroui/react";
 import * as d3 from "d3";
 import React, { useEffect, useRef, useState } from "react";
 
+import { useUser } from "@/features/auth/hooks/useUser";
 import {
   type Memory,
   type MemoryRelation,
@@ -43,6 +44,7 @@ export default function MemoryGraph({
   const [legendItems, setLegendItems] = useState<
     Array<{ type: string; color: string }>
   >([]);
+  const user = useUser();
 
   useEffect(() => {
     if (!svgRef.current || !containerRef.current) return;
@@ -121,13 +123,13 @@ export default function MemoryGraph({
           .forceLink<GraphNode, GraphLink>(links)
           .id((d) => d.id)
           .distance((d) => {
-            // Shorter distance for user connections
+            // Increased distances
             const source = d.source as GraphNode;
             const target = d.target as GraphNode;
             if (source.type === "user" || target.type === "user") {
-              return 80;
+              return 150; // Increased from 80
             }
-            return 120;
+            return 200; // Increased from 120
           })
           .strength((d) => {
             // Stronger links for user connections
@@ -139,11 +141,11 @@ export default function MemoryGraph({
             return 1;
           }),
       )
-      .force("charge", d3.forceManyBody().strength(-400))
+      .force("charge", d3.forceManyBody().strength(-800)) // Increased repulsion from -400
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force(
         "collision",
-        d3.forceCollide().radius((d) => (d as GraphNode).size + 5),
+        d3.forceCollide().radius((d) => (d as GraphNode).size + 20), // Increased from 5
       );
 
     // Create zoom behavior
@@ -180,20 +182,16 @@ export default function MemoryGraph({
       .attr("fill", "#9ca3af")
       .text((d: GraphLink) => d.relationship.replace(/_/g, " "));
 
-    // Create nodes
-    const node = g
-      .selectAll<SVGCircleElement, GraphNode>(".node")
+    // Create node groups
+    const nodeGroup = g
+      .selectAll<SVGGElement, GraphNode>(".node-group")
       .data(nodes)
-      .join("circle")
-      .attr("class", "node")
-      .attr("r", (d: GraphNode) => d.size)
-      .attr("fill", (d: GraphNode) => colorScale(d.group))
-      .attr("stroke", "#1f2937")
-      .attr("stroke-width", 2)
+      .join("g")
+      .attr("class", "node-group")
       .style("cursor", "pointer")
       .call(
         d3
-          .drag<SVGCircleElement, GraphNode>()
+          .drag<SVGGElement, GraphNode>()
           .on("start", (event, d) => {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             d.fx = d.x;
@@ -210,11 +208,57 @@ export default function MemoryGraph({
           }),
       );
 
-    // Create node labels
-    const nodeLabel = g
-      .selectAll<SVGTextElement, GraphNode>(".node-label")
-      .data(nodes)
-      .join("text")
+    // Add circles for non-user nodes
+    nodeGroup
+      .filter((d) => d.type !== "user")
+      .append("circle")
+      .attr("r", (d: GraphNode) => d.size)
+      .attr("fill", (d: GraphNode) => colorScale(d.group))
+      .attr("stroke", "#1f2937")
+      .attr("stroke-width", 2);
+
+    // Add clipPath for user image
+    const defs = svg.append("defs");
+    defs
+      .append("clipPath")
+      .attr("id", "user-avatar-clip")
+      .append("circle")
+      .attr("r", 25); // Smaller radius for padding effect
+
+    // Add background circle for user node
+    nodeGroup
+      .filter((d) => d.type === "user")
+      .append("circle")
+      .attr("r", 32)
+      .attr("fill", "#27272a"); // zinc-800
+
+    // Add image for user node
+    const userProfilePic =
+      user?.profilePicture || "https://links.aryanranderiya.com/l/default_user";
+    nodeGroup
+      .filter((d) => d.type === "user")
+      .append("image")
+      .attr("xlink:href", userProfilePic)
+      .attr("x", -25)
+      .attr("y", -25)
+      .attr("width", 50)
+      .attr("height", 50)
+      .attr("clip-path", "url(#user-avatar-clip)")
+      .attr("preserveAspectRatio", "xMidYMid slice");
+
+    // Add border circle for user node
+    nodeGroup
+      .filter((d) => d.type === "user")
+      .append("circle")
+      .attr("r", 32)
+      .attr("fill", "none")
+      .attr("stroke", "#00bbff")
+      .attr("stroke-width", 2);
+
+    // Create node labels (for non-user nodes only)
+    nodeGroup
+      .filter((d) => d.type !== "user")
+      .append("text")
       .attr("class", "node-label")
       .attr("text-anchor", "middle")
       .attr("dy", ".35em")
@@ -227,7 +271,7 @@ export default function MemoryGraph({
       );
 
     // Add event handlers
-    node
+    nodeGroup
       .on("click", (_event, d) => {
         setSelectedNode(d);
         onNodeClick?.(d);
@@ -267,13 +311,7 @@ export default function MemoryGraph({
             ((d.source as GraphNode).y! + (d.target as GraphNode).y!) / 2,
         );
 
-      node
-        .attr("cx", (d: GraphNode) => d.x!)
-        .attr("cy", (d: GraphNode) => d.y!);
-
-      nodeLabel
-        .attr("x", (d: GraphNode) => d.x!)
-        .attr("y", (d: GraphNode) => d.y!);
+      nodeGroup.attr("transform", (d: GraphNode) => `translate(${d.x},${d.y})`);
     });
 
     // Cleanup function
