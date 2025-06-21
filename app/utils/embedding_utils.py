@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 
 from app.config.loggers import chat_logger as logger
 from app.db.chromadb import ChromaClient
-from app.db.collections import files_collection, notes_collection
+from app.db.mongodb.collections import files_collection, notes_collection
 
 
 @lru_cache(maxsize=1)

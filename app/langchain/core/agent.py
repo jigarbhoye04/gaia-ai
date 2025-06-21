@@ -21,9 +21,9 @@ async def call_agent(
     request: MessageRequestWithHistory,
     conversation_id,
     user,
+    user_time: datetime,
     access_token=None,
     refresh_token=None,
-    background_tasks=None,
 ):
     user_id = user.get("user_id")
     messages = request.messages
@@ -82,6 +82,7 @@ async def call_agent(
                     "access_token": access_token,
                     "refresh_token": refresh_token,
                     "email": user.get("email"),
+                    "user_time": user_time.isoformat(),
                 },
                 "recursion_limit": 15,
                 "metadata": {"user_id": user_id},
@@ -265,3 +266,87 @@ async def call_mail_processing_agent(
             + [{"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}],
             "processed_at": datetime.now(timezone.utc).isoformat(),
         }
+
+
+@traceable
+async def call_reminder_agent(
+    instruction: str,
+    user_id: str,
+    reminder_id: str,
+    access_token: str | None = None,
+    refresh_token: str | None = None,
+):
+    """
+    Process reminder instruction with AI agent to process a reminder.
+
+    Args:
+        instruction: The reminder instruction to process
+        user_id: User ID for context
+        access_token: User's access token for API calls
+        refresh_token: User's refresh token
+
+    Returns:
+        None: This function is designed to run as a background task
+    """
+    logger.info(f"Starting reminder processing for user {user_id}")
+
+    messages = [
+        {
+            "role": "system",
+            "content": """
+You are a reminder processing agent. Your task is to process the following reminder instruction and take appropriate actions based on it.""",
+        },
+        {"role": "user", "content": instruction},
+    ]
+
+    logger.info(f"Processing reminder for user {user_id}")
+
+    initial_state = {
+        "messages": messages,
+        "current_datetime": datetime.now(timezone.utc).isoformat(),
+        "mem0_user_id": user_id,
+    }
+
+    try:
+        # Get the reminder processing graph
+        graph = await GraphManager.get_graph("reminder_processing")
+
+        if not graph:
+            logger.error(f"No graph found for reminder processing for user {user_id}")
+            raise ValueError(f"Graph not found for reminder processing: {user_id}")
+
+        logger.info(
+            f"Graph for reminder processing retrieved successfully for user {user_id}"
+        )
+
+        # Just invoke the graph directly - no streaming needed
+        result = await graph.ainvoke(
+            initial_state,
+            config={
+                "configurable": {
+                    "thread_id": f"reminder_{reminder_id}",
+                    "user_id": user_id,
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "reminder_id": reminder_id,
+                    "initiator": "backend",
+                },
+                "recursion_limit": 5,  # Lower limit for reminder processing
+                "metadata": {
+                    "user_id": user_id,
+                    "processing_type": "reminder",
+                },
+            },
+        )
+
+        logger.info(
+            f"Reminder processing result for user {user_id}: {result}"
+            if result
+            else "No result returned"
+        )
+
+        return result
+    except Exception as e:
+        logger.error(f"Error in reminder processing for user {user_id}: {str(e)}")
+        # Handle the error as needed, e.g., log it, notify the user, etc.
+        raise e

@@ -3,7 +3,7 @@
 
 # from app.api.v1.dependencies.oauth_dependencies import get_valid_access_token
 # from app.config.loggers import celery_logger as logger
-# from app.db.collections import users_collection
+# from app.db.mongodb.collections import users_collection
 # from app.db.redis import get_cache, set_cache
 # from app.services.mail_service import (
 #     get_gmail_service,

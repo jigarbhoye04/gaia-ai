@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from app.models.calendar_models import EventCreateRequest
@@ -193,3 +194,32 @@ def create_calendar_event_notification(
     except Exception as e:
         print(f"Error creating calendar event notification: {e}")
         return []
+
+
+def create_reminder_notification(
+    user_id: str,
+    reminder_id: str,
+    title: str,
+    body: str,
+    actions: List[NotificationAction],
+) -> NotificationRequest:
+    """Create notification for a reminder"""
+    return NotificationRequest(
+        user_id=user_id,
+        source="reminder",
+        type=NotificationType.INFO,
+        priority=1,
+        channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
+        content=NotificationContent(
+            title=title,
+            body=body,
+            actions=actions,
+        ),
+        metadata={
+            "reminder_id": reminder_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        },
+        rules=NotificationRules(
+            max_retries=3, expire_after_hours=48, respect_quiet_hours=True
+        ),
+    )

@@ -1,5 +1,6 @@
 from app.langchain.tools import (
     calendar_tool,
+    code_exec_tool,
     document_tool,
     file_tools,
     flowchart_tool,
@@ -8,7 +9,7 @@ from app.langchain.tools import (
     image_tool,
     mail_tool,
     memory_tools,
-    code_exec_tool,
+    reminder_tool,
     search_tool,
     todo_tool,
     weather_tool,
@@ -21,6 +22,7 @@ ALWAYS_AVAILABLE_TOOLS = [
     search_tool.deep_search_tool,
     webpage_tool.fetch_webpages,
     file_tools.query_file,
+    reminder_tool.create_reminder_tool,
 ]
 
 # All other tools will be accessible through vector search
@@ -28,6 +30,7 @@ tools = [
     *mail_tool.tools,
     *todo_tool.tools,
     *calendar_tool.tools,
+    *reminder_tool.tools,
     *google_docs_tool.tools,
     *memory_tools.tools,
     *goal_tool.tools,

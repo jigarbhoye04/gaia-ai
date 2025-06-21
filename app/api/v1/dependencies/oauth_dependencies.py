@@ -1,12 +1,14 @@
 import logging
 import time
+from datetime import datetime
 from typing import Optional
 
 import httpx
-from fastapi import Cookie, HTTPException
+from fastapi import Cookie, Header, HTTPException
+from pytz import timezone
 
 from app.config.settings import settings
-from app.db.collections import users_collection
+from app.db.mongodb.collections import users_collection
 from app.db.redis import get_cache, set_cache
 
 logger = logging.getLogger(__name__)
@@ -271,3 +273,24 @@ async def get_current_user(
     except Exception as e:
         logger.error(f"Unexpected authentication error: {e}")
         raise HTTPException(status_code=500, detail="Authentication processing failed")
+
+
+def get_user_timezone(
+    x_timezone: str = Header(
+        default="UTC", alias="x-timezone", description="User's timezone identifier"
+    ),
+) -> datetime:
+    """
+    Get the current time in the user's timezone.
+    Uses the x-timezone header to determine the user's timezone.
+
+    Args:
+        x_timezone (str): The timezone identifier from the request header.
+    Returns:
+        datetime: The current time in the user's timezone.
+    """
+    user_tz = timezone(x_timezone)
+    now = datetime.now(user_tz)
+
+    logger.debug(f"User timezone: {user_tz}, Current time: {now}")
+    return now

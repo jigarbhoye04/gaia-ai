@@ -1,5 +1,5 @@
-from functools import lru_cache
 import sys
+from functools import lru_cache
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.server_api import ServerApi
@@ -34,7 +34,25 @@ class MongoDB:
             sys.exit(1)
 
     def ping(self):
-        self.client.admin.command("ping")
+        try:
+            import pymongo
+
+            # Use the same URI that was used to initialize the async client
+            sync_client = pymongo.MongoClient(settings.MONGO_DB)
+            sync_client.admin.command("ping")
+            sync_client.close()
+        except Exception as e:
+            logger.error(f"Ping failed: {e}")
+
+    async def _initialize_indexes(self):
+        try:
+            from app.db.mongodb.indexes import create_all_indexes, log_index_summary
+
+            logger.info("Initializing all indexes in MongoDB...")
+            await create_all_indexes()
+            await log_index_summary()
+        except Exception as e:
+            logger.error(f"Error while initializing indexes: {e}")
 
     def get_collection(self, collection_name: str):
         return self.database.get_collection(collection_name)

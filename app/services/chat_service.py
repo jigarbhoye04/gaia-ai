@@ -17,6 +17,7 @@ async def chat_stream(
     body: MessageRequestWithHistory,
     user: dict,
     background_tasks: BackgroundTasks,
+    user_time: datetime,
 ) -> AsyncGenerator:
     """
     Stream chat messages in real-time.
@@ -47,7 +48,7 @@ async def chat_stream(
         conversation_id=conversation_id,
         access_token=user.get("access_token"),
         refresh_token=user.get("refresh_token"),
-        background_tasks=background_tasks,
+        user_time=user_time,
     ):
         # Process complete message marker
         if chunk.startswith("nostream: "):

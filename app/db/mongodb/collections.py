@@ -2,7 +2,7 @@
 Module to expose commonly used MongoDB collections.
 """
 
-from app.db.mongodb import init_mongodb
+from app.db.mongodb.mongodb import init_mongodb
 
 mongodb_instance = init_mongodb()
 
@@ -21,4 +21,5 @@ files_collection = mongodb_instance.get_collection("files")
 notifications_collection = mongodb_instance.get_collection("notifications")
 todos_collection = mongodb_instance.get_collection("todos")
 projects_collection = mongodb_instance.get_collection("projects")
+reminders_collection = mongodb_instance.get_collection("reminders")
 support_collection = mongodb_instance.get_collection("support_requests")

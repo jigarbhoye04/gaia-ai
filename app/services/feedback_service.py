@@ -1,6 +1,7 @@
-from app.db.collections import feedback_collection
-from app.models.general_models import FeedbackFormData
 from fastapi import HTTPException
+
+from app.db.mongodb.collections import feedback_collection
+from app.models.general_models import FeedbackFormData
 
 
 async def submit_feedback(form_data: FeedbackFormData) -> dict:

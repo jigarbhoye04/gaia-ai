@@ -1,35 +1,35 @@
+import json
 from typing import Annotated, Any, Dict, Optional
 
+from bson import ObjectId
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
+from app.db.mongodb.collections import goals_collection
+from app.db.redis import delete_cache, get_cache, set_cache
 from app.docstrings.langchain.tools.goal_tool_docs import (
     CREATE_GOAL,
-    LIST_GOALS,
-    GET_GOAL,
     DELETE_GOAL,
     GENERATE_ROADMAP,
-    UPDATE_GOAL_NODE,
-    SEARCH_GOALS,
+    GET_GOAL,
     GET_GOAL_STATISTICS,
+    LIST_GOALS,
+    SEARCH_GOALS,
+    UPDATE_GOAL_NODE,
 )
 from app.docstrings.utils import with_doc
 from app.models.goals_models import GoalCreate, UpdateNodeRequest
 from app.services.goals_service import (
     create_goal_service,
+    delete_goal_service,
+    generate_roadmap_with_llm_stream,
     get_goal_service,
     get_user_goals_service,
-    delete_goal_service,
-    update_node_status_service,
-    generate_roadmap_with_llm_stream,
     update_goal_with_roadmap_service,
+    update_node_status_service,
 )
-from app.db.collections import goals_collection
-from app.db.redis import delete_cache, get_cache, set_cache
-from bson import ObjectId
-import json
 
 
 def get_user_from_config(config: RunnableConfig) -> dict:

@@ -3,6 +3,7 @@ from app.utils.logging_utils import get_logger
 # Application loggers - each will be a singleton instance
 app_logger = get_logger(name="main")
 worker_logger = get_logger(name="worker")
+arq_worker_logger = get_logger(name="arq:worker")
 llm_logger = get_logger(name="llm")
 audio_logger = get_logger(name="audio")
 goals_logger = get_logger(name="goals")
@@ -26,3 +27,4 @@ mail_webhook_logger = get_logger(name="mail_webhook")
 common_logger = get_logger(name="common")
 todos_logger = get_logger(name="todos")
 blogs_logger = get_logger(name="blogs")
+reminders_logger = get_logger(name="reminders")

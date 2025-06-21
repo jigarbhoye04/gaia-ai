@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, cast
 from zoneinfo import ZoneInfo
 
@@ -8,7 +8,7 @@ from fastapi import HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import refresh_access_token
 from app.config.loggers import calendar_logger as logger
-from app.db.collections import calendars_collection
+from app.db.mongodb.collections import calendars_collection
 from app.models.calendar_models import (
     EventCreateRequest,
     EventDeleteRequest,
@@ -472,7 +472,6 @@ async def create_calendar_event(
             end_date = event.end.split("T")[0] if "T" in event.end else event.end
         elif event.start:
             # If only start date is provided, end date is the next day
-            from datetime import datetime, timedelta
 
             start_date = (
                 event.start.split("T")[0] if "T" in event.start else event.start
@@ -481,8 +480,6 @@ async def create_calendar_event(
             end_date = (start_dt + timedelta(days=1)).strftime("%Y-%m-%d")
         else:
             # If no dates provided, default to today for start and tomorrow for end
-            from datetime import datetime, timedelta
-
             today = datetime.now()
             start_date = today.strftime("%Y-%m-%d")
             end_date = (today + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -905,12 +902,16 @@ async def update_calendar_event(
 
     # Create the update payload, preserving existing values for unspecified fields
     event_payload = {
-        "summary": event.summary
-        if event.summary is not None
-        else existing_event.get("summary", ""),
-        "description": event.description
-        if event.description is not None
-        else existing_event.get("description", ""),
+        "summary": (
+            event.summary
+            if event.summary is not None
+            else existing_event.get("summary", "")
+        ),
+        "description": (
+            event.description
+            if event.description is not None
+            else existing_event.get("description", "")
+        ),
     }
 
     # Handle time updates

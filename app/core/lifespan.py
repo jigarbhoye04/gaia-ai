@@ -6,8 +6,7 @@ from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.db.chromadb import init_chroma
 from app.db.rabbitmq import publisher
-from app.db.indexes import create_all_indexes, log_index_summary
-from app.langchain.core.graph_builder import build_graph
+from app.langchain.core.graph_builder.build_graph import build_graph
 from app.langchain.core.graph_manager import GraphManager
 from app.utils.nltk_utils import download_nltk_resources
 from app.utils.text_utils import get_zero_shot_classifier
@@ -25,10 +24,33 @@ async def lifespan(app: FastAPI):
         download_nltk_resources()
         get_zero_shot_classifier()
         init_cloudinary()
-        await create_all_indexes()
-        # await log_index_summary() # for logging purposes
 
-        await publisher.connect()
+        # Create all database indexes
+        try:
+            from app.db.mongodb.mongodb import init_mongodb
+
+            mongo_client = init_mongodb()
+
+            await mongo_client._initialize_indexes()
+        except Exception as e:
+            logger.error(f"Failed to create database indexes: {e}")
+
+        # Initialize reminder scheduler and scan for pending reminders
+        try:
+            from app.services.reminder_service import initialize_scheduler
+
+            scheduler = await initialize_scheduler()
+            await scheduler.scan_and_schedule_pending_reminders()
+            logger.info(
+                "Reminder scheduler initialized and pending reminders scheduled"
+            )
+        except Exception as e:
+            logger.error(f"Failed to initialize reminder scheduler: {e}")
+
+        try:
+            await publisher.connect()
+        except Exception as e:
+            logger.error(f"Failed to connect to RabbitMQ: {e}")
 
         # Initialize the graph and store in GraphManager
         async with build_graph() as built_graph:
@@ -40,4 +62,14 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("Startup failed") from e
     finally:
         logger.info("Shutting down the API...")
+
+        # Close reminder scheduler
+        try:
+            from app.services.reminder_service import close_scheduler
+
+            await close_scheduler()
+            logger.info("Reminder scheduler closed")
+        except Exception as e:
+            logger.error(f"Error closing reminder scheduler: {e}")
+
         await publisher.close()

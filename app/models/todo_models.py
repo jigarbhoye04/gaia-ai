@@ -1,6 +1,6 @@
-from datetime import datetime
-from typing import List, Optional
+from datetime import datetime, timezone
 from enum import Enum
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +18,7 @@ class SubTask(BaseModel):
     completed: bool = Field(
         default=False, description="Whether the subtask is completed"
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TodoModel(BaseModel):
@@ -43,8 +43,8 @@ class TodoModel(BaseModel):
     subtasks: List[SubTask] = Field(
         default_factory=list, max_length=50, description="List of subtasks"
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TodoCreate(BaseModel):
@@ -125,8 +125,8 @@ class ProjectModel(BaseModel):
         pattern="^#[0-9A-Fa-f]{6}$",
         description="Color code for the project in hex format",
     )
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ProjectCreate(BaseModel):
