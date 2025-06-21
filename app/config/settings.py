@@ -87,6 +87,7 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
+    RESEND_API_KEY: str
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str

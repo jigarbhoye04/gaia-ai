@@ -203,12 +203,12 @@ async def init_chroma(app=None):
         )
 
         existing_collections = await client.list_collections()
-        existing_collections = list(map(lambda x: x.name, existing_collections))  # type: ignore
+        existing_collection_names = [col.name for col in existing_collections]  # type: ignore
         collection_names = ["notes", "documents"]
 
         # Create collections if they don't exist
         for collection_name in collection_names:
-            if collection_name not in existing_collections:
+            if collection_name not in existing_collection_names:
                 logger.info(
                     f"'{collection_name}' collection not found. Creating new collection..."
                 )
@@ -216,6 +216,10 @@ async def init_chroma(app=None):
                     name=collection_name, metadata={"hnsw:space": "cosine"}
                 )
                 logger.info(f"'{collection_name}' collection created successfully.")
+            else:
+                logger.info(
+                    f"Collection '{collection_name}' already exists, skipping creation."
+                )
 
         ChromaClient(
             chroma_client=client,
