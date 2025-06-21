@@ -31,7 +31,7 @@ async def execute_reminder_by_agent(
 
     if not reminder.id:
         logger.error(f"Reminder {reminder.id} has no ID, skipping execution.")
-        return
+        raise ValueError(f"Reminder {reminder.id} has no ID, skipping execution.")
 
     if reminder.agent == AgentType.AI_AGENTS and isinstance(
         reminder.payload, AIAgentReminderPayload
@@ -44,7 +44,9 @@ async def execute_reminder_by_agent(
             logger.error(
                 f"Failed to get valid tokens for user {reminder.user_id} while executing reminder {reminder.id}"
             )
-            return
+            raise ValueError(
+                f"Failed to get valid tokens for user {reminder.user_id} while executing reminder {reminder.id}"
+            )
 
         notification_data = await call_reminder_agent(
             instruction=reminder.payload.instructions,
@@ -58,7 +60,9 @@ async def execute_reminder_by_agent(
             logger.error(
                 f"AI agent reminder {reminder.id} returned no notification data for user {reminder.user_id}"
             )
-            return
+            raise ValueError(
+                f"AI agent reminder {reminder.id} returned no notification data"
+            )
 
     elif reminder.agent == AgentType.STATIC and isinstance(
         reminder.payload, StaticReminderPayload

@@ -7,6 +7,7 @@ from typing import List, Optional
 
 from arq import create_pool
 from arq.connections import RedisSettings
+from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.config.loggers import general_logger as logger
@@ -106,7 +107,7 @@ class ReminderScheduler:
         # Add updated_at timestamp
         update_data["updated_at"] = datetime.now(timezone.utc)
 
-        filters = {"_id": reminder_id}
+        filters: dict = {"_id": ObjectId(reminder_id)}
         if user_id:
             filters["user_id"] = user_id
 
@@ -136,7 +137,7 @@ class ReminderScheduler:
         Returns:
             True if cancelled successfully
         """
-        filters = {"_id": reminder_id}
+        filters: dict = {"_id": ObjectId(reminder_id)}
         if user_id:
             filters["user_id"] = user_id
 
@@ -168,12 +169,13 @@ class ReminderScheduler:
         Returns:
             Reminder model or None if not found
         """
-        filters = {"_id": reminder_id}
+        filters: dict = {"_id": ObjectId(reminder_id)}
         if user_id:
             filters["user_id"] = user_id
 
         doc = await reminders_collection.find_one(filters)
         if doc:
+            doc["_id"] = str(doc["_id"])  # Convert ObjectId to string
             return ReminderModel(**doc)
         return None
 
@@ -203,7 +205,15 @@ class ReminderScheduler:
         cursor = reminders_collection.find(query).skip(skip).limit(limit)
         docs = await cursor.to_list(length=limit)
 
-        return [ReminderModel(**doc) for doc in docs]
+        results = []
+
+        # Convert ObjectId to string and create ReminderModel instances
+        for doc in docs:
+            if "_id" in doc:
+                doc["_id"] = str(doc["_id"])
+            results.append(ReminderModel(**doc))
+
+        return results
 
     async def scan_and_schedule_pending_reminders(self):
         """
@@ -219,6 +229,8 @@ class ReminderScheduler:
 
         scheduled_count = 0
         async for doc in cursor:
+            if "_id" in doc:
+                doc["_id"] = str(doc["_id"])
             reminder = ReminderModel(**doc)
             await self._enqueue_reminder(str(reminder.id), reminder.scheduled_at)
             scheduled_count += 1

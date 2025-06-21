@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from langchain_core.language_models import LanguageModelLike
 from langchain_huggingface import HuggingFaceEmbeddings
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
@@ -23,7 +24,9 @@ llm = init_llm()
 
 @asynccontextmanager
 async def build_graph(
-    chat_llm: Optional[LanguageModelLike] = None, exclude_tools: List[str] = []
+    chat_llm: Optional[LanguageModelLike] = None,
+    exclude_tools: List[str] = [],
+    in_memory_checkpointer: bool = False,
 ):
     """Construct and compile the state graph."""
     # Register both regular and always available tools
@@ -32,6 +35,9 @@ async def build_graph(
     # Filter out any tools that should be excluded
     if exclude_tools:
         all_tools = [tool for tool in all_tools if tool.name not in exclude_tools]
+
+    for tool in all_tools:
+        print(tool.name)
 
     tool_registry = {tool.name: tool for tool in all_tools}
 
@@ -84,10 +90,21 @@ async def build_graph(
     builder.add_edge("inject_web_search", "tools")
     builder.add_edge("inject_deep_search", "tools")
 
-    async with AsyncPostgresSaver.from_conn_string(
-        settings.POSTGRES_URL
-    ) as checkpointer:
-        await checkpointer.setup()
-        graph = builder.compile(checkpointer=checkpointer, store=store)
+    if in_memory_checkpointer:
+        # Use in-memory checkpointer for testing or simple use cases
+        checkpointer = InMemorySaver()
+        # Setup the checkpointer
+        graph = builder.compile(
+            checkpointer=checkpointer,  # type: ignore[call-arg]
+            store=store,
+        )
         print(graph.get_graph().draw_mermaid())
         yield graph
+    else:
+        async with AsyncPostgresSaver.from_conn_string(
+            settings.POSTGRES_URL
+        ) as checkpointer:
+            await checkpointer.setup()
+            graph = builder.compile(checkpointer=checkpointer, store=store)
+            print(graph.get_graph().draw_mermaid())
+            yield graph

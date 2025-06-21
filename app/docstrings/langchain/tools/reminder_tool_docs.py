@@ -1,107 +1,52 @@
 """Docstrings for reminder-related LangChain tools."""
 
+# TODO: Improve this prompt to be more concise and focused on the tool's purpose, LLM still sometimes misses that it has capabilities to create reminders with tools, not just static notifications.
 CREATE_REMINDER = """
 Create a new reminder (static or agent-based) for the user.
 
-This tool schedules reminders that can either:
-1. **STATIC** — fire a plain notification at a specific time (no LLM involvement).
-2. **AI_AGENT** — wake the LLM (you) at a specific time to perform a task using available tools.
+**WORKFLOW:**
+1. **Determine reminder type** based on user request:
+   - Simple notification → use STATIC type
+   - Task requiring tools/actions → use AI_AGENT type
 
-Use this tool only if you are confident that you (the agent) or the system can act on the reminder at runtime.
+2. **Set scheduling** using either:
+   - `scheduled_at` for one-time reminders (ISO 8601 datetime)
+   - `repeat` for recurring reminders (cron expression)
 
----
+3. **For AI_AGENT reminders - Check tool availability:**
+   - Verify you have the necessary tools to complete the task. Use the `retrieve_tools` function to get available tools.
+   - If tools are missing, politely refuse and suggest alternatives
 
-### 🔥 Reminder Types:
+4. **Create payload** based on type:
+   - STATIC: Simple `{"title": str, "body": str}`
+   - AI_AGENT: Comprehensive `{"instructions": str}` (self-contained)
 
-**STATIC Reminders**:
-- Send a predefined notification (title + body).
-- Use when the reminder is simple and doesn't require reasoning or access to tools.
-- Payload must be of type `StaticReminderPayload`.
+5. **Optional: Set limits** for recurring reminders:
+   - `max_occurrences` to limit total executions
+   - `stop_after` to set end date
 
-**AI_AGENT Reminders**:
-- Triggers the LLM to take action at the scheduled time.
-- You must write clear `instructions` that tell the agent exactly what to do.
-- You are responsible for checking whether the required tools are available before creating an AI_AGENT reminder.
-- Payload must be of type `AIAgentReminderPayload`.
+⚠️  **CRITICAL FOR AI_AGENT**: The reminder agent starts with ZERO context from this conversation. 
+Write completely self-contained instructions that include ALL necessary context, user preferences, 
+tools to use, output format, and task details.
 
----
+**Reminder Types:**
+- **STATIC**: Simple notification (title + body) sent at scheduled time
+- **AI_AGENT**: Activates LLM with tools to perform tasks at scheduled time
 
-### 🧠 Example: AI_AGENT Reminder Flow
+Args:
+    agent (str): Reminder type - "static" for notifications, "ai_agents" for tool-based tasks
+    repeat (str, optional): Cron expression for recurring reminders
+        Examples: "0 9 * * *" (daily 9AM), "30 18 * * 1-5" (weekdays 6:30PM)
+    scheduled_at (str, optional): ISO 8601 datetime for one-time execution
+        Use this OR repeat, not both
+    max_occurrences (int, optional): Maximum number of executions for recurring reminders
+    stop_after (str, optional): ISO 8601 datetime to stop recurring executions
+    payload (dict): Reminder content based on agent type:
+        - STATIC: {"title": str, "body": str}
+        - AI_AGENT: {"instructions": str} (must be completely self-contained)
 
-User says:  
-**"Remind me at 9PM every day to summarize my unread emails."**
-
-Step-by-step:
-1. Check: Do you have tools to access and summarize emails?
-2. If yes, set `repeat = "0 21 * * *"` (daily at 9PM).
-3. Use the following `AIAgentReminderPayload`:
-
-```json
-{
-  "instructions": "The user wants a daily summary of unread emails. Fetch all unread emails at 9PM and summarize them in plain English. Output JSON: { 'title': ..., 'body': ... }"
-}
-````
-
-If no tools are available for email access → do not create the reminder, and politely refuse the request.
-
----
-
-### 🧘 Example: STATIC Reminder
-
-User says:
-**"Remind me to meditate at 7AM tomorrow."**
-
-→ Create a one-time static reminder using:
-
-```json
-{
-  "title": "Time to Meditate",
-  "body": "Breathe deeply and take 10 minutes for yourself."
-}
-```
-
----
-
-### Args
-
-- **agent**  
-  static or ai_agent reminder type.
-
-- **repeat**  
-  Cron expression for recurring reminders.  
-  **Examples:**
-  - `"0 9 * * *"` → every day at 9AM  
-  - `"0 */2 * * *"` → every 2 hours  
-  - `"30 18 * * 1-5"` → weekdays at 6:30PM  
-
-- **scheduled_at** *(optional)*  
-  ISO 8601 formatted datetime when the reminder should first run. If repeat is set, no need to specify this.
-  
-- **max_occurrences** *(optional)*  
-  Maximum number of times the reminder will fire.
-
-- **stop_after** *(optional)*  
-  datetime after which no more executions will happen.
-
-- **payload** *(required)*  
-  Determines the type of reminder:
-
-  - **For STATIC:**
-    ```json
-    { "title": string, "body": string }
-    ```
-
-  - **For AI_AGENT:**
-    ```json
-    { "instructions": string }
-    ```
-    Instructions must be explicit, comprehensive, and actionable using current tools.
-
----
-
-### Returns:
-
-* `str`: success message if reminder is successfully created, or an error message.
+Returns:
+    str: Success message if reminder created, or error message if failed
 """
 
 

@@ -43,6 +43,7 @@ async def startup(ctx: dict):
             update_reminder_tool.name,
             delete_reminder_tool.name,
         ],
+        in_memory_checkpointer=True,
     ) as built_graph:
         GraphManager.set_graph(built_graph, graph_name="reminder_processing")
 
