@@ -105,7 +105,7 @@ class ReminderScheduler:
             True if updated successfully
         """
         # Add updated_at timestamp
-        update_data["updated_at"] = datetime.now(timezone.utc)
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         filters: dict = {"_id": ObjectId(reminder_id)}
         if user_id:
@@ -120,7 +120,10 @@ class ReminderScheduler:
             if "scheduled_at" in update_data and "status" in update_data:
                 if update_data["status"] == ReminderStatus.SCHEDULED:
                     await self._enqueue_reminder(
-                        reminder_id, update_data["scheduled_at"]
+                        reminder_id,
+                        scheduled_at=datetime.fromisoformat(
+                            update_data["scheduled_at"]
+                        ),
                     )
 
             return True
@@ -284,24 +287,32 @@ class ReminderScheduler:
                     )
 
                 # Check stop_after date
-                if reminder.stop_after and next_run >= reminder.stop_after:
-                    should_continue = False
-                    logger.info(
-                        f"Reminder {reminder_id} reached stop_after date ({reminder.stop_after})"
-                    )
+                if reminder.stop_after:
+                    # Ensure both datetimes are timezone-aware for comparison
+                    stop_after = reminder.stop_after
+                    if stop_after.tzinfo is None:
+                        stop_after = stop_after.replace(tzinfo=timezone.utc)
+                        logger.warning(
+                            f"Reminder {reminder_id} stop_after was offset-naive, assuming UTC"
+                        )
+
+                    if next_run >= stop_after:
+                        should_continue = False
+                        logger.info(
+                            f"Reminder {reminder_id} reached stop_after date ({stop_after})"
+                        )
 
                 if should_continue:
                     # Update and reschedule
                     await self.update_reminder(
                         reminder_id,
                         {
-                            "scheduled_at": next_run,
+                            "scheduled_at": next_run.isoformat(),
                             "occurrence_count": occurrence_count,
                             "status": ReminderStatus.SCHEDULED,
                         },
                         reminder.user_id,
                     )
-                    await self._enqueue_reminder(reminder_id, next_run)
                     logger.info(
                         f"Rescheduled recurring reminder {reminder_id} for {next_run}"
                     )
@@ -339,6 +350,7 @@ class ReminderScheduler:
                 },
                 reminder.user_id,
             )
+            raise e
 
     async def _enqueue_reminder(self, reminder_id: str, scheduled_at: datetime):
         """

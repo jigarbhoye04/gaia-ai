@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator
 
 
 class ReminderStatus(str, Enum):
@@ -81,11 +81,25 @@ class ReminderModel(BaseModel):
         description="Last update timestamp",
     )
 
+    @field_validator("scheduled_at", "stop_after", "created_at", "updated_at")
+    @classmethod
+    def ensure_timezone_aware(cls, v):
+        """Ensure datetime fields are timezone-aware (UTC if no timezone)."""
+        if v is not None and v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v
+
+    @field_serializer("scheduled_at", "stop_after", "created_at", "updated_at")
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format strings."""
+        if value is not None:
+            return value.isoformat()
+        return None
+
     class Config:
         """Pydantic configuration."""
 
         populate_by_name = True
-        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class CreateReminderRequest(BaseModel):
@@ -115,6 +129,7 @@ class CreateReminderRequest(BaseModel):
     )
 
     @field_validator("repeat")
+    @classmethod
     def check_repeat_cron(cls, v):
         from app.utils.cron_utils import validate_cron_expression
 
@@ -123,18 +138,30 @@ class CreateReminderRequest(BaseModel):
         return v
 
     @field_validator("max_occurrences")
+    @classmethod
     def check_max_occurrences(cls, v):
         if v is not None and v <= 0:
             raise ValueError("max_occurrences must be greater than 0")
         return v
 
     @field_validator("stop_after")
+    @classmethod
     def check_stop_after_future(cls, v):
-        from datetime import datetime
+        if v is not None:
+            # Ensure timezone-aware datetime
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
 
-        if v is not None and v <= datetime.now(timezone.utc):
-            raise ValueError("stop_after must be in the future")
+            if v <= datetime.now(timezone.utc):
+                raise ValueError("stop_after must be in the future")
         return v
+
+    @field_serializer("scheduled_at", "stop_after", "base_time")
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format strings."""
+        if value is not None:
+            return value.isoformat()
+        return None
 
 
 class UpdateReminderRequest(BaseModel):
@@ -159,6 +186,7 @@ class UpdateReminderRequest(BaseModel):
     )
 
     @field_validator("repeat")
+    @classmethod
     def check_repeat_cron(cls, v):
         from app.utils.cron_utils import validate_cron_expression
 
@@ -166,19 +194,41 @@ class UpdateReminderRequest(BaseModel):
             raise ValueError(f"Invalid cron expression: {v}")
         return v
 
+    @field_validator("scheduled_at", "stop_after")
+    @classmethod
+    def ensure_timezone_aware(cls, v):
+        """Ensure datetime fields are timezone-aware (UTC if no timezone)."""
+        if v is not None and v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+        return v
+
     @field_validator("max_occurrences")
+    @classmethod
     def check_max_occurrences(cls, v):
         if v is not None and v <= 0:
             raise ValueError("max_occurrences must be greater than 0")
         return v
 
     @field_validator("stop_after")
+    @classmethod
     def check_stop_after_future(cls, v):
         from datetime import datetime
 
-        if v is not None and v <= datetime.now(timezone.utc):
-            raise ValueError("stop_after must be in the future")
+        if v is not None:
+            # Ensure timezone-aware datetime
+            if v.tzinfo is None:
+                v = v.replace(tzinfo=timezone.utc)
+
+            if v <= datetime.now(timezone.utc):
+                raise ValueError("stop_after must be in the future")
         return v
+
+    @field_serializer("scheduled_at", "stop_after")
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format strings."""
+        if value is not None:
+            return value.isoformat()
+        return None
 
 
 class ReminderResponse(BaseModel):
@@ -208,6 +258,13 @@ class ReminderResponse(BaseModel):
     )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
+
+    @field_serializer("scheduled_at", "stop_after", "created_at", "updated_at")
+    def serialize_datetime(self, value: Optional[datetime]) -> Optional[str]:
+        """Serialize datetime fields to ISO format strings."""
+        if value is not None:
+            return value.isoformat()
+        return None
 
 
 class ReminderProcessingAgentResult(BaseModel):

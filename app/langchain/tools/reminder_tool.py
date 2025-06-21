@@ -7,6 +7,7 @@ from typing import Annotated, Any, Optional, Union
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
 
+from app.config.loggers import reminders_logger as logger
 from app.docstrings.langchain.tools.reminder_tool_docs import (
     CREATE_REMINDER,
     DELETE_REMINDER,
@@ -71,13 +72,10 @@ async def create_reminder_tool(
         if not user_id:
             return {"error": "User ID is required to create a reminder"}
 
-        user_time_str: str = config.get("configurable", {}).get(
-            "user_time", ""
-        )  # ISO 8601 format
+        user_time_str: str = config.get("configurable", {}).get("user_time", "")
         if not user_time_str:
             return {"error": "User time is required to create a reminder"}
 
-        # Adjust scheduled_at to user timezone if provided
         if scheduled_at:
             try:
                 scheduled_at = replace_timezone_info(
@@ -85,6 +83,7 @@ async def create_reminder_tool(
                     timezone_source=user_time_str,
                 ).isoformat()
             except ValueError:
+                logger.error(f"Invalid scheduled_at format: {scheduled_at}")
                 return {"error": "Invalid scheduled_at format. Use ISO 8601 format."}
 
         if stop_after:
@@ -94,6 +93,7 @@ async def create_reminder_tool(
                     timezone_source=user_time_str,
                 ).isoformat()
             except ValueError:
+                logger.error(f"Invalid stop_after format {stop_after}")
                 return {"error": "Invalid stop_after format. Use ISO 8601 format."}
 
         data: dict[str, Any] = {
@@ -108,12 +108,13 @@ async def create_reminder_tool(
             "base_time": datetime.fromisoformat(user_time_str),
         }
 
-        request_model = CreateReminderRequest(
-            **data,
-        )
+        request_model = CreateReminderRequest(**data)
         await svc_create_reminder(request_model, user_id=user_id)
+
         return "Reminder created successfully"
+
     except Exception as e:
+        logger.exception("Exception occurred while creating reminder")
         return {"error": str(e)}
 
 
@@ -137,6 +138,7 @@ async def list_user_reminders_tool(
         )
         return [r.model_dump() for r in reminders]
     except Exception as e:
+        logger.exception("Exception occurred while listing reminders")
         return {"error": str(e)}
 
 
@@ -154,8 +156,12 @@ async def get_reminder_tool(
             return {"error": "User ID is required to get reminder"}
 
         reminder = await svc_get_reminder(reminder_id, user_id)
-        return reminder.model_dump() if reminder else {"error": "Reminder not found"}
+        if reminder:
+            return reminder.model_dump()
+        else:
+            return {"error": "Reminder not found"}
     except Exception as e:
+        logger.exception("Exception occurred while getting reminder")
         return {"error": str(e)}
 
 
@@ -170,15 +176,16 @@ async def delete_reminder_tool(
     try:
         user_id = config.get("configurable", {}).get("user_id")
         if not user_id:
+            logger.error("Missing user_id in config")
             return {"error": "User ID is required to delete reminder"}
 
         success = await svc_delete_reminder(reminder_id, user_id)
-        return (
-            {"status": "cancelled"}
-            if success
-            else {"error": "Failed to cancel reminder"}
-        )
+        if success:
+            return {"status": "cancelled"}
+        else:
+            return {"error": "Failed to cancel reminder"}
     except Exception as e:
+        logger.exception("Exception occurred while deleting reminder")
         return {"error": str(e)}
 
 
@@ -217,11 +224,15 @@ async def update_reminder_tool(
             update_data["stop_after"] = datetime.fromisoformat(stop_after)
         if payload is not None:
             update_data["payload"] = payload
+
         success = await svc_update_reminder(reminder_id, update_data, user_id)
-        return (
-            {"status": "updated"} if success else {"error": "Failed to update reminder"}
-        )
+        if success:
+            return {"status": "updated"}
+        else:
+            logger.error("Failed to update reminder")
+            return {"error": "Failed to update reminder"}
     except Exception as e:
+        logger.exception("Exception occurred while updating reminder")
         return {"error": str(e)}
 
 
@@ -236,6 +247,7 @@ async def search_reminders_tool(
     try:
         user_id = config.get("configurable", {}).get("user_id")
         if not user_id:
+            logger.error("Missing user_id in config")
             return {"error": "User ID is required to search reminders"}
 
         reminders = await svc_list_user_reminders(user_id=user_id, limit=100, skip=0)
@@ -245,8 +257,10 @@ async def search_reminders_tool(
             rd = r.model_dump()
             if query.lower() in json.dumps(rd).lower():
                 results.append(rd)
+
         return results
     except Exception as e:
+        logger.exception("Exception occurred while searching reminders")
         return {"error": str(e)}
 
 

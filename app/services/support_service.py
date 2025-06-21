@@ -10,16 +10,16 @@ import cloudinary.uploader
 from fastapi import HTTPException, UploadFile
 
 from app.config.loggers import app_logger as logger
-from app.db.collections import support_collection
+from app.db.mongodb.collections import support_collection
 from app.models.support_models import (
     SupportAttachment,
     SupportEmailNotification,
     SupportRequestCreate,
+    SupportRequestPriority,
     SupportRequestResponse,
     SupportRequestStatus,
     SupportRequestSubmissionResponse,
     SupportRequestType,
-    SupportRequestPriority,
 )
 from app.services.upload_service import upload_file_to_cloudinary
 from app.utils.email_utils import (
@@ -305,7 +305,7 @@ async def create_support_request_with_attachments(
     request_id = None
     attachment_urls = []
     ticket_id = None
-    
+
     try:
         # Generate unique IDs
         request_id = str(uuid.uuid4())
@@ -347,23 +347,23 @@ async def create_support_request_with_attachments(
                     )
                     for attachment in attachments
                 ]
-                
+
                 # Execute all uploads in parallel
                 upload_results = await asyncio.gather(*upload_tasks)
-                
+
                 # Extract URLs and attachment metadata from results
                 for file_url, attachment_metadata in upload_results:
                     attachment_urls.append(file_url)
                     processed_attachments.append(attachment_metadata)
-                
+
                 logger.info(f"Successfully uploaded {len(attachment_urls)} files in parallel for ticket {ticket_id}")
 
-            except Exception as e:
+            except Exception:
                 # Clean up any files that were successfully uploaded before the failure
                 if attachment_urls:
                     logger.info(f"Cleaning up {len(attachment_urls)} partially uploaded files for ticket {ticket_id}")
                     await _delete_uploaded_files(attachment_urls, ticket_id)
-                
+
                 # Re-raise the original exception (could be HTTPException from validation or upload error)
                 raise
 
@@ -423,7 +423,7 @@ async def create_support_request_with_attachments(
         except Exception as email_error:
             # Email sending failed - rollback everything
             logger.error(f"Email sending failed for ticket {ticket_id}: {str(email_error)}")
-            
+
             # Rollback: Delete uploaded files
             if attachment_urls:
                 try:
@@ -431,7 +431,7 @@ async def create_support_request_with_attachments(
                     logger.info(f"Successfully cleaned up {len(attachment_urls)} uploaded files for ticket {ticket_id}")
                 except Exception as cleanup_error:
                     logger.error(f"Error cleaning up uploaded files for ticket {ticket_id}: {str(cleanup_error)}")
-            
+
             # Rollback: Delete the support request from database
             try:
                 delete_result = await support_collection.delete_one({"_id": request_id})
@@ -441,7 +441,7 @@ async def create_support_request_with_attachments(
                     logger.error(f"Failed to rollback support request {ticket_id} from database")
             except Exception as rollback_error:
                 logger.error(f"Error during database rollback for ticket {ticket_id}: {str(rollback_error)}")
-            
+
             # Raise the original email error
             raise HTTPException(
                 status_code=500, 
@@ -485,7 +485,7 @@ async def create_support_request_with_attachments(
     except Exception as e:
         # For any other unexpected errors, also try to rollback everything
         logger.error(f"Unexpected error creating support request with images: {str(e)}")
-        
+
         # Clean up uploaded files
         if attachment_urls and ticket_id:
             try:
@@ -493,7 +493,7 @@ async def create_support_request_with_attachments(
                 logger.info(f"Cleaned up {len(attachment_urls)} uploaded files due to unexpected error")
             except Exception as cleanup_error:
                 logger.error(f"Error cleaning up uploaded files: {str(cleanup_error)}")
-        
+
         # Clean up database entry
         if request_id:
             try:
@@ -501,7 +501,7 @@ async def create_support_request_with_attachments(
                 logger.info(f"Rolled back support request {request_id} due to unexpected error")
             except Exception as rollback_error:
                 logger.error(f"Error during rollback for request {request_id}: {str(rollback_error)}")
-        
+
         raise HTTPException(
             status_code=500, detail=f"Failed to create support request: {str(e)}"
         )
