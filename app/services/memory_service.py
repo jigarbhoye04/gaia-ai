@@ -8,6 +8,7 @@ from app.memory.client import get_memory_client
 from app.models.memory_models import (
     MemoryEntry,
     MemorySearchResult,
+    MemoryRelation,
 )
 
 
@@ -51,6 +52,7 @@ class MemoryService:
             MemoryEntry or None if parsing fails
         """
         if not isinstance(result, dict):
+            self.logger.warning(f"Expected dict, got {type(result)}: {result}")
             return None
 
         # Handle both memory structure formats
@@ -58,20 +60,34 @@ class MemoryService:
             result.get("memory") or result.get("text") or result.get("content", "")
         )
 
-        # Extract all the fields that match the output structure
-        return MemoryEntry(
-            id=result.get("id"),
-            content=content,
-            user_id=result.get("user_id", ""),
-            metadata=result.get("metadata") or {},
-            categories=result.get("categories", []),
-            created_at=result.get("created_at"),
-            updated_at=result.get("updated_at"),
-            expiration_date=result.get("expiration_date"),
-            internal_metadata=result.get("internal_metadata"),
-            deleted_at=result.get("deleted_at"),
-            relevance_score=result.get("score") or result.get("relevance_score"),
-        )
+        if not content:
+            self.logger.warning(f"No content found in memory result: {result}")
+            return None
+
+        try:
+            # Extract all the fields that match the output structure
+            memory_entry = MemoryEntry(
+                id=result.get("id"),
+                content=content,
+                user_id=result.get("user_id", ""),
+                metadata=result.get("metadata") or {},
+                categories=result.get("categories", []),
+                created_at=result.get("created_at"),
+                updated_at=result.get("updated_at"),
+                expiration_date=result.get("expiration_date"),
+                internal_metadata=result.get("internal_metadata"),
+                deleted_at=result.get("deleted_at"),
+                relevance_score=result.get("score") or result.get("relevance_score"),
+            )
+
+            self.logger.debug(f"Successfully parsed memory: {memory_entry.id}")
+            return memory_entry
+
+        except Exception as e:
+            self.logger.error(
+                f"Error creating MemoryEntry from data: {e}, raw data: {result}"
+            )
+            return None
 
     def _parse_memory_list(
         self, memories: List[Dict[str, Any]], user_id: str
@@ -88,10 +104,95 @@ class MemoryService:
         """
         parsed_memories = []
         for memory_data in memories:
-            if memory_entry := self._parse_memory_result(memory_data):
-                memory_entry.user_id = user_id
-                parsed_memories.append(memory_entry)
+            try:
+                if memory_entry := self._parse_memory_result(memory_data):
+                    memory_entry.user_id = user_id
+                    parsed_memories.append(memory_entry)
+            except Exception as e:
+                self.logger.warning(f"Failed to parse memory: {e}")
+                continue
+
+        self.logger.debug(
+            f"Successfully parsed {len(parsed_memories)}/{len(memories)} memories"
+        )
         return parsed_memories
+
+    def _extract_memories_from_response(self, response: Any) -> List[Dict[str, Any]]:
+        """
+        Extract memories list from various response formats.
+
+        Args:
+            response: API response in various formats
+
+        Returns:
+            List of memory dictionaries
+        """
+        if isinstance(response, list):
+            return response
+
+        if isinstance(response, dict):
+            # Check for 'memories' key (v1.1 format with graph data)
+            if "memories" in response:
+                return response["memories"]
+
+            # Check for 'results' key (standard format)
+            if "results" in response:
+                return response["results"]
+
+            # Check if response itself is a single memory
+            if "id" in response and ("memory" in response or "content" in response):
+                return [response]
+
+        self.logger.warning(f"Unexpected response format: {type(response)}")
+        return []
+
+    def _extract_relationships_from_response(
+        self, response: Any
+    ) -> List[Dict[str, Any]]:
+        """
+        Extract relationships list from API response.
+
+        Args:
+            response: API response in various formats
+
+        Returns:
+            List of relationship dictionaries
+        """
+        if isinstance(response, dict) and "relations" in response:
+            return response.get("relations", [])
+        return []
+
+    def _parse_relationships(
+        self, relations: List[Dict[str, Any]]
+    ) -> List[MemoryRelation]:
+        """
+        Parse relationships from Mem0 API response.
+
+        Args:
+            relations: List of relationship dictionaries
+
+        Returns:
+            List of MemoryRelation objects
+        """
+        parsed_relations = []
+        for relation_data in relations:
+            try:
+                relation = MemoryRelation(
+                    source=relation_data.get("source", ""),
+                    source_type=relation_data.get("source_type", ""),
+                    relationship=relation_data.get("relationship", ""),
+                    target=relation_data.get("target", ""),
+                    target_type=relation_data.get("target_type", ""),
+                )
+                parsed_relations.append(relation)
+            except Exception as e:
+                self.logger.warning(f"Failed to parse relationship: {e}")
+                continue
+
+        self.logger.debug(
+            f"Successfully parsed {len(parsed_relations)}/{len(relations)} relationships"
+        )
+        return parsed_relations
 
     async def store_memory(
         self,
@@ -124,8 +225,6 @@ class MemoryService:
                 metadata=metadata or {},
                 infer=True,
             )
-
-            self.logger.info(f"THIS IS RESULT OF MEM0 {result}")
 
             self.logger.info(f"Memory stored for user {user_id}")
 
@@ -224,24 +323,38 @@ class MemoryService:
             return MemorySearchResult()
 
         try:
-            all_memories = await asyncio.to_thread(self.client.get_all, user_id=user_id)
+            response = await asyncio.to_thread(
+                self.client.get_all,
+                enable_graph=True,
+                user_id=user_id,
+                output_format="v1.1",
+            )  # Extract memories from response
+            memories_list = self._extract_memories_from_response(response)
 
-            # Log the raw response
-            self.logger.info(f"Raw memory response: {all_memories}")
+            # Extract relationships from response (if available)
+            relations_list = self._extract_relationships_from_response(response)
 
-            memory_entries = []
+            # Parse memories and relationships
+            memory_entries = self._parse_memory_list(memories_list, user_id)
+            relationships = self._parse_relationships(relations_list)
 
-            for memory in all_memories:
-                memory_entry = self._parse_memory_result(memory)
-                if memory_entry:
-                    memory_entries.append(memory_entry)
+            # Calculate pagination
+            start_index = (page - 1) * page_size
+            end_index = start_index + page_size
+            paginated_memories = memory_entries[start_index:end_index]
+
+            self.logger.info(
+                f"Successfully processed {len(memory_entries)} memories and {len(relationships)} relationships for user {user_id}, "
+                f"returning page {page} ({len(paginated_memories)} items)"
+            )
 
             return MemorySearchResult(
-                memories=memory_entries,
+                memories=paginated_memories,
+                relations=relationships,
                 total_count=len(memory_entries),
                 page=page,
                 page_size=page_size,
-                has_next=len(memory_entries) > page * page_size,
+                has_next=end_index < len(memory_entries),
             )
 
         except Exception as e:
