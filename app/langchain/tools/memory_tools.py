@@ -22,9 +22,9 @@ from app.services.memory_service import memory_service
 @tool
 @with_doc(ADD_MEMORY)
 async def add_memory(
+    config: RunnableConfig,
     content: Annotated[str, "Memory content to store"],
     metadata: Annotated[Optional[Dict], "Additional metadata for the memory"] = None,
-    config: RunnableConfig = None,
 ) -> str:
     if not config:
         return "Error: Configuration required but not provided"
@@ -48,9 +48,9 @@ async def add_memory(
 @tool
 @with_doc(SEARCH_MEMORY)
 async def search_memory(
+    config: RunnableConfig,
     query: Annotated[str, "Query string to search for"],
     limit: Annotated[int, "Maximum number of results to return"] = 5,
-    config: RunnableConfig = None,
 ) -> str:
     if not config:
         return "Error: Configuration required but not provided"
@@ -81,9 +81,9 @@ async def search_memory(
 @tool
 @with_doc(GET_ALL_MEMORY)
 async def get_all_memory(
+    config: RunnableConfig,
     page: Annotated[int, "Page number for pagination"] = 1,
     page_size: Annotated[int, "Number of results per page"] = 10,
-    config: RunnableConfig = None,
 ) -> str:
     if not config:
         return "Error: Configuration required but not provided"

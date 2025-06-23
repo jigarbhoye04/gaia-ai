@@ -22,11 +22,11 @@ ALWAYS_AVAILABLE_TOOLS = [
     search_tool.deep_search_tool,
     webpage_tool.fetch_webpages,
     file_tools.query_file,
-    reminder_tool.create_reminder_tool,
 ]
 
 # All other tools will be accessible through vector search
 tools = [
+    reminder_tool.create_reminder_tool,
     *mail_tool.tools,
     *todo_tool.tools,
     *calendar_tool.tools,
