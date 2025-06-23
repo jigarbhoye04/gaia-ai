@@ -12,6 +12,10 @@ const config = {
     extend: {
       fontFamily: {
         switzer: "var(--font-switzer), sans-serif",
+        sf: "var(--font-sf-pro-display), var(--font-sf-pro-text), sans-serif",
+        "sf-display": "var(--font-sf-pro-display), sans-serif",
+        "sf-text": "var(--font-sf-pro-text), sans-serif",
+        creato: "var(--font-creato), sans-serif",
       },
       command: {
         bg: "#1E293B",

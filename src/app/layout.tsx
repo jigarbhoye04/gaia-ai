@@ -2,10 +2,11 @@ import "./styles/globals.css";
 import "./styles/tailwind.css";
 
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
 import Script from "next/script";
 
 import ProvidersLayout from "@/layouts/ProvidersLayout";
+
+import { defaultFont,getAllFontVariables } from "./fonts";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -62,25 +63,12 @@ export const viewport: Viewport = {
   themeColor: "#00bbff",
 };
 
-const switzer = localFont({
-  src: [
-    {
-      path: "./fonts/switzer/Switzer-Variable.woff2",
-      weight: "100 900",
-      style: "normal",
-    },
-  ],
-  preload: true,
-  variable: "--font-switzer",
-  display: "swap",
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${switzer.variable} dark`}>
-      <body className="dark">
+    <html lang="en" className={`${getAllFontVariables()} dark`}>
+      <body className={`dark ${defaultFont.className}`}>
         <main>
           <ProvidersLayout>{children}</ProvidersLayout>
         </main>
