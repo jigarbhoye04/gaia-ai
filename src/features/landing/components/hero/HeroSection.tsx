@@ -1,3 +1,4 @@
+import { Spotlight } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
 import { MotionContainer } from "../../../../layouts/MotionContainer";
@@ -6,9 +7,9 @@ import GetStartedButton from "../shared/GetStartedButton";
 export default function HeroSection() {
   return (
     <div className="flex h-fit w-screen flex-col items-center justify-center gap-8 py-16 sm:py-28">
-      {/* <div className="top-0 left-0 w-screen">
+      <div className="top-0 left-0 w-screen">
         <Spotlight duration={15} />
-      </div> */}
+      </div>
       <MotionContainer className="relative z-2 flex h-full flex-col items-center justify-center gap-4">
         <div
           // Gradient for text.

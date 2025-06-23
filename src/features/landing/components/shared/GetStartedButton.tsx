@@ -19,7 +19,7 @@ export default function GetStartedButton({
         variant="shadow"
       >
         <div className="relative z-10 flex items-center gap-1 transition-all duration-100">
-          Get Started for Free
+          Start for free
           <ArrowUpRight className="transition-transform group-hover:translate-x-0.5" />
         </div>
       </Button>

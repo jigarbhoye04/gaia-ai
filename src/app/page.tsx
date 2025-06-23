@@ -3,10 +3,7 @@
 import { lazy, useEffect } from "react";
 
 import HeroSection from "@/features/landing/components/hero/HeroSection";
-import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
-import Personalised from "@/features/landing/components/sections/new/Personalised";
-import Proactive from "@/features/landing/components/sections/new/Proactive";
-import Productivity from "@/features/landing/components/sections/new/Productivity";
+import Todo from "@/features/landing/components/sections/new/Todo";
 
 import LandingLayout from "./(landing)/layout";
 
@@ -56,10 +53,11 @@ export default function LandingPage() {
         <div
         // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
         >
-          <Productivity />
-          <Proactive />
-          <Personalised />
-          <AdvancedConversation />
+          {/* <Productivity /> */}
+          <Todo />
+          {/* <Proactive /> */}
+          {/* <Personalised /> */}
+          {/* <AdvancedConversation /> */}
           {/* <Integrations /> */}
           {/* 
           <Suspense fallback={<SuspenseLoader />}>
