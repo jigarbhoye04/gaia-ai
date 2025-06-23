@@ -149,9 +149,9 @@ export function CalendarEventCard({
               // Single time event (fallback)
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
+                  {/* <span className="rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
                     All Day
-                  </span>
+                  </span> */}
                 </div>
                 <div className="font-medium">{event.time || "Time TBD"}</div>
               </div>

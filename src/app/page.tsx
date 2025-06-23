@@ -4,15 +4,10 @@ import { lazy, useEffect } from "react";
 
 import HeroImage from "@/features/landing/components/hero/HeroImageSection";
 import HeroSection from "@/features/landing/components/hero/HeroSection";
-import Description from "@/features/landing/components/sections/new/Description";
-import Todo from "@/features/landing/components/sections/new/Todo";
+import Calendar from "@/features/landing/components/sections/new/Calendar";
 
 import LandingLayout from "./(landing)/layout";
 
-// Lazy load section components
-const CalendarSection = lazy(
-  () => import("@/features/landing/components/sections/CalendarSection"),
-);
 const DeepSearchSection = lazy(
   () => import("@/features/landing/components/sections/DeepSearchSection"),
 );
@@ -55,21 +50,24 @@ export default function LandingPage() {
         <HeroImage />
 
         <div
-          className="space-y-30"
+          className="mt-40 space-y-30"
           // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
         >
-          <Description />
+          {/* <Description /> */}
           {/* <Productivity /> */}
-          <Todo />
-          <Goals />
           {/* <Proactive /> */}
           {/* <Personalised /> */}
+          {/* <Todo /> */}
+          {/* <Goals /> */}
           {/* <AdvancedConversation /> */}
           {/* <Integrations /> */}
 
+          <Calendar />
+
+          {/* Section for crazy automations, MCP, n8n, and reminders feature */}
+
           {/* 
           <Suspense fallback={<SuspenseLoader />}>
-            <CalendarSection />
           </Suspense>
 
           <Suspense fallback={<SuspenseLoader />}>

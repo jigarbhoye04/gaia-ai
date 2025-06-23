@@ -15,11 +15,12 @@ export default function Description() {
   const [isSectionVisible, setIsSectionVisible] = useState(false);
 
   const paragraphs = [
-    "We believe that everyone deserves a personal assistant. Not just a chatbot — but something smarter.",
-    "One that truly understands you, remembers what matters, and gets real work done.",
+    "We believe that everyone deserves a personal assistant. Not just a chatbot, but something smarter.",
+    "One that is truly personalised and gets real work done.",
     "Frustrated with Siri, Alexa, ChatGPT or Google Assistant doing the bare minimum?",
-    "What if everything in your digital life was seamlessly managed by an assistant that works like a real human, thinks ahead, and grows smarter the more you use it?",
-    "Meet GAIA — your very own personal AI assistant. Something closer to Jarvis than any chatbot you've used.",
+    "What if everything in your digital life was seamlessly managed by an assistant that works like a real human, and grows smarter the more you use it?",
+    "Meet GAIA, your very own personal AI assistant.",
+    "Something closer to Jarvis than any chatbot you've used.",
     "An AI that thinks, plans, and acts like a real human assistant would",
     "Because staying productive shouldn't require effort. It should feel effortless.",
   ];
@@ -118,6 +119,7 @@ export default function Description() {
           filter: "blur(0px)",
           duration: 10, // Longer visibility
           ease: "power2.out",
+          immediateRender: false,
         },
         0,
       );
@@ -158,7 +160,7 @@ export default function Description() {
           filter: "blur(8px)",
           duration: 0.8,
         },
-        20.0, // Increased delay - text stays visible much longer
+        50.0, // Significantly increased delay - text stays visible much longer
       );
     });
 
