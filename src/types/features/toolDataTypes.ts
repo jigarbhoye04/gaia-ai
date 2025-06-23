@@ -119,3 +119,20 @@ export type CodeData = {
   }> | null;
   status?: "executing" | "completed" | "error";
 };
+
+// Define Google Docs data structure for Google Docs operations
+export type GoogleDocsData = {
+  documents: Array<{
+    id: string;
+    title: string;
+    url: string;
+    created_time: string;
+    modified_time: string;
+    type: string;
+  }>;
+  count: number;
+  query?: string | null;
+  action: string;
+  message: string;
+  type: string;
+};

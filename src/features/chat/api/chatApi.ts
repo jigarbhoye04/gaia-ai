@@ -183,6 +183,7 @@ export const chatApi = {
         headers: {
           "Content-Type": "application/json",
           Accept: "text/event-stream",
+          "x-timezone": Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         credentials: "include",
         signal: controller.signal,

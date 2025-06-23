@@ -24,6 +24,7 @@ import {
   CodeData,
   DocumentData,
   GoalDataMessageType,
+  GoogleDocsData,
   ImageData,
   MemoryData,
 } from "./toolDataTypes";
@@ -41,6 +42,7 @@ export type {
   EmailComposeData,
   EnhancedWebResult,
   GoalDataMessageType,
+  GoogleDocsData,
   ImageData,
   ImageResult,
   MemoryData,
@@ -83,6 +85,7 @@ export type MessageType = {
   code_data?: CodeData | null; // code execution data from backend
   memory_data?: MemoryData | null; // memory-related fields
   goal_data?: GoalDataMessageType | null; // goal-related fields
+  google_docs_data?: GoogleDocsData | null; // Google Docs data from backend tools
 };
 
 // Define the structure for a single conversation

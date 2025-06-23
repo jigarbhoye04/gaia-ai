@@ -77,6 +77,11 @@ type StreamChunk = Partial<MessageType> & {
     };
     error?: string;
   };
+  google_docs_data?: {
+    title: string;
+    url: string;
+    action?: string;
+  };
 };
 
 export function parseStreamData(
@@ -168,6 +173,11 @@ export function parseStreamData(
   // goal-related fields
   if (streamChunk.goal_data !== undefined) {
     result.goal_data = streamChunk.goal_data;
+  }
+
+  // Google Docs related fields
+  if (streamChunk.google_docs_data !== undefined) {
+    result.google_docs_data = streamChunk.google_docs_data;
   }
 
   return result;

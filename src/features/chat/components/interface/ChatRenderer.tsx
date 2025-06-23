@@ -141,6 +141,7 @@ export default function ChatRenderer() {
               document_data={message.document_data}
               code_data={message.code_data}
               onOpenMemoryModal={() => setOpenMemoryModal(true)}
+              google_docs_data={message.google_docs_data}
             />
           </div>
         ) : (

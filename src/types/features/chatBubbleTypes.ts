@@ -9,6 +9,7 @@ import {
   DeepSearchResults,
   DocumentData,
   EmailComposeData,
+  GoogleDocsData,
   ImageData,
   SearchResults,
   WeatherData,
@@ -149,6 +150,9 @@ export interface ChatBubbleBotProps {
     };
     error?: string;
   } | null;
+
+  // Google Docs data from backend tools
+  google_docs_data?: GoogleDocsData | null;
 
   // Function to open the shared memory modal
   onOpenMemoryModal?: () => void;
