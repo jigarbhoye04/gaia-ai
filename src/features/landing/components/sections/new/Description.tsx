@@ -3,6 +3,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useEffect, useRef, useState } from "react";
 
+import { OnboardingBackground } from "@/features/onboarding/components/OnboardingBackground";
+
 import GetStartedButton from "../../shared/GetStartedButton";
 
 export default function Description() {
@@ -10,15 +12,16 @@ export default function Description() {
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const [lastParagraphVisible, setLastParagraphVisible] = useState(false);
+  const [isSectionVisible, setIsSectionVisible] = useState(false);
 
   const paragraphs = [
-    "Everyone deserves a personal assistant. Not just a chatbot — but something smarter.",
-    "One that understands you, remembers what matters, and actually gets things done.",
-    "Tired of Siri, Alexa, or Google Assistant doing the bare minimum?",
-    "Do you wish your entire digital life could be integrated — your calendar, email, browser, and files — all in one assistant?",
-    "We're building GAIA — something closer to Jarvis than any chatbot you've used.",
-    "An AI that thinks, plans, and acts like a real human would",
-    "Because productivity shouldn't require effort. It should feel effortless.",
+    "We believe that everyone deserves a personal assistant. Not just a chatbot — but something smarter.",
+    "One that truly understands you, remembers what matters, and gets real work done.",
+    "Frustrated with Siri, Alexa, ChatGPT or Google Assistant doing the bare minimum?",
+    "What if everything in your digital life was seamlessly managed by an assistant that works like a real human, thinks ahead, and grows smarter the more you use it?",
+    "Meet GAIA — your very own personal AI assistant. Something closer to Jarvis than any chatbot you've used.",
+    "An AI that thinks, plans, and acts like a real human assistant would",
+    "Because staying productive shouldn't require effort. It should feel effortless.",
   ];
 
   useEffect(() => {
@@ -32,6 +35,20 @@ export default function Description() {
       !sectionRef.current
     )
       return;
+
+    // Setup intersection observer to track when the section is visible
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          setIsSectionVisible(entry.isIntersecting);
+        });
+      },
+      { threshold: 0.1 },
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
 
     // Clear any existing ScrollTriggers to prevent duplicates on re-renders
     ScrollTrigger.getAll().forEach((st) => st.kill());
@@ -70,8 +87,8 @@ export default function Description() {
           trigger: sectionRef.current,
           start: `top+=${index * sectionHeight} center`,
           end: `top+=${(index + 1) * sectionHeight} top+=100`,
-          scrub: 0.3, // Smoother transitions
-          markers: false, // Set to false in production
+          scrub: 1, // Smoother transitions
+          markers: false,
           toggleActions: "play none none reverse",
           onEnter: () => {
             // Ensure all other texts are hidden
@@ -89,8 +106,6 @@ export default function Description() {
             if (index !== paragraphs.length - 1) {
               setLastParagraphVisible(false);
             }
-            // Note: We don't set lastParagraphVisible to true here anymore
-            // That happens in the onComplete callback of the word animation
           },
         },
       });
@@ -101,7 +116,7 @@ export default function Description() {
         {
           opacity: 1,
           filter: "blur(0px)",
-          duration: 1.2, // Longer visibility
+          duration: 10, // Longer visibility
           ease: "power2.out",
         },
         0,
@@ -113,15 +128,15 @@ export default function Description() {
           newSplitTexts[index].words,
           {
             opacity: 0,
-            y: 20,
-            filter: "blur(5px)",
+            y: 40,
+            filter: "blur(10px)",
           },
           {
             opacity: 1,
             y: 0,
             filter: "blur(0px)",
-            duration: 1.2,
-            stagger: 0.1, // Stagger each word
+            duration: 5,
+            stagger: 0.7, // Stagger each word
             ease: "back.out(1.2)",
             onComplete: () => {
               // Only set the last paragraph as visible after all words have appeared
@@ -130,7 +145,7 @@ export default function Description() {
               }
             },
           },
-          0.2, // Slight delay after parent text starts to appear
+          0.5, // Slight delay after parent text starts to appear
         );
       }
 
@@ -143,30 +158,45 @@ export default function Description() {
           filter: "blur(8px)",
           duration: 0.8,
         },
-        5.0, // Increased delay - text stays visible much longer
+        20.0, // Increased delay - text stays visible much longer
       );
     });
 
     // Cleanup function
     return () => {
       ScrollTrigger.getAll().forEach((st) => st.kill());
+      if (sectionRef.current) {
+        observer.disconnect();
+      }
     };
   }, [paragraphs.length]);
 
   return (
     <div
       ref={sectionRef}
-      className="relative mb-40 flex flex-col items-center justify-center p-20"
-      style={{ height: `${paragraphs.length * 100}vh` }}
+      className="relative mb-60 flex flex-col items-center justify-center p-20"
+      style={{
+        height: `${paragraphs.length * 100}vh`,
+        position: "relative",
+        overflow: "hidden",
+      }}
     >
-      <div ref={containerRef} className="relative w-full max-w-4xl">
+      <div
+        className={`fixed inset-0 z-[-1] h-screen w-full transition-opacity duration-700 ${
+          isSectionVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <OnboardingBackground />
+      </div>
+
+      <div ref={containerRef} className="relative z-10 w-full max-w-4xl">
         {paragraphs.map((text, index) => (
           <div
             key={index}
             ref={(el) => {
               textRefs.current[index] = el;
             }}
-            className="max-w-3xl text-center text-5xl font-medium"
+            className="max-w-3xl text-center text-6xl font-medium"
             style={{ width: "100%" }}
           >
             {text}
@@ -178,7 +208,7 @@ export default function Description() {
                     : "pointer-events-none opacity-0"
                 }`}
               >
-                <GetStartedButton />
+                <GetStartedButton text="Sign Up" />
               </div>
             )}
           </div>
