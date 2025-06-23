@@ -47,6 +47,13 @@ export default function Footer() {
                       href={link.href}
                       className="group relative flex items-center justify-start text-white"
                     >
+                      {section.title == "Connect" &&
+                        link.label !== "Contact Us" &&
+                        link.icon && (
+                          <div className="text-foreground-400 group-hover:text-foreground">
+                            {link.icon}
+                          </div>
+                        )}
                       <span className="text-foreground-400 transition-colors group-hover:text-foreground">
                         {link.label}
                       </span>

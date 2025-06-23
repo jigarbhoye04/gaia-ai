@@ -2,6 +2,7 @@ import { ReactElement } from "react";
 
 import {
   BubbleConversationChatIcon,
+  DiscordIcon,
   Home01Icon,
   Idea01Icon,
   MapsIcon,
@@ -44,6 +45,12 @@ export const mainNavLinks: NavLink[] = [
     label: "Roadmap",
     icon: <MapsIcon width={19} color={undefined} />,
     external: true,
+  },
+  {
+    label: "Discord",
+    href: "https://discord.heygaia.io",
+    external: true,
+    icon: <DiscordIcon width={19} />,
   },
 ];
 

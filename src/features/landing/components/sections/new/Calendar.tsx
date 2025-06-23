@@ -117,7 +117,7 @@ export default function Calendar() {
           "No need to ever open your Calendar again. Easily schedule, update, and manage your schedule just by texting GAIA. "
         }
       />
-      <div className="grid h-full w-full max-w-6xl grid-cols-4 grid-rows-2 gap-5">
+      <div className="grid h-full w-full max-w-6xl grid-cols-4 gap-5">
         <div className="col-span-2">
           <FeatureCard
             title="Your Calendar, Powered by Conversation"

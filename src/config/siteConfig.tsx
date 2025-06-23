@@ -16,6 +16,8 @@ import { ReactElement } from "react";
 import {
   BookOpen02Icon,
   CustomerService01Icon,
+  DiscordIcon,
+  Github,
   GlobalIcon,
   Idea01Icon,
   LinkedinIcon,
@@ -85,6 +87,18 @@ export const siteConfig = {
           href: "https://x.com/heygaia_io",
           external: true,
           icon: <TwitterIcon width={19} />,
+        },
+        {
+          label: "Discord",
+          href: "https://discord.heygaia.io",
+          external: true,
+          icon: <DiscordIcon width={19} />,
+        },
+        {
+          label: "GitHub",
+          href: "https://github.com/heygaia",
+          external: true,
+          icon: <Github width={19} />,
         },
       ],
     },
