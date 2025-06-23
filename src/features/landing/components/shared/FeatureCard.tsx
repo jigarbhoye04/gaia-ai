@@ -11,6 +11,7 @@ interface FeatureCardProps {
   icon?: ReactNode;
   className?: string;
   children?: ReactNode;
+  childrenBeforeHeading?: ReactNode;
 }
 
 export function FeatureCard({
@@ -23,6 +24,7 @@ export function FeatureCard({
   icon,
   className = "",
   children,
+  childrenBeforeHeading = false,
 }: FeatureCardProps) {
   return (
     <div
@@ -32,7 +34,12 @@ export function FeatureCard({
         <div
           className={`relative w-full flex-1 overflow-hidden rounded-2xl ${reverse ? "mt-3" : "mb-3"}`}
         >
-          <Image fill src={imageSrc} className="object-cover" alt={imageAlt} />
+          <Image
+            fill
+            src={imageSrc}
+            className="object-contain"
+            alt={imageAlt}
+          />
         </div>
       )}
       <div className="flex flex-col gap-1">
@@ -43,6 +50,7 @@ export function FeatureCard({
             </div>
           </div>
         )}
+        {childrenBeforeHeading && <div>{childrenBeforeHeading}</div>}
         <div
           className={`font-medium text-white ${small ? "text-xl" : "text-3xl"}`}
         >

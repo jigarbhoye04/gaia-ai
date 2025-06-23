@@ -3,6 +3,7 @@
 import { lazy, useEffect } from "react";
 
 import HeroSection from "@/features/landing/components/hero/HeroSection";
+import Goals from "@/features/landing/components/sections/new/Goals";
 import Todo from "@/features/landing/components/sections/new/Todo";
 
 import LandingLayout from "./(landing)/layout";
@@ -55,10 +56,13 @@ export default function LandingPage() {
         >
           {/* <Productivity /> */}
           <Todo />
+          <Goals />
           {/* <Proactive /> */}
           {/* <Personalised /> */}
           {/* <AdvancedConversation /> */}
           {/* <Integrations /> */}
+
+          <GoalSection />
           {/* 
           <Suspense fallback={<SuspenseLoader />}>
             <CalendarSection />
@@ -68,9 +72,6 @@ export default function LandingPage() {
             <DeepSearchSection />
           </Suspense>
 
-          <Suspense fallback={<SuspenseLoader />}>
-            <GoalSection />
-          </Suspense>
 
           <Suspense fallback={<SuspenseLoader />}>
             <InternetSection />

@@ -53,9 +53,9 @@ export default function Todo() {
   return (
     <div className="flex flex-col items-center justify-center gap-10 p-10">
       <LargeHeader
-        headingText="To-Do Lists"
+        headingText="Save Hours on Task Management"
         subHeadingText={
-          "Simple tools to create, organize, and complete your tasks"
+          "Stop wasting time organizing your to-dos — GAIA manages   everything for you through simple text."
         }
       />
       <div className="grid h-full w-full max-w-6xl grid-cols-4 grid-rows-2 gap-5">
