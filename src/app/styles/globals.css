@@ -256,7 +256,7 @@ code,
 }
 html,
 body {
-  background-color: #080808;
+  /* background-color: #080808; */
   overflow-x: hidden;
 }
 main {
