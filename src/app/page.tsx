@@ -3,7 +3,6 @@
 import { lazy, useEffect } from "react";
 
 import HeroSection from "@/features/landing/components/hero/HeroSection";
-import Goals from "@/features/landing/components/sections/new/Goals";
 import Todo from "@/features/landing/components/sections/new/Todo";
 
 import LandingLayout from "./(landing)/layout";
@@ -21,8 +20,8 @@ const DeepSearchSection = lazy(
 const FinalSection = lazy(
   () => import("@/features/landing/components/sections/FinalSection"),
 );
-const GoalSection = lazy(
-  () => import("@/features/landing/components/sections/GoalSection"),
+const Goals = lazy(
+  () => import("@/features/landing/components/sections/new/Goals"),
 );
 const InternetSection = lazy(
   () => import("@/features/landing/components/sections/InternetSection"),
@@ -52,7 +51,8 @@ export default function LandingPage() {
         {/* <HeroImage /> */}
 
         <div
-        // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
+          className="space-y-30"
+          // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
         >
           {/* <Productivity /> */}
           <Todo />
@@ -62,7 +62,6 @@ export default function LandingPage() {
           {/* <AdvancedConversation /> */}
           {/* <Integrations /> */}
 
-          <GoalSection />
           {/* 
           <Suspense fallback={<SuspenseLoader />}>
             <CalendarSection />

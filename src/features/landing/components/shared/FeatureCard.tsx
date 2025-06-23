@@ -10,6 +10,7 @@ interface FeatureCardProps {
   reverse?: boolean;
   icon?: ReactNode;
   className?: string;
+  imageClassName?: string;
   children?: ReactNode;
   childrenBeforeHeading?: ReactNode;
 }
@@ -23,12 +24,13 @@ export function FeatureCard({
   reverse = false,
   icon,
   className = "",
+  imageClassName = "object-contain",
   children,
   childrenBeforeHeading = false,
 }: FeatureCardProps) {
   return (
     <div
-      className={`${className} flex aspect-[9/10] h-full w-full ${reverse ? "flex-col-reverse" : "flex-col"} bg-zinc-900 ${small ? "rounded-2xl p-4" : "rounded-3xl p-6"}`}
+      className={`${className} flex h-full w-full ${reverse ? "flex-col-reverse" : "flex-col"} bg-zinc-900 ${small ? "rounded-2xl p-4" : "rounded-3xl p-6"}`}
     >
       {imageSrc && (
         <div
@@ -37,7 +39,7 @@ export function FeatureCard({
           <Image
             fill
             src={imageSrc}
-            className="object-contain"
+            className={`${imageClassName}`}
             alt={imageAlt}
           />
         </div>

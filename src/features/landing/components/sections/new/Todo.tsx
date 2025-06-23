@@ -53,6 +53,7 @@ export default function Todo() {
   return (
     <div className="flex flex-col items-center justify-center gap-10 p-10">
       <LargeHeader
+        chipText="To-do lists"
         headingText="Save Hours on Task Management"
         subHeadingText={
           "Stop wasting time organizing your to-dos — GAIA manages   everything for you through simple text."
