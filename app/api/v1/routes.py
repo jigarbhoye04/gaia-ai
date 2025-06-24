@@ -22,6 +22,7 @@ from app.api.v1.router import (
     notes,
     notification,
     oauth,
+    payments,
     reminders,
     search,
     support,
@@ -55,4 +56,5 @@ router.include_router(mail_webhook.router, tags=["Mail Webhook"])
 router.include_router(todos.router, tags=["Todos"])
 router.include_router(reminders.router, tags=["Reminders"])
 router.include_router(support.router, tags=["Support"])
+router.include_router(payments.router, prefix="/payments", tags=["Payments"])
 # api_router.include_router(audio.router, tags=["Audio"])

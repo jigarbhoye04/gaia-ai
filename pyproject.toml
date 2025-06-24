@@ -88,6 +88,7 @@ dependencies = [
   "markdown2>=2.5.3",
   "pandas>=2.3.0",
   "resend>=2.10.0",
+  "razorpay>=1.4.2",
 ]
 
 [dependency-groups]

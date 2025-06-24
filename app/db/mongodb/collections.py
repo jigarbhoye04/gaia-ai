@@ -23,3 +23,8 @@ todos_collection = mongodb_instance.get_collection("todos")
 projects_collection = mongodb_instance.get_collection("projects")
 reminders_collection = mongodb_instance.get_collection("reminders")
 support_collection = mongodb_instance.get_collection("support_requests")
+
+# Payment collections
+plans_collection = mongodb_instance.get_collection("subscription_plans")
+subscriptions_collection = mongodb_instance.get_collection("subscriptions")
+payments_collection = mongodb_instance.get_collection("payments")

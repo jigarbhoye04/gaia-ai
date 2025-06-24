@@ -23,8 +23,11 @@ from app.db.mongodb.collections import (
     mail_collection,
     notes_collection,
     notifications_collection,
+    payments_collection,
+    plans_collection,
     projects_collection,
     reminders_collection,
+    subscriptions_collection,
     todos_collection,
     users_collection,
 )
@@ -58,6 +61,7 @@ async def create_all_indexes():
             create_blog_indexes(),
             create_notification_indexes(),
             create_reminder_indexes(),
+            create_payment_indexes(),
         ]
 
         # Execute all index creation tasks concurrently
@@ -77,6 +81,7 @@ async def create_all_indexes():
             "blog",
             "notifications",
             "reminders",
+            "payments",
         ]
 
         index_results = {}
@@ -410,6 +415,41 @@ async def create_reminder_indexes():
         logger.info("Reminder indexes created successfully")
     except Exception as e:
         logger.error(f"Error creating reminder indexes: {e}")
+        raise
+
+
+async def create_payment_indexes():
+    """Create indexes for payment-related collections."""
+    try:
+        # Create payment collection indexes
+        await asyncio.gather(
+            # Payment indexes
+            payments_collection.create_index("user_id"),
+            payments_collection.create_index("razorpay_payment_id", unique=True),
+            payments_collection.create_index("subscription_id", sparse=True),
+            payments_collection.create_index("order_id", sparse=True),
+            payments_collection.create_index("status"),
+            payments_collection.create_index([("user_id", 1), ("created_at", -1)]),
+            # Subscription indexes
+            subscriptions_collection.create_index("user_id"),
+            subscriptions_collection.create_index(
+                "razorpay_subscription_id", unique=True
+            ),
+            subscriptions_collection.create_index("plan_id"),
+            subscriptions_collection.create_index("status"),
+            subscriptions_collection.create_index([("user_id", 1), ("status", 1)]),
+            subscriptions_collection.create_index("current_end", sparse=True),
+            subscriptions_collection.create_index("charge_at", sparse=True),
+            # Plan indexes
+            plans_collection.create_index("razorpay_plan_id", unique=True),
+            plans_collection.create_index("is_active"),
+            plans_collection.create_index([("is_active", 1), ("amount", 1)]),
+        )
+
+        logger.info("Created payment indexes")
+
+    except Exception as e:
+        logger.error(f"Error creating payment indexes: {str(e)}")
         raise
 
 
