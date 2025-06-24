@@ -1,7 +1,8 @@
 import { Spotlight } from "@/components/ui";
+import ShinyText from "@/components/ui/shadcn/shimmering-chip";
+import { MotionContainer } from "@/layouts/MotionContainer";
 import { cn } from "@/lib/utils";
 
-import { MotionContainer } from "../../../../layouts/MotionContainer";
 import GetStartedButton from "../shared/GetStartedButton";
 
 export default function HeroSection() {
@@ -16,6 +17,12 @@ export default function HeroSection() {
           className={cn(
             "group rounded-full border border-white/5 bg-neutral-900 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-800",
           )}
+        />
+
+        <ShinyText
+          text="Currently in Public Beta"
+          speed={3}
+          className="relative z-10 cursor-pointer rounded-full bg-zinc-900 p-1 px-3 text-sm font-light outline-1 outline-zinc-700"
         />
 
         <div className="max-w-(--breakpoint-lg) bg-linear-to-b from-white to-zinc-400 bg-clip-text py-3 text-center text-[2.8rem] font-medium text-transparent sm:text-8xl">
