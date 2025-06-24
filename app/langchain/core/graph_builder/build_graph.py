@@ -36,9 +36,6 @@ async def build_graph(
     if exclude_tools:
         all_tools = [tool for tool in all_tools if tool.name not in exclude_tools]
 
-    for tool in all_tools:
-        print(tool.name)
-
     tool_registry = {tool.name: tool for tool in all_tools}
 
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")

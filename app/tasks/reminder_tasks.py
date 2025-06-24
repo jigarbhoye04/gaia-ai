@@ -56,6 +56,15 @@ async def execute_reminder_by_agent(
             refresh_token=refresh_token,
         )
 
+        notification = create_reminder_notification(
+            title=notification_data.title,
+            body=notification_data.body,
+            reminder_id=reminder.id,
+            user_id=reminder.user_id,
+            actions=[],
+        )
+        await notification_service.create_notification(notification)
+
         if not notification_data:
             logger.error(
                 f"AI agent reminder {reminder.id} returned no notification data for user {reminder.user_id}"

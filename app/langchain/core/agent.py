@@ -2,17 +2,26 @@ import asyncio
 import json
 from datetime import datetime, timezone
 
-from langchain_core.messages import AIMessageChunk
+from langchain_core.messages import (
+    AIMessage,
+    AIMessageChunk,
+    HumanMessage,
+    SystemMessage,
+)
+from langchain_core.output_parsers import PydanticOutputParser
 from langsmith import traceable
 
 from app.config.loggers import llm_logger as logger
 from app.langchain.core.graph_manager import GraphManager
 from app.langchain.core.messages import construct_langchain_messages
 from app.langchain.prompts.proactive_agent_prompt import (
-    PROACTIVE_AGENT_MESSAGE_PROMPT,
-    PROACTIVE_AGENT_SYSTEM_PROMPT,
+    PROACTIVE_MAIL_AGENT_MESSAGE_PROMPT,
+    PROACTIVE_MAIL_AGENT_SYSTEM_PROMPT,
+    PROACTIVE_REMINDER_AGENT_MESSAGE_PROMPT,
+    PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
 )
 from app.models.message_models import MessageRequestWithHistory
+from app.models.reminder_models import ReminderProcessingAgentResult
 from app.utils.memory_utils import store_user_message_memory
 
 
@@ -151,10 +160,10 @@ async def call_mail_processing_agent(
 
     # Construct the message with system prompt and email content
     messages = [
-        {"role": "system", "content": PROACTIVE_AGENT_SYSTEM_PROMPT},
+        {"role": "system", "content": PROACTIVE_MAIL_AGENT_SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": PROACTIVE_AGENT_MESSAGE_PROMPT.format(
+            "content": PROACTIVE_MAIL_AGENT_MESSAGE_PROMPT.format(
                 email_content=email_content,
                 subject=email_metadata.get("subject", "No Subject"),
                 sender=email_metadata.get("sender", "Unknown Sender"),
@@ -268,6 +277,11 @@ async def call_mail_processing_agent(
         }
 
 
+reminder_agent_result_parser = PydanticOutputParser(
+    pydantic_object=ReminderProcessingAgentResult
+)
+
+
 @traceable
 async def call_reminder_agent(
     instruction: str,
@@ -275,7 +289,7 @@ async def call_reminder_agent(
     reminder_id: str,
     access_token: str | None = None,
     refresh_token: str | None = None,
-):
+) -> ReminderProcessingAgentResult:
     """
     Process reminder instruction with AI agent to process a reminder.
 
@@ -291,12 +305,15 @@ async def call_reminder_agent(
     logger.info(f"Starting reminder processing for user {user_id}")
 
     messages = [
-        {
-            "role": "system",
-            "content": """
-You are a reminder processing agent. Your task is to process the following reminder instruction and take appropriate actions based on it.""",
-        },
-        {"role": "user", "content": instruction},
+        SystemMessage(
+            content=PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
+        ),
+        HumanMessage(
+            content=PROACTIVE_REMINDER_AGENT_MESSAGE_PROMPT.format(
+                reminder_request=instruction,
+                format_instructions=reminder_agent_result_parser.get_format_instructions(),
+            )
+        ),
     ]
 
     logger.info(f"Processing reminder for user {user_id}")
@@ -339,13 +356,38 @@ You are a reminder processing agent. Your task is to process the following remin
             },
         )
 
-        logger.info(
-            f"Reminder processing result for user {user_id}: {result}"
-            if result
-            else "No result returned"
-        )
+        if not result:
+            logger.warning(
+                f"No result returned from reminder processing for user {user_id}"
+            )
+            raise ValueError(
+                f"No result returned from reminder processing for user {user_id}"
+            )
 
-        return result
+        # Extract the AI response from the messages
+        ai_response = None
+        if "messages" in result:
+            last_message = result["messages"][-1]
+            if isinstance(last_message, AIMessage):
+                ai_response = last_message.content
+
+        if not ai_response:
+            logger.error(f"No AI response found in result for user {user_id}")
+            raise ValueError(f"No AI response found in result for user {user_id}")
+
+        logger.info(f"AI response content: {ai_response}")
+
+        # Parse the AI response using the parser
+        try:
+            parsed_result = reminder_agent_result_parser.parse(ai_response)  # type: ignore
+            logger.info(f"Successfully parsed reminder result: {parsed_result}")
+
+            return parsed_result
+        except Exception as parse_error:
+            logger.error(f"Failed to parse AI response with parser: {parse_error}")
+            raise ValueError(
+                f"Failed to parse AI response for reminder {reminder_id} for user {user_id}: {parse_error}"
+            )
     except Exception as e:
         logger.error(f"Error in reminder processing for user {user_id}: {str(e)}")
         # Handle the error as needed, e.g., log it, notify the user, etc.

@@ -11,7 +11,6 @@ from arq.connections import RedisSettings
 from app.config.loggers import arq_worker_logger as logger
 from app.config.settings import settings
 from app.langchain.llm.client import init_llm
-from app.models.reminder_models import ReminderProcessingAgentResult
 from app.services.reminder_service import process_reminder_task
 
 
@@ -33,7 +32,6 @@ async def startup(ctx: dict):
     logger.info("ARQ worker startup complete")
 
     llm = init_llm()
-    llm = llm.with_structured_output(schema=ReminderProcessingAgentResult)
 
     # Register and Build the processing graph
     async with build_graph(
@@ -46,6 +44,7 @@ async def startup(ctx: dict):
         in_memory_checkpointer=True,
     ) as built_graph:
         GraphManager.set_graph(built_graph, graph_name="reminder_processing")
+
 
 async def shutdown(ctx: dict):
     """ARQ worker shutdown function."""

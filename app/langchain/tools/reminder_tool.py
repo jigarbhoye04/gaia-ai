@@ -59,11 +59,12 @@ async def create_reminder_tool(
         "ISO 8601 formatted date/time for when the reminder should run",
     ] = None,
     max_occurrences: Annotated[
-        Optional[int], "Maximum number of times to run the reminder"
+        Optional[int],
+        "Maximum number of times to run the reminder. Use this when user explicitly sets a limit on how many times the reminder should run.",
     ] = None,
     stop_after: Annotated[
         Optional[str],
-        "ISO 8601 formatted date/time after which no more runs",
+        "ISO 8601 formatted date/time after which no more runs. Use this when user explicitly sets a date/time after which the reminder should not run anymore.",
     ] = None,
 ) -> Any:
     """Create a new reminder tool function."""
