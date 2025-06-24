@@ -406,10 +406,12 @@ ADD_SUBTASK = """
     down complex tasks into smaller, manageable steps.
 
     When to use:
-    - When breaking down a task into steps
-    - When adding checklist items to a todo
-    - When detailing task requirements
-    - When user wants to add subtasks
+    - When breaking down a complex task into multiple related subtasks
+    - When a parent task requires sequential steps to complete
+    - When creating a checklist of related items under a main task
+    - When a task has multiple components that should be tracked separately
+    - When organizing work that logically belongs under a single parent task
+    - Only use for tasks that need multiple different components tracked individually
 
     Input:
     - todo_id: Required, parent todo ID
@@ -419,7 +421,7 @@ ADD_SUBTASK = """
     - Updated TodoResponse with new subtask
     - Error if todo not found or limit exceeded
 
-    Note: Each todo can have up to 50 subtasks.
+    Note: Each todo can have up to 50 subtasks. For completely independent tasks, create separate todos instead.
     """
 
 UPDATE_SUBTASK = """

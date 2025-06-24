@@ -1,9 +1,10 @@
 import asyncio
-import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import Request
+
+from app.config.loggers import app_logger as logger
 
 from app.models.notification.notification_models import (
     ActionResult,
@@ -31,18 +32,13 @@ from app.utils.notification.sources import (
 )
 from app.utils.notification.storage import (
     MongoDBNotificationStorage,
-    NotificationStorage,
 )
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 class NotificationOrchestrator:
     """Core notification orchestration engine"""
 
-    def __init__(self, storage: NotificationStorage = MongoDBNotificationStorage()):
+    def __init__(self, storage=MongoDBNotificationStorage()):
         self.storage = storage
         self.channel_adapters: Dict[str, ChannelAdapter] = {}
         self.action_handlers: Dict[str, ActionHandler] = {}
@@ -295,9 +291,14 @@ class NotificationOrchestrator:
         if not notification:
             return False
 
+        logger.info(f"{NotificationStatus.READ.value=}")
+
         await self.storage.update_notification(
             notification_id,
-            {"status": NotificationStatus.READ, "read_at": datetime.now(timezone.utc)},
+            {
+                "status": NotificationStatus.READ.value,
+                "read_at": datetime.now(timezone.utc),
+            },
         )
 
         # Broadcast update

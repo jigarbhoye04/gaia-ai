@@ -328,11 +328,14 @@ class MemoryService:
                 enable_graph=True,
                 user_id=user_id,
                 output_format="v1.1",
-            )  # Extract memories from response
+            )
+
             memories_list = self._extract_memories_from_response(response)
 
             # Extract relationships from response (if available)
             relations_list = self._extract_relationships_from_response(response)
+
+            logger.info(relations_list)
 
             # Parse memories and relationships
             memory_entries = self._parse_memory_list(memories_list, user_id)

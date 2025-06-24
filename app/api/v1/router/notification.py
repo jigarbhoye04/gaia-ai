@@ -62,7 +62,7 @@ async def get_notifications(
 
         return PaginatedNotificationsResponse(
             notifications=notifications,
-            total=notification_count,  # In a real implementation, you'd get actual total count
+            total=notification_count,
             limit=limit,
             offset=offset,
         )
@@ -119,7 +119,6 @@ async def execute_action(
         )
 
     try:
-
         result = await notification_service.execute_action(
             notification_id, action_id, user_id, request=request
         )
@@ -153,7 +152,6 @@ async def mark_as_read(
         )
 
     try:
-
         success = await notification_service.mark_as_read(notification_id, user_id)
         if not success:
             raise HTTPException(status_code=404, detail="Notification not found")
@@ -181,7 +179,6 @@ async def snooze_notification(
         )
 
     try:
-
         if request.snooze_until <= datetime.now(timezone.utc):
             raise HTTPException(
                 status_code=400, detail="Snooze time must be in the future"
@@ -218,7 +215,6 @@ async def bulk_actions(
         )
 
     try:
-
         if not request.notification_ids:
             raise HTTPException(status_code=400, detail="No notification IDs provided")
 
