@@ -1,10 +1,12 @@
 import asyncio
 import json
 from datetime import datetime, timezone
+from typing import List
 
 from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
+    AnyMessage,
     HumanMessage,
     SystemMessage,
 )
@@ -289,6 +291,7 @@ async def call_reminder_agent(
     reminder_id: str,
     access_token: str | None = None,
     refresh_token: str | None = None,
+    old_messages: List[AnyMessage] = [],
 ) -> ReminderProcessingAgentResult:
     """
     Process reminder instruction with AI agent to process a reminder.
@@ -305,6 +308,7 @@ async def call_reminder_agent(
     logger.info(f"Starting reminder processing for user {user_id}")
 
     messages = [
+        *old_messages,
         SystemMessage(
             content=PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
         ),

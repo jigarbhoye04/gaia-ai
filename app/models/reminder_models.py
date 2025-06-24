@@ -69,6 +69,9 @@ class ReminderModel(BaseModel):
         default=datetime.now(timezone.utc) + timedelta(days=180),
         description="Stop executing after this date (optional), defaults to 6 months from now",
     )
+    conversation_id: Optional[str] = Field(
+        None, description="Conversation ID for AI agent reminders to track outputs"
+    )
     payload: Union[StaticReminderPayload, AIAgentReminderPayload, Dict[str, Any]] = (
         Field(..., description="Task-specific data based on agent type")
     )
@@ -127,6 +130,9 @@ class CreateReminderRequest(BaseModel):
         None,
         description="Base time for handling time zones and scheduling (optional, defaults to None)",
     )
+    conversation_id: Optional[str] = Field(
+        None, description="Conversation ID for AI agent reminders (optional, auto-generated if not provided)"
+    )
 
     @field_validator("repeat")
     @classmethod
@@ -183,6 +189,9 @@ class UpdateReminderRequest(BaseModel):
     )
     payload: Optional[Union[StaticReminderPayload, AIAgentReminderPayload]] = Field(
         None, description="Task-specific data (optional)"
+    )
+    conversation_id: Optional[str] = Field(
+        None, description="Conversation ID for AI agent reminders (optional)"
     )
 
     @field_validator("repeat")
@@ -255,6 +264,9 @@ class ReminderResponse(BaseModel):
     )
     payload: Union[StaticReminderPayload, AIAgentReminderPayload, Dict[str, Any]] = (
         Field(..., description="Task-specific data")
+    )
+    conversation_id: Optional[str] = Field(
+        None, description="Conversation ID for AI agent reminders"
     )
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
