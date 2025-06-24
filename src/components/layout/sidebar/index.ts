@@ -18,6 +18,7 @@ export * from "./settings/MemorySettings";
 export * from "./settings/PreferencesSettings";
 export * from "./settings/SettingsMenu";
 export * from "./variants/BrowserSidebar";
+export * from "./variants/CalendarSidebar";
 export * from "./variants/MailSidebar";
 export * from "./variants/SettingsSidebar";
 export * from "./variants/TodoSidebar";
