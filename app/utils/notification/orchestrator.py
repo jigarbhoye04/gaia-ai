@@ -176,9 +176,7 @@ class NotificationOrchestrator:
         if delivery_tasks:
             delivery_results = await asyncio.gather(
                 *delivery_tasks, return_exceptions=True
-            )
-
-            # Update notification with delivery results
+            )  # Update notification with delivery results
             channel_statuses = []
             for result in delivery_results:
                 if isinstance(result, ChannelDeliveryStatus):
@@ -186,11 +184,20 @@ class NotificationOrchestrator:
                 elif isinstance(result, Exception):
                     logger.error(f"Delivery failed: {result}")
 
+            # Update the existing notification record instead of saving a new one
+            await self.storage.update_notification(
+                notification.id,
+                {
+                    "channels": [status.model_dump() for status in channel_statuses],
+                    "status": NotificationStatus.DELIVERED,
+                    "delivered_at": datetime.now(timezone.utc),
+                },
+            )
+
+            # Update the local notification object for broadcasting
             notification.channels = channel_statuses
             notification.status = NotificationStatus.DELIVERED
             notification.delivered_at = datetime.now(timezone.utc)
-
-            await self.storage.save_notification(notification)
 
             # Broadcast real-time update
             await websocket_manager.broadcast_to_user(
