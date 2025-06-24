@@ -184,14 +184,17 @@ export default function Description() {
       }}
     >
       <div
-        className={`fixed inset-0 z-[-1] h-screen w-full transition-opacity duration-700 ${
+        className={`pointer-events-none fixed inset-0 z-[-1] h-screen w-full transition-opacity duration-700 ${
           isSectionVisible ? "opacity-100" : "opacity-0"
         }`}
       >
         <OnboardingBackground />
       </div>
 
-      <div ref={containerRef} className="relative z-10 w-full max-w-4xl">
+      <div
+        ref={containerRef}
+        className="pointer-events-none relative z-10 w-full max-w-4xl"
+      >
         {paragraphs.map((text, index) => (
           <div
             key={index}
@@ -204,7 +207,7 @@ export default function Description() {
             {text}
             {index === paragraphs.length - 1 && (
               <div
-                className={`mt-12 transition-opacity duration-500 ${
+                className={`pointer-events-auto mt-12 transition-opacity duration-500 ${
                   lastParagraphVisible
                     ? "opacity-100"
                     : "pointer-events-none opacity-0"

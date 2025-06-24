@@ -233,11 +233,11 @@ export default function Calendar() {
           <FeatureCard
             title="Integrated with Google Calendar"
             description="and many more integrations coming soon..."
-            className="relative max-h-[130px] pt-8"
+            className="relative max-h-[130px] pt-6"
           >
             <div className="absolute top-0 right-0 flex h-full items-center justify-center p-8">
-              <div className="flex aspect-square h-[100px] w-[100px] -rotate-6 items-center justify-center rounded-2xl bg-zinc-800 p-4 outline-2 outline-zinc-700 transition active:scale-90">
-                <GoogleCalendarIcon width={70} />
+              <div className="flex aspect-square h-[90px] w-[90px] -rotate-6 items-center justify-center rounded-2xl bg-zinc-800 p-4 outline-2 outline-zinc-700 transition active:scale-90">
+                <GoogleCalendarIcon width={65} height={65} />
               </div>
             </div>
           </FeatureCard>

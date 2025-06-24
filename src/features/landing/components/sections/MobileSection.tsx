@@ -8,25 +8,17 @@ import { SectionHeading } from "@/features/landing/layouts/SectionHeader";
 export default function MobileSection() {
   return (
     <div className="flex w-screen flex-col items-center justify-center">
-      <div className="relative z-1 flex max-h-[430px] w-screen max-w-fit flex-col items-start justify-center space-y-5 overflow-hidden rounded-3xl bg-zinc-900 pl-12 sm:flex-row">
+      <div className="relative z-1 flex max-h-[430px] w-screen max-w-fit flex-col items-start justify-center space-y-5 overflow-hidden rounded-3xl bg-zinc-950 pl-12 sm:flex-row">
         <div className="flex flex-col">
           <SectionHeading
             heading="Move beyond Siri and Google Assistant"
-            // heading="The Personal Assistant That Truly Works"
             className="mt-10"
-            chipTitle="Mobile App"
             chipTitle2="Coming Soon"
             smallHeading
             subheading="Ever been frustrated with your personal assistant not working as expected? Finally, a personal assistant that 'just works' and more."
-            // icon={
-            //   <SmartPhone01Icon
-            //     className="size-[35px] sm:size-[35px]"
-            //     color="#9b9b9b"
-            //   />
-            // }
           />
 
-          <div className="relative z-1 flex w-full flex-col gap-2 px-8 py-8 pt-0 sm:pt-8">
+          <div className="relative z-1 flex w-full flex-col gap-2 px-6 py-8 pt-0 sm:pt-8">
             <div className="flex flex-row gap-2">
               <ChatBotIcon className="text-primary" />
               <span className="text-zinc-300">

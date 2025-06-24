@@ -56,6 +56,7 @@ export * from "./shadcn/scroll-area";
 export * from "./shadcn/select";
 export * from "./shadcn/separator";
 export * from "./shadcn/sheet";
+export * from "./shadcn/shimmering-chip";
 export * from "./shadcn/shine-border";
 export * from "./shadcn/sidebar";
 export * from "./shadcn/skeleton";

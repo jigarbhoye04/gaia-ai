@@ -4,7 +4,7 @@ import { lazy, useEffect } from "react";
 
 import HeroImage from "@/features/landing/components/hero/HeroImageSection";
 import HeroSection from "@/features/landing/components/hero/HeroSection";
-import Integrations from "@/features/landing/components/sections/IntegrationsSection";
+// import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
 import Calendar from "@/features/landing/components/sections/new/Calendar";
 import Description from "@/features/landing/components/sections/new/Description";
@@ -68,9 +68,8 @@ export default function LandingPage() {
           <Todo />
           <Goals />
           <AdvancedConversation />
-          <Integrations />
-
-          {/* Section for crazy automations, MCP, n8n, and reminders feature */}
+          {/* <Integrations /> */}
+          {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}
 
           {/* 
           <Suspense fallback={<SuspenseLoader />}>
@@ -92,13 +91,9 @@ export default function LandingPage() {
             <FeatureGridSection />
           </Suspense> 
 
-          <Suspense fallback={<SuspenseLoader />}>
-            <MobileSection />
-          </Suspense>
-
-          <Suspense fallback={<SuspenseLoader />}>
-            <FinalSection />
-          </Suspense> */}
+           */}
+          {/* <MobileSection /> */}
+          <FinalSection />
         </div>
       </div>
       {/* </ReactLenis> */}

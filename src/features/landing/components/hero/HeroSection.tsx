@@ -29,7 +29,7 @@ export default function HeroSection() {
           Meet the AI assistant that actually works
         </div>
 
-        <div className="mb-6 max-w-(--breakpoint-sm) px-4 py-0 text-center text-lg leading-7 font-normal text-foreground-500 sm:px-0 sm:text-xl">
+        <div className="mb-6 max-w-(--breakpoint-sm) px-4 py-0 text-center text-lg leading-7 font-light text-foreground-500 sm:px-0 sm:text-xl">
           One assistant. Every task. All in one place.
         </div>
 
