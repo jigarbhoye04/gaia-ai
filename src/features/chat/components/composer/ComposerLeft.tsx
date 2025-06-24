@@ -62,7 +62,7 @@ export default function ComposerLeft({
       ),
       isMode: true,
       description:
-        "search the web and fetch content from those pages, extracting key information",
+        "Search the web and fetch content from those pages, extracting key information",
     },
     {
       id: "web_search",
@@ -71,7 +71,7 @@ export default function ComposerLeft({
         <GlobalSearchIcon className="min-h-[20px] min-w-[20px] text-primary" />
       ),
       isMode: true,
-      description: "search the web for the latest information",
+      description: "Search the web for the latest information",
     },
     {
       id: "fetch_webpage",
@@ -123,8 +123,11 @@ export default function ComposerLeft({
       <DropdownMenuContent
         align="end"
         side="top"
-        className="w-fit gap-2 rounded-xl border-none bg-zinc-900 p-1 text-white"
+        className="w-fit gap-2 rounded-xl border-none bg-zinc-900 p-1 text-white outline-2! outline-zinc-800!"
       >
+        <div className="px-3 py-1 text-xs text-foreground-400">
+          Add context to the chat
+        </div>
         {dropdownItems.map((item) => (
           <Tooltip
             content={<div className="max-w-[270px]">{item.description}</div>}

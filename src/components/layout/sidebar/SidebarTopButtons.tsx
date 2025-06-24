@@ -68,7 +68,7 @@ export default function SidebarTopButtons() {
               <div className="text-left text-sm font-medium">
                 Upgrade to Pro
               </div>
-              <div className="line-clamp-2 text-left text-xs text-wrap text-foreground-400">
+              <div className="line-clamp-2 text-left text-xs font-light text-wrap text-foreground-500">
                 All features & unlimited usage
               </div>
             </div>

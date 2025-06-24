@@ -4,7 +4,7 @@ import GetStartedButton from "../shared/GetStartedButton";
 export default function FinalSection() {
   return (
     <div className="relative z-1 m-0! flex min-h-[80vh] w-screen flex-col items-center justify-center p-5 sm:min-h-fit">
-      <MotionContainer className="my-20 flex w-full max-w-7xl flex-col items-center justify-center gap-6 rounded-4xl bg-gradient-to-b from-zinc-900 to-zinc-950 sm:p-28">
+      <MotionContainer className="my-20 flex w-full max-w-7xl flex-col items-center justify-center gap-6 rounded-4xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black outline-1 outline-zinc-800 sm:p-28">
         <div className="text-center text-4xl font-medium sm:text-6xl">
           Your Life, Supercharged by GAIA
         </div>
