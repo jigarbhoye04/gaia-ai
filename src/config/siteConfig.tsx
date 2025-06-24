@@ -15,6 +15,7 @@ import { ReactElement } from "react";
 
 import {
   BookOpen02Icon,
+  CreditCardPosIcon,
   CustomerService01Icon,
   DiscordIcon,
   Github,
@@ -56,11 +57,11 @@ export const siteConfig = {
           external: true,
           icon: <MapsIcon width={19} />,
         },
-        // {
-        //   label: "pricing",
-        //   href: "/pricing",
-        //   icon: <CreditCardPosIcon width={19} />,
-        // },
+        {
+          label: "Pricing",
+          href: "/pricing",
+          icon: <CreditCardPosIcon width={19} />,
+        },
         {
           label: "Status",
           href: "https://status.heygaia.io",

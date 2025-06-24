@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { ChevronLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -51,20 +50,7 @@ export default function SettingsSidebar() {
 
   return (
     <div className="flex h-full max-w-[280px] flex-col">
-      <div className="">
-        <Button
-          size="sm"
-          className="w-full"
-          variant="light"
-          color="primary"
-          onPress={() => router.push("/c")}
-        >
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          <span className="text-sm">Back to Chat</span>
-        </Button>
-      </div>
-
-      <nav className="mt-5 flex-1 space-y-1">
+      <nav className="flex-1 space-y-1">
         {settingsMenuItems.map((item) => {
           const isActive = currentSection === item.href.split("section=")[1];
           const Icon = item.icon;

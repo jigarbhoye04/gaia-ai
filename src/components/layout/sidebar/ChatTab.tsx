@@ -55,7 +55,7 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
               width="19"
             />
           )}
-          <span className="w-[calc(100%-45px)] max-w-[200px] truncate text-left">
+          <span className="w-[calc(100%-45px)] max-w-[200px] truncate text-left text-foreground-600">
             {name.replace('"', "")}
           </span>
         </div>
