@@ -41,12 +41,8 @@ export const GlobalIcon: React.FC<IconProps> = ({ ...props }) => (
   </svg>
 );
 
-export const PinIcon: React.FC<IconProps> = ({
-  color = "#9b9b9b",
-  ...props
-}) => (
+export const PinIcon: React.FC<IconProps> = ({ ...props }) => (
   <svg
-    color={color}
     fill={"none"}
     height={24}
     viewBox="0 0 24 24"

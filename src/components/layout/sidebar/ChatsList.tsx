@@ -153,7 +153,7 @@ export default function ChatsList() {
                 value="item-1"
                 className="pb-mb-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 px-0 pt-0"
               >
-                <AccordionTrigger className="w-full px-2 pt-3 pb-1 text-xs">
+                <AccordionTrigger className="w-full px-2 pt-0 pb-1 text-xs">
                   Starred Chats
                 </AccordionTrigger>
                 <AccordionContent className="w-full p-0!">

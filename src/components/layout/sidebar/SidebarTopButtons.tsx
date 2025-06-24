@@ -3,47 +3,49 @@
 import { Button } from "@heroui/button";
 import { CircleArrowUp } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import React from "react";
 
 import {
   CalendarIcon,
   ChatBubbleAddIcon,
-  CheckmarkSquare03Icon,
-  DashboardSquare01Icon,
+  CheckmarkCircle02Icon,
   Mail01Icon,
   PinIcon,
   Route02Icon,
 } from "@/components/shared/icons";
+import { Separator } from "@/components/ui";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
+  const pathname = usePathname();
   const { clearMessages } = useConversation();
 
   const buttonData = [
     {
       route: "/calendar",
-      icon: <CalendarIcon height={23} width={23} />,
+      icon: <CalendarIcon height={21} width={21} />,
       label: "Calendar",
     },
     {
       route: "/goals",
-      icon: <Route02Icon height={23} width={23} />,
+      icon: <Route02Icon height={21} width={21} />,
       label: "Goals",
     },
     {
       route: "/todos",
-      icon: <CheckmarkSquare03Icon height={23} width={23} />,
+      icon: <CheckmarkCircle02Icon height={21} width={21} />,
       label: "Todos",
     },
     {
       route: "/mail",
-      icon: <Mail01Icon height={23} width={23} />,
+      icon: <Mail01Icon height={21} width={21} />,
       label: "Mail",
     },
     {
       route: "/pins",
-      icon: <PinIcon height={23} width={23} />,
+      icon: <PinIcon height={21} width={21} />,
       label: "Pins",
     },
   ];
@@ -54,7 +56,7 @@ export default function SidebarTopButtons() {
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       <Link href={"/pricing"}>
         <Button
           variant="flat"
@@ -74,7 +76,7 @@ export default function SidebarTopButtons() {
         </Button>
       </Link>
 
-      <Link href={"/dashboard"} className="w-full">
+      {/* <Link href={"/dashboard"} className="w-full">
         <Button
           className="flex w-full justify-start text-sm"
           size="sm"
@@ -86,7 +88,7 @@ export default function SidebarTopButtons() {
         >
           Dashboard
         </Button>
-      </Link>
+      </Link> */}
 
       <Button
         className="flex w-full justify-start text-sm text-primary"
@@ -121,6 +123,25 @@ export default function SidebarTopButtons() {
           </Tooltip>
         ))}
       </div> */}
+      {buttonData.map(({ route, icon, label }, index) => (
+        <Link href={route} className="w-full" key={index}>
+          <Button
+            className="flex w-full justify-start text-sm"
+            size="sm"
+            variant="light"
+            color={pathname === route ? "primary" : "default"}
+            onPress={() => router.push(route)}
+            startContent={React.cloneElement(icon, {
+              color: undefined,
+            })}
+          >
+            {label}
+          </Button>
+        </Link>
+      ))}
+      <div className="my-2 px-2">
+        <Separator className="bg-zinc-800" />
+      </div>
     </div>
   );
 }
