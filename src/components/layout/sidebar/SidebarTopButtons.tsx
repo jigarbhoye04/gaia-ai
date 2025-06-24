@@ -59,7 +59,7 @@ export default function SidebarTopButtons() {
     <div className="flex flex-col">
       <Link href={"/pricing"}>
         <Button
-          variant="flat"
+          variant="faded"
           className="mb-2 flex h-fit w-full justify-start gap-3 px-3"
         >
           <CircleArrowUp width={20} height={20} />

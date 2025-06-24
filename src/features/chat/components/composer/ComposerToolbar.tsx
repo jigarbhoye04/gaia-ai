@@ -12,6 +12,7 @@ interface SearchbarToolbarProps {
   openFileUploadModal: () => void;
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   handleSelectionChange: (mode: SearchMode) => void;
+  searchbarText: string;
 }
 
 const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
@@ -21,6 +22,7 @@ const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
   openFileUploadModal,
   handleFormSubmit,
   handleSelectionChange,
+  searchbarText,
 }) => {
   return (
     <div className="flex items-center justify-between px-2 pt-1">
@@ -33,7 +35,10 @@ const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
           handleSelectionChange={handleSelectionChange}
         />
       </div>
-      <SearchbarRightSendBtn handleFormSubmit={handleFormSubmit} />
+      <SearchbarRightSendBtn
+        handleFormSubmit={handleFormSubmit}
+        searchbarText={searchbarText}
+      />
     </div>
   );
 };
