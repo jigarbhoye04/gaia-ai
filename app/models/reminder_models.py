@@ -282,5 +282,19 @@ class ReminderResponse(BaseModel):
 class ReminderProcessingAgentResult(BaseModel):
     """Result model for reminder processing by AI agents."""
 
-    title: str = Field(..., description="Title of notification")
-    body: str = Field(..., description="Body of notification")
+    title: str = Field(
+        ...,
+        description="Short, clear title for the user-facing notification. No filler—just the key point.",
+    )
+    body: str = Field(
+        ...,
+        description="Notification body shown to the user. Keep it direct, informative, and useful. Avoid fluff like 'Here's what you asked for.'",
+    )
+    message: str = Field(
+        ...,
+        description=(
+            "The complete message that will be added to the user’s conversation thread. "
+            "It should contain the actual output or summary of the reminder task. "
+            "Be professional and helpful—avoid filler phrases like 'Sure, here's the thing' or conversational fluff."
+        ),
+    )

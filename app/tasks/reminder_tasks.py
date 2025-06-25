@@ -231,7 +231,7 @@ async def _execute_ai_agent_reminder(reminder: ReminderModel) -> None:
     await _log_reminder_execution(
         conversation_id=conversation_id,
         instructions=reminder.payload.instructions,  # Use original instructions for logging
-        ai_response=notification_data.body,
+        ai_response=notification_data.message,
         user_dict=user_dict,
         notification_request=notification,
     )

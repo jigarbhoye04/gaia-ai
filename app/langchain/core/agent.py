@@ -308,10 +308,10 @@ async def call_reminder_agent(
     logger.info(f"Starting reminder processing for user {user_id}")
 
     messages = [
-        *old_messages,
         SystemMessage(
             content=PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
         ),
+        *old_messages,
         HumanMessage(
             content=PROACTIVE_REMINDER_AGENT_MESSAGE_PROMPT.format(
                 reminder_request=instruction,
