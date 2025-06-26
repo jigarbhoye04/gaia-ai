@@ -72,9 +72,9 @@ class CreatePlanRequest(BaseModel):
     name: str = Field(..., description="Name of the plan")
     description: Optional[str] = Field(None, description="Plan description")
     amount: int = Field(
-        ..., description="Plan amount in smallest currency unit (paise for INR)"
+        ..., description="Plan amount in smallest currency unit"
     )
-    currency: Currency = Field(Currency.INR, description="Currency")
+    currency: Currency = Field(Currency.USD, description="Currency")
     duration: PlanDuration = Field(..., description="Billing duration")
     max_users: Optional[int] = Field(None, description="Maximum users allowed")
     features: List[str] = Field(default_factory=list, description="List of features")
@@ -97,7 +97,7 @@ class CreatePaymentRequest(BaseModel):
     """Request model for creating a payment."""
 
     amount: int = Field(..., description="Amount in smallest currency unit")
-    currency: Currency = Field(Currency.INR, description="Currency")
+    currency: Currency = Field(Currency.USD, description="Currency")
     description: Optional[str] = Field(None, description="Payment description")
     notes: Optional[Dict[str, str]] = Field(default_factory=dict, description="Notes")
 

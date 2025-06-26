@@ -258,10 +258,10 @@ async def get_payment_config():
 
     return {
         "razorpay_key_id": settings.RAZORPAY_KEY_ID,
-        "currency": "INR",
+        "currency": "USD",
         "company_name": "GAIA",
         "company_logo": f"{settings.FRONTEND_URL}/logo.png",
-        "theme_color": "#3399cc",
+        "theme_color": "#00bbff",
     }
 
 

@@ -661,8 +661,8 @@ async def verify_payment(
             razorpay_payment = {
                 "id": callback_data.razorpay_payment_id,
                 "entity": "payment",
-                "amount": 100000,  # 1000 INR in paisa
-                "currency": "INR",
+                "amount": 100,  # 1.-- USD
+                "currency": "USD",
                 "status": "captured",
                 "method": "card",
                 "captured": True,

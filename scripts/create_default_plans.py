@@ -16,79 +16,54 @@ async def create_default_plans():
     # Free Plan (Monthly)
     free_plan = CreatePlanRequest(
         name="Free Plan",
-        description="Basic features for personal use",
+        description="Basic features",
         amount=0,  # Free
-        currency=Currency.INR,
+        currency=Currency.USD,
         duration=PlanDuration.MONTHLY,
         max_users=1,
         features=[
             "Basic chat functionality",
-            "5 searches per day",
+            "20 file uploads per month",
+            "Limited calendar management",
+            "Limited email management",
+            "Limited proactive events",
+            "Basic (non-AI) reminders",
+            "Limited image generation",
+            "Limited memory",
+            "Track up to 3 goals",
+            "Unlimited web search",
+            "3 deep research sessions",
             "Basic calendar integration",
             "Limited notes storage (100 notes)",
-            "Email support",
+            "Basic support",
+            "To-do list management",
         ],
         is_active=True,
-    )
-
-    # Basic Plan (Monthly)
-    basic_monthly = CreatePlanRequest(
-        name="Basic Monthly",
-        description="Perfect for individual users",
-        amount=49900,  # ₹499 per month
-        currency=Currency.INR,
-        duration=PlanDuration.MONTHLY,
-        max_users=1,
-        features=[
-            "Advanced chat with AI",
-            "Unlimited searches",
-            "Full calendar integration",
-            "Unlimited notes storage",
-            "Email and file management",
-            "Priority support",
-            "Custom AI instructions",
-        ],
-        is_active=True,
-    )
-
-    # Basic Plan (Yearly)
-    basic_yearly = CreatePlanRequest(
-        name="Basic Yearly",
-        description="Perfect for individual users (Save 2 months)",
-        amount=499000,  # ₹4990 per year (2 months free)
-        currency=Currency.INR,
-        duration=PlanDuration.YEARLY,
-        max_users=1,
-        features=[
-            "Advanced chat with AI",
-            "Unlimited searches",
-            "Full calendar integration",
-            "Unlimited notes storage",
-            "Email and file management",
-            "Priority support",
-            "Custom AI instructions",
-            "2 months free!",
-        ],
-        is_active=True,
-    )
-
+)
     # Pro Plan (Monthly)
     pro_monthly = CreatePlanRequest(
         name="Pro Monthly",
-        description="For power users and small teams",
-        amount=99900,  # ₹999 per month
-        currency=Currency.INR,
+        description="For productivity nerds",
+        amount=2000,  # 20.00 USD per month
+        currency=Currency.USD,
         duration=PlanDuration.MONTHLY,
         max_users=5,
         features=[
             "Everything in Basic",
-            "Team collaboration",
+            "Unlimited file uploads",
+            "Unlimited calendar management",
+            "Unlimited email management",
+            "Unlimited proactive events",
+            "AI-powered smart reminders",
+            "Unlimited image generation",
+            "Extended memory",
+            "Unlimited goal tracking",
+            "Unlimited deep research",
             "Advanced AI models",
-            "Custom integrations",
-            "Analytics and insights",
-            "API access",
             "Premium support",
-            "Custom branding",
+            "Private Discord channels",
+            "Priority access to new features",
+            "To-do list management",
         ],
         is_active=True,
     )
@@ -96,78 +71,36 @@ async def create_default_plans():
     # Pro Plan (Yearly)
     pro_yearly = CreatePlanRequest(
         name="Pro Yearly",
-        description="For power users and small teams (Save 2 months)",
-        amount=999000,  # ₹9990 per year (2 months free)
-        currency=Currency.INR,
+        description="For productivity nerds (Save 3 months)",
+        amount=18000,  # 180.00 USD per year (3 months free), 15 per month
+        currency=Currency.USD,
         duration=PlanDuration.YEARLY,
         max_users=5,
         features=[
             "Everything in Basic",
-            "Team collaboration",
-            "Advanced AI models",
-            "Custom integrations",
-            "Analytics and insights",
-            "API access",
+            "Unlimited file uploads",
+            "Unlimited calendar management",
+            "Unlimited email management",
+            "Unlimited proactive events",
+            "AI-powered smart reminders",
+            "Unlimited image generation",
+            "Extended memory",
+            "Unlimited goal tracking",
+            "Unlimited deep research",
             "Premium support",
             "Custom branding",
+            "Private Discord channels",
+            "Priority access to new features",
             "2 months free!",
-        ],
-        is_active=True,
-    )
-
-    # Enterprise Plan (Monthly)
-    enterprise_monthly = CreatePlanRequest(
-        name="Enterprise Monthly",
-        description="For large organizations",
-        amount=249900,  # ₹2499 per month
-        currency=Currency.INR,
-        duration=PlanDuration.MONTHLY,
-        max_users=None,  # Unlimited
-        features=[
-            "Everything in Pro",
-            "Unlimited users",
-            "Advanced security",
-            "SSO integration",
-            "Custom deployment",
-            "Dedicated support",
-            "SLA guarantee",
-            "Custom training",
-            "White-label solution",
-        ],
-        is_active=True,
-    )
-
-    # Enterprise Plan (Yearly)
-    enterprise_yearly = CreatePlanRequest(
-        name="Enterprise Yearly",
-        description="For large organizations (Save 2 months)",
-        amount=2499000,  # ₹24990 per year (2 months free)
-        currency=Currency.INR,
-        duration=PlanDuration.YEARLY,
-        max_users=None,  # Unlimited
-        features=[
-            "Everything in Pro",
-            "Unlimited users",
-            "Advanced security",
-            "SSO integration",
-            "Custom deployment",
-            "Dedicated support",
-            "SLA guarantee",
-            "Custom training",
-            "White-label solution",
-            "2 months free!",
+            "To-do list management",
         ],
         is_active=True,
     )
 
     plans = [
         free_plan,
-        basic_monthly,
-        basic_yearly,
         pro_monthly,
         pro_yearly,
-        enterprise_monthly,
-        enterprise_yearly,
     ]
 
     created_plans = []
