@@ -33,7 +33,7 @@ async def setup_razorpay_plans():
     # Define plans with their corresponding Razorpay plan IDs
     plans_to_create = [
         {
-            "razorpay_plan_id": "plan_QlyNGEi4zjFJfs",  # Monthly plan
+            "razorpay_plan_id": "plan_QmJ1F2fJOIzSea",  # Monthly plan
             "plan": CreatePlanRequest(
                 name="GAIA Pro Monthly",
                 description="For productivity nerds - billed monthly",
@@ -65,7 +65,7 @@ async def setup_razorpay_plans():
             )
         },
         {
-            "razorpay_plan_id": "plan_QlyNxAapbw4UTe",  # Yearly plan
+            "razorpay_plan_id": "plan_QmJ1bew3wsABYv",  # Yearly plan
             "plan": CreatePlanRequest(
                 name="GAIA Pro Yearly",
                 description="For productivity nerds - billed annually (save ₹5,131/year)",

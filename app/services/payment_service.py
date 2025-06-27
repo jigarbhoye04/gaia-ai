@@ -566,6 +566,8 @@ async def get_razorpay_plan_id(plan_id: str) -> str:
         plan = await plans_collection.find_one({"_id": ObjectId(plan_id)})
         if not plan:
             raise HTTPException(status_code=404, detail="Plan not found")
+        
+        logger.info(f"{plan["razorpay_plan_id"]=}")
         return plan["razorpay_plan_id"]
     except HTTPException:
         raise
