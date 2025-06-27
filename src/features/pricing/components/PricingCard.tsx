@@ -2,9 +2,15 @@
 
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
+import { useRouter } from "next/navigation";
 import React from "react";
+import { toast } from "sonner";
 
 import { Tick02Icon } from "@/components/shared/icons";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { formatPriceForUser } from "@/utils/currency";
+
+import { useRazorpay } from "../hooks/useRazorpay";
 
 interface PricingCardProps {
   title: string;
@@ -16,6 +22,7 @@ interface PricingCardProps {
   features?: string[];
   durationIsMonth: boolean;
   className?: string;
+  planId?: string; // Add planId prop for backend integration
 }
 
 export function PricingCard({
@@ -28,12 +35,47 @@ export function PricingCard({
   features,
   durationIsMonth,
   className,
+  planId,
 }: PricingCardProps) {
   const yearlyPrice = price * 12;
   const discountAmount = !durationIsMonth
     ? (discountPercentage / 100) * yearlyPrice
     : 0;
   const finalPrice = durationIsMonth ? price : yearlyPrice - discountAmount;
+
+  // Convert prices to user's currency
+  const finalPriceFormatted = formatPriceForUser(finalPrice);
+  const yearlyPriceFormatted = formatPriceForUser(yearlyPrice);
+  const discountAmountFormatted = formatPriceForUser(discountAmount);
+
+  const { createSubscriptionPayment, isLoading } = useRazorpay();
+  const user = useUser();
+  const router = useRouter();
+
+  const handleGetStarted = async () => {
+    if (price === 0) {
+      // Handle free plan - redirect to signup or dashboard
+      if (user) router.push("/c");
+      else router.push("/signup");
+      return;
+    }
+
+    if (!user) {
+      toast.error("Please sign in to subscribe to a plan");
+      router.push("/login");
+      return;
+    }
+
+    if (!planId) {
+      toast.error("Plan not available. Please try again later.");
+      return;
+    }
+
+    await createSubscriptionPayment(planId, {
+      name: user.name,
+      email: user.email,
+    });
+  };
 
   return (
     <>
@@ -53,7 +95,7 @@ export function PricingCard({
                 color="primary"
                 variant="flat"
               >
-                <span>Save $ {discountAmount.toFixed(2)}</span>
+                <span>Save {discountAmountFormatted.formatted}</span>
               </Chip>
             )}
             {/* <span className="font-normal text-white text-opacity-70">
@@ -65,11 +107,11 @@ export function PricingCard({
             <div className="flex items-baseline gap-2 border-none!">
               {!durationIsMonth && discountPercentage > 0 && price > 0 && (
                 <span className="text-3xl font-normal text-red-500 line-through">
-                  ${yearlyPrice}
+                  {yearlyPriceFormatted.formatted}
                 </span>
               )}
-              <span className="text-5xl">${finalPrice}</span>
-              <span className="text-2xl">USD</span>
+              <span className="text-5xl">{finalPriceFormatted.formatted}</span>
+              <span className="text-2xl">{finalPriceFormatted.currency}</span>
             </div>
 
             <span className="text-opacity-70 text-sm font-normal text-white">
@@ -100,8 +142,11 @@ export function PricingCard({
             className="w-full font-medium"
             color="primary"
             variant={type === "main" ? "shadow" : "flat"}
+            onClick={handleGetStarted}
+            isLoading={isLoading}
+            disabled={isLoading}
           >
-            Get started
+            {price === 0 ? "Get started" : "Subscribe now"}
           </Button>
         </div>
       </div>
