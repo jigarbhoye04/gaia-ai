@@ -46,6 +46,7 @@ export function PricingCards({ durationIsMonth = false }) {
             </div>
           }
           price={0}
+          currency="INR"
           discountPercentage={0}
           title="Free Plan"
           type="secondary"
@@ -74,7 +75,8 @@ export function PricingCards({ durationIsMonth = false }) {
               <span>What's Included?</span>
             </div>
           }
-          price={20}
+          price={durationIsMonth ? 2000 : 20000} // 2000 paise = 20 INR for monthly, 20000 paise = 200 INR for yearly
+          currency="INR"
           discountPercentage={25}
           title="Pro"
           type="main"
@@ -114,7 +116,8 @@ export function PricingCards({ durationIsMonth = false }) {
                 <span>What's Included?</span>
               </div>
             }
-            price={plan.amount / 100} // Convert from cents to dollars
+            price={plan.amount} // Keep in smallest unit (cents/paise)
+            currency={plan.currency}
             discountPercentage={!durationIsMonth && isPro ? 25 : 0}
             title={plan.name}
             type={isPro ? "main" : "secondary"}

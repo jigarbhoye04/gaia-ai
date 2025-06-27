@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import { Tick02Icon } from "@/components/shared/icons";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { formatPriceForUser } from "@/utils/currency";
+import { formatPriceFromSmallestUnit } from "@/utils/currency";
 
 import { useRazorpay } from "../hooks/useRazorpay";
 
@@ -16,13 +16,14 @@ interface PricingCardProps {
   title: string;
   // description: string;
   type: "main" | "secondary";
-  price: number;
+  price: number; // Price in smallest currency unit (cents/paise)
   discountPercentage?: number; // new prop for discount percentage
   featurestitle: React.ReactNode;
   features?: string[];
   durationIsMonth: boolean;
   className?: string;
   planId?: string; // Add planId prop for backend integration
+  currency?: string; // Currency from backend
 }
 
 export function PricingCard({
@@ -36,17 +37,30 @@ export function PricingCard({
   durationIsMonth,
   className,
   planId,
+  currency = "INR",
 }: PricingCardProps) {
-  const yearlyPrice = price * 12;
-  const discountAmount = !durationIsMonth
-    ? (discountPercentage / 100) * yearlyPrice
-    : 0;
-  const finalPrice = durationIsMonth ? price : yearlyPrice - discountAmount;
+  // Calculate prices based on monthly/yearly duration
+  const monthlyPrice = durationIsMonth ? price : Math.round(price / 12);
+  const yearlyPrice = !durationIsMonth ? price : price * 12;
 
-  // Convert prices to user's currency
-  const finalPriceFormatted = formatPriceForUser(finalPrice);
-  const yearlyPriceFormatted = formatPriceForUser(yearlyPrice);
-  const discountAmountFormatted = formatPriceForUser(discountAmount);
+  // Apply discount only for yearly plans
+  const discountAmount = !durationIsMonth
+    ? Math.round((discountPercentage / 100) * yearlyPrice)
+    : 0;
+  const finalPrice = durationIsMonth
+    ? monthlyPrice
+    : yearlyPrice - discountAmount;
+
+  // Convert prices from smallest unit to display format
+  const finalPriceFormatted = formatPriceFromSmallestUnit(finalPrice, currency);
+  const yearlyPriceFormatted = formatPriceFromSmallestUnit(
+    yearlyPrice,
+    currency,
+  );
+  const discountAmountFormatted = formatPriceFromSmallestUnit(
+    discountAmount,
+    currency,
+  );
 
   const { createSubscriptionPayment, isLoading } = useRazorpay();
   const user = useUser();

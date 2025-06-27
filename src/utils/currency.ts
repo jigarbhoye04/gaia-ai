@@ -135,6 +135,28 @@ export function formatPriceForUser(
 }
 
 /**
+ * Format price from smallest currency unit (cents/paise) to display format
+ */
+export function formatPriceFromSmallestUnit(
+  amountInSmallestUnit: number,
+  currency: string,
+): {
+  amount: number;
+  formatted: string;
+  currency: string;
+} {
+  // Convert from smallest unit to main unit
+  const divisor = currency === "JPY" || currency === "CNY" ? 1 : 100;
+  const amountInMainUnit = amountInSmallestUnit / divisor;
+
+  return {
+    amount: amountInMainUnit,
+    formatted: formatCurrency(amountInMainUnit, currency),
+    currency: currency,
+  };
+}
+
+/**
  * Set user's preferred currency
  */
 export function setUserCurrency(currency: string): void {

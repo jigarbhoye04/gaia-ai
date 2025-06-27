@@ -5,7 +5,7 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/react";
 
-import { formatPriceForUser } from "@/utils/currency";
+import { formatPriceFromSmallestUnit } from "@/utils/currency";
 
 import { useUserSubscriptionStatus } from "../hooks/usePricing";
 
@@ -45,13 +45,19 @@ export function PaymentSummary() {
 
   const plan = subscriptionStatus.current_plan;
   const subscription = subscriptionStatus.subscription;
-  const priceFormatted = formatPriceForUser(plan.amount / 100);
+  const priceFormatted = formatPriceFromSmallestUnit(
+    plan.amount,
+    plan.currency,
+  );
 
   const isYearly = plan.duration === "yearly";
   const monthlyEquivalent = isYearly
-    ? plan.amount / 12 / 100
-    : plan.amount / 100;
-  const monthlyFormatted = formatPriceForUser(monthlyEquivalent);
+    ? Math.round(plan.amount / 12)
+    : plan.amount;
+  const monthlyFormatted = formatPriceFromSmallestUnit(
+    monthlyEquivalent,
+    plan.currency,
+  );
 
   return (
     <Card className="w-full max-w-md">
