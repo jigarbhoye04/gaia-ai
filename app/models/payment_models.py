@@ -192,23 +192,26 @@ class PaymentResponse(BaseModel):
 
 
 class UserSubscriptionStatus(BaseModel):
-    """Response model for user's subscription status."""
+    """Response model for user subscription status."""
 
     user_id: str = Field(..., description="User ID")
-    current_plan: Optional[PlanResponse] = Field(
-        None, description="Current active plan"
-    )
-    subscription: Optional[SubscriptionResponse] = Field(
-        None, description="Current subscription"
-    )
-    is_subscribed: bool = Field(
-        False, description="Whether user has active subscription"
-    )
-    days_remaining: Optional[int] = Field(
-        None, description="Days remaining in current period"
-    )
+    current_plan: Optional[Dict[str, Any]] = Field(None, description="Current plan details")
+    subscription: Optional[Dict[str, Any]] = Field(None, description="Current subscription")
+    is_subscribed: bool = Field(False, description="Whether user has an active subscription")
+    days_remaining: Optional[int] = Field(None, description="Days remaining in current period")
     can_upgrade: bool = Field(True, description="Whether user can upgrade")
     can_downgrade: bool = Field(True, description="Whether user can downgrade")
+    
+    # Legacy fields for backward compatibility
+    has_subscription: Optional[bool] = Field(None, description="Legacy field - use is_subscribed")
+    plan_type: Optional[PlanType] = Field(None, description="Legacy field - check current_plan")
+    status: Optional[SubscriptionStatus] = Field(None, description="Legacy field - check subscription")
+    current_period_start: Optional[datetime] = Field(None, description="Legacy field")
+    current_period_end: Optional[datetime] = Field(None, description="Legacy field")
+    cancel_at_period_end: Optional[bool] = Field(None, description="Legacy field")
+    trial_end: Optional[datetime] = Field(None, description="Legacy field")
+    subscription_id: Optional[str] = Field(None, description="Legacy field")
+    plan_id: Optional[str] = Field(None, description="Legacy field")
 
 
 class PaymentHistoryResponse(BaseModel):
