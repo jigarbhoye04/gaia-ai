@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import { Tooltip } from "@heroui/tooltip";
 import { CircleArrowUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -90,18 +91,7 @@ export default function SidebarTopButtons() {
         </Button>
       </Link> */}
 
-      <Button
-        className="flex w-full justify-start text-sm text-primary"
-        color="primary"
-        size="sm"
-        variant="light"
-        onPress={createNewChat}
-      >
-        <ChatBubbleAddIcon color="#00bbff" width={18} />
-        New Chat
-      </Button>
-
-      {/* <div className="grid grid-cols-3 grid-rows-2 items-start gap-1 rounded-2xl">
+      <div className="flex flex-row items-start gap-1 rounded-2xl">
         {buttonData.map(({ route, icon, label }, index) => (
           <Tooltip
             key={index}
@@ -122,8 +112,8 @@ export default function SidebarTopButtons() {
             </Button>
           </Tooltip>
         ))}
-      </div> */}
-      {buttonData.map(({ route, icon, label }, index) => (
+      </div>
+      {/* {buttonData.map(({ route, icon, label }, index) => (
         <Link href={route} className="w-full" key={index}>
           <Button
             className="flex w-full justify-start text-sm"
@@ -138,7 +128,19 @@ export default function SidebarTopButtons() {
             {label}
           </Button>
         </Link>
-      ))}
+      ))} */}
+
+      <Button
+        className="mt-2 flex w-full justify-start text-sm text-primary"
+        color="primary"
+        size="sm"
+        variant="light"
+        onPress={createNewChat}
+      >
+        <ChatBubbleAddIcon color="#00bbff" width={18} />
+        New Chat
+      </Button>
+
       <div className="my-2 px-2">
         <Separator className="bg-zinc-800" />
       </div>

@@ -69,9 +69,9 @@ export default function ChatRenderer() {
         <Image
           alt="GAIA Logo"
           src={"/branding/logo.webp"}
-          width={130}
-          height={130}
-          className="bobbing hover:translate-y-3"
+          width={110}
+          height={110}
+          className="bobbing"
         />
         <StarterText />
       </div>
