@@ -1,11 +1,10 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { type PaymentCallbackData, pricingApi } from "../api/pricingApi";
+import { usePaymentFlow } from "./usePaymentFlow";
 import { usePaymentConfig } from "./usePricing";
 
 declare global {
@@ -41,11 +40,9 @@ interface RazorpayOptions {
 }
 
 export const useRazorpay = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const { data: config } = usePaymentConfig();
-  const router = useRouter();
-  const queryClient = useQueryClient();
+  const { states, actions } = usePaymentFlow();
 
   // Load Razorpay script
   useEffect(() => {
@@ -80,7 +77,9 @@ export const useRazorpay = () => {
         return;
       }
 
-      setIsLoading(true);
+      actions.resetFlow();
+      actions.startInitiating();
+
       try {
         // Create subscription
         const subscription = await pricingApi.createSubscription({
@@ -100,34 +99,12 @@ export const useRazorpay = () => {
             color: config.theme_color,
           },
           handler: async (response: PaymentCallbackData) => {
-            try {
-              await pricingApi.verifyPayment({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_subscription_id: response.razorpay_subscription_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-
-              toast.success(
-                "Payment successful! Your subscription is now active.",
-              );
-
-              // Invalidate and refetch subscription status
-              await queryClient.invalidateQueries({
-                queryKey: ["userSubscriptionStatus"],
-              });
-
-              // Navigate to dashboard instead of hard reload
-              router.push("/c");
-            } catch (error) {
-              console.error("Payment verification failed:", error);
-              toast.error(
-                "Payment verification failed. Please contact support.",
-              );
-            }
+            actions.startProcessing();
+            await actions.handlePaymentSuccess(response);
           },
           modal: {
             ondismiss: () => {
-              toast.info("Payment cancelled");
+              actions.handlePaymentDismiss();
             },
           },
         };
@@ -136,17 +113,21 @@ export const useRazorpay = () => {
         rzp.open();
       } catch (error) {
         console.error("Error creating subscription:", error);
-        toast.error("Failed to initiate payment. Please try again.");
-      } finally {
-        setIsLoading(false);
+        actions.handlePaymentError(
+          error instanceof Error
+            ? error
+            : new Error("Failed to initiate payment"),
+        );
       }
     },
-    [isScriptLoaded, config],
+    [isScriptLoaded, config, actions],
   );
 
   return {
-    isLoading,
+    isLoading: states.isInitiating || states.isProcessing,
     isScriptLoaded,
     createSubscriptionPayment,
+    paymentStates: states,
+    paymentActions: actions,
   };
 };

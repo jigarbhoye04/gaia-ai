@@ -11,6 +11,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 
 // Removed currency import - using USD only
 import { useRazorpay } from "../hooks/useRazorpay";
+import { PaymentStatusIndicator } from "./PaymentStatusIndicator";
 
 interface PricingCardProps {
   title: string;
@@ -44,9 +45,6 @@ export function PricingCard({
       ? Math.round(((originalPrice - price) / originalPrice) * 100)
       : 0;
 
-  const amountSaved =
-    originalPrice && originalPrice > price ? originalPrice - price : 0;
-
   // Calculate free months for yearly plan (assuming monthly price is originalPrice/12)
   const freeMonths =
     originalPrice && !durationIsMonth && originalPrice > price
@@ -55,7 +53,7 @@ export function PricingCard({
 
   // Always display in USD format - convert from smallest unit (cents)
   const formatUSDPrice = (amountInCents: number) => {
-    if (amountInCents === 0) return { formatted: "Free", currency: "" };
+    if (amountInCents === 0) return { formatted: "$0", currency: "USD" };
     const dollars = amountInCents / 100;
     return {
       formatted: `$${dollars.toFixed(0)}`,
@@ -67,9 +65,8 @@ export function PricingCard({
   const originalPriceFormatted = originalPrice
     ? formatUSDPrice(originalPrice)
     : null;
-  const amountSavedFormatted = amountSaved ? formatUSDPrice(amountSaved) : null;
 
-  const { createSubscriptionPayment, isLoading } = useRazorpay();
+  const { createSubscriptionPayment, isLoading, paymentStates } = useRazorpay();
   const user = useUser();
   const router = useRouter();
 
@@ -99,85 +96,97 @@ export function PricingCard({
   };
 
   return (
-    <>
-      <div
-        className={`relative w-full rounded-2xl ${className} ${
-          type === "main"
-            ? "bg-zinc-900 outline-2 outline-primary"
-            : "bg-zinc-900"
-        } `}
-      >
-        <div className="flex h-full flex-col gap-4 p-[7%]">
-          <div className="flex flex-row items-center justify-between border-none!">
-            <div className="flex justify-between text-2xl">{title}</div>
-            {!durationIsMonth && discountPercentage > 0 && (
-              <Chip
-                className="flex items-center gap-[2px] border-none! text-sm"
-                color="primary"
-                variant="flat"
+    <div
+      className={`relative w-full rounded-2xl ${className} ${
+        type === "main"
+          ? "bg-zinc-900 outline-2 outline-primary"
+          : "bg-zinc-900"
+      } `}
+    >
+      <div className="flex h-full flex-col gap-4 p-[7%]">
+        <div className="flex flex-row items-center justify-between border-none!">
+          <div className="flex justify-between text-2xl">{title}</div>
+          {!durationIsMonth && discountPercentage > 0 && (
+            <Chip
+              className="flex items-center gap-[2px] border-none! text-sm"
+              color="primary"
+              variant="flat"
+            >
+              <span>Save {discountPercentage}%</span>
+            </Chip>
+          )}
+        </div>
+
+        <div className="m-0! flex flex-col gap-0 border-none!">
+          <div className="flex items-baseline gap-2 border-none!">
+            {originalPriceFormatted && !durationIsMonth && (
+              <span className="text-3xl font-normal text-red-500 line-through">
+                {originalPriceFormatted.formatted}
+              </span>
+            )}
+            <span className="text-5xl">{finalPriceFormatted.formatted}</span>
+            {finalPriceFormatted.currency && (
+              <span className="text-2xl">{finalPriceFormatted.currency}</span>
+            )}
+          </div>
+
+          <span className="text-opacity-70 min-h-5 text-sm font-normal text-white">
+            {price > 0 && (durationIsMonth ? "/ per month" : "/ per year")}
+          </span>
+
+          {!durationIsMonth && freeMonths > 0 && (
+            <span className="mt-1 text-sm font-normal text-green-400">
+              Get {freeMonths} month{freeMonths > 1 ? "s" : ""} free!
+            </span>
+          )}
+        </div>
+
+        <div className="mt-1 flex flex-1 flex-col gap-1">
+          {featurestitle}
+
+          {!!features &&
+            features.map((feature: string, index: number) => (
+              <div
+                key={index}
+                className="flex items-center gap-3 border-none! text-sm font-light"
               >
-                <span>Save {discountPercentage}%</span>
-              </Chip>
-            )}
-          </div>
+                <Tick02Icon
+                  height="20"
+                  width="20"
+                  className="min-h-[20px] min-w-[20px]"
+                />
+                {feature}
+              </div>
+            ))}
+        </div>
 
-          <div className="m-0! flex flex-1 flex-col gap-0 border-none!">
-            <div className="flex items-baseline gap-2 border-none!">
-              {originalPriceFormatted && !durationIsMonth && (
-                <span className="text-3xl font-normal text-red-500 line-through">
-                  {originalPriceFormatted.formatted}
-                </span>
-              )}
-              <span className="text-5xl">{finalPriceFormatted.formatted}</span>
-              {finalPriceFormatted.currency && (
-                <span className="text-2xl">{finalPriceFormatted.currency}</span>
-              )}
-            </div>
-
-            {price > 0 && (
-              <span className="text-opacity-70 text-sm font-normal text-white">
-                {durationIsMonth ? "/ per month" : "/ per year"}
-              </span>
-            )}
-
-            {!durationIsMonth && freeMonths > 0 && (
-              <span className="mt-1 text-sm font-normal text-green-400">
-                Get {freeMonths} month{freeMonths > 1 ? "s" : ""} free!
-              </span>
-            )}
-          </div>
-
-          <div className="mt-1 flex flex-col gap-1">
-            {featurestitle}
-
-            {!!features &&
-              features.map((feature: string, index: number) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-3 border-none! text-sm font-normal"
-                >
-                  <Tick02Icon
-                    height="20"
-                    width="20"
-                    className="min-h-[20px] min-w-[20px]"
-                  />
-                  {feature}
-                </div>
-              ))}
-          </div>
+        <div className="space-y-3">
+          {(paymentStates.isInitiating ||
+            paymentStates.isProcessing ||
+            paymentStates.isVerifying) && (
+            <PaymentStatusIndicator states={paymentStates} />
+          )}
 
           <Button
             className="w-full font-medium"
             color="primary"
             variant={type === "main" ? "shadow" : "flat"}
-            onClick={handleGetStarted}
+            onPress={handleGetStarted}
             isLoading={isLoading}
-            disabled={isLoading}
+            disabled={isLoading || paymentStates.isVerifying}
           >
-            {price === 0 ? "Get started" : "Subscribe now"}
+            {paymentStates.isInitiating
+              ? "Preparing..."
+              : paymentStates.isProcessing
+                ? "Processing..."
+                : paymentStates.isVerifying
+                  ? "Activating..."
+                  : price === 0
+                    ? "Get started"
+                    : "Subscribe now"}
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

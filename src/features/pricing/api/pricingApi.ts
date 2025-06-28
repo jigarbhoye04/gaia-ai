@@ -196,7 +196,7 @@ class PricingApi {
   // Cancel subscription
   async cancelSubscription(cancelAtCycleEnd = true): Promise<{
     message: string;
-    cancel_at_cycle_end: string;
+    cancel_at_cycle_end: boolean;
   }> {
     try {
       return await apiService.delete(

@@ -9,6 +9,7 @@ import LogoutModal from "@/components/layout/sidebar/settings/LogoutModal";
 import MemorySettings from "@/components/layout/sidebar/settings/MemorySettings";
 import PreferencesSettings from "@/components/layout/sidebar/settings/PreferencesSettings";
 import { ModalAction } from "@/components/layout/sidebar/settings/SettingsMenu";
+import { SubscriptionSettings } from "@/features/settings/components/SubscriptionSettings";
 
 export default function SettingsPage() {
   const searchParams = useSearchParams();
@@ -19,6 +20,8 @@ export default function SettingsPage() {
     switch (section) {
       case "account":
         return <AccountSettings setModalAction={setModalAction} />;
+      case "subscription":
+        return <SubscriptionSettings />;
       case "preferences":
         return <PreferencesSettings />;
       case "memory":

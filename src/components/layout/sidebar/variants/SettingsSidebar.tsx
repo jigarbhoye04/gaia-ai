@@ -4,6 +4,7 @@ import { Button } from "@heroui/button";
 import {
   Brain,
   ChevronLeft,
+  CreditCard,
   MessageSquare,
   Settings,
   User,
@@ -35,6 +36,11 @@ export default function SettingsSidebar() {
       label: "Account",
       icon: User,
       href: "/settings?section=account",
+    },
+    {
+      label: "Subscription",
+      icon: CreditCard,
+      href: "/settings?section=subscription",
     },
     {
       label: "Chat",
