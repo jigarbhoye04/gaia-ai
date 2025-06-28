@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { pricingApi } from "../api/pricingApi";
+import { type Plan,pricingApi } from "../api/pricingApi";
 
-export const usePlans = (activeOnly = true) => {
+export const usePlans = (activeOnly = true, initialData?: Plan[]) => {
   return useQuery({
     queryKey: ["plans", activeOnly],
     queryFn: () => pricingApi.getPlans(activeOnly),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    ...(initialData && { initialData }),
   });
 };
 

@@ -5,9 +5,11 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/react";
 
-import { formatPriceFromSmallestUnit } from "@/utils/currency";
-
 import { useUserSubscriptionStatus } from "../hooks/usePricing";
+import {
+  convertToUSDCents,
+  formatUSDFromCents,
+} from "../utils/currencyConverter";
 
 export function PaymentSummary() {
   const { data: subscriptionStatus, isLoading } = useUserSubscriptionStatus();
@@ -45,19 +47,16 @@ export function PaymentSummary() {
 
   const plan = subscriptionStatus.current_plan;
   const subscription = subscriptionStatus.subscription;
-  const priceFormatted = formatPriceFromSmallestUnit(
-    plan.amount,
-    plan.currency,
-  );
+
+  // Convert to USD and format
+  const priceInUSDCents = convertToUSDCents(plan.amount, plan.currency);
+  const priceFormatted = formatUSDFromCents(priceInUSDCents);
 
   const isYearly = plan.duration === "yearly";
   const monthlyEquivalent = isYearly
-    ? Math.round(plan.amount / 12)
-    : plan.amount;
-  const monthlyFormatted = formatPriceFromSmallestUnit(
-    monthlyEquivalent,
-    plan.currency,
-  );
+    ? Math.round(priceInUSDCents / 12)
+    : priceInUSDCents;
+  const monthlyFormatted = formatUSDFromCents(monthlyEquivalent);
 
   return (
     <Card className="w-full max-w-md">
@@ -82,7 +81,7 @@ export function PaymentSummary() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm">Price:</span>
-            <span className="font-medium">{priceFormatted.formatted}</span>
+            <span className="font-medium">{priceFormatted}</span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -94,7 +93,7 @@ export function PaymentSummary() {
             <div className="flex items-center justify-between">
               <span className="text-sm">Monthly equivalent:</span>
               <span className="text-sm text-success">
-                {monthlyFormatted.formatted}/month
+                {monthlyFormatted}/month
               </span>
             </div>
           )}

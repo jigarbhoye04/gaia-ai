@@ -3,13 +3,17 @@
 import { Chip } from "@heroui/chip";
 import { Tab, Tabs } from "@heroui/tabs";
 
-import { FAQAccordion } from "@/features/pricing/components/FAQAccordion";
+import type { Plan } from "@/features/pricing/api/pricingApi";
 import { PricingCards } from "@/features/pricing/components/PricingCards";
 
-export default function PricingPage() {
+interface PricingPageProps {
+  initialPlans?: Plan[];
+}
+
+export default function PricingPage({ initialPlans }: PricingPageProps) {
   return (
     <>
-      <div className="bg-custom-gradient flex min-h-screen w-screen flex-col items-center justify-center">
+      <div className="flex min-h-screen w-screen flex-col items-center justify-center py-28">
         <div className="flex flex-col items-center gap-2">
           <div className="mb-2 flex w-full flex-col items-center gap-3">
             <Chip color="primary" size="lg" variant="light">
@@ -27,7 +31,7 @@ export default function PricingPage() {
           <div className="mt-5 flex w-full flex-col items-center font-medium">
             <Tabs aria-label="Options" radius="full">
               <Tab key="monthly" title="Monthly">
-                <PricingCards durationIsMonth />
+                <PricingCards durationIsMonth initialPlans={initialPlans} />
               </Tab>
               <Tab
                 key="yearly"
@@ -40,12 +44,12 @@ export default function PricingPage() {
                   </div>
                 }
               >
-                <PricingCards />
+                <PricingCards initialPlans={initialPlans} />
               </Tab>
             </Tabs>
           </div>
 
-          <FAQAccordion />
+          {/* <FAQAccordion /> */}
         </div>
       </div>
     </>

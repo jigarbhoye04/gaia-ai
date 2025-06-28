@@ -55,15 +55,24 @@ export default async function About() {
   };
 
   return (
-    <div className="flex min-h-screen w-screen justify-center px-6 py-28">
-      <div className="max-w-(--breakpoint-md) space-y-8">
+    <div className="flex min-h-screen w-screen justify-center bg-black px-6 py-28">
+      <div className="fixed top-0 left-0 z-[0] flex h-screen w-full items-center justify-center opacity-5">
+        <Image
+          src="/branding/logo.webp"
+          alt="GAIA Logo"
+          className="scale-110 object-contain grayscale"
+          fill
+        />
+      </div>
+
+      <div className="relative max-w-(--breakpoint-md) space-y-8">
         <Suspense fallback={<div>Loading...</div>}>
-          <div className="flex justify-center">
+          <div className="flex w-full justify-center">
             <Image
               src="/branding/logo.webp"
               alt="GAIA Logo"
-              width={150}
-              height={150}
+              width={80}
+              height={80}
             />
           </div>
           <div className="prose prose-zinc dark:prose-invert max-w-xl">
@@ -85,7 +94,7 @@ export default async function About() {
                   </h3>
                 ),
                 p: ({ children }) => (
-                  <p className="mb-4 text-justify text-lg leading-relaxed text-foreground-600">
+                  <p className="mb-4 text-justify text-lg leading-relaxed font-light text-foreground-600">
                     {children}
                   </p>
                 ),

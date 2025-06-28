@@ -40,6 +40,7 @@ export interface PaymentCallbackData {
 
 export interface Subscription {
   id: string;
+  razorpay_subscription_id: string;
   user_id: string;
   plan_id: string;
   status: string;

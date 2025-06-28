@@ -8,59 +8,66 @@ import { toast } from "sonner";
 
 import { Tick02Icon } from "@/components/shared/icons";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { formatPriceFromSmallestUnit } from "@/utils/currency";
 
+// Removed currency import - using USD only
 import { useRazorpay } from "../hooks/useRazorpay";
 
 interface PricingCardProps {
   title: string;
-  // description: string;
   type: "main" | "secondary";
-  price: number; // Price in smallest currency unit (cents/paise)
-  discountPercentage?: number; // new prop for discount percentage
+  price: number; // Price in USD cents (already discounted if applicable)
+  originalPrice?: number; // Original price before discount (for yearly plans)
   featurestitle: React.ReactNode;
   features?: string[];
   durationIsMonth: boolean;
   className?: string;
   planId?: string; // Add planId prop for backend integration
-  currency?: string; // Currency from backend
 }
 
 export function PricingCard({
   title,
-  // description,
   type,
   price,
-  discountPercentage = 0,
+  originalPrice,
   featurestitle,
   features,
   durationIsMonth,
   className,
   planId,
-  currency = "INR",
 }: PricingCardProps) {
-  // Calculate prices based on monthly/yearly duration
-  const monthlyPrice = durationIsMonth ? price : Math.round(price / 12);
-  const yearlyPrice = !durationIsMonth ? price : price * 12;
+  // Use the price directly from backend (already discounted if applicable)
+  const finalPrice = price;
 
-  // Apply discount only for yearly plans
-  const discountAmount = !durationIsMonth
-    ? Math.round((discountPercentage / 100) * yearlyPrice)
-    : 0;
-  const finalPrice = durationIsMonth
-    ? monthlyPrice
-    : yearlyPrice - discountAmount;
+  // Calculate discount info if original price is provided
+  const discountPercentage =
+    originalPrice && originalPrice > price
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : 0;
 
-  // Convert prices from smallest unit to display format
-  const finalPriceFormatted = formatPriceFromSmallestUnit(finalPrice, currency);
-  const yearlyPriceFormatted = formatPriceFromSmallestUnit(
-    yearlyPrice,
-    currency,
-  );
-  const discountAmountFormatted = formatPriceFromSmallestUnit(
-    discountAmount,
-    currency,
-  );
+  const amountSaved =
+    originalPrice && originalPrice > price ? originalPrice - price : 0;
+
+  // Calculate free months for yearly plan (assuming monthly price is originalPrice/12)
+  const freeMonths =
+    originalPrice && !durationIsMonth && originalPrice > price
+      ? Math.round((originalPrice - price) / (originalPrice / 12))
+      : 0;
+
+  // Always display in USD format - convert from smallest unit (cents)
+  const formatUSDPrice = (amountInCents: number) => {
+    if (amountInCents === 0) return { formatted: "Free", currency: "" };
+    const dollars = amountInCents / 100;
+    return {
+      formatted: `$${dollars.toFixed(0)}`,
+      currency: "USD",
+    };
+  };
+
+  const finalPriceFormatted = formatUSDPrice(finalPrice);
+  const originalPriceFormatted = originalPrice
+    ? formatUSDPrice(originalPrice)
+    : null;
+  const amountSavedFormatted = amountSaved ? formatUSDPrice(amountSaved) : null;
 
   const { createSubscriptionPayment, isLoading } = useRazorpay();
   const user = useUser();
@@ -109,28 +116,35 @@ export function PricingCard({
                 color="primary"
                 variant="flat"
               >
-                <span>Save {discountAmountFormatted.formatted}</span>
+                <span>Save {discountPercentage}%</span>
               </Chip>
             )}
-            {/* <span className="font-normal text-white text-opacity-70">
-              {description}
-            </span> */}
           </div>
 
           <div className="m-0! flex flex-1 flex-col gap-0 border-none!">
             <div className="flex items-baseline gap-2 border-none!">
-              {!durationIsMonth && discountPercentage > 0 && price > 0 && (
+              {originalPriceFormatted && !durationIsMonth && (
                 <span className="text-3xl font-normal text-red-500 line-through">
-                  {yearlyPriceFormatted.formatted}
+                  {originalPriceFormatted.formatted}
                 </span>
               )}
               <span className="text-5xl">{finalPriceFormatted.formatted}</span>
-              <span className="text-2xl">{finalPriceFormatted.currency}</span>
+              {finalPriceFormatted.currency && (
+                <span className="text-2xl">{finalPriceFormatted.currency}</span>
+              )}
             </div>
 
-            <span className="text-opacity-70 text-sm font-normal text-white">
-              {durationIsMonth ? "/ per month" : "/ per year"}
-            </span>
+            {price > 0 && (
+              <span className="text-opacity-70 text-sm font-normal text-white">
+                {durationIsMonth ? "/ per month" : "/ per year"}
+              </span>
+            )}
+
+            {!durationIsMonth && freeMonths > 0 && (
+              <span className="mt-1 text-sm font-normal text-green-400">
+                Get {freeMonths} month{freeMonths > 1 ? "s" : ""} free!
+              </span>
+            )}
           </div>
 
           <div className="mt-1 flex flex-col gap-1">

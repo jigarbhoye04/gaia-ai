@@ -2,11 +2,21 @@
 
 import { Skeleton } from "@heroui/react";
 
+import type { Plan } from "../api/pricingApi";
 import { usePlans } from "../hooks/usePricing";
+import { convertToUSDCents } from "../utils/currencyConverter";
 import { PricingCard } from "./PricingCard";
 
-export function PricingCards({ durationIsMonth = false }) {
-  const { data: plans, isLoading, error } = usePlans(true);
+interface PricingCardsProps {
+  durationIsMonth?: boolean;
+  initialPlans?: Plan[];
+}
+
+export function PricingCards({
+  durationIsMonth = false,
+  initialPlans,
+}: PricingCardsProps) {
+  const { data: plans, isLoading, error } = usePlans(true, initialPlans);
 
   if (isLoading) {
     return (
@@ -18,69 +28,20 @@ export function PricingCards({ durationIsMonth = false }) {
   }
 
   if (error || !plans) {
-    // Fallback to static plans if API fails
     return (
       <div className="grid w-screen max-w-(--breakpoint-sm) grid-cols-2 gap-3">
-        <PricingCard
-          durationIsMonth={durationIsMonth}
-          features={[
-            "Basic chat functionality",
-            "20 file uploads per month",
-            "Limited calendar management",
-            "Limited email management",
-            "Limited proactive events",
-            "Basic (non-AI) reminders",
-            "Limited image generation",
-            "Limited memory",
-            "Track up to 3 goals",
-            "Unlimited web search",
-            "3 deep research sessions",
-            "Basic calendar integration",
-            "Limited notes storage (100 notes)",
-            "Basic support",
-            "To-do list management",
-          ]}
-          featurestitle={
-            <div className="mb-1 flex flex-col border-none!">
-              <span>What's Included?</span>
-            </div>
-          }
-          price={0}
-          currency="INR"
-          discountPercentage={0}
-          title="Free Plan"
-          type="secondary"
-        />
-        <PricingCard
-          durationIsMonth={durationIsMonth}
-          features={[
-            "Everything in Basic",
-            "Unlimited file uploads",
-            "Unlimited calendar management",
-            "Unlimited email management",
-            "Unlimited proactive events",
-            "AI-powered smart reminders",
-            "Unlimited image generation",
-            "Extended memory",
-            "Unlimited goal tracking",
-            "Unlimited deep research",
-            "Advanced AI models",
-            "Premium support",
-            "Private Discord channels",
-            "Priority access to new features",
-            "To-do list management",
-          ]}
-          featurestitle={
-            <div className="mb-1 flex flex-col border-none!">
-              <span>What's Included?</span>
-            </div>
-          }
-          price={durationIsMonth ? 2000 : 20000} // 2000 paise = 20 INR for monthly, 20000 paise = 200 INR for yearly
-          currency="INR"
-          discountPercentage={25}
-          title="Pro"
-          type="main"
-        />
+        <div className="col-span-2 flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 p-8">
+          <p className="text-center text-red-400">
+            Unable to load pricing plans. Please refresh the page or try again
+            later.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-lg bg-red-500 px-4 py-2 text-white hover:bg-red-600"
+          >
+            Refresh Page
+          </button>
+        </div>
       </div>
     );
   }
@@ -104,6 +65,15 @@ export function PricingCards({ durationIsMonth = false }) {
     <div className="grid w-screen max-w-(--breakpoint-sm) grid-cols-2 gap-3">
       {sortedPlans.map((plan) => {
         const isPro = plan.name.toLowerCase().includes("pro");
+        // Convert any currency to USD cents for display
+        const priceInUSDCents = convertToUSDCents(plan.amount, plan.currency);
+
+        // Calculate original price for yearly plans (monthly * 12)
+        let originalPriceInUSDCents;
+        if (!durationIsMonth && isPro) {
+          // For yearly plans, assume 25% discount, so original = price / 0.75
+          originalPriceInUSDCents = Math.round(priceInUSDCents / 0.75);
+        }
 
         return (
           <PricingCard
@@ -116,9 +86,8 @@ export function PricingCards({ durationIsMonth = false }) {
                 <span>What's Included?</span>
               </div>
             }
-            price={plan.amount} // Keep in smallest unit (cents/paise)
-            currency={plan.currency}
-            discountPercentage={!durationIsMonth && isPro ? 25 : 0}
+            price={priceInUSDCents} // Always in USD cents
+            originalPrice={originalPriceInUSDCents}
             title={plan.name}
             type={isPro ? "main" : "secondary"}
           />

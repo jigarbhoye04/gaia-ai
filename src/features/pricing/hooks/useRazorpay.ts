@@ -88,11 +88,9 @@ export const useRazorpay = () => {
           customer_notify: true,
         });
 
-        console.log("HELLO THERE");
-
         const options: RazorpayOptions = {
           key: config.razorpay_key_id,
-          subscription_id: subscription.id,
+          subscription_id: subscription.razorpay_subscription_id,
           amount: 0,
           currency: config.currency,
           name: config.company_name,

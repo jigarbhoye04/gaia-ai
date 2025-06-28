@@ -31,7 +31,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 
 /**
- * Get user's preferred currency based on their location
+ * Get user's preferred currency - defaults to USD
  */
 export function getUserCurrency(): string {
   // Try to get from localStorage first
@@ -40,45 +40,8 @@ export function getUserCurrency(): string {
     return savedCurrency;
   }
 
-  // Fallback to browser locale
-  try {
-    const locale = navigator.language || navigator.languages?.[0] || "en-US";
-    const region = locale.split("-")[1]?.toUpperCase();
-
-    // Map common regions to currencies
-    const regionToCurrency: Record<string, string> = {
-      US: "USD",
-      GB: "GBP",
-      IN: "INR",
-      CA: "CAD",
-      AU: "AUD",
-      JP: "JPY",
-      CN: "CNY",
-      BR: "BRL",
-      MX: "MXN",
-    };
-
-    // Check if we're in Europe (rough approximation)
-    const europeanCountries = [
-      "DE",
-      "FR",
-      "IT",
-      "ES",
-      "NL",
-      "AT",
-      "BE",
-      "PT",
-      "GR",
-      "IE",
-    ];
-    if (region && europeanCountries.includes(region)) {
-      return "EUR";
-    }
-
-    return regionToCurrency[region || ""] || "USD";
-  } catch {
-    return "USD";
-  }
+  // Always default to USD for primary display
+  return "USD";
 }
 
 /**
