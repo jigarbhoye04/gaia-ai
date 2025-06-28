@@ -303,7 +303,7 @@ async def create_subscription(
             "plan_id": razorpay_plan_id,
             "quantity": subscription_data.quantity,
             "customer_notify": subscription_data.customer_notify,
-            "total_count": 120,  # 10 years worth of billing cycles
+            "total_count": 10,  # Razorpay's maximum allowed
             "addons": subscription_data.addons,
             "notes": {
                 "user_id": user_id,
@@ -336,7 +336,7 @@ async def create_subscription(
                 start_at=_timestamp_to_datetime(razorpay_subscription.get("start_at")),
                 end_at=_timestamp_to_datetime(razorpay_subscription.get("end_at")),
                 auth_attempts=razorpay_subscription.get("auth_attempts", 0),
-                total_count=razorpay_subscription.get("total_count", 120),
+                total_count=razorpay_subscription.get("total_count", 100),
                 paid_count=razorpay_subscription.get("paid_count", 0),
                 customer_notify=subscription_data.customer_notify,
                 notes=subscription_data.notes or {},
@@ -505,7 +505,7 @@ async def verify_payment(
                 error_code=razorpay_payment.get("error_code"),
                 error_description=razorpay_payment.get("error_description"),
                 webhook_verified=True,
-                notes=razorpay_payment.get("notes", {}),
+                notes=razorpay_payment.get("notes", {}) if isinstance(razorpay_payment.get("notes", {}), dict) else {},
                 created_at=current_time,
             )
 

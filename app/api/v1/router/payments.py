@@ -123,7 +123,7 @@ async def cancel_subscription_endpoint(
 
 
 @router.post(
-    "/payments/verify", 
+    "/verify", 
     response_model=PaymentResponse, 
     summary="Verify payment"
 )
