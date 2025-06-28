@@ -106,6 +106,7 @@ export default function Todo() {
           imageSrc="/landing/todo/2.png"
           title="Organize Your Tasks"
           description="Sort tasks by priority, labels, and projects"
+          imageClassName="shadow-sm object-cover"
           small
         />
       </div>

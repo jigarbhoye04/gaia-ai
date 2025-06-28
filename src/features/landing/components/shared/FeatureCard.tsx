@@ -39,7 +39,7 @@ export function FeatureCard({
           <Image
             fill
             src={imageSrc}
-            className={`${imageClassName}`}
+            className={`${imageClassName} `}
             alt={imageAlt}
           />
         </div>
