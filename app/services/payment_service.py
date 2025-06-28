@@ -97,6 +97,20 @@ class RazorpayService:
             logger.error(f"Error verifying payment signature: {e}")
             return False
 
+    def verify_subscription_signature(
+        self, razorpay_payment_id: str, razorpay_subscription_id: str, razorpay_signature: str
+    ) -> bool:
+        """Verify subscription payment signature for security."""
+        try:
+            body = f"{razorpay_payment_id}|{razorpay_subscription_id}"
+            expected_signature = hmac.new(
+                settings.RAZORPAY_KEY_SECRET.encode(), body.encode(), hashlib.sha256
+            ).hexdigest()
+            return hmac.compare_digest(expected_signature, razorpay_signature)
+        except Exception as e:
+            logger.error(f"Error verifying subscription signature: {e}")
+            return False
+
 
 # Initialize Razorpay service
 razorpay_service = RazorpayService()
@@ -347,6 +361,7 @@ async def create_subscription(
 
         return SubscriptionResponse(
             id=subscription_doc.id,
+            razorpay_subscription_id=subscription_doc.razorpay_subscription_id,
             user_id=subscription_doc.user_id,
             plan_id=subscription_doc.plan_id,
             status=SubscriptionStatus(subscription_doc.status),
@@ -424,20 +439,27 @@ async def verify_payment(
     try:
         # Verify payment signature
         if callback_data.razorpay_order_id:
+            # Regular payment verification
             is_valid = razorpay_service.verify_payment_signature(
                 callback_data.razorpay_order_id,
                 callback_data.razorpay_payment_id,
                 callback_data.razorpay_signature,
             )
+            logger.info(f"Regular payment signature verification: {is_valid}")
+        elif callback_data.razorpay_subscription_id:
+            # Subscription payment verification
+            is_valid = razorpay_service.verify_subscription_signature(
+                callback_data.razorpay_payment_id,
+                callback_data.razorpay_subscription_id,
+                callback_data.razorpay_signature,
+            )
+            logger.info(f"Subscription payment signature verification: {is_valid}")
         else:
-            # For subscription payments, verify differently
-            body = f"{callback_data.razorpay_payment_id}|{callback_data.razorpay_subscription_id}"
-            expected_signature = hmac.new(
-                settings.RAZORPAY_KEY_SECRET.encode(), body.encode(), hashlib.sha256
-            ).hexdigest()
-            is_valid = hmac.compare_digest(expected_signature, callback_data.razorpay_signature)
+            logger.error("No order_id or subscription_id provided for signature verification")
+            raise HTTPException(status_code=400, detail="Missing order_id or subscription_id for verification")
         
         if not is_valid:
+            logger.error(f"Invalid payment signature for payment_id: {callback_data.razorpay_payment_id}")
             raise HTTPException(status_code=400, detail="Invalid payment signature")
         
         mode = "test" if razorpay_service.is_test_mode else "live"
@@ -635,6 +657,7 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
         
         subscription_data = {
             "id": str(subscription["_id"]),
+            "razorpay_subscription_id": subscription.get("razorpay_subscription_id"),
             "user_id": subscription["user_id"],
             "plan_id": subscription["plan_id"],
             "status": subscription["status"],
@@ -743,6 +766,7 @@ async def update_subscription(
         
         return SubscriptionResponse(
             id=str(updated_subscription_doc["_id"]),
+            razorpay_subscription_id=updated_subscription_doc["razorpay_subscription_id"],
             user_id=updated_subscription_doc["user_id"],
             plan_id=updated_subscription_doc["plan_id"],
             status=SubscriptionStatus(updated_subscription_doc["status"]),

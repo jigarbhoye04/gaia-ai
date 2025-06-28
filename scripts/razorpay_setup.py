@@ -33,16 +33,45 @@ async def setup_razorpay_plans():
     # Define plans with their corresponding Razorpay plan IDs
     plans_to_create = [
         {
+            "razorpay_plan_id": None,  # Free plan doesn't need Razorpay plan ID
+            "plan": CreatePlanRequest(
+                name="Free",
+                description="Get started with GAIA for free",
+                amount=0,  # Free plan
+                currency=Currency.USD,
+                duration=PlanDuration.MONTHLY,
+                max_users=1,
+                features=[
+                    "Basic chat functionality",
+                    "20 file uploads per month",
+                    "Limited calendar management",
+                    "Limited email management",
+                    "Limited proactive events",
+                    "Basic (non-AI) reminders",
+                    "Limited image generation",
+                    "Limited memory",
+                    "Track up to 3 goals",
+                    "Unlimited web search",
+                    "3 deep research sessions",
+                    "Basic calendar integration",
+                    "Limited notes storage (100 notes)",
+                    "Basic support",
+                    "To-do list management"
+                ],
+                is_active=True
+            )
+        },
+        {
             "razorpay_plan_id": "plan_QmJ1F2fJOIzSea",  # Monthly plan
             "plan": CreatePlanRequest(
                 name="GAIA Pro Monthly",
                 description="For productivity nerds - billed monthly",
-                amount=171200,  # ₹1,712.00 in paise
-                currency=Currency.INR,
+                amount=2000,  # $20.00 in cents
+                currency=Currency.USD,
                 duration=PlanDuration.MONTHLY,
                 max_users=1,
                 features=[
-                    "Unlimited chat functionality",
+                    "Everything in Free",
                     "Unlimited file uploads",
                     "Advanced calendar management",
                     "Advanced email management",
@@ -51,7 +80,6 @@ async def setup_razorpay_plans():
                     "Unlimited image generation",
                     "Advanced memory",
                     "Track unlimited goals",
-                    "Unlimited web search",
                     "Unlimited deep research sessions",
                     "Advanced calendar integration",
                     "Unlimited notes storage",
@@ -68,13 +96,13 @@ async def setup_razorpay_plans():
             "razorpay_plan_id": "plan_QmJ1bew3wsABYv",  # Yearly plan
             "plan": CreatePlanRequest(
                 name="GAIA Pro Yearly",
-                description="For productivity nerds - billed annually (save ₹5,131/year)",
-                amount=1541300,  # ₹15,413.00 in paise
-                currency=Currency.INR,
+                description="For productivity nerds - billed annually (save $60/year)",
+                amount=18000,  # $180.00 in cents (save $60)
+                currency=Currency.USD,
                 duration=PlanDuration.YEARLY,
                 max_users=1,
                 features=[
-                    "Unlimited chat functionality",
+                    "Everything in Free",
                     "Unlimited file uploads", 
                     "Advanced calendar management",
                     "Advanced email management",
@@ -83,7 +111,6 @@ async def setup_razorpay_plans():
                     "Unlimited image generation",
                     "Advanced memory",
                     "Track unlimited goals",
-                    "Unlimited web search",
                     "Unlimited deep research sessions",
                     "Advanced calendar integration",
                     "Unlimited notes storage",
@@ -92,7 +119,7 @@ async def setup_razorpay_plans():
                     "Custom AI personas",
                     "Advanced analytics",
                     "API access",
-                    "Annual discount - Save ₹5,131"
+                    "Annual discount - Save $60"
                 ],
                 is_active=True
             )
@@ -128,7 +155,7 @@ async def setup_razorpay_plans():
             
             current_time = datetime.utcnow()
             plan_doc = PlanDB(
-                razorpay_plan_id=razorpay_plan_id,
+                razorpay_plan_id=razorpay_plan_id or f"free_plan_{int(current_time.timestamp())}",  # Use a dummy ID for free plans
                 name=plan_data.name,
                 description=plan_data.description,
                 amount=plan_data.amount,
@@ -147,8 +174,9 @@ async def setup_razorpay_plans():
             
             print(f"✅ Created plan: {plan_data.name}")
             print(f"   📋 Database ID: {plan_doc.id}")
-            print(f"   🏷️  Razorpay Plan ID: {razorpay_plan_id}")
-            print(f"   💰 Amount: ₹{plan_data.amount/100:.2f}")
+            print(f"   🏷️  Razorpay Plan ID: {razorpay_plan_id or 'Free Plan (No Razorpay ID)'}")
+            amount_display = f"${plan_data.amount/100:.2f}" if plan_data.amount > 0 else "Free"
+            print(f"   💰 Amount: {amount_display}")
             print(f"   📅 Duration: {plan_data.duration.value}")
             
         except Exception as e:
@@ -161,10 +189,11 @@ async def setup_razorpay_plans():
         print("\n📋 Summary:")
         print("-" * 60)
         for plan in created_plans:
+            amount_display = f"${plan.amount/100:.2f}" if plan.amount > 0 else "Free"
             print(f"Plan: {plan.name}")
             print(f"Database ID: {plan.id}")
             print(f"Razorpay Plan ID: {plan.razorpay_plan_id}")
-            print(f"Amount: ₹{plan.amount/100:.2f}")
+            print(f"Amount: {amount_display}")
             print(f"Duration: {plan.duration}")
             print("-" * 30)
         

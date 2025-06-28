@@ -146,6 +146,7 @@ class SubscriptionResponse(BaseModel):
     """Response model for subscription."""
 
     id: str = Field(..., description="Subscription ID")
+    razorpay_subscription_id: str = Field(..., description="Razorpay subscription ID")
     user_id: str = Field(..., description="User ID")
     plan_id: str = Field(..., description="Plan ID")
     status: SubscriptionStatus = Field(..., description="Subscription status")
