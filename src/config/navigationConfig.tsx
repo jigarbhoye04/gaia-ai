@@ -28,7 +28,7 @@ export const mainNavLinks: NavLink[] = [
 
   {
     href: "https://gaia.featurebase.app",
-    label: "Request a Feature",
+    label: "Feature Request",
     icon: <Idea01Icon width={19} color={undefined} />,
     external: true,
   },

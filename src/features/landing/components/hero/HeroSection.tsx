@@ -30,7 +30,9 @@ export default function HeroSection() {
         </div>
 
         <div className="mb-6 max-w-(--breakpoint-sm) px-4 py-0 text-center text-lg leading-7 font-light text-foreground-500 sm:px-0 sm:text-xl">
-          One assistant. Every task. All in one place.
+          {/* One assistant. Every task. All in one place. */}
+          Tired of Siri, Google Assistant, and ChatGPT doing nothing useful? Try
+          GAIA.
         </div>
 
         <GetStartedButton small_text />

@@ -85,7 +85,7 @@ export const siteConfig = {
         },
         {
           label: "X (Twitter)",
-          href: "https://x.com/heygaia_io",
+          href: "https://x.com/_heygaia",
           external: true,
           icon: <TwitterIcon width={19} />,
         },
