@@ -29,6 +29,7 @@ class PaymentStatus(str, Enum):
     """Payment status."""
 
     PENDING = "pending"
+    AUTHORIZED = "authorized"
     PAID = "paid"
     CAPTURED = "captured"
     FAILED = "failed"
