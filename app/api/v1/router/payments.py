@@ -3,7 +3,6 @@ Clean payment and subscription router for Razorpay integration.
 """
 
 import json
-from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -21,13 +20,14 @@ from app.models.payment_models import (
     UserSubscriptionStatus,
     WebhookEvent,
 )
-from app.services.payment_service import (
+from app.services.payments import (
     cancel_subscription,
     create_subscription,
     get_plans,
     get_user_subscription_status,
     process_webhook,
     razorpay_service,
+    sync_subscription_from_razorpay,
     update_subscription,
     verify_payment,
 )
@@ -120,6 +120,40 @@ async def cancel_subscription_endpoint(
         raise HTTPException(status_code=401, detail="Authentication required")
 
     return await cancel_subscription(user_id, cancel_at_cycle_end)
+
+
+@router.post(
+    "/subscriptions/sync",
+    summary="Sync subscription data from Razorpay"
+)
+@limiter.limit("5/minute")  # Allow 5 sync operations per minute
+async def sync_subscription_endpoint(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+):
+    """Sync subscription data from Razorpay to fix missing date fields."""
+    user_id = current_user.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    # Get user's current subscription
+    from app.db.mongodb.collections import subscriptions_collection
+    subscription = await subscriptions_collection.find_one({
+        "user_id": user_id, 
+        "status": {"$in": ["active", "created", "paused"]}
+    })
+    
+    if not subscription:
+        raise HTTPException(status_code=404, detail="No active subscription found")
+    
+    razorpay_subscription_id = subscription["razorpay_subscription_id"]
+    
+    success = await sync_subscription_from_razorpay(razorpay_subscription_id)
+    
+    if success:
+        return {"message": "Subscription synced successfully", "subscription_id": razorpay_subscription_id}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to sync subscription")
 
 
 @router.post(
