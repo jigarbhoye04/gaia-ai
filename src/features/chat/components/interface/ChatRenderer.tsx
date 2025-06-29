@@ -69,9 +69,9 @@ export default function ChatRenderer() {
         <Image
           alt="GAIA Logo"
           src={"/branding/logo.webp"}
-          width={130}
-          height={130}
-          className="bobbing hover:translate-y-3"
+          width={110}
+          height={110}
+          className="bobbing"
         />
         <StarterText />
       </div>
@@ -112,7 +112,7 @@ export default function ChatRenderer() {
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "animate-spin" : ""} relative`}
+                className={`${isLoading ? "opacity-0" : "opacity-100"} relative transition duration-150`}
               />
             </div>
 

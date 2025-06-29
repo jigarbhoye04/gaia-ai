@@ -13,16 +13,17 @@ import StaticSidebar from "@/features/landing/components/demo/DummySidebar";
 import useMediaQuery from "@/hooks/ui/useMediaQuery";
 import { MotionContainer } from "@/layouts/MotionContainer";
 
-import LargeHeader from "../shared/LargeHeader";
+import LargeHeader from "../../shared/LargeHeader";
 
 interface Step {
   icon: React.ReactNode;
   title: string;
   description: string;
   image: string | null;
+  imageClassName?: string;
 }
 
-export default function GoalSection() {
+export default function Goals() {
   const [selectedStep, setSelectedStep] = useState<number>(0);
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
 
@@ -33,14 +34,18 @@ export default function GoalSection() {
         title: "Enter your goal",
         description:
           "Define your objective clearly so we can create a personalized plan for you.",
-        image: "/landing/blur_goals.webp",
+        // image: "/landing/blur_goals.webp",
+        image: "/landing/goals/chat.png",
+        imageClassName: "object-contain!",
       },
       {
         icon: <FlowchartIcon1 color={undefined} height={25} width={25} />,
         title: "Create a Roadmap",
         description:
-          "GAIA provides a step-by-step plan with resources to help you achieve your goal!",
-        image: "/landing/goal_tracking.webp",
+          "GAIA provides a step-by-step plan to help you achieve your goal!",
+        // image: "/landing/goal_tracking.webp",
+        imageClassName: "object-contain!",
+        image: "/landing/goals/roadmap.png",
       },
       {
         icon: (
@@ -49,7 +54,9 @@ export default function GoalSection() {
         title: "Keep Track",
         description:
           "Monitor your milestones and celebrate every step toward achieving your goal.",
-        image: isMobileScreen ? null : "/landing/goal_cropped.webp",
+        // image: isMobileScreen ? null : "/landing/goal_cropped.webp",
+        imageClassName: "object-cover",
+        image: isMobileScreen ? null : "/landing/goals/roadmap.png",
       },
     ],
     [isMobileScreen],
@@ -66,9 +73,10 @@ export default function GoalSection() {
   }, [steps]);
 
   return (
-    <div className="flex min-h-fit w-screen flex-col items-center gap-5 p-4 transition-all sm:mt-0">
+    <div className="flex min-h-screen w-screen flex-col items-center gap-5 p-4 transition-all">
       <LargeHeader
         headingText="Ever Felt Stuck Setting Goals?"
+        subHeadingText="Setting goals is easy. Sticking to them is hard — unless you have a roadmap."
         chipText="Goal Tracking"
       />
       <GoalSteps
@@ -167,8 +175,13 @@ function GoalSteps({
 
   return (
     <div className="relative flex flex-col items-center gap-5">
+      <GoalImage
+        image={image}
+        imageClassName={steps[selectedStep].imageClassName}
+      />
+
       <div ref={goalSectionRef} className="min-w-full">
-        <MotionContainer className="grid w-full items-center justify-center gap-5 px-2 sm:w-screen sm:max-w-(--breakpoint-xl) sm:grid-cols-3 sm:px-0">
+        <MotionContainer className="grid w-full items-center justify-center gap-5 px-2 sm:w-screen sm:max-w-(--breakpoint-lg) sm:grid-cols-3 sm:px-0">
           {steps.map((step, index) => (
             <GoalStep
               key={index}
@@ -181,8 +194,6 @@ function GoalSteps({
           ))}
         </MotionContainer>
       </div>
-
-      <GoalImage image={image} />
 
       <StaticSidebar
         isComplete={isComplete}
@@ -211,7 +222,7 @@ function GoalStep({
 }: GoalStepProps) {
   return (
     <div
-      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-2xl bg-zinc-900 p-6 py-4 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:rounded-3xl sm:py-6 ${
+      className={`flex cursor-pointer flex-row items-center justify-center gap-7 rounded-2xl bg-zinc-900 p-6 py-4 transition-all hover:opacity-100 sm:flex-col sm:items-start sm:gap-1 sm:py-6 ${
         isSelected ? "opacity-100" : "sm:opacity-45"
       }`}
       onClick={onClick}
@@ -247,16 +258,17 @@ function GoalStep({
 
 interface GoalImageProps {
   image: string | null;
+  imageClassName?: string;
 }
 
-function GoalImage({ image }: GoalImageProps) {
-  return !!image ? (
+function GoalImage({ image, imageClassName }: GoalImageProps) {
+  return image ? (
     <div className="relative h-[50vh] w-full">
       <NextImage
         fill={true}
         alt="Goal step illustration"
         // outline outline-4 outline-zinc-800
-        className="min-h-[50vh] max-w-(--breakpoint-sm) rounded-3xl object-cover object-center transition-all sm:w-screen sm:max-w-(--breakpoint-xl)"
+        className={`${imageClassName} min-h-[50vh] max-w-(--breakpoint-sm) rounded-3xl object-cover object-center transition-all sm:w-screen sm:max-w-(--breakpoint-xl)`}
         src={image}
       />
       {image === "/landing/blur_goals.webp" && (

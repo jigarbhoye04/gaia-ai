@@ -6,6 +6,7 @@ export * from "./providers";
 export * from "./store";
 export * from "./selectors/todoSelectors";
 export * from "./slices/calendarModalSlice";
+export * from "./slices/calendarSlice";
 export * from "./slices/conversationSlice";
 export * from "./slices/conversationsSlice";
 export * from "./slices/headerSlice";

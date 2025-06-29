@@ -1,6 +1,8 @@
 import { Button } from "@heroui/button";
 import { useDisclosure } from "@heroui/modal";
+import { Tooltip } from "@heroui/react";
 
+import { CustomerService01Icon } from "@/components/shared/icons";
 import { ContactSupportModal } from "@/features/support";
 
 export default function ContactSupport() {
@@ -8,24 +10,18 @@ export default function ContactSupport() {
 
   return (
     <>
-      <div>
+      <Tooltip content="Contact Support or Request a Feature">
         <Button
           variant="flat"
-          className="h-fit w-full rounded-2xl"
+          className="flex h-fit w-full gap-2"
           onPress={onOpen}
         >
-          <div className="flex items-center gap-4">
-            <div className="flex w-full flex-col justify-center py-3">
-              <div className="text-left text-sm font-medium">
-                Contact Support
-              </div>
-              <div className="line-clamp-2 text-left text-xs text-wrap text-foreground-500">
-                Need help or wish a feature existed?
-              </div>
-            </div>
+          <CustomerService01Icon width={23} height={23} color={undefined} />
+          <div className="w-full py-2 text-left text-sm font-light text-wrap">
+            Need help or want a feature?
           </div>
         </Button>
-      </div>
+      </Tooltip>
 
       <ContactSupportModal isOpen={isOpen} onOpenChange={onOpenChange} />
     </>

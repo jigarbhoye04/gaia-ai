@@ -2,6 +2,8 @@ import { ReactElement } from "react";
 
 import {
   BubbleConversationChatIcon,
+  CreditCardPosIcon,
+  DiscordIcon,
   Home01Icon,
   Idea01Icon,
   MapsIcon,
@@ -23,27 +25,29 @@ export const mainNavLinks: NavLink[] = [
     label: "Home",
     icon: <Home01Icon width={19} color={undefined} />,
   },
-  // {
-  //   href: "/about",
-  //   label: "About",
-  //   icon: <GlobalIcon width={19} color={undefined} />,
-  // },
-  // {
-  //   href: "/blog",
-  //   label: "Blog",
-  //   icon: <BookOpen02Icon width={19} color={undefined} />,
-  // },
+
   {
     href: "https://gaia.featurebase.app",
-    label: "Request a Feature",
+    label: "Feature Request",
     icon: <Idea01Icon width={19} color={undefined} />,
     external: true,
+  },
+  {
+    label: "Pricing",
+    href: "/pricing",
+    icon: <CreditCardPosIcon width={19} color={undefined} />,
   },
   {
     href: "https://gaia.featurebase.app/roadmap",
     label: "Roadmap",
     icon: <MapsIcon width={19} color={undefined} />,
     external: true,
+  },
+  {
+    label: "Discord",
+    href: "https://discord.heygaia.io",
+    external: true,
+    icon: <DiscordIcon width={19} />,
   },
 ];
 

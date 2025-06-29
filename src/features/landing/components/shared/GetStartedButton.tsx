@@ -4,8 +4,10 @@ import Link from "next/link";
 
 export default function GetStartedButton({
   small_text = false,
+  text = "Start for free",
 }: {
   small_text?: boolean;
+  text?: string;
 }) {
   return (
     <div className="flex flex-col items-center gap-4">
@@ -19,7 +21,7 @@ export default function GetStartedButton({
         variant="shadow"
       >
         <div className="relative z-10 flex items-center gap-1 transition-all duration-100">
-          Get Started for Free
+          {text}{" "}
           <ArrowUpRight className="transition-transform group-hover:translate-x-0.5" />
         </div>
       </Button>

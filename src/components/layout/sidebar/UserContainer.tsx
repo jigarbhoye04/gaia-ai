@@ -9,9 +9,9 @@ export default function UserContainer() {
 
   return (
     <div className="pointer-events-auto relative flex w-full flex-col justify-center gap-3 bg-transparent">
-      <div className="user_container_inner rounded-2xl bg-zinc-900 px-3">
+      <div className="user_container_inner rounded-xl bg-zinc-900 px-3">
         <div className="flex items-center gap-2">
-          <Avatar className="size-9 rounded-full border-2 border-black outline outline-zinc-700">
+          <Avatar className="size-7 rounded-full bg-black">
             <AvatarImage
               src={
                 user?.profilePicture ||
