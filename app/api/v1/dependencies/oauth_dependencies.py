@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime, timezone as tz
+from datetime import datetime, timezone as tz 
 from typing import Optional
 
 import httpx
@@ -258,7 +258,7 @@ async def get_current_user(
         # Update user's last activity
         await users_collection.update_one(
             {"email": user_email},
-            {"$set": {"last_active_at": datetime.now(timezone.utc)}}
+            {"$set": {"last_active_at": datetime.now(tz.utc)}}
         )
 
         user_info_to_cache = {
