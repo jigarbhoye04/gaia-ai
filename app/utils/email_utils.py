@@ -127,3 +127,56 @@ def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
     except Exception as e:
         logger.error(f"Error generating support to user email HTML: {str(e)}")
         raise
+
+
+async def send_pro_subscription_email(
+    user_name: str, 
+    user_email: str,
+    discord_url: str = "https://discord.heygaia.io",
+    whatsapp_url: str = "https://whatsapp.heygaia.io", 
+    twitter_url: str = "https://twitter.com/_heygaia"
+) -> None:
+    """Send welcome email to user who upgraded to Pro subscription."""
+    try:
+        subject = "Welcome to GAIA Pro! 🚀"
+        html_content = generate_pro_subscription_html(
+            user_name=user_name,
+            discord_url=discord_url,
+            whatsapp_url=whatsapp_url,
+            twitter_url=twitter_url
+        )
+
+        resend.Emails.send(
+            {
+                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "to": [user_email],
+                "subject": subject,
+                "html": html_content,
+                "reply_to": "aryan@heygaia.io",
+            }
+        )
+        logger.info(f"Pro subscription welcome email sent to {user_email}")
+    except Exception as e:
+        logger.error(f"Failed to send pro subscription email to {user_email}: {str(e)}")
+        raise
+
+
+def generate_pro_subscription_html(
+    user_name: str,
+    discord_url: str,
+    whatsapp_url: str, 
+    twitter_url: str
+) -> str:
+    """Generate HTML email for pro subscription welcome using the Jinja2 template."""
+    try:
+        template = jinja_env.get_template("subscribed.html")
+        html_content = template.render(
+            user_name=user_name,
+            discord_url=discord_url,
+            whatsapp_url=whatsapp_url,
+            twitter_url=twitter_url
+        )
+        return html_content
+    except Exception as e:
+        logger.error(f"Error generating pro subscription email HTML: {str(e)}")
+        raise

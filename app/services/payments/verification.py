@@ -3,11 +3,13 @@ Payment verification and processing.
 """
 
 from datetime import datetime
+from bson import ObjectId
 
+from app.utils.email_utils import send_pro_subscription_email
 from fastapi import HTTPException
 
 from app.config.loggers import general_logger as logger
-from app.db.mongodb.collections import payments_collection, subscriptions_collection
+from app.db.mongodb.collections import payments_collection, subscriptions_collection, users_collection
 from app.models.payment_models import (
     PaymentCallbackRequest,
     PaymentDB,
@@ -122,14 +124,27 @@ async def verify_payment(
                         }
                     },
                 )
-                
-                if result.modified_count > 0:
+                subscription_activated = result.modified_count > 0
+                if subscription_activated:
                     logger.info(f"Activated subscription: {callback_data.razorpay_subscription_id}")
                 else:
                     logger.warning(f"No subscription found to activate: {callback_data.razorpay_subscription_id}")
             except Exception as e:
                 logger.error(f"Failed to activate subscription {callback_data.razorpay_subscription_id}: {e}")
-                # Don't fail the payment verification for subscription activation issues
+                subscription_activated = False
+
+            # Send pro activation email to the user if subscription was activated
+            if subscription_activated:
+                try:
+                    user = await users_collection.find_one({"_id": ObjectId(user_id)})   
+                    logger.info(user)
+                    await send_pro_subscription_email(
+                        user_name=user.get("first_name", user.get("name", "there")),
+                        user_email=user["email"]
+                    )
+                    logger.info(f"Pro subscription welcome email sent to {user['email']}")
+                except Exception as e:
+                    logger.error(f"Failed to send pro subscription email to user {user_id}: {e}")
 
         logger.info(f"Successfully verified and stored payment: {payment_doc.id}")
 
