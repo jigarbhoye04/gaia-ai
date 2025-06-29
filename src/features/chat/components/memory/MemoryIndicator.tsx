@@ -43,8 +43,6 @@ export default function MemoryIndicator({
   const [displayText, setDisplayText] = useState<string>("");
   const [showIndicator, setShowIndicator] = useState(false);
 
-  console.log(memoryData);
-
   useEffect(() => {
     // Determine what text to display based on memory data
     if (memoryData) {
