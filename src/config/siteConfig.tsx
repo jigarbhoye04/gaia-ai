@@ -24,6 +24,7 @@ import {
   LinkedinIcon,
   MapsIcon,
   TwitterIcon,
+  WhatsappIcon,
 } from "@/components/shared/icons";
 
 export const siteConfig = {
@@ -77,12 +78,7 @@ export const siteConfig = {
           href: "/contact",
           icon: <CustomerService01Icon width={19} />,
         },
-        {
-          label: "LinkedIn",
-          href: "https://www.linkedin.com/company/heygaia",
-          external: true,
-          icon: <LinkedinIcon width={19} />,
-        },
+
         {
           label: "X (Twitter)",
           href: "https://x.com/_heygaia",
@@ -96,10 +92,22 @@ export const siteConfig = {
           icon: <DiscordIcon width={19} />,
         },
         {
+          label: "WhatsApp",
+          href: "https://whatsapp.heygaia.io",
+          external: true,
+          icon: <WhatsappIcon width={19} />,
+        },
+        {
           label: "GitHub",
           href: "https://github.com/heygaia",
           external: true,
           icon: <Github width={19} />,
+        },
+        {
+          label: "LinkedIn",
+          href: "https://www.linkedin.com/company/heygaia",
+          external: true,
+          icon: <LinkedinIcon width={19} />,
         },
       ],
     },
