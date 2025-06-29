@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone as tz
 from typing import Optional
 
 import httpx
@@ -239,6 +239,11 @@ async def get_current_user(
         cache_key = f"user_cache:{user_email}"
         cached_user_data = await get_cache(cache_key)
         if cached_user_data:
+            # Update user's last activity
+            await users_collection.update_one(
+                {"email": user_email},
+                {"$set": {"last_active_at": datetime.now(tz.utc)}}
+            )
             # Update with new tokens if available but keep other cached data
             if access_token and access_token != cached_user_data.get("access_token"):
                 cached_user_data["access_token"] = access_token
@@ -249,6 +254,12 @@ async def get_current_user(
         user_data = await users_collection.find_one({"email": user_email})
         if not user_data:
             raise HTTPException(status_code=404, detail="User not found")
+
+        # Update user's last activity
+        await users_collection.update_one(
+            {"email": user_email},
+            {"$set": {"last_active_at": datetime.now(timezone.utc)}}
+        )
 
         user_info_to_cache = {
             "user_id": str(user_data.get("_id")),
