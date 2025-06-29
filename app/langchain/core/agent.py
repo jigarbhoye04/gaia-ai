@@ -37,21 +37,16 @@ async def call_agent(
     user_id = user.get("user_id")
     messages = request.messages
     complete_message = ""
-    memory_stored_event = asyncio.Event()
 
     async def store_memory():
-        """Store memory in background and signal completion."""
+        """Store memory in background."""
         try:
             if user_id and request.message:
-                memory_data = await store_user_message_memory(
+                await store_user_message_memory(
                     user_id, request.message, conversation_id
                 )
-                return memory_data
         except Exception as e:
             logger.error(f"Error in background memory storage: {e}")
-        finally:
-            memory_stored_event.set()  # Always signal completion
-        return None
 
     try:
         # First gather: Setup operations that can run in parallel
@@ -67,8 +62,8 @@ async def call_agent(
             GraphManager.get_graph(),
         )
 
-        # Start memory storage in background
-        memory_task = asyncio.create_task(store_memory())
+        # Start memory storage in background - fire and forget
+        asyncio.create_task(store_memory())
 
         initial_state = {
             "query": request.message,
@@ -115,13 +110,6 @@ async def call_agent(
 
         # After streaming, yield complete message in order to store in db
         yield f"nostream: {json.dumps({'complete_message': complete_message})}"
-
-        # Wait until memory is stored before yielding the confirmation
-        await memory_stored_event.wait()
-        # Get the memory result and yield if successful
-        memory_data = await memory_task
-        if memory_data:
-            yield f"data: {json.dumps({'memory_data': memory_data})}\n\n"
 
         yield "data: [DONE]\n\n"
 
