@@ -64,7 +64,7 @@ async def setup_razorpay_plans():
         {
             "razorpay_plan_id": "plan_QmJ1F2fJOIzSea",  # Monthly plan
             "plan": CreatePlanRequest(
-                name="GAIA Pro Monthly",
+                name="GAIA Pro",
                 description="For productivity nerds - billed monthly",
                 amount=2000,  # $20.00 in cents
                 currency=Currency.USD,
@@ -95,7 +95,7 @@ async def setup_razorpay_plans():
         {
             "razorpay_plan_id": "plan_QmJ1bew3wsABYv",  # Yearly plan
             "plan": CreatePlanRequest(
-                name="GAIA Pro Yearly",
+                name="GAIA Pro",
                 description="For productivity nerds - billed annually (save $60/year)",
                 amount=18000,  # $180.00 in cents (save $60)
                 currency=Currency.USD,
