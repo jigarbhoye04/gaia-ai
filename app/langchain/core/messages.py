@@ -61,8 +61,6 @@ async def construct_langchain_messages(
                 query=query, user_id=user_id, limit=5
             )
 
-            logger.info(f"ARYANARYAN {memory_results}")
-
             # If we have memories, add them as a system message
             if (
                 memory_results

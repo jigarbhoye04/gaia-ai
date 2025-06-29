@@ -50,7 +50,7 @@ class MongoDB:
 
             logger.info("Initializing all indexes in MongoDB...")
             await create_all_indexes()
-            await log_index_summary()
+            # await log_index_summary()
         except Exception as e:
             logger.error(f"Error while initializing indexes: {e}")
 
