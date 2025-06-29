@@ -1,3 +1,4 @@
+import axios from "axios";
 import { cookies } from "next/headers";
 
 import type { Plan } from "../api/pricingApi";
@@ -6,35 +7,34 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export async function getPlansServer(activeOnly = true): Promise<Plan[]> {
+  const cookieStore = await cookies();
+  const authCookie = cookieStore.get("auth_token");
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (authCookie) {
+    headers["Authorization"] = `Bearer ${authCookie.value}`;
+  }
+
   try {
-    const cookieStore = await cookies();
-    const authCookie = cookieStore.get("auth_token");
+    const response = await axios.get<Plan[]>(`${API_BASE_URL}/payments/plans`, {
+      headers,
+      params: { active_only: activeOnly },
+      timeout: 10000, // 10 second timeout
+    });
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-    };
-
-    if (authCookie) {
-      headers["Authorization"] = `Bearer ${authCookie.value}`;
+    if (!Array.isArray(response.data)) {
+      throw new Error("Invalid response format from backend");
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/payments/plans?active_only=${activeOnly}`,
-      {
-        headers,
-        next: { revalidate: 300 }, // Revalidate every 5 minutes
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch plans: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
+    return response.data;
   } catch (error) {
-    console.error("Error fetching plans server-side:", error);
-    // Return empty array instead of throwing to allow graceful fallback
-    return [];
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.detail || error.message;
+      throw new Error(`Failed to fetch plans from backend: ${message}`);
+    }
+    throw error;
   }
 }
