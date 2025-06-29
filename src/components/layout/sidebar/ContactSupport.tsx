@@ -17,7 +17,7 @@ export default function ContactSupport() {
           onPress={onOpen}
         >
           <CustomerService01Icon width={23} height={23} color={undefined} />
-          <div className="w-full py-2 text-left text-sm font-medium text-wrap">
+          <div className="w-full py-2 text-left text-sm font-light text-wrap">
             Need help or want a feature?
           </div>
         </Button>

@@ -8,12 +8,14 @@ export const fontClasses = {
     sf: "font-sf-pro-display",
     switzer: "font-switzer",
     creato: "font-creato",
+    inter: "font-inter",
   },
   // Text fonts
   text: {
     sf: "font-sf-pro-text",
     switzer: "font-switzer", // Using the same for display and text since Switzer is a variable font
     creato: "font-creato", // Using the same for display and text until dedicated text variant is available
+    inter: "font-inter", // Inter is a variable font that works well for both display and text
   },
 };
 
