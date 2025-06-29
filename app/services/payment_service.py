@@ -40,6 +40,22 @@ from app.models.payment_models import (
 from app.services.user_service import get_user_by_id
 
 
+def _safe_get_notes(notes_value: Any) -> Dict[str, str]:
+    """
+    Safely extract notes from Razorpay response.
+    Razorpay sometimes returns notes as a list instead of dict.
+    """
+    if isinstance(notes_value, dict):
+        return {str(k): str(v) for k, v in notes_value.items()}
+    elif isinstance(notes_value, list) and len(notes_value) == 0:
+        return {}
+    elif notes_value is None:
+        return {}
+    else:
+        logger.warning(f"Unexpected notes format from Razorpay: {type(notes_value)} - {notes_value}")
+        return {}
+
+
 class PaymentServiceError(Exception):
     """Base exception for payment service errors."""
     def __init__(self, message: str, status_code: int = 500, details: Optional[Dict[str, Any]] = None):
@@ -505,7 +521,7 @@ async def verify_payment(
                 error_code=razorpay_payment.get("error_code"),
                 error_description=razorpay_payment.get("error_description"),
                 webhook_verified=True,
-                notes=razorpay_payment.get("notes", {}) if isinstance(razorpay_payment.get("notes", {}), dict) else {},
+                notes=_safe_get_notes(razorpay_payment.get("notes")),
                 created_at=current_time,
             )
 
@@ -589,7 +605,7 @@ async def get_razorpay_plan_id(plan_id: str) -> str:
         if not plan:
             raise HTTPException(status_code=404, detail="Plan not found")
         
-        logger.info(f"{plan["razorpay_plan_id"]=}")
+        logger.info(f'plan["razorpay_plan_id"]={plan["razorpay_plan_id"]}')
         return plan["razorpay_plan_id"]
     except HTTPException:
         raise

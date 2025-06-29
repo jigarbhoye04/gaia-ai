@@ -30,6 +30,7 @@ class PaymentStatus(str, Enum):
 
     PENDING = "pending"
     PAID = "paid"
+    CAPTURED = "captured"
     FAILED = "failed"
     REFUNDED = "refunded"
     CANCELLED = "cancelled"
