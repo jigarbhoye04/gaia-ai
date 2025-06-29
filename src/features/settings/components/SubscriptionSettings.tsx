@@ -88,7 +88,7 @@ export function SubscriptionSettings() {
         <CardBody className="space-y-6">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Current Plan</span>
+              <span className="text-xs font-medium">Current Plan</span>
               <span className="text-lg font-semibold">Free</span>
             </div>
 
@@ -254,7 +254,7 @@ export function SubscriptionSettings() {
         {/* Plan Details */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Current Plan</span>
+            <span className="text-xs font-medium">Current Plan</span>
             <span className="text-lg font-semibold">{plan.name}</span>
           </div>
 

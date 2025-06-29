@@ -3,7 +3,7 @@
 import { Skeleton } from "@heroui/react";
 
 import type { Plan } from "../api/pricingApi";
-import { usePlans } from "../hooks/usePricing";
+import { usePlans, useUserSubscriptionStatus } from "../hooks/usePricing";
 import { convertToUSDCents } from "../utils/currencyConverter";
 import { PricingCard } from "./PricingCard";
 
@@ -17,6 +17,7 @@ export function PricingCards({
   initialPlans,
 }: PricingCardsProps) {
   const { data: plans, isLoading, error } = usePlans(true, initialPlans);
+  const { data: subscriptionStatus } = useUserSubscriptionStatus();
 
   if (isLoading) {
     return (
@@ -75,6 +76,11 @@ export function PricingCards({
           originalPriceInUSDCents = Math.round(priceInUSDCents / 0.75);
         }
 
+        const isCurrentPlan = subscriptionStatus?.current_plan?.id === plan.id;
+        const hasActiveSubscription =
+          subscriptionStatus?.is_subscribed &&
+          subscriptionStatus?.subscription?.status === "active";
+
         return (
           <PricingCard
             key={plan.id}
@@ -90,6 +96,8 @@ export function PricingCards({
             originalPrice={originalPriceInUSDCents}
             title={plan.name}
             type={isPro ? "main" : "secondary"}
+            isCurrentPlan={isCurrentPlan}
+            hasActiveSubscription={hasActiveSubscription}
           />
         );
       })}

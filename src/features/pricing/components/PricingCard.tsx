@@ -23,6 +23,8 @@ interface PricingCardProps {
   durationIsMonth: boolean;
   className?: string;
   planId?: string; // Add planId prop for backend integration
+  isCurrentPlan?: boolean;
+  hasActiveSubscription?: boolean;
 }
 
 export function PricingCard({
@@ -35,6 +37,8 @@ export function PricingCard({
   durationIsMonth,
   className,
   planId,
+  isCurrentPlan,
+  hasActiveSubscription,
 }: PricingCardProps) {
   // Use the price directly from backend (already discounted if applicable)
   const finalPrice = price;
@@ -84,6 +88,18 @@ export function PricingCard({
       return;
     }
 
+    if (isCurrentPlan && hasActiveSubscription) {
+      toast.info("This is your current active plan");
+      return;
+    }
+
+    if (hasActiveSubscription && !isCurrentPlan) {
+      toast.info(
+        "Please cancel your current subscription before subscribing to a different plan",
+      );
+      return;
+    }
+
     if (!planId) {
       toast.error("Plan not available. Please try again later.");
       return;
@@ -101,12 +117,27 @@ export function PricingCard({
         type === "main"
           ? "bg-zinc-900 outline-2 outline-primary"
           : "bg-zinc-900"
-      } `}
+      } ${
+        isCurrentPlan && hasActiveSubscription
+          ? "ring-2 ring-green-500 ring-offset-2 ring-offset-zinc-950"
+          : ""
+      }`}
     >
       <div className="flex h-full flex-col gap-4 p-[7%]">
         <div className="flex flex-row items-center justify-between border-none!">
-          <div className="flex justify-between text-2xl">{title}</div>
-          {!durationIsMonth && discountPercentage > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{title}</span>
+            {isCurrentPlan && hasActiveSubscription && (
+              <Chip
+                className="flex items-center gap-[2px] border-none! text-xs"
+                color="success"
+                variant="flat"
+              >
+                <span>Current Plan</span>
+              </Chip>
+            )}
+          </div>
+          {!durationIsMonth && discountPercentage > 0 && !isCurrentPlan && (
             <Chip
               className="flex items-center gap-[2px] border-none! text-sm"
               color="primary"
@@ -169,11 +200,17 @@ export function PricingCard({
 
           <Button
             className="w-full font-medium"
-            color="primary"
+            color={
+              isCurrentPlan && hasActiveSubscription ? "success" : "primary"
+            }
             variant={type === "main" ? "shadow" : "flat"}
             onPress={handleGetStarted}
             isLoading={isLoading}
-            disabled={isLoading || paymentStates.isVerifying}
+            disabled={
+              isLoading ||
+              paymentStates.isVerifying ||
+              (isCurrentPlan && hasActiveSubscription)
+            }
           >
             {paymentStates.isInitiating
               ? "Preparing..."
@@ -181,9 +218,13 @@ export function PricingCard({
                 ? "Processing..."
                 : paymentStates.isVerifying
                   ? "Activating..."
-                  : price === 0
-                    ? "Get started"
-                    : "Subscribe now"}
+                  : isCurrentPlan && hasActiveSubscription
+                    ? "Active Plan"
+                    : hasActiveSubscription && !isCurrentPlan
+                      ? "Switch Plan"
+                      : price === 0
+                        ? "Get started"
+                        : "Subscribe now"}
           </Button>
         </div>
       </div>
