@@ -12,6 +12,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 // Removed currency import - using USD only
 import { useRazorpay } from "../hooks/useRazorpay";
 import { PaymentStatusIndicator } from "./PaymentStatusIndicator";
+import { SubscriptionSuccessModal } from "./SubscriptionSuccessModal";
 
 interface PricingCardProps {
   title: string;
@@ -70,7 +71,12 @@ export function PricingCard({
     ? formatUSDPrice(originalPrice)
     : null;
 
-  const { createSubscriptionPayment, isLoading, paymentStates } = useRazorpay();
+  const {
+    createSubscriptionPayment,
+    isLoading,
+    paymentStates,
+    paymentActions,
+  } = useRazorpay();
   const user = useUser();
   const router = useRouter();
 
@@ -228,6 +234,13 @@ export function PricingCard({
           </Button>
         </div>
       </div>
+
+      <SubscriptionSuccessModal
+        isOpen={paymentStates.showSuccessModal}
+        onClose={paymentActions.handleSuccessModalClose}
+        onNavigateToChat={paymentActions.handleSuccessModalNavigate}
+        planName={title}
+      />
     </div>
   );
 }

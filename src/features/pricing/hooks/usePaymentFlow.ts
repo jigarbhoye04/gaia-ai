@@ -14,6 +14,7 @@ export interface PaymentFlowStates {
   isVerifying: boolean;
   isComplete: boolean;
   error: string | null;
+  showSuccessModal: boolean;
 }
 
 export const usePaymentFlow = () => {
@@ -23,6 +24,7 @@ export const usePaymentFlow = () => {
     isVerifying: false,
     isComplete: false,
     error: null,
+    showSuccessModal: false,
   });
 
   const queryClient = useQueryClient();
@@ -46,6 +48,7 @@ export const usePaymentFlow = () => {
       isVerifying: false,
       isComplete: false,
       error: null,
+      showSuccessModal: false,
     });
     resetRetryCount();
   }, [resetRetryCount]);
@@ -106,20 +109,19 @@ export const usePaymentFlow = () => {
               realStatus.is_subscribed &&
               realStatus.subscription?.status === "active"
             ) {
-              updateState({ isVerifying: false, isComplete: true });
+              updateState({
+                isVerifying: false,
+                isComplete: true,
+                showSuccessModal: true,
+              });
 
               // Show completion message
               toast.success(
-                "✨ All features unlocked! Your Pro subscription is fully active.",
+                "🎉 Welcome to GAIA Pro! Your subscription is now active.",
                 {
                   duration: 4000,
                 },
               );
-
-              // Navigate to chat after short delay for better UX
-              setTimeout(() => {
-                router.push("/c");
-              }, 1500);
 
               return;
             }
@@ -129,7 +131,11 @@ export const usePaymentFlow = () => {
               setTimeout(pollStatus, 5000);
             } else {
               // Polling timed out but don't show error - user might still be active
-              updateState({ isVerifying: false, isComplete: true });
+              updateState({
+                isVerifying: false,
+                isComplete: true,
+                showSuccessModal: verificationSuccessful,
+              });
 
               if (verificationSuccessful) {
                 toast.success(
@@ -145,12 +151,11 @@ export const usePaymentFlow = () => {
                     duration: 5000,
                   },
                 );
+                // Only auto-navigate if modal won't show
+                setTimeout(() => {
+                  router.push("/c");
+                }, 2000);
               }
-
-              // Still navigate to maintain smooth UX
-              setTimeout(() => {
-                router.push("/c");
-              }, 2000);
             }
           } catch (error) {
             handleError(error, "Subscription status polling");
@@ -227,6 +232,15 @@ export const usePaymentFlow = () => {
     updateState({ isInitiating: true, error: null });
   }, []);
 
+  const handleSuccessModalClose = useCallback(() => {
+    updateState({ showSuccessModal: false });
+  }, []);
+
+  const handleSuccessModalNavigate = useCallback(() => {
+    updateState({ showSuccessModal: false });
+    router.push("/c");
+  }, [router]);
+
   return {
     states,
     actions: {
@@ -236,6 +250,8 @@ export const usePaymentFlow = () => {
       handlePaymentSuccess,
       handlePaymentError,
       handlePaymentDismiss,
+      handleSuccessModalClose,
+      handleSuccessModalNavigate,
     },
   };
 };
