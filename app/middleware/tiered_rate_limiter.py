@@ -1,5 +1,20 @@
 """
 Tiered rate limiting middleware for API endpoints.
+
+Enforces hourly, daily, and monthly rate limits based on user subscription plans.
+Automatically checks all three time periods and rejects requests that exceed any limit.
+
+Usage:
+    @tiered_rate_limit("chat_messages")
+    async def chat_endpoint(user: dict = Depends(get_current_user)):
+        # Free: 50/hour, 200/day, 5000/month
+        # Pro: 500/hour, 5000/day, 125000/month
+        return await process_chat()
+
+    @tiered_rate_limit("file_analysis", count_tokens=True) 
+    async def analyze_file(user: dict = Depends(get_current_user)):
+        # Also validates token usage limits per request
+        return await analyze()
 """
 
 import asyncio
@@ -104,7 +119,7 @@ class TieredRateLimiter:
             ttl = self._get_ttl(period)
             
             # Use pipeline for atomic operations
-            async with self.redis.redis_client.pipeline() as pipe:
+            async with self.redis.redis.pipeline() as pipe:
                 await pipe.incr(redis_key)
                 await pipe.expire(redis_key, ttl)
                 await pipe.execute()

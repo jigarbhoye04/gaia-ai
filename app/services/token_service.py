@@ -24,7 +24,7 @@ class TokenService:
         user_id: str, 
         feature_key: str, 
         tokens_used: int,
-        plan_type: PlanType
+        _plan_type: PlanType
     ) -> None:
         """Track token usage for a user and feature."""
         if tokens_used <= 0:
@@ -34,8 +34,8 @@ class TokenService:
         date_key = datetime.now(timezone.utc).strftime("%Y%m%d")
         redis_key = f"tokens:{user_id}:{feature_key}:{date_key}"
         
-        await self.redis.redis_client.incrby(redis_key, tokens_used)
-        await self.redis.redis_client.expire(redis_key, SECONDS_PER_DAY)
+        await self.redis.redis.incrby(redis_key, tokens_used)
+        await self.redis.redis.expire(redis_key, SECONDS_PER_DAY)
     
     async def get_token_usage(
         self, 
@@ -58,14 +58,14 @@ class TokenService:
                 # Get all features for this date
                 pattern = f"tokens:{user_id}:*:{date_key}"
                 total = 0
-                async for key in self.redis.redis_client.scan_iter(match=pattern):
+                async for key in self.redis.redis.scan_iter(match=pattern):
                     tokens = await self.redis.get(key)
                     total += int(tokens) if tokens else 0
                 usage[date_key] = total
         
         return usage
     
-    async def get_token_limits(self, user_id: str, plan_type: PlanType) -> Dict[str, int]:
+    async def get_token_limits(self, _user_id: str, plan_type: PlanType) -> Dict[str, int]:
         """Get token limits based on plan type."""
         # Base limits that apply across all features
         if plan_type == PlanType.FREE:
