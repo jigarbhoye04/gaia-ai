@@ -3,6 +3,11 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
+import {
+  showFeatureRestrictedToast,
+  showRateLimitToast,
+  showTokenLimitToast,
+} from "@/components/shared/RateLimitToast";
 import { apiauth } from "@/lib/api";
 
 import { useLoginModalActions } from "../../features/auth/hooks/useLoginModal";
@@ -24,8 +29,6 @@ export default function useAxiosInterceptor() {
       "/pricing",
     ].includes(pathname);
 
-    // console.log("Axios Interceptor Pathname:", pathname, onLandingRoutes);
-
     const interceptor = apiauth.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -41,11 +44,42 @@ export default function useAxiosInterceptor() {
             toast.error("Server unreachable. Try again later");
 
           if (error.response) {
-            const { status } = error.response;
+            const { status, data, headers } = error.response;
 
             if (status === 401) {
               toast.error("Session expired. Please log in again.");
               setLoginModalOpen(true);
+            } else if (status === 429) {
+              // Handle rate limiting errors
+              const errorData = data?.detail;
+
+              if (
+                typeof errorData === "object" &&
+                errorData?.error === "rate_limit_exceeded"
+              ) {
+                const { feature, plan_required, reset_time, message } =
+                  errorData;
+
+                if (plan_required) {
+                  // Feature is restricted to higher tier
+                  showFeatureRestrictedToast(
+                    feature || "This feature",
+                    plan_required,
+                  );
+                } else if (feature?.includes("token")) {
+                  // Token limit exceeded
+                  showTokenLimitToast(feature, plan_required);
+                } else {
+                  // General rate limit exceeded
+                  showRateLimitToast({
+                    title: "Rate Limit Exceeded",
+                    message: message || undefined,
+                    resetTime: reset_time,
+                    feature,
+                    showUpgradeButton: true,
+                  });
+                }
+              }
             } else if (status >= 500)
               toast.error("Server error. Please try again later.");
             else if (status === 404)

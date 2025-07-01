@@ -2,6 +2,7 @@
 
 import { Button } from "@heroui/button";
 import {
+  BarChart3,
   Brain,
   ChevronLeft,
   CreditCard,
@@ -41,6 +42,11 @@ export default function SettingsSidebar() {
       label: "Subscription",
       icon: CreditCard,
       href: "/settings?section=subscription",
+    },
+    {
+      label: "Usage",
+      icon: BarChart3,
+      href: "/settings?section=usage",
     },
     {
       label: "Chat",
