@@ -127,3 +127,82 @@ def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
     except Exception as e:
         logger.error(f"Error generating support to user email HTML: {str(e)}")
         raise
+
+
+async def send_welcome_email(user_email: str, user_name: str = None) -> None:
+    """Send welcome email to new user using Jinja2 template."""
+    try:
+        subject = "From the founder of GAIA, personally"
+        html_content = generate_welcome_email_html(user_name)
+
+        resend.Emails.send(
+            {
+                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "to": [user_email],
+                "subject": subject,
+                "html": html_content,
+                "reply_to": "aryan@heygaia.io",
+            }
+        )
+        logger.info(f"Welcome email sent to {user_email}")
+    except Exception as e:
+        logger.error(f"Failed to send welcome email to {user_email}: {str(e)}")
+        raise
+
+
+def generate_welcome_email_html(user_name: str = None) -> str:
+    """Generate HTML email content for welcome email using Jinja2 template."""
+    try:
+        template = jinja_env.get_template("welcome.html")
+
+        # Render template with data
+        html_content = template.render(
+            user_name=user_name,
+            contact_email="aryan@heygaia.io",
+            discord_url="https://discord.gg/gaia",
+            whatsapp_url="https://chat.whatsapp.com/gaia",
+            twitter_url="https://twitter.com/heygaia",
+        )
+
+        return html_content
+    except Exception as e:
+        logger.error(f"Error generating welcome email HTML: {str(e)}")
+        raise
+
+
+async def send_inactive_user_email(user_email: str, user_name: str = None) -> None:
+    """Send email to inactive user using Jinja2 template."""
+    try:
+        subject = "We miss you at GAIA 🌱"
+        html_content = generate_inactive_user_email_html(user_name)
+
+        resend.Emails.send(
+            {
+                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "to": [user_email],
+                "subject": subject,
+                "html": html_content,
+                "reply_to": "aryan@heygaia.io",
+            }
+        )
+        logger.info(f"Inactive user email sent to {user_email}")
+    except Exception as e:
+        logger.error(f"Failed to send inactive user email to {user_email}: {str(e)}")
+        raise
+
+
+def generate_inactive_user_email_html(user_name: str = None) -> str:
+    """Generate HTML email content for inactive user email using Jinja2 template."""
+    try:
+        template = jinja_env.get_template("inactive.html")
+
+        # Render template with data
+        html_content = template.render(
+            user_name=user_name,
+            contact_email="aryan@heygaia.io",
+        )
+
+        return html_content
+    except Exception as e:
+        logger.error(f"Error generating inactive user email HTML: {str(e)}")
+        raise

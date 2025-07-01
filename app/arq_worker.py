@@ -118,6 +118,52 @@ async def cleanup_expired_reminders(ctx: dict) -> str:
         raise
 
 
+async def check_inactive_users(ctx: dict) -> str:
+    """
+    Check for inactive users and send emails to those inactive for more than 7 days.
+
+    Args:
+        ctx: ARQ context
+
+    Returns:
+        Processing result message
+    """
+    from app.db.mongodb.collections import users_collection
+    from app.utils.email_utils import send_inactive_user_email
+
+    logger.info("Checking for inactive users")
+
+    try:
+        # Find users inactive for more than 7 days
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        
+        inactive_users = await users_collection.find({
+            "last_active_at": {"$lt": seven_days_ago},
+            "is_active": {"$ne": False}  # Only active users
+        }).to_list(length=None)
+
+        email_count = 0
+        for user in inactive_users:
+            try:
+                await send_inactive_user_email(
+                    user_email=user["email"],
+                    user_name=user.get("name")
+                )
+                email_count += 1
+                logger.info(f"Sent inactive user email to {user['email']}")
+            except Exception as e:
+                logger.error(f"Failed to send email to {user['email']}: {str(e)}")
+
+        message = f"Processed {len(inactive_users)} inactive users, sent {email_count} emails"
+        logger.info(message)
+        return message
+
+    except Exception as e:
+        error_msg = f"Failed to check inactive users: {str(e)}"
+        logger.error(error_msg)
+        raise
+
+
 class WorkerSettings:
     """
     ARQ worker settings configuration.
@@ -129,11 +175,18 @@ class WorkerSettings:
     functions = [
         process_reminder,
         cleanup_expired_reminders,
+        check_inactive_users,
     ]
     cron_jobs = [
         cron(
             cleanup_expired_reminders,
             hour=0,  # At midnight
+            minute=0,  # At the start of the hour
+            second=0,  # At the start of the minute
+        ),
+        cron(
+            check_inactive_users,
+            hour=9,  # At 9 AM
             minute=0,  # At the start of the hour
             second=0,  # At the start of the minute
         ),

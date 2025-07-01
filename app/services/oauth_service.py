@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from app.config.loggers import app_logger as logger
 from app.db.mongodb.collections import users_collection
 from app.utils.oauth_utils import upload_user_picture
+from app.utils.email_utils import send_welcome_email
 
 
 async def store_user_info(name: str, email: str, picture_url: str):
@@ -109,4 +110,13 @@ async def store_user_info(name: str, email: str, picture_url: str):
         }
 
         result = await users_collection.insert_one(user_data)
+        
+        # Send welcome email to new user
+        try:
+            await send_welcome_email(email, name)
+            logger.info(f"Welcome email sent to new user: {email}")
+        except Exception as e:
+            logger.error(f"Failed to send welcome email to {email}: {str(e)}")
+            # Don't raise exception - user creation should still succeed
+        
         return result.inserted_id
