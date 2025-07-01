@@ -24,13 +24,6 @@ async def chat_stream_endpoint(
     Stream chat messages in real time.
     """
 
-    # TODO: Figure out a better way to get the user's IP address
-    # if settings.ENV == "development":
-    #     client_ip = settings.DUMMY_IP
-    # else:
-    #     forwarded = request.headers.get("X-Forwarded-For")
-    #     client_ip = forwarded.split(",")[0] if forwarded else request.client.host
-
     return StreamingResponse(
         chat_stream(
             body=body, user=user, background_tasks=background_tasks, user_time=user_time

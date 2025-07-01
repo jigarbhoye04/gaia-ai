@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemM
 
 from app.config.loggers import llm_logger as logger
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.services.memory_service import MemorySearchResult, memory_service
+from app.services.memory_service import memory_service
 from app.models.message_models import FileData, MessageDict
 from app.services.onboarding_service import get_user_preferences_for_agent
 

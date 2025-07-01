@@ -7,6 +7,7 @@ from pymongo.server_api import ServerApi
 from app.config.loggers import mongo_logger as logger
 from app.config.settings import settings
 
+import pymongo
 
 class MongoDB:
     """
@@ -35,7 +36,6 @@ class MongoDB:
 
     def ping(self):
         try:
-            import pymongo
 
             # Use the same URI that was used to initialize the async client
             sync_client = pymongo.MongoClient(settings.MONGO_DB)
@@ -46,9 +46,9 @@ class MongoDB:
 
     async def _initialize_indexes(self):
         try:
-            from app.db.mongodb.indexes import create_all_indexes, log_index_summary
-
             logger.info("Initializing all indexes in MongoDB...")
+            # Import here to avoid circular import
+            from app.db.mongodb.indexes import create_all_indexes
             await create_all_indexes()
             # await log_index_summary()
         except Exception as e:

@@ -1,0 +1,185 @@
+"""
+Usage tracking API endpoints.
+"""
+
+from datetime import datetime, timezone
+from typing import Dict, List, Optional, Any
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.services.usage_service import UsageService
+from app.services.token_service import token_service
+from app.models.usage_models import get_feature_info
+from app.config.rate_limits import FEATURE_LIMITS, get_limits_for_plan, get_reset_time, RateLimitPeriod
+from app.services.payments.subscriptions import get_user_subscription_status
+from app.models.payment_models import PlanType
+
+
+router = APIRouter(prefix="/usage", tags=["usage"])
+usage_service = UsageService()
+
+
+@router.get("/summary")
+async def get_usage_summary(
+    user: dict = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get comprehensive usage summary for the current user."""
+    user_id = user.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID not found")
+    
+    # Usage is now synced in real-time automatically
+    
+    # Get latest usage snapshot
+    snapshot = await usage_service.get_latest_usage_snapshot(user_id)
+    
+    # Get user subscription
+    subscription = await get_user_subscription_status(user_id)
+    user_plan = subscription.plan_type or PlanType.FREE
+    
+    if not snapshot:
+        # Return empty usage with configured limits
+        features_formatted = _format_empty_features(user_plan)
+        token_summary = await token_service.get_token_usage_summary(user_id, user_plan)
+        
+        return {
+            "user_id": user_id,
+            "plan_type": user_plan.value if hasattr(user_plan, 'value') else str(user_plan),
+            "features": features_formatted,
+            "token_usage": token_summary,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }
+    
+    # Format features with actual usage data
+    features_formatted = _format_features_with_usage(snapshot, user_plan)
+    token_summary = await token_service.get_token_usage_summary(user_id, user_plan)
+    
+    return {
+        "user_id": user_id,
+        "plan_type": snapshot.plan_type,
+        "features": features_formatted,
+        "token_usage": token_summary,
+        "last_updated": snapshot.created_at.isoformat()
+    }
+
+
+@router.get("/history")
+async def get_usage_history(
+    days: int = Query(default=7, ge=1, le=90, description="Number of days to retrieve"),
+    feature_key: Optional[str] = Query(default=None, description="Specific feature to filter by"),
+    user: dict = Depends(get_current_user)
+) -> List[Dict[str, Any]]:
+    """Get usage history for the current user."""
+    user_id = user.get("user_id")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="User ID not found")
+    
+    # Validate feature_key if provided
+    if feature_key and feature_key not in FEATURE_LIMITS:
+        raise HTTPException(status_code=400, detail=f"Unknown feature: {feature_key}")
+    
+    history = await usage_service.get_usage_history(user_id, feature_key, days)
+    
+    formatted_history = []
+    for snapshot in history:
+        features_formatted = {}
+        for feature in snapshot.features:
+            key = feature.feature_key
+            if key not in features_formatted:
+                feature_info = get_feature_info(key)
+                features_formatted[key] = {
+                    "title": feature_info["title"],
+                    "periods": {}
+                }
+            
+            features_formatted[key]["periods"][feature.period] = {
+                "used": feature.used,
+                "limit": feature.limit,
+                "percentage": (feature.used / feature.limit * 100) if feature.limit > 0 else 0
+            }
+        
+        formatted_history.append({
+            "date": snapshot.created_at.isoformat(),
+            "plan_type": snapshot.plan_type,
+            "features": features_formatted
+        })
+    
+    return formatted_history
+
+
+
+
+def _format_empty_features(user_plan: PlanType) -> Dict[str, Any]:
+    """Format empty features with zero usage."""
+    features_formatted = {}
+    
+    for feature_key in FEATURE_LIMITS:
+        feature_info = get_feature_info(feature_key)
+        features_formatted[feature_key] = {
+            "title": feature_info["title"],
+            "description": feature_info["description"],
+            "periods": {}
+        }
+        
+        current_limits = get_limits_for_plan(feature_key, user_plan)
+        
+        for period in ["hour", "day", "month"]:
+            limit = getattr(current_limits, period, 0)
+            if limit > 0:
+                reset_time = get_reset_time(getattr(RateLimitPeriod, period.upper()))
+                features_formatted[feature_key]["periods"][period] = {
+                    "used": 0,
+                    "limit": limit,
+                    "percentage": 0,
+                    "reset_time": reset_time.isoformat(),
+                    "remaining": limit
+                }
+    
+    return features_formatted
+
+
+def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]:
+    """Format features with actual usage data."""
+    # Create mapping of actual usage data
+    usage_data = {}
+    for feature in snapshot.features:
+        if feature.feature_key not in usage_data:
+            usage_data[feature.feature_key] = {}
+        usage_data[feature.feature_key][feature.period] = {
+            "used": feature.used,
+            "limit": feature.limit,
+            "percentage": (feature.used / feature.limit * 100) if feature.limit > 0 else 0,
+            "reset_time": feature.reset_time.isoformat(),
+            "remaining": max(0, feature.limit - feature.used)
+        }
+    
+    # Format ALL configured features
+    features_formatted = {}
+    for feature_key in FEATURE_LIMITS:
+        feature_info = get_feature_info(feature_key)
+        features_formatted[feature_key] = {
+            "title": feature_info["title"],
+            "description": feature_info["description"],
+            "periods": {}
+        }
+        
+        current_limits = get_limits_for_plan(feature_key, user_plan)
+        
+        for period in ["hour", "day", "month"]:
+            limit = getattr(current_limits, period, 0)
+            if limit > 0:
+                if feature_key in usage_data and period in usage_data[feature_key]:
+                    # Use actual usage data
+                    features_formatted[feature_key]["periods"][period] = usage_data[feature_key][period]
+                else:
+                    # Show unused feature with zero usage
+                    reset_time = get_reset_time(getattr(RateLimitPeriod, period.upper()))
+                    features_formatted[feature_key]["periods"][period] = {
+                        "used": 0,
+                        "limit": limit,
+                        "percentage": 0,
+                        "reset_time": reset_time.isoformat(),
+                        "remaining": limit
+                    }
+    
+    return features_formatted
