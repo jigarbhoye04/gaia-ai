@@ -13,9 +13,7 @@ class PlanType(str, Enum):
     """Subscription plan types."""
 
     FREE = "free"
-    BASIC = "basic"
     PRO = "pro"
-    ENTERPRISE = "enterprise"
 
 
 class PlanDuration(str, Enum):

@@ -141,16 +141,13 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
         
         # Get plan details
         plan = await plans_collection.find_one({"_id": ObjectId(subscription["plan_id"])})
-        plan_type = PlanType.FREE
-        
+    
         if plan:
             plan_name = plan.get("name", "").lower()
-            if "basic" in plan_name:
-                plan_type = PlanType.BASIC
-            elif "pro" in plan_name:
+            if "pro" in plan_name:
                 plan_type = PlanType.PRO
-            elif "enterprise" in plan_name:
-                plan_type = PlanType.ENTERPRISE
+            else:
+                plan_type = PlanType.FREE
         
         # Calculate days remaining
         days_remaining = None
@@ -195,8 +192,9 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
             subscription=subscription_data,
             is_subscribed=True,
             days_remaining=days_remaining,
-            can_upgrade=plan_type != PlanType.ENTERPRISE,
-            can_downgrade=plan_type not in [PlanType.FREE, PlanType.BASIC],
+            can_upgrade=plan_type != PlanType.PRO,
+            can_downgrade=plan_type not in [PlanType.FREE],
+            
             # Legacy fields for backward compatibility
             has_subscription=True,
             plan_type=plan_type,
