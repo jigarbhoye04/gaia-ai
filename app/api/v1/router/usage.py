@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.services.usage_service import UsageService
 from app.services.token_service import token_service
-from app.models.usage_models import get_feature_info
+from app.config.rate_limits import get_feature_info
 from app.config.rate_limits import FEATURE_LIMITS, get_limits_for_plan, get_reset_time, RateLimitPeriod
 from app.services.payments.subscriptions import get_user_subscription_status
 from app.models.payment_models import PlanType
@@ -123,7 +123,7 @@ def _format_empty_features(user_plan: PlanType) -> Dict[str, Any]:
         
         current_limits = get_limits_for_plan(feature_key, user_plan)
         
-        for period in ["hour", "day", "month"]:
+        for period in ["day", "month"]:
             limit = getattr(current_limits, period, 0)
             if limit > 0:
                 reset_time = get_reset_time(getattr(RateLimitPeriod, period.upper()))
@@ -165,7 +165,7 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
         
         current_limits = get_limits_for_plan(feature_key, user_plan)
         
-        for period in ["hour", "day", "month"]:
+        for period in ["day", "month"]:
             limit = getattr(current_limits, period, 0)
             if limit > 0:
                 if feature_key in usage_data and period in usage_data[feature_key]:

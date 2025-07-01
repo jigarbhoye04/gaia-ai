@@ -2,19 +2,18 @@
 Rate limiting configuration for all features.
 Single source of truth for rate limits.
 
-Rate limits are enforced across three time periods:
-- Hourly: Short-term burst protection
+Rate limits are enforced across two time periods:
 - Daily: Medium-term usage control  
 - Monthly: Long-term subscription limits
 
-All three limits are checked on each request. If any limit is exceeded,
+Both limits are checked on each request. If any limit is exceeded,
 the request is rejected with a 429 status code.
 
 Usage:
     @tiered_rate_limit("image_generation")
     async def generate_image(user: dict = Depends(get_current_user)):
-        # This endpoint will be limited by hourly (10/100), daily (50/1000), 
-        # and monthly (1000/25000) limits based on user's plan
+        # This endpoint will be limited by daily (50/1000) and monthly (1000/25000) 
+        # limits based on user's plan
         pass
 """
 
@@ -27,76 +26,93 @@ from app.models.payment_models import PlanType
 
 
 class RateLimitPeriod(str, Enum):
-    HOUR = "hour"
     DAY = "day"
     MONTH = "month"
 
 
 class RateLimitConfig(BaseModel):
-    hour: int = 0
     day: int = 0
     month: int = 0
     tokens_per_request: int = 0
 
 
+class FeatureInfo(BaseModel):
+    title: str
+    description: str
+
+
 class TieredRateLimits(BaseModel):
     free: RateLimitConfig = RateLimitConfig()
     pro: RateLimitConfig = RateLimitConfig()
+    info: FeatureInfo
 
 
 # All feature rate limits in one place
 FEATURE_LIMITS: Dict[str, TieredRateLimits] = {
     "image_generation": TieredRateLimits(
-        free=RateLimitConfig(hour=10, day=50, month=1000),
-        pro=RateLimitConfig(hour=100, day=1000, month=25000)
+        free=RateLimitConfig(day=1, month=1000),
+        pro=RateLimitConfig(day=1, month=25000),
+        info=FeatureInfo(title="AI Image Generation", description="Generate images using AI models")
     ),
     "file_analysis": TieredRateLimits(
-        free=RateLimitConfig(hour=20, day=100, month=2000),
-        pro=RateLimitConfig(hour=200, day=2000, month=50000)
+        free=RateLimitConfig(day=100, month=2000),
+        pro=RateLimitConfig(day=2000, month=50000),
+        info=FeatureInfo(title="File Analysis", description="Analyze and process uploaded files")
     ),
     "chat_messages": TieredRateLimits(
-        free=RateLimitConfig(hour=50, day=200, month=5000),
-        pro=RateLimitConfig(hour=500, day=5000, month=125000)
+        free=RateLimitConfig(day=200, month=5000),
+        pro=RateLimitConfig(day=5000, month=125000),
+        info=FeatureInfo(title="Chat Messages", description="Send messages to AI assistants")
     ),
     "api_calls": TieredRateLimits(
-        free=RateLimitConfig(hour=30, day=150, month=3000),
-        pro=RateLimitConfig(hour=300, day=3000, month=75000)
+        free=RateLimitConfig(day=150, month=3000),
+        pro=RateLimitConfig(day=3000, month=75000),
+        info=FeatureInfo(title="API Calls", description="Make API calls to external services")
     ),
     "document_search": TieredRateLimits(
-        free=RateLimitConfig(hour=25, day=100, month=2500),
-        pro=RateLimitConfig(hour=250, day=2500, month=62500)
+        free=RateLimitConfig(day=100, month=2500),
+        pro=RateLimitConfig(day=2500, month=62500),
+        info=FeatureInfo(title="Document Search", description="Search through documents and knowledge base")
     ),
     "web_search": TieredRateLimits(
-        free=RateLimitConfig(hour=15, day=75, month=1500),
-        pro=RateLimitConfig(hour=150, day=1500, month=37500)
+        free=RateLimitConfig(day=75, month=1500),
+        pro=RateLimitConfig(day=1500, month=37500),
+        info=FeatureInfo(title="Web Search", description="Search the web for information")
     ),
     "calendar": TieredRateLimits(
-        free=RateLimitConfig(hour=40, day=200, month=4000),
-        pro=RateLimitConfig(hour=400, day=4000, month=100000)
+        free=RateLimitConfig(day=200, month=4000),
+        pro=RateLimitConfig(day=4000, month=100000),
+        info=FeatureInfo(title="Calendar Operations", description="Manage calendar events and schedules")
     ),
     "email": TieredRateLimits(
-        free=RateLimitConfig(hour=20, day=100, month=2000),
-        pro=RateLimitConfig(hour=200, day=2000, month=50000)
+        free=RateLimitConfig(day=100, month=2000),
+        pro=RateLimitConfig(day=2000, month=50000),
+        info=FeatureInfo(title="Email Operations", description="Send and manage emails")
     ),
     "notes": TieredRateLimits(
-        free=RateLimitConfig(hour=60, day=300, month=6000),
-        pro=RateLimitConfig(hour=600, day=6000, month=150000)
+        free=RateLimitConfig(day=300, month=6000),
+        pro=RateLimitConfig(day=6000, month=150000),
+        info=FeatureInfo(title="Notes & Memories", description="Create and manage notes")
     ),
     "goals": TieredRateLimits(
-        free=RateLimitConfig(hour=30, day=150, month=3000),
-        pro=RateLimitConfig(hour=300, day=3000, month=75000)
+        free=RateLimitConfig(day=150, month=3000),
+        pro=RateLimitConfig(day=3000, month=75000),
+        info=FeatureInfo(title="Goal Management", description="Track and manage goals")
     ),
     "todos": TieredRateLimits(
-        free=RateLimitConfig(hour=100, day=500, month=10000),
-        pro=RateLimitConfig(hour=1000, day=10000, month=250000)
+        free=RateLimitConfig(day=500, month=10000),
+        pro=RateLimitConfig(day=10000, month=250000),
+        info=FeatureInfo(title="Todo Management", description="Manage tasks and todos")
     ),
     "memory": TieredRateLimits(
-        free=RateLimitConfig(hour=40, day=200, month=4000),
-        pro=RateLimitConfig(hour=400, day=4000, month=100000)
+        free=RateLimitConfig(day=200, month=4000),
+        pro=RateLimitConfig(day=4000, month=100000),
+        info=FeatureInfo(title="Memory Operations", description="Store and retrieve memories")
     ),
     "browser": TieredRateLimits(
-        free=RateLimitConfig(hour=10, day=50, month=1000),
-        pro=RateLimitConfig(hour=100, day=1000, month=25000)
+        free=RateLimitConfig(day=50, month=1000),
+        pro=RateLimitConfig(day=1000, month=25000),
+        info=FeatureInfo(title="Browser Automation", description="Automate browser operations")
     ),
 }
 
@@ -117,9 +133,7 @@ def get_limits_for_plan(feature_key: str, plan_type: PlanType) -> RateLimitConfi
 def get_reset_time(period: RateLimitPeriod) -> datetime:
     """Calculate reset time for a given period."""
     now = datetime.now(timezone.utc)
-    if period == RateLimitPeriod.HOUR:
-        return now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-    elif period == RateLimitPeriod.DAY:
+    if period == RateLimitPeriod.DAY:
         return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
     else:  # MONTH
         if now.month == 12:
@@ -131,12 +145,24 @@ def get_reset_time(period: RateLimitPeriod) -> datetime:
 def get_time_window_key(period: RateLimitPeriod) -> str:
     """Get Redis time window key for a period."""
     now = datetime.now(timezone.utc)
-    if period == RateLimitPeriod.HOUR:
-        return now.strftime("%Y%m%d%H")
-    elif period == RateLimitPeriod.DAY:
+    if period == RateLimitPeriod.DAY:
         return now.strftime("%Y%m%d")
     else:  # MONTH
         return now.strftime("%Y%m")
+
+
+def get_feature_info(feature_key: str) -> Dict[str, str]:
+    """Get user-friendly feature information."""
+    if feature_key in FEATURE_LIMITS:
+        info = FEATURE_LIMITS[feature_key].info
+        return {
+            "title": info.title,
+            "description": info.description
+        }
+    return {
+        "title": feature_key.replace("_", " ").title(),
+        "description": f"Usage for {feature_key}"
+    }
 
 
 def list_all_features() -> list[str]:

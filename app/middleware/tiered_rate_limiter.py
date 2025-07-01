@@ -1,14 +1,14 @@
 """
 Tiered rate limiting middleware for API endpoints.
 
-Enforces hourly, daily, and monthly rate limits based on user subscription plans.
-Automatically checks all three time periods and rejects requests that exceed any limit.
+Enforces daily and monthly rate limits based on user subscription plans.
+Automatically checks both time periods and rejects requests that exceed any limit.
 
 Usage:
     @tiered_rate_limit("chat_messages")
     async def chat_endpoint(user: dict = Depends(get_current_user)):
-        # Free: 50/hour, 200/day, 5000/month
-        # Pro: 500/hour, 5000/day, 125000/month
+        # Free: 200/day, 5000/month
+        # Pro: 5000/day, 125000/month
         return await process_chat()
 
     @tiered_rate_limit("file_analysis", count_tokens=True) 
@@ -32,9 +32,10 @@ from app.config.rate_limits import (
     RateLimitPeriod, 
     get_limits_for_plan,
     get_reset_time,
-    get_time_window_key
+    get_time_window_key,
+    get_feature_info
 )
-from app.models.usage_models import UserUsageSnapshot, FeatureUsage, UsagePeriod, get_feature_info
+from app.models.usage_models import UserUsageSnapshot, FeatureUsage, UsagePeriod
 from app.db.mongodb.collections import usage_snapshots_collection
 
 
@@ -82,7 +83,7 @@ class TieredRateLimiter:
         current_limits = get_limits_for_plan(feature_key, user_plan)
         usage_info = {}
         
-        for period in [RateLimitPeriod.HOUR, RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
+        for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
             limit = getattr(current_limits, period.value)
             if limit <= 0:
                 continue
@@ -110,7 +111,7 @@ class TieredRateLimiter:
                 raise RateLimitExceededException(f"{feature_key} (token limit)", plan_required)
         
         # Increment usage
-        for period in [RateLimitPeriod.HOUR, RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
+        for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
             limit = getattr(current_limits, period.value)
             if limit <= 0:
                 continue
@@ -138,7 +139,7 @@ class TieredRateLimiter:
         current_limits = get_limits_for_plan(feature_key, user_plan)
         usage_info = {}
         
-        for period in [RateLimitPeriod.HOUR, RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
+        for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
             limit = getattr(current_limits, period.value)
             if limit <= 0:
                 continue
@@ -166,7 +167,7 @@ class TieredRateLimiter:
             current_limits = get_limits_for_plan(feature_key, user_plan)
             feature_usage_list = []
             
-            for period in [RateLimitPeriod.HOUR, RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
+            for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
                 limit = getattr(current_limits, period.value)
                 if limit <= 0:
                     continue
