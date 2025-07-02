@@ -1,4 +1,5 @@
 import { Textarea } from "@heroui/input";
+import { Kbd } from "@heroui/react";
 import React, { useCallback, useEffect, useState } from "react";
 
 import {
@@ -64,7 +65,7 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
             commandStart: detection.commandStart,
             commandEnd: detection.commandEnd,
             dropdownPosition: {
-              top: rect.top - dropdownHeight - 8, // Position above the composer
+              top: rect.top - dropdownHeight - 45, // Position above the composer
               left: rect.left,
               width: rect.width, // Match the composer width
             },
@@ -231,11 +232,12 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
             inputWrapper:
               " px-3 data-[hover=true]:bg-zinc-800 group-data-[focus-visible=true]:ring-zinc-800 group-data-[focus-visible=true]:ring-offset-0",
             innerWrapper: `${currentHeight > 24 ? "items-end" : "items-center"}`,
+            input: "font-light",
           }}
           isInvalid={searchbarText.length > 10_000}
           maxRows={13}
           minRows={1}
-          placeholder="What can I do for you today? Type / for tools..."
+          placeholder="What can I do for you today?"
           size="lg"
           value={searchbarText}
           onHeightChange={onHeightChange}
@@ -243,6 +245,12 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
           onValueChange={handleTextChange}
           onSelect={handleCursorPositionChange}
           onClick={handleCursorPositionChange}
+          endContent={
+            <div className="flex items-center gap-1 text-xs text-nowrap text-foreground-500">
+              <Kbd className="bg-zinc-700">/</Kbd>
+              for tools
+            </div>
+          }
         />
       </form>
 

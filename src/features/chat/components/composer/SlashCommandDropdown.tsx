@@ -59,7 +59,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             stiffness: 300,
             duration: 0.15,
           }}
-          className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900/95 shadow-2xl backdrop-blur-xl"
+          className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/50 shadow-2xl backdrop-blur-3xl"
           style={{
             top: position.top,
             left: position.left,
@@ -67,7 +67,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             minWidth: position.width ? "unset" : "320px",
             maxWidth: position.width ? "unset" : "384px",
             boxShadow:
-              "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
+              "0px -15px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -86,10 +86,10 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                       e.stopPropagation();
                       setSelectedCategory(category);
                     }}
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
                       selectedCategory === category
                         ? "bg-zinc-700 text-white"
-                        : "text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-300"
+                        : "text-zinc-400 hover:bg-white/10 hover:text-zinc-300"
                     }`}
                   >
                     {category === "all" ? (
@@ -102,7 +102,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                       getToolCategoryIcon(category)
                     )}
                     <span className="capitalize">
-                      {category === "all" ? "All" : category}
+                      {category === "all" ? "All" : category.replace("_", " ")}
                     </span>
                   </button>
                 ))}
@@ -116,10 +116,10 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
               {filteredMatches.map((match, index) => (
                 <div
                   key={match.tool.name}
-                  className={`relative mx-2 mb-1 cursor-pointer rounded-lg transition-all duration-150 ${
+                  className={`relative mx-2 mb-1 cursor-pointer rounded-xl transition-all duration-150 ${
                     index === selectedIndex
                       ? "border border-zinc-600 bg-zinc-700/60"
-                      : "border border-transparent hover:bg-zinc-800/40"
+                      : "border border-transparent hover:bg-white/5"
                   }`}
                   onClick={() => onSelect(match)}
                 >
@@ -136,8 +136,8 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                           {formatToolName(match.tool.name)}
                         </span>
                         {selectedCategory === "all" && (
-                          <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400 capitalize">
-                            {match.tool.category}
+                          <span className="rounded-full bg-zinc-600 px-2 py-0.5 text-xs text-zinc-200 capitalize">
+                            {match.tool.category.replace("_", " ")}
                           </span>
                         )}
                       </div>
