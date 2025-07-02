@@ -1,15 +1,21 @@
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
+import { ArrowUp } from "lucide-react";
 
-import { SentIcon } from "@/components/shared/icons";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 
 interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
+  searchbarText: string;
 }
 
-export default function RightSide({ handleFormSubmit }: RightSideProps) {
+export default function RightSide({
+  handleFormSubmit,
+  searchbarText,
+}: RightSideProps) {
   const { isLoading } = useLoading();
+  const hasText = searchbarText.trim().length > 0;
+  const isDisabled = isLoading || !hasText;
 
   return (
     <div className="ml-2 flex items-center gap-1">
@@ -18,14 +24,14 @@ export default function RightSide({ handleFormSubmit }: RightSideProps) {
           isIconOnly
           aria-label="Send message"
           className={`${isLoading && "cursor-wait"}`}
-          color="primary"
-          disabled={isLoading}
+          color={hasText ? "primary" : "default"}
+          disabled={isDisabled}
           isLoading={isLoading}
           radius="full"
           type="submit"
           onPress={() => handleFormSubmit()}
         >
-          <SentIcon color="black" />
+          <ArrowUp color={hasText ? "black" : "gray"} />
         </Button>
       </Tooltip>
     </div>

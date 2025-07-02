@@ -1,4 +1,7 @@
-import Image from "next/image";
+import { useEffect, useState } from "react";
+
+import { useUser } from "@/features/auth/hooks/useUser";
+import { getCompleteTimeBasedGreeting } from "@/utils/greeting/greetingUtils";
 
 // import {
 //   BlushBrush02Icon,
@@ -123,19 +126,47 @@ import Image from "next/image";
 // ];
 
 export default function StarterText() {
+  const user = useUser();
+  const [greetingData, setGreetingData] = useState(
+    getCompleteTimeBasedGreeting(user?.name),
+  );
+
+  // Update greeting when user name changes and every hour to keep it current
+  useEffect(() => {
+    // Update greeting immediately
+    setGreetingData(getCompleteTimeBasedGreeting(user?.name));
+
+    // Set up interval to update every hour
+    const interval = setInterval(() => {
+      setGreetingData(getCompleteTimeBasedGreeting(user?.name));
+    }, 3_600_000); // update every hour
+
+    return () => clearInterval(interval);
+  }, [user?.name]);
+
   return (
     <>
-      <div className="my-4 inline-flex flex-wrap items-center justify-center text-center text-3xl font-medium sm:gap-2 sm:text-3xl">
-        Hey, I'm GAIA, your personal AI assistant!
-        <Image
-          alt="Waving Hand"
-          className="mx-2 w-[35px] object-contain sm:mx-0 sm:w-[40px]"
-          src="https://em-content.zobj.net/source/apple/391/waving-hand_1f44b.png"
-          height={30}
-          width={30}
-          unoptimized
-        />
-        <div className="text-2xl">What can I do for you today?</div>
+      <div className="my-4 inline-flex flex-wrap items-center justify-center text-center font-medium sm:gap-2">
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-2 text-4xl">
+            {greetingData.greeting}!
+            <span className="text-2xl">{greetingData.emoji}</span>
+          </div>
+          {/* <div className="text-2xl">
+            I'm GAIA, your personal AI assistant!
+            <Image
+              alt="Waving Hand"
+              className="mx-2 inline w-[35px] object-contain sm:mx-2 sm:w-[40px]"
+              src="https://em-content.zobj.net/source/apple/391/waving-hand_1f44b.png"
+              height={30}
+              width={30}
+              unoptimized
+            />
+          </div> */}
+          <div className="text-xl font-light text-gray-600 dark:text-gray-400">
+            {greetingData.context} How can I help you today?
+          </div>
+        </div>
       </div>
       {/* <div className="flex max-w-[650px] flex-wrap justify-center gap-2">
         {badges.map((badge, index) => (

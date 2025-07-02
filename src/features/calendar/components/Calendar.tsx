@@ -1,16 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
 import CalendarCard from "@/features/calendar/components/CalendarCard";
 import CalendarEventDialog from "@/features/calendar/components/CalendarEventDialog";
-import CalendarSelector from "@/features/calendar/components/CalendarSelector";
+import { useEventGroups } from "@/features/calendar/hooks/useEventGroups";
+import { useSharedCalendar } from "@/features/calendar/hooks/useSharedCalendar";
 import { GoogleCalendarEvent } from "@/types/features/calendarTypes";
-
-import { useCalendarEvents } from "../hooks/useCalendarEvents";
-import { useCalendarPreferences } from "../hooks/useCalendarPreferences";
-import { useEventGroups } from "../hooks/useEventGroups";
 
 export default function Calendar() {
   const [selectedEvent, setSelectedEvent] =
@@ -20,46 +17,46 @@ export default function Calendar() {
   const observerRef = useRef<HTMLDivElement | null>(null);
 
   const {
-    loading,
-    calendarEvents,
+    calendars,
+    selectedCalendars,
+    events,
     nextPageToken,
+    loading,
     error,
-    fetchEvents,
-    resetEvents,
-    // eventIdsRef,
-  } = useCalendarEvents();
+    isInitialized,
+    loadCalendars,
+    loadEvents,
+    clearEvents,
+  } = useSharedCalendar();
 
-  const groupedEventsByMonth = useEventGroups(calendarEvents);
+  const groupedEventsByMonth = useEventGroups(events);
 
-  const handleCalendarUpdate = useCallback(
-    (newCalendars: string[]) => {
-      resetEvents();
-      if (newCalendars.length) {
-        fetchEvents(null, newCalendars);
-      }
-    },
-    [resetEvents, fetchEvents],
-  );
-
-  const { calendars, selectedCalendars, fetchCalendars, handleCalendarSelect } =
-    useCalendarPreferences(handleCalendarUpdate);
-
+  // Initialize calendars on mount
   useEffect(() => {
-    fetchCalendars();
+    if (!isInitialized && !loading.calendars) {
+      loadCalendars();
+    }
+  }, [isInitialized, loading.calendars, loadCalendars]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Fetch events when selected calendars change
+  useEffect(() => {
+    if (selectedCalendars.length > 0) {
+      clearEvents();
+      loadEvents(null, selectedCalendars, true);
+    }
+  }, [selectedCalendars, clearEvents, loadEvents]);
 
+  // Infinite scroll for loading more events
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (
           entry.isIntersecting &&
-          !loading &&
+          !loading.events &&
           nextPageToken &&
           selectedCalendars.length > 0
         ) {
-          fetchEvents(nextPageToken, selectedCalendars);
+          loadEvents(nextPageToken, selectedCalendars);
         }
       },
       { rootMargin: "0px" },
@@ -70,7 +67,7 @@ export default function Calendar() {
     return () => {
       if (currentElement) observer.unobserve(currentElement);
     };
-  }, [loading, nextPageToken, fetchEvents, selectedCalendars]);
+  }, [loading.events, nextPageToken, loadEvents, selectedCalendars]);
 
   const handleEventClick = (event: GoogleCalendarEvent) => {
     setSelectedEvent(event);
@@ -81,21 +78,21 @@ export default function Calendar() {
     <>
       <div className="relative flex h-full w-full flex-col overflow-y-auto">
         <div className="flex flex-col items-center gap-2 pb-6">
-          <div className="sticky top-0 z-20 text-center text-5xl font-bold">
+          <div className="sticky top-0 z-20 text-center text-4xl font-medium">
             Your Calendar
           </div>
 
-          {error && (
+          {error.calendars && (
             <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
-              {error}
+              {error.calendars}
             </div>
           )}
 
-          <CalendarSelector
-            calendars={calendars}
-            selectedCalendars={selectedCalendars}
-            onCalendarSelect={handleCalendarSelect}
-          />
+          {error.events && (
+            <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
+              {error.events}
+            </div>
+          )}
         </div>
 
         <div className="mx-auto max-w-(--breakpoint-sm)">
@@ -131,7 +128,7 @@ export default function Calendar() {
             ))}
         </div>
 
-        {loading && (
+        {loading.events && (
           <div className="flex h-[80vh] items-center justify-center">
             <Spinner />
           </div>

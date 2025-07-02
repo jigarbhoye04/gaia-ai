@@ -1,7 +1,9 @@
+import { CalendarItem } from "@/types/api/calendarApiTypes";
+
 export interface CalendarCardProps {
   event: GoogleCalendarEvent | CalendarEvent;
   onClick: () => void;
-  calendars: GoogleCalendar[];
+  calendars: CalendarItem[];
 }
 
 export interface GoogleCalendarDateTime {
@@ -11,13 +13,13 @@ export interface GoogleCalendarDateTime {
 }
 
 export interface CalendarChipProps {
-  calendar: GoogleCalendar;
+  calendar: CalendarItem;
   selected: boolean;
   onSelect: (id: string) => void;
 }
 
 export interface CalendarSelectorProps {
-  calendars: GoogleCalendar[];
+  calendars: CalendarItem[];
   selectedCalendars: string[];
   onCalendarSelect: (calendarId: string) => void;
 }

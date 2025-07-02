@@ -293,6 +293,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
             openGenerateImageModal={openGenerateImageModal}
             openFileUploadModal={openFileUploadModal}
             handleFormSubmit={handleFormSubmit}
+            searchbarText={searchbarText}
             handleSelectionChange={handleSelectionChange}
           />
         </div>

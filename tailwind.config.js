@@ -12,6 +12,11 @@ const config = {
     extend: {
       fontFamily: {
         switzer: "var(--font-switzer), sans-serif",
+        sf: "var(--font-sf-pro-display), var(--font-sf-pro-text), sans-serif",
+        "sf-display": "var(--font-sf-pro-display), sans-serif",
+        "sf-text": "var(--font-sf-pro-text), sans-serif",
+        creato: "var(--font-creato), sans-serif",
+        inter: "'Inter Variable', var(--font-inter), sans-serif",
       },
       command: {
         bg: "#1E293B",
@@ -19,15 +24,22 @@ const config = {
         border: "#334155",
       },
       animation: {
+        shine: "shine 5s linear infinite",
         orbit: "orbit calc(var(--duration)*1s) linear infinite",
         grid: "grid 15s linear infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "shiny-text": "shiny-text 8s infinite",
         "pulse-shadow": "pulseShadow 2s infinite ease-in-out",
-        shine: "shine var(--duration) infinite linear",
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
       },
       keyframes: {
+        shine: {
+          "0%": { "background-position": "100%" },
+          "100%": { "background-position": "-100%" },
+        },
         pulseShadow: {
           "0%, 100%": {
             boxShadow: "0px 0px 170px #00bbff",
