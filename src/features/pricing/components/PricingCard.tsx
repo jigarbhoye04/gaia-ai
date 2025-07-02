@@ -190,7 +190,7 @@ export function PricingCard({
                 <Tick02Icon
                   height="20"
                   width="20"
-                  className="min-h-[20px] min-w-[20px]"
+                  className="min-h-[25px] min-w-[25px] rounded-full bg-zinc-950 p-[4px] text-primary outline-1 outline-zinc-800"
                 />
                 {feature}
               </div>
@@ -205,11 +205,11 @@ export function PricingCard({
           )}
 
           <Button
-            className="w-full font-medium"
+            className="w-full"
             color={
               isCurrentPlan && hasActiveSubscription ? "success" : "primary"
             }
-            variant={type === "main" ? "shadow" : "flat"}
+            variant={type === "main" ? "solid" : "flat"}
             onPress={handleGetStarted}
             isLoading={isLoading}
             disabled={

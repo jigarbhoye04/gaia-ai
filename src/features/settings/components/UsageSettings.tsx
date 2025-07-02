@@ -46,11 +46,11 @@ export default function UsageSettings() {
           <div className="flex items-start space-x-3">
             <div className="flex-1">
               <h3 className="mb-1 text-base font-semibold text-[#00bbff] dark:text-[#00bbff]">
-                Upgrade to Pro for unlimited access
+                Upgrade to Pro for higher limits
               </h3>
               <p className="mb-3 text-sm text-[#00bbff]/80 dark:text-[#00bbff]/90">
-                Get unlimited usage across all features, priority support, and
-                exclusive Pro features.
+                Get 25-250x higher usage limits across all features, priority
+                support, and private Discord channels.
               </p>
               <Button
                 size="sm"
