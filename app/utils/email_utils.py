@@ -129,6 +129,27 @@ def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
         raise
 
 
+async def send_pro_subscription_email(
+    user_name: str, 
+    user_email: str,
+    discord_url: str = "https://discord.heygaia.io",
+    whatsapp_url: str = "https://whatsapp.heygaia.io", 
+    twitter_url: str = "https://twitter.com/_heygaia"
+) -> None:
+    """Send welcome email to user who upgraded to Pro subscription."""
+    try:
+        subject = "Welcome to GAIA Pro! 🚀"
+        html_content = generate_pro_subscription_html(
+            user_name=user_name,
+            discord_url=discord_url,
+            whatsapp_url=whatsapp_url,
+            twitter_url=twitter_url
+        )
+        logger.info(f"Pro subscription welcome email sent to {user_email}")
+    except Exception as e:
+        logger.error(f"Failed to send pro subscription email to {user_email}: {str(e)}")
+        raise
+
 async def send_welcome_email(user_email: str, user_name: str = None) -> None:
     """Send welcome email to new user using Jinja2 template."""
     try:
@@ -175,7 +196,7 @@ async def send_inactive_user_email(user_email: str, user_name: str = None) -> No
     try:
         subject = "We miss you at GAIA 🌱"
         html_content = generate_inactive_user_email_html(user_name)
-
+        
         resend.Emails.send(
             {
                 "from": "Aryan from GAIA <aryan@heygaia.io>",
@@ -189,6 +210,25 @@ async def send_inactive_user_email(user_email: str, user_name: str = None) -> No
     except Exception as e:
         logger.error(f"Failed to send inactive user email to {user_email}: {str(e)}")
         raise
+
+def generate_pro_subscription_html(
+    user_name: str,
+    discord_url: str,
+    whatsapp_url: str, 
+    twitter_url: str
+) -> str:
+    """Generate HTML email for pro subscription welcome using the Jinja2 template."""
+    try:
+        template = jinja_env.get_template("subscribed.html")
+        html_content = template.render(
+            user_name=user_name,
+            discord_url=discord_url,
+            whatsapp_url=whatsapp_url,
+            twitter_url=twitter_url
+        )
+        return html_content
+    except Exception as e:
+        logger.error(f"Error generating pro subscription email HTML: {str(e)}")
 
 
 def generate_inactive_user_email_html(user_name: str = None) -> str:

@@ -129,6 +129,10 @@ class Settings(BaseSettings):
     # Code Execution
     E2B_API_KEY: str
 
+    # Razorpay Configuration
+    RAZORPAY_KEY_ID: str
+    RAZORPAY_KEY_SECRET: str
+
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only if explicitly enabled in production."""

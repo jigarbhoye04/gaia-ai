@@ -7,6 +7,7 @@ from app.api.v1.dependencies.oauth_dependencies import (
     get_current_user,
     get_user_timezone,
 )
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.message_models import MessageRequestWithHistory
 from app.services.chat_service import chat_stream
 
@@ -14,6 +15,7 @@ router = APIRouter()
 
 
 @router.post("/chat-stream")
+@tiered_rate_limit("chat_messages")
 async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
@@ -23,13 +25,6 @@ async def chat_stream_endpoint(
     """
     Stream chat messages in real time.
     """
-
-    # TODO: Figure out a better way to get the user's IP address
-    # if settings.ENV == "development":
-    #     client_ip = settings.DUMMY_IP
-    # else:
-    #     forwarded = request.headers.get("X-Forwarded-For")
-    #     client_ip = forwarded.split(",")[0] if forwarded else request.client.host
 
     return StreamingResponse(
         chat_stream(

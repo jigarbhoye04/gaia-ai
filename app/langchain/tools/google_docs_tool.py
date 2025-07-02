@@ -5,6 +5,7 @@ from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.docstrings.langchain.tools.google_docs_tool_docs import (
     CREATE_GOOGLE_DOC,
     LIST_GOOGLE_DOCS,
@@ -50,6 +51,7 @@ def get_auth_from_config(config: RunnableConfig) -> Dict[str, str]:
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(CREATE_GOOGLE_DOC)
 async def create_google_doc_tool(
     config: RunnableConfig,
@@ -111,6 +113,7 @@ async def create_google_doc_tool(
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(LIST_GOOGLE_DOCS)
 async def list_google_docs_tool(
     config: RunnableConfig,
@@ -198,6 +201,7 @@ async def list_google_docs_tool(
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(GET_GOOGLE_DOC)
 async def get_google_doc_tool(
     document_id: Annotated[str, "ID of the document to retrieve"],
@@ -262,6 +266,7 @@ async def get_google_doc_tool(
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(UPDATE_GOOGLE_DOC)
 async def update_google_doc_tool(
     config: RunnableConfig,
@@ -333,6 +338,7 @@ async def update_google_doc_tool(
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(FORMAT_GOOGLE_DOC)
 async def format_google_doc_tool(
     document_id: Annotated[str, "ID of the document to format"],
@@ -432,6 +438,7 @@ async def format_google_doc_tool(
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(SHARE_GOOGLE_DOC)
 async def share_google_doc_tool(
     document_id: Annotated[str, "ID of the document to share"],
@@ -500,6 +507,7 @@ async def share_google_doc_tool(
 
 
 @tool
+@with_rate_limiting("google_docs_operations")
 @with_doc(SEARCH_GOOGLE_DOCS)
 async def search_google_docs_tool(
     query: Annotated[str, "Search terms to look for"],

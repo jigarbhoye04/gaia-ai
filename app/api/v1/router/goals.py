@@ -6,6 +6,7 @@ from fastapi.websockets import WebSocketState
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import goals_logger as logger
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.db.mongodb.collections import goals_collection
 from app.models.goals_models import (
     GoalCreate,
@@ -32,6 +33,7 @@ router = APIRouter()
     summary="Create a goal",
     description="Creates a new goal for the authenticated user.",
 )
+@tiered_rate_limit("goal_tracking")
 async def create_goal(goal: GoalCreate, user: dict = Depends(get_current_user)):
     """
     Create a new goal.

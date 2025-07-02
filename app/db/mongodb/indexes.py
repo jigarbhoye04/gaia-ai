@@ -23,9 +23,13 @@ from app.db.mongodb.collections import (
     mail_collection,
     notes_collection,
     notifications_collection,
+    payments_collection,
+    plans_collection,
     projects_collection,
     reminders_collection,
+    subscriptions_collection,
     todos_collection,
+    usage_snapshots_collection,
     users_collection,
 )
 
@@ -58,12 +62,13 @@ async def create_all_indexes():
             create_blog_indexes(),
             create_notification_indexes(),
             create_reminder_indexes(),
+            create_payment_indexes(),
+            create_usage_indexes(),
         ]
 
         # Execute all index creation tasks concurrently
         results = await asyncio.gather(*index_tasks, return_exceptions=True)
 
-        # Process results and log outcomes
         collection_names = [
             "users",
             "conversations",
@@ -77,6 +82,8 @@ async def create_all_indexes():
             "blog",
             "notifications",
             "reminders",
+            "payments",
+            "usage",
         ]
 
         index_results = {}
@@ -412,6 +419,83 @@ async def create_reminder_indexes():
         logger.info("Reminder indexes created successfully")
     except Exception as e:
         logger.error(f"Error creating reminder indexes: {e}")
+        raise
+
+
+async def create_payment_indexes():
+    """Create indexes for payment-related collections."""
+    try:
+        # Create payment collection indexes
+        await asyncio.gather(
+            # Payment indexes
+            payments_collection.create_index("user_id"),
+            payments_collection.create_index("razorpay_payment_id", unique=True),
+            payments_collection.create_index("subscription_id", sparse=True),
+            payments_collection.create_index("order_id", sparse=True),
+            payments_collection.create_index("status"),
+            payments_collection.create_index([("user_id", 1), ("created_at", -1)]),
+            # Subscription indexes
+            subscriptions_collection.create_index("user_id"),
+            subscriptions_collection.create_index(
+                "razorpay_subscription_id", unique=True
+            ),
+            subscriptions_collection.create_index("plan_id"),
+            subscriptions_collection.create_index("status"),
+            subscriptions_collection.create_index([("user_id", 1), ("status", 1)]),
+            subscriptions_collection.create_index("current_end", sparse=True),
+            subscriptions_collection.create_index("charge_at", sparse=True),
+            # Plan indexes
+            plans_collection.create_index("razorpay_plan_id", unique=True),
+            plans_collection.create_index("is_active"),
+            plans_collection.create_index([("is_active", 1), ("amount", 1)]),
+        )
+
+        logger.info("Created payment indexes")
+
+    except Exception as e:
+        logger.error(f"Error creating payment indexes: {str(e)}")
+        raise
+
+
+async def create_usage_indexes():
+    """
+    Create indexes for usage_snapshots collection for optimal query performance.
+    Includes TTL index for automatic cleanup after 90 days.
+
+    Query patterns:
+    - Find latest usage by user_id (sorted by created_at desc)
+    - Find usage history by user_id and date range
+    - Automatic cleanup via TTL index
+    """
+    try:
+        await asyncio.gather(
+            # Primary query: get latest usage by user
+            usage_snapshots_collection.create_index(
+                [("user_id", 1), ("created_at", -1)], 
+                name="user_latest_usage"
+            ),
+            # Usage history queries by user and date range
+            usage_snapshots_collection.create_index(
+                [("user_id", 1), ("created_at", 1)], 
+                name="user_usage_history"
+            ),
+            # TTL index for automatic cleanup after 90 days (7,776,000 seconds)
+            usage_snapshots_collection.create_index(
+                "created_at",
+                name="created_at_ttl",
+                expireAfterSeconds=7776000  # 90 days
+            ),
+            # Plan type filtering
+            usage_snapshots_collection.create_index(
+                "plan_type", 
+                name="plan_type_filter"
+            ),
+        )
+        
+        logger.info("Created usage indexes with TTL cleanup (90 days)")
+        
+    except Exception as e:
+        logger.error(f"Error creating usage indexes: {str(e)}")
         raise
 
 

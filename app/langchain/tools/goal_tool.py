@@ -20,6 +20,7 @@ from app.docstrings.langchain.tools.goal_tool_docs import (
     UPDATE_GOAL_NODE,
 )
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.goals_models import GoalCreate, UpdateNodeRequest
 from app.services.goals_service import (
     create_goal_service,
@@ -84,6 +85,7 @@ async def invalidate_goal_caches(user_id: str, goal_id: str = None) -> None:
 
 
 @tool
+@with_rate_limiting("goal_tracking")
 @with_doc(CREATE_GOAL)
 async def create_goal(
     config: RunnableConfig,

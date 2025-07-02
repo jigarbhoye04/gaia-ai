@@ -4,6 +4,7 @@ import time
 from typing import Annotated
 
 from langchain_core.tools import tool
+from langchain_core.runnables import RunnableConfig
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
@@ -12,17 +13,20 @@ from app.docstrings.langchain.tools.search_tool_docs import (
     DEEP_SEARCH_TOOL,
 )
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.utils.internet_utils import perform_deep_search
 from app.utils.search_utils import format_results_for_llm, perform_search
 
 
 @tool
+@with_rate_limiting("web_search")
 @with_doc(WEB_SEARCH_TOOL)
 async def web_search_tool(
     query_text: Annotated[
         str,
         "The search query to look up on the web. Be specific and concise for better results.",
     ],
+    config: RunnableConfig,
 ) -> str:
 
     start_time = time.time()
@@ -105,12 +109,14 @@ async def web_search_tool(
 
 
 @tool
+@with_rate_limiting("deep_research")
 @with_doc(DEEP_SEARCH_TOOL)
 async def deep_search_tool(
     query_text: Annotated[
         str,
         "The search query for in-depth research. Be specific to get thorough and comprehensive results.",
     ],
+    config: RunnableConfig,
 ) -> str:
     start_time = time.time()
 

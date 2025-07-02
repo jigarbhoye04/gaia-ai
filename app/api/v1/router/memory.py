@@ -6,6 +6,7 @@ import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.memory_models import (
     CreateMemoryRequest,
     CreateMemoryResponse,
@@ -45,6 +46,7 @@ async def get_all_memories(
 
 
 @router.post("", response_model=CreateMemoryResponse)
+@tiered_rate_limit("memory")
 async def create_memory(
     request: CreateMemoryRequest,
     user: dict = Depends(get_current_user),
@@ -83,6 +85,7 @@ async def create_memory(
 
 
 @router.delete("/{memory_id}", response_model=DeleteMemoryResponse)
+@tiered_rate_limit("memory")
 async def delete_memory(
     memory_id: str,
     user: dict = Depends(get_current_user),
@@ -119,6 +122,7 @@ async def delete_memory(
 
 
 @router.delete("", response_model=DeleteMemoryResponse)
+@tiered_rate_limit("memory")
 async def clear_all_memories(
     user: dict = Depends(get_current_user),
 ):

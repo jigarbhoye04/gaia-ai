@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.todo_models import (
     TodoCreate,
     TodoResponse,
@@ -109,6 +110,7 @@ async def list_todos(
 
 
 @router.post("/todos", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@tiered_rate_limit("todo_operations")
 async def create_todo(todo: TodoCreate, user: dict = Depends(get_current_user)):
     """Create a new todo. If no project is specified, it will be added to Inbox."""
     try:
@@ -137,6 +139,7 @@ async def get_todo(todo_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.put("/todos/{todo_id}", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
 async def update_todo(
     todo_id: str, updates: UpdateTodoRequest, user: dict = Depends(get_current_user)
 ):
@@ -153,6 +156,7 @@ async def update_todo(
 
 
 @router.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@tiered_rate_limit("todo_operations")
 async def delete_todo(todo_id: str, user: dict = Depends(get_current_user)):
     """Delete a todo."""
     try:
@@ -168,6 +172,7 @@ async def delete_todo(todo_id: str, user: dict = Depends(get_current_user)):
 
 # Bulk Operations
 @router.put("/todos/bulk", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_update_todos(
     request: BulkUpdateRequest, user: dict = Depends(get_current_user)
 ):
@@ -195,6 +200,7 @@ async def bulk_update_todos(
 
 
 @router.post("/todos/bulk/move", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_move_todos(
     request: BulkMoveRequest, user: dict = Depends(get_current_user)
 ):
@@ -210,6 +216,7 @@ async def bulk_move_todos(
 
 
 @router.delete("/todos/bulk", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_delete_todos(
     todo_ids: List[str] = Body(..., min_length=1, max_length=100),
     user: dict = Depends(get_current_user),
@@ -226,6 +233,7 @@ async def bulk_delete_todos(
 
 # Special mark complete endpoint for convenience
 @router.post("/todos/bulk/complete", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_complete_todos(
     todo_ids: List[str] = Body(..., min_length=1, max_length=100),
     user: dict = Depends(get_current_user),
@@ -259,6 +267,7 @@ async def list_projects(user: dict = Depends(get_current_user)):
 @router.post(
     "/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED
 )
+@tiered_rate_limit("todo_operations")
 async def create_project(
     project: ProjectCreate, user: dict = Depends(get_current_user)
 ):
@@ -273,6 +282,7 @@ async def create_project(
 
 
 @router.put("/projects/{project_id}", response_model=ProjectResponse)
+@tiered_rate_limit("todo_operations")
 async def update_project(
     project_id: str,
     updates: UpdateProjectRequest,
@@ -296,6 +306,7 @@ async def update_project(
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@tiered_rate_limit("todo_operations")
 async def delete_project(project_id: str, user: dict = Depends(get_current_user)):
     """Delete a project. All todos will be moved to Inbox. Cannot delete Inbox."""
     try:
@@ -316,6 +327,7 @@ async def delete_project(project_id: str, user: dict = Depends(get_current_user)
 
 # Subtask Management Endpoints
 @router.post("/todos/{todo_id}/subtasks", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@tiered_rate_limit("todo_operations")
 async def create_subtask(
     todo_id: str, 
     subtask: SubtaskCreateRequest, 
@@ -353,6 +365,7 @@ async def create_subtask(
 
 
 @router.put("/todos/{todo_id}/subtasks/{subtask_id}", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
 async def update_subtask(
     todo_id: str,
     subtask_id: str,
@@ -397,6 +410,7 @@ async def update_subtask(
 
 
 @router.delete("/todos/{todo_id}/subtasks/{subtask_id}", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
 async def delete_subtask(
     todo_id: str,
     subtask_id: str,
@@ -429,6 +443,7 @@ async def delete_subtask(
 
 
 @router.post("/todos/{todo_id}/subtasks/{subtask_id}/toggle", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
 async def toggle_subtask_completion(
     todo_id: str,
     subtask_id: str,
