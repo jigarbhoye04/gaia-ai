@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.mail_models import (
     ApplyLabelRequest,
     DraftRequest,
@@ -176,6 +177,7 @@ async def search_emails(
 
 
 @router.post("/mail/ai/compose")
+@tiered_rate_limit("mail_actions")
 async def process_email(
     request: EmailRequest,
     current_user: dict = Depends(get_current_user),
@@ -223,6 +225,7 @@ async def process_email(
 
 
 @router.post("/gmail/send", summary="Send an email using Gmail API")
+@tiered_rate_limit("mail_actions")
 async def send_email_route(
     to: str = Form(...),
     subject: str = Form(...),
@@ -280,6 +283,7 @@ async def send_email_route(
 
 
 @router.post("/gmail/send-json", summary="Send an email using JSON payload")
+@tiered_rate_limit("mail_actions")
 async def send_email_json(
     request: SendEmailRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -387,6 +391,7 @@ async def summarize_email(
 
 
 @router.post("/gmail/mark-as-read", summary="Mark emails as read")
+@tiered_rate_limit("mail_actions")
 async def mark_as_read(
     request: EmailReadStatusRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -417,6 +422,7 @@ async def mark_as_read(
 
 
 @router.post("/gmail/mark-as-unread", summary="Mark emails as unread")
+@tiered_rate_limit("mail_actions")
 async def mark_as_unread(
     request: EmailReadStatusRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -447,6 +453,7 @@ async def mark_as_unread(
 
 
 @router.post("/gmail/star", summary="Star emails")
+@tiered_rate_limit("mail_actions")
 async def star_emails(
     request: EmailActionRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -477,6 +484,7 @@ async def star_emails(
 
 
 @router.post("/gmail/unstar", summary="Unstar emails")
+@tiered_rate_limit("mail_actions")
 async def unstar_emails(
     request: EmailActionRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -507,6 +515,7 @@ async def unstar_emails(
 
 
 @router.post("/gmail/trash", summary="Move emails to trash")
+@tiered_rate_limit("mail_actions")
 async def trash_emails(
     request: EmailActionRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -537,6 +546,7 @@ async def trash_emails(
 
 
 @router.post("/gmail/untrash", summary="Restore emails from trash")
+@tiered_rate_limit("mail_actions")
 async def untrash_emails(
     request: EmailActionRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -567,6 +577,7 @@ async def untrash_emails(
 
 
 @router.post("/gmail/archive", summary="Archive emails")
+@tiered_rate_limit("mail_actions")
 async def archive_emails(
     request: EmailActionRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -597,6 +608,7 @@ async def archive_emails(
 
 
 @router.post("/gmail/move-to-inbox", summary="Move emails to inbox")
+@tiered_rate_limit("mail_actions")
 async def move_emails_to_inbox(
     request: EmailActionRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -654,6 +666,7 @@ async def get_thread(thread_id: str, current_user: dict = Depends(get_current_us
 
 
 @router.post("/gmail/labels", summary="Create a new Gmail label")
+@tiered_rate_limit("mail_actions")
 async def create_label_route(
     request: LabelRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -687,6 +700,7 @@ async def create_label_route(
 
 
 @router.put("/gmail/labels/{label_id}", summary="Update an existing Gmail label")
+@tiered_rate_limit("mail_actions")
 async def update_label_route(
     label_id: str,
     request: LabelRequest,
@@ -724,6 +738,7 @@ async def update_label_route(
 
 
 @router.delete("/gmail/labels/{label_id}", summary="Delete a Gmail label")
+@tiered_rate_limit("mail_actions")
 async def delete_label_route(
     label_id: str, current_user: dict = Depends(get_current_user)
 ):
@@ -749,6 +764,7 @@ async def delete_label_route(
 
 
 @router.post("/gmail/messages/apply-label", summary="Apply labels to messages")
+@tiered_rate_limit("mail_actions")
 async def apply_labels_route(
     request: ApplyLabelRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -782,6 +798,7 @@ async def apply_labels_route(
 
 
 @router.post("/gmail/messages/remove-label", summary="Remove labels from messages")
+@tiered_rate_limit("mail_actions")
 async def remove_labels_route(
     request: ApplyLabelRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -815,6 +832,7 @@ async def remove_labels_route(
 
 
 @router.post("/gmail/drafts", summary="Create a new draft email")
+@tiered_rate_limit("mail_actions")
 async def create_draft_route(
     request: DraftRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -914,6 +932,7 @@ async def get_draft_route(
 
 
 @router.put("/gmail/drafts/{draft_id}", summary="Update a draft email")
+@tiered_rate_limit("mail_actions")
 async def update_draft_route(
     draft_id: str,
     request: DraftRequest,
@@ -964,6 +983,7 @@ async def update_draft_route(
 
 
 @router.delete("/gmail/drafts/{draft_id}", summary="Delete a draft email")
+@tiered_rate_limit("mail_actions")
 async def delete_draft_route(
     draft_id: str, current_user: dict = Depends(get_current_user)
 ):
@@ -990,6 +1010,7 @@ async def delete_draft_route(
 
 
 @router.post("/gmail/drafts/{draft_id}/send", summary="Send a draft email")
+@tiered_rate_limit("mail_actions")
 async def send_draft_route(
     draft_id: str, current_user: dict = Depends(get_current_user)
 ):

@@ -10,7 +10,7 @@ Both limits are checked on each request. If any limit is exceeded,
 the request is rejected with a 429 status code.
 
 Usage:
-    @tiered_rate_limit("image_generation")
+    @tiered_rate_limit("generate_image")
     async def generate_image(user: dict = Depends(get_current_user)):
         # This endpoint will be limited by daily (50/1000) and monthly (1000/25000) 
         # limits based on user's plan
@@ -123,6 +123,26 @@ FEATURE_LIMITS: Dict[str, TieredRateLimits] = {
         free=RateLimitConfig(day=3, month=20),
         pro=RateLimitConfig(day=100, month=2500),
         info=FeatureInfo(title="Google Docs Operations", description="Create and manage Google Docs")
+    ),
+    "file_analysis": TieredRateLimits(
+        free=RateLimitConfig(day=10, month=50),
+        pro=RateLimitConfig(day=500, month=10000),
+        info=FeatureInfo(title="File Analysis", description="Analyze and process uploaded files")
+    ),
+    "memory": TieredRateLimits(
+        free=RateLimitConfig(day=50, month=500),
+        pro=RateLimitConfig(day=1000, month=25000),
+        info=FeatureInfo(title="Memory Operations", description="Store and retrieve memories")
+    ),
+    "notes": TieredRateLimits(
+        free=RateLimitConfig(day=100, month=1000),
+        pro=RateLimitConfig(day=2000, month=50000),
+        info=FeatureInfo(title="Notes Management", description="Create and manage notes")
+    ),
+    "chat_messages": TieredRateLimits(
+        free=RateLimitConfig(day=200, month=5000),
+        pro=RateLimitConfig(day=5000, month=125000),
+        info=FeatureInfo(title="Chat Messages", description="Send messages to AI assistants")
     ),
 }
 

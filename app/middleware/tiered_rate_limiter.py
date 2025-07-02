@@ -5,12 +5,6 @@ Enforces daily and monthly rate limits based on user subscription plans.
 Automatically checks both time periods and rejects requests that exceed any limit.
 
 Usage:
-    @tiered_rate_limit("chat_messages")
-    async def chat_endpoint(user: dict = Depends(get_current_user)):
-        # Free: 200/day, 5000/month
-        # Pro: 5000/day, 125000/month
-        return await process_chat()
-
     @tiered_rate_limit("file_analysis", count_tokens=True) 
     async def analyze_file(user: dict = Depends(get_current_user)):
         # Also validates token usage limits per request
@@ -33,7 +27,8 @@ from app.config.rate_limits import (
     get_limits_for_plan,
     get_reset_time,
     get_time_window_key,
-    get_feature_info
+    get_feature_info,
+    FEATURE_LIMITS
 )
 from app.models.usage_models import UserUsageSnapshot, FeatureUsage, UsagePeriod
 from app.db.mongodb.collections import usage_snapshots_collection
@@ -183,39 +178,53 @@ class TieredRateLimiter:
         """
         Sync usage data to database in real-time after rate limit usage.
         Runs asynchronously to avoid blocking the main request.
+        Creates comprehensive snapshot with ALL features that have usage data.
         """
         try:
-            # Get current usage for this feature across all periods
-            current_limits = get_limits_for_plan(feature_key, user_plan)
-            feature_usage_list = []
+            # Get current usage for ALL features that have been used
+            all_feature_usage = []
             
-            for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
-                limit = getattr(current_limits, period.value)
-                if limit <= 0:
-                    continue
+            # Iterate through all possible features to build comprehensive snapshot
+            for check_feature_key in FEATURE_LIMITS:
+                current_limits = get_limits_for_plan(check_feature_key, user_plan)
+                feature_has_usage = False
+                feature_usage_list = []
                 
-                redis_key = self._get_redis_key(user_id, feature_key, period)
-                current_usage = await self.redis.get(redis_key)
-                current_usage = int(current_usage) if current_usage else 0
-                reset_time = get_reset_time(period)
+                for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
+                    limit = getattr(current_limits, period.value)
+                    if limit <= 0:
+                        continue
+                    
+                    redis_key = self._get_redis_key(user_id, check_feature_key, period)
+                    current_usage = await self.redis.get(redis_key)
+                    current_usage = int(current_usage) if current_usage else 0
+                    
+                    # Only include features that have been used (current_usage > 0)
+                    if current_usage > 0:
+                        feature_has_usage = True
+                        reset_time = get_reset_time(period)
+                        
+                        feature_info = get_feature_info(check_feature_key)
+                        feature_usage = FeatureUsage(
+                            feature_key=check_feature_key,
+                            feature_title=feature_info["title"],
+                            period=UsagePeriod(period.value),
+                            used=current_usage,
+                            limit=limit,
+                            reset_time=reset_time
+                        )
+                        feature_usage_list.append(feature_usage)
                 
-                feature_info = get_feature_info(feature_key)
-                feature_usage = FeatureUsage(
-                    feature_key=feature_key,
-                    feature_title=feature_info["title"],
-                    period=UsagePeriod(period.value),
-                    used=current_usage,
-                    limit=limit,
-                    reset_time=reset_time
-                )
-                feature_usage_list.append(feature_usage)
+                # Add this feature's usage if it has any
+                if feature_has_usage:
+                    all_feature_usage.extend(feature_usage_list)
             
-            if feature_usage_list:
-                # Create and save usage snapshot
+            if all_feature_usage:
+                # Create and save comprehensive usage snapshot
                 snapshot = UserUsageSnapshot(
                     user_id=user_id,
                     plan_type=user_plan.value if hasattr(user_plan, 'value') else str(user_plan),
-                    features=feature_usage_list
+                    features=all_feature_usage
                 )
                 
                 snapshot_dict = snapshot.model_dump()

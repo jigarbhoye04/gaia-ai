@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post("/image/generate")
-@tiered_rate_limit("image_generation")
+@tiered_rate_limit("generate_image")
 async def image(
     request: MessageRequest,
     _user: dict = Depends(get_current_user)
@@ -41,7 +41,7 @@ async def image_to_text(
 
 
 @router.post("/image/generate/stream")
-@tiered_rate_limit("image_generation")
+@tiered_rate_limit("generate_image")
 async def image_stream(
     request: MessageRequest,
     _user: dict = Depends(get_current_user)

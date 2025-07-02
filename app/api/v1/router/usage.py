@@ -13,6 +13,7 @@ from app.config.rate_limits import get_feature_info
 from app.config.rate_limits import FEATURE_LIMITS, get_limits_for_plan, get_reset_time, RateLimitPeriod
 from app.services.payments.subscriptions import get_user_subscription_status
 from app.models.payment_models import PlanType
+from app.middleware.tiered_rate_limiter import tiered_limiter
 
 
 router = APIRouter(prefix="/usage", tags=["usage"])
@@ -23,43 +24,25 @@ usage_service = UsageService()
 async def get_usage_summary(
     user: dict = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Get comprehensive usage summary for the current user."""
+    """Get real-time usage summary for the current user."""
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="User ID not found")
-    
-    # Usage is now synced in real-time automatically
-    
-    # Get latest usage snapshot
-    snapshot = await usage_service.get_latest_usage_snapshot(user_id)
     
     # Get user subscription
     subscription = await get_user_subscription_status(user_id)
     user_plan = subscription.plan_type or PlanType.FREE
     
-    if not snapshot:
-        # Return empty usage with configured limits
-        features_formatted = _format_empty_features(user_plan)
-        token_summary = await token_service.get_token_usage_summary(user_id, user_plan)
-        
-        return {
-            "user_id": user_id,
-            "plan_type": user_plan.value if hasattr(user_plan, 'value') else str(user_plan),
-            "features": features_formatted,
-            "token_usage": token_summary,
-            "last_updated": datetime.now(timezone.utc).isoformat()
-        }
-    
-    # Format features with actual usage data
-    features_formatted = _format_features_with_usage(snapshot, user_plan)
+    # Get real-time usage data directly from Redis
+    features_formatted = await _get_realtime_usage(user_id, user_plan)
     token_summary = await token_service.get_token_usage_summary(user_id, user_plan)
     
     return {
         "user_id": user_id,
-        "plan_type": snapshot.plan_type,
+        "plan_type": user_plan.value if hasattr(user_plan, 'value') else str(user_plan),
         "features": features_formatted,
         "token_usage": token_summary,
-        "last_updated": snapshot.created_at.isoformat()
+        "last_updated": datetime.now(timezone.utc).isoformat()
     }
 
 
@@ -169,8 +152,15 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
             limit = getattr(current_limits, period, 0)
             if limit > 0:
                 if feature_key in usage_data and period in usage_data[feature_key]:
-                    # Use actual usage data
-                    features_formatted[feature_key]["periods"][period] = usage_data[feature_key][period]
+                    # Use actual usage data but with CURRENT limit configuration
+                    stored_data = usage_data[feature_key][period]
+                    features_formatted[feature_key]["periods"][period] = {
+                        "used": stored_data["used"],
+                        "limit": limit,  # Use current config limit, not stored limit
+                        "percentage": (stored_data["used"] / limit * 100) if limit > 0 else 0,
+                        "reset_time": stored_data["reset_time"],
+                        "remaining": max(0, limit - stored_data["used"])
+                    }
                 else:
                     # Show unused feature with zero usage
                     reset_time = get_reset_time(getattr(RateLimitPeriod, period.upper()))
@@ -181,5 +171,42 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
                         "reset_time": reset_time.isoformat(),
                         "remaining": limit
                     }
+    
+    return features_formatted
+
+
+async def _get_realtime_usage(user_id: str, user_plan: PlanType) -> Dict[str, Any]:
+    """Get real-time usage data directly from Redis for all features."""
+    features_formatted = {}
+    
+    for feature_key in FEATURE_LIMITS:
+        feature_info = get_feature_info(feature_key)
+        features_formatted[feature_key] = {
+            "title": feature_info["title"],
+            "description": feature_info["description"],
+            "periods": {}
+        }
+        
+        current_limits = get_limits_for_plan(feature_key, user_plan)
+        
+        for period in ["day", "month"]:
+            limit = getattr(current_limits, period, 0)
+            if limit > 0:
+                # Get real-time usage from Redis
+                redis_key = tiered_limiter._get_redis_key(user_id, feature_key, getattr(RateLimitPeriod, period.upper()))
+                current_usage = await tiered_limiter.redis.get(redis_key)
+                current_usage = int(current_usage) if current_usage else 0
+                
+                reset_time = get_reset_time(getattr(RateLimitPeriod, period.upper()))
+                percentage = (current_usage / limit * 100) if limit > 0 else 0
+                remaining = max(0, limit - current_usage)
+                
+                features_formatted[feature_key]["periods"][period] = {
+                    "used": current_usage,
+                    "limit": limit,
+                    "percentage": percentage,
+                    "reset_time": reset_time.isoformat(),
+                    "remaining": remaining
+                }
     
     return features_formatted

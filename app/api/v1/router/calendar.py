@@ -2,6 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.calendar_models import (
     EventCreateRequest,
     EventDeleteRequest,
@@ -108,6 +109,7 @@ async def get_events_by_calendar(
 
 
 @router.post("/calendar/event", summary="Create a Calendar Event")
+@tiered_rate_limit("calendar_management")
 async def create_event(
     event: EventCreateRequest,
     current_user: dict = Depends(get_current_user),
@@ -178,6 +180,7 @@ async def get_calendar_preferences(current_user: dict = Depends(get_current_user
 
 
 @router.put("/calendar/preferences", summary="Update User Calendar Preferences")
+@tiered_rate_limit("calendar_management")
 async def update_calendar_preferences(
     preferences: CalendarPreferencesUpdateRequest,
     current_user: dict = Depends(get_current_user),
@@ -203,6 +206,7 @@ async def update_calendar_preferences(
 
 
 @router.delete("/calendar/event", summary="Delete a Calendar Event")
+@tiered_rate_limit("calendar_management")
 async def delete_event(
     event: EventDeleteRequest,
     current_user: dict = Depends(get_current_user),
@@ -226,6 +230,7 @@ async def delete_event(
 
 
 @router.put("/calendar/event", summary="Update a Calendar Event")
+@tiered_rate_limit("calendar_management")
 async def update_event(
     event: EventUpdateRequest,
     current_user: dict = Depends(get_current_user),
