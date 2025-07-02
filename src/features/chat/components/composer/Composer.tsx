@@ -46,6 +46,9 @@ const Composer: React.FC<MainSearchbarProps> = ({
     new Set([null]),
   );
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
+  const [selectedToolCategory, setSelectedToolCategory] = useState<
+    string | null
+  >(null);
   const [pageFetchURLs, setPageFetchURLs] = useState<string[]>([]);
   const [fetchPageModal, setFetchPageModal] = useState<boolean>(false);
   const [generateImageModal, setGenerateImageModal] = useState<boolean>(false);
@@ -153,6 +156,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
 
     // Clear selected tool after sending
     setSelectedTool(null);
+    setSelectedToolCategory(null);
 
     // Optional: Clear the input field (can be controlled via a setting)
     const shouldClearInput =
@@ -195,6 +199,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
     else setSelectedMode(new Set([mode]));
     // Clear selected tool when mode changes
     setSelectedTool(null);
+    setSelectedToolCategory(null);
     // If the user selects upload_file mode, open the file selector immediately
     if (mode === "upload_file") {
       setTimeout(() => {
@@ -203,14 +208,16 @@ const Composer: React.FC<MainSearchbarProps> = ({
     }
   };
 
-  const handleSlashCommandSelect = (toolName: string) => {
+  const handleSlashCommandSelect = (toolName: string, toolCategory: string) => {
     setSelectedTool(toolName);
+    setSelectedToolCategory(toolCategory);
     // Clear the current mode when a tool is selected via slash command
     setSelectedMode(new Set([null]));
   };
 
   const handleRemoveSelectedTool = () => {
     setSelectedTool(null);
+    setSelectedToolCategory(null);
   };
 
   const handleFilesUploaded = (files: UploadedFilePreview[]) => {
@@ -296,11 +303,12 @@ const Composer: React.FC<MainSearchbarProps> = ({
 
   return (
     <>
-      <div className="searchbar_container relative transition-all duration-1000">
-        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2 transition-all duration-1000">
+      <div className="searchbar_container relative pb-1">
+        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
           <SelectedToolIndicator
             toolName={selectedTool}
+            toolCategory={selectedToolCategory}
             onRemove={handleRemoveSelectedTool}
           />
           <ComposerInput

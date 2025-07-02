@@ -16,7 +16,7 @@ interface SearchbarInputProps {
   currentHeight: number;
   onHeightChange: (height: number) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  onSlashCommandSelect?: (toolName: string) => void;
+  onSlashCommandSelect?: (toolName: string, toolCategory: string) => void;
 }
 
 const ComposerInput: React.FC<SearchbarInputProps> = ({
@@ -139,7 +139,7 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
 
       // Notify parent component about tool selection
       if (onSlashCommandSelect) {
-        onSlashCommandSelect(match.tool.name);
+        onSlashCommandSelect(match.tool.name, match.tool.category);
       }
 
       // Focus back to input
