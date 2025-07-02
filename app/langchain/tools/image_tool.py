@@ -12,7 +12,7 @@ from app.services.image_service import api_generate_image
 
 
 @tool
-@with_rate_limiting()  # Auto-derives feature key from function name: "generate_image"
+@with_rate_limiting("generate_image")
 @with_doc(GENERATE_IMAGE)
 async def generate_image(
     prompt: Annotated[

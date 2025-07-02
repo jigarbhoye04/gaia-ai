@@ -19,6 +19,7 @@ from app.docstrings.langchain.tools.calendar_tool_docs import (
     VIEW_CALENDAR_EVENT,
 )
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.langchain.templates.calendar_template import (
     CALENDAR_LIST_TEMPLATE,
     CALENDAR_PROMPT_TEMPLATE,
@@ -34,6 +35,7 @@ from app.utils.notification.sources import create_calendar_event_notification
 
 
 @tool(parse_docstring=True)
+@with_rate_limiting("calendar_management")
 @with_doc(CALENDAR_EVENT)
 async def create_calendar_event(
     event_data: Union[
@@ -442,6 +444,7 @@ async def view_calendar_event(
 
 
 @tool(parse_docstring=True)
+@with_rate_limiting("calendar_management")
 @with_doc(DELETE_CALENDAR_EVENT)
 async def delete_calendar_event(
     query: str,
@@ -515,6 +518,7 @@ async def delete_calendar_event(
 
 
 @tool(parse_docstring=True)
+@with_rate_limiting("calendar_management")
 @with_doc(EDIT_CALENDAR_EVENT)
 async def edit_calendar_event(
     query: str,

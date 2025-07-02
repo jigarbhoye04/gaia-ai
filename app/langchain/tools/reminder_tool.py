@@ -8,6 +8,7 @@ from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
 
 from app.config.loggers import reminders_logger as logger
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.docstrings.langchain.tools.reminder_tool_docs import (
     CREATE_REMINDER,
     DELETE_REMINDER,
@@ -43,6 +44,7 @@ from app.utils.timezone import replace_timezone_info
 
 
 @tool()
+@with_rate_limiting("reminder_operations")
 @with_doc(CREATE_REMINDER)
 async def create_reminder_tool(
     config: RunnableConfig,
@@ -120,6 +122,7 @@ async def create_reminder_tool(
 
 
 @tool(parse_docstring=True)
+@with_rate_limiting("reminder_operations")
 @with_doc(LIST_USER_REMINDERS)
 async def list_user_reminders_tool(
     config: RunnableConfig,
@@ -145,6 +148,7 @@ async def list_user_reminders_tool(
 
 # Define get_reminder_tool
 @tool(parse_docstring=True)
+@with_rate_limiting("reminder_operations")
 @with_doc(GET_REMINDER)
 async def get_reminder_tool(
     config: RunnableConfig,
@@ -168,6 +172,7 @@ async def get_reminder_tool(
 
 # Define delete_reminder_tool
 @tool(parse_docstring=True)
+@with_rate_limiting("reminder_operations")
 @with_doc(DELETE_REMINDER)
 async def delete_reminder_tool(
     config: RunnableConfig,
@@ -192,6 +197,7 @@ async def delete_reminder_tool(
 
 # Define update_reminder_tool
 @tool(parse_docstring=True)
+@with_rate_limiting("reminder_operations")
 @with_doc(UPDATE_REMINDER)
 async def update_reminder_tool(
     config: RunnableConfig,
@@ -239,6 +245,7 @@ async def update_reminder_tool(
 
 # Define search_reminders_tool
 @tool(parse_docstring=True)
+@with_rate_limiting("reminder_operations")
 @with_doc(SEARCH_REMINDERS)
 async def search_reminders_tool(
     config: RunnableConfig,

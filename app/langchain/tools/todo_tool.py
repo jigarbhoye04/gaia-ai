@@ -32,6 +32,7 @@ from app.docstrings.langchain.tools.todo_tool_docs import (
     UPDATE_TODO,
 )
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.todo_models import (
     Priority,
     ProjectCreate,
@@ -80,6 +81,7 @@ def get_user_id_from_config(config: RunnableConfig) -> str:
 
 
 @tool
+@with_rate_limiting("todo_operations")
 @with_doc(CREATE_TODO)
 async def create_todo(
     config: RunnableConfig,
