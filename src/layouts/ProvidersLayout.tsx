@@ -9,21 +9,24 @@ import CalendarModal from "@/features/calendar/components/CalendarModal";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import { HeroUIProvider } from "@/layouts/HeroUIProvider";
+import QueryProvider from "@/layouts/QueryProvider";
 import ReduxProviders from "@/redux/providers";
 
 export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={<SuspenseLoader fullHeight fullWidth />}>
       <HeroUIProvider>
-        <ReduxProviders>
-          <GlobalInterceptor />
-          <GlobalAuth />
-          <LoginModal />
-          <CalendarModal />
+        <QueryProvider>
+          <ReduxProviders>
+            <GlobalInterceptor />
+            <GlobalAuth />
+            <LoginModal />
+            <CalendarModal />
 
-          <Toaster closeButton richColors position="top-right" theme="dark" />
-          {children}
-        </ReduxProviders>
+            <Toaster closeButton richColors position="top-right" theme="dark" />
+            {children}
+          </ReduxProviders>
+        </QueryProvider>
       </HeroUIProvider>
     </Suspense>
   );

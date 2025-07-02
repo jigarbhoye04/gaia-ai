@@ -1,6 +1,10 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import {
+  BarChart3,
+  CreditCard,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
@@ -35,6 +39,16 @@ export default function SettingsSidebar() {
       label: "Account",
       icon: UserIcon,
       href: "/settings?section=account",
+    },
+    {
+      label: "Subscription",
+      icon: CreditCard,
+      href: "/settings?section=subscription",
+    },
+    {
+      label: "Usage",
+      icon: BarChart3,
+      href: "/settings?section=usage",
     },
     {
       label: "Chat",

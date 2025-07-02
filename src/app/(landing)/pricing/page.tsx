@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-import Pricing from "@/features/pricing/components/PricingPage";
+import PricingPage from "@/features/pricing/components/PricingPage";
+import { getPlansServer } from "@/features/pricing/lib/serverPricingApi";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -33,6 +34,9 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function PricingPage() {
-  return <Pricing />;
+export default async function Pricing() {
+  // Fetch plans on the server side
+  const initialPlans = await getPlansServer(true);
+
+  return <PricingPage initialPlans={initialPlans} />;
 }
