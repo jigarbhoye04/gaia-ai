@@ -49,7 +49,7 @@ class TieredRateLimits(BaseModel):
 
 # All feature rate limits in one place
 FEATURE_LIMITS: Dict[str, TieredRateLimits] = {
-    "image_generation": TieredRateLimits(
+    "generate_image": TieredRateLimits(
         free=RateLimitConfig(day=1, month=1000),
         pro=RateLimitConfig(day=1, month=25000),
         info=FeatureInfo(title="AI Image Generation", description="Generate images using AI models")

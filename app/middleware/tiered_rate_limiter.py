@@ -110,7 +110,7 @@ class TieredRateLimiter:
                 plan_required = "pro" if user_plan == PlanType.FREE else None
                 raise RateLimitExceededException(f"{feature_key} (token limit)", plan_required)
         
-        # Increment usage
+        # Increment usage atomically
         for period in [RateLimitPeriod.DAY, RateLimitPeriod.MONTH]:
             limit = getattr(current_limits, period.value)
             if limit <= 0:
@@ -119,11 +119,33 @@ class TieredRateLimiter:
             redis_key = self._get_redis_key(user_id, feature_key, period)
             ttl = self._get_ttl(period)
             
-            # Use pipeline for atomic operations
+            # Use Redis pipeline with WATCH for atomic check-and-increment
             async with self.redis.redis.pipeline() as pipe:
-                await pipe.incr(redis_key)
-                await pipe.expire(redis_key, ttl)
-                await pipe.execute()
+                while True:
+                    try:
+                        # Watch the key for changes
+                        await pipe.watch(redis_key)
+                        
+                        # Get current value
+                        current_val = await self.redis.get(redis_key)
+                        current_val = int(current_val) if current_val else 0
+                        
+                        # Double-check limit hasn't been exceeded by concurrent requests
+                        if current_val >= limit:
+                            await pipe.unwatch()
+                            plan_required = "pro" if user_plan == PlanType.FREE else None
+                            raise RateLimitExceededException(feature_key, plan_required, get_reset_time(period))
+                        
+                        # Execute atomic increment
+                        pipe.multi()
+                        await pipe.incr(redis_key)
+                        await pipe.expire(redis_key, ttl)
+                        await pipe.execute()
+                        break  # Success, exit retry loop
+                        
+                    except redis_cache.redis.WatchError:
+                        # Key was modified, retry the transaction
+                        continue
         
         # Real-time usage sync after rate limit usage
         asyncio.create_task(self._sync_usage_real_time(user_id, feature_key, user_plan))
