@@ -2,36 +2,15 @@
 Service for managing and retrieving tool information.
 """
 
-from typing import List, Dict
+from typing import Dict
 from langchain_core.tools import BaseTool
 
 from app.langchain.tools.core.registry import tools, ALWAYS_AVAILABLE_TOOLS
+from app.langchain.tools.core.categories import get_tool_category
 from app.models.tools_models import ToolInfo, ToolsListResponse, ToolsCategoryResponse
 
 
 
-def _categorize_tool(tool_name: str) -> str:
-    """Categorize tools based on their name and functionality."""
-    name_lower = tool_name.lower()
-    
-    # Define category mappings
-    category_mappings = {
-        'productivity': ['todo', 'reminder', 'note', 'goal'],
-        'communication': ['mail', 'email', 'compose'],
-        'search': ['search', 'web', 'deep'],
-        'calendar': ['calendar', 'event', 'schedule'],
-        'documents': ['document', 'google_docs', 'file', 'pdf'],
-        'media': ['image', 'generate_image', 'flowchart'],
-        'development': ['code', 'execute'],
-        'information': ['weather', 'webpage', 'fetch'],
-        'memory': ['memory', 'remember', 'recall']
-    }
-    
-    for category, keywords in category_mappings.items():
-        if any(keyword in name_lower for keyword in keywords):
-            return category
-    
-    return 'general'
 
 
 async def get_available_tools() -> ToolsListResponse:
@@ -46,7 +25,7 @@ async def get_available_tools() -> ToolsListResponse:
         
         # Extract basic info
         name = tool.name
-        category = _categorize_tool(name)
+        category = get_tool_category(name)
         categories.add(category)
         
         tool_info = ToolInfo(
