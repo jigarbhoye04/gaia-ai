@@ -128,11 +128,12 @@ const Composer: React.FC<MainSearchbarProps> = ({
       toast.error("Please enter valid URLs to fetch webpage content");
       return;
     }
-    // Only prevent submission if there's no text AND no files
+    // Only prevent submission if there's no text AND no files AND no selected tool
     if (
       !searchbarText &&
       currentMode !== "fetch_webpage" &&
-      uploadedFiles.length === 0
+      uploadedFiles.length === 0 &&
+      !selectedTool
     ) {
       return;
     }
@@ -329,6 +330,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
             handleFormSubmit={handleFormSubmit}
             searchbarText={searchbarText}
             handleSelectionChange={handleSelectionChange}
+            selectedTool={selectedTool}
           />
         </div>
       </div>

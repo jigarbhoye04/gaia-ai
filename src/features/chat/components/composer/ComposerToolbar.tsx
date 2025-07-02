@@ -13,6 +13,7 @@ interface SearchbarToolbarProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   handleSelectionChange: (mode: SearchMode) => void;
   searchbarText: string;
+  selectedTool?: string | null;
 }
 
 const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
@@ -23,6 +24,7 @@ const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
   handleFormSubmit,
   handleSelectionChange,
   searchbarText,
+  selectedTool,
 }) => {
   return (
     <div className="flex items-center justify-between px-2 pt-1">
@@ -38,6 +40,7 @@ const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
       <SearchbarRightSendBtn
         handleFormSubmit={handleFormSubmit}
         searchbarText={searchbarText}
+        selectedTool={selectedTool}
       />
     </div>
   );

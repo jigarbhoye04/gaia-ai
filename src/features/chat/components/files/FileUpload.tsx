@@ -316,7 +316,7 @@ export default function FileUpload({
   };
 
   return (
-    <Modal isOpen={open} onOpenChange={closeModal} backdrop="opaque">
+    <Modal isOpen={open} onOpenChange={closeModal} backdrop="blur">
       <ModalContent>
         <ModalHeader className="flex flex-col items-center">
           Upload Files{" "}
@@ -334,7 +334,7 @@ export default function FileUpload({
 
           {/* Main upload area */}
           <div
-            className={`flex h-64 w-full cursor-pointer flex-col items-center ${files.length > 0 ? "justify-start" : "justify-center"} rounded-xl border-2 border-dashed bg-zinc-950 ${
+            className={`flex h-64 w-full cursor-pointer flex-col items-center ${files.length > 0 ? "justify-start" : "justify-center"} rounded-xl border-2 border-dashed bg-zinc-950/50 ${
               isDragging
                 ? "scale-105 border-primary bg-primary/10"
                 : "border-zinc-700 hover:border-primary"

@@ -65,7 +65,7 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
             commandStart: detection.commandStart,
             commandEnd: detection.commandEnd,
             dropdownPosition: {
-              top: rect.top - dropdownHeight - 45, // Position above the composer
+              top: rect.top - dropdownHeight - 10, // Position above the composer
               left: rect.left,
               width: rect.width, // Match the composer width
             },
@@ -109,10 +109,15 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
         case "Enter":
         case "Tab":
           e.preventDefault();
-          const selectedMatch =
-            slashCommandState.matches[slashCommandState.selectedIndex];
-          if (selectedMatch) {
-            handleSlashCommandSelect(selectedMatch);
+          // If there's only one match, automatically select it regardless of selectedIndex
+          if (slashCommandState.matches.length === 1) {
+            handleSlashCommandSelect(slashCommandState.matches[0]);
+          } else {
+            const selectedMatch =
+              slashCommandState.matches[slashCommandState.selectedIndex];
+            if (selectedMatch) {
+              handleSlashCommandSelect(selectedMatch);
+            }
           }
           return true;
 
