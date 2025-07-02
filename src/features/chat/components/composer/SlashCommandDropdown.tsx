@@ -59,15 +59,14 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             stiffness: 300,
             duration: 0.15,
           }}
-          className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/50 shadow-2xl backdrop-blur-3xl"
+          className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
           style={{
             top: position.top,
             left: position.left,
             width: position.width || "auto",
             minWidth: position.width ? "unset" : "320px",
             maxWidth: position.width ? "unset" : "384px",
-            boxShadow:
-              "0px -15px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2)",
+            boxShadow: "0px -18px 30px 5px rgba(0, 0, 0, 0.5)",
           }}
           onClick={(e) => e.stopPropagation()}
         >

@@ -49,7 +49,7 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
   const getSlashCommandSuggestions = useCallback(
     (query: string): SlashCommandMatch[] => {
       // If no query, show all tools sorted by category and name
-      if (!query) {
+      if (!query.trim()) {
         return tools
           .map((tool) => ({ tool, matchedText: tool.name }))
           .sort((a, b) => {
@@ -61,12 +61,18 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
           });
       }
 
-      const queryLower = query.toLowerCase();
+      const queryLower = query.toLowerCase().trim();
       const matches: SlashCommandMatch[] = [];
 
-      // Find name matches
+      // Find name matches - now supports partial matches with spaces
       tools.forEach((tool) => {
-        if (tool.name.toLowerCase().includes(queryLower)) {
+        const toolNameLower = tool.name.toLowerCase();
+        const toolNameSpaced = tool.name.replace(/_/g, " ").toLowerCase();
+
+        if (
+          toolNameLower.includes(queryLower) ||
+          toolNameSpaced.includes(queryLower)
+        ) {
           matches.push({
             tool,
             matchedText: tool.name,
@@ -138,11 +144,24 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
         };
       }
 
-      // Find the end of the potential command (next space or end of text)
+      // Check if there's a space immediately after the slash
       const textAfterSlash = text.substring(lastSlashIndex + 1);
-      const spaceIndex = textAfterSlash.search(/\s/);
+      if (textAfterSlash.startsWith(" ")) {
+        return {
+          isSlashCommand: false,
+          query: "",
+          matches: [],
+          commandStart: -1,
+          commandEnd: -1,
+        };
+      }
+
+      // Find the end of the potential command - extend to next slash or end of text to allow spaces after words
+      const nextSlashIndex = textAfterSlash.indexOf("/");
       const commandEnd =
-        spaceIndex === -1 ? text.length : lastSlashIndex + 1 + spaceIndex;
+        nextSlashIndex === -1
+          ? text.length
+          : lastSlashIndex + 1 + nextSlashIndex;
 
       // Only consider it a slash command if cursor is within the command
       if (cursorPosition > commandEnd) {

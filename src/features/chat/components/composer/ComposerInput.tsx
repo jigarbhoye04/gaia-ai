@@ -130,10 +130,15 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
 
   const handleSlashCommandSelect = useCallback(
     (match: SlashCommandMatch) => {
-      const newText =
-        searchbarText.substring(0, slashCommandState.commandStart) +
-        `/${match.tool.name} ` +
-        searchbarText.substring(slashCommandState.commandEnd);
+      // Remove the slash command portion while keeping other text
+      const textBeforeCommand = searchbarText.substring(
+        0,
+        slashCommandState.commandStart,
+      );
+      const textAfterCommand = searchbarText.substring(
+        slashCommandState.commandEnd,
+      );
+      const newText = textBeforeCommand + textAfterCommand;
 
       onSearchbarTextChange(newText);
       setSlashCommandState((prev) => ({ ...prev, isActive: false }));
@@ -143,11 +148,10 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
         onSlashCommandSelect(match.tool.name, match.tool.category);
       }
 
-      // Focus back to input
+      // Focus back to input and position cursor where the slash command was
       setTimeout(() => {
         if (inputRef.current) {
-          const newCursorPos =
-            slashCommandState.commandStart + match.tool.name.length + 2;
+          const newCursorPos = slashCommandState.commandStart;
           inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
           inputRef.current.focus();
         }
