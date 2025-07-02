@@ -5,7 +5,7 @@ import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
 import { Tab, Tabs } from "@heroui/tabs";
-import { BarChart3, Calendar, Crown, TrendingUp } from "lucide-react";
+import { BarChart3, Calendar, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
@@ -44,9 +44,6 @@ export default function UsageSettings() {
       {summary?.plan_type !== "pro" && (
         <div className="rounded-lg border border-[#00bbff]/30 bg-gradient-to-r from-[#00bbff]/10 to-[#00bbff]/20 p-4 dark:border-[#00bbff]/50 dark:from-[#00bbff]/20 dark:to-[#00bbff]/30">
           <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0">
-              <Crown className="mt-0.5 h-5 w-5 text-[#00bbff] dark:text-[#00bbff]" />
-            </div>
             <div className="flex-1">
               <h3 className="mb-1 text-base font-semibold text-[#00bbff] dark:text-[#00bbff]">
                 Upgrade to Pro for unlimited access
@@ -78,10 +75,7 @@ export default function UsageSettings() {
           <div className="flex items-center space-x-3">
             <Chip
               size="sm"
-              color={summary?.plan_type === "pro" ? "warning" : "default"}
-              startContent={
-                summary?.plan_type === "pro" ? <Crown size={14} /> : null
-              }
+              color={summary?.plan_type === "pro" ? "primary" : "default"}
               className="font-medium"
             >
               {summary?.plan_type?.toUpperCase() || "FREE"} PLAN
