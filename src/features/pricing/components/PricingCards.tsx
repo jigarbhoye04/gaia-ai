@@ -47,8 +47,13 @@ export function PricingCards({
     );
   }
 
-  // Filter plans by duration
+  // Filter plans by duration (always show free plan)
   const filteredPlans = plans.filter((plan) => {
+    // Always show free plan regardless of selected duration
+    if (plan.amount === 0) {
+      return true;
+    }
+    // For paid plans, filter by duration
     if (durationIsMonth) {
       return plan.duration === "monthly";
     }
