@@ -75,6 +75,7 @@ async def call_agent(
             "current_datetime": datetime.now(timezone.utc).isoformat(),
             "mem0_user_id": user_id,
             "conversation_id": conversation_id,
+            "selected_tool": request.selectedTool,  # Add selectedTool to agent state
         }
 
         # Begin streaming the AI output
