@@ -59,6 +59,7 @@ class ReminderScheduler:
 
         Args:
             reminder_data: Reminder data dictionary
+            user_id: User Id
 
         Returns:
             Created reminder ID
@@ -136,6 +137,7 @@ class ReminderScheduler:
 
         Args:
             reminder_id: Reminder ID to cancel
+            user_id: User Id
 
         Returns:
             True if cancelled successfully

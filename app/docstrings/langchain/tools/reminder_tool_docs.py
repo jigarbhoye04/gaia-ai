@@ -1,52 +1,44 @@
 """Docstrings for reminder-related LangChain tools."""
 
 # TODO: Improve this prompt to be more concise and focused on the tool's purpose, LLM still sometimes misses that it has capabilities to create reminders with tools, not just static notifications.
+
 CREATE_REMINDER = """
 Create a new reminder (static or agent-based) for the user.
 
-**WORKFLOW:**
-1. **Determine reminder type** based on user request:
-   - Simple notification → use STATIC type
-   - Task requiring tools/actions → use AI_AGENT type
+WORKFLOW:
+1. Determine reminder type:
+   • STATIC – simple title+body notification.
+   • AI_AGENT – LLM-triggered task using available tools.
 
-2. **Set scheduling** using either:
-   - `scheduled_at` for one-time reminders (ISO 8601 datetime)
-   - `repeat` for recurring reminders (cron expression)
+2. Schedule:
+   • One-time: use `scheduled_at` (ISO 8601).
+   • Recurring: use `repeat` (cron syntax).
+   • If “start now” but repeat is out of sync, set `scheduled_at` to align first run.
 
-3. **For AI_AGENT reminders - Check tool availability:**
-   - Verify you have the necessary tools to complete the task. Use the `retrieve_tools` function to get available tools.
-   - If tools are missing, politely refuse and suggest alternatives
+3. Limits (only when user asks, explicitly or implicitly):
+   • If user says “stop after 5 days” (daily reminders), set `max_occurrences=5`.
+   • Or use `stop_after` (ISO 8601) to cut off after a date.
 
-4. **Create payload** based on type:
-   - STATIC: Simple `{"title": str, "body": str}`
-   - AI_AGENT: Comprehensive `{"instructions": str}` (self-contained)
+4. AI_AGENT only:
+   • Before creating, verify you have the tools needed.
+   • If not, refuse and explain the limitation.
+   • Instructions must be fully self-contained: include context, tool names, inputs, and exact output format.
+   • Each time the reminder fires, its `instructions` become the “user” message in a new conversation thread (AI_AGENT reminders only).
 
-5. **Optional: Set limits** for recurring reminders:
-   - `max_occurrences` to limit total executions
-   - `stop_after` to set end date
-
-⚠️  **CRITICAL FOR AI_AGENT**: The reminder agent starts with ZERO context from this conversation. 
-Write completely self-contained instructions that include ALL necessary context, user preferences, 
-tools to use, output format, and task details.
-
-**Reminder Types:**
-- **STATIC**: Simple notification (title + body) sent at scheduled time
-- **AI_AGENT**: Activates LLM with tools to perform tasks at scheduled time
+PAYLOAD:
+  STATIC → {"title": str, "body": str}  
+  AI_AGENT → {"instructions": str}
 
 Args:
-    agent (str): Reminder type - "static" for notifications, "ai_agents" for tool-based tasks
-    repeat (str, optional): Cron expression for recurring reminders
-        Examples: "0 9 * * *" (daily 9AM), "30 18 * * 1-5" (weekdays 6:30PM)
-    scheduled_at (str, optional): ISO 8601 datetime for one-time execution
-        Use this OR repeat, not both
-    max_occurrences (int, optional): Maximum number of executions for recurring reminders
-    stop_after (str, optional): ISO 8601 datetime to stop recurring executions
-    payload (dict): Reminder content based on agent type:
-        - STATIC: {"title": str, "body": str}
-        - AI_AGENT: {"instructions": str} (must be completely self-contained)
+    agent: "static" or "ai_agent"
+    repeat: cron string (e.g. "0 9 * * *", "0 */2 * * *", "30 18 * * 1-5")
+    scheduled_at: ISO 8601 timestamp for first run (optional)
+    max_occurrences: int (optional)
+    stop_after: ISO 8601 cutoff datetime (optional)
+    payload: Required reminder content (see above)
 
 Returns:
-    str: Success message if reminder created, or error message if failed
+    str: success message or error message.
 """
 
 
