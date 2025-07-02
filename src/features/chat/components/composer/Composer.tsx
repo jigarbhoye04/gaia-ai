@@ -19,6 +19,7 @@ import { FileData, SearchMode } from "@/types/shared";
 import ComposerInput from "./ComposerInput";
 import ComposerToolbar from "./ComposerToolbar";
 import FetchPageModal from "./FetchPageModal";
+import SelectedToolIndicator from "./SelectedToolIndicator";
 
 interface MainSearchbarProps {
   scrollToBottom: () => void;
@@ -44,6 +45,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   const [selectedMode, setSelectedMode] = useState<Set<SearchMode>>(
     new Set([null]),
   );
+  const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [pageFetchURLs, setPageFetchURLs] = useState<string[]>([]);
   const [fetchPageModal, setFetchPageModal] = useState<boolean>(false);
   const [generateImageModal, setGenerateImageModal] = useState<boolean>(false);
@@ -134,16 +136,23 @@ const Composer: React.FC<MainSearchbarProps> = ({
     setIsLoading(true);
 
     // Send the message with complete file data
+    // If a tool is selected via slash command, include it in the message
+    const messageText = selectedTool ? searchbarText : searchbarText;
+
     sendMessage(
-      searchbarText,
+      messageText,
       currentMode,
       currentMode === "fetch_webpage" ? pageFetchURLs : [],
       uploadedFileData,
+      selectedTool, // Pass the selected tool name
     );
 
     // Clear uploaded files after sending
     setUploadedFiles([]);
     setUploadedFileData([]);
+
+    // Clear selected tool after sending
+    setSelectedTool(null);
 
     // Optional: Clear the input field (can be controlled via a setting)
     const shouldClearInput =
@@ -184,12 +193,24 @@ const Composer: React.FC<MainSearchbarProps> = ({
   const handleSelectionChange = (mode: SearchMode) => {
     if (currentMode === mode) setSelectedMode(new Set([null]));
     else setSelectedMode(new Set([mode]));
+    // Clear selected tool when mode changes
+    setSelectedTool(null);
     // If the user selects upload_file mode, open the file selector immediately
     if (mode === "upload_file") {
       setTimeout(() => {
         openFileUploadModal();
       }, 100);
     }
+  };
+
+  const handleSlashCommandSelect = (toolName: string) => {
+    setSelectedTool(toolName);
+    // Clear the current mode when a tool is selected via slash command
+    setSelectedMode(new Set([null]));
+  };
+
+  const handleRemoveSelectedTool = () => {
+    setSelectedTool(null);
   };
 
   const handleFilesUploaded = (files: UploadedFilePreview[]) => {
@@ -275,9 +296,13 @@ const Composer: React.FC<MainSearchbarProps> = ({
 
   return (
     <>
-      <div className="searchbar_container relative">
-        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
+      <div className="searchbar_container relative transition-all duration-1000">
+        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2 transition-all duration-1000">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
+          <SelectedToolIndicator
+            toolName={selectedTool}
+            onRemove={handleRemoveSelectedTool}
+          />
           <ComposerInput
             searchbarText={searchbarText}
             onSearchbarTextChange={setSearchbarText}
@@ -286,6 +311,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
             currentHeight={currentHeight}
             onHeightChange={setCurrentHeight}
             inputRef={inputRef}
+            onSlashCommandSelect={handleSlashCommandSelect}
           />
           <ComposerToolbar
             selectedMode={selectedMode}

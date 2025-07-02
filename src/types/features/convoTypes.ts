@@ -72,6 +72,7 @@ export type MessageType = {
   pinned?: boolean;
   fileData?: FileData[];
   intent?: string;
+  selectedTool?: string | null; // Tool selected via slash commands
   calendar_options?: CalendarOptions[] | null;
   calendar_delete_options?: CalendarDeleteOptions[] | null;
   calendar_edit_options?: CalendarEditOptions[] | null;

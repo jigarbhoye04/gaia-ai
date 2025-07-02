@@ -1,5 +1,12 @@
 import { Textarea } from "@heroui/input";
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
+
+import {
+  SlashCommandMatch,
+  useSlashCommands,
+} from "@/features/chat/hooks/useSlashCommands";
+
+import SlashCommandDropdown from "./SlashCommandDropdown";
 
 interface SearchbarInputProps {
   searchbarText: string;
@@ -9,6 +16,7 @@ interface SearchbarInputProps {
   currentHeight: number;
   onHeightChange: (height: number) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  onSlashCommandSelect?: (toolName: string) => void;
 }
 
 const ComposerInput: React.FC<SearchbarInputProps> = ({
@@ -19,28 +27,236 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
   currentHeight,
   onHeightChange,
   inputRef,
+  onSlashCommandSelect,
 }) => {
+  const { detectSlashCommand } = useSlashCommands();
+  const [slashCommandState, setSlashCommandState] = useState({
+    isActive: false,
+    matches: [] as SlashCommandMatch[],
+    selectedIndex: 0,
+    commandStart: -1,
+    commandEnd: -1,
+    dropdownPosition: { top: 0, left: 0, width: 0 },
+  });
+
+  const updateSlashCommandDetection = useCallback(
+    (text: string, cursorPosition: number) => {
+      const detection = detectSlashCommand(text, cursorPosition);
+
+      if (detection.isSlashCommand && detection.matches.length > 0) {
+        // Calculate dropdown position - position above the composer and match its width
+        const textarea = inputRef.current;
+        if (textarea) {
+          // Find the composer container (searchbar class)
+          const composerContainer = textarea.closest(".searchbar");
+          const rect =
+            composerContainer?.getBoundingClientRect() ||
+            textarea.getBoundingClientRect();
+          const dropdownHeight = Math.min(
+            detection.matches.length * 80 + 60,
+            400,
+          ); // Estimate dropdown height (increased max)
+
+          setSlashCommandState({
+            isActive: true,
+            matches: detection.matches,
+            selectedIndex: 0,
+            commandStart: detection.commandStart,
+            commandEnd: detection.commandEnd,
+            dropdownPosition: {
+              top: rect.top - dropdownHeight - 8, // Position above the composer
+              left: rect.left,
+              width: rect.width, // Match the composer width
+            },
+          });
+        }
+      } else {
+        setSlashCommandState((prev) => ({
+          ...prev,
+          isActive: false,
+          matches: [],
+        }));
+      }
+    },
+    [detectSlashCommand, inputRef],
+  );
+
+  const handleSlashCommandKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!slashCommandState.isActive) return false;
+
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          setSlashCommandState((prev) => ({
+            ...prev,
+            selectedIndex: Math.max(0, prev.selectedIndex - 1),
+          }));
+          return true;
+
+        case "ArrowDown":
+          e.preventDefault();
+          setSlashCommandState((prev) => ({
+            ...prev,
+            selectedIndex: Math.min(
+              prev.matches.length - 1,
+              prev.selectedIndex + 1,
+            ),
+          }));
+          return true;
+
+        case "Enter":
+        case "Tab":
+          e.preventDefault();
+          const selectedMatch =
+            slashCommandState.matches[slashCommandState.selectedIndex];
+          if (selectedMatch) {
+            handleSlashCommandSelect(selectedMatch);
+          }
+          return true;
+
+        case "Escape":
+          e.preventDefault();
+          setSlashCommandState((prev) => ({ ...prev, isActive: false }));
+          return true;
+
+        default:
+          return false;
+      }
+    },
+    [slashCommandState],
+  );
+
+  const handleSlashCommandSelect = useCallback(
+    (match: SlashCommandMatch) => {
+      const newText =
+        searchbarText.substring(0, slashCommandState.commandStart) +
+        `/${match.tool.name} ` +
+        searchbarText.substring(slashCommandState.commandEnd);
+
+      onSearchbarTextChange(newText);
+      setSlashCommandState((prev) => ({ ...prev, isActive: false }));
+
+      // Notify parent component about tool selection
+      if (onSlashCommandSelect) {
+        onSlashCommandSelect(match.tool.name);
+      }
+
+      // Focus back to input
+      setTimeout(() => {
+        if (inputRef.current) {
+          const newCursorPos =
+            slashCommandState.commandStart + match.tool.name.length + 2;
+          inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+          inputRef.current.focus();
+        }
+      }, 0);
+    },
+    [
+      searchbarText,
+      slashCommandState,
+      onSearchbarTextChange,
+      onSlashCommandSelect,
+      inputRef,
+    ],
+  );
+
+  const handleTextChange = useCallback(
+    (text: string) => {
+      onSearchbarTextChange(text);
+
+      // Update slash command detection
+      setTimeout(() => {
+        if (inputRef.current) {
+          const cursorPosition = inputRef.current.selectionStart || 0;
+          updateSlashCommandDetection(text, cursorPosition);
+        }
+      }, 0);
+    },
+    [onSearchbarTextChange, updateSlashCommandDetection, inputRef],
+  );
+
+  const handleKeyDownWithSlashCommands: React.KeyboardEventHandler<HTMLInputElement> =
+    useCallback(
+      (e) => {
+        // First, handle slash command navigation
+        const wasHandledBySlashCommand = handleSlashCommandKeyDown(e);
+
+        // If not handled by slash command, pass to original handler
+        if (!wasHandledBySlashCommand) {
+          handleKeyDown(e);
+        }
+      },
+      [handleSlashCommandKeyDown, handleKeyDown],
+    );
+
+  // Update cursor position tracking
+  const handleCursorPositionChange = useCallback(() => {
+    if (inputRef.current) {
+      const cursorPosition = inputRef.current.selectionStart || 0;
+      updateSlashCommandDetection(searchbarText, cursorPosition);
+    }
+  }, [searchbarText, updateSlashCommandDetection, inputRef]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+
+      // Don't close if clicking inside the dropdown or the input
+      if (
+        target.closest(".slash-command-dropdown") ||
+        target.closest(".searchbar") ||
+        inputRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      setSlashCommandState((prev) => ({ ...prev, isActive: false }));
+    };
+
+    if (slashCommandState.isActive) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [slashCommandState.isActive, inputRef]);
+
   return (
-    <form onSubmit={handleFormSubmit}>
-      <Textarea
-        ref={inputRef}
-        autoFocus
-        classNames={{
-          inputWrapper:
-            " px-3 data-[hover=true]:bg-zinc-800 group-data-[focus-visible=true]:ring-zinc-800 group-data-[focus-visible=true]:ring-offset-0",
-          innerWrapper: `${currentHeight > 24 ? "items-end" : "items-center"}`,
-        }}
-        isInvalid={searchbarText.length > 10_000}
-        maxRows={13}
-        minRows={1}
-        placeholder="What can I do for you today?"
-        size="lg"
-        value={searchbarText}
-        onHeightChange={onHeightChange}
-        onKeyDown={handleKeyDown}
-        onValueChange={onSearchbarTextChange}
+    <>
+      <form onSubmit={handleFormSubmit}>
+        <Textarea
+          ref={inputRef}
+          autoFocus
+          classNames={{
+            inputWrapper:
+              " px-3 data-[hover=true]:bg-zinc-800 group-data-[focus-visible=true]:ring-zinc-800 group-data-[focus-visible=true]:ring-offset-0",
+            innerWrapper: `${currentHeight > 24 ? "items-end" : "items-center"}`,
+          }}
+          isInvalid={searchbarText.length > 10_000}
+          maxRows={13}
+          minRows={1}
+          placeholder="What can I do for you today? Type / for tools..."
+          size="lg"
+          value={searchbarText}
+          onHeightChange={onHeightChange}
+          onKeyDown={handleKeyDownWithSlashCommands}
+          onValueChange={handleTextChange}
+          onSelect={handleCursorPositionChange}
+          onClick={handleCursorPositionChange}
+        />
+      </form>
+
+      <SlashCommandDropdown
+        matches={slashCommandState.matches}
+        selectedIndex={slashCommandState.selectedIndex}
+        onSelect={handleSlashCommandSelect}
+        onClose={() =>
+          setSlashCommandState((prev) => ({ ...prev, isActive: false }))
+        }
+        position={slashCommandState.dropdownPosition}
+        isVisible={slashCommandState.isActive}
       />
-    </form>
+    </>
   );
 };
 
