@@ -7,6 +7,7 @@ This module contains endpoints for creating, retrieving, updating, and deleting 
 from fastapi import APIRouter, Depends, status
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.notes_models import NoteModel, NoteResponse
 from app.services.notes_service import (
     create_note_service,
@@ -20,6 +21,7 @@ router = APIRouter()
 
 
 @router.post("/notes", response_model=NoteResponse, status_code=status.HTTP_201_CREATED)
+@tiered_rate_limit("notes")
 async def create_note_endpoint(
     note: NoteModel,
     user: dict = Depends(get_current_user),
@@ -67,6 +69,7 @@ async def get_all_notes_endpoint(user: dict = Depends(get_current_user)):
 
 
 @router.put("/notes/{note_id}", response_model=NoteResponse)
+@tiered_rate_limit("notes")
 async def update_note_endpoint(
     note_id: str,
     note: NoteModel,
@@ -87,6 +90,7 @@ async def update_note_endpoint(
 
 
 @router.delete("/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
+@tiered_rate_limit("notes")
 async def delete_note_endpoint(
     note_id: str,
     user: dict = Depends(get_current_user),

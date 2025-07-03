@@ -1,210 +1,249 @@
-import time
-from datetime import datetime, timedelta, timezone
+# from asgiref.sync import async_to_sync
+# from celery import shared_task
 
-from celery import shared_task
-from googleapiclient.errors import HttpError
-
-from app.config.loggers import celery_logger as logger
-from app.services.mail_service import fetch_detailed_messages, get_gmail_service
-from app.utils.general_utils import transform_gmail_message
-from app.utils.profiler_utils import profile_celery_task
-# from app.db.collections import mail_collection
-# from app.utils.text_utils import classify_email
+# from app.api.v1.dependencies.oauth_dependencies import get_valid_access_token
+# from app.config.loggers import celery_logger as logger
+# from app.db.mongodb.collections import users_collection
+# from app.db.redis import get_cache, set_cache
+# from app.services.mail_service import (
+#     get_gmail_service,
+# )
 
 
-@shared_task(name="process.email", rate_limit="5/s")
-@profile_celery_task(print_lines=3)
-def process_email(email_data: dict, user_dict: dict):
-    """Processes an email.
-
-    Args:
-        email_data: A dictionary containing email data
-        user_dict: A dictionary containing user data, must include user_id
-
-    Returns:
-        A dictionary with the processing results
-    """
-    try:
-        # if not user_dict or "user_id" not in user_dict:
-        #     error_msg = "User ID is required for processing emails"
-        #     logger.error(error_msg)
-        #     return {"error": error_msg, "status": "failed"}
-
-        # user_id = user_dict["user_id"]
-
-        # email_id = email_data.get("id", None)
-        # if not email_id:
-        #     error_msg = "Email ID is required"
-        #     logger.error(error_msg)
-        #     return {"error": error_msg, "status": "failed"}
-
-        # subject = email_data.get("subject", "No subject")
-        # snippet = email_data.get("snippet", None)
-        # body = email_data.get("body", "Unknown body")
-
-        # combined_text = f"{subject} {body}".strip()
-
-        # logger.info(f"{subject=}")
-        # logger.info(f"{snippet=}")
-
-        # TODO RE IMPLEMENT THIS STREAMING
-        # summary_response = {}  # !remove this line
-        # summary_response = do_prompt_no_stream_sync(
-        #     prompt=EMAIL_SUMMARIZER_SHORT.format(
-        #         subject=subject,
-        #         body=body,
-        #         snippet=snippet,
-        #         time=email_data.get("time", ""),
-        #         sender=email_data.get("from", "No sender"),
-        #     ),
-        #     model="@cf/meta/llama-3.2-3b-instruct",
-        # )
-
-        # Handle potential non-dict response
-        # summary = None
-        # if isinstance(summary_response, dict):
-        #     summary = summary_response.get("response", None)
-
-        # logger.info(f"{summary=}")
-
-        # classified = classify_email(email_text=combined_text, async_mode=False)
-
-        # if isinstance(classified, dict):
-        #     classification_result = classified
-
-        # logger.info(f"{classification_result=}")
-
-        # # Check for Gmail's native important markers
-        # is_important_by_gmail = False
-        # label_ids = email_data.get("labelIds", [])
-        # gmail_important_labels = ["IMPORTANT", "CATEGORY_PRIORITY"]
-
-        # for label in gmail_important_labels:
-        #     if label in label_ids:
-        #         is_important_by_gmail = True
-        #         logger.info(f"Email marked as important by Gmail with label: {label}")
-        #         break
-
-        # is_important = (
-        #     classification_result and classification_result.get("is_important", False)
-        # ) or is_important_by_gmail
-
-        # if is_important:
-        #     email_record = {
-        #         "email_id": email_id,
-        #         "subject": subject,
-        #         "processed_at": datetime.now(),
-        #         "is_important": True,
-        #         "user_id": user_id,
-        #         "summary": summary,
-        #     }
-
-        #     # Add classification_result items if it's a dictionary
-        #     if isinstance(classification_result, dict):
-        #         email_record.update(classification_result)
-
-        #     query = {"email_id": email_id, "user_id": user_id}
-
-        #     logger.info("Updating in mongodb")
-
-        #     mail_collection.update_one(query, {"$set": email_record}, upsert=True)
-
-        #     logger.info(
-        #         f"Stored important email for user {user_id}: {subject} (ID: {email_id})"
-        #     )
-
-        # result = {
-        #     "email_id": email_id,
-        #     "subject": subject,
-        #     "processed_at": datetime.now(),
-        #     "user_id": user_id,
-        #     "summary": summary,
-        #     "is_important": is_important,
-        # }
-
-        # # Add classification_result items if it's a dictionary
-        # if isinstance(classification_result, dict):
-        #     result.update(classification_result)
-
-        # return result
-        return {}
-
-    except Exception as e:
-        logger.error(f"Error processing email: {e}", exc_info=True)
-        return {"error": str(e), "status": "failed"}
+# @shared_task(name="process.email", rate_limit="5/s")
+# def process_email(history_id: str, email: str):
+#     return async_to_sync(_process_email_async)(history_id, email)
 
 
-@shared_task(name="fetch.last_week_emails")
-@profile_celery_task()
-def fetch_last_week_emails(user_dict: dict):
-    """
-    Fetch all emails from the last week using pagination and queue them for processing.
-    Implements rate limiting, logging, and error handling.
-    """
-    try:
-        service = get_gmail_service(user_dict)
+# async def _process_email_async(history_id: str, email: str):
+#     try:
+#         if not email or not history_id:
+#             logger.error("Email address or history ID is missing")
+#             return {
+#                 "error": "Email address or history ID is missing",
+#                 "status": "failed",
+#             }
 
-        now = datetime.now(timezone.utc)
-        last_week = now - timedelta(days=7)
-        query = f"after:{int(last_week.timestamp())}"
+#         logger.info(f"Processing emails for {email} with history ID: {history_id}")
 
-        all_messages = []
-        next_page_token = None
+#         history_id, history_found = await _get_history_id(email, history_id)
+#         if not history_found:
+#             return {"error": "User not found", "status": "failed"}
 
-        logger.info("Fetching emails from Gmail...")
+#         await _update_history_id(email, history_id)
 
-        while True:
-            try:
-                results = (
-                    service.users()
-                    .messages()
-                    .list(userId="me", q=query, pageToken=next_page_token)
-                    .execute()
-                )
+#         access_token, refresh_token, tokens_valid = await _get_tokens(email)
+#         if not tokens_valid:
+#             return {"error": "Authentication failed", "status": "failed"}
 
-                if isinstance(results, dict):
-                    messages = results.get("messages", [])
-                    all_messages.extend(messages)
+#         messages = await _fetch_messages(access_token, refresh_token, history_id)
 
-                    logger.info(
-                        f"Fetched {len(messages)} messages (Total: {len(all_messages)})"
-                    )
+#         logger.info(f"Fetched {len(messages.get('history', []))} history items")
 
-                    next_page_token = results.get("nextPageToken")
-                    if not next_page_token:
-                        break
-                else:
-                    logger.error("Unexpected result type from Gmail API")
-                    break
+#         # TODO: Process the messages here
 
-                time.sleep(3)
+#         return {
+#             "status": "success",
+#             "message": "Email history processed successfully",
+#             "history_count": len(messages.get("history", [])),
+#         }
 
-            except HttpError as e:
-                logger.error(f"Gmail API Error: {e}", exc_info=True)
-                time.sleep(5)
-                continue
+#     except Exception as e:
+#         logger.error(f"Error processing email: {e}", exc_info=True)
+#         return {"error": str(e), "status": "failed"}
 
-        if not all_messages:
-            logger.info("No new emails found in the last week.")
-            return {"result": "No emails to process."}
 
-        detailed_messages = fetch_detailed_messages(service, all_messages)
-        transformed_messages = [
-            transform_gmail_message(msg) for msg in detailed_messages
-        ]
+# async def _get_history_id(email: str, history_id: str) -> tuple[str, bool]:
+#     """
+#     Retrieve and validate the history ID from cache or database.
 
-        for _, email in enumerate(transformed_messages):
-            process_email.delay(email, user_dict)
+#     Args:
+#         email: The user's email address
+#         history_id: The initial history ID passed to the function
 
-        result = f"Queued {len(transformed_messages)} emails for processing."
+#     Returns:
+#         tuple: (history_id, success_flag)
+#     """
+#     cache_key = f"gmail_history_id:{email}"
 
-        logger.info(result)
+#     # Try to get history ID from cache first
+#     cached_history_id = await get_cache(cache_key)
+#     if cached_history_id:
+#         return str(cached_history_id), True
 
-        return {
-            "result": result,
-            "total_messages": len(all_messages),
-        }
+#     # If not in cache, try to get from database
+#     user = await users_collection.find_one({"email": email})
+#     if not user:
+#         logger.error(f"No user found with email: {email}")
+#         return "", False
 
-    except Exception as e:
-        logger.error(f"Unexpected error fetching emails: {e}", exc_info=True)
-        return {"error": str(e)}
+#     db_history_id = user.get("gmail_history_id")
+#     return db_history_id or history_id, bool(db_history_id)
+
+
+# async def _update_history_id(email: str, history_id: str) -> None:
+#     """
+#     Update the history ID in both database and cache.
+
+#     Args:
+#         email: The user's email address
+#         history_id: The history ID to update
+#     """
+#     cache_key = f"gmail_history_id:{email}"
+
+#     # Update in database
+#     await users_collection.update_one(
+#         {"email": email},
+#         {"$set": {"gmail_history_id": history_id}},
+#     )
+
+#     # Update in cache
+#     await set_cache(cache_key, history_id)
+
+
+# async def _get_tokens(email: str) -> tuple[str, str, bool]:
+#     """
+#     Get valid access and refresh tokens for the user.
+
+#     Args:
+#         email: The user's email address
+
+#     Returns:
+#         tuple: (access_token, refresh_token, success_flag)
+#     """
+#     # Get refresh token from cache
+#     refresh_token = await get_cache(f"refresh_token:{email}")
+#     if not refresh_token:
+#         logger.error(f"Refresh token not found for email: {email}")
+#         return "", "", False
+
+#     # Get access token using the refresh token
+#     access_token, _ = await get_valid_access_token(
+#         user_email=email,
+#         refresh_token=refresh_token,
+#     )
+
+#     if not access_token:
+#         logger.error(f"Failed to get access token for email: {email}")
+#         return "", refresh_token, False
+
+#     return access_token, refresh_token, True
+
+
+# async def _fetch_messages(
+#     access_token: str, refresh_token: str, history_id: str
+# ) -> dict:
+#     """
+#     Fetch messages from Gmail API using the history ID.
+
+#     Args:
+#         access_token: The user's access token
+#         refresh_token: The user's refresh token
+#         history_id: The history ID to use for fetching messages
+
+#     Returns:
+#         dict: The messages response from Gmail API
+#     """
+#     service = get_gmail_service(
+#         access_token=access_token,
+#         refresh_token=refresh_token,
+#     )
+
+#     return (
+#         service.users()
+#         .history()
+#         .list(
+#             userId="me",
+#             startHistoryId=history_id,
+#         )
+#         .execute()
+#     )
+
+
+# # @shared_task(name="fetch.last_week_emails")
+# # @profile_celery_task()
+# # def fetch_last_week_emails(user_dict: dict):
+# #     """
+# #     Fetch all emails from the last week using pagination and queue them for processing.
+# #     Implements rate limiting, logging, and error handling.
+# #     """
+# #     try:
+# #         access_token = user_dict.get("access_token")
+# #         if not access_token:
+# #             logger.error("Access token is required to fetch emails")
+# #             return {"error": "Access token is required"}
+
+# #         refresh_token = user_dict.get("refresh_token")
+# #         if not refresh_token:
+# #             logger.error("Refresh token is required to fetch emails")
+# #             return {"error": "Refresh token is required"}
+
+# #         service = get_gmail_service(
+# #             access_token=access_token,
+# #             refresh_token=refresh_token,
+# #         )
+
+# #         now = datetime.now(timezone.utc)
+# #         last_week = now - timedelta(days=7)
+# #         query = f"after:{int(last_week.timestamp())}"
+
+# #         all_messages = []
+# #         next_page_token = None
+
+# #         logger.info("Fetching emails from Gmail...")
+
+# #         while True:
+# #             try:
+# #                 results = (
+# #                     service.users()
+# #                     .messages()
+# #                     .list(userId="me", q=query, pageToken=next_page_token)
+# #                     .execute()
+# #                 )
+
+# #                 if isinstance(results, dict):
+# #                     messages = results.get("messages", [])
+# #                     all_messages.extend(messages)
+
+# #                     logger.info(
+# #                         f"Fetched {len(messages)} messages (Total: {len(all_messages)})"
+# #                     )
+
+# #                     next_page_token = results.get("nextPageToken")
+# #                     if not next_page_token:
+# #                         break
+# #                 else:
+# #                     logger.error("Unexpected result type from Gmail API")
+# #                     break
+
+# #                 time.sleep(3)
+
+# #             except HttpError as e:
+# #                 logger.error(f"Gmail API Error: {e}", exc_info=True)
+# #                 time.sleep(5)
+# #                 continue
+
+# #         if not all_messages:
+# #             logger.info("No new emails found in the last week.")
+# #             return {"result": "No emails to process."}
+
+# #         detailed_messages = fetch_detailed_messages(service, all_messages)
+# #         transformed_messages = [
+# #             transform_gmail_message(msg) for msg in detailed_messages
+# #         ]
+
+# #         for _, email in enumerate(transformed_messages):
+# #             process_email.delay(email, user_dict)
+
+# #         result = f"Queued {len(transformed_messages)} emails for processing."
+
+# #         logger.info(result)
+
+# #         return {
+# #             "result": result,
+# #             "total_messages": len(all_messages),
+# #         }
+
+# #     except Exception as e:
+# #         logger.error(f"Unexpected error fetching emails: {e}", exc_info=True)
+# #         return {"error": str(e)}

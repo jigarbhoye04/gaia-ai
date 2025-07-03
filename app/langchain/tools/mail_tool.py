@@ -23,6 +23,7 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     GET_GMAIL_CONTACTS,
 )
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.langchain.prompts.mail_prompts import EMAIL_SUMMARIZER
 from app.langchain.templates.mail_templates import (
     process_get_thread_response,
@@ -305,6 +306,7 @@ async def summarize_email(
 
 
 @tool
+@with_rate_limiting("mail_actions")
 @with_doc(COMPOSE_EMAIL)
 async def compose_email(
     config: RunnableConfig,
@@ -717,7 +719,7 @@ async def get_mail_contacts(
         return {"success": False, "error": error_msg, "contacts": []}
 
 
-mail_tools = [
+tools = [
     # list_gmail_labels,
     fetch_gmail_messages,
     search_gmail_messages,

@@ -1,64 +1,67 @@
+from datetime import datetime, timezone
 from typing import Annotated, Any, Dict, List, Optional
-from datetime import datetime
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
+import uuid
+from datetime import time, timedelta
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.todo_tool_docs import (
+    ADD_SUBTASK,
+    BULK_COMPLETE_TODOS,
+    BULK_DELETE_TODOS,
+    BULK_MOVE_TODOS,
+    CREATE_PROJECT,
     CREATE_TODO,
-    LIST_TODOS,
-    UPDATE_TODO,
+    DELETE_PROJECT,
+    DELETE_SUBTASK,
     DELETE_TODO,
+    GET_ALL_LABELS,
+    GET_TODAY_TODOS,
+    GET_TODO_STATS,
+    GET_TODOS_BY_LABEL,
+    GET_UPCOMING_TODOS,
+    LIST_PROJECTS,
+    LIST_TODOS,
     SEARCH_TODOS,
     SEMANTIC_SEARCH_TODOS,
-    GET_TODO_STATS,
-    GET_TODAY_TODOS,
-    GET_UPCOMING_TODOS,
-    CREATE_PROJECT,
-    LIST_PROJECTS,
     UPDATE_PROJECT,
-    DELETE_PROJECT,
-    GET_TODOS_BY_LABEL,
-    GET_ALL_LABELS,
-    BULK_COMPLETE_TODOS,
-    BULK_MOVE_TODOS,
-    BULK_DELETE_TODOS,
-    ADD_SUBTASK,
     UPDATE_SUBTASK,
-    DELETE_SUBTASK,
+    UPDATE_TODO,
 )
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.todo_models import (
-    TodoCreate,
-    UpdateTodoRequest,
-    ProjectCreate,
-    UpdateProjectRequest,
     Priority,
+    ProjectCreate,
     SubTask,
-)
-from app.services.todo_service import (
-    create_todo as create_todo_service,
-    get_todo as get_todo_service,
-    get_all_todos as get_all_todos_service,
-    update_todo as update_todo_service,
-    delete_todo as delete_todo_service,
-    search_todos as search_todos_service,
-    semantic_search_todos as semantic_search_todos_service,
-    get_todo_stats as get_todo_stats_service,
-    get_todos_by_date_range,
-    get_todos_by_label as get_todos_by_label_service,
-    get_all_labels as get_all_labels_service,
-    create_project as create_project_service,
-    get_all_projects as get_all_projects_service,
-    update_project as update_project_service,
-    delete_project as delete_project_service,
+    TodoCreate,
+    UpdateProjectRequest,
+    UpdateTodoRequest,
 )
 from app.services.todo_bulk_service import (
     bulk_complete_todos as bulk_complete_service,
-    bulk_move_todos as bulk_move_service,
     bulk_delete_todos as bulk_delete_service,
+    bulk_move_todos as bulk_move_service,
+)
+from app.services.todo_service import (
+    create_project as create_project_service,
+    create_todo as create_todo_service,
+    delete_project as delete_project_service,
+    delete_todo as delete_todo_service,
+    get_all_labels as get_all_labels_service,
+    get_all_projects as get_all_projects_service,
+    get_all_todos as get_all_todos_service,
+    get_todo as get_todo_service,
+    get_todo_stats as get_todo_stats_service,
+    get_todos_by_date_range,
+    get_todos_by_label as get_todos_by_label_service,
+    search_todos as search_todos_service,
+    semantic_search_todos as semantic_search_todos_service,
+    update_project as update_project_service,
+    update_todo as update_todo_service,
 )
 
 
@@ -67,38 +70,45 @@ def get_user_id_from_config(config: RunnableConfig) -> str:
     if not config:
         logger.error("Todo tool called without config")
         return ""
-    
+
     metadata = config.get("metadata", {})
     user_id = metadata.get("user_id", "")
-    
+
     if not user_id:
         logger.error("No user_id found in config metadata")
-    
+
     return user_id
 
 
 @tool
+@with_rate_limiting("todo_operations")
 @with_doc(CREATE_TODO)
 async def create_todo(
     config: RunnableConfig,
     title: Annotated[str, "Title of the todo item (required)"],
     description: Annotated[Optional[str], "Detailed description of the todo"] = None,
-    labels: Annotated[Optional[List[str]], "List of labels/tags for categorization"] = None,
+    labels: Annotated[
+        Optional[List[str]], "List of labels/tags for categorization"
+    ] = None,
     due_date: Annotated[Optional[datetime], "When the task should be completed"] = None,
-    due_date_timezone: Annotated[Optional[str], "Timezone for the due date (e.g., 'America/New_York')"] = None,
-    priority: Annotated[Optional[str], "Priority level: high, medium, low, or none"] = None,
+    due_date_timezone: Annotated[
+        Optional[str], "Timezone for the due date (e.g., 'America/New_York')"
+    ] = None,
+    priority: Annotated[
+        Optional[str], "Priority level: high, medium, low, or none"
+    ] = None,
     project_id: Annotated[Optional[str], "Project ID to assign the todo to"] = None,
 ) -> Dict[str, Any]:
     try:
         logger.info(f"Todo Tool: Creating todo with title '{title}'")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todo": None}
-        
+
         # Convert priority string to enum if provided
         priority_enum = Priority(priority) if priority else Priority.NONE
-        
+
         todo_data = TodoCreate(
             title=title,
             description=description,
@@ -108,7 +118,7 @@ async def create_todo(
             priority=priority_enum,
             project_id=project_id,
         )
-        
+
         result = await create_todo_service(todo_data, user_id)
         todo_dict = result.model_dump(mode="json")
 
@@ -125,7 +135,7 @@ async def create_todo(
         )
 
         return {"todo": todo_dict, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error creating todo: {str(e)}"
         logger.error(error_msg)
@@ -138,8 +148,12 @@ async def list_todos(
     config: RunnableConfig,
     project_id: Annotated[Optional[str], "Filter by specific project ID"] = None,
     completed: Annotated[Optional[bool], "Filter by completion status"] = None,
-    priority: Annotated[Optional[str], "Filter by priority: high, medium, low, or none"] = None,
-    has_due_date: Annotated[Optional[bool], "Filter todos with/without due dates"] = None,
+    priority: Annotated[
+        Optional[str], "Filter by priority: high, medium, low, or none"
+    ] = None,
+    has_due_date: Annotated[
+        Optional[bool], "Filter todos with/without due dates"
+    ] = None,
     overdue: Annotated[Optional[bool], "Filter overdue uncompleted todos"] = None,
     skip: Annotated[int, "Number of records to skip for pagination"] = 0,
     limit: Annotated[int, "Maximum number of records to return"] = 50,
@@ -147,17 +161,17 @@ async def list_todos(
     try:
         logger.info("Todo Tool: Listing todos with filters")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         # Ensure limit is reasonable
         if limit > 100:
             limit = 100
-        
+
         # Convert priority string to value if provided
         priority_value = priority if priority else None
-        
+
         results = await get_all_todos_service(
             user_id,
             project_id=project_id,
@@ -166,7 +180,7 @@ async def list_todos(
             has_due_date=has_due_date,
             overdue=overdue,
             skip=skip,
-            limit=limit
+            limit=limit,
         )
 
         todos_data = [todo.model_dump(mode="json") for todo in results]
@@ -250,7 +264,7 @@ async def update_todo(
         )
 
         return {"todo": todo_dict, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error updating todo: {str(e)}"
         logger.error(error_msg)
@@ -266,16 +280,16 @@ async def delete_todo(
     try:
         logger.info(f"Todo Tool: Deleting todo {todo_id}")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "success": False}
-        
+
         # Get the todo first to show what was deleted
         todo = await get_todo_service(todo_id, user_id)
         todo_title = todo.title
-        
+
         await delete_todo_service(todo_id, user_id)
-        
+
         # Stream the deletion confirmation to frontend
         writer = get_stream_writer()
         writer(
@@ -286,9 +300,9 @@ async def delete_todo(
                 }
             }
         )
-        
+
         return {"success": True, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error deleting todo: {str(e)}"
         logger.error(error_msg)
@@ -304,10 +318,10 @@ async def search_todos(
     try:
         logger.info(f"Todo Tool: Searching todos with query '{query}'")
         user_id = get_user_id_from_config(config)
-        
+
         if not user_id:
             return {"error": "User authentication required", "todos": []}
-        
+
         results = await search_todos_service(query, user_id)
         todos_data = [todo.model_dump(mode="json") for todo in results]
 
@@ -362,7 +376,7 @@ async def semantic_search_todos(
             completed=completed,
             priority=priority,
         )
-        
+
         todos_data = [todo.model_dump(mode="json") for todo in results]
 
         # Stream the semantic search results to frontend
@@ -432,8 +446,6 @@ async def get_today_todos(config: RunnableConfig) -> Dict[str, Any]:
         if not user_id:
             return {"error": "User authentication required", "todos": []}
 
-        from datetime import time
-
         today_start = datetime.combine(datetime.today(), time.min)
         today_end = datetime.combine(datetime.today(), time.max)
 
@@ -477,9 +489,7 @@ async def get_upcoming_todos(
         if not user_id:
             return {"error": "User authentication required", "todos": []}
 
-        from datetime import timedelta
-
-        start_date = datetime.utcnow()
+        start_date = datetime.now(timezone.utc)
         end_date = start_date + timedelta(days=days)
 
         results = await get_todos_by_date_range(user_id, start_date, end_date)
@@ -652,9 +662,9 @@ async def delete_project(
         all_projects = await get_all_projects_service(user_id)
         project = next((p for p in all_projects if p.id == project_id), None)
         project_name = project.name if project else "Unknown Project"
-        
+
         await delete_project_service(project_id, user_id)
-        
+
         # Stream the deletion confirmation to frontend
         writer = get_stream_writer()
         writer(
@@ -665,7 +675,7 @@ async def delete_project(
                 }
             }
         )
-        
+
         return {"success": True, "error": None}
 
     except Exception as e:
@@ -828,7 +838,7 @@ async def bulk_delete_todos(
             return {"error": "User authentication required", "success": False}
 
         await bulk_delete_service(todo_ids, user_id)
-        
+
         # Stream the bulk deletion confirmation to frontend
         writer = get_stream_writer()
         writer(
@@ -839,7 +849,7 @@ async def bulk_delete_todos(
                 }
             }
         )
-        
+
         return {"success": True, "error": None}
 
     except Exception as e:
@@ -861,8 +871,6 @@ async def add_subtask(
 
         if not user_id:
             return {"error": "User authentication required", "todo": None}
-
-        import uuid
 
         # Get the todo first
         todo = await get_todo_service(todo_id, user_id)
@@ -996,7 +1004,7 @@ async def delete_subtask(
         )
 
         return {"todo": todo_dict, "error": None}
-        
+
     except Exception as e:
         error_msg = f"Error deleting subtask: {str(e)}"
         logger.error(error_msg)
@@ -1004,7 +1012,7 @@ async def delete_subtask(
 
 
 # Export all todo tools as a list for easy registration
-todo_tools = [
+tools = [
     create_todo,
     list_todos,
     update_todo,

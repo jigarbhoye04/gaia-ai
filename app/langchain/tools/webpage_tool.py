@@ -2,18 +2,22 @@ import asyncio
 import re
 from typing import Annotated, Dict, List, Union
 
+from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from app.docstrings.langchain.tools.webpage_tool_docs import FETCH_WEBPAGES
 from app.docstrings.utils import with_doc
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.langchain.templates.fetch_template import FETCH_TEMPLATE
 from app.utils.search_utils import perform_fetch
 
 
 @tool
+@with_rate_limiting("webpage_fetch")
 @with_doc(FETCH_WEBPAGES)
 async def fetch_webpages(
+    config: RunnableConfig,
     urls: Annotated[List[str], "List of URLs to fetch content from"],
     # state: Annotated[dict, InjectedState],
 ) -> Dict[str, Union[str, List[str]]]:

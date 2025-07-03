@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.todo_models import (
     TodoCreate,
     TodoResponse,
@@ -18,6 +19,9 @@ from app.models.todo_models import (
     BulkUpdateRequest,
     BulkMoveRequest,
     BulkOperationResponse,
+    SubtaskCreateRequest,
+    SubtaskUpdateRequest,
+    SubTask,
 )
 from app.services.todo_service import TodoService, ProjectService
 
@@ -98,7 +102,7 @@ async def list_todos(
         return await TodoService.list_todos(user["user_id"], params)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve todos",
@@ -106,13 +110,14 @@ async def list_todos(
 
 
 @router.post("/todos", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@tiered_rate_limit("todo_operations")
 async def create_todo(todo: TodoCreate, user: dict = Depends(get_current_user)):
     """Create a new todo. If no project is specified, it will be added to Inbox."""
     try:
         return await TodoService.create_todo(todo, user["user_id"])
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create todo",
@@ -126,7 +131,7 @@ async def get_todo(todo_id: str, user: dict = Depends(get_current_user)):
         return await TodoService.get_todo(todo_id, user["user_id"])
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve todo",
@@ -134,6 +139,7 @@ async def get_todo(todo_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.put("/todos/{todo_id}", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
 async def update_todo(
     todo_id: str, updates: UpdateTodoRequest, user: dict = Depends(get_current_user)
 ):
@@ -142,7 +148,7 @@ async def update_todo(
         return await TodoService.update_todo(todo_id, updates, user["user_id"])
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update todo",
@@ -150,13 +156,14 @@ async def update_todo(
 
 
 @router.delete("/todos/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@tiered_rate_limit("todo_operations")
 async def delete_todo(todo_id: str, user: dict = Depends(get_current_user)):
     """Delete a todo."""
     try:
         await TodoService.delete_todo(todo_id, user["user_id"])
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete todo",
@@ -165,6 +172,7 @@ async def delete_todo(todo_id: str, user: dict = Depends(get_current_user)):
 
 # Bulk Operations
 @router.put("/todos/bulk", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_update_todos(
     request: BulkUpdateRequest, user: dict = Depends(get_current_user)
 ):
@@ -184,7 +192,7 @@ async def bulk_update_todos(
     """
     try:
         return await TodoService.bulk_update_todos(request, user["user_id"])
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Bulk update failed",
@@ -192,6 +200,7 @@ async def bulk_update_todos(
 
 
 @router.post("/todos/bulk/move", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_move_todos(
     request: BulkMoveRequest, user: dict = Depends(get_current_user)
 ):
@@ -200,21 +209,22 @@ async def bulk_move_todos(
         return await TodoService.bulk_move_todos(request, user["user_id"])
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Bulk move failed"
         )
 
 
 @router.delete("/todos/bulk", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_delete_todos(
-    todo_ids: List[str] = Body(..., min_items=1, max_items=100),
+    todo_ids: List[str] = Body(..., min_length=1, max_length=100),
     user: dict = Depends(get_current_user),
 ):
     """Delete multiple todos."""
     try:
         return await TodoService.bulk_delete_todos(todo_ids, user["user_id"])
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Bulk delete failed",
@@ -223,8 +233,9 @@ async def bulk_delete_todos(
 
 # Special mark complete endpoint for convenience
 @router.post("/todos/bulk/complete", response_model=BulkOperationResponse)
+@tiered_rate_limit("todo_operations")
 async def bulk_complete_todos(
-    todo_ids: List[str] = Body(..., min_items=1, max_items=100),
+    todo_ids: List[str] = Body(..., min_length=1, max_length=100),
     user: dict = Depends(get_current_user),
 ):
     """Mark multiple todos as completed (convenience endpoint)."""
@@ -233,7 +244,7 @@ async def bulk_complete_todos(
     )
     try:
         return await TodoService.bulk_update_todos(request, user["user_id"])
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Bulk complete failed",
@@ -246,7 +257,7 @@ async def list_projects(user: dict = Depends(get_current_user)):
     """List all projects with todo counts."""
     try:
         return await ProjectService.list_projects(user["user_id"])
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve projects",
@@ -256,13 +267,14 @@ async def list_projects(user: dict = Depends(get_current_user)):
 @router.post(
     "/projects", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED
 )
+@tiered_rate_limit("todo_operations")
 async def create_project(
     project: ProjectCreate, user: dict = Depends(get_current_user)
 ):
     """Create a new project."""
     try:
         return await ProjectService.create_project(project, user["user_id"])
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create project",
@@ -270,6 +282,7 @@ async def create_project(
 
 
 @router.put("/projects/{project_id}", response_model=ProjectResponse)
+@tiered_rate_limit("todo_operations")
 async def update_project(
     project_id: str,
     updates: UpdateProjectRequest,
@@ -285,7 +298,7 @@ async def update_project(
             else status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update project",
@@ -293,6 +306,7 @@ async def update_project(
 
 
 @router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@tiered_rate_limit("todo_operations")
 async def delete_project(project_id: str, user: dict = Depends(get_current_user)):
     """Delete a project. All todos will be moved to Inbox. Cannot delete Inbox."""
     try:
@@ -304,8 +318,165 @@ async def delete_project(project_id: str, user: dict = Depends(get_current_user)
             else status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete project",
+        )
+
+
+# Subtask Management Endpoints
+@router.post("/todos/{todo_id}/subtasks", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@tiered_rate_limit("todo_operations")
+async def create_subtask(
+    todo_id: str, 
+    subtask: SubtaskCreateRequest, 
+    user: dict = Depends(get_current_user)
+):
+    """Add a new subtask to a todo."""
+    try:
+        # Get the current todo
+        current_todo = await TodoService.get_todo(todo_id, user["user_id"])
+        
+        # Create new subtask with unique ID
+        import uuid
+        new_subtask = SubTask(
+            id=str(uuid.uuid4()),
+            title=subtask.title,
+            completed=False
+        )
+        
+        # Add to existing subtasks
+        updated_subtasks = list(current_todo.subtasks) + [new_subtask]
+        
+        # Update the todo
+        return await TodoService.update_todo(
+            todo_id,
+            UpdateTodoRequest(subtasks=updated_subtasks),
+            user["user_id"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create subtask"
+        )
+
+
+@router.put("/todos/{todo_id}/subtasks/{subtask_id}", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
+async def update_subtask(
+    todo_id: str,
+    subtask_id: str,
+    updates: SubtaskUpdateRequest,
+    user: dict = Depends(get_current_user)
+):
+    """Update a specific subtask."""
+    try:
+        # Get the current todo
+        current_todo = await TodoService.get_todo(todo_id, user["user_id"])
+        
+        # Find and update the subtask
+        updated_subtasks = []
+        subtask_found = False
+        
+        for subtask in current_todo.subtasks:
+            if subtask.id == subtask_id:
+                subtask_found = True
+                # Update fields if provided
+                if updates.title is not None:
+                    subtask.title = updates.title
+                if updates.completed is not None:
+                    subtask.completed = updates.completed
+            updated_subtasks.append(subtask)
+        
+        if not subtask_found:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtask not found")
+        
+        # Update the todo
+        return await TodoService.update_todo(
+            todo_id,
+            UpdateTodoRequest(subtasks=updated_subtasks),
+            user["user_id"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update subtask"
+        )
+
+
+@router.delete("/todos/{todo_id}/subtasks/{subtask_id}", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
+async def delete_subtask(
+    todo_id: str,
+    subtask_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Delete a specific subtask."""
+    try:
+        # Get the current todo
+        current_todo = await TodoService.get_todo(todo_id, user["user_id"])
+        
+        # Remove the subtask
+        updated_subtasks = [s for s in current_todo.subtasks if s.id != subtask_id]
+        
+        if len(updated_subtasks) == len(current_todo.subtasks):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtask not found")
+        
+        # Update the todo
+        return await TodoService.update_todo(
+            todo_id,
+            UpdateTodoRequest(subtasks=updated_subtasks),
+            user["user_id"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete subtask"
+        )
+
+
+@router.post("/todos/{todo_id}/subtasks/{subtask_id}/toggle", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
+async def toggle_subtask_completion(
+    todo_id: str,
+    subtask_id: str,
+    user: dict = Depends(get_current_user)
+):
+    """Toggle the completion status of a subtask (convenience endpoint)."""
+    try:
+        # Get the current todo
+        current_todo = await TodoService.get_todo(todo_id, user["user_id"])
+        
+        # Find and toggle the subtask
+        updated_subtasks = []
+        subtask_found = False
+        
+        for subtask in current_todo.subtasks:
+            if subtask.id == subtask_id:
+                subtask_found = True
+                subtask.completed = not subtask.completed
+            updated_subtasks.append(subtask)
+        
+        if not subtask_found:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subtask not found")
+        
+        # Update the todo
+        return await TodoService.update_todo(
+            todo_id,
+            UpdateTodoRequest(subtasks=updated_subtasks),
+            user["user_id"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle subtask"
         )

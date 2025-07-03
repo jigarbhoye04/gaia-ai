@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from infisical_sdk import InfisicalSDKClient
@@ -86,10 +87,13 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str
     GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
-    GEMINI_API_KEY: str
+    RESEND_API_KEY: str
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
+
+    # Blog Management
+    BLOG_BEARER_TOKEN: str  # Bearer token for blog management operations
 
     # Service URL's
     LLM_URL: str = "https://llm.aryanranderiya1478.workers.dev/"
@@ -112,11 +116,22 @@ class Settings(BaseSettings):
     # Miscellaneous
     LLAMA_INDEX_KEY: str
     OPENAI_API_KEY: str
+    GCP_TOPIC_NAME: str
 
     # Memory Configuration
     MEM0_API_KEY: str
     MEM0_ORG_ID: str
     MEM0_PROJECT_ID: str
+
+    # Celery Configuration
+    RABBITMQ_URL: str
+
+    # Code Execution
+    E2B_API_KEY: str
+
+    # Razorpay Configuration
+    RAZORPAY_KEY_ID: str
+    RAZORPAY_KEY_SECRET: str
 
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
@@ -133,6 +148,8 @@ class Settings(BaseSettings):
         extra="allow",
     )
 
+    MAX_REMINDER_DURATION: datetime.timedelta = datetime.timedelta(days=180)
+
 
 inject_infisical_secrets()
-settings = Settings()
+settings = Settings()  # type: ignore

@@ -1,16 +1,19 @@
 """Memory management API routes."""
 
 
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
-from app.services.memory_service import memory_service
+from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.memory_models import (
     CreateMemoryRequest,
     CreateMemoryResponse,
     DeleteMemoryResponse,
     MemorySearchResult,
 )
+from app.services.memory_service import memory_service
 
 router = APIRouter()
 
@@ -43,6 +46,7 @@ async def get_all_memories(
 
 
 @router.post("", response_model=CreateMemoryResponse)
+@tiered_rate_limit("memory")
 async def create_memory(
     request: CreateMemoryRequest,
     user: dict = Depends(get_current_user),
@@ -81,6 +85,7 @@ async def create_memory(
 
 
 @router.delete("/{memory_id}", response_model=DeleteMemoryResponse)
+@tiered_rate_limit("memory")
 async def delete_memory(
     memory_id: str,
     user: dict = Depends(get_current_user),
@@ -117,6 +122,7 @@ async def delete_memory(
 
 
 @router.delete("", response_model=DeleteMemoryResponse)
+@tiered_rate_limit("memory")
 async def clear_all_memories(
     user: dict = Depends(get_current_user),
 ):
@@ -132,7 +138,7 @@ async def clear_all_memories(
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="User ID not found")
-    
+
     try:
         # Get all memories and delete them one by one
         # (Mem0 doesn't have a bulk delete, so we iterate)
@@ -141,17 +147,22 @@ async def clear_all_memories(
             page=1,
             page_size=100  # Get first 100 memories
         )
-        
+
         deleted_count = 0
+        # Create deletion tasks for all memories in the current page
+        deletion_tasks = []
         for memory in all_memories.memories:
             if memory.id:
-                success = await memory_service.delete_memory(
-                    memory_id=memory.id,
-                    user_id=user_id
+                task = memory_service.delete_memory(
+                    memory_id=memory.id, user_id=user_id
                 )
-                if success:
-                    deleted_count += 1
-        
+                deletion_tasks.append(task)
+
+        # Execute all deletion tasks concurrently and collect results
+        if deletion_tasks:
+            results = await asyncio.gather(*deletion_tasks)
+            deleted_count += sum(1 for result in results if result)
+
         # Handle remaining memories if more than 100
         while all_memories.has_next:
             all_memories = await memory_service.get_all_memories(
@@ -167,7 +178,7 @@ async def clear_all_memories(
                     )
                     if success:
                         deleted_count += 1
-        
+
         return DeleteMemoryResponse(
             success=True,
             message=f"Cleared {deleted_count} memories successfully"

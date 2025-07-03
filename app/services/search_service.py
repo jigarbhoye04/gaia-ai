@@ -5,7 +5,7 @@ Service module for handling search operations and URL metadata fetching.
 from fastapi import HTTPException, status
 
 from app.config.loggers import search_logger as logger
-from app.db.collections import (
+from app.db.mongodb.collections import (
     conversations_collection,
     notes_collection,
 )

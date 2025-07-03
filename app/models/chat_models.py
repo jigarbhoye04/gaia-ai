@@ -37,6 +37,8 @@ class MessageModel(BaseModel):
     message_id: Optional[str] = None  # Message ID
     fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
     fileData: Optional[List[FileData]] = []  # Complete file metadata
+    selectedTool: Optional[str] = None  # Tool selected via slash commands
+    toolCategory: Optional[str] = None  # Category of the selected tool
     intent: Optional[Literal["calendar", "generate_image", "weather"]] = None
     calendar_options: Optional[List[EventCreateRequest]] = None
     search_results: Optional[SearchResults] = None
@@ -45,6 +47,12 @@ class MessageModel(BaseModel):
     email_compose_data: Optional[dict] = None  # Email compose data from mail_tool
     memory_data: Optional[dict] = None  # Complete memory operation data
     todo_data: Optional[dict] = None  # Data related to todo operations
+    document_data: Optional[dict] = None  # Data related to todo operations
+    goal_data: Optional[dict] = None  # Data related to goal operations
+    code_data: Optional[dict] = (
+        None  # Code execution data with language, code, and output
+    )
+    google_docs_data: Optional[dict] = None  # Google Docs data from google_docs_tool
 
 
 class ConversationModel(BaseModel):

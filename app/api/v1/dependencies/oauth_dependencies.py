@@ -1,12 +1,14 @@
 import logging
 import time
+from datetime import datetime, timezone as tz 
 from typing import Optional
 
 import httpx
-from fastapi import Cookie, HTTPException
+from fastapi import Cookie, Header, HTTPException
+from pytz import timezone
 
 from app.config.settings import settings
-from app.db.collections import users_collection
+from app.db.mongodb.collections import users_collection
 from app.db.redis import get_cache, set_cache
 
 logger = logging.getLogger(__name__)
@@ -237,6 +239,11 @@ async def get_current_user(
         cache_key = f"user_cache:{user_email}"
         cached_user_data = await get_cache(cache_key)
         if cached_user_data:
+            # Update user's last activity
+            await users_collection.update_one(
+                {"email": user_email},
+                {"$set": {"last_active_at": datetime.now(tz.utc)}}
+            )
             # Update with new tokens if available but keep other cached data
             if access_token and access_token != cached_user_data.get("access_token"):
                 cached_user_data["access_token"] = access_token
@@ -247,6 +254,12 @@ async def get_current_user(
         user_data = await users_collection.find_one({"email": user_email})
         if not user_data:
             raise HTTPException(status_code=404, detail="User not found")
+
+        # Update user's last activity
+        await users_collection.update_one(
+            {"email": user_email},
+            {"$set": {"last_active_at": datetime.now(tz.utc)}}
+        )
 
         user_info_to_cache = {
             "user_id": str(user_data.get("_id")),
@@ -271,3 +284,24 @@ async def get_current_user(
     except Exception as e:
         logger.error(f"Unexpected authentication error: {e}")
         raise HTTPException(status_code=500, detail="Authentication processing failed")
+
+
+def get_user_timezone(
+    x_timezone: str = Header(
+        default="UTC", alias="x-timezone", description="User's timezone identifier"
+    ),
+) -> datetime:
+    """
+    Get the current time in the user's timezone.
+    Uses the x-timezone header to determine the user's timezone.
+
+    Args:
+        x_timezone (str): The timezone identifier from the request header.
+    Returns:
+        datetime: The current time in the user's timezone.
+    """
+    user_tz = timezone(x_timezone)
+    now = datetime.now(user_tz)
+
+    logger.debug(f"User timezone: {user_tz}, Current time: {now}")
+    return now

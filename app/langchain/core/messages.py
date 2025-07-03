@@ -5,8 +5,9 @@ from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemM
 
 from app.config.loggers import llm_logger as logger
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.services.memory_service import MemorySearchResult, memory_service
+from app.services.memory_service import memory_service
 from app.models.message_models import FileData, MessageDict
+from app.services.onboarding_service import get_user_preferences_for_agent
 
 
 async def construct_langchain_messages(
@@ -16,6 +17,7 @@ async def construct_langchain_messages(
     user_id: Optional[str] = None,
     user_name: Optional[str] = None,
     query: Optional[str] = None,
+    selected_tool: Optional[str] = None,
 ) -> List[AnyMessage]:
     """
     Convert raw dict messages to LangChain message objects with current datetime.
@@ -26,6 +28,7 @@ async def construct_langchain_messages(
         currently_uploaded_file_ids: Optional list of currently uploaded file IDs
         user_id: Optional user ID for retrieving relevant memories
         query: Optional query string for memory search (usually the latest user message)
+        selected_tool: Optional tool selected via slash commands
 
     Returns:
         List of LangChain message objects
@@ -36,9 +39,18 @@ async def construct_langchain_messages(
     # Format the list of files if any
     current_files_str = _format_files_list(files_data, currently_uploaded_file_ids)
 
-    # Create the system prompt with the current time
+    # Get user preferences for the agent if user_id is provided
+    user_preferences_str = ""
+    if user_id:
+        user_preferences_str = await get_user_preferences_for_agent(user_id) or ""
+        if user_preferences_str:
+            user_preferences_str = f"\n{user_preferences_str}\n"
+
+    # Create the system prompt with the current time and user preferences
     system_prompt = AGENT_PROMPT_TEMPLATE.format(
-        current_datetime=formatted_time, user_name=user_name
+        current_datetime=formatted_time,
+        user_name=user_name,
+        user_preferences=user_preferences_str,
     )
 
     chain_msgs: List[AnyMessage] = [SystemMessage(content=system_prompt)]
@@ -47,7 +59,7 @@ async def construct_langchain_messages(
     if user_id and query:
         try:
             # Search for relevant memories
-            memory_results: MemorySearchResult = await memory_service.search_memories(
+            memory_results = await memory_service.search_memories(
                 query=query, user_id=user_id, limit=5
             )
 
@@ -69,17 +81,41 @@ async def construct_langchain_messages(
         except Exception as e:
             logger.error(f"Error retrieving memories: {e}")
 
-    # Convert each message to the appropriate LangChain message type
-    for index, msg in enumerate(messages):
-        role = msg.get("role")
-        content = msg.get("content", "")
-        if role == "user":
-            # If the message is last and the role is "user", it means the user is uploading files
-            if index == len(messages) - 1 and currently_uploaded_file_ids:
-                content += f"\n\n{current_files_str}"
-            chain_msgs.append(HumanMessage(content=content))
-        elif role in ("assistant", "bot"):
-            chain_msgs.append(AIMessage(content=content))
+    # Handle case where no conversation messages exist but a tool is selected
+    if not messages and selected_tool:
+        # Format tool name for better readability
+        tool_display_name = selected_tool.replace("_", " ").title()
+        content = f"Use the {tool_display_name} tool."
+        
+        # Add file information if files are uploaded
+        if currently_uploaded_file_ids:
+            content += f"\n\n{current_files_str}"
+            
+        chain_msgs.append(HumanMessage(content=content))
+    else:
+        # Convert each message to the appropriate LangChain message type
+        for index, msg in enumerate(messages):
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role == "user":
+                # If the message is last and the role is "user", append additional context
+                if index == len(messages) - 1:
+                    # Add file information if files are uploaded
+                    if currently_uploaded_file_ids:
+                        content += f"\n\n{current_files_str}"
+                    
+                    # Add tool selection information if a tool is selected
+                    if selected_tool:
+                        # Format tool name for better readability
+                        tool_display_name = selected_tool.replace("_", " ").title()
+                        if content.strip():  # If there's existing content
+                            content += f"\n\nPlease use the {tool_display_name} tool to handle this request."
+                        else:  # If the message is empty
+                            content = f"Use the {tool_display_name} tool."
+                            
+                chain_msgs.append(HumanMessage(content=content))
+            elif role in ("assistant", "bot"):
+                chain_msgs.append(AIMessage(content=content))
 
     return chain_msgs
 

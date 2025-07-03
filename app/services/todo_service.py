@@ -1,40 +1,51 @@
-from datetime import datetime, timezone
-from typing import List, Optional, Tuple, Dict, Any
-import uuid
 import math
+import uuid
+from datetime import datetime, timezone
+from typing import List, Optional
 
 from bson import ObjectId
 from pymongo import ReturnDocument
 
 from app.config.loggers import todos_logger
-from app.db.collections import todos_collection, projects_collection
-from app.db.redis import get_cache, set_cache, delete_cache_by_pattern, CACHE_TTL, STATS_CACHE_TTL
+from app.db.mongodb.collections import projects_collection, todos_collection
+from app.db.redis import (
+    CACHE_TTL,
+    STATS_CACHE_TTL,
+    delete_cache,
+    delete_cache_by_pattern,
+    get_cache,
+    set_cache,
+)
 from app.db.utils import serialize_document
 from app.models.todo_models import (
-    TodoCreate,
-    TodoResponse,
-    UpdateTodoRequest,
-    ProjectCreate,
-    ProjectResponse,
-    UpdateProjectRequest,
-    SubTask,
-    TodoListResponse,
-    PaginationMeta,
-    TodoStats,
-    TodoSearchParams,
-    SearchMode,
+    BulkMoveRequest,
     BulkOperationResponse,
     BulkUpdateRequest,
-    BulkMoveRequest,
+    PaginationMeta,
     Priority,
+    ProjectCreate,
+    ProjectResponse,
+    SearchMode,
+    SubTask,
+    TodoCreate,
+    TodoListResponse,
+    TodoResponse,
+    TodoSearchParams,
+    TodoStats,
+    UpdateProjectRequest,
+    UpdateTodoRequest,
 )
 from app.utils.todo_vector_utils import (
+    bulk_index_todos,
+    delete_todo_embedding,
     store_todo_embedding,
     update_todo_embedding,
-    delete_todo_embedding,
-    semantic_search_todos as vector_search,
+)
+from app.utils.todo_vector_utils import (
     hybrid_search_todos as vector_hybrid_search,
-    bulk_index_todos,
+)
+from app.utils.todo_vector_utils import (
+    semantic_search_todos as vector_search,
 )
 
 # Special constants
@@ -45,14 +56,32 @@ class TodoService:
     """Service class for todo operations with consistent error handling and caching."""
 
     @staticmethod
-    async def _invalidate_cache(user_id: str, project_id: Optional[str] = None):
-        """Invalidate all relevant caches for a user."""
+    async def _invalidate_cache(user_id: str, project_id: Optional[str] = None, todo_id: Optional[str] = None, operation: Optional[str] = None):
+        """Invalidate relevant caches based on the operation context."""
         try:
-            await delete_cache_by_pattern(f"todos:{user_id}*")
-            await delete_cache_by_pattern(f"todo:{user_id}:*")
-            await delete_cache_by_pattern(f"projects:{user_id}*")
-            await delete_cache_by_pattern(f"stats:{user_id}*")
+            # Always invalidate stats since they might change
+            await delete_cache(f"stats:{user_id}")
+            
+            # For specific todo operations, invalidate only affected caches
+            if todo_id and operation in ["update", "delete"]:
+                await delete_cache(f"todo:{user_id}:{todo_id}")
+                
+                # Only invalidate list caches if the operation affects list visibility
+                # (e.g., completion status change, project change, priority change)
+                if operation == "delete" or operation == "update":
+                    # Invalidate project-specific caches
+                    if project_id:
+                        await delete_cache_by_pattern(f"todos:{user_id}:project:{project_id}:*")
+                    # Invalidate main list cache
+                    await delete_cache_by_pattern(f"todos:{user_id}:page:*")
+            else:
+                # For create or bulk operations, invalidate broader caches
+                await delete_cache_by_pattern(f"todos:{user_id}*")
+                await delete_cache_by_pattern(f"todo:{user_id}:*")
+                
+            # Project cache invalidation
             if project_id:
+                await delete_cache(f"projects:{user_id}")
                 await delete_cache_by_pattern(f"*:project:{project_id}*")
         except Exception as e:
             todos_logger.warning(f"Cache invalidation failed: {str(e)}")
@@ -235,13 +264,19 @@ class TodoService:
         except Exception as e:
             todos_logger.warning(f"Failed to index todo: {str(e)}")
 
-        await cls._invalidate_cache(user_id, todo.project_id)
+        await cls._invalidate_cache(user_id, todo.project_id, str(result.inserted_id), "create")
 
         return TodoResponse(**serialize_document(created_todo))
 
     @classmethod
     async def get_todo(cls, todo_id: str, user_id: str) -> TodoResponse:
         """Get a single todo by ID."""
+        # Try cache first
+        cache_key = f"todo:{user_id}:{todo_id}"
+        cached = await get_cache(cache_key)
+        if cached:
+            return TodoResponse(**cached)
+        
         todo = await todos_collection.find_one(
             {"_id": ObjectId(todo_id), "user_id": user_id}
         )
@@ -249,7 +284,12 @@ class TodoService:
         if not todo:
             raise ValueError(f"Todo {todo_id} not found")
 
-        return TodoResponse(**serialize_document(todo))
+        response = TodoResponse(**serialize_document(todo))
+        
+        # Cache the response
+        await set_cache(cache_key, response.model_dump(), CACHE_TTL)
+        
+        return response
 
     @classmethod
     async def list_todos(
@@ -259,6 +299,22 @@ class TodoService:
         # Handle search modes
         if params.q and params.mode in [SearchMode.SEMANTIC, SearchMode.HYBRID]:
             return await cls._search_todos(user_id, params)
+
+        # Generate cache key for this specific query
+        cache_key_parts = [f"todos:{user_id}"]
+        if params.project_id:
+            cache_key_parts.append(f"project:{params.project_id}")
+        if params.completed is not None:
+            cache_key_parts.append(f"completed:{params.completed}")
+        if params.priority:
+            cache_key_parts.append(f"priority:{params.priority.value}")
+        cache_key_parts.append(f"page:{params.page}")
+        cache_key = ":".join(cache_key_parts)
+        
+        # Try to get from cache
+        cached_response = await get_cache(cache_key)
+        if cached_response and not params.include_stats:
+            return TodoListResponse(**cached_response)
 
         # Build query
         query = await cls._build_query(user_id, params)
@@ -287,6 +343,10 @@ class TodoService:
         )
 
         response = TodoListResponse(data=data, meta=meta)
+
+        # Cache the response (without stats)
+        if not params.include_stats:
+            await set_cache(cache_key, response.model_dump(), CACHE_TTL)
 
         # Include stats if requested
         if params.include_stats:
@@ -343,13 +403,55 @@ class TodoService:
         except Exception as e:
             todos_logger.warning(f"Failed to update index: {str(e)}")
 
-        await cls._invalidate_cache(user_id)
+        # Sync subtask changes back to goals if this is a goal-related todo
+        if "subtasks" in update_dict:
+            try:
+                # Import here to avoid circular import
+                from app.services.goals_service import sync_subtask_to_goal_completion
+                
+                # Compare old vs new subtasks to find what changed
+                for new_subtask_dict in update_dict["subtasks"]:
+                    new_subtask_id = new_subtask_dict.get("id")
+                    new_completed = new_subtask_dict.get("completed", False)
+                    
+                    old_subtask = next((s for s in existing["subtasks"] if s["id"] == new_subtask_id), None)
+                    if old_subtask and old_subtask["completed"] != new_completed:
+                        # Subtask completion status changed, sync to goal
+                        await sync_subtask_to_goal_completion(
+                            todo_id, new_subtask_id, new_completed, user_id
+                        )
+            except Exception as e:
+                todos_logger.warning(f"Failed to sync subtask completion to goal: {str(e)}")
+
+        # Determine if this update affects list visibility
+        affects_visibility = any([
+            "completed" in update_dict,
+            "project_id" in update_dict,
+            "priority" in update_dict,
+            "due_date" in update_dict,
+            "labels" in update_dict
+        ])
+        
+        await cls._invalidate_cache(
+            user_id, 
+            updated.get("project_id"), 
+            todo_id, 
+            "update" if affects_visibility else "update_minor"
+        )
 
         return TodoResponse(**serialize_document(updated))
 
     @classmethod
     async def delete_todo(cls, todo_id: str, user_id: str) -> None:
         """Delete a todo."""
+
+        # Get the todo before deletion to know its project
+        todo = await todos_collection.find_one({"_id": ObjectId(todo_id), "user_id": user_id})
+        if not todo:
+            raise ValueError(f"Todo {todo_id} not found")
+        
+        project_id = todo.get("project_id")
+        
         result = await todos_collection.delete_one(
             {"_id": ObjectId(todo_id), "user_id": user_id}
         )
@@ -363,7 +465,7 @@ class TodoService:
         except Exception as e:
             todos_logger.warning(f"Failed to remove from index: {str(e)}")
 
-        await cls._invalidate_cache(user_id)
+        await cls._invalidate_cache(user_id, project_id, todo_id, "delete")
 
     # Bulk Operations
     @classmethod
@@ -381,7 +483,7 @@ class TodoService:
             except Exception as e:
                 failed.append({"id": todo_id, "error": str(e)})
 
-        await cls._invalidate_cache(user_id)
+        await cls._invalidate_cache(user_id, operation="bulk_update")
 
         return BulkOperationResponse(
             success=success,
@@ -438,7 +540,7 @@ class TodoService:
             },
         )
 
-        await cls._invalidate_cache(user_id)
+        await cls._invalidate_cache(user_id, project_id=request.project_id, operation="bulk_move")
 
         return BulkOperationResponse(
             success=request.todo_ids if result.modified_count > 0 else [],
@@ -546,13 +648,19 @@ class ProjectService:
             {"user_id": user_id, "project_id": str(result.inserted_id)}
         )
 
-        await TodoService._invalidate_cache(user_id)
+        await TodoService._invalidate_cache(user_id, project_id=str(result.inserted_id), operation="project_create")
 
         return ProjectResponse(**serialize_document(created), todo_count=todo_count)
 
     @staticmethod
     async def list_projects(user_id: str) -> List[ProjectResponse]:
         """List all projects with todo counts."""
+        # Try cache first
+        cache_key = f"projects:{user_id}"
+        cached = await get_cache(cache_key)
+        if cached:
+            return [ProjectResponse(**project) for project in cached]
+        
         # Ensure inbox exists
         await TodoService._get_or_create_inbox(user_id)
 
@@ -588,8 +696,12 @@ class ProjectService:
         ]
 
         projects = await projects_collection.aggregate(pipeline).to_list(None)
-
-        return [ProjectResponse(**serialize_document(project)) for project in projects]
+        response = [ProjectResponse(**serialize_document(project)) for project in projects]
+        
+        # Cache the response
+        await set_cache(cache_key, [p.model_dump() for p in response], CACHE_TTL)
+        
+        return response
 
     @staticmethod
     async def update_project(
@@ -620,7 +732,7 @@ class ProjectService:
             {"user_id": user_id, "project_id": project_id}
         )
 
-        await TodoService._invalidate_cache(user_id)
+        await TodoService._invalidate_cache(user_id, project_id=project_id, operation="project_update")
 
         return ProjectResponse(**serialize_document(updated), todo_count=todo_count)
 
@@ -652,7 +764,7 @@ class ProjectService:
         # Delete project
         await projects_collection.delete_one({"_id": ObjectId(project_id)})
 
-        await TodoService._invalidate_cache(user_id)
+        await TodoService._invalidate_cache(user_id, project_id=project_id, operation="project_delete")
 
 
 # Compatibility functions for old API

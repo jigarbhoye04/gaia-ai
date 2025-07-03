@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 from fastapi import HTTPException, status
 
-from app.db.collections import conversations_collection
+from app.db.mongodb.collections import conversations_collection
 from app.models.chat_models import ConversationModel, UpdateMessagesRequest
 
 

@@ -128,6 +128,65 @@ services:
     networks:
       - gaia_network
 
+  # RabbitMQ Service (scheduler only)
+  rabbitmq:
+    profiles: ["scheduler"]
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # scheduler Worker (scheduler only)
+  worker:
+    profiles: ["scheduler"]
+    container_name: worker
+    image: gaia
+    working_dir: /app
+    env_file:
+      - .env
+    command: ["python", "-m", "app.worker"]
+    restart: always
+    volumes:
+      - .:/app
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - gaia_network
+
+  # Arq Worker
+  arq_worker:
+    profiles: ["scheduler"]
+    container_name: arq_worker
+    image: gaia
+    working_dir: /app
+    env_file:
+      - .env
+    command: ["python", "-m", "arq", "app.arq_worker.WorkerSettings"]
+    restart: always
+    volumes:
+      - .:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - gaia_network
+
   # Mongo Express Service (dev only)
   mongo_express:
     image: mongo-express:latest
@@ -150,6 +209,7 @@ volumes:
   pgdata:
   redis_data:
   mongo_data:
+  rabbitmq_data:
 
 networks:
   gaia_network:

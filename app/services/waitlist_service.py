@@ -4,11 +4,13 @@ Waitlist service functions for the GAIA API.
 This module contains service functions related to the waitlist functionality of the GAIA API.
 """
 
-from app.db.collections import waitlist_collection
+from typing import Optional
+
+from fastapi import HTTPException, Request
+
+from app.db.mongodb.collections import waitlist_collection
 from app.db.utils import serialize_document
 from app.models.general_models import WaitlistItem
-from fastapi import HTTPException, Request
-from typing import Optional
 
 
 async def get_waitlist_members_service():

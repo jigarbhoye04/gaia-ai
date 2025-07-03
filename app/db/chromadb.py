@@ -2,11 +2,11 @@ from functools import lru_cache
 from typing import Dict, Optional
 
 import chromadb
+from chromadb.api import AsyncClientAPI, ClientAPI
 from chromadb.config import Settings
 from fastapi import Request
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from chromadb.api import AsyncClientAPI, ClientAPI
 
 from app.config.loggers import chroma_logger as logger
 from app.config.settings import settings
@@ -124,6 +124,7 @@ class ChromaClient:
 
             # Check if collection exists, create if it doesn't
             collections = await chroma_client.list_collections()
+            collections = list(map(lambda x: x.name, collections))  # type: ignore
 
             if collection_name not in collections:
                 if create_if_not_exists:
@@ -202,11 +203,12 @@ async def init_chroma(app=None):
         )
 
         existing_collections = await client.list_collections()
+        existing_collection_names = [col.name for col in existing_collections]  # type: ignore
         collection_names = ["notes", "documents"]
 
         # Create collections if they don't exist
         for collection_name in collection_names:
-            if collection_name not in existing_collections:
+            if collection_name not in existing_collection_names:
                 logger.info(
                     f"'{collection_name}' collection not found. Creating new collection..."
                 )
@@ -214,6 +216,10 @@ async def init_chroma(app=None):
                     name=collection_name, metadata={"hnsw:space": "cosine"}
                 )
                 logger.info(f"'{collection_name}' collection created successfully.")
+            else:
+                logger.info(
+                    f"Collection '{collection_name}' already exists, skipping creation."
+                )
 
         ChromaClient(
             chroma_client=client,

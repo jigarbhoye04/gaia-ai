@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import search_logger as logger
-from app.db.collections import (
+from app.db.mongodb.collections import (
     search_urls_collection,
 )
 from app.db.redis import get_cache, set_cache
