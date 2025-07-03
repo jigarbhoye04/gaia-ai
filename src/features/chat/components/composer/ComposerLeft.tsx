@@ -109,7 +109,6 @@ export default function ComposerLeft({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
             size="icon"
             className={cn(
               "group relative h-10 w-10 rounded-full border-none bg-zinc-700 p-0 hover:bg-zinc-600/90",
@@ -178,7 +177,6 @@ export default function ComposerLeft({
           showArrow
         >
           <Button
-            variant="outline"
             size="icon"
             className={cn(
               "group relative h-10 w-10 rounded-full border-none bg-zinc-700 p-0 text-zinc-400 hover:bg-zinc-600/90",
@@ -195,7 +193,7 @@ export default function ComposerLeft({
             />
             {isSlashCommandDropdownOpen && (
               <span
-                className="top-0x absolute right-0 h-2 w-2 rounded-full bg-primary transition"
+                className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary transition"
                 aria-hidden="true"
               />
             )}
