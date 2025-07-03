@@ -71,7 +71,6 @@ export default function ChatRenderer() {
           src={"/branding/logo.webp"}
           width={110}
           height={110}
-          className="bobbing"
         />
         <StarterText />
       </div>
@@ -153,6 +152,8 @@ export default function ChatRenderer() {
             searchWeb={message.searchWeb}
             text={message.response}
             fileData={message.fileData}
+            selectedTool={message.selectedTool}
+            toolCategory={message.toolCategory}
           />
         ),
       )}

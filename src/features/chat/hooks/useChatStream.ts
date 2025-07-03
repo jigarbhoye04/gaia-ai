@@ -150,6 +150,8 @@ export const useChatStream = () => {
     pageFetchURLs: string[],
     botMessageId: string,
     fileData: FileData[] = [],
+    selectedTool: string | null = null,
+    toolCategory: string | null = null,
   ) => {
     refs.current.accumulatedResponse = "";
     refs.current.userPrompt = inputText;
@@ -185,6 +187,8 @@ export const useChatStream = () => {
         localStorage.setItem("gaia-searchbar-text", inputText);
       },
       fileData,
+      selectedTool,
+      toolCategory,
     );
   };
 };
