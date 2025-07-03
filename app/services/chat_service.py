@@ -37,9 +37,17 @@ async def chat_stream(
     logger.info(
         f"User {user.get('user_id')} started a conversation with ID {conversation_id}"
     )
-    logger.info(
-        f"User {user.get('user_id')} sent a message: {body.messages[-1]['content']}"
-    )
+    
+    # Log the user's message if messages exist
+    if body.messages:
+        message_content = body.messages[-1].get('content', '') if body.messages else ''
+        logger.info(
+            f"User {user.get('user_id')} sent a message: {message_content}"
+        )
+    else:
+        logger.info(
+            f"User {user.get('user_id')} sent a request with selected tool: {body.selectedTool}"
+        )
 
     # Stream response from the agent
     async for chunk in call_agent(
@@ -223,15 +231,18 @@ def update_conversation_messages(
         complete_message: Complete LLM-generated message
         tool_data: Structured tool output data to store with the message
     """
-    # Create user message
+    # Create user message - handle case where messages array might be empty due to tool selection
+    user_content = body.messages[-1]["content"] if body.messages else body.message
     user_message = MessageModel(
         type="user",
-        response=body.messages[-1]["content"],
+        response=user_content,
         date=datetime.now(timezone.utc).isoformat(),
         searchWeb=body.search_web,
         deepSearchWeb=body.deep_search,
         pageFetchURLs=body.pageFetchURLs,
         fileIds=body.fileIds,
+        selectedTool=body.selectedTool,
+        toolCategory=body.toolCategory,
     )
 
     # Create bot message with base properties

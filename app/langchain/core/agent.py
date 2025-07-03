@@ -60,6 +60,7 @@ async def call_agent(
                 user_id=user_id,
                 query=request.message,
                 user_name=user.get("name"),
+                selected_tool=request.selectedTool,
             ),
             GraphManager.get_graph(),
         )
