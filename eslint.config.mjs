@@ -53,7 +53,7 @@ export default [
       "react/no-unescaped-entities": "off",
       "import/order": "off",
       "simple-import-sort/imports": "warn",
-      "simple-import-sort/exports": "error",
+      "simple-import-sort/exports": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {
