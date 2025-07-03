@@ -8,7 +8,7 @@ import {
   GoogleCalendarIcon,
 } from "@/components";
 import CalendarCard from "@/features/calendar/components/CalendarCard";
-import { CalendarEvent, GoogleCalendar } from "@/types";
+import { CalendarEvent, CalendarItem } from "@/types";
 
 import CalendarMessages from "../../demo/CalendarMessages";
 import { FeatureCard } from "../../shared/FeatureCard";
@@ -27,21 +27,24 @@ const calendarTools: string[] = [
 export default function Calendar() {
   const [addedEvents, setAddedEvents] = useState<number[]>([]);
   const [selectedTab, setSelectedTab] = useState("chat");
-  const dummyCalendars: GoogleCalendar[] = [
+  const dummyCalendars: CalendarItem[] = [
     {
       id: "work@heygaia.io",
+      name: "Work",
       summary: "Work",
       backgroundColor: "#00bbff",
       primary: true,
     },
     {
       id: "personal@heygaia.io",
+      name: "Personal",
       summary: "Personal",
       backgroundColor: "#7c4dff",
       primary: false,
     },
     {
       id: "organizer@heygaia.io",
+      name: "Added Events",
       summary: "Added Events",
       backgroundColor: "#00bbff",
       primary: false,

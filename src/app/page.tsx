@@ -8,9 +8,9 @@ import Integrations from "@/features/landing/components/sections/IntegrationsSec
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
 
-const DeepSearchSection = lazy(
-  () => import("@/features/landing/components/sections/DeepSearchSection"),
-);
+// const DeepSearchSection = lazy(
+//   () => import("@/features/landing/components/sections/DeepSearchSection"),
+// );
 // const FeatureGridSection = lazy(
 //   () => import("@/components/landing/sections/FeatureGridSection"),
 // );
@@ -21,12 +21,12 @@ const FinalSection = lazy(
 const Goals = lazy(
   () => import("@/features/landing/components/sections/new/Goals"),
 );
-const InternetSection = lazy(
-  () => import("@/features/landing/components/sections/InternetSection"),
-);
-const MobileSection = lazy(
-  () => import("@/features/landing/components/sections/MobileSection"),
-);
+// const InternetSection = lazy(
+//   () => import("@/features/landing/components/sections/InternetSection"),
+// );
+// const MobileSection = lazy(
+//   () => import("@/features/landing/components/sections/MobileSection"),
+// );
 
 export default function LandingPage() {
   useEffect(() => {

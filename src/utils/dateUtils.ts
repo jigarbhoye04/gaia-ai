@@ -73,7 +73,7 @@ export function formatDateWithFallback(
       month: "long",
       day: "numeric",
     });
-  } catch (error) {
+  } catch {
     return formatRelativeDate(dateString);
   }
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
 import { todoApi } from "@/features/todo/api/todoApi";
@@ -16,11 +16,7 @@ export default function LabelTodosPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    loadTodosByLabel();
-  }, [label]);
-
-  const loadTodosByLabel = async () => {
+  const loadTodosByLabel = useCallback(async () => {
     setLoading(true);
     try {
       const todoList = await todoApi.getTodosByLabel(label);
@@ -30,7 +26,11 @@ export default function LabelTodosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [label]);
+
+  useEffect(() => {
+    loadTodosByLabel();
+  }, [loadTodosByLabel]);
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {

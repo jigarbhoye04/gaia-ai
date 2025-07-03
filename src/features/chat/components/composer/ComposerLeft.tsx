@@ -40,8 +40,8 @@ interface DropdownItemConfig {
 
 export default function ComposerLeft({
   selectedMode,
-  openPageFetchModal,
-  openGenerateImageModal,
+  openPageFetchModal: _openPageFetchModal,
+  openGenerateImageModal: _openGenerateImageModal,
   openFileUploadModal,
   handleSelectionChange,
   onOpenSlashCommandDropdown,
