@@ -8,35 +8,10 @@ export default function UserContainer() {
   const user = useUser();
 
   return (
-    <div className="pointer-events-auto relative flex w-full flex-col justify-center gap-3 bg-zinc-950 px-2 py-2">
-      {/* <div className="flex relative py-3 px-3 justify-between items-center hover:bg-zinc-900 rounded-xl transition-all bg-black">
-      Syncing...
-      <Spinner size="sm" />
-      <div className="absolute h-[2px] bottom-2 left-3 w-1/3 bg-[#00bbff]" />
-    </div> */}
-
-      <div className="user_container_inner">
+    <div className="pointer-events-auto relative flex w-full flex-col justify-center gap-3 bg-transparent">
+      <div className="user_container_inner rounded-xl bg-zinc-900 px-3">
         <div className="flex items-center gap-2">
-          {/* <User
-          avatarProps={{
-            src: user?.profilePicture,
-
-            // showFallback: !user?.profilePicture,
-            isBordered: true,
-            // fallback: (
-            //   <img
-            //     alt={"User Profile photo"}
-            //     className="min-h-[35px] min-w-[35px]"
-            //     src="https://links.aryanranderiya.com/l/default_user"
-            //   />
-            // ),
-            size: "sm",
-            className: "min-w-[30px]",
-          }}
-          className="text-nowrap"
-          name={``} */}
-          {/* /> */}
-          <Avatar className="size-9 rounded-full border-2 border-black outline outline-zinc-700">
+          <Avatar className="size-7 rounded-full bg-black">
             <AvatarImage
               src={
                 user?.profilePicture ||

@@ -59,9 +59,9 @@ export default function LogoutModal({
       await fetchConversations(1, 20, false);
 
       updateConvoMessages([]);
-      toast.success("All chats cleared successfully!");
+      // Toast is already shown by the API service
     } catch (error) {
-      toast.error("Failed to clear chats. Please try again.");
+      // Error toast is already shown by the API service
       console.error("Error clearing chats:", error);
     } finally {
       setModalAction(null);

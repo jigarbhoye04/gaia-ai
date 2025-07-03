@@ -1,11 +1,17 @@
-import { Button, Card, CardBody, Pagination } from "@heroui/react";
-import { Brain, Plus, Trash2 } from "lucide-react";
+import { Button, Card, CardBody, Pagination, Tab, Tabs } from "@heroui/react";
+import { List, Network, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { type Memory, memoryApi } from "@/features/memory/api/memoryApi";
+import { AiBrain01Icon } from "@/components/shared/icons";
+import {
+  type Memory,
+  memoryApi,
+  type MemoryRelation,
+} from "@/features/memory/api/memoryApi";
 import AddMemoryModal from "@/features/memory/components/AddMemoryModal";
+import MemoryGraph from "@/features/memory/components/MemoryGraph";
 
 export interface MemoryManagementProps {
   className?: string;
@@ -16,16 +22,18 @@ export interface MemoryManagementProps {
 
 export default function MemoryManagement({
   className = "",
-  onClose,
+  onClose: _onClose,
   autoFetch = true,
   onFetch,
 }: MemoryManagementProps) {
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [relations, setRelations] = useState<MemoryRelation[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isAddMemoryModalOpen, setIsAddMemoryModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedTab, setSelectedTab] = useState("list");
 
   const fetchMemories = useCallback(
     async (page: number = 1) => {
@@ -37,6 +45,7 @@ export default function MemoryManagement({
         });
 
         setMemories(response.memories || []);
+        setRelations(response.relations || []);
         setTotalPages(Math.ceil((response.total_count || 0) / 10));
         if (onFetch) {
           onFetch(response.memories || []);
@@ -94,6 +103,7 @@ export default function MemoryManagement({
       if (response.success) {
         toast.success(response.message || "All memories cleared");
         setMemories([]);
+        setRelations([]);
         setCurrentPage(1);
         setTotalPages(1);
       } else {
@@ -210,21 +220,69 @@ export default function MemoryManagement({
         </div>
       ) : memories.length === 0 ? (
         <div className="flex h-40 flex-col items-center justify-center text-gray-500">
-          <Brain className="mb-3 h-12 w-12 opacity-30" />
+          <AiBrain01Icon className="mb-3 h-12 w-12 opacity-30" />
           <p>No memories yet</p>
           <p className="text-sm">
             Start a conversation and GAIA will remember important details
           </p>
         </div>
       ) : (
-        <div className="flex-1 space-y-2 overflow-y-auto pr-4">
-          {memories.map((memory) => (
-            <MemoryCard key={memory.id} memory={memory} />
-          ))}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Tabs
+            selectedKey={selectedTab}
+            onSelectionChange={(key) => setSelectedTab(key as string)}
+            variant="underlined"
+            classNames={{
+              tabList:
+                "gap-6 w-full relative rounded-none p-0 border-b border-divider flex justify-center",
+              cursor: "w-full bg-primary",
+              tab: "max-w-fit px-0",
+              tabContent: "group-data-[selected=true]:text-primary",
+            }}
+          >
+            <Tab
+              key="list"
+              title={
+                <div className="flex items-center gap-2">
+                  <List className="h-4 w-4" />
+                  <span>List View</span>
+                </div>
+              }
+            >
+              <div className="mt-4 flex-1 space-y-2 overflow-y-auto pr-4">
+                {memories.map((memory) => (
+                  <MemoryCard key={memory.id} memory={memory} />
+                ))}
+              </div>
+            </Tab>
+            <Tab
+              key="graph"
+              title={
+                <div className="flex items-center gap-2">
+                  <Network className="h-4 w-4" />
+                  <span>Graph View</span>
+                </div>
+              }
+            >
+              <div
+                className="mt-4 flex-1"
+                style={{ height: "calc(100vh - 300px)" }}
+              >
+                <MemoryGraph
+                  memories={memories}
+                  relations={relations}
+                  onNodeClick={(node) => {
+                    console.log("Node clicked:", node);
+                    // Add navigation logic here if needed
+                  }}
+                />
+              </div>
+            </Tab>
+          </Tabs>
         </div>
       )}
 
-      {totalPages > 1 && (
+      {totalPages > 1 && selectedTab === "list" && (
         <div className="mt-4 flex justify-center">
           <Pagination
             total={totalPages}

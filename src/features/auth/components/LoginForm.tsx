@@ -22,7 +22,7 @@ export default function LoginForm() {
   }, [user, router]);
 
   return (
-    <form className="flex h-screen w-screen flex-row items-center justify-center gap-10 overflow-auto select-none">
+    <form className="relative -bottom-4 flex h-screen w-screen flex-row items-center justify-center gap-10 overflow-auto select-none">
       <div className="0 relative z-1 flex w-full flex-col items-center justify-center gap-5 p-10">
         <div className="mb-3 space-y-2 text-center">
           <div className="text-5xl font-medium">Welcome back!</div>

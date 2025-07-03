@@ -1,3 +1,4 @@
+"use client";
 import { Star } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
@@ -27,7 +28,7 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
 
   return (
     <div
-      className="relative flex"
+      className="relative z-0 flex"
       onMouseOut={() => setButtonHovered(false)}
       onMouseOver={() => setButtonHovered(true)}
     >

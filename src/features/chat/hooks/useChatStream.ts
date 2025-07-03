@@ -150,6 +150,8 @@ export const useChatStream = () => {
     pageFetchURLs: string[],
     botMessageId: string,
     fileData: FileData[] = [],
+    selectedTool: string | null = null,
+    toolCategory: string | null = null,
   ) => {
     refs.current.accumulatedResponse = "";
     refs.current.userPrompt = inputText;
@@ -178,13 +180,15 @@ export const useChatStream = () => {
       (err) => {
         setIsLoading(false);
         resetLoadingText();
-        toast.error("Error fetching messages. Please try again later.");
+        toast.error("Error in chat stream.");
         console.error("Stream error:", err);
 
         // Save the user's input text for restoration on error
         localStorage.setItem("gaia-searchbar-text", inputText);
       },
       fileData,
+      selectedTool,
+      toolCategory,
     );
   };
 };

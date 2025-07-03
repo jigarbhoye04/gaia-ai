@@ -105,20 +105,22 @@ export default function LabelTodosPage() {
   }
 
   return (
-    <div className="flex h-full flex-col" style={{ minWidth: "500px" }}>
-      <TodoHeader
-        title={`Label: ${label}`}
-        todoCount={todos.length}
-        selectedCount={selectedTodos.size}
-        onSelectAll={handleSelectAll}
-        onBulkComplete={handleBulkComplete}
-        onBulkDelete={handleBulkDelete}
-        allSelected={selectedTodos.size === todos.length && todos.length > 0}
-      />
+    <div className="flex h-full w-full flex-col">
+      <div className="w-full" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <TodoHeader
+          title={`Label: ${label}`}
+          todoCount={todos.length}
+          selectedCount={selectedTodos.size}
+          onSelectAll={handleSelectAll}
+          onBulkComplete={handleBulkComplete}
+          onBulkDelete={handleBulkDelete}
+          allSelected={selectedTodos.size === todos.length && todos.length > 0}
+        />
+      </div>
 
       <div
-        className="flex-1 overflow-y-auto"
-        style={{ maxWidth: "1200px", margin: "0 auto" }}
+        className="flex-1 overflow-y-auto px-4"
+        style={{ maxWidth: "1200px", margin: "0 auto", width: "100%" }}
       >
         <TodoList
           todos={todos}

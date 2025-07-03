@@ -1,3 +1,5 @@
+@import "./fonts.css";
+
 .arrow_diagonal {
   transition: all 0.3s ease;
 }
@@ -232,15 +234,12 @@
 }
 .user_container_inner {
   align-items: center;
-  background-color: #141414;
-  border-radius: 15px;
   display: flex;
   flex-direction: row;
   height: fit-content;
   justify-content: space-between;
   min-height: 50px;
   overflow: hidden;
-  padding: 0.5em;
   width: 100%;
 }
 ::selection {
@@ -248,7 +247,7 @@
   color: #0bf;
 }
 body {
-  font-family: var(--font-creato), sans-serif;
+  font-family: var(--font-switzer), sans-serif;
 }
 
 code,
@@ -259,7 +258,7 @@ code,
 }
 html,
 body {
-  background-color: #080808;
+  /* background-color: #080808; */
   overflow-x: hidden;
 }
 main {

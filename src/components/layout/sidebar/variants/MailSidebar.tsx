@@ -28,10 +28,11 @@ type MailButtonProps = {
 function MailButton({ label, Icon }: MailButtonProps) {
   return (
     <Button
-      startContent={<Icon color={undefined} className="mr-1" />}
-      className="justify-start pl-2 text-start text-foreground-600"
+      startContent={<Icon color={undefined} width={21} height={21} />}
       variant="light"
       radius="sm"
+      size="sm"
+      className="flex w-full justify-start text-sm text-foreground-600"
     >
       {label}
     </Button>
@@ -45,9 +46,6 @@ type MailContainerProps = {
 function MailContainer({ items }: MailContainerProps) {
   return (
     <div className="flex h-full flex-col">
-      <div className="px-2 pb-1 text-sm font-medium text-foreground-500">
-        Mail
-      </div>
       {items.map((item, index) => (
         <MailButton key={index} label={item.label} Icon={item.icon} />
       ))}
@@ -60,16 +58,16 @@ export default function EmailSidebar() {
 
   return (
     <>
-      <div className="flex h-full flex-col">
-        <div className="mb-5 w-full">
+      <div className="flex h-full flex-col gap-1">
+        <div className="w-full">
           <Button
-            className="w-full justify-start text-sm text-primary"
             color="primary"
             size="sm"
+            className="flex w-full justify-start text-sm text-primary"
             variant="flat"
             onPress={() => setOpen(true)}
           >
-            <QuillWrite01Icon color={undefined} width={18} />
+            <QuillWrite01Icon color={undefined} width={18} height={18} />
             Compose Email
           </Button>
         </div>

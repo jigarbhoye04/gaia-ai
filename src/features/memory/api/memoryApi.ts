@@ -14,6 +14,14 @@ export interface Memory {
   relevance_score?: number | null;
 }
 
+export interface MemoryRelation {
+  source: string;
+  source_type: string;
+  relationship: string;
+  target: string;
+  target_type: string;
+}
+
 export interface MemoryCreate {
   content: string;
 }
@@ -24,6 +32,7 @@ export interface MemoryUpdate {
 
 export interface MemoriesResponse {
   memories: Memory[];
+  relations: MemoryRelation[];
   total_count: number;
   success?: boolean;
 }

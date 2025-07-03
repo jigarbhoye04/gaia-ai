@@ -1,8 +1,10 @@
 import { Search } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { ReactNode, useState } from "react";
 
+import ContactSupport from "@/components/layout/sidebar/ContactSupport";
 import SidebarTopButtons from "@/components/layout/sidebar/SidebarTopButtons";
 import UserContainer from "@/components/layout/sidebar/UserContainer";
 import {
@@ -66,30 +68,31 @@ const CustomSidebarTrigger = () => {
 export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const { clearMessages } = useConversation();
   const router = useRouter();
+  const pathname = usePathname();
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
 
   return (
-    <Sidebar
-      variant="sidebar"
-      collapsible="offcanvas"
-      className="border-none p-1"
-    >
+    <Sidebar variant="sidebar" collapsible="offcanvas" className="border-none!">
+      <div className="pointer-events-none absolute right-0 bottom-16 left-0 z-1 h-1/3 w-full bg-gradient-to-b from-transparent to-black" />
+
       <SearchCommand
         openSearchDialog={openSearchDialog}
         setOpenSearchDialog={setOpenSearchDialog}
       />
 
-      <SidebarHeader className="p-2">
+      <SidebarHeader className="pb-0">
         <div className="flex items-center justify-between">
-          <Button className="flex items-center gap-2 rounded-full bg-transparent px-2 hover:bg-foreground/10">
-            <Image
-              alt="GAIA Logo"
-              src="/branding/logo.webp"
-              width={23}
-              height={23}
-            />
-            <span className="font-medium text-sidebar-foreground">gaia</span>
-          </Button>
+          <Link href={"/"}>
+            <Button className="group flex items-center gap-2 rounded-full bg-transparent px-2 hover:bg-foreground/10">
+              <Image
+                alt="GAIA Logo"
+                src="/branding/logo.webp"
+                width={23}
+                height={23}
+              />
+            </Button>
+          </Link>
+
           <div className="flex items-center gap-1">
             <SidebarHeaderButton
               onClick={() => setOpenSearchDialog(true)}
@@ -97,18 +100,20 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
             >
               <Search className="max-h-5 min-h-5 max-w-5 min-w-5" />
             </SidebarHeaderButton>
-            <SidebarHeaderButton
-              onClick={() => {
-                router.push("/c");
-                clearMessages();
-              }}
-              aria-label="New chat"
-            >
-              <ChatBubbleAddIcon
-                className="max-h-5 min-h-5 max-w-5 min-w-5"
-                color={undefined}
-              />
-            </SidebarHeaderButton>
+            {!pathname.startsWith("/c") && (
+              <SidebarHeaderButton
+                onClick={() => {
+                  router.push("/c");
+                  clearMessages();
+                }}
+                aria-label="New chat"
+              >
+                <ChatBubbleAddIcon
+                  className="max-h-5 min-h-5 max-w-5 min-w-5"
+                  color={undefined}
+                />
+              </SidebarHeaderButton>
+            )}
             <CustomSidebarTrigger />
           </div>
         </div>
@@ -123,7 +128,8 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-0">
+      <SidebarFooter className="relative z-[4] p-2">
+        <ContactSupport />
         <UserContainer />
       </SidebarFooter>
     </Sidebar>

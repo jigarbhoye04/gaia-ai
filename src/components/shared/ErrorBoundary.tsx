@@ -1,3 +1,5 @@
+"use client";
+
 import { ChevronLeft, Home } from "lucide-react";
 import React from "react";
 

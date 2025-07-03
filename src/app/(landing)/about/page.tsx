@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import { Suspense } from "react";
+import ReactMarkdown from "react-markdown";
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/shadcn/avatar";
-
+import { AuthorTooltip } from "@/features/blog/components/AuthorTooltip";
+import type { AboutData, Author } from "@/types/api/aboutApiTypes";
 export const metadata: Metadata = {
   title: "About",
   description:
@@ -40,83 +39,104 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function About() {
-  return (
-    <div className="flex min-h-screen w-screen justify-center pt-28">
-      <div className="max-w-(--breakpoint-md) space-y-2">
-        <h1 className="text-center">
-          GAIA Lorem, ipsum dolor sit amet consectetur
-        </h1>
-        <div className="text-justify">
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Magnam eos
-          totam rerum inventore hic voluptatem porro et quia eum. Atque vel
-          dolorum ducimus delectus vitae repellat corrupti quaerat asperiores,
-          quasi fugiat tempore reiciendis. Quia quo similique pariatur quam
-          facilis voluptatum, dolorum fuga, hic harum quaerat consequatur eum
-          quae vero recusandae suscipit cum saepe ducimus aspernatur deserunt?
-          Amet ipsa in corrupti ipsum nisi ab, officiis ea ratione quo, ullam
-          enim saepe inventore maiores? Quidem distinctio quasi sed, atque
-          tempora vitae laboriosam, rem, delectus illo similique aspernatur
-          asperiores exercitationem est hic? Velit, obcaecati sed ut autem ex
-          officiis necessitatibus, eligendi consequatur repellat recusandae
-          saepe. Natus ab quam iusto placeat nostrum excepturi dolores, quae
-          iure nemo illo asperiores nisi neque doloribus quos sapiente nam vel,
-          esse deleniti, voluptate a saepe. Facilis quaerat placeat dolorem ex
-          laborum impedit et tempore sapiente? Repudiandae mollitia molestiae
-          assumenda. Reprehenderit numquam veritatis, iste animi sit quia harum.
-          Quia blanditiis dignissimos, laboriosam exercitationem sapiente sed
-          quos quidem obcaecati. Voluptatem vero consequuntur esse a ducimus
-          ipsum distinctio, fugiat impedit molestias mollitia voluptates
-          nesciunt numquam pariatur aut modi explicabo expedita veritatis
-          incidunt nemo illum officiis aperiam reiciendis molestiae. Officia
-          minus accusamus consequatur sint eaque suscipit quis mollitia illo
-          deleniti delectus perferendis rem repudiandae temporibus, dolorum
-          saepe quam iusto doloribus in nesciunt error ratione odio adipisci
-          quidem! Eaque, officiis quas fugiat architecto culpa mollitia nobis
-          dolores voluptatibus impedit aut veniam ducimus dignissimos obcaecati
-          facere a dolorum magnam? Nostrum dignissimos voluptatum error, magnam
-          eveniet inventore ab, tempora nihil officia accusamus sed architecto
-          perspiciatis modi et culpa quasi nam ad recusandae iure voluptatibus
-          ex quam provident consequatur dolorum. Sunt eaque, sapiente,
-          laboriosam architecto veritatis placeat laudantium explicabo
-          perferendis quas quam harum distinctio aliquid, ullam voluptatibus
-          pariatur dolores. Distinctio, odio eius molestiae mollitia quasi nemo.
-          Cupiditate doloribus, minus praesentium dolores totam laborum ea
-          voluptatum repellendus similique eligendi et hic aliquid expedita,
-          quasi sed mollitia adipisci, harum quibusdam nisi reiciendis saepe
-          asperiores. Aperiam sint sapiente doloremque quos, itaque repellat quo
-          dolor earum rerum consectetur officia atque ullam? Vel, incidunt
-          aspernatur natus voluptatum cum deserunt velit ipsum praesentium
-          itaque? Fugit, esse officia vitae impedit eaque cupiditate unde
-          tenetur deleniti, corporis beatae, quasi ratione accusamus tempore ea.
-          Repudiandae eligendi vel nulla? Saepe, a. Facilis cupiditate rem vel
-          nulla repudiandae vitae, veniam quisquam corporis illo? Dolores illum
-          distinctio ex sed quo voluptas corrupti quae nemo odio nobis eius
-          cumque officiis explicabo aliquid voluptate ullam repellat suscipit
-          ipsum, repudiandae maiores tempora temporibus, culpa fuga quas.
-          Deleniti ad omnis ipsa aut, quaerat odit placeat animi ut, quod sed
-          officiis porro voluptate laborum odio temporibus cum rem sunt. Iste
-          repudiandae, distinctio dolor eaque a quisquam deserunt repellat
-          quibusdam quasi ipsum possimus porro laudantium magni dolore, suscipit
-          neque! Aut atque reiciendis dolores sint expedita esse pariatur, quae
-          labore minima eligendi delectus, commodi excepturi laboriosam sed
-          quasi hic? Omnis eius labore aperiam nostrum, hic sit odit voluptatum
-          quia iure praesentium debitis et, porro enim ex officiis! Dolorum
-          illum, laudantium beatae ab, nesciunt facere excepturi accusamus nam
-          dolorem sunt earum eveniet quae necessitatibus, debitis sint.
-        </div>
-        <div className="flex items-center justify-center gap-3 py-3">
-          <Avatar className="size-9 rounded-full">
-            <AvatarImage
-              src={"https://github.com/aryanranderiya.png"}
-              alt="Avatar"
-            />
-            <AvatarFallback>AR</AvatarFallback>
-          </Avatar>
+export default async function About() {
+  const aboutData: AboutData | null = {
+    content:
+      "Hey, I’m building GAIA because I’ve always wanted a personal assistant that actually does things for me—not just answer questions or pretend to help. The truth is, tools like Siri, Alexa, and even ChatGPT are helpful in small ways, but they’re not real assistants.\n\nThey don’t remember you, they don’t handle your work, and they don’t make your life easier the way a human would.\n\nGAIA is our attempt to change that.\n\nWe’re building a general-purpose personal assistant that’s always by your side. It connects to your digital life, learns how you work, and starts taking care of the boring stuff—emails, meetings, scheduling, reminders, calls, your goals, your habits—so you can focus on what actually matters.\n\nIt’s not a chatbot. It’s an assistant that gets things done.\n\nI envision a world where everyone has their own personal AI assistant—something like Jarvis from Iron Man. Not just a tool, but a proactive, intelligent presence that knows you, helps you, and works with you. That’s the kind of future I want to help build.\n\nGAIA was founded by me and [Dhruv](https://www.linkedin.com/in/dhruvmaradiya/). As of June 2025, we’re a really small team of under 5 people—building fast, learning fast, and trying to solve one of the hardest and most exciting problems in tech today.\n\nWe’re just getting started, and there’s a lot more to come. I hope you find what we’re building useful, thoughtful, and maybe even a little magical. Thanks for being here.",
+    authors: [
+      {
+        name: "Aryan Randeriya",
+        avatar: "https://github.com/aryanranderiya.png",
+        role: "Founder & CEO",
+        linkedin: "https://www.linkedin.com/in/aryanranderiya/",
+        twitter: "https://twitter.com/aryanranderiya",
+      },
+    ],
+  };
 
-          <div>
-            <div>Aryan Randeriya</div>
-            <div className="text-sm text-foreground-500">— Founder & CEO</div>
+  return (
+    <div className="flex min-h-screen w-screen justify-center bg-black px-6 py-28">
+      <div className="fixed top-0 left-0 z-[0] flex h-screen w-full items-center justify-center opacity-5">
+        <Image
+          src="/branding/logo.webp"
+          alt="GAIA Logo"
+          className="scale-110 object-contain grayscale"
+          fill
+        />
+      </div>
+
+      <div className="relative max-w-(--breakpoint-md) space-y-8">
+        <Suspense fallback={<div>Loading...</div>}>
+          <div className="flex w-full justify-center">
+            <Image
+              src="/branding/logo.webp"
+              alt="GAIA Logo"
+              width={80}
+              height={80}
+            />
+          </div>
+          <div className="prose prose-zinc dark:prose-invert max-w-xl">
+            <ReactMarkdown
+              components={{
+                h1: ({ children }) => (
+                  <h1 className="mb-6 text-center text-3xl font-bold">
+                    {children}
+                  </h1>
+                ),
+                h2: ({ children }) => (
+                  <h2 className="mt-8 mb-4 text-2xl font-semibold">
+                    {children}
+                  </h2>
+                ),
+                h3: ({ children }) => (
+                  <h3 className="mt-6 mb-3 text-xl font-semibold">
+                    {children}
+                  </h3>
+                ),
+                p: ({ children }) => (
+                  <p className="mb-4 text-justify text-lg leading-relaxed font-light text-foreground-600">
+                    {children}
+                  </p>
+                ),
+                ul: ({ children }) => (
+                  <ul className="mb-4 ml-6 list-disc space-y-2">{children}</ul>
+                ),
+                li: ({ children }) => (
+                  <li className="text-foreground-600">{children}</li>
+                ),
+                strong: ({ children }) => (
+                  <strong className="font-semibold text-foreground">
+                    {children}
+                  </strong>
+                ),
+                a: ({ children }) => (
+                  <a className="cursor-pointer text-primary hover:underline">
+                    {children}
+                  </a>
+                ),
+              }}
+            >
+              {aboutData.content}
+            </ReactMarkdown>
+          </div>
+        </Suspense>
+
+        <div className="flex items-start">
+          <div className="flex items-center -space-x-2">
+            {aboutData.authors.map((author: Author) => (
+              <AuthorTooltip
+                key={author.name}
+                author={author}
+                avatarSize="md"
+                avatarClassName="h-10 w-10 cursor-help border-2 border-background"
+              />
+            ))}
+          </div>
+          <div className="ml-4">
+            <div className="font-medium">{aboutData.authors[0]?.name}</div>
+            <div className="text-sm text-foreground-500">
+              — {aboutData.authors[0]?.role}
+            </div>
           </div>
         </div>
       </div>

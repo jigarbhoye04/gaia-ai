@@ -17,7 +17,7 @@ import {
 } from "@/components/shared/icons";
 import Spinner from "@/components/ui/shadcn/spinner";
 import AddProjectModal from "@/features/todo/components/AddProjectModal";
-import AddTodoModal from "@/features/todo/components/AddTodoModal";
+import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { RootState } from "@/redux/store";
 import { Priority } from "@/types/features/todoTypes";
@@ -388,7 +388,8 @@ export default function TodoSidebar() {
       </div>
 
       {/* Modals */}
-      <AddTodoModal
+      <TodoModal
+        mode="add"
         open={addTodoOpen}
         onOpenChange={setAddTodoOpen}
         onSuccess={() => {

@@ -7,33 +7,25 @@ import { useUser } from "@/features/auth/hooks/useUser";
 
 export default function Footer() {
   const user = useUser();
-  const isAuthenticated = user && user.email;
+  const isAuthenticated = user?.email;
 
   return (
-    <div className="m-0!">
-      <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20">
-        <div className="grid w-full max-w-(--breakpoint-lg) grid-cols-2 gap-8 sm:grid-cols-4">
+    <div className="relative z-[1] m-0! border-t-1 border-t-zinc-800 bg-gradient-to-t from-black to-zinc-950">
+      <div className="flex h-fit w-screen items-center justify-center p-5 sm:p-20 sm:pb-5">
+        <div className="grid w-full max-w-(--breakpoint-lg) grid-cols-2 gap-8 sm:grid-cols-5">
           <div className="flex h-full w-fit flex-col gap-1 text-foreground-600">
             <Image
               src="/branding/logo.webp"
               alt="GAIA Logo"
-              width={50}
-              height={50}
+              width={40}
+              height={40}
             />
-            <div className="mt-2 text-3xl font-medium text-white">
+            <div className="mt-2 text-2xl font-medium text-white">
               {siteConfig.name}
             </div>
-            {/* <div>{siteConfig.copyright}</div> */}
-            {/* <div className="text-foreground-500">{siteConfig.domain}</div> */}
-
-            <iframe
-              src="https://status.heygaia.io/badge?theme=dark"
-              width="250"
-              height="30"
-              // frameborder="0"
-              scrolling="no"
-              style={{ colorScheme: "normal" }}
-            />
+            <div className="flex flex-col gap-2 text-xs text-foreground-400">
+              <div>{siteConfig.copyright}</div>
+            </div>
           </div>
 
           {siteConfig.pageSections.map((section) => (
@@ -41,7 +33,7 @@ export default function Footer() {
               key={section.title}
               className="flex h-full w-fit flex-col text-foreground-500"
             >
-              <div className="mb-1 pl-2 font-normal text-foreground-400 uppercase">
+              <div className="mb-3 pl-2 text-sm text-foreground">
                 {section.title}
               </div>
               {section.links
@@ -55,7 +47,14 @@ export default function Footer() {
                       href={link.href}
                       className="group relative flex items-center justify-start text-white"
                     >
-                      <span className="transition-colors group-hover:text-primary">
+                      {section.title == "Connect" &&
+                        link.label !== "Contact Us" &&
+                        link.icon && (
+                          <div className="text-foreground-400 group-hover:text-foreground">
+                            {link.icon}
+                          </div>
+                        )}
+                      <span className="text-foreground-400 transition-colors group-hover:text-foreground">
                         {link.label}
                       </span>
                       <span className="ml-1 -translate-x-10 opacity-0 transition-all duration-150 group-hover:translate-x-0 group-hover:opacity-100">
@@ -67,6 +66,15 @@ export default function Footer() {
             </div>
           ))}
         </div>
+      </div>
+      <div className="flex w-full items-center justify-center py-10">
+        <iframe
+          src="https://status.heygaia.io/badge?theme=dark"
+          width="200"
+          height="40"
+          scrolling="no"
+          style={{ colorScheme: "normal" }}
+        />
       </div>
     </div>
   );

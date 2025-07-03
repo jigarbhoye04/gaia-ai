@@ -8,7 +8,7 @@ import {
   FileUploadIcon,
   GlobalSearchIcon,
   Gmail,
-  GoogleCalendar,
+  GoogleCalendarIcon,
   StickyNote01Icon,
   UserCircle02Icon,
 } from "@/components/shared/icons";
@@ -89,7 +89,7 @@ export default function AnimatedBeamMultipleOutputDemo({
                 <Gmail width={24} height={24} />
               </Circle>
               <Circle ref={div5Ref} className="size-12 p-1">
-                <GoogleCalendar width={24} height={24} />
+                <GoogleCalendarIcon width={24} height={24} />
               </Circle>
             </div>
             <div className="flex flex-col justify-center">

@@ -1,31 +1,57 @@
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
+import { ArrowUp } from "lucide-react";
 
-import { SentIcon } from "@/components/shared/icons";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 
 interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
+  searchbarText: string;
+  selectedTool?: string | null;
 }
 
-export default function RightSide({ handleFormSubmit }: RightSideProps) {
+export default function RightSide({
+  handleFormSubmit,
+  searchbarText,
+  selectedTool,
+}: RightSideProps) {
   const { isLoading } = useLoading();
+  const hasText = searchbarText.trim().length > 0;
+  const hasSelectedTool = selectedTool !== null && selectedTool !== undefined;
+  const isDisabled = isLoading || (!hasText && !hasSelectedTool);
+
+  const getTooltipContent = () => {
+    if (hasSelectedTool && !hasText) {
+      // Format tool name to be more readable
+      const formattedToolName = selectedTool
+        ?.split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+      return `Send with ${formattedToolName}`;
+    }
+    return "Send message";
+  };
 
   return (
     <div className="ml-2 flex items-center gap-1">
-      <Tooltip content="Send message" placement="right">
+      <Tooltip
+        content={getTooltipContent()}
+        placement="right"
+        color="primary"
+        showArrow
+      >
         <Button
           isIconOnly
           aria-label="Send message"
           className={`${isLoading && "cursor-wait"}`}
-          color="primary"
-          disabled={isLoading}
+          color={hasText || hasSelectedTool ? "primary" : "default"}
+          disabled={isDisabled}
           isLoading={isLoading}
           radius="full"
           type="submit"
           onPress={() => handleFormSubmit()}
         >
-          <SentIcon color="black" />
+          <ArrowUp color={hasText || hasSelectedTool ? "black" : "gray"} />
         </Button>
       </Tooltip>
     </div>

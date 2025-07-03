@@ -69,9 +69,8 @@ export default function ChatRenderer() {
         <Image
           alt="GAIA Logo"
           src={"/branding/logo.webp"}
-          width={130}
-          height={130}
-          className="bobbing hover:translate-y-3"
+          width={110}
+          height={110}
         />
         <StarterText />
       </div>
@@ -112,12 +111,14 @@ export default function ChatRenderer() {
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "animate-spin" : ""} relative`}
+                className={`${isLoading ? "opacity-0" : "opacity-100"} relative transition duration-150`}
               />
             </div>
 
             <ChatBubbleBot
               calendar_options={message.calendar_options}
+              calendar_delete_options={message.calendar_delete_options}
+              calendar_edit_options={message.calendar_edit_options}
               email_compose_data={message.email_compose_data}
               intent={message.intent}
               loading={message.loading}
@@ -136,7 +137,10 @@ export default function ChatRenderer() {
               image_data={message.image_data}
               memory_data={message.memory_data}
               todo_data={message.todo_data}
+              document_data={message.document_data}
+              code_data={message.code_data}
               onOpenMemoryModal={() => setOpenMemoryModal(true)}
+              google_docs_data={message.google_docs_data}
             />
           </div>
         ) : (
@@ -148,6 +152,8 @@ export default function ChatRenderer() {
             searchWeb={message.searchWeb}
             text={message.response}
             fileData={message.fileData}
+            selectedTool={message.selectedTool}
+            toolCategory={message.toolCategory}
           />
         ),
       )}

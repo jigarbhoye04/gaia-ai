@@ -1,10 +1,9 @@
-import { Button } from "@heroui/button";
+"use client";
+
 import { isToday, isYesterday, subDays } from "date-fns";
 import { Loader } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import { ChatBubbleAddIcon } from "@/components/shared/icons";
 import {
   Accordion,
   AccordionContent,
@@ -12,7 +11,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/shadcn/accordion";
 import { Conversation } from "@/features/chat/api/chatApi";
-import { useConversation } from "@/features/chat/hooks/useConversation";
 import {
   useConversationList,
   useFetchConversations,
@@ -59,8 +57,6 @@ export default function ChatsList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const router = useRouter();
-  const { clearMessages } = useConversation();
 
   useEffect(() => {
     fetchConversations();
@@ -138,11 +134,6 @@ export default function ChatsList() {
     (conversation) => conversation.starred,
   );
 
-  const createNewChat = (): void => {
-    router.push(`/c`);
-    clearMessages();
-  };
-
   return (
     <>
       {loading ? (
@@ -151,63 +142,40 @@ export default function ChatsList() {
         </div>
       ) : (
         <>
-          <div className="mt- w-full">
-            <Button
-              className="w-full justify-start text-sm text-primary"
-              color="primary"
-              size="sm"
-              variant="flat"
-              onPress={createNewChat}
+          {starredConversations.length > 0 && (
+            <Accordion
+              type="single"
+              collapsible
+              className="w-full p-0"
+              defaultValue="item-1"
             >
-              <ChatBubbleAddIcon color="#00bbff" width={18} />
-              Create new chat
-            </Button>
-          </div>
-
-          <Accordion
-            type="single"
-            collapsible
-            className="w-full p-0"
-            defaultValue="item-1"
-          >
-            <AccordionItem
-              value="item-1"
-              className="mt-2 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 pt-0 pb-1"
-            >
-              <AccordionTrigger className="w-full px-3 pt-3 pb-2 text-xs">
-                Starred Chats
-              </AccordionTrigger>
-              <AccordionContent className="w-full p-0!">
-                <div className="-mr-4 flex w-full flex-col">
-                  {starredConversations.length > 0 ? (
-                    starredConversations.map((conversation: Conversation) => (
+              <AccordionItem
+                value="item-1"
+                className="my-1 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border-b-0 bg-zinc-900 px-1 py-2"
+              >
+                <AccordionTrigger className="w-full px-2 pt-0 pb-1 text-xs">
+                  Starred Chats
+                </AccordionTrigger>
+                <AccordionContent className="w-full p-0!">
+                  <div className="-mr-4 flex w-full flex-col">
+                    {starredConversations.map((conversation: Conversation) => (
                       <ChatTab
                         key={conversation.conversation_id}
                         id={conversation.conversation_id}
                         name={conversation.description || "New chat"}
                         starred={conversation.starred || false}
                       />
-                    ))
-                  ) : (
-                    <div className="w-full pt-2 pb-3 text-center text-xs text-nowrap text-foreground-500">
-                      No Starred Chats yet.
-                    </div>
-                  )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-
-          {/* <div className="bg-zinc-900 min-h-fit pt-3 pb-1 mt-2 flex items-start justify-start rounded-lg flex-col overflow-hidden w-full">
-              <div className="font-medium text-xs flex items-center gap-1 px-3 pb-1">
-                Starred Chats
-              </div>
-            </div> */}
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
 
           {/* Grouped Conversations by Time Frame */}
           {sortedTimeFrames.map(([timeFrame, conversationsGroup]) => (
             <div key={timeFrame}>
-              <div className="sticky top-0 z-1 bg-zinc-950 px-2 pt-3 pb-1 text-xs font-medium text-foreground-500">
+              <div className="sticky top-0 z-1 bg-zinc-950 px-2 py-1 text-xs text-foreground-500">
                 {timeFrame}
               </div>
               {conversationsGroup

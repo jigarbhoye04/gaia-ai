@@ -47,7 +47,7 @@ export default function MailCompose({ open, onOpenChange }: MailComposeProps) {
   const {
     toEmails,
     subject,
-    body,
+    body: _body,
     prompt,
     writingStyle,
     contentLength,

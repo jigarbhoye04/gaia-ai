@@ -8,6 +8,7 @@ export * from "./providers/GlobalAuth";
 export * from "./providers/GlobalInterceptor";
 export * from "./ui/useCreateConfetti";
 export * from "./ui/useDragAndDrop";
+export * from "./ui/useFont";
 export * from "./ui/useIntersectionObserver";
 export * from "./ui/useMediaQuery";
 export * from "./ui/useMobile";

@@ -31,6 +31,57 @@ type StreamChunk = Partial<MessageType> & {
     has_next?: boolean;
     error?: string;
   };
+  goal_data?: {
+    goals?: Array<{
+      id: string;
+      title: string;
+      description?: string;
+      progress?: number;
+      roadmap?: {
+        nodes: Array<{
+          id: string;
+          data: {
+            title?: string;
+            label?: string;
+            isComplete?: boolean;
+            type?: string;
+            subtask_id?: string;
+          };
+        }>;
+        edges: Array<{
+          id: string;
+          source: string;
+          target: string;
+        }>;
+      };
+      created_at?: string;
+      todo_project_id?: string;
+      todo_id?: string;
+    }>;
+    action?: string;
+    message?: string;
+    goal_id?: string;
+    deleted_goal_id?: string;
+    stats?: {
+      total_goals: number;
+      goals_with_roadmaps: number;
+      total_tasks: number;
+      completed_tasks: number;
+      overall_completion_rate: number;
+      active_goals: Array<{
+        id: string;
+        title: string;
+        progress: number;
+      }>;
+      active_goals_count: number;
+    };
+    error?: string;
+  };
+  google_docs_data?: {
+    title: string;
+    url: string;
+    action?: string;
+  };
 };
 
 export function parseStreamData(
@@ -57,6 +108,14 @@ export function parseStreamData(
     result.calendar_options = streamChunk.calendar_options;
   }
 
+  if (streamChunk.calendar_delete_options !== undefined) {
+    result.calendar_delete_options = streamChunk.calendar_delete_options;
+  }
+
+  if (streamChunk.calendar_edit_options !== undefined) {
+    result.calendar_edit_options = streamChunk.calendar_edit_options;
+  }
+
   if (streamChunk.email_compose_data !== undefined) {
     result.email_compose_data = streamChunk.email_compose_data;
   }
@@ -81,6 +140,10 @@ export function parseStreamData(
     result.todo_data = streamChunk.todo_data;
   }
 
+  if (streamChunk.code_data !== undefined) {
+    result.code_data = streamChunk.code_data;
+  }
+
   // Include other stream-specific fields
   if (streamChunk.searchWeb !== undefined) {
     result.searchWeb = streamChunk.searchWeb;
@@ -101,6 +164,20 @@ export function parseStreamData(
   // memory-related fields
   if (streamChunk.memory_data !== undefined) {
     result.memory_data = streamChunk.memory_data;
+  }
+
+  if (streamChunk.document_data !== undefined) {
+    result.document_data = streamChunk.document_data;
+  }
+
+  // goal-related fields
+  if (streamChunk.goal_data !== undefined) {
+    result.goal_data = streamChunk.goal_data;
+  }
+
+  // Google Docs related fields
+  if (streamChunk.google_docs_data !== undefined) {
+    result.google_docs_data = streamChunk.google_docs_data;
   }
 
   return result;

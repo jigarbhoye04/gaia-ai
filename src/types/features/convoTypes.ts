@@ -3,13 +3,54 @@
 
 import { FileData } from "@/types/shared/fileTypes";
 
+import {
+  CalendarDeleteOptions,
+  CalendarEditOptions,
+  CalendarEventDateTime,
+  CalendarOptions,
+} from "./calendarTypes";
+import { EmailComposeData } from "./mailTypes";
+import {
+  DeepSearchResults,
+  EnhancedWebResult,
+  ImageResult,
+  NewsResult,
+  SearchResults,
+  VideoResult,
+  WebResult,
+} from "./searchTypes";
 import { TodoToolData } from "./todoToolTypes";
+import {
+  CodeData,
+  DocumentData,
+  GoalDataMessageType,
+  GoogleDocsData,
+  ImageData,
+  MemoryData,
+} from "./toolDataTypes";
+import { WeatherData } from "./weatherTypes";
 
-// Define image data structure for image generation
-export type ImageData = {
-  url: string;
-  prompt?: string;
-  improved_prompt?: string | null;
+// Re-export types for external consumption
+export type {
+  CalendarDeleteOptions,
+  CalendarEditOptions,
+  CalendarEventDateTime,
+  CalendarOptions,
+  CodeData,
+  DeepSearchResults,
+  DocumentData,
+  EmailComposeData,
+  EnhancedWebResult,
+  GoalDataMessageType,
+  GoogleDocsData,
+  ImageData,
+  ImageResult,
+  MemoryData,
+  NewsResult,
+  SearchResults,
+  VideoResult,
+  WeatherData,
+  WebResult,
 };
 
 // the content of the message, its date, and optional fields for loading state, images, files, etc.
@@ -31,111 +72,22 @@ export type MessageType = {
   pinned?: boolean;
   fileData?: FileData[];
   intent?: string;
+  selectedTool?: string | null; // Tool selected via slash commands
+  toolCategory?: string | null; // Category of the selected tool
   calendar_options?: CalendarOptions[] | null;
+  calendar_delete_options?: CalendarDeleteOptions[] | null;
+  calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_search_results?: DeepSearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
   todo_data?: TodoToolData | null; // todo data from backend tools
-
-  // memory-related fields
-  memory_data?: {
-    operation?: string;
-    status?: string;
-    results?: Array<{
-      id: string;
-      content: string;
-      relevance_score?: number;
-      metadata?: Record<string, unknown>;
-    }>;
-    memories?: Array<{
-      id: string;
-      content: string;
-      metadata?: Record<string, unknown>;
-      created_at?: string;
-    }>;
-    count?: number;
-    content?: string;
-    memory_id?: string;
-    error?: string;
-  } | null;
-};
-
-export type CalendarOptions = {
-  summary: string | undefined;
-  description: string | undefined;
-  start: string | undefined;
-  end: string | undefined;
-};
-
-// Email compose data structure for email intent
-export type EmailComposeData = {
-  to: string[];
-  subject: string;
-  body: string;
-};
-
-// weather data structure for weather intent
-export type WeatherData = {
-  coord: {
-    lon: number;
-    lat: number;
-  };
-  weather: Array<{
-    id: number;
-    main: string;
-    description: string;
-    icon: string;
-  }>;
-  base?: string;
-  main: {
-    temp: number;
-    feels_like: number;
-    temp_min: number;
-    temp_max: number;
-    pressure: number;
-    humidity: number;
-    sea_level?: number;
-    grnd_level?: number;
-  };
-  visibility?: number;
-  wind: {
-    speed: number;
-    deg: number;
-    gust?: number;
-  };
-  clouds?: {
-    all: number;
-  };
-  dt: number;
-  sys: {
-    country: string;
-    sunrise: number;
-    sunset: number;
-  };
-  timezone: number;
-  id?: number;
-  name: string;
-  cod?: number;
-  location: {
-    city: string;
-    country: string | null;
-    region: string | null;
-  };
-  // New field for forecast data
-  forecast?: Array<{
-    date: string;
-    timestamp: number;
-    temp_min: number;
-    temp_max: number;
-    humidity: number;
-    weather: {
-      main: string;
-      description: string;
-      icon: string;
-    };
-  }>;
+  document_data?: DocumentData | null;
+  code_data?: CodeData | null; // code execution data from backend
+  memory_data?: MemoryData | null; // memory-related fields
+  goal_data?: GoalDataMessageType | null; // goal-related fields
+  google_docs_data?: GoogleDocsData | null; // Google Docs data from backend tools
 };
 
 // Define the structure for a single conversation
@@ -148,62 +100,8 @@ export type ConversationType = {
 export interface IntentType {
   intent: string | undefined;
   calendar_options?: CalendarOptions[] | null;
+  calendar_delete_options?: CalendarDeleteOptions[] | null;
+  calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
 }
-
-export type WebResult = {
-  title: string;
-  url: string;
-  snippet: string;
-  source: string;
-  date: string;
-};
-
-export type ImageResult = {
-  title: string;
-  url: string;
-  source: string;
-  thumbnail?: string;
-};
-
-export type NewsResult = {
-  title: string;
-  url: string;
-  snippet: string;
-  source: string;
-  date: string;
-};
-
-export type VideoResult = {
-  title: string;
-  url: string;
-  thumbnail: string;
-  source: string;
-};
-
-// Define the overall SearchResults type.
-export type SearchResults = {
-  web?: WebResult[];
-  images?: ImageResult[];
-  news?: NewsResult[];
-  videos?: VideoResult[];
-};
-
-// Enhanced result including full_content and screenshot_url
-export type EnhancedWebResult = WebResult & {
-  full_content?: string;
-  screenshot_url?: string;
-};
-
-// Define the DeepSearchResults type for deep search results
-export type DeepSearchResults = {
-  original_search?: SearchResults;
-  enhanced_results?: EnhancedWebResult[];
-  screenshots_taken?: boolean;
-  metadata?: {
-    total_content_size?: number;
-    elapsed_time?: number;
-    query?: string;
-  };
-};

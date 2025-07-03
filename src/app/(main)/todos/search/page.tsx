@@ -73,20 +73,22 @@ export default function SearchTodosPage() {
   };
 
   return (
-    <div className="flex h-full flex-col" style={{ minWidth: "500px" }}>
-      <TodoHeader
-        title="Search Tasks"
-        todoCount={0} // Count will be shown in search results
-        selectedCount={selectedTodos.size}
-        onSelectAll={handleSelectAll}
-        onBulkComplete={handleBulkComplete}
-        onBulkDelete={handleBulkDelete}
-        allSelected={false}
-      />
+    <div className="flex h-full w-full flex-col">
+      <div className="w-full" style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        <TodoHeader
+          title="Search Tasks"
+          todoCount={0} // Count will be shown in search results
+          selectedCount={selectedTodos.size}
+          onSelectAll={handleSelectAll}
+          onBulkComplete={handleBulkComplete}
+          onBulkDelete={handleBulkDelete}
+          allSelected={false}
+        />
+      </div>
 
       <div
-        className="min-w-5xl flex-1 overflow-y-auto p-4"
-        style={{ maxWidth: "1200px", margin: "0 auto" }}
+        className="flex-1 overflow-y-auto px-4"
+        style={{ maxWidth: "1200px", margin: "0 auto", width: "100%" }}
       >
         {/* Enhanced search Bar with integrated results */}
         <EnhancedTodoSearchBar

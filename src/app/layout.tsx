@@ -2,10 +2,11 @@ import "./styles/globals.css";
 import "./styles/tailwind.css";
 
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
 import Script from "next/script";
 
 import ProvidersLayout from "@/layouts/ProvidersLayout";
+
+import { defaultFont, getAllFontVariables } from "./fonts";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -62,36 +63,15 @@ export const viewport: Viewport = {
   themeColor: "#00bbff",
 };
 
-const creato = localFont({
-  src: [
-    {
-      path: "./fonts/CreatoDisplay-Regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/CreatoDisplay-Bold.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./fonts/CreatoDisplay-ExtraBold.woff2",
-      weight: "700",
-      style: "normal",
-    },
-  ],
-  preload: true,
-  variable: "--font-creato",
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${creato.variable} dark`}>
-      <body className="dark">
-        <ProvidersLayout>{children}</ProvidersLayout>
-
+    <html lang="en" className={`${getAllFontVariables()} dark`}>
+      <body className={`dark ${defaultFont.className}`}>
+        <main>
+          <ProvidersLayout>{children}</ProvidersLayout>
+        </main>
         {/* Google OAuth */}
         <Script async src="https://accounts.google.com/gsi/client" />
 

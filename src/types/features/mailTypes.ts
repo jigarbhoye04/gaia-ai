@@ -49,3 +49,10 @@ export interface EmailBody {
   data?: string;
   attachmentId?: string;
 }
+
+// Email compose data structure for email intent
+export type EmailComposeData = {
+  to: string[];
+  subject: string;
+  body: string;
+};

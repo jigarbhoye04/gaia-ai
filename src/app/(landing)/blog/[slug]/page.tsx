@@ -1,33 +1,46 @@
-// app/blog/[slug]/page.tsx
-import { Avatar, AvatarGroup } from "@heroui/avatar";
-import { Button } from "@heroui/button";
-import { Tooltip } from "@heroui/tooltip";
-import { Calendar, ChevronLeft } from "lucide-react";
-import Link from "next/link";
-import Markdown from "react-markdown";
+import type { Metadata } from "next";
+import Image from "next/image";
 
-import { Separator } from "@/components/ui/shadcn/separator";
-import { api } from "@/lib/api";
-
-interface BlogPost {
-  slug: string;
-  title: string;
-  description: string;
-  date: string;
-  authors: string[];
-  readTime: string;
-  category: string;
-  content: string;
-}
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/shadcn/breadcrumb";
+import { blogApi } from "@/features/blog/api/blogApi";
+import BlogMetadata from "@/features/blog/components/BlogMetadata";
+import MarkdownWrapper from "@/features/blog/components/MarkdownWrapper";
+import {
+  generateBlogMetadata,
+  generateBlogStructuredData,
+} from "@/utils/seoUtils";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+
+  try {
+    const blog = await blogApi.getBlog(slug);
+    return generateBlogMetadata(blog);
+  } catch {
+    return {
+      title: "Blog Post Not Found",
+      description: "The requested blog post could not be found.",
+    };
+  }
+}
+
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
+
   try {
-    const { data: blog } = await api.get<BlogPost>(`blogs/${slug}`);
+    const blog = await blogApi.getBlog(slug);
 
     if (!blog) {
       return (
@@ -37,57 +50,66 @@ export default async function BlogPostPage({ params }: PageProps) {
       );
     }
 
+    const structuredData = generateBlogStructuredData(blog);
+
     return (
-      <div className="flex h-fit min-h-screen w-screen justify-center overflow-y-auto pt-28">
-        <div className="mx-auto w-full max-w-(--breakpoint-md)">
-          <div className="mb-8">
-            <Button
-              variant="light"
-              className="mb-4 font-medium"
-              as={Link}
-              href="/blog"
-              size="sm"
-              startContent={<ChevronLeft />}
-            >
-              Blog
-            </Button>
-
-            <h1 className="mb-4 text-2xl font-bold tracking-tight">
-              {blog.title}
-            </h1>
-
-            <div className="mb-6 flex items-center space-x-4">
-              <AvatarGroup>
-                {blog.authors.map((author) => (
-                  <Tooltip
-                    key={author}
-                    content={author}
-                    classNames={{ content: "text-nowrap" }}
-                  >
-                    <Avatar />
-                  </Tooltip>
-                ))}
-              </AvatarGroup>
-              <div>
-                <p className="font-medium">{blog.authors.join(", ")}</p>
-                <div className="text-muted-foreground flex items-center text-sm">
-                  <Calendar className="mr-1 h-4 w-4" />
-                  <span className="text-foreground-500">{blog.date}</span>
-                </div>
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        <div className="flex h-fit min-h-screen w-screen justify-center overflow-y-auto pt-28">
+          <div className="mx-auto w-full px-5 sm:p-0">
+            <div className="mb-8 flex flex-col items-center">
+              <div className="mb-5 flex w-full justify-center text-foreground-400">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink href="/blog">Blog</BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink>{blog.category}</BreadcrumbLink>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
+
+              <h1 className="text-center text-4xl font-medium tracking-tight sm:text-5xl">
+                {blog.title}
+              </h1>
+
+              <div className="flex h-fit max-w-4xl items-center justify-center py-10">
+                {blog.image && (
+                  <Image
+                    src={blog.image}
+                    alt={blog.title}
+                    width={1920}
+                    height={1080}
+                    className="object-cover sm:max-w-5xl"
+                  />
+                )}
+              </div>
+
+              <BlogMetadata
+                authors={blog.author_details}
+                date={blog.date}
+                className="mb-10"
+              />
+
+              <div className="prose prose-lg dark:prose-invert max-w-2xl text-foreground-600">
+                <MarkdownWrapper content={blog.content.toString()} />
+              </div>
+
+              <BlogMetadata
+                authors={blog.author_details}
+                date={blog.date}
+                className="my-10 w-full max-w-3xl border-t-1 border-gray-700 py-10"
+              />
             </div>
-
-            <Separator className="my-6 bg-zinc-700" />
-
-            <Markdown
-            // className="prose prose-sm max-w-none space-y-6"
-            // dangerouslySetInnerHTML={{ __html: blog.content }}
-            >
-              {blog.content}
-            </Markdown>
           </div>
         </div>
-      </div>
+      </>
     );
   } catch (error) {
     return (

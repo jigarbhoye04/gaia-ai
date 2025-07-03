@@ -22,7 +22,7 @@ export default function SignupForm() {
   }, [user, router]);
 
   return (
-    <form className="flex h-screen w-screen flex-row items-center justify-center gap-10 overflow-auto select-none">
+    <form className="relative -bottom-4 flex h-screen w-screen flex-row items-center justify-center gap-10 overflow-auto select-none">
       <div className="backdrop-blur- shadow-blue-30 relative z-1 flex w-full max-w-(--breakpoint-sm) flex-col items-center justify-center gap-5 rounded-4xl bg-black/10 p-10 shadow-2xl shadow-black backdrop-blur-[3px]">
         <div className="mb-3 space-y-2 text-center">
           <div className="text-5xl font-medium">Create an Account</div>
