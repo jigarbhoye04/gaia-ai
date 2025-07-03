@@ -19,11 +19,14 @@ const IntegrationCard = ({
     className={`group relative flex aspect-square ${isLarge ? "w-28" : "w-24"} items-center justify-center rounded-2xl border border-zinc-800/50 bg-gradient-to-br from-zinc-900/50 to-zinc-800/30 shadow-2xl shadow-zinc-600/30 backdrop-blur-sm transition-all duration-300 ease-out hover:border-zinc-600/70 hover:from-zinc-800/70 hover:to-zinc-700/50 ${isBlurred ? "translate-y-1 scale-90 opacity-60 blur-[2px]" : ""} ${className} `}
   >
     {image ? (
-      <img
-        src={image}
-        alt={alt}
-        className={`${isLarge ? "h-16 w-16" : "h-15 w-15"} object-contain`}
-      />
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image}
+          alt={alt}
+          className={`${isLarge ? "h-16 w-16" : "h-15 w-15"} object-contain`}
+        />
+      </>
     ) : (
       <div className="h-8 w-8 animate-pulse rounded-lg bg-zinc-600/50" />
     )}

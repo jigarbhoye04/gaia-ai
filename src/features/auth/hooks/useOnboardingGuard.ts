@@ -25,5 +25,5 @@ export const useOnboardingGuard = () => {
         }
       }
     }
-  }, [user.email, user.onboarding?.completed, router, pathname]);
+  }, [user.email, user.onboarding, router, pathname]);
 };

@@ -72,11 +72,14 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </a>
     ),
     img: ({ src, alt }) => (
-      <img
-        src={src}
-        alt={alt}
-        className="mb-4 h-auto max-w-full rounded-lg border"
-      />
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          className="mb-4 h-auto max-w-full rounded-lg border"
+        />
+      </>
     ),
     hr: () => <hr className="my-8 border-zinc-300 dark:border-zinc-600" />,
     table: ({ children }) => (

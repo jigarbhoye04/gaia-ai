@@ -44,7 +44,7 @@ export default function useAxiosInterceptor() {
             toast.error("Server unreachable. Try again later");
 
           if (error.response) {
-            const { status, data, headers } = error.response;
+            const { status, data } = error.response;
 
             if (status === 401) {
               toast.error("Session expired. Please log in again.");

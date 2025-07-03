@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
 import { todoApi } from "@/features/todo/api/todoApi";
@@ -21,13 +21,7 @@ export default function PriorityTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (priority) {
-      loadPriorityTodos();
-    }
-  }, [priority]);
-
-  const loadPriorityTodos = async () => {
+  const loadPriorityTodos = useCallback(async () => {
     setLoading(true);
     try {
       const filters: TodoFilters = {
@@ -40,7 +34,13 @@ export default function PriorityTodosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [priority]);
+
+  useEffect(() => {
+    if (priority) {
+      loadPriorityTodos();
+    }
+  }, [priority, loadPriorityTodos]);
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {

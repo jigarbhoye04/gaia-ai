@@ -53,7 +53,6 @@ export default function CreateBlogPage() {
   const {
     register,
     handleSubmit,
-    control,
     watch,
     setValue,
     formState: { errors },

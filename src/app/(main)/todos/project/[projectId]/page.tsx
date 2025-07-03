@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
 import { todoApi } from "@/features/todo/api/todoApi";
@@ -25,13 +25,7 @@ export default function ProjectTodosPage() {
   const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
 
-  useEffect(() => {
-    if (projectId) {
-      loadProjectData();
-    }
-  }, [projectId]);
-
-  const loadProjectData = async () => {
+  const loadProjectData = useCallback(async () => {
     setLoading(true);
     try {
       // Load project details and all projects
@@ -51,7 +45,13 @@ export default function ProjectTodosPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (projectId) {
+      loadProjectData();
+    }
+  }, [projectId, loadProjectData]);
 
   const handleTodoUpdate = async (todoId: string, updates: TodoUpdate) => {
     try {

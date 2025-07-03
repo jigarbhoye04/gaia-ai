@@ -101,11 +101,14 @@ export default function AccountSection({
               className="relative h-20 w-20 overflow-hidden rounded-full bg-zinc-800 transition-all duration-200 hover:ring-2 hover:ring-blue-500 hover:ring-offset-2 hover:ring-offset-zinc-900"
             >
               {user?.profilePicture ? (
-                <img
-                  src={user.profilePicture}
-                  alt={user?.name || "Profile"}
-                  className="h-full w-full object-cover"
-                />
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={user.profilePicture}
+                    alt={user?.name || "Profile"}
+                    className="h-full w-full object-cover"
+                  />
+                </>
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <User className="h-8 w-8 text-zinc-400" />

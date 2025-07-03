@@ -115,7 +115,7 @@ export const getEventDurationText = (
       const days = Math.round(diffHours / 24);
       return `${days} day${days !== 1 ? "s" : ""}`;
     }
-  } catch (_error) {
+  } catch {
     return "Duration unknown";
   }
 };

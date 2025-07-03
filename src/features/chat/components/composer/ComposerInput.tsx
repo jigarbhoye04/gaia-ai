@@ -160,6 +160,48 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
       [detectSlashCommand, inputRef],
     );
 
+    const handleSlashCommandSelect = useCallback(
+      (match: SlashCommandMatch) => {
+        // Remove the slash command portion while keeping other text
+        const textBeforeCommand = searchbarText.substring(
+          0,
+          slashCommandState.commandStart,
+        );
+        const textAfterCommand = searchbarText.substring(
+          slashCommandState.commandEnd,
+        );
+        const newText = textBeforeCommand + textAfterCommand;
+
+        onSearchbarTextChange(newText);
+        setSlashCommandState((prev) => ({
+          ...prev,
+          isActive: false,
+          openedViaButton: false,
+        }));
+
+        // Notify parent component about tool selection
+        if (onSlashCommandSelect) {
+          onSlashCommandSelect(match.tool.name, match.tool.category);
+        }
+
+        // Focus back to input and position cursor where the slash command was
+        setTimeout(() => {
+          if (inputRef.current) {
+            const newCursorPos = slashCommandState.commandStart;
+            inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
+            inputRef.current.focus();
+          }
+        }, 0);
+      },
+      [
+        searchbarText,
+        slashCommandState,
+        onSearchbarTextChange,
+        onSlashCommandSelect,
+        inputRef,
+      ],
+    );
+
     const handleSlashCommandKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (!slashCommandState.isActive) return false;
@@ -212,49 +254,7 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
             return false;
         }
       },
-      [slashCommandState],
-    );
-
-    const handleSlashCommandSelect = useCallback(
-      (match: SlashCommandMatch) => {
-        // Remove the slash command portion while keeping other text
-        const textBeforeCommand = searchbarText.substring(
-          0,
-          slashCommandState.commandStart,
-        );
-        const textAfterCommand = searchbarText.substring(
-          slashCommandState.commandEnd,
-        );
-        const newText = textBeforeCommand + textAfterCommand;
-
-        onSearchbarTextChange(newText);
-        setSlashCommandState((prev) => ({
-          ...prev,
-          isActive: false,
-          openedViaButton: false,
-        }));
-
-        // Notify parent component about tool selection
-        if (onSlashCommandSelect) {
-          onSlashCommandSelect(match.tool.name, match.tool.category);
-        }
-
-        // Focus back to input and position cursor where the slash command was
-        setTimeout(() => {
-          if (inputRef.current) {
-            const newCursorPos = slashCommandState.commandStart;
-            inputRef.current.setSelectionRange(newCursorPos, newCursorPos);
-            inputRef.current.focus();
-          }
-        }, 0);
-      },
-      [
-        searchbarText,
-        slashCommandState,
-        onSearchbarTextChange,
-        onSlashCommandSelect,
-        inputRef,
-      ],
+      [slashCommandState, handleSlashCommandSelect],
     );
 
     const handleTextChange = useCallback(

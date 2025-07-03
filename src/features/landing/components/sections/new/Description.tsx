@@ -1,7 +1,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { OnboardingBackground } from "@/features/onboarding/components/OnboardingBackground";
 
@@ -14,16 +14,19 @@ export default function Description() {
   const [lastParagraphVisible, setLastParagraphVisible] = useState(false);
   const [isSectionVisible, setIsSectionVisible] = useState(false);
 
-  const paragraphs = [
-    "We believe that everyone deserves a personal assistant. Not just a chatbot, but something smarter.",
-    "One that is truly personalised and gets real work done.",
-    "Frustrated with Siri, Alexa, ChatGPT or Google Assistant doing the bare minimum?",
-    "What if everything in your digital life was seamlessly managed by an assistant that works like a real human, and grows smarter the more you use it?",
-    "Meet GAIA, your very own personal AI assistant.",
-    "Something closer to Jarvis than any chatbot you've used.",
-    "An AI that thinks, plans, and acts like a real human assistant would",
-    "Because staying productive shouldn't require effort. It should feel effortless.",
-  ];
+  const paragraphs = useMemo(
+    () => [
+      "We believe that everyone deserves a personal assistant. Not just a chatbot, but something smarter.",
+      "One that is truly personalised and gets real work done.",
+      "Frustrated with Siri, Alexa, ChatGPT or Google Assistant doing the bare minimum?",
+      "What if everything in your digital life was seamlessly managed by an assistant that works like a real human, and grows smarter the more you use it?",
+      "Meet GAIA, your very own personal AI assistant.",
+      "Something closer to Jarvis than any chatbot you've used.",
+      "An AI that thinks, plans, and acts like a real human assistant would",
+      "Because staying productive shouldn't require effort. It should feel effortless.",
+    ],
+    [],
+  );
 
   useEffect(() => {
     // Register ScrollTrigger plugin
@@ -167,11 +170,9 @@ export default function Description() {
     // Cleanup function
     return () => {
       ScrollTrigger.getAll().forEach((st) => st.kill());
-      if (sectionRef.current) {
-        observer.disconnect();
-      }
+      observer.disconnect();
     };
-  }, [paragraphs.length]);
+  }, [paragraphs]);
 
   return (
     <div
