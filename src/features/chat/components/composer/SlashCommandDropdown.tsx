@@ -1,5 +1,4 @@
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { Tooltip } from "@heroui/tooltip";
 import { AnimatePresence, motion } from "framer-motion";
 import { Hash } from "lucide-react";
 import React, { useMemo, useState } from "react";
@@ -60,108 +59,93 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             stiffness: 300,
             duration: 0.15,
           }}
-          className="slash-command-dropdown fixed z-[100] flex overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
+          className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
           style={{
             top: position.top,
             left: position.left,
             width: position.width || "auto",
-            minWidth: position.width ? "unset" : "420px",
-            maxWidth: position.width ? "unset" : "500px",
+            minWidth: position.width ? "unset" : "320px",
+            maxWidth: position.width ? "unset" : "384px",
             boxShadow: "0px -18px 30px 5px rgba(0, 0, 0, 0.5)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Category Tabs - Vertical */}
+          {/* Category Tabs */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="flex-shrink-0 border-r border-zinc-700"
           >
-            <ScrollShadow
-              orientation="vertical"
-              className="h-full max-h-[400px]"
-            >
-              <div className="flex flex-col gap-1 p-2">
+            <ScrollShadow orientation="horizontal" className="overflow-x-auto">
+              <div className="flex min-w-max gap-1 px-2 py-2">
                 {categories.map((category) => (
-                  <Tooltip
+                  <button
                     key={category}
-                    content={
-                      category === "all" ? "All" : formatToolName(category)
-                    }
-                    placement="right"
-                    delay={300}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategory(category);
+                    }}
+                    className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all ${
+                      selectedCategory === category
+                        ? "bg-zinc-700 text-white"
+                        : "text-zinc-400 hover:bg-white/10 hover:text-zinc-300"
+                    }`}
                   >
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCategory(category);
-                      }}
-                      className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-all ${
-                        selectedCategory === category
-                          ? "bg-zinc-700 text-white"
-                          : "text-zinc-400 hover:bg-white/10 hover:text-zinc-300"
-                      }`}
-                    >
-                      {category === "all" ? (
-                        <Hash
-                          size={18}
-                          strokeWidth={2}
-                          className="text-gray-400"
-                        />
-                      ) : (
-                        getToolCategoryIcon(category, {
-                          width: 25,
-                          height: 25,
-                          size: 25,
-                        })
-                      )}
-                    </button>
-                  </Tooltip>
+                    {category === "all" ? (
+                      <Hash
+                        size={16}
+                        strokeWidth={2}
+                        className="text-gray-400"
+                      />
+                    ) : (
+                      getToolCategoryIcon(category)
+                    )}
+                    <span className="capitalize">
+                      {category === "all" ? "All" : category.replace("_", " ")}
+                    </span>
+                  </button>
                 ))}
               </div>
             </ScrollShadow>
           </motion.div>
 
           {/* Tool List */}
-          <div className="flex-1">
-            <ScrollShadow className="max-h-[400px] overflow-y-auto">
-              <div className="py-2">
-                {filteredMatches.map((match, index) => (
-                  <div
-                    key={match.tool.name}
-                    className={`relative mx-2 mb-1 cursor-pointer rounded-xl transition-all duration-150 ${
-                      index === selectedIndex
-                        ? "border border-zinc-600 bg-zinc-700/60"
-                        : "border border-transparent hover:bg-white/5"
-                    }`}
-                    onClick={() => onSelect(match)}
-                  >
-                    <div className="flex items-center gap-3 p-3">
-                      {/* Icon */}
-                      <div className="flex-shrink-0">
-                        {getToolCategoryIcon(match.tool.category)}
-                      </div>
+          <ScrollShadow className="max-h-96 overflow-y-auto">
+            <div className="py-2">
+              {filteredMatches.map((match, index) => (
+                <div
+                  key={match.tool.name}
+                  className={`relative mx-2 mb-1 cursor-pointer rounded-xl transition-all duration-150 ${
+                    index === selectedIndex
+                      ? "border border-zinc-600 bg-zinc-700/60"
+                      : "border border-transparent hover:bg-white/5"
+                  }`}
+                  onClick={() => onSelect(match)}
+                >
+                  <div className="flex items-center gap-3 p-3">
+                    {/* Icon */}
+                    <div className="flex-shrink-0">
+                      {getToolCategoryIcon(match.tool.category)}
+                    </div>
 
-                      {/* Content */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm text-foreground-600">
-                            {formatToolName(match.tool.name)}
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate text-sm text-foreground-600">
+                          {formatToolName(match.tool.name)}
+                        </span>
+                        {selectedCategory === "all" && (
+                          <span className="rounded-full bg-zinc-600 px-2 py-0.5 text-xs text-zinc-200 capitalize">
+                            {match.tool.category.replace("_", " ")}
                           </span>
-                          {selectedCategory === "all" && (
-                            <span className="rounded-full bg-zinc-600 px-2 py-0.5 text-xs text-zinc-200 capitalize">
-                              {match.tool.category.replace("_", " ")}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
-            </ScrollShadow>
-          </div>
+                </div>
+              ))}
+            </div>
+          </ScrollShadow>
         </motion.div>
       )}
     </AnimatePresence>

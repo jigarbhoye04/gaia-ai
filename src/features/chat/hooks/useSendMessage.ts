@@ -20,6 +20,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
     pageFetchURLs: string[] = [],
     fileData: FileData[] = [],
     selectedTool: string | null = null,
+    toolCategory: string | null = null,
   ) => {
     const botMessageId = String(ObjectID());
     const isWebSearch = currentMode === "web_search";
@@ -36,6 +37,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       fileIds: fileData.map((f) => f.fileId),
       fileData,
       selectedTool, // Add selectedTool to the message
+      toolCategory, // Add toolCategory to the message
     };
 
     dispatch(addMessage(userMessage));
@@ -50,6 +52,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
       botMessageId,
       fileData,
       selectedTool, // Pass selectedTool to fetchChatStream
+      toolCategory, // Pass toolCategory to fetchChatStream
     );
   };
 };

@@ -171,6 +171,7 @@ export const chatApi = {
     onError: (err: Error) => void,
     fileData: FileData[] = [],
     selectedTool: string | null = null,
+    toolCategory: string | null = null,
   ) => {
     const controller = new AbortController();
 
@@ -197,6 +198,7 @@ export const chatApi = {
           fileIds, // For backward compatibility
           fileData, // Send complete file data
           selectedTool, // Add selectedTool to the request body
+          toolCategory, // Add toolCategory to the request body
           messages: convoMessages
             .slice(-30)
             .filter(({ response }) => response.trim().length > 0)

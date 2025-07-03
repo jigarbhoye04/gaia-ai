@@ -28,6 +28,8 @@ export interface ChatBubbleUserProps {
   pinned?: boolean;
   fileIds?: string[];
   fileData?: FileData[];
+  selectedTool?: string | null;
+  toolCategory?: string | null;
 }
 
 export interface SetImageDataType {

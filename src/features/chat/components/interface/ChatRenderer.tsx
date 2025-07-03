@@ -152,6 +152,8 @@ export default function ChatRenderer() {
             searchWeb={message.searchWeb}
             text={message.response}
             fileData={message.fileData}
+            selectedTool={message.selectedTool}
+            toolCategory={message.toolCategory}
           />
         ),
       )}

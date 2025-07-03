@@ -54,7 +54,7 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
             composerContainer?.getBoundingClientRect() ||
             textarea.getBoundingClientRect();
           const dropdownHeight = Math.min(
-            detection.matches.length * 80 + 60,
+            detection.matches.length * 80 + 50,
             400,
           ); // Estimate dropdown height (increased max)
 
@@ -65,7 +65,7 @@ const ComposerInput: React.FC<SearchbarInputProps> = ({
             commandStart: detection.commandStart,
             commandEnd: detection.commandEnd,
             dropdownPosition: {
-              top: rect.top - dropdownHeight - 10, // Position above the composer
+              top: rect.top - dropdownHeight - 45, // Position above the composer
               left: rect.left,
               width: rect.width, // Match the composer width
             },

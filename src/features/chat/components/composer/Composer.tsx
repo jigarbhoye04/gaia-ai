@@ -149,6 +149,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
       currentMode === "fetch_webpage" ? pageFetchURLs : [],
       uploadedFileData,
       selectedTool, // Pass the selected tool name
+      selectedToolCategory, // Pass the selected tool category
     );
 
     // Clear uploaded files after sending

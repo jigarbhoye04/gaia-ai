@@ -7,7 +7,7 @@ import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 interface SelectedToolIndicatorProps {
   toolName: string | null;
   toolCategory?: string | null;
-  onRemove: () => void;
+  onRemove?: () => void;
 }
 
 const formatToolName = (toolName: string): string => {
@@ -46,15 +46,16 @@ const SelectedToolIndicator: React.FC<SelectedToolIndicatorProps> = ({
           <span className="text-sm font-light text-zinc-200">
             {formatToolName(toolName)}
           </span>
-
-          <motion.button
-            onClick={onRemove}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="flex h-4 w-4 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-600 hover:text-zinc-200"
-          >
-            <X size={10} />
-          </motion.button>
+          {onRemove && (
+            <motion.button
+              onClick={onRemove}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="flex h-4 w-4 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-zinc-600 hover:text-zinc-200"
+            >
+              <X size={10} />
+            </motion.button>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

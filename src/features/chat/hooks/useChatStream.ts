@@ -151,6 +151,7 @@ export const useChatStream = () => {
     botMessageId: string,
     fileData: FileData[] = [],
     selectedTool: string | null = null,
+    toolCategory: string | null = null,
   ) => {
     refs.current.accumulatedResponse = "";
     refs.current.userPrompt = inputText;
@@ -187,6 +188,7 @@ export const useChatStream = () => {
       },
       fileData,
       selectedTool,
+      toolCategory,
     );
   };
 };
