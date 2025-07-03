@@ -176,7 +176,7 @@ export default function MemoryManagement({
   );
 
   return (
-    <div className={`flex h-full flex-col gap-2 ${className}`}>
+    <div className={`flex h-full min-h-[70vh] flex-col gap-2 ${className}`}>
       <div className="mb-4 flex items-center justify-end">
         <div className="flex gap-2">
           <Button

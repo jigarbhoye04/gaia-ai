@@ -1,19 +1,26 @@
 "use client";
 
-import {
-  Input,
-  Select,
-  SelectItem,
-  SharedSelection,
-  Textarea,
-} from "@heroui/react";
-import { Globe, MessageSquare, User } from "lucide-react";
+import { Select, SelectItem, SharedSelection, Textarea } from "@heroui/react";
+import { Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { CountrySelector } from "@/components/country-selector";
+import { CustomResponseStyleInput } from "@/components/shared/CustomResponseStyleInput";
+import { FormField } from "@/components/shared/FormField";
+import {
+  MessageMultiple02Icon,
+  PencilEdit01Icon,
+  UserIcon,
+} from "@/components/shared/icons";
+import { SettingsCard } from "@/components/shared/SettingsCard";
+import { SettingsCardSimple } from "@/components/shared/SettingsCardSimple";
+import { SettingsOption } from "@/components/shared/SettingsOption";
+import { StatusIndicator } from "@/components/shared/StatusIndicator";
 import { authApi } from "@/features/auth/api/authApi";
 import { useUser } from "@/features/auth/hooks/useUser";
+
+import { ModalAction } from "./SettingsMenu";
 
 const responseStyleOptions = [
   { value: "brief", label: "Brief - Keep responses concise and to the point" },
@@ -42,7 +49,11 @@ const professionOptions = [
   { value: "other", label: "Other" },
 ];
 
-export default function PreferencesSettings() {
+export default function PreferencesSettings({
+  setModalAction,
+}: {
+  setModalAction: React.Dispatch<React.SetStateAction<ModalAction | null>>;
+}) {
   const user = useUser();
   const [isUpdating, setIsUpdating] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -166,22 +177,12 @@ export default function PreferencesSettings() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="rounded-2xl bg-zinc-900 p-6">
-        <div className="mb-6 flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10">
-            <User className="h-5 w-5 text-blue-400" />
-          </div>
-          <div>
-            <h3 className="font-medium text-white">Personal Information</h3>
-            <p className="text-sm text-zinc-400">
-              Configure your personal details and location
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">Country</label>
+      <SettingsCard
+        icon={<UserIcon className="h-5 w-5 text-zinc-400" />}
+        title="Personal"
+      >
+        <div className="space-y-3">
+          <FormField label="Country">
             <CountrySelector
               selectedKey={preferences.country}
               onSelectionChange={handleCountryChange}
@@ -189,21 +190,18 @@ export default function PreferencesSettings() {
               label=""
               isDisabled={isUpdating}
               variant="flat"
-              radius="lg"
+              radius="md"
               classNames={{
                 base: "w-full",
                 popoverContent: "bg-zinc-800 border-zinc-700",
                 listboxWrapper: "bg-zinc-800",
                 selectorButton:
-                  "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 data-[hover=true]:bg-zinc-700",
+                  "bg-zinc-800/50 hover:bg-zinc-700/50 border-zinc-700 data-[hover=true]:bg-zinc-700/50 min-h-[36px]",
               }}
             />
-          </div>
+          </FormField>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">
-              Profession
-            </label>
+          <FormField label="Profession">
             <Select
               placeholder="Select your profession"
               selectedKeys={
@@ -215,10 +213,10 @@ export default function PreferencesSettings() {
               isDisabled={isUpdating}
               classNames={{
                 trigger:
-                  "bg-zinc-800 hover:bg-zinc-700 cursor-pointer min-h-[44px]",
+                  "bg-zinc-800/50 hover:bg-zinc-700/50 cursor-pointer min-h-[36px]",
                 popoverContent: "bg-zinc-800 z-50",
                 listbox: "bg-zinc-800",
-                value: "text-white",
+                value: "text-white text-sm",
               }}
             >
               {professionOptions.map((profession) => (
@@ -227,29 +225,16 @@ export default function PreferencesSettings() {
                 </SelectItem>
               ))}
             </Select>
-          </div>
+          </FormField>
         </div>
-      </div>
+      </SettingsCard>
 
-      {/* Communication Style */}
-      <div className="rounded-2xl bg-zinc-900 p-6">
-        <div className="mb-6 flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-500/10">
-            <MessageSquare className="h-5 w-5 text-green-400" />
-          </div>
-          <div>
-            <h3 className="font-medium text-white">Communication Style</h3>
-            <p className="text-sm text-zinc-400">
-              Customize how GAIA responds to your messages
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-zinc-300">
-              Response Style
-            </label>
+      <SettingsCard
+        icon={<MessageMultiple02Icon className="h-5 w-5 text-zinc-400" />}
+        title="Communication Style"
+      >
+        <div className="space-y-3">
+          <FormField label="Response Style">
             <Select
               placeholder="Select response style"
               selectedKeys={
@@ -266,10 +251,10 @@ export default function PreferencesSettings() {
               isDisabled={isUpdating}
               classNames={{
                 trigger:
-                  "bg-zinc-800 hover:bg-zinc-700 cursor-pointer min-h-[44px]",
+                  "bg-zinc-800/50 hover:bg-zinc-700/50 cursor-pointer min-h-[36px]",
                 popoverContent: "bg-zinc-800 z-50",
                 listbox: "bg-zinc-800",
-                value: "text-white",
+                value: "text-white text-sm",
               }}
             >
               {responseStyleOptions.map((style) => (
@@ -280,87 +265,75 @@ export default function PreferencesSettings() {
                   }
                 >
                   <div>
-                    <div className="font-medium">
+                    <div className="text-sm font-medium">
                       {style.value.charAt(0).toUpperCase() +
                         style.value.slice(1)}
                     </div>
-                    <div className="text-xs text-foreground-400">
+                    <div className="text-xs text-zinc-500">
                       {style.label.split(" - ")[1]}
                     </div>
                   </div>
                 </SelectItem>
               ))}
             </Select>
-          </div>
+          </FormField>
 
-          {/* Custom response style input */}
           {preferences.response_style &&
             !responseStyleOptions.some(
               (option) => option.value === preferences.response_style,
             ) && (
-              <div className="space-y-2">
-                <Input
-                  placeholder="Describe your preferred response style..."
-                  value={preferences.response_style || ""}
-                  onChange={(e) =>
-                    handleCustomResponseStyleChange(e.target.value)
-                  }
-                  isDisabled={isUpdating}
-                  classNames={{
-                    input: "bg-zinc-800 min-h-[44px]",
-                    inputWrapper: "bg-zinc-800 hover:bg-zinc-700",
-                  }}
-                />
-              </div>
+              <CustomResponseStyleInput
+                value={preferences.response_style}
+                onChange={handleCustomResponseStyleChange}
+                isDisabled={isUpdating}
+              />
             )}
         </div>
-      </div>
+      </SettingsCard>
 
-      {/* Custom Instructions */}
-      <div className="rounded-2xl bg-zinc-900 p-6">
-        <div className="mb-6 flex items-center space-x-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-purple-500/10">
-            <Globe className="h-5 w-5 text-purple-400" />
-          </div>
-          <div>
-            <h3 className="font-medium text-white">Custom Instructions</h3>
-            <p className="text-sm text-zinc-400">
-              Add personalized instructions for GAIA to follow
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
+      <SettingsCard
+        icon={<PencilEdit01Icon className="h-6 w-6 text-zinc-400" />}
+        title="Custom Instructions"
+      >
+        <div className="space-y-1">
           <Textarea
             placeholder="Add any specific instructions for how GAIA should assist you..."
             value={preferences.custom_instructions || ""}
             onChange={(e) => handleCustomInstructionsChange(e.target.value)}
             isDisabled={isUpdating}
-            minRows={4}
+            minRows={3}
             classNames={{
-              input: "bg-zinc-800",
-              inputWrapper: "bg-zinc-800 hover:bg-zinc-700",
+              input: "bg-zinc-800/50 text-sm",
+              inputWrapper: "bg-zinc-800/50 hover:bg-zinc-700/50",
             }}
           />
-          <p className="text-xs text-zinc-400">
+          <p className="text-xs text-zinc-500">
             These instructions will be included in every conversation to
             personalize GAIA's responses.
           </p>
         </div>
-      </div>
+      </SettingsCard>
 
-      {/* Status indicator */}
-      <div className="text-center">
-        {isUpdating && (
-          <p className="text-sm text-blue-400">Saving preferences...</p>
-        )}
-        {hasUnsavedChanges && !isUpdating && (
-          <p className="text-sm text-yellow-400">Unsaved changes</p>
-        )}
-        {!hasUnsavedChanges && !isUpdating && (
-          <p className="text-sm text-green-400">All changes saved</p>
-        )}
-      </div>
+      <SettingsCardSimple>
+        <SettingsOption
+          icon={<Trash2 className="h-5 w-5 text-red-500" />}
+          title="Clear Chat History"
+          description="Permanently delete all your conversations and chat history"
+          action={
+            <button
+              onClick={() => setModalAction("clear_chats")}
+              className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-400 transition-colors duration-200 hover:bg-red-500/20"
+            >
+              Clear All
+            </button>
+          }
+        />
+      </SettingsCardSimple>
+
+      <StatusIndicator
+        isUpdating={isUpdating}
+        hasUnsavedChanges={hasUnsavedChanges}
+      />
     </div>
   );
 }

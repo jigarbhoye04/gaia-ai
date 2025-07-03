@@ -332,7 +332,6 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       errorMessage={errorMessage}
       className="max-w-full"
       variant={variant}
-      size="lg"
       radius={radius}
       startContent={
         selectedKey ? (

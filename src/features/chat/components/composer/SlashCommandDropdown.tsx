@@ -7,6 +7,7 @@ import React, { useMemo, useState } from "react";
 
 import { SlashCommandMatch } from "@/features/chat/hooks/useSlashCommands";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
+import { IntegrationsCard } from "@/features/integrations/components/IntegrationsCard";
 
 interface SlashCommandDropdownProps {
   matches: SlashCommandMatch[];
@@ -165,6 +166,11 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           {/* Tool List */}
           <ScrollShadow className="max-h-96 overflow-y-auto">
             <div className="py-2">
+              {/* Integrations Card - Only show in "all" category */}
+              {selectedCategory === "all" && (
+                <IntegrationsCard onClose={onClose} />
+              )}
+
               {filteredMatches.map((match, index) => (
                 <div
                   key={match.tool.name}

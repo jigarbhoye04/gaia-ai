@@ -130,6 +130,17 @@ export const getToolCategoryIcon = (
           className={iconProps.className || "text-emerald-400"}
         />
       );
+    case "notion":
+      return (
+        <Image
+          alt={`${category} Icon`}
+          {...defaultProps}
+          className={`${iconProps.className} aspect-square object-contain`}
+          src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+          width={25}
+          height={25}
+        />
+      );
     case "webpage":
       return (
         <Info
