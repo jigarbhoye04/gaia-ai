@@ -8,7 +8,7 @@ import {
   Image02Icon,
   SourceCodeCircleIcon,
   Target02Icon,
-} from "@/components";
+} from "@/components/shared/icons";
 
 interface IconProps {
   size?: number;

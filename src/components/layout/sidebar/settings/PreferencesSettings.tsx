@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { CountrySelector } from "@/components/country-selector";
 import { CustomResponseStyleInput } from "@/components/shared/CustomResponseStyleInput";
-import { FormField } from "@/components/shared/FormField";
+import { LabeledField } from "@/components/shared/FormField";
 import {
   MessageMultiple02Icon,
   PencilEdit01Icon,
@@ -67,6 +67,19 @@ export default function PreferencesSettings({
 
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSavedPreferences = useRef(preferences);
+
+  // Update preferences when user data changes
+  useEffect(() => {
+    const newPreferences = {
+      country: user.onboarding?.preferences?.country || "",
+      profession: user.onboarding?.preferences?.profession || "",
+      response_style: user.onboarding?.preferences?.response_style || "",
+      custom_instructions:
+        user.onboarding?.preferences?.custom_instructions || null,
+    };
+    setPreferences(newPreferences);
+    lastSavedPreferences.current = newPreferences;
+  }, [user.onboarding?.preferences]);
 
   const updatePreferences = useCallback(
     async (updatedPreferences: typeof preferences) => {
@@ -182,7 +195,7 @@ export default function PreferencesSettings({
         title="Personal"
       >
         <div className="space-y-3">
-          <FormField label="Country">
+          <LabeledField label="Country">
             <CountrySelector
               selectedKey={preferences.country}
               onSelectionChange={handleCountryChange}
@@ -199,9 +212,9 @@ export default function PreferencesSettings({
                   "bg-zinc-800/50 hover:bg-zinc-700/50 border-zinc-700 data-[hover=true]:bg-zinc-700/50 min-h-[36px]",
               }}
             />
-          </FormField>
+          </LabeledField>
 
-          <FormField label="Profession">
+          <LabeledField label="Profession">
             <Select
               placeholder="Select your profession"
               selectedKeys={
@@ -225,7 +238,7 @@ export default function PreferencesSettings({
                 </SelectItem>
               ))}
             </Select>
-          </FormField>
+          </LabeledField>
         </div>
       </SettingsCard>
 
@@ -234,7 +247,7 @@ export default function PreferencesSettings({
         title="Communication Style"
       >
         <div className="space-y-3">
-          <FormField label="Response Style">
+          <LabeledField label="Response Style">
             <Select
               placeholder="Select response style"
               selectedKeys={
@@ -276,7 +289,7 @@ export default function PreferencesSettings({
                 </SelectItem>
               ))}
             </Select>
-          </FormField>
+          </LabeledField>
 
           {preferences.response_style &&
             !responseStyleOptions.some(

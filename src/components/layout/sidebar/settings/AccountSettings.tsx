@@ -6,7 +6,7 @@ import { Camera, Edit3, LogOut, User } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { FormField } from "@/components/shared/FormField";
+import { LabeledField } from "@/components/shared/FormField";
 import { SettingsCard } from "@/components/shared/SettingsCard";
 import { SettingsCardSimple } from "@/components/shared/SettingsCardSimple";
 import { SettingsOption } from "@/components/shared/SettingsOption";
@@ -125,7 +125,7 @@ export default function AccountSection({
           {/* User Info */}
           <div className="flex-1 space-y-4">
             {/* Name */}
-            <FormField label="Name">
+            <LabeledField label="Name">
               {isEditing ? (
                 <div className="space-y-3">
                   <Input
@@ -165,12 +165,12 @@ export default function AccountSection({
                   <Edit3 className="h-4 w-4 text-zinc-400 transition-colors duration-200 group-hover:text-white" />
                 </button>
               )}
-            </FormField>
+            </LabeledField>
 
             {/* Email */}
-            <FormField label="Email">
+            <LabeledField label="Email">
               <Input value={user.email} readOnly />
-            </FormField>
+            </LabeledField>
           </div>
         </div>
       </SettingsCard>
