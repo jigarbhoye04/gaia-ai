@@ -1,4 +1,4 @@
-name: Linting and Formatting
+name: Create Build
 
 # this is trigger CI on push and PR for main branch only
 on:
