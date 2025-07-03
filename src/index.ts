@@ -15,6 +15,5 @@ export * from "./layouts/SidebarLayout";
 export * from "./lib/index";
 export * from "./redux/index";
 export * from "./services/index";
-export * from "./store/index";
 export * from "./types/index";
 export * from "./utils/index";
