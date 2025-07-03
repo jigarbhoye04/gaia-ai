@@ -1,6 +1,8 @@
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { AnimatePresence, motion } from "framer-motion";
-import { Hash } from "lucide-react";
+import { Hash, Search, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
 import { SlashCommandMatch } from "@/features/chat/hooks/useSlashCommands";
@@ -13,6 +15,7 @@ interface SlashCommandDropdownProps {
   onClose: () => void;
   position: { top: number; left: number; width?: number };
   isVisible: boolean;
+  openedViaButton?: boolean;
 }
 
 const formatToolName = (toolName: string): string => {
@@ -29,8 +32,10 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
   onClose,
   position,
   isVisible,
+  openedViaButton = false,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Get unique categories from matches
   const categories = useMemo(() => {
@@ -40,11 +45,29 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
     return ["all", ...uniqueCategories.sort()];
   }, [matches]);
 
-  // Filter matches based on selected category
+  // Filter matches based on selected category and search query
   const filteredMatches = useMemo(() => {
-    if (selectedCategory === "all") return matches;
-    return matches.filter((match) => match.tool.category === selectedCategory);
-  }, [matches, selectedCategory]);
+    let filtered = matches;
+
+    // Filter by category
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter(
+        (match) => match.tool.category === selectedCategory,
+      );
+    }
+
+    // Filter by search query (only when opened via button)
+    if (openedViaButton && searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (match) =>
+          formatToolName(match.tool.name).toLowerCase().includes(query) ||
+          match.tool.category.toLowerCase().includes(query),
+      );
+    }
+
+    return filtered;
+  }, [matches, selectedCategory, searchQuery, openedViaButton]);
 
   return (
     <AnimatePresence>
@@ -70,6 +93,35 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           }}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Header section - Only show when opened via button */}
+          {openedViaButton && (
+            <div className="flex items-center gap-2 border-b border-zinc-700 p-3">
+              {/* Search Input */}
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search tools..."
+                  value={searchQuery}
+                  size="sm"
+                  radius="full"
+                  startContent={<Search size={16} />}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              {/* Close Button */}
+              <Button
+                onPress={onClose}
+                isIconOnly
+                size="sm"
+                radius="full"
+                variant="flat"
+              >
+                <X size={14} />
+              </Button>
+            </div>
+          )}
+
           {/* Category Tabs */}
           <motion.div
             initial={{ opacity: 0 }}

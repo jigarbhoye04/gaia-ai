@@ -1,13 +1,11 @@
 import { Tooltip } from "@heroui/tooltip";
-import { ArrowUpRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import React from "react";
 
 import {
-  AiWebBrowsingIcon,
   AttachmentIcon,
-  GlobalSearchIcon,
-  Image02Icon,
   PlusSignIcon,
+  ToolsIcon,
 } from "@/components/shared/icons";
 import { Button } from "@/components/ui/shadcn/button";
 import {
@@ -26,6 +24,8 @@ interface SearchbarLeftDropdownProps {
   openGenerateImageModal: () => void;
   openFileUploadModal: () => void;
   handleSelectionChange: (mode: SearchMode) => void;
+  onOpenSlashCommandDropdown?: () => void;
+  isSlashCommandDropdownOpen?: boolean;
 }
 
 interface DropdownItemConfig {
@@ -44,6 +44,8 @@ export default function ComposerLeft({
   openGenerateImageModal,
   openFileUploadModal,
   handleSelectionChange,
+  onOpenSlashCommandDropdown,
+  isSlashCommandDropdownOpen,
 }: SearchbarLeftDropdownProps) {
   const { isLoading } = useLoading();
   // const { setLoadingText } = useLoadingText();
@@ -54,41 +56,41 @@ export default function ComposerLeft({
   );
 
   const dropdownItems: DropdownItemConfig[] = [
-    {
-      id: "deep_search",
-      label: "Deep Research",
-      icon: (
-        <AiWebBrowsingIcon className="min-h-[20px] min-w-[20px] text-primary" />
-      ),
-      isMode: true,
-      description:
-        "Search the web and fetch content from those pages, extracting key information",
-    },
-    {
-      id: "web_search",
-      label: "Web search",
-      icon: (
-        <GlobalSearchIcon className="min-h-[20px] min-w-[20px] text-primary" />
-      ),
-      isMode: true,
-      description: "Search the web for the latest information",
-    },
-    {
-      id: "fetch_webpage",
-      label: "Fetch Webpage",
-      icon: <ArrowUpRight className="min-h-[20px] min-w-[20px] text-primary" />,
-      action: openPageFetchModal,
-      isMode: false,
-      description: "Retrieve and understand content from specific webpages",
-    },
-    {
-      id: "generate_image",
-      label: "Generate Image",
-      icon: <Image02Icon className="min-h-[20px] min-w-[20px] text-primary" />,
-      action: openGenerateImageModal,
-      isMode: false,
-      description: "Create AI-generated images from text",
-    },
+    // {
+    //   id: "deep_search",
+    //   label: "Deep Research",
+    //   icon: (
+    //     <AiWebBrowsingIcon className="min-h-[20px] min-w-[20px] text-primary" />
+    //   ),
+    //   isMode: true,
+    //   description:
+    //     "Search the web and fetch content from those pages, extracting key information",
+    // },
+    // {
+    //   id: "web_search",
+    //   label: "Web search",
+    //   icon: (
+    //     <GlobalSearchIcon className="min-h-[20px] min-w-[20px] text-primary" />
+    //   ),
+    //   isMode: true,
+    //   description: "Search the web for the latest information",
+    // },
+    // {
+    //   id: "fetch_webpage",
+    //   label: "Fetch Webpage",
+    //   icon: <ArrowUpRight className="min-h-[20px] min-w-[20px] text-primary" />,
+    //   action: openPageFetchModal,
+    //   isMode: false,
+    //   description: "Retrieve and understand content from specific webpages",
+    // },
+    // {
+    //   id: "generate_image",
+    //   label: "Generate Image",
+    //   icon: <Image02Icon className="min-h-[20px] min-w-[20px] text-primary" />,
+    //   action: openGenerateImageModal,
+    //   isMode: false,
+    //   description: "Create AI-generated images from text",
+    // },
     {
       id: "upload_file",
       label: "Attach Files",
@@ -102,70 +104,104 @@ export default function ComposerLeft({
   ];
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className={cn(
-            "group relative h-10 w-10 rounded-full border-2 border-zinc-700 bg-zinc-900/50 p-0 hover:bg-zinc-800",
-            isLoading && "cursor-wait",
-          )}
-          disabled={isLoading}
-        >
-          <PlusSignIcon className="min-h-[20px] min-w-[20px]" />
-          <span
-            className={`absolute -top-0 -right-0 h-2 w-2 rounded-full bg-primary transition ${currentMode ? "opacity-100" : "opacity-0"}`}
-            aria-hidden="true"
-          />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        side="top"
-        className="w-fit gap-2 rounded-xl border-none bg-zinc-900 p-1 text-white outline-2! outline-zinc-800!"
-      >
-        <div className="px-3 py-1 text-xs text-foreground-400">
-          Add context to the chat
-        </div>
-        {dropdownItems.map((item) => (
-          <Tooltip
-            content={<div className="max-w-[270px]">{item.description}</div>}
-            key={item.id}
-            color="foreground"
-            radius="sm"
+    <div className="flex items-center gap-1">
+      {/* Add Context Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "group relative h-10 w-10 rounded-full border-none bg-zinc-700 p-0 hover:bg-zinc-600/90",
+              isLoading && "cursor-wait",
+            )}
+            disabled={isLoading}
           >
-            <DropdownMenuItem
+            <PlusSignIcon className="min-h-[23px] min-w-[23px] text-zinc-400!" />
+            <span
+              className={`absolute -top-0 -right-0 h-2 w-2 rounded-full bg-primary transition ${currentMode ? "opacity-100" : "opacity-0"}`}
+              aria-hidden="true"
+            />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          side="top"
+          className="w-fit gap-2 rounded-xl border-none bg-zinc-900 p-1 text-white outline-2! outline-zinc-800!"
+        >
+          {dropdownItems.map((item) => (
+            <Tooltip
+              content={<div className="max-w-[270px]">{item.description}</div>}
               key={item.id}
-              onClick={() => {
-                // setLoadingText(item.loadingText ?? "");
-                if (item.isMode) handleSelectionChange(item.id as SearchMode);
-                else if (item.action) item.action();
-              }}
-              className={cn(
-                "cursor-pointer rounded-lg px-3 py-2",
-                currentMode === item.id
-                  ? "bg-[#00bbff50] text-primary focus:bg-[#00bbff50] focus:text-primary"
-                  : "focus:bg-zinc-800 focus:text-white",
-              )}
+              color="foreground"
+              radius="sm"
             >
-              <div className="flex w-full items-center justify-between gap-3">
-                <div className="flex flex-col">
-                  <div className="flex flex-row items-center gap-2">
-                    {item.icon}
-                    <span className="">{item.label}</span>
+              <DropdownMenuItem
+                key={item.id}
+                onClick={() => {
+                  // setLoadingText(item.loadingText ?? "");
+                  if (item.isMode) handleSelectionChange(item.id as SearchMode);
+                  else if (item.action) item.action();
+                }}
+                className={cn(
+                  "cursor-pointer rounded-lg px-3 py-2",
+                  currentMode === item.id
+                    ? "bg-[#00bbff50] text-primary focus:bg-[#00bbff50] focus:text-primary"
+                    : "focus:bg-zinc-800 focus:text-white",
+                )}
+              >
+                <div className="flex w-full items-center justify-between gap-3">
+                  <div className="flex flex-col">
+                    <div className="flex flex-row items-center gap-2">
+                      {item.icon}
+                      <span className="">{item.label}</span>
+                    </div>
+                  </div>
+                  <div>
+                    {currentMode === item.id && (
+                      <Check className="min-h-[20px] min-w-[20px] text-primary" />
+                    )}
                   </div>
                 </div>
-                <div>
-                  {currentMode === item.id && (
-                    <Check className="min-h-[20px] min-w-[20px] text-primary" />
-                  )}
-                </div>
-              </div>
-            </DropdownMenuItem>
-          </Tooltip>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+              </DropdownMenuItem>
+            </Tooltip>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Tools Button */}
+      {onOpenSlashCommandDropdown && (
+        <Tooltip
+          content="Browse all tools"
+          placement="right"
+          color="primary"
+          showArrow
+        >
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(
+              "group relative h-10 w-10 rounded-full border-none bg-zinc-700 p-0 text-zinc-400 hover:bg-zinc-600/90",
+              isLoading && "cursor-wait",
+              isSlashCommandDropdownOpen &&
+                "border-primary/50 bg-primary/20 text-primary",
+            )}
+            disabled={isLoading}
+            onClick={onOpenSlashCommandDropdown}
+          >
+            <ToolsIcon
+              className="min-h-[20px] min-w-[20px]"
+              color={undefined}
+            />
+            {isSlashCommandDropdownOpen && (
+              <span
+                className="top-0x absolute right-0 h-2 w-2 rounded-full bg-primary transition"
+                aria-hidden="true"
+              />
+            )}
+          </Button>
+        </Tooltip>
+      )}
+    </div>
   );
 }

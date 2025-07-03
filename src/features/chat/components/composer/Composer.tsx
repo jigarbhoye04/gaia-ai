@@ -3,6 +3,7 @@ import React, {
   useEffect,
   useImperativeHandle,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { toast } from "sonner";
@@ -16,7 +17,7 @@ import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
 import { FileData, SearchMode } from "@/types/shared";
 
-import ComposerInput from "./ComposerInput";
+import ComposerInput, { ComposerInputRef } from "./ComposerInput";
 import ComposerToolbar from "./ComposerToolbar";
 import FetchPageModal from "./FetchPageModal";
 import SelectedToolIndicator from "./SelectedToolIndicator";
@@ -41,6 +42,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
 }) => {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const [currentHeight, setCurrentHeight] = useState<number>(24);
+  const composerInputRef = useRef<ComposerInputRef>(null);
   const [searchbarText, setSearchbarText] = useState<string>("");
   const [selectedMode, setSelectedMode] = useState<Set<SearchMode>>(
     new Set([null]),
@@ -56,6 +58,8 @@ const Composer: React.FC<MainSearchbarProps> = ({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFilePreview[]>([]);
   const [uploadedFileData, setUploadedFileData] = useState<FileData[]>([]);
   const [pendingDroppedFiles, setPendingDroppedFiles] = useState<File[]>([]);
+  const [isSlashCommandDropdownOpen, setIsSlashCommandDropdownOpen] =
+    useState(false);
   const sendMessage = useSendMessage(convoIdParam ?? null);
   const { isLoading, setIsLoading } = useLoading();
   const currentMode = useMemo(
@@ -222,6 +226,30 @@ const Composer: React.FC<MainSearchbarProps> = ({
     setSelectedToolCategory(null);
   };
 
+  const handleToggleSlashCommandDropdown = () => {
+    // Focus the input first - this will naturally trigger slash command detection
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+
+    composerInputRef.current?.toggleSlashCommandDropdown();
+    // Update the state to reflect the current dropdown state
+    setIsSlashCommandDropdownOpen(
+      composerInputRef.current?.isSlashCommandDropdownOpen() || false,
+    );
+  };
+
+  // Sync the state with the actual dropdown state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const isOpen =
+        composerInputRef.current?.isSlashCommandDropdownOpen() || false;
+      setIsSlashCommandDropdownOpen(isOpen);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleFilesUploaded = (files: UploadedFilePreview[]) => {
     if (files.length === 0) {
       // If no files, just clear the uploaded files
@@ -314,6 +342,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
             onRemove={handleRemoveSelectedTool}
           />
           <ComposerInput
+            ref={composerInputRef}
             searchbarText={searchbarText}
             onSearchbarTextChange={setSearchbarText}
             handleFormSubmit={handleFormSubmit}
@@ -332,6 +361,8 @@ const Composer: React.FC<MainSearchbarProps> = ({
             searchbarText={searchbarText}
             handleSelectionChange={handleSelectionChange}
             selectedTool={selectedTool}
+            onToggleSlashCommandDropdown={handleToggleSlashCommandDropdown}
+            isSlashCommandDropdownOpen={isSlashCommandDropdownOpen}
           />
         </div>
       </div>

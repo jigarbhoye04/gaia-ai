@@ -22,6 +22,7 @@ export interface UseSlashCommandsReturn {
     commandEnd: number;
   };
   getSlashCommandSuggestions: (query: string) => SlashCommandMatch[];
+  getAllTools: () => ToolInfo[];
 }
 
 export const useSlashCommands = (): UseSlashCommandsReturn => {
@@ -188,11 +189,16 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
     [getSlashCommandSuggestions],
   );
 
+  const getAllTools = useCallback(() => {
+    return tools;
+  }, [tools]);
+
   return {
     tools,
     isLoadingTools,
     error,
     detectSlashCommand,
     getSlashCommandSuggestions,
+    getAllTools,
   };
 };

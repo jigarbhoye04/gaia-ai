@@ -34,7 +34,12 @@ export default function RightSide({
 
   return (
     <div className="ml-2 flex items-center gap-1">
-      <Tooltip content={getTooltipContent()} placement="right">
+      <Tooltip
+        content={getTooltipContent()}
+        placement="right"
+        color="primary"
+        showArrow
+      >
         <Button
           isIconOnly
           aria-label="Send message"

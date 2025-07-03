@@ -14,6 +14,8 @@ interface SearchbarToolbarProps {
   handleSelectionChange: (mode: SearchMode) => void;
   searchbarText: string;
   selectedTool?: string | null;
+  onToggleSlashCommandDropdown?: () => void;
+  isSlashCommandDropdownOpen?: boolean;
 }
 
 const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
@@ -25,6 +27,8 @@ const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
   handleSelectionChange,
   searchbarText,
   selectedTool,
+  onToggleSlashCommandDropdown,
+  isSlashCommandDropdownOpen,
 }) => {
   return (
     <div className="flex items-center justify-between px-2 pt-1">
@@ -35,6 +39,8 @@ const ComposerToolbar: React.FC<SearchbarToolbarProps> = ({
           openGenerateImageModal={openGenerateImageModal}
           openFileUploadModal={openFileUploadModal}
           handleSelectionChange={handleSelectionChange}
+          onOpenSlashCommandDropdown={onToggleSlashCommandDropdown}
+          isSlashCommandDropdownOpen={isSlashCommandDropdownOpen}
         />
       </div>
       <SearchbarRightSendBtn
