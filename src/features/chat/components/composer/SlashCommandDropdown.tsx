@@ -78,6 +78,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           >
             <ScrollShadow orientation="horizontal" className="overflow-x-auto">
               <div className="flex min-w-max gap-1 px-2 py-2">
+                {/* <div className="grid min-w-max gap-1 px-2 py-2 grid-rows-2 grid-flow"> for 2 rows */}
                 {categories.map((category) => (
                   <button
                     key={category}
