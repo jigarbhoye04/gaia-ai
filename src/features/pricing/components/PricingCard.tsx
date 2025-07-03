@@ -190,7 +190,7 @@ export function PricingCard({
                 <Tick02Icon
                   height="20"
                   width="20"
-                  className="min-h-[25px] min-w-[25px] rounded-full bg-zinc-950 p-[4px] text-primary outline-1 outline-zinc-800"
+                  className="min-h-[20px] min-w-[22px] text-primary"
                 />
                 {feature}
               </div>

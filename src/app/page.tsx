@@ -2,17 +2,10 @@
 
 import { lazy, useEffect } from "react";
 
-import HeroImage from "@/features/landing/components/hero/HeroImageSection";
 import HeroSection from "@/features/landing/components/hero/HeroSection";
 import Integrations from "@/features/landing/components/sections/IntegrationsSection";
-// import Integrations from "@/features/landing/components/sections/IntegrationsSection";
-import Calendar from "@/features/landing/components/sections/new/Calendar";
-import Description from "@/features/landing/components/sections/new/Description";
-import Mail from "@/features/landing/components/sections/new/Mail";
-import Personalised from "@/features/landing/components/sections/new/Personalised";
-import Proactive from "@/features/landing/components/sections/new/Proactive";
-import Todo from "@/features/landing/components/sections/new/Todo";
 
+// import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
 
 const DeepSearchSection = lazy(
@@ -51,20 +44,20 @@ export default function LandingPage() {
         <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-linear-to-b" />
 
         <HeroSection />
-        <HeroImage />
+        {/* <HeroImage /> */}
 
         <div
-          className="mt-40 space-y-26"
-          // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
+        // className="mt-40 space-y-26"
+        // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
         >
-          <Description />
-          <Personalised />
+          {/* <Description /> */}
+          {/* <Personalised /> */}
           <Integrations />
-          <Proactive />
-          <Mail />
-          <Calendar />
-          <Todo />
-          <Goals />
+          {/* <Proactive /> */}
+          {/* <Mail /> */}
+          {/* <Calendar /> */}
+          {/* <Todo /> */}
+          {/* <Goals /> */}
           {/* <InternetSection /> */}
           {/* <AdvancedConversation /> */}
           {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}
