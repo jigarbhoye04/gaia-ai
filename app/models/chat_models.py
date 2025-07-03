@@ -37,6 +37,8 @@ class MessageModel(BaseModel):
     message_id: Optional[str] = None  # Message ID
     fileIds: Optional[List[str]] = []  # List of file IDs associated with the message
     fileData: Optional[List[FileData]] = []  # Complete file metadata
+    selectedTool: Optional[str] = None  # Tool selected via slash commands
+    toolCategory: Optional[str] = None  # Category of the selected tool
     intent: Optional[Literal["calendar", "generate_image", "weather"]] = None
     calendar_options: Optional[List[EventCreateRequest]] = None
     search_results: Optional[SearchResults] = None

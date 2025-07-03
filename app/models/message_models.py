@@ -26,6 +26,8 @@ class MessageRequestWithHistory(BaseModel):
     pageFetchURLs: Optional[List[str]] = []
     fileIds: Optional[List[str]] = []
     fileData: Optional[List[FileData]] = []
+    selectedTool: Optional[str] = None  # Tool selected via slash commands
+    toolCategory: Optional[str] = None  # Category of the selected tool
     # TODO: Remove fileIds, fileData and messages, we should not get them from the client
 
 

@@ -28,6 +28,7 @@ from app.api.v1.router import (
     support,
     team,
     todos,
+    tools,
     usage,
     waitlist,
     websocket,
@@ -59,4 +60,5 @@ router.include_router(reminders.router, tags=["Reminders"])
 router.include_router(support.router, tags=["Support"])
 router.include_router(payments.router, prefix="/payments", tags=["Payments"])
 router.include_router(usage.router, tags=["Usage"])
+router.include_router(tools.router, tags=["Tools"])
 # api_router.include_router(audio.router, tags=["Audio"])
