@@ -99,6 +99,7 @@ export default function RootLayout({
           src="https://analytics.heygaia.io/api/script.js"
           data-site-id="1"
           defer
+          data-session-replay="true"
         />
       </body>
     </html>
