@@ -18,3 +18,15 @@ export const fetchMessages = async (
     router.push("/c");
   }
 };
+
+/**
+ * Format tool name for display
+ * Converts snake_case tool names to readable format
+ */
+export const formatToolName = (toolName: string): string => {
+  return toolName
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .replace(/Tool$/, "")
+    .trim();
+};

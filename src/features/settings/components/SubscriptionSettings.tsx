@@ -1,14 +1,15 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
-import { Divider } from "@heroui/divider";
 import { Skeleton } from "@heroui/skeleton";
+import { CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { CreditCardIcon } from "@/components";
+import { SettingsCard } from "@/components/shared/SettingsCard";
 import { pricingApi } from "@/features/pricing/api/pricingApi";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
 import {
@@ -53,57 +54,49 @@ export function SubscriptionSettings() {
 
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <h3 className="text-lg font-semibold">Subscription</h3>
-        </CardHeader>
-        <CardBody className="space-y-4">
+      <SettingsCard
+        icon={<CreditCard className="h-5 w-5 text-blue-400" />}
+        title="Subscription"
+      >
+        <div className="space-y-4">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-64" />
           <Skeleton className="h-16 w-full" />
-        </CardBody>
-      </Card>
+        </div>
+      </SettingsCard>
     );
   }
 
   // Free plan display
   if (!subscriptionStatus?.is_subscribed || !subscriptionStatus.current_plan) {
     return (
-      <Card className="w-full">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <h3 className="text-lg font-semibold">Subscription</h3>
-          <Chip color="default" variant="flat" size="sm">
-            Free Plan
-          </Chip>
-        </CardHeader>
-        <CardBody className="space-y-4">
+      <SettingsCard
+        icon={<CreditCardIcon className="h-5 w-5 text-primary" />}
+        title="Subscription"
+      >
+        <div className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-default-600">Plan</span>
-              <span className="font-medium">Free</span>
+              <span className="text-sm text-zinc-400">Plan</span>
+              <span className="font-medium text-white">Free</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-default-600">Price</span>
-              <span className="font-medium">$0</span>
+              <span className="text-sm text-zinc-400">Price</span>
+              <span className="font-medium text-white">$0</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-default-600">Status</span>
-              <span className="font-medium">Active</span>
+              <span className="text-sm text-zinc-400">Status</span>
+              <span className="font-medium text-white">Active</span>
             </div>
           </div>
 
-          <Divider />
-
-          <Button
-            color="primary"
-            size="lg"
-            className="w-full"
-            onPress={handleUpgrade}
-          >
-            Upgrade to Pro
-          </Button>
-        </CardBody>
-      </Card>
+          <div className="border-t border-zinc-700 pt-4">
+            <Button color="primary" className="w-full" onPress={handleUpgrade}>
+              Upgrade to Pro
+            </Button>
+          </div>
+        </div>
+      </SettingsCard>
     );
   }
 
@@ -154,9 +147,11 @@ export function SubscriptionSettings() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <h3 className="text-lg font-semibold">Subscription</h3>
+    <SettingsCard
+      icon={<CreditCard className="h-5 w-5 text-blue-400" />}
+      title="Subscription"
+    >
+      <div className="mb-4 flex justify-end">
         <Chip
           color={getStatusColor(subscription?.status || "unknown")}
           variant="flat"
@@ -164,66 +159,66 @@ export function SubscriptionSettings() {
         >
           {getStatusText(subscription?.status || "unknown")}
         </Chip>
-      </CardHeader>
+      </div>
 
-      <CardBody className="space-y-4">
+      <div className="space-y-4">
         {/* Plan Details */}
         <div className="space-y-3">
           <div className="flex justify-between">
-            <span className="text-sm text-default-600">Plan</span>
-            <span className="font-medium">{plan.name}</span>
+            <span className="text-sm text-zinc-400">Plan</span>
+            <span className="font-medium text-white">{plan.name}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-default-600">Price</span>
-            <span className="font-medium">
+            <span className="text-sm text-zinc-400">Price</span>
+            <span className="font-medium text-white">
               {priceFormatted} / {plan.duration}
             </span>
           </div>
           {subscription?.current_end && (
             <div className="flex justify-between">
-              <span className="text-sm text-default-600">Next billing</span>
-              <span className="font-medium">
+              <span className="text-sm text-zinc-400">Next billing</span>
+              <span className="font-medium text-white">
                 {formatDate(subscription.current_end)}
               </span>
             </div>
           )}
           {subscriptionStatus.days_remaining !== undefined && (
             <div className="flex justify-between">
-              <span className="text-sm text-default-600">Days remaining</span>
-              <span className="font-medium">
+              <span className="text-sm text-zinc-400">Days remaining</span>
+              <span className="font-medium text-white">
                 {subscriptionStatus.days_remaining}
               </span>
             </div>
           )}
         </div>
 
-        <Divider />
-
-        {/* Actions */}
-        <div className="flex flex-col gap-2">
-          <Button
-            color="primary"
-            variant="flat"
-            onPress={handleUpgrade}
-            className="w-full"
-          >
-            View Plans
-          </Button>
-
-          {subscription?.status === "active" && (
+        <div className="border-t border-zinc-700 pt-4">
+          {/* Actions */}
+          <div className="flex flex-col gap-2">
             <Button
-              color="danger"
-              variant="light"
-              onPress={handleCancelSubscription}
-              isLoading={isCancelling}
-              disabled={isCancelling}
+              color="primary"
+              variant="flat"
+              onPress={handleUpgrade}
               className="w-full"
             >
-              Cancel Subscription
+              View Plans
             </Button>
-          )}
+
+            {subscription?.status === "active" && (
+              <Button
+                color="danger"
+                variant="light"
+                onPress={handleCancelSubscription}
+                isLoading={isCancelling}
+                disabled={isCancelling}
+                className="w-full"
+              >
+                Cancel Subscription
+              </Button>
+            )}
+          </div>
         </div>
-      </CardBody>
-    </Card>
+      </div>
+    </SettingsCard>
   );
 }

@@ -12,7 +12,6 @@ export * from "./SidebarTopButtons";
 export * from "./TopWebsiteName";
 export * from "./UserContainer";
 export * from "./settings/AccountSettings";
-export * from "./settings/GeneralSettings";
 export * from "./settings/LogoutModal";
 export * from "./settings/MemorySettings";
 export * from "./settings/PreferencesSettings";

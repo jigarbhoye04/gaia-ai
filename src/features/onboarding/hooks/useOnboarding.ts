@@ -77,7 +77,8 @@ export const useOnboarding = () => {
 
         const newResponses = {
           ...prev.userResponses,
-          [currentQuestion.fieldName]: rawValue || responseText,
+          [currentQuestion.fieldName]:
+            rawValue !== undefined ? rawValue : responseText,
         };
         newState.userResponses = newResponses;
 
@@ -144,7 +145,7 @@ export const useOnboarding = () => {
       );
       if (selectedChip) {
         if (chipValue === "skip") {
-          submitResponse("I'll skip this for now", "");
+          submitResponse("Skipped", "");
         } else if (chipValue === "none") {
           submitResponse("No special instructions", "");
         } else {

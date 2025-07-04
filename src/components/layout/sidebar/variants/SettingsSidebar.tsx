@@ -1,17 +1,15 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import {
-  BarChart3,
-  CreditCard,
-} from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import {
+  AccountSetting02Icon,
   AiBrain01Icon,
+  ConnectIcon,
+  CreditCardIcon,
   MessageMultiple02Icon,
-  Settings01Icon,
-  UserIcon,
 } from "@/components/shared/icons";
 
 type MenuItem = {
@@ -31,18 +29,13 @@ export default function SettingsSidebar() {
 
   const settingsMenuItems: MenuItem[] = [
     {
-      label: "General",
-      icon: Settings01Icon,
-      href: "/settings?section=general",
-    },
-    {
       label: "Account",
-      icon: UserIcon,
+      icon: AccountSetting02Icon,
       href: "/settings?section=account",
     },
     {
       label: "Subscription",
-      icon: CreditCard,
+      icon: CreditCardIcon,
       href: "/settings?section=subscription",
     },
     {
@@ -59,6 +52,11 @@ export default function SettingsSidebar() {
       label: "Memory",
       icon: AiBrain01Icon,
       href: "/settings?section=memory",
+    },
+    {
+      label: "Integrations",
+      icon: ConnectIcon,
+      href: "/settings?section=integrations",
     },
   ];
 
@@ -79,7 +77,7 @@ export default function SettingsSidebar() {
               className={`group ${isActive ? "text-primary" : ""} flex w-full justify-start`}
             >
               <Icon
-                className={`mr-1 h-5 w-5 transition-colors ${isActive ? "" : "text-foreground-500"}`}
+                className={`mr-1 h-5 w-5 transition-colors ${isActive ? "text-primary" : "text-foreground-500"}`}
               />
               <span className="text-sm">{item.label}</span>
             </Button>

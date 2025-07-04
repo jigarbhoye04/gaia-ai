@@ -286,6 +286,31 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
 }) => {
   const [inputValue, setInputValue] = React.useState("");
 
+  // Get the selected country object
+  const selectedCountry = React.useMemo(() => {
+    if (!selectedKey) return null;
+    return countries.find(
+      (country) => country.code === selectedKey.toUpperCase(),
+    );
+  }, [selectedKey]);
+
+  // Sync input value with selected country
+  React.useEffect(() => {
+    if (selectedCountry) {
+      setInputValue(selectedCountry.name);
+    } else if (selectedKey && !selectedCountry) {
+      // Handle case where selectedKey might be a country name instead of code
+      const countryByName = countries.find(
+        (country) => country.name.toLowerCase() === selectedKey.toLowerCase(),
+      );
+      if (countryByName) {
+        setInputValue(countryByName.name);
+        // Update the parent with the correct country code
+        onSelectionChange(countryByName.code);
+      }
+    }
+  }, [selectedKey, selectedCountry, onSelectionChange]);
+
   // Filter countries based on both name and code
   const filteredCountries = React.useMemo(() => {
     if (!inputValue) return countries;
@@ -318,9 +343,18 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       inputValue={inputValue}
       selectedKey={selectedKey}
       onInputChange={setInputValue}
-      onSelectionChange={(key) =>
-        onSelectionChange(key ? (key as string).toUpperCase() : null)
-      }
+      onSelectionChange={(key) => {
+        const countryCode = key ? (key as string).toUpperCase() : null;
+        onSelectionChange(countryCode);
+
+        // Update input value to show selected country name
+        if (countryCode) {
+          const country = countries.find((c) => c.code === countryCode);
+          if (country) {
+            setInputValue(country.name);
+          }
+        }
+      }}
       onKeyDown={(e) => {
         // Prevent form submission when Enter is pressed on autocomplete
         if (e.key === "Enter" && filteredCountries.length > 0) {
@@ -332,7 +366,6 @@ export const CountrySelector: React.FC<CountrySelectorProps> = ({
       errorMessage={errorMessage}
       className="max-w-full"
       variant={variant}
-      size="lg"
       radius={radius}
       startContent={
         selectedKey ? (

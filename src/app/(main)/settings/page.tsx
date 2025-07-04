@@ -4,11 +4,11 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import AccountSettings from "@/components/layout/sidebar/settings/AccountSettings";
-import GeneralSettings from "@/components/layout/sidebar/settings/GeneralSettings";
 import LogoutModal from "@/components/layout/sidebar/settings/LogoutModal";
 import MemorySettings from "@/components/layout/sidebar/settings/MemorySettings";
 import PreferencesSettings from "@/components/layout/sidebar/settings/PreferencesSettings";
 import { ModalAction } from "@/components/layout/sidebar/settings/SettingsMenu";
+import { IntegrationsSettings } from "@/features/integrations/components/IntegrationsSettings";
 import { SubscriptionSettings } from "@/features/settings/components/SubscriptionSettings";
 import UsageSettings from "@/features/settings/components/UsageSettings";
 
@@ -26,12 +26,13 @@ export default function SettingsPage() {
       case "usage":
         return <UsageSettings />;
       case "preferences":
-        return <PreferencesSettings />;
+        return <PreferencesSettings setModalAction={setModalAction} />;
       case "memory":
         return <MemorySettings />;
-      case "general":
+      case "integrations":
+        return <IntegrationsSettings />;
       default:
-        return <GeneralSettings setModalAction={setModalAction} />;
+        return <AccountSettings setModalAction={setModalAction} />;
     }
   };
 

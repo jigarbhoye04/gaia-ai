@@ -2,8 +2,12 @@ import { useCallback, useEffect, useState } from "react";
 
 import { fetchAvailableTools, ToolInfo } from "@/features/chat/api/toolsApi";
 
+import { EnhancedToolInfo } from "../types/enhancedTools";
+import { useToolsWithIntegrations } from "./useToolsWithIntegrations";
+
 export interface SlashCommandMatch {
   tool: ToolInfo;
+  enhancedTool?: EnhancedToolInfo;
   matchedText: string;
 }
 
@@ -30,6 +34,9 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
   const [isLoadingTools, setIsLoadingTools] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Get enhanced tools with integration status
+  const { tools: enhancedTools } = useToolsWithIntegrations();
+
   useEffect(() => {
     const loadTools = async () => {
       try {
@@ -49,12 +56,28 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
 
   const getSlashCommandSuggestions = useCallback(
     (query: string): SlashCommandMatch[] => {
-      // If no query, show all tools sorted by category and name
+      // If no query, show all tools sorted by unlock status, category and name
       if (!query.trim()) {
         return tools
-          .map((tool) => ({ tool, matchedText: tool.name }))
+          .map((tool) => {
+            const enhancedTool = enhancedTools.find(
+              (et) => et.name === tool.name,
+            );
+            return {
+              tool,
+              enhancedTool,
+              matchedText: tool.name,
+            };
+          })
           .sort((a, b) => {
-            // First sort by category, then by name
+            // Unlocked tools first
+            const aLocked = a.enhancedTool?.isLocked || false;
+            const bLocked = b.enhancedTool?.isLocked || false;
+            if (aLocked !== bLocked) {
+              return aLocked ? 1 : -1;
+            }
+
+            // Then sort by category, then by name
             if (a.tool.category !== b.tool.category) {
               return a.tool.category.localeCompare(b.tool.category);
             }
@@ -67,6 +90,7 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
 
       // Find name matches - now supports partial matches with spaces
       tools.forEach((tool) => {
+        const enhancedTool = enhancedTools.find((et) => et.name === tool.name);
         const toolNameLower = tool.name.toLowerCase();
         const toolNameSpaced = tool.name.replace(/_/g, " ").toLowerCase();
 
@@ -76,6 +100,7 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
         ) {
           matches.push({
             tool,
+            enhancedTool,
             matchedText: tool.name,
           });
         }
@@ -83,12 +108,14 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
 
       // Find category matches
       tools.forEach((tool) => {
+        const enhancedTool = enhancedTools.find((et) => et.name === tool.name);
         if (
           !matches.find((m) => m.tool.name === tool.name) &&
           tool.category.toLowerCase().includes(queryLower)
         ) {
           matches.push({
             tool,
+            enhancedTool,
             matchedText: `${tool.category} tool`,
           });
         }
@@ -109,7 +136,7 @@ export const useSlashCommands = (): UseSlashCommandsReturn => {
         return a.tool.name.localeCompare(b.tool.name);
       });
     },
-    [tools],
+    [tools, enhancedTools],
   );
 
   const detectSlashCommand = useCallback(
