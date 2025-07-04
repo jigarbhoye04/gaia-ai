@@ -96,8 +96,8 @@ export default function RootLayout({
 
         {/* Analytics */}
         <Script
-          src="https://app.rybbit.io/api/script.js"
-          data-site-id="881"
+          src="https://analytics.heygaia.io/api/script.js"
+          data-site-id="1"
           defer
         />
       </body>
