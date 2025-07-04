@@ -3,6 +3,7 @@ import { apiService } from "@/lib/api";
 export interface ToolInfo {
   name: string;
   category: string;
+  required_integration?: string;
 }
 
 export interface ToolsListResponse {

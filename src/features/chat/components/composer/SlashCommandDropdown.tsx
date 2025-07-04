@@ -6,8 +6,12 @@ import { Hash, Search, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
 import { SlashCommandMatch } from "@/features/chat/hooks/useSlashCommands";
+import { formatToolName } from "@/features/chat/utils/chatUtils";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { IntegrationsCard } from "@/features/integrations/components/IntegrationsCard";
+
+import { CategoryIntegrationStatus } from "./CategoryIntegrationStatus";
+import { LockedCategorySection } from "./LockedCategorySection";
 
 interface SlashCommandDropdownProps {
   matches: SlashCommandMatch[];
@@ -18,13 +22,6 @@ interface SlashCommandDropdownProps {
   isVisible: boolean;
   openedViaButton?: boolean;
 }
-
-const formatToolName = (toolName: string): string => {
-  return toolName
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-};
 
 const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
   matches,
@@ -69,6 +66,30 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
 
     return filtered;
   }, [matches, selectedCategory, searchQuery, openedViaButton]);
+
+  // Group tools by category and lock status
+  const { unlockedMatches, lockedCategories } = useMemo(() => {
+    const unlocked: SlashCommandMatch[] = [];
+    const lockedByCategory: Record<string, SlashCommandMatch[]> = {};
+
+    filteredMatches.forEach((match) => {
+      const isLocked = match.enhancedTool?.isLocked || false;
+
+      if (isLocked) {
+        if (!lockedByCategory[match.tool.category]) {
+          lockedByCategory[match.tool.category] = [];
+        }
+        lockedByCategory[match.tool.category].push(match);
+      } else {
+        unlocked.push(match);
+      }
+    });
+
+    return {
+      unlockedMatches: unlocked,
+      lockedCategories: lockedByCategory,
+    };
+  }, [filteredMatches]);
 
   return (
     <AnimatePresence>
@@ -157,6 +178,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                     <span className="capitalize">
                       {category === "all" ? "All" : category.replace("_", " ")}
                     </span>
+                    <CategoryIntegrationStatus category={category} />
                   </button>
                 ))}
               </div>
@@ -164,14 +186,15 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           </motion.div>
 
           {/* Tool List */}
-          <ScrollShadow className="max-h-96 overflow-y-auto">
+          <div className="relative z-[1] h-96 max-h-96 overflow-y-auto">
             <div className="py-2">
               {/* Integrations Card - Only show in "all" category */}
               {selectedCategory === "all" && (
                 <IntegrationsCard onClose={onClose} />
               )}
 
-              {filteredMatches.map((match, index) => (
+              {/* Render unlocked tools first */}
+              {unlockedMatches.map((match, index) => (
                 <div
                   key={match.tool.name}
                   className={`relative mx-2 mb-1 cursor-pointer rounded-xl transition-all duration-150 ${
@@ -203,8 +226,38 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                   </div>
                 </div>
               ))}
+
+              {/* Render locked categories as grouped sections */}
+              {Object.entries(lockedCategories).map(
+                ([category, categoryMatches]) => {
+                  // Get integration info from the first tool in the category
+                  const firstTool = categoryMatches[0];
+                  const requiredIntegration =
+                    firstTool.tool.required_integration;
+
+                  if (!requiredIntegration) return null;
+
+                  // Find integration name
+                  const integrationName =
+                    firstTool.enhancedTool?.integration?.integrationName ||
+                    requiredIntegration;
+
+                  return (
+                    <LockedCategorySection
+                      key={`locked-${category}`}
+                      category={category}
+                      tools={categoryMatches}
+                      requiredIntegration={{
+                        id: requiredIntegration,
+                        name: integrationName,
+                      }}
+                      onConnect={onClose}
+                    />
+                  );
+                },
+              )}
             </div>
-          </ScrollShadow>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
