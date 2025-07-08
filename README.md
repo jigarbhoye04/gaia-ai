@@ -3,27 +3,23 @@
   
   # GAIA
   
-  [![Website](https://img.shields.io/badge/Website-heygaia.io-00bbff?style=flat-square&logo=globe&logoColor=white)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Docs-docs.heygaia.io-00bbff?style=flat-square&logo=gitbook&logoColor=white)](https://docs.heygaia.io) [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.heygaia.io)
-  [![WhatsApp](https://img.shields.io/badge/WhatsApp-Support-25D366?style=flat-square&logo=whatsapp&logoColor=white)](https://whatsapp.heygaia.io)
-  [![PolyForm Shield](https://img.shields.io/badge/PolyForm-Shield-blue)](https://polyformproject.org/licenses/shield/1.0.0/)
+  [![Website](https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white)](https://docs.heygaia.io)
   
-  [![GitHub Stars](https://img.shields.io/github/stars/heygaia/gaia?style=social)](https://github.com/heygaia/gaia) [![Twitter Follow](https://img.shields.io/twitter/follow/_heygaia?style=social)](https://twitter.com/_heygaia)
+  [![PolyForm Shield](https://img.shields.io/badge/PolyForm-Shield-blue)](https://polyformproject.org/licenses/shield/1.0.0/) [![GitHub Stars](https://img.shields.io/github/stars/heygaia/gaia?style=social)](https://github.com/heygaia/gaia)
   
   <p align="center">
     <strong>A proactive personal AI assistant designed to enhance productivity and streamline daily tasks</strong>
   </p>
   
   <p align="center">
-    <a href="https://heygaia.io">Website</a> •
-    <a href="https://docs.heygaia.io">Documentation</a> •
     <a href="https://discord.heygaia.io">
       <img src="https://img.shields.io/badge/-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" />
-    </a> •
+    </a>
     <a href="https://whatsapp.heygaia.io">
       <img src="https://img.shields.io/badge/-WhatsApp-25D366?style=flat&logo=whatsapp&logoColor=white" alt="WhatsApp" />
-    </a> •
+    </a>
     <a href="https://twitter.com/_heygaia">
-      <img src="https://img.shields.io/badge/-Twitter-1DA1F2?style=flat&logo=twitter&logoColor=white" alt="Twitter" />
+      <img src="https://img.shields.io/twitter/follow/_heygaia?style=social" alt="Twitter" />
     </a>
   </p>
 </div>
@@ -57,7 +53,6 @@ Our comprehensive documentation is available at [docs.heygaia.io](https://docs.h
 - **[Quick Start](https://docs.heygaia.io/quick-start)** - Get up and running in minutes
 - **[Self-Hosting](https://docs.heygaia.io/self-hosting/overview)** - Deploy GAIA on your infrastructure  
 - **[For Developers](https://docs.heygaia.io/developers/introduction)** - Contribute and extend GAIA
-- **[Configuration](https://docs.heygaia.io/configuration/environment-variables)** - Customize your setup
 
 ## Community & Support
 
@@ -90,7 +85,7 @@ Please read our [Contributing Guidelines](https://docs.heygaia.io/developers/con
 
 This project is licensed under the [Polyform Shield License 1.0.0](https://polyformproject.org/licenses/shield/1.0.0/).
 
-> [!NOTE]
+> [!WARNING]
 > This license allows personal, academic, and evaluation use.  
 > **Commercial, production, or competitive use is not permitted.**
 
