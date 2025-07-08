@@ -1,0 +1,94 @@
+---
+title: "Self-Hosting Overview"
+description: "Learn how to self-host GAIA on your own infrastructure"
+---
+
+## Welcome to GAIA Self-Hosting
+
+GAIA (General Purpose AI Assistant) can be easily self-hosted on your own infrastructure using Docker Compose. This gives you complete control over your data and allows you to customize the deployment to your specific needs.
+
+## Architecture Overview
+
+GAIA consists of several components that work together:
+
+- **Frontend**: Next.js React application
+- **Backend**: FastAPI Python application
+- **Database**: PostgreSQL for structured data
+- **Vector Database**: ChromaDB for embeddings
+- **Cache**: Redis for caching and sessions
+- **Message Queue**: RabbitMQ for task processing
+- **Document Storage**: MongoDB for document metadata
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+<AccordionGroup>
+  <Accordion icon="docker" title="Docker & Docker Compose">
+    - Docker Desktop or Docker Engine (v20.10+) - Docker Compose (v2.0+) - At
+    least 4GB of available RAM - 10GB of free disk space
+  </Accordion>
+
+<Accordion icon="server" title="System Requirements">
+  - **Minimum**: 2 CPU cores, 4GB RAM, 10GB storage - **Recommended**: 4 CPU
+  cores, 8GB RAM, 20GB storage - Supported OS: Linux, macOS, Windows (with WSL2)
+</Accordion>
+
+  <Accordion icon="key" title="API Keys">
+    Various API keys for AI models and integrations (see Environment Variables
+    guide)
+  </Accordion>
+</AccordionGroup>
+
+## Quick Start
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/heygaia/gaia.git
+    cd gaia 
+    ```
+  </Step>
+  <Step title="Set Up Environment Variables">
+    See the [Environment Variables](/self-hosting/environment-variables) guide
+    for details.
+  </Step>
+  <Step title="Start the Application">
+    ```
+    docker compose up -d 
+    ```
+     This will start all services in the background.
+  </Step>
+  <Step title="Access GAIA">
+    Open your browser and navigate to:  <br/>
+     - **Frontend**: http://localhost:3000 
+     - **Backend API**: http://localhost:8000 
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Environment Variables"
+    icon="gear"
+    href="/self-hosting/environment-variables"
+  >
+    Configure all required API keys and settings
+  </Card>
+  <Card title="Docker Setup" icon="docker" href="/self-hosting/docker-setup">
+    Detailed Docker configuration and deployment
+  </Card>
+  <Card
+    title="Infisical Setup"
+    icon="shield-check"
+    href="/self-hosting/infisical-setup"
+  >
+    Secure secret management with Infisical
+  </Card>
+</CardGroup>
+
+
+<Warning>
+  Self-hosting requires technical knowledge and ongoing maintenance. 
+</Warning>

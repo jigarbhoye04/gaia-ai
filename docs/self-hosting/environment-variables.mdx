@@ -1,0 +1,264 @@
+---
+title: "Environment Variables"
+description: "Complete guide to configuring environment variables for GAIA"
+---
+
+## Environment Configuration
+
+GAIA requires various environment variables to function properly. These variables configure API keys, database connections, and feature flags.
+
+<Info>
+**Infisical Integration**: GAIA supports [Infisical](https://infisical.com) for secure secret management. When configured, Infisical secrets will override local environment variables. See our [Infisical Setup Guide](/self-hosting/infisical-setup) for more details.
+</Info>
+
+<CardGroup cols={2}>
+  <Card title="Backend Environment Variables">
+    Configure API keys, database connections, and backend services for the GAIA backend application
+  </Card>
+  <Card title="Frontend Environment Variables">
+    Set up API URLs, authentication secrets, and frontend configuration for the GAIA web interface
+  </Card>
+</CardGroup>
+
+
+## Backend Environment Variables
+
+Create a `backend/.env` file with the following variables:
+
+<Note>
+**Infisical Integration**: If you're using [Infisical](/self-hosting/infisical-setup) for secret management, you can add these environment variables to your Infisical project instead of the `.env` file. Infisical secrets will automatically override any local environment variables with the same names.
+</Note>
+
+### Core Application Settings
+
+```bash
+# Application Environment
+ENV=development
+HOST=localhost
+FRONTEND_URL=http://localhost:3000
+DISABLE_PROFILING=true
+```
+
+### Database Configuration
+
+```bash
+# PostgreSQL (automatically configured in Docker)
+POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/langgraph
+
+# MongoDB (automatically configured in Docker)
+MONGO_DB=mongodb://mongo:27017/gaia
+
+# Redis (automatically configured in Docker)
+REDIS_URL=redis://redis:6379
+
+# ChromaDB (automatically configured in Docker)
+CHROMADB_HOST=chromadb
+CHROMADB_PORT=8000
+
+# RabbitMQ (automatically configured in Docker)
+RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+```
+
+### AI Model APIs
+
+<AccordionGroup>
+  <Accordion icon="brain" title="OpenAI & Language Models">
+    ```bash
+    # OpenAI API (recommended)
+    OPENAI_API_KEY=sk-your-openai-api-key
+
+    # Google AI/Gemini
+    GEMINI_API_KEY=your-gemini-api-key
+
+    # Hugging Face
+    HUGGINGFACE_API_KEY=hf_your-huggingface-token
+
+    # LlamaIndex
+    LLAMA_INDEX_KEY=llx-your-llamaindex-key
+    ```
+
+  </Accordion>
+
+  <Accordion icon="microphone" title="Speech & Audio APIs">
+    ```bash
+    # AssemblyAI (speech-to-text)
+    ASSEMBLYAI_API_KEY=your-assemblyai-api-key
+
+    # Deepgram (speech processing)
+    DEEPGRAM_API_KEY=your-deepgram-api-key
+    ```
+
+  </Accordion>
+
+  <Accordion icon="code" title="Code Execution">
+    ```bash
+    # E2B (code execution)
+    E2B_API_KEY=your-e2b-api-key
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Integration APIs
+
+<AccordionGroup>
+  <Accordion icon="google" title="Google Services">
+    ```bash
+    # Google OAuth
+    GOOGLE_CLIENT_ID=your-google-client-id
+    GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+    # Google Cloud Pub/Sub
+    GCP_TOPIC_NAME=your-pubsub-topic
+    ```
+
+  </Accordion>
+
+{" "}
+<Accordion icon="cloud" title="Cloud Services">
+  ```bash # Cloudinary (image/video management)
+  CLOUDINARY_CLOUD_NAME=your-cloud-name
+  CLOUDINARY_API_KEY=your-cloudinary-api-key
+  CLOUDINARY_API_SECRET=your-cloudinary-api-secret ```
+</Accordion>
+
+{" "}
+<Accordion icon="brain" title="Memory & Knowledge">
+  ```bash # Mem0 (AI memory platform) MEM0_API_KEY=your-mem0-api-key
+  MEM0_ORG_ID=your-mem0-org-id MEM0_PROJECT_ID=your-mem0-project-id ```
+</Accordion>
+
+  <Accordion icon="file-text" title="Document & Productivity">
+    ```bash
+    # Notion Integration
+    NOTION_CLIENT_ID=your-notion-client-id
+    NOTION_CLIENT_SECRET=your-notion-client-secret
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Search & Weather APIs
+
+```bash
+# Bing Search API
+BING_API_KEY=your-bing-search-api-key
+
+# OpenWeather API
+OPENWEATHER_API_KEY=your-openweather-api-key
+OPENWEATHERMAP_API_KEY=your-openweathermap-api-key
+```
+
+### Communication & Payments
+
+```bash
+# Email (Resend)
+RESEND_API_KEY=your-resend-api-key
+
+# Razorpay (payments)
+RAZORPAY_KEY_ID=your-razorpay-key-id
+RAZORPAY_KEY_SECRET=your-razorpay-key-secret
+
+# Blog/Content
+BLOG_BEARER_TOKEN=your-blog-bearer-token
+```
+
+### Docker Specific
+
+```bash
+# Docker Compose
+COMPOSE_BAKE=true
+```
+
+## Frontend Environment Variables
+
+Create a `frontend/.env` file with the following variables:
+
+<Note>
+**Local Configuration**: Frontend environment variables are typically configured locally as they're needed during the build process. However, you can also manage sensitive frontend secrets through Infisical if needed.
+</Note>
+
+```bash
+# Base url of the backend api (this url will be the same)
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1/
+
+# Blog management bearer token (for creating/editing/deleting blog posts)
+NEXT_PUBLIC_BLOG_BEARER_TOKEN=your-blog-management-token-here
+```
+
+## Environment File Templates
+
+### Backend .env Template
+
+<Note>
+**Important**: If you're using Infisical, add your environment variables to your Infisical project instead. The variables below will be overridden by Infisical secrets if they have the same names. Read more about [Infisical setup](/self-hosting/infisical-setup).
+</Note>
+
+<CodeGroup>
+```bash backend/.env
+# Core Settings
+ENV=development
+DEBUG=true
+HOST=localhost
+FRONTEND_URL=http://localhost:3000
+
+# Databases (Docker defaults)
+
+POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/langgraph
+MONGO_DB=mongodb://mongo:27017/gaia
+REDIS_URL=redis://redis:6379
+CHROMADB_HOST=chromadb
+CHROMADB_PORT=8000
+RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+
+# AI APIs (replace with your keys)
+
+OPENAI_API_KEY=sk-your-openai-api-key
+GROQ_API_KEY=gsk_your-groq-api-key
+GOOGLE_API_KEY=your-google-ai-api-key
+HUGGINGFACE_API_KEY=hf_your-huggingface-token
+
+# Google OAuth
+
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Optional APIs
+
+BING_API_KEY=your-bing-search-api-key
+OPENWEATHER_API_KEY=your-openweather-api-key
+RESEND_API_KEY=your-resend-api-key
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+
+# Add other APIs as needed
+
+````
+</CodeGroup>
+
+### Frontend .env Template
+
+<CodeGroup>
+```bash frontend/.env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1/
+
+# Blog management bearer token (for creating/editing/deleting blog posts)
+NEXT_PUBLIC_BLOG_BEARER_TOKEN=your-blog-management-token-here
+````
+
+</CodeGroup>
+
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Docker Setup" icon="docker" href="/self-hosting/docker-setup">
+    Configure and deploy with Docker Compose
+  </Card>
+  <Card
+    title="Infisical Setup"
+    icon="shield-check"
+    href="/self-hosting/infisical-setup"
+  >
+    Secure secret management
+  </Card>
+</CardGroup>

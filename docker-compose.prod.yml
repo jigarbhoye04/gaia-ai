@@ -85,9 +85,8 @@ services:
     networks:
       - gaia_network
 
-  # RabbitMQ Service (prod only)
+  # RabbitMQ Service
   rabbitmq:
-    profiles: ["celery"]
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
@@ -104,24 +103,14 @@ services:
     networks:
       - gaia_network
 
-  # Celery Worker (prod only)
-  celery_worker:
-    profiles: ["celery"]
-    container_name: celery_worker
+  # Scheduler Worker
+  worker:
+    container_name: worker
     image: gaia
     working_dir: /app
     env_file:
       - .env
-    command:
-      [
-        "python",
-        "-m",
-        "celery",
-        "-A",
-        "app.worker",
-        "worker",
-        "--loglevel=info",
-      ]
+    command: ["python", "-m", "app.worker"]
     restart: always
     volumes:
       - .:/app

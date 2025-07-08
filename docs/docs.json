@@ -1,0 +1,83 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "GAIA",
+  "colors": {
+    "primary": "#00bbff",
+    "light": "#00bbff",
+    "dark": "#00bbff"
+  },
+  "favicon": "/logo/logo.png",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction"]
+          },
+          {
+            "group": "Self-Hosting",
+            "pages": [
+              "self-hosting/overview",
+              "self-hosting/environment-variables",
+              "self-hosting/infisical-setup",
+              "self-hosting/docker-setup"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Discord",
+          "href": "https://discord.heygaia.io",
+          "icon": "discord"
+        },
+        {
+          "anchor": "Twitter",
+          "href": "https://twitter.com/_heygaia",
+          "icon": "twitter"
+        },
+        {
+          "anchor": "WhatsApp",
+          "href": "https://whatsapp.heygaia.io",
+          "icon": "whatsapp"
+        },
+        {
+          "anchor": "Blog",
+          "href": "https://heygaia.io/blog",
+          "icon": "newspaper"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/logo.png",
+    "dark": "/logo/logo.png"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Contact",
+        "href": "https://heygaia.io/contact"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://heygaia.io"
+    }
+  },
+  "footer": {
+    "socials": {
+      "website": "https://heygaia.io",
+      "x": "https://x.com/heygaia_io",
+      "github": "https://github.com/heygaia",
+      "discord": "https://discord.heygaia.io",
+      "linkedin": "https://linkedin.com/company/heygaia"
+    }
+  }
+}

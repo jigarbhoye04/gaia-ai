@@ -20,7 +20,7 @@ GAIA is an advanced personal AI assistant designed to enhance productivity and s
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/gaia-frontend.git
+   git clone https://github.com/heygaia/gaia-frontend.git
    cd gaia-frontend
    ```
 
