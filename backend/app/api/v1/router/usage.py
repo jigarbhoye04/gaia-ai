@@ -83,9 +83,9 @@ async def get_usage_history(
             features_formatted[key]["periods"][feature.period] = {
                 "used": feature.used,
                 "limit": feature.limit,
-                "percentage": (feature.used / feature.limit * 100)
-                if feature.limit > 0
-                else 0,
+                "percentage": (
+                    (feature.used / feature.limit * 100) if feature.limit > 0 else 0
+                ),
             }
 
         formatted_history.append(
@@ -138,9 +138,9 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
         usage_data[feature.feature_key][feature.period] = {
             "used": feature.used,
             "limit": feature.limit,
-            "percentage": (feature.used / feature.limit * 100)
-            if feature.limit > 0
-            else 0,
+            "percentage": (
+                (feature.used / feature.limit * 100) if feature.limit > 0 else 0
+            ),
             "reset_time": feature.reset_time.isoformat(),
             "remaining": max(0, feature.limit - feature.used),
         }
@@ -166,9 +166,9 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
                     features_formatted[feature_key]["periods"][period] = {
                         "used": stored_data["used"],
                         "limit": limit,  # Use current config limit, not stored limit
-                        "percentage": (stored_data["used"] / limit * 100)
-                        if limit > 0
-                        else 0,
+                        "percentage": (
+                            (stored_data["used"] / limit * 100) if limit > 0 else 0
+                        ),
                         "reset_time": stored_data["reset_time"],
                         "remaining": max(0, limit - stored_data["used"]),
                     }

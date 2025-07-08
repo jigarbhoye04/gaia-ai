@@ -30,15 +30,13 @@ router = APIRouter()
 
 @router.get("/notifications", response_model=PaginatedNotificationsResponse)
 async def get_notifications(
-    status: Optional[NotificationStatus] = Query(
-        NotificationStatus.DELIVERED, description="Filter by status"
-    ),
+    status: Optional[NotificationStatus] = Query(None, description="Filter by status"),
     limit: int = Query(
         50, ge=1, le=100, description="Number of notifications to return"
     ),
     offset: int = Query(default=0, ge=0, description="Number of notifications to skip"),
     channel_type: Optional[str] = Query(
-        "inapp", description="Filter by channel type (e.g., email, sms)"
+        None, description="Filter by channel type (e.g., email, sms)"
     ),
     current_user: dict = Depends(get_current_user),
 ):

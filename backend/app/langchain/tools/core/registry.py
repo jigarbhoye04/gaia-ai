@@ -40,7 +40,7 @@ TOOLS_BY_CATEGORY = {
     ],
     "search": [
         search_tool.web_search_tool,
-        search_tool.deep_search_tool,
+        search_tool.deep_research_tool,
         webpage_tool.fetch_webpages,
     ],
     "memory": [
@@ -58,10 +58,18 @@ TOOLS_BY_CATEGORY = {
     ],
 }
 
+# Map categories to their required integrations
+CATEGORY_INTEGRATION_REQUIREMENTS = {
+    "mail": "gmail",
+    "calendar": "google_calendar",
+    "google_docs": "google_docs",
+    # "productivity", "goal_tracking", "documents", "search", "memory", "development", "creative", "weather" don't require integrations
+}
+
 # Define tools that should always be accessible to the agent directly
 ALWAYS_AVAILABLE_TOOLS = [
     search_tool.web_search_tool,
-    search_tool.deep_search_tool,
+    search_tool.deep_research_tool,
     webpage_tool.fetch_webpages,
     file_tools.query_file,
 ]
@@ -74,3 +82,5 @@ tools = [
     for tool in category_tools
     if tool not in ALWAYS_AVAILABLE_TOOLS  # Avoid duplicates
 ]
+
+tool_names = [tool.name for tool in tools]

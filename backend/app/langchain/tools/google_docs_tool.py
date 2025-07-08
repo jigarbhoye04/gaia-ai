@@ -102,9 +102,11 @@ async def create_google_doc_tool(
             title=result["title"],
             document_id=result["document_id"],
             url=result["url"],
-            content=f"Initial content: {content}"
-            if content
-            else "Empty document ready for editing.",
+            content=(
+                f"Initial content: {content}"
+                if content
+                else "Empty document ready for editing."
+            ),
         )
 
     except Exception as e:
@@ -126,10 +128,6 @@ async def list_google_docs_tool(
 
         if not auth["access_token"] or not auth["refresh_token"]:
             return "Authentication credentials not provided"
-
-        # Send progress update
-        writer = get_stream_writer()
-        writer({"progress": "Fetching your Google Docs..."})
 
         docs = await list_google_docs(
             refresh_token=auth["refresh_token"],
@@ -312,9 +310,9 @@ async def update_google_doc_tool(
                     "url": result["url"],
                     "document_id": document_id,
                     "action": "update",
-                    "content_preview": content[:200] + "..."
-                    if len(content) > 200
-                    else content,
+                    "content_preview": (
+                        content[:200] + "..." if len(content) > 200 else content
+                    ),
                 }
             }
         )

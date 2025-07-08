@@ -33,11 +33,11 @@ def serialize_document(document: dict) -> dict:
         # Process lists
         elif isinstance(value, list):
             result[key] = [
-                str(item)
-                if isinstance(item, ObjectId)
-                else serialize_document(item)
-                if isinstance(item, dict)
-                else item
+                (
+                    str(item)
+                    if isinstance(item, ObjectId)
+                    else serialize_document(item) if isinstance(item, dict) else item
+                )
                 for item in value
             ]
         # Process nested dictionaries

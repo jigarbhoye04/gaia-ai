@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional
 from fastapi import Request
 
 from app.config.loggers import app_logger as logger
-
 from app.models.notification.notification_models import (
     ActionResult,
     BulkActions,
@@ -248,6 +247,19 @@ class NotificationOrchestrator:
                 success=False, message="Action not found", error_code="ACTION_NOT_FOUND"
             )
 
+        # Check if action is already executed
+        if action.id in list(
+            map(
+                lambda _notification: _notification["id"],
+                notification.original_request.metadata.get("actions_executed", []),
+            )
+        ):
+            return ActionResult(
+                success=False,
+                message="Action has already been executed",
+                error_code="ACTION_ALREADY_EXECUTED",
+            )
+
         # Get handler
         handler = self.action_handlers.get(action.type.value)
         if not handler or not handler.can_handle(action):
@@ -449,10 +461,12 @@ class NotificationOrchestrator:
                         "style": action.style.value,
                         "requires_confirmation": action.requires_confirmation,
                         "confirmation_message": action.confirmation_message,
+                        "config": action.config.model_dump() if action.config else None,
                     }
                     for action in (notification.original_request.content.actions or [])
                 ],
             },
+            "source": notification.original_request.source,
             "metadata": notification.original_request.metadata,
             "channels": [
                 {

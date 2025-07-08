@@ -30,8 +30,11 @@ async def generate_image(
         # Send image data to frontend via writer
         writer({"image_data": image_result})
 
-        # Return simple confirmation message
-        return {"status": "success", "instructions": "Image generated successfully."}
+        # Return simple confirmation message with clear instructions to prevent markdown image rendering
+        return {
+            "status": "success",
+            "instructions": "Image generated successfully. The image is automatically displayed to the user through the interface. DO NOT include any markdown image syntax like ![alt](url) or attachment:// references in your response. Simply describe what you generated in natural language without trying to embed or link to the image.",
+        }
 
     except Exception as e:
         writer = get_stream_writer()

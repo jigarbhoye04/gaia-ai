@@ -52,13 +52,13 @@ class SearchResults(BaseModel):
     videos: Optional[List[VideoResult]] = []
 
 
-class DeepSearchResultsMedata(BaseModel):
+class DeepResearchResultsMedata(BaseModel):
     elapsed_time: Optional[float] = None
     query: Optional[str] = None
     total_content_size: Optional[int] = None
 
 
-class DeepSearchResult(BaseModel):
+class DeepResearchResult(BaseModel):
     title: str
     url: str
     snippet: str
@@ -69,9 +69,9 @@ class DeepSearchResult(BaseModel):
     date: Optional[str] = None
 
 
-class DeepSearchResults(BaseModel):
+class DeepResearchResults(BaseModel):
     original_search: Optional[SearchResults] = None
-    enhanced_results: Optional[List[DeepSearchResult]] = None
-    metadata: Optional[DeepSearchResultsMedata] = None
+    enhanced_results: Optional[List[DeepResearchResult]] = None
+    metadata: Optional[DeepResearchResultsMedata] = None
     query: Optional[str] = None
     error: Optional[str] = None

@@ -5,7 +5,11 @@ Service for managing and retrieving tool information.
 from typing import Dict
 from langchain_core.tools import BaseTool
 
-from app.langchain.tools.core.registry import tools, ALWAYS_AVAILABLE_TOOLS
+from app.langchain.tools.core.registry import (
+    tools,
+    ALWAYS_AVAILABLE_TOOLS,
+    CATEGORY_INTEGRATION_REQUIREMENTS,
+)
 from app.langchain.tools.core.categories import get_tool_category
 from app.models.tools_models import ToolInfo, ToolsListResponse, ToolsCategoryResponse
 
@@ -25,9 +29,13 @@ async def get_available_tools() -> ToolsListResponse:
         category = get_tool_category(name)
         categories.add(category)
 
+        # Check if this category requires an integration
+        required_integration = CATEGORY_INTEGRATION_REQUIREMENTS.get(category)
+
         tool_info = ToolInfo(
             name=name,
             category=category,
+            required_integration=required_integration,
         )
         tool_infos.append(tool_info)
 

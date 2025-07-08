@@ -6,6 +6,7 @@ from typing import Optional
 import httpx
 from fastapi import Request
 
+from app.config.loggers import notification_logger
 from app.models.notification.notification_models import (
     ActionResult,
     ActionType,
@@ -86,10 +87,16 @@ class ApiCallActionHandler(ActionHandler):
                 "metadata": notification.original_request.metadata,
             }
 
+            url = api_config.endpoint
+            if api_config.is_internal:
+                # For internal API calls, use the request's base URL
+                if request:
+                    url = f"{request.base_url}{api_config.endpoint.lstrip('/')}"
+
             async with httpx.AsyncClient() as client:
                 response = await client.request(
                     method=api_config.method,
-                    url=api_config.endpoint,
+                    url=url,
                     headers=headers,
                     json=payload,
                     timeout=30.0,
@@ -110,20 +117,37 @@ class ApiCallActionHandler(ActionHandler):
                         "status": NotificationStatus.ARCHIVED,
                         "metadata": {
                             **notification.original_request.metadata,
-                            "action_executed": action.id,
-                            "action_result": result_data,
-                            "executed_at": datetime.now(timezone.utc).isoformat(),
+                            "actions_executed": [
+                                *(
+                                    notification.original_request.metadata.get(
+                                        "actions_executed", []
+                                    )
+                                ),
+                                {
+                                    "id": action.id,
+                                    "result": result_data,
+                                    "executed_at": datetime.now(
+                                        timezone.utc
+                                    ).isoformat(),
+                                },
+                            ],
                         },
                     },
                 )
 
         except httpx.HTTPError as e:
+            notification_logger.error(
+                f"Unexpected error in API call action {action.id} for notification {notification.id}: {str(e)}",
+            )
             return ActionResult(
                 success=False,
                 message=api_config.error_message or f"API call failed: {str(e)}",
                 error_code="API_ERROR",
             )
         except Exception as e:
+            notification_logger.error(
+                f"Unexpected error in API call action {action.id} for notification {notification.id}: {str(e)}",
+            )
             return ActionResult(
                 success=False,
                 message=api_config.error_message or f"Unexpected error: {str(e)}",

@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Optional
 from urllib.parse import urlencode, urlparse
 
 import httpx
@@ -16,19 +16,24 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
+from app.config.oauth_config import (
+    OAUTH_INTEGRATIONS,
+    get_integration_by_id,
+    get_integration_scopes,
+)
 from app.models.user_models import (
-    UserUpdateResponse,
+    OnboardingPreferences,
     OnboardingRequest,
     OnboardingResponse,
-    OnboardingPreferences,
+    UserUpdateResponse,
 )
 from app.services.oauth_service import store_user_info
-from app.services.user_service import update_user_profile
 from app.services.onboarding_service import (
     complete_onboarding,
     get_user_onboarding_status,
     update_onboarding_preferences,
 )
+from app.services.user_service import update_user_profile
 
 # from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
@@ -42,15 +47,11 @@ http_async_client = httpx.AsyncClient()
 
 @router.get("/login/google")
 async def login_google():
+    """Basic Google OAuth for signup - only requests essential scopes."""
     scopes = [
         "openid",
         "profile",
         "email",
-        "https://www.googleapis.com/auth/calendar.events",
-        "https://www.googleapis.com/auth/calendar.readonly",
-        "https://www.googleapis.com/auth/gmail.modify",
-        "https://www.googleapis.com/auth/documents",
-        "https://www.googleapis.com/auth/drive.file",
     ]
     params = {
         "response_type": "code",
@@ -58,17 +59,99 @@ async def login_google():
         "redirect_uri": settings.GOOGLE_CALLBACK_URL,
         "scope": " ".join(scopes),
         "access_type": "offline",
-        "prompt": "consent",
+        "prompt": "select_account",  # Only force account selection for initial login
     }
     auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
     return RedirectResponse(url=auth_url)
 
 
+@router.get("/login/integration/{integration_id}")
+async def login_integration(
+    integration_id: str, user: dict = Depends(get_current_user)
+):
+    """Dynamic OAuth login for any configured integration."""
+    # Get the integration configuration
+    integration = get_integration_by_id(integration_id)
+    if not integration:
+        raise HTTPException(
+            status_code=404, detail=f"Integration {integration_id} not found"
+        )
+
+    if not integration.available:
+        raise HTTPException(
+            status_code=400, detail=f"Integration {integration_id} is not available yet"
+        )
+
+    # Handle different OAuth providers
+    if integration.provider == "google":
+        # Get base scopes
+        base_scopes = ["openid", "profile", "email"]
+
+        # Get new integration scopes
+        new_scopes = get_integration_scopes(integration_id)
+
+        # Get existing scopes from user's current token
+        existing_scopes = []
+        access_token = user.get("access_token")
+        if access_token:
+            try:
+                token_info_response = await http_async_client.get(
+                    f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                )
+                if token_info_response.status_code == 200:
+                    token_data = token_info_response.json()
+                    existing_scopes = token_data.get("scope", "").split()
+            except Exception as e:
+                logger.warning(f"Could not get existing scopes: {e}")
+
+        # Combine all scopes (base + existing + new), removing duplicates
+        all_scopes = list(set(base_scopes + existing_scopes + new_scopes))
+
+        params = {
+            "response_type": "code",
+            "client_id": settings.GOOGLE_CLIENT_ID,
+            "redirect_uri": settings.GOOGLE_CALLBACK_URL,
+            "scope": " ".join(all_scopes),
+            "access_type": "offline",
+            "prompt": "consent",  # Only force consent for additional scopes
+            "include_granted_scopes": "true",  # Include previously granted scopes
+            "login_hint": user.get("email"),
+        }
+        auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
+        return RedirectResponse(url=auth_url)
+
+    # Add other providers here (GitHub, Notion, etc.)
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"OAuth provider {integration.provider} not implemented",
+        )
+
+
 @router.get("/google/callback", response_class=RedirectResponse)
 async def callback(
-    code: Annotated[str, "code"], background_tasks: BackgroundTasks
+    code: Optional[str] = None,
+    error: Optional[str] = None,
+    background_tasks: BackgroundTasks = None,
 ) -> RedirectResponse:
     try:
+        # Handle OAuth errors (e.g., user canceled)
+        if error:
+            logger.warning(f"OAuth error: {error}")
+            if error == "access_denied":
+                # User canceled OAuth flow
+                redirect_url = f"{settings.FRONTEND_URL}/redirect?oauth_error=cancelled"
+            else:
+                # Other OAuth errors
+                redirect_url = f"{settings.FRONTEND_URL}/redirect?oauth_error={error}"
+            return RedirectResponse(url=redirect_url)
+
+        # Check if we have the authorization code
+        if not code:
+            logger.error("No authorization code provided")
+            redirect_url = f"{settings.FRONTEND_URL}/redirect?oauth_error=no_code"
+            return RedirectResponse(url=redirect_url)
+
         tokens = await get_tokens_from_code(code)
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
@@ -89,7 +172,7 @@ async def callback(
         user_id = await store_user_info(user_name, user_email, user_picture)
 
         # Redirect URL can include tokens if needed
-        redirect_url = f"{settings.FRONTEND_URL}?access_token={access_token}&refresh_token={refresh_token}"
+        redirect_url = f"{settings.FRONTEND_URL}/redirect"
         response = RedirectResponse(url=redirect_url)
 
         # Set cookie expiration: access token (1 hour), refresh token (30 days)
@@ -173,6 +256,98 @@ async def get_me(
         **user,
         "onboarding": onboarding_status,
     }
+
+
+@router.get("/integrations/config")
+async def get_integrations_config():
+    """
+    Get the configuration for all integrations.
+    This endpoint is public and returns integration metadata.
+    """
+    return JSONResponse(
+        content={
+            "integrations": [
+                {
+                    "id": integration.id,
+                    "name": integration.name,
+                    "description": integration.description,
+                    "icon": integration.icon,
+                    "category": integration.category,
+                    "provider": integration.provider,
+                    "features": integration.features,
+                    "available": integration.available,
+                    "loginEndpoint": (
+                        f"oauth/login/integration/{integration.id}"
+                        if integration.available
+                        else None
+                    ),
+                }
+                for integration in OAUTH_INTEGRATIONS
+            ]
+        }
+    )
+
+
+@router.get("/integrations/status")
+async def get_integrations_status(
+    user: dict = Depends(get_current_user),
+):
+    """
+    Get the integration status for the current user based on OAuth scopes.
+    """
+    try:
+        access_token = user.get("access_token")
+        authorized_scopes = []
+
+        # Check Google token info if we have an access token
+        if access_token:
+            token_info_response = await http_async_client.get(
+                f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+            )
+
+            if token_info_response.status_code == 200:
+                token_data = token_info_response.json()
+                authorized_scopes = token_data.get("scope", "").split()
+
+        # Dynamically check each integration's status
+        integration_statuses = []
+        for integration in OAUTH_INTEGRATIONS:
+            is_connected = False
+
+            # Check connection based on provider
+            if integration.provider == "google" and authorized_scopes:
+                # Check if all required scopes are present
+                required_scopes = get_integration_scopes(integration.id)
+                is_connected = all(
+                    scope in authorized_scopes for scope in required_scopes
+                )
+
+            # Add other provider checks here (GitHub, Notion, etc.)
+
+            integration_statuses.append(
+                {"integrationId": integration.id, "connected": is_connected}
+            )
+
+        return JSONResponse(
+            content={
+                "integrations": integration_statuses,
+                "debug": {
+                    "authorized_scopes": authorized_scopes,
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error checking integration status: {e}")
+        # Return all disconnected on error
+        return JSONResponse(
+            content={
+                "integrations": [
+                    {"integrationId": i.id, "connected": False}
+                    for i in OAUTH_INTEGRATIONS
+                ]
+            }
+        )
 
 
 # async def me(access_token: str = Cookie(None)):
@@ -320,6 +495,10 @@ async def update_user_name(
     """
     try:
         user_id = user.get("user_id")
+
+        if not user_id or not isinstance(user_id, str):
+            raise HTTPException(status_code=400, detail="Invalid user ID")
+
         updated_user = await update_user_profile(user_id=user_id, name=name)
         return UserUpdateResponse(**updated_user)
     except HTTPException as e:

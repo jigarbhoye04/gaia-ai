@@ -9,7 +9,6 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     LIST_GMAIL_LABELS,
     LIST_GMAIL_MESSAGES,
     SEARCH_GMAIL_MESSAGES,
-    SUMMARIZE_EMAIL,
     COMPOSE_EMAIL,
     STAR_EMAILS,
     UNSTAR_EMAILS,
@@ -24,7 +23,6 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
 )
 from app.docstrings.utils import with_doc
 from app.middleware.langchain_rate_limiter import with_rate_limiting
-from app.langchain.prompts.mail_prompts import EMAIL_SUMMARIZER
 from app.langchain.templates.mail_templates import (
     process_get_thread_response,
     process_list_labels_response,
@@ -47,7 +45,6 @@ from app.services.mail_service import (
     update_label,
 )
 from app.services.contact_service import get_gmail_contacts
-from app.utils.chat_utils import do_prompt_no_stream
 from app.utils.general_utils import transform_gmail_message
 
 
@@ -236,76 +233,6 @@ async def search_gmail_messages(
 
 
 @tool
-@with_doc(SUMMARIZE_EMAIL)
-async def summarize_email(
-    config: RunnableConfig,
-    message_id: Annotated[str, "The Gmail message ID to summarize"],
-    include_action_items: Annotated[
-        Optional[bool], "Whether to include action items in the summary"
-    ] = False,
-    max_length: Annotated[
-        Optional[int], "Maximum length of the summary in words"
-    ] = 150,
-) -> Dict[str, Any]:
-    try:
-        logger.info(f"Gmail Tool: Summarizing email {message_id}")
-        auth = get_auth_from_config(config)
-
-        if not auth["access_token"] or not auth["refresh_token"]:
-            return {"error": "Authentication credentials not provided"}
-
-        service = get_gmail_service(
-            access_token=auth["access_token"], refresh_token=auth["refresh_token"]
-        )
-
-        # Fetch the message
-        message = (
-            service.users()
-            .messages()
-            .get(userId="me", id=message_id, format="full")
-            .execute()
-        )
-
-        if not message:
-            return {"error": f"Message with ID {message_id} not found"}
-
-        email_data = transform_gmail_message(message)
-
-        action_items_instruction = (
-            "Identify any action items or requests made in the email."
-            if include_action_items
-            else ""
-        )
-
-        prompt = EMAIL_SUMMARIZER.format(
-            subject=email_data.get("subject", "No Subject"),
-            sender=email_data.get("from", "Unknown"),
-            date=email_data.get("time", "Unknown"),
-            content=email_data.get(
-                "body", email_data.get("snippet", "No content available")
-            ),
-            max_length=max_length or 150,
-            action_items_instruction=action_items_instruction,
-        )
-
-        # Call the LLM service to generate the summary
-        llm_response = await do_prompt_no_stream(prompt)
-
-        # Use a minimal template for the response
-        return {
-            "email_id": message_id,
-            "email_subject": email_data.get("subject", "No Subject"),
-            "email_date": email_data.get("time", "Unknown"),
-            "email_sender": email_data.get("from", "Unknown"),
-            "result": llm_response,
-        }
-    except Exception as e:
-        error_msg = f"Error summarizing email: {str(e)}"
-        logger.error(error_msg)
-        return {"error": error_msg}
-
-
-@tool
 @with_rate_limiting("mail_actions")
 @with_doc(COMPOSE_EMAIL)
 async def compose_email(
@@ -368,11 +295,6 @@ async def compose_email(
 
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
-
-        writer({"progress": "Adding final touches..."})
-
-        writer({"progress": "Email draft ready!"})
-
         writer(
             {
                 "email_compose_data": {
@@ -742,7 +664,6 @@ tools = [
     # list_gmail_labels,
     fetch_gmail_messages,
     search_gmail_messages,
-    summarize_email,
     compose_email,
     # star_emails,
     # unstar_emails,

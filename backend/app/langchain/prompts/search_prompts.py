@@ -18,9 +18,9 @@ SEARCH_PROMPT = """
     Only include information that is directly supported by the search results. Prioritize clarity, transparency, and citation integrity.
 """
 
-DEEP_SEARCH_PROMPT = """
-You have access to in-depth web search results with full page content using GAIA Deep Search.
-Below is the detailed context retrieved from the deep search:
+DEEP_RESEARCH_PROMPT = """
+You have access to in-depth web search results with full page content using GAIA Deep Research.
+Below is the detailed context retrieved from the deep research:
 
 {formatted_results}
 

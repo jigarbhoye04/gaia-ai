@@ -15,12 +15,17 @@ class InfisicalConfigError(Exception):
 
 
 def inject_infisical_secrets():
+    INFISICAL_TOKEN = os.getenv("INFISICAL_TOKEN")
     INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
     ENV = os.getenv("ENV", "production")
     CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
     CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
 
-    if not INFISICAL_PROJECT_ID:
+    if not INFISICAL_TOKEN:
+        raise InfisicalConfigError(
+            "INFISICAL_TOKEN is missing. This is required for secrets management."
+        )
+    elif not INFISICAL_PROJECT_ID:
         raise InfisicalConfigError(
             "INFISICAL_PROJECT_ID is missing. This is required for secrets management."
         )
@@ -80,6 +85,7 @@ class Settings(BaseSettings):
     BING_API_KEY: str
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
+    GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
     RESEND_API_KEY: str
     CLOUDINARY_CLOUD_NAME: str

@@ -85,9 +85,11 @@ async def execute_code(
         code_data["code_data"]["output"] = {
             "stdout": "\n".join(execution.logs.stdout) if execution.logs.stdout else "",
             "stderr": "\n".join(execution.logs.stderr) if execution.logs.stderr else "",
-            "results": [str(result) for result in execution.results]
-            if execution.results
-            else [],
+            "results": (
+                [str(result) for result in execution.results]
+                if execution.results
+                else []
+            ),
             "error": str(execution.error) if execution.error else None,
         }
 
@@ -100,9 +102,9 @@ async def execute_code(
         # Include chart processing errors in output if any
         if chart_errors:
             if code_data["code_data"]["output"]["stderr"]:
-                code_data["code_data"]["output"]["stderr"] += (
-                    "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
-                )
+                code_data["code_data"]["output"][
+                    "stderr"
+                ] += "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
             else:
                 code_data["code_data"]["output"]["stderr"] = (
                     "Chart Processing Warnings:\n" + "\n".join(chart_errors)

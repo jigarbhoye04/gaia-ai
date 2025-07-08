@@ -2,7 +2,7 @@
 Pydantic models for tool-related operations.
 """
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -11,6 +11,7 @@ class ToolInfo(BaseModel):
 
     name: str
     category: str
+    required_integration: Optional[str] = None
 
 
 class ToolsListResponse(BaseModel):
