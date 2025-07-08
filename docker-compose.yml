@@ -2,10 +2,9 @@ name: gaia-dev
 
 services:
   # FastAPI Application
-  gaia:
-    container_name: gaia
-    # image: ghcr.io/hey-gaia/gaia-backend
-    build: .
+  gaia-backend:
+    container_name: gaia-backend
+    build: ./backend
     image: gaia
     working_dir: /app
     command:
@@ -26,9 +25,9 @@ services:
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
-      - .:/app
+      - ./backend:/app
     ports:
       - "8000:80"
     restart: on-failure
@@ -50,6 +49,24 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  frontend:
+    container_name: gaia-frontend
+    build:
+      context: ./frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Avoid host overwriting container deps
+    restart: on-failure
+    networks:
+      - gaia_network
+    depends_on:
+      - gaia-backend
+    env_file:
+      - ./frontend/.env
 
   # ChromaDB Service
   chromadb:
@@ -128,9 +145,8 @@ services:
     networks:
       - gaia_network
 
-  # RabbitMQ Service (scheduler only)
+  # RabbitMQ Service
   rabbitmq:
-    profiles: ["scheduler"]
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
@@ -147,18 +163,17 @@ services:
     networks:
       - gaia_network
 
-  # scheduler Worker (scheduler only)
+  # Scheduler Worker
   worker:
-    profiles: ["scheduler"]
     container_name: worker
     image: gaia
     working_dir: /app
     env_file:
-      - .env
+      - ./backend/.env
     command: ["python", "-m", "app.worker"]
     restart: always
     volumes:
-      - .:/app
+      - ./backend:/app
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -171,16 +186,15 @@ services:
 
   # Arq Worker
   arq_worker:
-    profiles: ["scheduler"]
     container_name: arq_worker
     image: gaia
     working_dir: /app
     env_file:
-      - .env
+      - ./backend/.env
     command: ["python", "-m", "arq", "app.arq_worker.WorkerSettings"]
     restart: always
     volumes:
-      - .:/app
+      - ./backend:/app
     depends_on:
       redis:
         condition: service_healthy

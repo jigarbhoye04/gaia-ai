@@ -57,7 +57,7 @@ node_modules/
 /coverage
 
 # next.js
-/.next/
+.next/
 /out/
 
 # production
@@ -95,3 +95,5 @@ dist/
 .VScodeCounter
 
 .idea
+
+_next-video

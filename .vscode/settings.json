@@ -14,15 +14,17 @@
 
   // File & folder exclude (explorer + search)
   "files.exclude": {
-    "**/.git": false,
-    "**/.svn": false,
-    "**/.hg": false,
-    "**/.DS_Store": false,
-    "**/Thumbs.db": false,
-    "**/__pycache__": false,
-    "**/.venv": false,
-    ".venv": false,
-    "backend/venv": false
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/__pycache__": true,
+    "**/.venv": true,
+    ".venv": true,
+    "backend/venv": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true
   },
 
   // Backup for any custom excludes (optional)
