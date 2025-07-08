@@ -1,0 +1,11 @@
+{
+  "typescript.tsserver.experimental.enableTelemetry": false,
+  "typescript.tsserver.enable": true,
+  "javascript.tsserver.enable": true,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.tsserver.enableRegionDiagnostics": false,
+  "typescript.tsserver.web.projectWideIntellisense.enabled": true,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}

@@ -1,0 +1,29 @@
+name: Create Build
+
+# this is trigger CI on push and PR for main branch only
+on:
+  pull_request:
+    branches: [master, develop]
+  workflow_dispatch:
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Fetch all history for all branches and tags
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20.9.0"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Create Build
+        run: pnpm build
