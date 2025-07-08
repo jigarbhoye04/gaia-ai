@@ -85,7 +85,6 @@ class Settings(BaseSettings):
     BING_API_KEY: str
     ASSEMBLYAI_API_KEY: str
     DEEPGRAM_API_KEY: str
-    GROQ_API_KEY: str
     OPENWEATHER_API_KEY: str
     RESEND_API_KEY: str
     CLOUDINARY_CLOUD_NAME: str
