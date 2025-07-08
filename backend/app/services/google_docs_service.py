@@ -87,11 +87,11 @@ async def create_google_doc(
                     }
                 }
             ]
-            
+
             docs_service.documents().batchUpdate(
                 documentId=doc_id, body={"requests": margin_requests}
             ).execute()
-            
+
             logger.info(f"Applied default margins to Google Doc {doc_id}")
 
         # Add initial content if provided
@@ -134,15 +134,17 @@ async def list_google_docs(
         drive_service = get_drive_service(refresh_token, access_token)
 
         # Build query to filter for Google Docs
-        drive_query = "mimeType='application/vnd.google-apps.document' and trashed=false"
+        drive_query = (
+            "mimeType='application/vnd.google-apps.document' and trashed=false"
+        )
         if query:
             drive_query += f" and name contains '{query}'"
 
         logger.info(f"Querying Google Drive with: q='{drive_query}', pageSize={limit}")
-        
+
         # Use max pageSize allowed by Google Drive API (1000) if limit is higher
         api_page_size = min(limit, 1000)
-        
+
         results = (
             drive_service.files()
             .list(
@@ -158,8 +160,10 @@ async def list_google_docs(
 
         files = results.get("files", [])
         next_page_token = results.get("nextPageToken")
-        
-        logger.info(f"Google Drive API returned {len(files)} files, nextPageToken: {next_page_token}")
+
+        logger.info(
+            f"Google Drive API returned {len(files)} files, nextPageToken: {next_page_token}"
+        )
 
         docs_list = []
         for file in files:
@@ -259,12 +263,18 @@ async def update_google_doc_content(
         else:
             # Replace all content - first get current document to find actual end index
             doc = docs_service.documents().get(documentId=document_id).execute()
-            doc_end_index = doc.get("body", {}).get("content", [{}])[-1].get("endIndex", 1)
-            
+            doc_end_index = (
+                doc.get("body", {}).get("content", [{}])[-1].get("endIndex", 1)
+            )
+
             # Only delete if there's content to delete (avoid empty documents)
             if doc_end_index > 1:
                 requests = [
-                    {"deleteContentRange": {"range": {"startIndex": 1, "endIndex": doc_end_index - 1}}},
+                    {
+                        "deleteContentRange": {
+                            "range": {"startIndex": 1, "endIndex": doc_end_index - 1}
+                        }
+                    },
                     {
                         "insertText": {
                             "location": {"index": 1},

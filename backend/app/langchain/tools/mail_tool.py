@@ -320,50 +320,68 @@ async def compose_email(
     try:
         writer = get_stream_writer()
         resolved_emails = []
-        
+
         # If recipient_query is provided, try to resolve contact emails
         if recipient_query and recipient_query.strip():
             writer({"progress": f"Searching contacts for '{recipient_query}'..."})
             try:
                 auth = get_auth_from_config(config)
-                
+
                 if not auth["access_token"] or not auth["refresh_token"]:
-                    logger.warning("Missing authentication credentials for contact resolution")
+                    logger.warning(
+                        "Missing authentication credentials for contact resolution"
+                    )
                 else:
                     service = get_gmail_service(
-                        access_token=auth["access_token"], 
-                        refresh_token=auth["refresh_token"]
+                        access_token=auth["access_token"],
+                        refresh_token=auth["refresh_token"],
                     )
-                    
+
                     # Use the service function directly instead of calling the tool
                     contacts_result = get_gmail_contacts(
                         service=service,
                         query=recipient_query,
                     )
-                    
-                    if contacts_result.get("success") and contacts_result.get("contacts"):
-                        resolved_emails = [contact["email"] for contact in contacts_result["contacts"]]
-                        writer({"progress": f"Found {len(resolved_emails)} contact(s) for '{recipient_query}'"})
+
+                    if contacts_result.get("success") and contacts_result.get(
+                        "contacts"
+                    ):
+                        resolved_emails = [
+                            contact["email"] for contact in contacts_result["contacts"]
+                        ]
+                        writer(
+                            {
+                                "progress": f"Found {len(resolved_emails)} contact(s) for '{recipient_query}'"
+                            }
+                        )
                     else:
-                        writer({"progress": f"No contacts found for '{recipient_query}'"})
+                        writer(
+                            {"progress": f"No contacts found for '{recipient_query}'"}
+                        )
                     logger.info(f"Resolved emails: {resolved_emails}")
             except Exception as contact_error:
-                logger.warning(f"Failed to resolve contacts for '{recipient_query}': {contact_error}")
+                logger.warning(
+                    f"Failed to resolve contacts for '{recipient_query}': {contact_error}"
+                )
                 writer({"progress": f"Contact search failed for '{recipient_query}'"})
                 # Continue with empty resolved_emails if contact resolution fails
-        
+
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
-        
+
         writer({"progress": "Adding final touches..."})
-        
+
         writer({"progress": "Email draft ready!"})
 
-        writer({"email_compose_data": {
-                "to": resolved_emails if resolved_emails else [],
-                "subject": subject,
-                "body": body,
-            }})
+        writer(
+            {
+                "email_compose_data": {
+                    "to": resolved_emails if resolved_emails else [],
+                    "subject": subject,
+                    "body": body,
+                }
+            }
+        )
 
         # Generate summary of the composed email
         return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)
@@ -683,6 +701,7 @@ async def remove_labels_from_emails(
         logger.error(error_msg)
         return {"success": False, "error": error_msg}
 
+
 @tool
 @with_doc(GET_GMAIL_CONTACTS)
 async def get_mail_contacts(
@@ -709,10 +728,10 @@ async def get_mail_contacts(
         service = get_gmail_service(
             access_token=auth["access_token"], refresh_token=auth["refresh_token"]
         )
-        
+
         # Use the service function to get contacts
         return get_gmail_contacts(service=service, query=query, max_results=max_results)
-        
+
     except Exception as e:
         error_msg = f"Error getting Gmail contacts: {str(e)}"
         logger.error(error_msg)

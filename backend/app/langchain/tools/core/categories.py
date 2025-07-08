@@ -11,10 +11,10 @@ from app.langchain.tools.core.registry import TOOLS_BY_CATEGORY
 CATEGORY_OVERRIDES: Dict[str, str] = {
     # Example overrides:
     # "google_docs_tool": "documents",
-    # "code_exec_tool": "development", 
-    
+    # "code_exec_tool": "development",
     # Add custom overrides here as needed
 }
+
 
 def get_tool_category(tool_name: str) -> str:
     """
@@ -24,16 +24,16 @@ def get_tool_category(tool_name: str) -> str:
     3. Extract from file name dynamically
     4. Return extracted category or 'general' as fallback
     """
-    
-    # Priority 1: Check registry categories first    
+
+    # Priority 1: Check registry categories first
     # Find the tool in categorized registry
     for category, category_tools in TOOLS_BY_CATEGORY.items():
         for tool in category_tools:
-            if hasattr(tool, 'name') and tool.name == tool_name:
+            if hasattr(tool, "name") and tool.name == tool_name:
                 return category
-    
+
     # Priority 2: Check for explicit overrides
     if tool_name in CATEGORY_OVERRIDES:
         return CATEGORY_OVERRIDES[tool_name]
-    
+
     return "general"

@@ -14,7 +14,13 @@ from app.config.settings import settings
 
 class PaymentServiceError(Exception):
     """Base exception for payment service errors."""
-    def __init__(self, message: str, status_code: int = 500, details: Optional[Dict[str, Any]] = None):
+
+    def __init__(
+        self,
+        message: str,
+        status_code: int = 500,
+        details: Optional[Dict[str, Any]] = None,
+    ):
         self.message = message
         self.status_code = status_code
         self.details = details or {}
@@ -30,10 +36,10 @@ class RazorpayService:
             # Use Razorpay credentials from settings (via Infisical)
             key_id = settings.RAZORPAY_KEY_ID
             key_secret = settings.RAZORPAY_KEY_SECRET
-            
+
             # Initialize client
             self.client = razorpay.Client(auth=(key_id, key_secret))
-            
+
             # Auto-detect test mode based on key prefix
             self.is_test_mode = key_id.startswith("rzp_test_")
             mode = "test" if self.is_test_mode else "live"
@@ -70,7 +76,10 @@ class RazorpayService:
             return False
 
     def verify_subscription_signature(
-        self, razorpay_payment_id: str, razorpay_subscription_id: str, razorpay_signature: str
+        self,
+        razorpay_payment_id: str,
+        razorpay_subscription_id: str,
+        razorpay_signature: str,
     ) -> bool:
         """Verify subscription payment signature for security."""
         try:

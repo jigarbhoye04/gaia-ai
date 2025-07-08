@@ -479,7 +479,7 @@ async def delete_calendar_event(
         )
 
         matching_events = search_results.get("matching_events", [])
-        
+
         if not matching_events:
             logger.info(f"No events found matching query: {query}")
             return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
@@ -487,7 +487,7 @@ async def delete_calendar_event(
         # For simplicity, take the first (most relevant) match
         # In production, you might want to implement more sophisticated matching
         target_event = matching_events[0]
-        
+
         logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
 
         # Prepare deletion confirmation data
@@ -503,10 +503,12 @@ async def delete_calendar_event(
         }
 
         # Send deletion options to frontend via writer
-        writer({
-            "calendar_delete_options": [delete_option],
-            "intent": "delete_calendar_event"
-        })
+        writer(
+            {
+                "calendar_delete_options": [delete_option],
+                "intent": "delete_calendar_event",
+            }
+        )
 
         logger.info("Calendar event deletion options sent to frontend")
         return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Please confirm the deletion."
@@ -559,14 +561,14 @@ async def edit_calendar_event(
         )
 
         matching_events = search_results.get("matching_events", [])
-        
+
         if not matching_events:
             logger.info(f"No events found matching query: {query}")
             return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
 
         # For simplicity, take the first (most relevant) match
         target_event = matching_events[0]
-        
+
         logger.info(f"Found event to edit: {target_event.get('summary', 'Unknown')}")
 
         # Prepare the updated event data
@@ -596,10 +598,9 @@ async def edit_calendar_event(
             edit_option["timezone"] = timezone
 
         # Send edit options to frontend via writer
-        writer({
-            "calendar_edit_options": [edit_option],
-            "intent": "edit_calendar_event"
-        })
+        writer(
+            {"calendar_edit_options": [edit_option], "intent": "edit_calendar_event"}
+        )
 
         logger.info("Calendar event edit options sent to frontend")
         changes_summary = []
@@ -611,8 +612,10 @@ async def edit_calendar_event(
             changes_summary.append("time/date")
         if is_all_day is not None:
             changes_summary.append(f"all-day status to {is_all_day}")
-        
-        changes_text = ", ".join(changes_summary) if changes_summary else "the specified fields"
+
+        changes_text = (
+            ", ".join(changes_summary) if changes_summary else "the specified fields"
+        )
         return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Ready to update {changes_text}. Please confirm the changes."
 
     except Exception as e:

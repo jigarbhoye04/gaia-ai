@@ -9,6 +9,7 @@ from app.config.settings import settings
 
 import pymongo
 
+
 class MongoDB:
     """
     A class to manage the MongoDB connection using Motor.
@@ -36,7 +37,6 @@ class MongoDB:
 
     def ping(self):
         try:
-
             # Use the same URI that was used to initialize the async client
             sync_client = pymongo.MongoClient(settings.MONGO_DB)
             sync_client.admin.command("ping")
@@ -49,6 +49,7 @@ class MongoDB:
             logger.info("Initializing all indexes in MongoDB...")
             # Import here to avoid circular import
             from app.db.mongodb.indexes import create_all_indexes
+
             await create_all_indexes()
             # await log_index_summary()
         except Exception as e:

@@ -131,7 +131,8 @@ class CreateReminderRequest(BaseModel):
         description="Base time for handling time zones and scheduling (optional, defaults to None)",
     )
     conversation_id: Optional[str] = Field(
-        None, description="Conversation ID for AI agent reminders (optional, auto-generated if not provided)"
+        None,
+        description="Conversation ID for AI agent reminders (optional, auto-generated if not provided)",
     )
 
     @field_validator("repeat")

@@ -33,25 +33,27 @@ async def store_user_info(name: str, email: str, picture_url: str):
 
     expected_prefix = "https://res.cloudinary.com"
     current_time = datetime.now(timezone.utc)
-    
+
     # Check if user already exists
     existing_user = await users_collection.find_one({"email": email})
-    
+
     # Process the picture URL
     cloudinary_picture_url = None
-    
+
     # Only process picture if:
     # 1. User is new (no existing_user), OR
     # 2. User exists but has no picture stored, OR
     # 3. User exists but the Google picture URL has changed
     should_process_picture = False
-    
+
     if existing_user:
         current_picture = existing_user.get("picture", "")
         # If user has no picture, or if Google is providing a picture, we might need to process
         if not current_picture and picture_url:
             should_process_picture = True
-            logger.info(f"User {email} has no picture stored, will process Google picture")
+            logger.info(
+                f"User {email} has no picture stored, will process Google picture"
+            )
         else:
             logger.info(f"User {email} already has picture stored, skipping re-upload")
     else:
@@ -59,8 +61,12 @@ async def store_user_info(name: str, email: str, picture_url: str):
         should_process_picture = bool(picture_url)
         if should_process_picture:
             logger.info(f"New user {email}, will process Google picture")
-    
-    if should_process_picture and picture_url and not picture_url.startswith(expected_prefix):
+
+    if (
+        should_process_picture
+        and picture_url
+        and not picture_url.startswith(expected_prefix)
+    ):
         try:
             response = requests.get(picture_url, timeout=10)
             response.raise_for_status()
@@ -110,7 +116,7 @@ async def store_user_info(name: str, email: str, picture_url: str):
         }
 
         result = await users_collection.insert_one(user_data)
-        
+
         # Send welcome email to new user
         try:
             await send_welcome_email(email, name)
@@ -118,5 +124,5 @@ async def store_user_info(name: str, email: str, picture_url: str):
         except Exception as e:
             logger.error(f"Failed to send welcome email to {email}: {str(e)}")
             # Don't raise exception - user creation should still succeed
-        
+
         return result.inserted_id

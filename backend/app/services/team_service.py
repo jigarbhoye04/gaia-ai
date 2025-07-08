@@ -40,7 +40,7 @@ class TeamService:
 
             # Convert to response models
             members = [TeamMember.from_mongo(member) for member in members_data]
-            
+
             # Cache the result
             cache_data = [member.model_dump() for member in members]
             await set_cache(TEAM_LIST_CACHE_KEY, cache_data, CACHE_TTL)
@@ -52,7 +52,7 @@ class TeamService:
             logger.error(f"Error fetching team members: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to retrieve team members"
+                detail="Failed to retrieve team members",
             )
 
     @staticmethod
@@ -63,11 +63,11 @@ class TeamService:
             if not ObjectId.is_valid(member_id):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid team member ID format"
+                    detail="Invalid team member ID format",
                 )
 
             cache_key = f"{TEAM_CACHE_PREFIX}:member:{member_id}"
-            
+
             # Try cache first
             cached_member = await get_cache(cache_key)
             if cached_member:
@@ -79,11 +79,11 @@ class TeamService:
             if not member_data:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Team member not found"
+                    detail="Team member not found",
                 )
 
             member = TeamMember.from_mongo(member_data)
-            
+
             # Cache the result
             await set_cache(cache_key, member.model_dump(), CACHE_TTL)
             logger.debug(f"Cached team member {member_id}")
@@ -96,7 +96,7 @@ class TeamService:
             logger.error(f"Error fetching team member {member_id}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to retrieve team member"
+                detail="Failed to retrieve team member",
             )
 
     @staticmethod
@@ -106,17 +106,19 @@ class TeamService:
             # Insert into database
             member_dict = member_data.model_dump()
             result = await team_collection.insert_one(member_dict)
-            
+
             # Fetch the created member
-            created_member_data = await team_collection.find_one({"_id": result.inserted_id})
+            created_member_data = await team_collection.find_one(
+                {"_id": result.inserted_id}
+            )
             if not created_member_data:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to retrieve created team member"
+                    detail="Failed to retrieve created team member",
                 )
 
             created_member = TeamMember.from_mongo(created_member_data)
-            
+
             # Invalidate list cache
             await delete_cache(TEAM_LIST_CACHE_KEY)
             logger.debug("Invalidated team list cache after creation")
@@ -129,50 +131,55 @@ class TeamService:
             logger.error(f"Error creating team member: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to create team member"
+                detail="Failed to create team member",
             )
 
     @staticmethod
-    async def update_team_member(member_id: str, update_data: TeamMemberUpdate) -> TeamMember:
+    async def update_team_member(
+        member_id: str, update_data: TeamMemberUpdate
+    ) -> TeamMember:
         """Update a team member and invalidate cache."""
         try:
             # Validate ObjectId format
             if not ObjectId.is_valid(member_id):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid team member ID format"
+                    detail="Invalid team member ID format",
                 )
 
             # Prepare update data (exclude None values)
-            update_dict = {k: v for k, v in update_data.model_dump().items() if v is not None}
+            update_dict = {
+                k: v for k, v in update_data.model_dump().items() if v is not None
+            }
             if not update_dict:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="No valid fields to update"
+                    detail="No valid fields to update",
                 )
 
             # Update in database
             result = await team_collection.update_one(
-                {"_id": ObjectId(member_id)}, 
-                {"$set": update_dict}
+                {"_id": ObjectId(member_id)}, {"$set": update_dict}
             )
-            
+
             if result.matched_count == 0:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Team member not found"
+                    detail="Team member not found",
                 )
 
             # Fetch updated member
-            updated_member_data = await team_collection.find_one({"_id": ObjectId(member_id)})
+            updated_member_data = await team_collection.find_one(
+                {"_id": ObjectId(member_id)}
+            )
             if not updated_member_data:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to retrieve updated team member"
+                    detail="Failed to retrieve updated team member",
                 )
 
             updated_member = TeamMember.from_mongo(updated_member_data)
-            
+
             # Invalidate caches
             cache_key = f"{TEAM_CACHE_PREFIX}:member:{member_id}"
             await delete_cache(cache_key)
@@ -187,7 +194,7 @@ class TeamService:
             logger.error(f"Error updating team member {member_id}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update team member"
+                detail="Failed to update team member",
             )
 
     @staticmethod
@@ -198,16 +205,16 @@ class TeamService:
             if not ObjectId.is_valid(member_id):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid team member ID format"
+                    detail="Invalid team member ID format",
                 )
 
             # Delete from database
             result = await team_collection.delete_one({"_id": ObjectId(member_id)})
-            
+
             if result.deleted_count == 0:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Team member not found"
+                    detail="Team member not found",
                 )
 
             # Invalidate caches
@@ -222,5 +229,5 @@ class TeamService:
             logger.error(f"Error deleting team member {member_id}: {str(e)}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete team member"
+                detail="Failed to delete team member",
             )

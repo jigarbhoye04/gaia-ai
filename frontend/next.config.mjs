@@ -1,6 +1,6 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
-import { withNextVideo } from "next-video/process";
 import createMDX from "@next/mdx";
+import { withNextVideo } from "next-video/process";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",

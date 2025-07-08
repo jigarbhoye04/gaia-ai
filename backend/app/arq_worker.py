@@ -136,25 +136,28 @@ async def check_inactive_users(ctx: dict) -> str:
     try:
         # Find users inactive for more than 7 days
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-        
-        inactive_users = await users_collection.find({
-            "last_active_at": {"$lt": seven_days_ago},
-            "is_active": {"$ne": False}  # Only active users
-        }).to_list(length=None)
+
+        inactive_users = await users_collection.find(
+            {
+                "last_active_at": {"$lt": seven_days_ago},
+                "is_active": {"$ne": False},  # Only active users
+            }
+        ).to_list(length=None)
 
         email_count = 0
         for user in inactive_users:
             try:
                 await send_inactive_user_email(
-                    user_email=user["email"],
-                    user_name=user.get("name")
+                    user_email=user["email"], user_name=user.get("name")
                 )
                 email_count += 1
                 logger.info(f"Sent inactive user email to {user['email']}")
             except Exception as e:
                 logger.error(f"Failed to send email to {user['email']}: {str(e)}")
 
-        message = f"Processed {len(inactive_users)} inactive users, sent {email_count} emails"
+        message = (
+            f"Processed {len(inactive_users)} inactive users, sent {email_count} emails"
+        )
         logger.info(message)
         return message
 

@@ -580,7 +580,9 @@ async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> 
                 await delete_cache(cache_key_goal)
                 await delete_cache(cache_key_goals)
                 await delete_cache(cache_key_stats)
-                logger.info(f"Goal caches invalidated for goal {goal_id} and user {user_id}")
+                logger.info(
+                    f"Goal caches invalidated for goal {goal_id} and user {user_id}"
+                )
 
             logger.info(
                 f"Goal {goal_id} successfully updated with roadmap and todo project {project_id}"

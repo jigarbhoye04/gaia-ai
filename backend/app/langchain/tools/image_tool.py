@@ -19,9 +19,8 @@ async def generate_image(
         str,
         "An enhanced, detailed description for image generation. Expand from the user's request to include style, composition, lighting, mood, and other visual details for optimal results.",
     ],
-    config: RunnableConfig
+    config: RunnableConfig,
 ) -> dict:
-
     try:
         writer = get_stream_writer()
         writer({"status": "generating_image"})

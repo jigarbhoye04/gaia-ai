@@ -2,7 +2,7 @@
 Subscription management service.
 """
 
-from datetime import datetime, timedelta,timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 from bson import ObjectId
@@ -41,20 +41,24 @@ async def create_subscription(
             raise HTTPException(status_code=404, detail="Plan not found")
 
         # Check for existing active subscriptions
-        existing_sub = await subscriptions_collection.find_one({
-            "user_id": user_id,
-            "status": {"$in": ["active", "authenticated"]},
-        })
-        
+        existing_sub = await subscriptions_collection.find_one(
+            {
+                "user_id": user_id,
+                "status": {"$in": ["active", "authenticated"]},
+            }
+        )
+
         if existing_sub:
-            raise HTTPException(status_code=409, detail="User already has an active subscription")
+            raise HTTPException(
+                status_code=409, detail="User already has an active subscription"
+            )
 
         # Clean up old failed/abandoned subscriptions
         await _cleanup_old_subscriptions(user_id)
 
         # Get Razorpay plan ID
         razorpay_plan_id = await get_razorpay_plan_id(subscription_data.plan_id)
-        
+
         # Create subscription in Razorpay
         razorpay_subscription = await _create_razorpay_subscription(
             user_id, subscription_data, razorpay_plan_id, user
@@ -63,10 +67,12 @@ async def create_subscription(
         # Store subscription in database
         try:
             current_time = datetime.now(timezone.utc)
-            
+
             # Calculate all date fields with sensible defaults
-            dates = calculate_subscription_dates(plan, current_time, razorpay_subscription)
-            
+            dates = calculate_subscription_dates(
+                plan, current_time, razorpay_subscription
+            )
+
             # Create subscription document
             subscription_doc = _create_subscription_doc(
                 razorpay_subscription, user_id, subscription_data, dates, current_time
@@ -76,16 +82,20 @@ async def create_subscription(
                 subscription_doc.dict(by_alias=True, exclude={"id"})
             )
             subscription_doc.id = str(result.inserted_id)
-            
+
             if not result.inserted_id:
-                raise HTTPException(status_code=500, detail="Failed to store subscription in database")
+                raise HTTPException(
+                    status_code=500, detail="Failed to store subscription in database"
+                )
         except HTTPException:
             raise
         except Exception as e:
             logger.error(f"Failed to store subscription in database: {e}")
             raise HTTPException(status_code=500, detail="Failed to save subscription")
 
-        logger.info(f"Successfully created subscription for user {user_id}: {subscription_doc.id}")
+        logger.info(
+            f"Successfully created subscription for user {user_id}: {subscription_doc.id}"
+        )
 
         return SubscriptionResponse(
             id=subscription_doc.id,
@@ -123,7 +133,7 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
         subscription = await subscriptions_collection.find_one(
             {"user_id": user_id, "status": {"$in": ["active", "paused", "created"]}}
         )
-        
+
         if not subscription:
             return UserSubscriptionStatus(
                 user_id=user_id,
@@ -136,25 +146,27 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
                 # Legacy fields
                 has_subscription=False,
                 plan_type=PlanType.FREE,
-                status=SubscriptionStatus.CANCELLED
+                status=SubscriptionStatus.CANCELLED,
             )
-        
+
         # Get plan details
-        plan = await plans_collection.find_one({"_id": ObjectId(subscription["plan_id"])})
-    
+        plan = await plans_collection.find_one(
+            {"_id": ObjectId(subscription["plan_id"])}
+        )
+
         if plan:
             plan_name = plan.get("name", "").lower()
             if "pro" in plan_name:
                 plan_type = PlanType.PRO
             else:
                 plan_type = PlanType.FREE
-        
+
         # Calculate days remaining
         days_remaining = None
         if subscription.get("current_end"):
             remaining_delta = subscription["current_end"] - datetime.utcnow()
             days_remaining = max(0, remaining_delta.days)
-        
+
         # Format plan and subscription data
         current_plan = None
         if plan:
@@ -166,9 +178,9 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
                 "currency": plan["currency"],
                 "duration": plan["duration"],
                 "features": plan.get("features", []),
-                "is_active": plan.get("is_active", True)
+                "is_active": plan.get("is_active", True),
             }
-        
+
         subscription_data = {
             "id": str(subscription["_id"]),
             "razorpay_subscription_id": subscription.get("razorpay_subscription_id"),
@@ -183,9 +195,9 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
             "paid_count": subscription.get("paid_count", 0),
             "customer_notify": subscription.get("customer_notify", True),
             "created_at": subscription.get("created_at"),
-            "updated_at": subscription.get("updated_at")
+            "updated_at": subscription.get("updated_at"),
         }
-        
+
         return UserSubscriptionStatus(
             user_id=user_id,
             current_plan=current_plan,
@@ -194,7 +206,6 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
             days_remaining=days_remaining,
             can_upgrade=plan_type != PlanType.PRO,
             can_downgrade=plan_type not in [PlanType.FREE],
-            
             # Legacy fields for backward compatibility
             has_subscription=True,
             plan_type=plan_type,
@@ -204,9 +215,9 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
             cancel_at_period_end=subscription.get("cancel_at_cycle_end", False),
             trial_end=subscription.get("trial_end"),
             subscription_id=subscription.get("razorpay_subscription_id"),
-            plan_id=subscription["plan_id"]
+            plan_id=subscription["plan_id"],
         )
-    
+
     except Exception as e:
         logger.error(f"Error getting subscription status for user {user_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to get subscription status")
@@ -221,30 +232,30 @@ async def update_subscription(
         current_subscription = await subscriptions_collection.find_one(
             {"user_id": user_id, "status": {"$in": ["active", "created"]}}
         )
-        
+
         if not current_subscription:
             raise HTTPException(status_code=404, detail="No active subscription found")
-        
+
         razorpay_subscription_id = current_subscription["razorpay_subscription_id"]
-        
+
         # Prepare update data for Razorpay
         update_data = {}
         if subscription_data.plan_id:
             razorpay_plan_id = await get_razorpay_plan_id(subscription_data.plan_id)
             update_data["plan_id"] = razorpay_plan_id
-        
+
         if subscription_data.quantity is not None:
             update_data["quantity"] = subscription_data.quantity
-        
+
         if subscription_data.remaining_count is not None:
             update_data["remaining_count"] = subscription_data.remaining_count
-        
+
         if subscription_data.replace_items is not None:
             update_data["replace_items"] = subscription_data.replace_items
-        
+
         if subscription_data.prorate is not None:
             update_data["prorate"] = subscription_data.prorate
-        
+
         # Update subscription in Razorpay
         try:
             updated_subscription = razorpay_service.client.subscription.update(
@@ -253,35 +264,39 @@ async def update_subscription(
             logger.info(f"Updated Razorpay subscription: {razorpay_subscription_id}")
         except Exception as e:
             logger.error(f"Failed to update Razorpay subscription: {e}")
-            raise HTTPException(status_code=502, detail="Failed to update subscription in payment gateway")
-        
+            raise HTTPException(
+                status_code=502,
+                detail="Failed to update subscription in payment gateway",
+            )
+
         # Update subscription in database
         db_update_data = {
             "updated_at": datetime.utcnow(),
         }
-        
+
         if subscription_data.plan_id:
             db_update_data["plan_id"] = subscription_data.plan_id
-        
+
         if subscription_data.quantity is not None:
             db_update_data["quantity"] = subscription_data.quantity
-        
+
         result = await subscriptions_collection.update_one(
-            {"_id": ObjectId(current_subscription["_id"])},
-            {"$set": db_update_data}
+            {"_id": ObjectId(current_subscription["_id"])}, {"$set": db_update_data}
         )
-        
+
         if result.modified_count == 0:
             logger.warning(f"No subscription updated in database for user {user_id}")
-        
+
         # Fetch updated subscription
         updated_subscription_doc = await subscriptions_collection.find_one(
             {"_id": ObjectId(current_subscription["_id"])}
         )
-        
+
         return SubscriptionResponse(
             id=str(updated_subscription_doc["_id"]),
-            razorpay_subscription_id=updated_subscription_doc["razorpay_subscription_id"],
+            razorpay_subscription_id=updated_subscription_doc[
+                "razorpay_subscription_id"
+            ],
             user_id=updated_subscription_doc["user_id"],
             plan_id=updated_subscription_doc["plan_id"],
             status=SubscriptionStatus(updated_subscription_doc["status"]),
@@ -298,9 +313,9 @@ async def update_subscription(
             customer_notify=updated_subscription_doc["customer_notify"],
             created_at=updated_subscription_doc["created_at"],
             updated_at=updated_subscription_doc["updated_at"],
-            notes=updated_subscription_doc.get("notes", {})
+            notes=updated_subscription_doc.get("notes", {}),
         )
-    
+
     except HTTPException:
         raise
     except Exception as e:
@@ -317,19 +332,18 @@ async def cancel_subscription(
         subscription = await subscriptions_collection.find_one(
             {"user_id": user_id, "status": {"$in": ["active", "created"]}}
         )
-        
+
         if not subscription:
             raise HTTPException(status_code=404, detail="No active subscription found")
-        
+
         razorpay_subscription_id = subscription["razorpay_subscription_id"]
-        
+
         # Cancel subscription in Razorpay
         try:
             if cancel_at_cycle_end:
                 # Cancel at cycle end
                 cancelled_subscription = razorpay_service.client.subscription.update(
-                    razorpay_subscription_id,
-                    {"cancel_at_cycle_end": True}
+                    razorpay_subscription_id, {"cancel_at_cycle_end": True}
                 )
                 new_status = "active"  # Remains active until cycle end
             else:
@@ -338,40 +352,44 @@ async def cancel_subscription(
                     razorpay_subscription_id
                 )
                 new_status = "cancelled"
-            
+
             logger.info(f"Cancelled Razorpay subscription: {razorpay_subscription_id}")
         except Exception as e:
             logger.error(f"Failed to cancel Razorpay subscription: {e}")
-            raise HTTPException(status_code=502, detail="Failed to cancel subscription in payment gateway")
-        
+            raise HTTPException(
+                status_code=502,
+                detail="Failed to cancel subscription in payment gateway",
+            )
+
         # Update subscription in database
         update_data = {
             "status": new_status,
             "cancel_at_cycle_end": cancel_at_cycle_end,
             "updated_at": datetime.utcnow(),
         }
-        
+
         if not cancel_at_cycle_end:
             update_data["ended_at"] = datetime.utcnow()
-        
+
         result = await subscriptions_collection.update_one(
-            {"_id": ObjectId(subscription["_id"])},
-            {"$set": update_data}
+            {"_id": ObjectId(subscription["_id"])}, {"$set": update_data}
         )
-        
+
         if result.modified_count == 0:
             logger.warning(f"No subscription updated in database for user {user_id}")
-        
+
         return {
             "message": "Subscription cancelled successfully",
             "cancel_at_cycle_end": str(cancel_at_cycle_end),
-            "status": new_status
+            "status": new_status,
         }
-    
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Unexpected error cancelling subscription for user {user_id}: {e}")
+        logger.error(
+            f"Unexpected error cancelling subscription for user {user_id}: {e}"
+        )
         raise HTTPException(status_code=500, detail="Failed to cancel subscription")
 
 
@@ -379,45 +397,53 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
     """Sync subscription data from Razorpay to fix missing fields."""
     try:
         # Fetch subscription details from Razorpay
-        razorpay_subscription = razorpay_service.client.subscription.fetch(razorpay_subscription_id)
-        
+        razorpay_subscription = razorpay_service.client.subscription.fetch(
+            razorpay_subscription_id
+        )
+
         # Get our plan details for calculating defaults
         subscription_doc = await subscriptions_collection.find_one(
             {"razorpay_subscription_id": razorpay_subscription_id}
         )
-        
+
         if not subscription_doc:
-            logger.error(f"Subscription not found in database: {razorpay_subscription_id}")
+            logger.error(
+                f"Subscription not found in database: {razorpay_subscription_id}"
+            )
             return False
-            
-        plan = await plans_collection.find_one({"_id": ObjectId(subscription_doc["plan_id"])})
-        
+
+        plan = await plans_collection.find_one(
+            {"_id": ObjectId(subscription_doc["plan_id"])}
+        )
+
         # Calculate updated fields
-        current_start = timestamp_to_datetime(razorpay_subscription.get("current_start"))
+        current_start = timestamp_to_datetime(
+            razorpay_subscription.get("current_start")
+        )
         current_end = timestamp_to_datetime(razorpay_subscription.get("current_end"))
         charge_at = timestamp_to_datetime(razorpay_subscription.get("charge_at"))
         start_at = timestamp_to_datetime(razorpay_subscription.get("start_at"))
         end_at = timestamp_to_datetime(razorpay_subscription.get("end_at"))
-        
+
         # Set defaults if fields are still null
         created_at = subscription_doc.get("created_at", datetime.utcnow())
-        
+
         if not start_at:
             start_at = created_at
-            
+
         if not current_start:
             current_start = start_at
-            
+
         if not current_end and plan:
             # Calculate end based on plan duration
             if plan.get("duration") == "monthly":
                 current_end = current_start + timedelta(days=30)
             elif plan.get("duration") == "yearly":
                 current_end = current_start + timedelta(days=365)
-                
+
         if not charge_at:
             charge_at = current_start
-            
+
         if not end_at and plan:
             # Set to total billing cycles from start
             total_count = razorpay_subscription.get("total_count", 10)
@@ -425,7 +451,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
                 end_at = start_at + timedelta(days=30 * total_count)
             elif plan.get("duration") == "yearly":
                 end_at = start_at + timedelta(days=365 * total_count)
-        
+
         # Update subscription in database
         update_data = {
             "status": razorpay_subscription["status"],
@@ -439,24 +465,30 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
             "paid_count": razorpay_subscription.get("paid_count", 0),
             "updated_at": datetime.utcnow(),
         }
-        
+
         # Remove None values
         update_data = {k: v for k, v in update_data.items() if v is not None}
-        
+
         result = await subscriptions_collection.update_one(
             {"razorpay_subscription_id": razorpay_subscription_id},
-            {"$set": update_data}
+            {"$set": update_data},
         )
-        
+
         if result.modified_count > 0:
-            logger.info(f"Successfully synced subscription from Razorpay: {razorpay_subscription_id}")
+            logger.info(
+                f"Successfully synced subscription from Razorpay: {razorpay_subscription_id}"
+            )
             return True
         else:
-            logger.warning(f"No changes made to subscription: {razorpay_subscription_id}")
+            logger.warning(
+                f"No changes made to subscription: {razorpay_subscription_id}"
+            )
             return False
-            
+
     except Exception as e:
-        logger.error(f"Failed to sync subscription from Razorpay {razorpay_subscription_id}: {e}")
+        logger.error(
+            f"Failed to sync subscription from Razorpay {razorpay_subscription_id}: {e}"
+        )
         return False
 
 
@@ -464,28 +496,32 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
 async def _cleanup_old_subscriptions(user_id: str) -> None:
     """Clean up old failed/abandoned subscriptions for a user."""
     try:
-        cleanup_result = await subscriptions_collection.delete_many({
-            "user_id": user_id,
-            "$or": [
-                {
-                    "status": "created",
-                    "created_at": {"$lt": datetime.utcnow() - timedelta(hours=1)},
-                },
-                {"status": "failed"},
-            ],
-        })
-        
+        cleanup_result = await subscriptions_collection.delete_many(
+            {
+                "user_id": user_id,
+                "$or": [
+                    {
+                        "status": "created",
+                        "created_at": {"$lt": datetime.utcnow() - timedelta(hours=1)},
+                    },
+                    {"status": "failed"},
+                ],
+            }
+        )
+
         if cleanup_result.deleted_count > 0:
-            logger.info(f"Cleaned up {cleanup_result.deleted_count} failed subscriptions for user {user_id}")
+            logger.info(
+                f"Cleaned up {cleanup_result.deleted_count} failed subscriptions for user {user_id}"
+            )
     except Exception as e:
         logger.warning(f"Failed to cleanup subscriptions for user {user_id}: {e}")
 
 
 async def _create_razorpay_subscription(
-    user_id: str, 
-    subscription_data: CreateSubscriptionRequest, 
+    user_id: str,
+    subscription_data: CreateSubscriptionRequest,
     razorpay_plan_id: str,
-    user: Dict[str, Any]
+    user: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Create subscription in Razorpay and return the subscription data."""
     razorpay_sub_data = {
@@ -502,21 +538,31 @@ async def _create_razorpay_subscription(
     }
 
     try:
-        razorpay_subscription = razorpay_service.client.subscription.create(razorpay_sub_data)
+        razorpay_subscription = razorpay_service.client.subscription.create(
+            razorpay_sub_data
+        )
         mode = "test" if razorpay_service.is_test_mode else "live"
-        logger.info(f"Created Razorpay subscription in {mode} mode: {razorpay_subscription['id']}")
+        logger.info(
+            f"Created Razorpay subscription in {mode} mode: {razorpay_subscription['id']}"
+        )
     except Exception as e:
         logger.error(f"Failed to create Razorpay subscription: {e}")
-        raise HTTPException(status_code=502, detail="Failed to create subscription in payment gateway")
+        raise HTTPException(
+            status_code=502, detail="Failed to create subscription in payment gateway"
+        )
 
     # Fetch latest subscription details to get any updated timestamps
     try:
-        razorpay_subscription = razorpay_service.client.subscription.fetch(razorpay_subscription["id"])
-        logger.info(f"Fetched updated subscription details for: {razorpay_subscription['id']}")
+        razorpay_subscription = razorpay_service.client.subscription.fetch(
+            razorpay_subscription["id"]
+        )
+        logger.info(
+            f"Fetched updated subscription details for: {razorpay_subscription['id']}"
+        )
     except Exception as e:
         logger.warning(f"Failed to fetch updated subscription details: {e}")
         # Continue with original response
-    
+
     return razorpay_subscription
 
 
@@ -525,7 +571,7 @@ def _create_subscription_doc(
     user_id: str,
     subscription_data: CreateSubscriptionRequest,
     dates: Dict[str, datetime],
-    current_time: datetime
+    current_time: datetime,
 ) -> SubscriptionDB:
     """Create a SubscriptionDB document with all the necessary fields."""
     return SubscriptionDB(

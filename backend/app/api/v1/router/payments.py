@@ -38,9 +38,7 @@ router = APIRouter()
 
 # Core Payment Flow Endpoints
 @router.get(
-    "/plans", 
-    response_model=List[PlanResponse], 
-    summary="Get subscription plans"
+    "/plans", response_model=List[PlanResponse], summary="Get subscription plans"
 )
 @limiter.limit("30/minute")  # Allow 30 plan fetches per minute
 async def get_plans_endpoint(request: Request, active_only: bool = True):
@@ -86,9 +84,7 @@ async def get_subscription_status_endpoint(
 
 
 @router.put(
-    "/subscriptions", 
-    response_model=SubscriptionResponse, 
-    summary="Update subscription"
+    "/subscriptions", response_model=SubscriptionResponse, summary="Update subscription"
 )
 @limiter.limit("10/minute")  # Allow 10 subscription updates per minute
 async def update_subscription_endpoint(
@@ -104,10 +100,7 @@ async def update_subscription_endpoint(
     return await update_subscription(user_id, subscription_data)
 
 
-@router.delete(
-    "/subscriptions", 
-    summary="Cancel subscription"
-)
+@router.delete("/subscriptions", summary="Cancel subscription")
 @limiter.limit("5/minute")  # Allow 5 cancellations per minute
 async def cancel_subscription_endpoint(
     request: Request,
@@ -122,10 +115,7 @@ async def cancel_subscription_endpoint(
     return await cancel_subscription(user_id, cancel_at_cycle_end)
 
 
-@router.post(
-    "/subscriptions/sync",
-    summary="Sync subscription data from Razorpay"
-)
+@router.post("/subscriptions/sync", summary="Sync subscription data from Razorpay")
 @limiter.limit("5/minute")  # Allow 5 sync operations per minute
 async def sync_subscription_endpoint(
     request: Request,
@@ -138,29 +128,28 @@ async def sync_subscription_endpoint(
 
     # Get user's current subscription
     from app.db.mongodb.collections import subscriptions_collection
-    subscription = await subscriptions_collection.find_one({
-        "user_id": user_id, 
-        "status": {"$in": ["active", "created", "paused"]}
-    })
-    
+
+    subscription = await subscriptions_collection.find_one(
+        {"user_id": user_id, "status": {"$in": ["active", "created", "paused"]}}
+    )
+
     if not subscription:
         raise HTTPException(status_code=404, detail="No active subscription found")
-    
+
     razorpay_subscription_id = subscription["razorpay_subscription_id"]
-    
+
     success = await sync_subscription_from_razorpay(razorpay_subscription_id)
-    
+
     if success:
-        return {"message": "Subscription synced successfully", "subscription_id": razorpay_subscription_id}
+        return {
+            "message": "Subscription synced successfully",
+            "subscription_id": razorpay_subscription_id,
+        }
     else:
         raise HTTPException(status_code=500, detail="Failed to sync subscription")
 
 
-@router.post(
-    "/verify", 
-    response_model=PaymentResponse, 
-    summary="Verify payment"
-)
+@router.post("/verify", response_model=PaymentResponse, summary="Verify payment")
 @limiter.limit("20/minute")  # Allow 20 payment verifications per minute
 async def verify_payment_endpoint(
     request: Request,
@@ -222,4 +211,3 @@ async def get_payment_config(request: Request):
         "company_name": "GAIA",
         "theme_color": "#00bbff",
     }
-

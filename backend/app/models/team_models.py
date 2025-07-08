@@ -25,15 +25,16 @@ class TeamMemberUpdate(BaseModel):
 
 class TeamMember(TeamMemberBase):
     """Team member response model with proper ID handling."""
+
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        from_attributes=True
+        from_attributes=True,
     )
-    
+
     id: str = Field(description="Unique identifier for the team member")
-    
+
     @classmethod
     def from_mongo(cls, data: dict) -> "TeamMember":
         """Create TeamMember instance from MongoDB document."""

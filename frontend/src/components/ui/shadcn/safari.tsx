@@ -126,7 +126,7 @@ export function Safari({
         ) : null}
         {imageSrc && (
           <>
-            {/* 
+            {/*
           <svg>
             <foreignObject x="1" y="52" width="1200" height="800">
               <img

@@ -41,12 +41,12 @@ async def update_user_profile(
 ) -> dict:
     """
     Update user profile information.
-    
+
     Args:
         user_id: User ID
         name: New name (optional)
         picture_data: New profile picture data (optional)
-        
+
     Returns:
         Updated user data
     """
@@ -72,7 +72,9 @@ async def update_user_profile(
             try:
                 # Generate public_id for Cloudinary
                 user_email = user.get("email", "")
-                public_id = f"user_{user_email.replace('@', '_at_').replace('.', '_dot_')}"
+                public_id = (
+                    f"user_{user_email.replace('@', '_at_').replace('.', '_dot_')}"
+                )
 
                 # Upload to Cloudinary
                 picture_url = await upload_user_picture(picture_data, public_id)
@@ -80,12 +82,13 @@ async def update_user_profile(
 
             except Exception as e:
                 logger.error(f"Error uploading profile picture: {e}")
-                raise HTTPException(status_code=500, detail="Failed to upload profile picture")
+                raise HTTPException(
+                    status_code=500, detail="Failed to upload profile picture"
+                )
 
         # Update database
         await users_collection.update_one(
-            {"_id": ObjectId(user_id)}, 
-            {"$set": update_data}
+            {"_id": ObjectId(user_id)}, {"$set": update_data}
         )
 
         # Clear user cache
@@ -103,7 +106,7 @@ async def update_user_profile(
             "name": updated_user.get("name"),
             "email": updated_user.get("email"),
             "picture": updated_user.get("picture"),
-            "updated_at": updated_user.get("updated_at")
+            "updated_at": updated_user.get("updated_at"),
         }
 
     except HTTPException:

@@ -56,29 +56,36 @@ class TodoService:
     """Service class for todo operations with consistent error handling and caching."""
 
     @staticmethod
-    async def _invalidate_cache(user_id: str, project_id: Optional[str] = None, todo_id: Optional[str] = None, operation: Optional[str] = None):
+    async def _invalidate_cache(
+        user_id: str,
+        project_id: Optional[str] = None,
+        todo_id: Optional[str] = None,
+        operation: Optional[str] = None,
+    ):
         """Invalidate relevant caches based on the operation context."""
         try:
             # Always invalidate stats since they might change
             await delete_cache(f"stats:{user_id}")
-            
+
             # For specific todo operations, invalidate only affected caches
             if todo_id and operation in ["update", "delete"]:
                 await delete_cache(f"todo:{user_id}:{todo_id}")
-                
+
                 # Only invalidate list caches if the operation affects list visibility
                 # (e.g., completion status change, project change, priority change)
                 if operation == "delete" or operation == "update":
                     # Invalidate project-specific caches
                     if project_id:
-                        await delete_cache_by_pattern(f"todos:{user_id}:project:{project_id}:*")
+                        await delete_cache_by_pattern(
+                            f"todos:{user_id}:project:{project_id}:*"
+                        )
                     # Invalidate main list cache
                     await delete_cache_by_pattern(f"todos:{user_id}:page:*")
             else:
                 # For create or bulk operations, invalidate broader caches
                 await delete_cache_by_pattern(f"todos:{user_id}*")
                 await delete_cache_by_pattern(f"todo:{user_id}:*")
-                
+
             # Project cache invalidation
             if project_id:
                 await delete_cache(f"projects:{user_id}")
@@ -188,11 +195,13 @@ class TodoService:
                         {"$group": {"_id": "$project_id", "count": {"$sum": 1}}}
                     ],
                     "labels": [
-                        {"$match": {"completed": False}},  # Only count labels from non-completed todos
+                        {
+                            "$match": {"completed": False}
+                        },  # Only count labels from non-completed todos
                         {"$unwind": "$labels"},
                         {"$group": {"_id": "$labels", "count": {"$sum": 1}}},
                         {"$sort": {"count": -1}},
-                        {"$limit": 50}  # Limit to top 50 labels
+                        {"$limit": 50},  # Limit to top 50 labels
                     ],
                 }
             },
@@ -219,11 +228,11 @@ class TodoService:
             by_project=by_project,
             completion_rate=round((completed / total * 100) if total > 0 else 0, 2),
         )
-        
+
         # Add labels if available
         if "labels" in facets:
             stats.labels = [
-                {"name": item["_id"], "count": item["count"]} 
+                {"name": item["_id"], "count": item["count"]}
                 for item in facets["labels"]
             ]
 
@@ -264,7 +273,9 @@ class TodoService:
         except Exception as e:
             todos_logger.warning(f"Failed to index todo: {str(e)}")
 
-        await cls._invalidate_cache(user_id, todo.project_id, str(result.inserted_id), "create")
+        await cls._invalidate_cache(
+            user_id, todo.project_id, str(result.inserted_id), "create"
+        )
 
         return TodoResponse(**serialize_document(created_todo))
 
@@ -276,7 +287,7 @@ class TodoService:
         cached = await get_cache(cache_key)
         if cached:
             return TodoResponse(**cached)
-        
+
         todo = await todos_collection.find_one(
             {"_id": ObjectId(todo_id), "user_id": user_id}
         )
@@ -285,10 +296,10 @@ class TodoService:
             raise ValueError(f"Todo {todo_id} not found")
 
         response = TodoResponse(**serialize_document(todo))
-        
+
         # Cache the response
         await set_cache(cache_key, response.model_dump(), CACHE_TTL)
-        
+
         return response
 
     @classmethod
@@ -310,7 +321,7 @@ class TodoService:
             cache_key_parts.append(f"priority:{params.priority.value}")
         cache_key_parts.append(f"page:{params.page}")
         cache_key = ":".join(cache_key_parts)
-        
+
         # Try to get from cache
         cached_response = await get_cache(cache_key)
         if cached_response and not params.include_stats:
@@ -408,35 +419,42 @@ class TodoService:
             try:
                 # Import here to avoid circular import
                 from app.services.goals_service import sync_subtask_to_goal_completion
-                
+
                 # Compare old vs new subtasks to find what changed
                 for new_subtask_dict in update_dict["subtasks"]:
                     new_subtask_id = new_subtask_dict.get("id")
                     new_completed = new_subtask_dict.get("completed", False)
-                    
-                    old_subtask = next((s for s in existing["subtasks"] if s["id"] == new_subtask_id), None)
+
+                    old_subtask = next(
+                        (s for s in existing["subtasks"] if s["id"] == new_subtask_id),
+                        None,
+                    )
                     if old_subtask and old_subtask["completed"] != new_completed:
                         # Subtask completion status changed, sync to goal
                         await sync_subtask_to_goal_completion(
                             todo_id, new_subtask_id, new_completed, user_id
                         )
             except Exception as e:
-                todos_logger.warning(f"Failed to sync subtask completion to goal: {str(e)}")
+                todos_logger.warning(
+                    f"Failed to sync subtask completion to goal: {str(e)}"
+                )
 
         # Determine if this update affects list visibility
-        affects_visibility = any([
-            "completed" in update_dict,
-            "project_id" in update_dict,
-            "priority" in update_dict,
-            "due_date" in update_dict,
-            "labels" in update_dict
-        ])
-        
+        affects_visibility = any(
+            [
+                "completed" in update_dict,
+                "project_id" in update_dict,
+                "priority" in update_dict,
+                "due_date" in update_dict,
+                "labels" in update_dict,
+            ]
+        )
+
         await cls._invalidate_cache(
-            user_id, 
-            updated.get("project_id"), 
-            todo_id, 
-            "update" if affects_visibility else "update_minor"
+            user_id,
+            updated.get("project_id"),
+            todo_id,
+            "update" if affects_visibility else "update_minor",
         )
 
         return TodoResponse(**serialize_document(updated))
@@ -446,12 +464,14 @@ class TodoService:
         """Delete a todo."""
 
         # Get the todo before deletion to know its project
-        todo = await todos_collection.find_one({"_id": ObjectId(todo_id), "user_id": user_id})
+        todo = await todos_collection.find_one(
+            {"_id": ObjectId(todo_id), "user_id": user_id}
+        )
         if not todo:
             raise ValueError(f"Todo {todo_id} not found")
-        
+
         project_id = todo.get("project_id")
-        
+
         result = await todos_collection.delete_one(
             {"_id": ObjectId(todo_id), "user_id": user_id}
         )
@@ -540,7 +560,9 @@ class TodoService:
             },
         )
 
-        await cls._invalidate_cache(user_id, project_id=request.project_id, operation="bulk_move")
+        await cls._invalidate_cache(
+            user_id, project_id=request.project_id, operation="bulk_move"
+        )
 
         return BulkOperationResponse(
             success=request.todo_ids if result.modified_count > 0 else [],
@@ -568,7 +590,7 @@ class TodoService:
                     has_prev=False,
                 ),
             )
-            
+
         if params.mode == SearchMode.SEMANTIC:
             results = await vector_search(
                 query=params.q,
@@ -648,7 +670,9 @@ class ProjectService:
             {"user_id": user_id, "project_id": str(result.inserted_id)}
         )
 
-        await TodoService._invalidate_cache(user_id, project_id=str(result.inserted_id), operation="project_create")
+        await TodoService._invalidate_cache(
+            user_id, project_id=str(result.inserted_id), operation="project_create"
+        )
 
         return ProjectResponse(**serialize_document(created), todo_count=todo_count)
 
@@ -660,7 +684,7 @@ class ProjectService:
         cached = await get_cache(cache_key)
         if cached:
             return [ProjectResponse(**project) for project in cached]
-        
+
         # Ensure inbox exists
         await TodoService._get_or_create_inbox(user_id)
 
@@ -696,11 +720,13 @@ class ProjectService:
         ]
 
         projects = await projects_collection.aggregate(pipeline).to_list(None)
-        response = [ProjectResponse(**serialize_document(project)) for project in projects]
-        
+        response = [
+            ProjectResponse(**serialize_document(project)) for project in projects
+        ]
+
         # Cache the response
         await set_cache(cache_key, [p.model_dump() for p in response], CACHE_TTL)
-        
+
         return response
 
     @staticmethod
@@ -732,7 +758,9 @@ class ProjectService:
             {"user_id": user_id, "project_id": project_id}
         )
 
-        await TodoService._invalidate_cache(user_id, project_id=project_id, operation="project_update")
+        await TodoService._invalidate_cache(
+            user_id, project_id=project_id, operation="project_update"
+        )
 
         return ProjectResponse(**serialize_document(updated), todo_count=todo_count)
 
@@ -764,7 +792,9 @@ class ProjectService:
         # Delete project
         await projects_collection.delete_one({"_id": ObjectId(project_id)})
 
-        await TodoService._invalidate_cache(user_id, project_id=project_id, operation="project_delete")
+        await TodoService._invalidate_cache(
+            user_id, project_id=project_id, operation="project_delete"
+        )
 
 
 # Compatibility functions for old API
@@ -859,7 +889,7 @@ async def search_todos(
         per_page=100,
         include_stats=False,
     )
-    
+
     response = await TodoService.list_todos(user_id, params)
     return response.data
 
@@ -872,9 +902,7 @@ async def get_todo_stats(user_id: str) -> dict:
 
 
 async def get_todos_by_date_range(
-    user_id: str,
-    start_date: datetime,
-    end_date: datetime
+    user_id: str, start_date: datetime, end_date: datetime
 ) -> List[TodoResponse]:
     """Get todos within a date range."""
     params = TodoSearchParams(
@@ -886,7 +914,7 @@ async def get_todos_by_date_range(
         per_page=1000,
         include_stats=False,
     )
-    
+
     response = await TodoService.list_todos(user_id, params)
     return response.data
 
@@ -895,11 +923,11 @@ async def get_all_labels(user_id: str) -> List[dict]:
     """Get all unique labels used by the user with counts."""
     # Get stats which includes label info
     stats = await TodoService._calculate_stats(user_id)
-    
+
     # Return labels from stats if available
-    if hasattr(stats, 'labels') and stats.labels:
+    if hasattr(stats, "labels") and stats.labels:
         return stats.labels
-    
+
     return []
 
 
@@ -912,7 +940,7 @@ async def get_todos_by_label(user_id: str, label: str) -> List[TodoResponse]:
         per_page=1000,
         include_stats=False,
     )
-    
+
     response = await TodoService.list_todos(user_id, params)
     return response.data
 
@@ -936,7 +964,7 @@ async def semantic_search_todos(
         per_page=limit,
         include_stats=False,
     )
-    
+
     response = await TodoService.list_todos(user_id, params)
     return response.data
 
@@ -961,7 +989,7 @@ async def hybrid_search_todos(
         per_page=limit,
         include_stats=False,
     )
-    
+
     response = await TodoService.list_todos(user_id, params)
     return response.data
 

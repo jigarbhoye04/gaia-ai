@@ -25,13 +25,13 @@ TOOLS_BY_CATEGORY = {
         *todo_tool.tools,
         *reminder_tool.tools,
     ],
-    "calendar":[
+    "calendar": [
         *calendar_tool.tools,
     ],
-    "goal_tracking":[
+    "goal_tracking": [
         *goal_tool.tools,
     ],
-    "google_docs":[
+    "google_docs": [
         *google_docs_tool.tools,
     ],
     "documents": [

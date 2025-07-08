@@ -38,17 +38,18 @@ class BlogPostUpdate(BaseModel):
 
 class BlogPost(BlogPostBase):
     """Blog post response model with proper ID handling."""
+
     model_config = ConfigDict(
         json_encoders={ObjectId: str},
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        from_attributes=True
+        from_attributes=True,
     )
 
     slug: str
     id: str = Field(description="Unique identifier for the blog post")
     author_details: Optional[List[AuthorDetails]] = None
-    
+
     @classmethod
     def from_mongo(cls, data: dict) -> "BlogPost":
         """Create BlogPost instance from MongoDB document."""

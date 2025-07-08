@@ -45,9 +45,9 @@ async def get_plan_by_id(plan_id: str) -> Optional[PlanResponse]:
     try:
         if not ObjectId.is_valid(plan_id):
             raise HTTPException(status_code=400, detail="Invalid plan ID format")
-            
+
         plan = await plans_collection.find_one({"_id": ObjectId(plan_id)})
-        
+
         if not plan:
             return None
 
@@ -77,7 +77,7 @@ async def get_razorpay_plan_id(plan_id: str) -> str:
         plan = await plans_collection.find_one({"_id": ObjectId(plan_id)})
         if not plan:
             raise HTTPException(status_code=404, detail="Plan not found")
-        
+
         logger.info(f'plan["razorpay_plan_id"]={plan["razorpay_plan_id"]}')
         return plan["razorpay_plan_id"]
     except HTTPException:

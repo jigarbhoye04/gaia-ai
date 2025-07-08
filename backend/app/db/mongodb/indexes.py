@@ -471,29 +471,26 @@ async def create_usage_indexes():
         await asyncio.gather(
             # Primary query: get latest usage by user
             usage_snapshots_collection.create_index(
-                [("user_id", 1), ("created_at", -1)], 
-                name="user_latest_usage"
+                [("user_id", 1), ("created_at", -1)], name="user_latest_usage"
             ),
             # Usage history queries by user and date range
             usage_snapshots_collection.create_index(
-                [("user_id", 1), ("created_at", 1)], 
-                name="user_usage_history"
+                [("user_id", 1), ("created_at", 1)], name="user_usage_history"
             ),
             # TTL index for automatic cleanup after 90 days (7,776,000 seconds)
             usage_snapshots_collection.create_index(
                 "created_at",
                 name="created_at_ttl",
-                expireAfterSeconds=7776000  # 90 days
+                expireAfterSeconds=7776000,  # 90 days
             ),
             # Plan type filtering
             usage_snapshots_collection.create_index(
-                "plan_type", 
-                name="plan_type_filter"
+                "plan_type", name="plan_type_filter"
             ),
         )
-        
+
         logger.info("Created usage indexes with TTL cleanup (90 days)")
-        
+
     except Exception as e:
         logger.error(f"Error creating usage indexes: {str(e)}")
         raise

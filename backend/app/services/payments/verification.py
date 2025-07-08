@@ -9,7 +9,11 @@ from app.utils.email_utils import send_pro_subscription_email
 from fastapi import HTTPException
 
 from app.config.loggers import general_logger as logger
-from app.db.mongodb.collections import payments_collection, subscriptions_collection, users_collection
+from app.db.mongodb.collections import (
+    payments_collection,
+    subscriptions_collection,
+    users_collection,
+)
 from app.models.payment_models import (
     PaymentCallbackRequest,
     PaymentDB,
@@ -44,23 +48,36 @@ async def verify_payment(
             )
             logger.info(f"Subscription payment signature verification: {is_valid}")
         else:
-            logger.error("No order_id or subscription_id provided for signature verification")
-            raise HTTPException(status_code=400, detail="Missing order_id or subscription_id for verification")
-        
+            logger.error(
+                "No order_id or subscription_id provided for signature verification"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail="Missing order_id or subscription_id for verification",
+            )
+
         if not is_valid:
-            logger.error(f"Invalid payment signature for payment_id: {callback_data.razorpay_payment_id}")
+            logger.error(
+                f"Invalid payment signature for payment_id: {callback_data.razorpay_payment_id}"
+            )
             raise HTTPException(status_code=400, detail="Invalid payment signature")
-        
+
         mode = "test" if razorpay_service.is_test_mode else "live"
         logger.info(f"Payment signature verified successfully in {mode} mode")
 
         # Fetch payment details from Razorpay
         try:
-            razorpay_payment = razorpay_service.client.payment.fetch(callback_data.razorpay_payment_id)
-            logger.info(f"Fetched payment data in {mode} mode: {callback_data.razorpay_payment_id}")
+            razorpay_payment = razorpay_service.client.payment.fetch(
+                callback_data.razorpay_payment_id
+            )
+            logger.info(
+                f"Fetched payment data in {mode} mode: {callback_data.razorpay_payment_id}"
+            )
         except Exception as e:
             logger.error(f"Failed to fetch payment details: {e}")
-            raise HTTPException(status_code=502, detail="Failed to fetch payment details")
+            raise HTTPException(
+                status_code=502, detail="Failed to fetch payment details"
+            )
 
         # Store payment in database
         try:
@@ -102,9 +119,11 @@ async def verify_payment(
                 payment_doc.dict(by_alias=True, exclude={"id"})
             )
             payment_doc.id = str(result.inserted_id)
-            
+
             if not result.inserted_id:
-                raise HTTPException(status_code=500, detail="Failed to store payment in database")
+                raise HTTPException(
+                    status_code=500, detail="Failed to store payment in database"
+                )
         except HTTPException:
             raise
         except Exception as e:
@@ -115,7 +134,9 @@ async def verify_payment(
         if callback_data.razorpay_subscription_id:
             try:
                 result = await subscriptions_collection.update_one(
-                    {"razorpay_subscription_id": callback_data.razorpay_subscription_id},
+                    {
+                        "razorpay_subscription_id": callback_data.razorpay_subscription_id
+                    },
                     {
                         "$set": {
                             "status": "active",
@@ -126,25 +147,35 @@ async def verify_payment(
                 )
                 subscription_activated = result.modified_count > 0
                 if subscription_activated:
-                    logger.info(f"Activated subscription: {callback_data.razorpay_subscription_id}")
+                    logger.info(
+                        f"Activated subscription: {callback_data.razorpay_subscription_id}"
+                    )
                 else:
-                    logger.warning(f"No subscription found to activate: {callback_data.razorpay_subscription_id}")
+                    logger.warning(
+                        f"No subscription found to activate: {callback_data.razorpay_subscription_id}"
+                    )
             except Exception as e:
-                logger.error(f"Failed to activate subscription {callback_data.razorpay_subscription_id}: {e}")
+                logger.error(
+                    f"Failed to activate subscription {callback_data.razorpay_subscription_id}: {e}"
+                )
                 subscription_activated = False
 
             # Send pro activation email to the user if subscription was activated
             if subscription_activated:
                 try:
-                    user = await users_collection.find_one({"_id": ObjectId(user_id)})   
+                    user = await users_collection.find_one({"_id": ObjectId(user_id)})
                     logger.info(user)
                     await send_pro_subscription_email(
                         user_name=user.get("first_name", user.get("name", "there")),
-                        user_email=user["email"]
+                        user_email=user["email"],
                     )
-                    logger.info(f"Pro subscription welcome email sent to {user['email']}")
+                    logger.info(
+                        f"Pro subscription welcome email sent to {user['email']}"
+                    )
                 except Exception as e:
-                    logger.error(f"Failed to send pro subscription email to user {user_id}: {e}")
+                    logger.error(
+                        f"Failed to send pro subscription email to user {user_id}: {e}"
+                    )
 
         logger.info(f"Successfully verified and stored payment: {payment_doc.id}")
 

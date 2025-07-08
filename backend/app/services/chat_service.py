@@ -37,13 +37,11 @@ async def chat_stream(
     logger.info(
         f"User {user.get('user_id')} started a conversation with ID {conversation_id}"
     )
-    
+
     # Log the user's message if messages exist
     if body.messages:
-        message_content = body.messages[-1].get('content', '') if body.messages else ''
-        logger.info(
-            f"User {user.get('user_id')} sent a message: {message_content}"
-        )
+        message_content = body.messages[-1].get("content", "") if body.messages else ""
+        logger.info(f"User {user.get('user_id')} sent a message: {message_content}")
     else:
         logger.info(
             f"User {user.get('user_id')} sent a request with selected tool: {body.selectedTool}"
@@ -147,7 +145,7 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         # Extract todo data
         elif "todo_data" in data:
             tool_data["todo_data"] = data["todo_data"]
-        
+
         # Extract code execution data
         elif "code_data" in data:
             tool_data["code_data"] = data["code_data"]
@@ -155,11 +153,11 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         # Extract document tool data
         elif "document_data" in data:
             tool_data["document_data"] = data["document_data"]
-            
+
         # Extract goal data
         elif "goal_data" in data:
             tool_data["goal_data"] = data["goal_data"]
-            
+
         # Extract Google Docs data
         elif "google_docs_data" in data:
             tool_data["google_docs_data"] = data["google_docs_data"]

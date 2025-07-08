@@ -58,7 +58,7 @@ async def fetch_webpages(
 
         writer({"progress": "Fetching Complete!"})
         data = {"webpage_data": combined_content, "fetched_urls": processed_urls}
-        
+
         # Send webpage data to frontend via writer
         writer(data)
 

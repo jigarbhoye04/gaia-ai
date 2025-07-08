@@ -124,51 +124,53 @@ async def websocket_generate_roadmap(websocket: WebSocket):
             await websocket.send_json({"error": "Goal not found"})
             return
 
-        logger.info(f"Starting roadmap generation for goal {goal_id} titled '{goal_title}'.")
+        logger.info(
+            f"Starting roadmap generation for goal {goal_id} titled '{goal_title}'."
+        )
         await websocket.send_json({"status": "Generating roadmap..."})
 
         try:
             generated_roadmap = None
-            
+
             async for chunk_data in generate_roadmap_with_llm_stream(goal_title):
                 # Send progress updates to the client
                 if "progress" in chunk_data:
-                    await websocket.send_json({
-                        "status": chunk_data["progress"]
-                    })
+                    await websocket.send_json({"status": chunk_data["progress"]})
                 elif "roadmap" in chunk_data:
                     # Store the final roadmap data
                     generated_roadmap = chunk_data["roadmap"]
-                    await websocket.send_json({
-                        "status": "Roadmap generated successfully!",
-                        "roadmap": generated_roadmap
-                    })
+                    await websocket.send_json(
+                        {
+                            "status": "Roadmap generated successfully!",
+                            "roadmap": generated_roadmap,
+                        }
+                    )
                 elif "error" in chunk_data:
                     # Send error message and stop processing
-                    await websocket.send_json({
-                        "error": chunk_data["error"]
-                    })
+                    await websocket.send_json({"error": chunk_data["error"]})
                     return
 
             # Update the goal with the generated roadmap
             if generated_roadmap:
-                update_success = await update_goal_with_roadmap_service(goal_id, generated_roadmap)
-                
+                update_success = await update_goal_with_roadmap_service(
+                    goal_id, generated_roadmap
+                )
+
                 if update_success:
                     # Send final success message
-                    await websocket.send_json({
-                        "status": "Goal updated successfully with roadmap!",
-                        "goal_id": goal_id,
-                        "success": True
-                    })
+                    await websocket.send_json(
+                        {
+                            "status": "Goal updated successfully with roadmap!",
+                            "goal_id": goal_id,
+                            "success": True,
+                        }
+                    )
                 else:
-                    await websocket.send_json({
-                        "error": "Failed to update goal with roadmap"
-                    })
+                    await websocket.send_json(
+                        {"error": "Failed to update goal with roadmap"}
+                    )
             else:
-                await websocket.send_json({
-                    "error": "No roadmap was generated"
-                })
+                await websocket.send_json({"error": "No roadmap was generated"})
 
         except Exception as e:
             logger.error(f"Error generating roadmap for goal {goal_id}: {str(e)}")

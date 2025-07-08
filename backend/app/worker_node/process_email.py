@@ -163,7 +163,7 @@ async def process_emails_by_user_id(history_id: int, user_id: str, email: str):
 
         logger.info(
             f"Fetched {len(full_messages)} full messages for user {user_id} with history ID {history_id}"
-        )        # Process the messages with user context in batches
+        )  # Process the messages with user context in batches
         processing_results = await _process_emails_batch(
             full_messages, user_id, access_token, refresh_token
         )
@@ -194,50 +194,58 @@ async def _process_emails_batch(
 ) -> list[dict]:
     """
     Process emails in batches using asyncio.gather for concurrent processing.
-    
+
     Args:
         messages: List of email messages to process
         user_id: The user ID
         access_token: OAuth access token
         refresh_token: OAuth refresh token
         batch_size: Number of emails to process concurrently in each batch
-        
+
     Returns:
         list[dict]: List of processing results
     """
     processing_results = []
-    
+
     # Filter out None messages
     valid_messages = [msg for msg in messages if msg is not None]
-    
+
     # Process messages in batches
     for i in range(0, len(valid_messages), batch_size):
-        batch = valid_messages[i:i + batch_size]
-        
-        logger.info(f"Processing batch {i//batch_size + 1} with {len(batch)} messages for user {user_id}")
-        
+        batch = valid_messages[i : i + batch_size]
+
+        logger.info(
+            f"Processing batch {i // batch_size + 1} with {len(batch)} messages for user {user_id}"
+        )
+
         # Create tasks for concurrent processing within the batch
         tasks = [
             _process_email(message, user_id, access_token, refresh_token)
             for message in batch
         ]
-        
+
         # Execute batch concurrently
         batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         # Handle results and exceptions
         for j, result in enumerate(batch_results):
             if isinstance(result, Exception):
-                logger.error(f"Error processing message in batch {i//batch_size + 1}, position {j}: {result}")
-                processing_results.append({
-                    "status": "error",
-                    "error": str(result),
-                    "message_id": batch[j].get("id", "unknown")
-                })
+                logger.error(
+                    f"Error processing message in batch {i // batch_size + 1}, position {j}: {result}"
+                )
+                processing_results.append(
+                    {
+                        "status": "error",
+                        "error": str(result),
+                        "message_id": batch[j].get("id", "unknown"),
+                    }
+                )
             else:
                 processing_results.append(result)
-    
-    logger.info(f"Completed batch processing {len(processing_results)} messages for user {user_id}")
+
+    logger.info(
+        f"Completed batch processing {len(processing_results)} messages for user {user_id}"
+    )
     return processing_results
 
 

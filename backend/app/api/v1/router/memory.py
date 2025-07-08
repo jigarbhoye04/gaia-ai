@@ -1,6 +1,5 @@
 """Memory management API routes."""
 
-
 import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -17,6 +16,7 @@ from app.services.memory_service import memory_service
 
 router = APIRouter()
 
+
 @router.get("", response_model=MemorySearchResult)
 async def get_all_memories(
     page: int = 1,
@@ -25,12 +25,12 @@ async def get_all_memories(
 ):
     """
     Get all memories for the current user with pagination.
-    
+
     Args:
         page: Page number (default: 1)
         page_size: Number of memories per page (default: 20)
         user: Current authenticated user
-        
+
     Returns:
         MemorySearchResult with paginated memories
     """
@@ -53,35 +53,30 @@ async def create_memory(
 ):
     """
     Create a new memory for the current user.
-    
+
     Args:
         request: Memory creation request
         user: Current authenticated user
-        
+
     Returns:
         CreateMemoryResponse with success status
     """
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="User ID not found")
-    
+
     memory_entry = await memory_service.store_memory(
-        content=request.content,
-        user_id=user_id,
-        metadata=request.metadata
+        content=request.content, user_id=user_id, metadata=request.metadata
     )
-    
+
     if memory_entry:
         return CreateMemoryResponse(
             success=True,
             memory_id=memory_entry.id,
-            message="Memory created successfully"
+            message="Memory created successfully",
         )
     else:
-        return CreateMemoryResponse(
-            success=False,
-            message="Failed to create memory"
-        )
+        return CreateMemoryResponse(success=False, message="Failed to create memory")
 
 
 @router.delete("/{memory_id}", response_model=DeleteMemoryResponse)
@@ -92,33 +87,24 @@ async def delete_memory(
 ):
     """
     Delete a specific memory.
-    
+
     Args:
         memory_id: ID of the memory to delete
         user: Current authenticated user
-        
+
     Returns:
         DeleteMemoryResponse with success status
     """
     user_id = user.get("user_id")
     if not user_id:
         raise HTTPException(status_code=400, detail="User ID not found")
-    
-    success = await memory_service.delete_memory(
-        memory_id=memory_id,
-        user_id=user_id
-    )
-    
+
+    success = await memory_service.delete_memory(memory_id=memory_id, user_id=user_id)
+
     if success:
-        return DeleteMemoryResponse(
-            success=True,
-            message="Memory deleted successfully"
-        )
+        return DeleteMemoryResponse(success=True, message="Memory deleted successfully")
     else:
-        return DeleteMemoryResponse(
-            success=False,
-            message="Failed to delete memory"
-        )
+        return DeleteMemoryResponse(success=False, message="Failed to delete memory")
 
 
 @router.delete("", response_model=DeleteMemoryResponse)
@@ -128,10 +114,10 @@ async def clear_all_memories(
 ):
     """
     Clear all memories for the current user.
-    
+
     Args:
         user: Current authenticated user
-        
+
     Returns:
         DeleteMemoryResponse with success status
     """
@@ -145,7 +131,7 @@ async def clear_all_memories(
         all_memories = await memory_service.get_all_memories(
             user_id=user_id,
             page=1,
-            page_size=100  # Get first 100 memories
+            page_size=100,  # Get first 100 memories
         )
 
         deleted_count = 0
@@ -166,25 +152,20 @@ async def clear_all_memories(
         # Handle remaining memories if more than 100
         while all_memories.has_next:
             all_memories = await memory_service.get_all_memories(
-                user_id=user_id,
-                page=all_memories.page + 1,
-                page_size=100
+                user_id=user_id, page=all_memories.page + 1, page_size=100
             )
             for memory in all_memories.memories:
                 if memory.id:
                     success = await memory_service.delete_memory(
-                        memory_id=memory.id,
-                        user_id=user_id
+                        memory_id=memory.id, user_id=user_id
                     )
                     if success:
                         deleted_count += 1
 
         return DeleteMemoryResponse(
-            success=True,
-            message=f"Cleared {deleted_count} memories successfully"
+            success=True, message=f"Cleared {deleted_count} memories successfully"
         )
     except Exception as e:
         return DeleteMemoryResponse(
-            success=False,
-            message=f"Failed to clear memories: {str(e)}"
+            success=False, message=f"Failed to clear memories: {str(e)}"
         )

@@ -86,11 +86,11 @@ async def construct_langchain_messages(
         # Format tool name for better readability
         tool_display_name = selected_tool.replace("_", " ").title()
         content = f"Use the {tool_display_name} tool."
-        
+
         # Add file information if files are uploaded
         if currently_uploaded_file_ids:
             content += f"\n\n{current_files_str}"
-            
+
         chain_msgs.append(HumanMessage(content=content))
     else:
         # Convert each message to the appropriate LangChain message type
@@ -103,7 +103,7 @@ async def construct_langchain_messages(
                     # Add file information if files are uploaded
                     if currently_uploaded_file_ids:
                         content += f"\n\n{current_files_str}"
-                    
+
                     # Add tool selection information if a tool is selected
                     if selected_tool:
                         # Format tool name for better readability
@@ -112,7 +112,7 @@ async def construct_langchain_messages(
                             content += f"\n\nPlease use the {tool_display_name} tool to handle this request."
                         else:  # If the message is empty
                             content = f"Use the {tool_display_name} tool."
-                            
+
                 chain_msgs.append(HumanMessage(content=content))
             elif role in ("assistant", "bot"):
                 chain_msgs.append(AIMessage(content=content))

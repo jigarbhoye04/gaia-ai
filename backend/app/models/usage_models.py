@@ -3,6 +3,7 @@ from typing import List
 from pydantic import BaseModel, Field
 from enum import Enum
 
+
 class UsagePeriod(str, Enum):
     DAY = "day"
     MONTH = "month"
@@ -24,5 +25,3 @@ class UserUsageSnapshot(BaseModel):
     features: List[FeatureUsage] = []
     snapshot_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-

@@ -6,6 +6,7 @@ from app.langchain.llm.client import init_llm
 
 llm = init_llm()
 
+
 async def chatbot(
     state: State,
 ):

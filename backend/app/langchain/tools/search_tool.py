@@ -28,7 +28,6 @@ async def web_search_tool(
     ],
     config: RunnableConfig,
 ) -> str:
-
     start_time = time.time()
 
     try:

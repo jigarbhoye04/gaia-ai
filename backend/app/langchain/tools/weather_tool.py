@@ -22,10 +22,7 @@ async def get_weather(
     weather_data = await user_weather(location)
 
     # Send weather data to frontend via writer
-    writer({
-        "weather_data": weather_data,
-        "location": location
-    })
+    writer({"weather_data": weather_data, "location": location})
 
     # Return simple confirmation message
     return "Weather data sent to frontend. Do not write anything else. Just send the weather data."
