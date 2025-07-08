@@ -1,8 +1,10 @@
 import { Button } from "@heroui/button";
 import Link from "next/link";
+import GitHubButton from 'react-github-btn'
 
 import { authNavLinks } from "@/config/navigationConfig";
 import { useUser } from "@/features/auth/hooks/useUser";
+import { siteConfig } from "@/config/siteConfig";
 
 export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
   const user = useUser();
@@ -10,7 +12,13 @@ export default function DesktopMenu({ scrolled }: { scrolled: boolean }) {
 
   if (scrolled)
     return (
+      
+  
       <div className="flex items-center gap-2">
+        <div className="relative top-1">
+        {siteConfig.githubRepo && <GitHubButton href="https://github.com/heygaia/gaia" data-color-scheme="no-preference: light; light: light; dark: dark;" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star heygaia/gaia on GitHub">Star</GitHubButton>
+        }
+        </div>
         {isAuthenticated ? (
           // Show auth links that require login
           authNavLinks

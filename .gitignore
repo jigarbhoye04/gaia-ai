@@ -97,3 +97,5 @@ dist/
 .idea
 
 _next-video
+
+.pnpm-store/

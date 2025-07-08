@@ -31,6 +31,7 @@ export const siteConfig = {
   name: "GAIA",
   copyright: "© 202 GAIA",
   domain: "heygaia.io",
+  githubRepo:"https://github.com/heygaia/gaia",
   pageSections: [
     {
       title: "Get Started",
