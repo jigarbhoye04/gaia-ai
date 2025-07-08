@@ -1,0 +1,160 @@
+---
+title: 'Development Setup'
+description: 'How to set up your local development environment for GAIA.'
+icon: 'laptop-code'
+---
+
+## Who This Guide Is For
+
+This development setup guide is designed for:
+
+<CardGroup cols={2}>
+  <Card title="Contributors" icon="git-branch">
+    Developers who want to contribute to the GAIA project by fixing bugs, adding features, or improving documentation
+  </Card>
+  <Card title="Customizers" icon="wrench">
+    Developers who want to modify GAIA for their specific use cases or integrate it with custom systems
+  </Card>
+  <Card title="Open Source Enthusiasts" icon="heart">
+    Developers who want to learn from the codebase, understand the architecture, or build upon GAIA
+  </Card>
+  <Card title="Enterprise Teams" icon="building">
+    Development teams who need to customize GAIA for enterprise deployment and integration
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+<AccordionGroup>
+  <Accordion icon="docker" title="Docker & Docker Compose">
+    - Docker Desktop or Docker Engine (v20.10+)
+    - Docker Compose (v2.0+)
+    - At least 4GB of available RAM
+    - 10GB of free disk space
+  </Accordion>
+  
+  <Accordion icon="code" title="Development Tools">
+    - Git (for version control)
+    - Python 3.11+ (for backend development)
+    - Node.js 18+ (for frontend development)
+    - pnpm (for frontend package management)
+    - uv (for Python package management)
+  </Accordion>
+
+  <Accordion icon="terminal" title="System Requirements">
+    - macOS, Linux, or Windows with WSL2
+    - At least 8GB of RAM (16GB recommended)
+    - SSD storage for better performance
+  </Accordion>
+</AccordionGroup>
+
+## Development Environment Setup
+
+To start developing on GAIA, you need to set up your local environment. You can choose between an automated setup using our script or a manual setup.
+
+<CardGroup cols={2}>
+  <Card title="Automated Setup" icon="rocket" href="#automated-setup">
+    The easiest way to get started. Our script handles everything for you.
+  </Card>
+  <Card title="Manual Setup" icon="wrench" href="#manual-setup">
+    For those who want more control over the setup process.
+  </Card>
+</CardGroup>
+
+## Automated Setup
+
+We provide a script that automates the entire setup process. This is the recommended method for most users.
+
+<Steps>
+  <Step title="Run the Setup Script">
+    Open your terminal and run the following command from the project root:
+
+    ```bash
+    ./scripts/setup.sh
+    ```
+
+    This script will:
+    - Start the required services with Docker Compose.
+    - Create a Python virtual environment.
+    - Install backend dependencies with `uv`.
+    - Install frontend dependencies with `pnpm`.
+  </Step>
+  <Step title="You're Ready!">
+    Once the script finishes, your development environment is ready to go!
+  </Step>
+</Steps>
+
+## Manual Setup
+
+If you prefer to set up your environment manually, follow these steps.
+
+### Environment Variables
+
+Before you start the services, you need to configure your environment variables. GAIA uses `.env` files to manage these settings.
+
+<Steps>
+  <Step title="Copy Example Files">
+    We provide example files to get you started. Copy them to create your own `.env` files:
+
+    ```bash
+    cp backend/.env.example backend/.env
+    cp frontend/.env.example frontend/.env
+    ```
+  </Step>
+  <Step title="Fill in Your Secrets">
+    Edit the newly created `.env` files and fill in your API keys and other secrets.
+
+    For a detailed explanation of all the available environment variables, see the [Environment Variables Reference](/configuration/environment-variables).
+  </Step>
+</Steps>
+
+### Backend Setup
+
+<Steps>
+  <Step title="Start Docker Services">
+    GAIA relies on several services that run in Docker containers. Start them with Docker Compose:
+
+    ```bash
+    docker-compose up -d
+    ```
+  </Step>
+  <Step title="Create Virtual Environment">
+    Create and activate a Python virtual environment:
+
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+  </Step>
+  <Step title="Install Backend Dependencies">
+    We use `uv` for fast dependency management. Install the required packages:
+
+    ```bash
+    uv pip install -r backend/requirements.txt
+    ```
+  </Step>
+</Steps>
+
+### Frontend Setup
+
+<Steps>
+  <Step title="Navigate to Frontend Directory">
+    ```bash
+    cd frontend
+    ```
+  </Step>
+  <Step title="Install Frontend Dependencies">
+    We use `pnpm` for managing frontend packages. Install them with:
+
+    ```bash
+    pnpm install
+    ```
+  </Step>
+  <Step title="Return to Root Directory">
+    ```bash
+    cd ..
+    ```
+  </Step>
+</Steps>

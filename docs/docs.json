@@ -15,15 +15,31 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": ["introduction"]
+            "pages": [
+              "introduction",
+              "quick-start"
+            ]
           },
           {
             "group": "Self-Hosting",
             "pages": [
               "self-hosting/overview",
-              "self-hosting/environment-variables",
-              "self-hosting/infisical-setup",
               "self-hosting/docker-setup"
+            ]
+          },
+          {
+            "group": "For Developers",
+            "pages": [
+              "developers/introduction",
+              "developers/development-setup",
+              "developers/contributing"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/environment-variables",
+              "configuration/infisical-setup"
             ]
           }
         ]

@@ -1,16 +1,17 @@
 ---
-title: Introduction to GAIA
+title: Introduction
 description: "Welcome to GAIA - Your Personal AI Assistant"
+icon: "book-open"
 ---
 
 <img
   className="block dark:hidden rounded-lg"
-  src="/images/wallpaper.png"
+  src="/images/wallpaper.webp"
   alt="GAIA - Your Personal AI Assistant"
 />
 <img
   className="hidden dark:block rounded-lg"
-  src="/images/wallpaper.png"
+  src="/images/wallpaper.webp"
   alt="GAIA - Your Personal AI Assistant"
 />
 
@@ -18,32 +19,48 @@ description: "Welcome to GAIA - Your Personal AI Assistant"
 
 GAIA is an advanced personal AI assistant designed to enhance productivity and streamline daily tasks. With seamless integration capabilities and intelligent features, GAIA provides a comprehensive solution for managing your digital life.
 
-**Website:** [https://heygaia.io](https://heygaia.io)
+**Website:** [heygaia.io](https://heygaia.io)
 
 ## Getting Started
 
-Get up and running with GAIA quickly using our comprehensive setup guides.
+Choose your path to get started with GAIA based on your needs:
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card
-    title="Self-Hosting Setup"
+    title="Quick Start"
+    icon="rocket"
+    href="/quick-start"
+  >
+    Try GAIA hosted at heygaia.io - no setup required
+  </Card>
+  <Card
+    title="Self-Hosting"
     icon="server"
     href="/self-hosting/overview"
   >
-    Set up GAIA on your own infrastructure for complete control
+    Deploy GAIA on your own infrastructure for complete control and privacy
   </Card>
   <Card
-    title="Docker Setup"
-    icon="docker"
-    href="/self-hosting/docker-setup"
+    title="Development"
+    icon="code"
+    href="/developers/introduction"
   >
-    Deploy GAIA using Docker for easy container management
+    Set up a local development environment to contribute or customize GAIA
   </Card>
 </CardGroup>
 
+### Quick Start
+The fastest way to experience GAIA is through our hosted service at [heygaia.io](https://heygaia.io). No installation required - just sign up and start using your AI assistant immediately.
+
+### Self-Hosting
+Perfect for users who want complete control over their data and deployment. Our Docker-based setup makes it easy to run GAIA on your own infrastructure with enterprise-grade security and customization options.
+
+### Development
+For developers who want to contribute to GAIA or customize it for their specific needs. Includes comprehensive development environment setup, architecture documentation, and contribution guidelines.
+
 ## Architecture
 
-GAIA is built with a modern, scalable architecture using industry-standard technologies.
+GAIA is built with a modern, scalable architecture using industry-standard technologies:
 
 <CardGroup cols={2}>
   <Card
@@ -60,17 +77,22 @@ GAIA is built with a modern, scalable architecture using industry-standard techn
   >
     Modern React-based frontend with Next.js for optimal user experience
   </Card>
+</CardGroup>
+
+## Configuration & Security
+
+<CardGroup cols={2}>
   <Card
     title="Environment Variables"
     icon="gear"
-    href="/self-hosting/environment-variables"
+    href="/configuration/environment-variables"
   >
     Configure GAIA with the necessary environment variables
   </Card>
   <Card
     title="Infisical Setup"
     icon="lock"
-    href="/self-hosting/infisical-setup"
+    href="/configuration/infisical-setup"
   >
     Secure secrets management with Infisical integration
   </Card>

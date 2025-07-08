@@ -1,6 +1,7 @@
 ---
 title: "Environment Variables"
 description: "Complete guide to configuring environment variables for GAIA"
+icon: "key"
 ---
 
 ## Environment Configuration
@@ -8,7 +9,7 @@ description: "Complete guide to configuring environment variables for GAIA"
 GAIA requires various environment variables to function properly. These variables configure API keys, database connections, and feature flags.
 
 <Info>
-**Infisical Integration**: GAIA supports [Infisical](https://infisical.com) for secure secret management. When configured, Infisical secrets will override local environment variables. See our [Infisical Setup Guide](/self-hosting/infisical-setup) for more details.
+**Infisical Integration**: GAIA supports [Infisical](https://infisical.com) for secure secret management. When configured, Infisical secrets will override local environment variables. See our [Infisical Setup Guide](/configuration/infisical-setup) for more details.
 </Info>
 
 <CardGroup cols={2}>
@@ -26,7 +27,7 @@ GAIA requires various environment variables to function properly. These variable
 Create a `backend/.env` file with the following variables:
 
 <Note>
-**Infisical Integration**: If you're using [Infisical](/self-hosting/infisical-setup) for secret management, you can add these environment variables to your Infisical project instead of the `.env` file. Infisical secrets will automatically override any local environment variables with the same names.
+**Infisical Integration**: If you're using [Infisical](/configuration/infisical-setup) for secret management, you can add these environment variables to your Infisical project instead of the `.env` file. Infisical secrets will automatically override any local environment variables with the same names.
 </Note>
 
 ### Core Application Settings
@@ -189,7 +190,7 @@ NEXT_PUBLIC_BLOG_BEARER_TOKEN=your-blog-management-token-here
 ### Backend .env Template
 
 <Note>
-**Important**: If you're using Infisical, add your environment variables to your Infisical project instead. The variables below will be overridden by Infisical secrets if they have the same names. Read more about [Infisical setup](/self-hosting/infisical-setup).
+**Important**: If you're using Infisical, add your environment variables to your Infisical project instead. The variables below will be overridden by Infisical secrets if they have the same names. Read more about [Infisical setup](/configuration/infisical-setup).
 </Note>
 
 <CodeGroup>
@@ -257,7 +258,7 @@ NEXT_PUBLIC_BLOG_BEARER_TOKEN=your-blog-management-token-here
   <Card
     title="Infisical Setup"
     icon="shield-check"
-    href="/self-hosting/infisical-setup"
+    href="/configuration/infisical-setup"
   >
     Secure secret management
   </Card>
