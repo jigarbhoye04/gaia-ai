@@ -24,7 +24,7 @@ class State(DictLikeModel):
     query: str = ""
     messages: Annotated[List[AnyMessage], add_messages] = Field(default_factory=list)
     force_web_search: bool = False
-    force_deep_search: bool = False
+    force_deep_research: bool = False
     current_datetime: Optional[str] = None
     mem0_user_id: Optional[str] = None
     memories: List[str] = Field(default_factory=list)

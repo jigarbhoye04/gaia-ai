@@ -85,8 +85,7 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
     """
     Parse and extract structured tool output from an agent's JSON response chunk.
 
-     This function is responsible for detecting and extracting specific tool-related
-     intents and their data (e.g., calendar options, search results, weather data,
+     This function is responsible for detecting and extracting specific tool-related data (e.g., calendar options, search results, weather data,
      image generation outputs) from a JSON string sent during streaming.
 
      Returns:
@@ -102,36 +101,23 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         tool_data: Dict[str, Any] = {}
 
         # Extract calendar data
-        if (
-            "intent" in data
-            and data["intent"] == "calendar"
-            and "calendar_options" in data
-        ):
-            tool_data["intent"] = "calendar"
+        if "calendar_options" in data:
             tool_data["calendar_options"] = data["calendar_options"]
 
         # Extract search results
         elif "search_results" in data:
             tool_data["search_results"] = data["search_results"]
 
-        # Extract deep search results
-        elif "deep_search_results" in data:
-            tool_data["deep_search_results"] = data["deep_search_results"]
+        # Extract deep research results
+        elif "deep_research_results" in data:
+            tool_data["deep_research_results"] = data["deep_research_results"]
 
         # Extract weather data
-        elif (
-            "intent" in data and data["intent"] == "weather" and "weather_data" in data
-        ):
-            tool_data["intent"] = "weather"
+        elif "weather_data" in data:
             tool_data["weather_data"] = data["weather_data"]
 
         # Extract image generation data
-        elif (
-            "intent" in data
-            and data["intent"] == "generate_image"
-            and "image_data" in data
-        ):
-            tool_data["intent"] = "generate_image"
+        elif "image_data" in data:
             tool_data["image_data"] = data["image_data"]
 
         # Extract email compose data
@@ -236,7 +222,7 @@ def update_conversation_messages(
         response=user_content,
         date=datetime.now(timezone.utc).isoformat(),
         searchWeb=body.search_web,
-        deepSearchWeb=body.deep_search,
+        deepSearchWeb=body.deep_research,
         pageFetchURLs=body.pageFetchURLs,
         fileIds=body.fileIds,
         selectedTool=body.selectedTool,
@@ -249,7 +235,7 @@ def update_conversation_messages(
         response=complete_message,
         date=datetime.now(timezone.utc).isoformat(),
         searchWeb=body.search_web,
-        deepSearchWeb=body.deep_search,
+        deepSearchWeb=body.deep_research,
         pageFetchURLs=body.pageFetchURLs,
         fileIds=body.fileIds,
     )

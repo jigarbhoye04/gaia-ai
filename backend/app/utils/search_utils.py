@@ -276,7 +276,7 @@ async def fetch_with_playwright(
 
                     writer(
                         {
-                            "progress": f"Deep Search: Taking screenshot of page {url:20}..."
+                            "progress": f"Deep Research: Taking screenshot of page {url:20}..."
                         }
                     )
 

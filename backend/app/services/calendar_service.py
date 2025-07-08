@@ -642,8 +642,6 @@ async def search_calendar_events_native(
     Returns:
         dict: Search results with matching events
     """
-    if not time_min:
-        time_min = datetime.now(timezone.utc).isoformat()
 
     # Get user's selected calendars
     try:
@@ -669,16 +667,31 @@ async def search_calendar_events_native(
     preferences = await calendars_collection.find_one({"user_id": user_id})
     if preferences and preferences.get("selected_calendars"):
         user_selected_calendars = preferences["selected_calendars"]
+        logger.info(f"User has calendar preferences: {user_selected_calendars}")
     else:
         # Default to primary calendar if no preferences set
         primary_calendar = next((cal for cal in calendars if cal.get("primary")), None)
         if primary_calendar:
             user_selected_calendars = [primary_calendar["id"]]
+            logger.info(
+                f"No preferences found, defaulting to primary calendar: {primary_calendar['id']}"
+            )
+        else:
+            logger.warning("No primary calendar found")
 
     # Filter the calendars to only those that are selected
     selected_cal_objs = [
         cal for cal in calendars if cal["id"] in user_selected_calendars
     ]
+
+    logger.info(
+        f"Searching in {len(selected_cal_objs)} calendars: {[cal['summary'] for cal in selected_cal_objs]}"
+    )
+
+    # If no calendars are selected, search all available calendars
+    if not selected_cal_objs:
+        logger.info("No selected calendars found, searching all available calendars")
+        selected_cal_objs = calendars
 
     # Create tasks for searching events concurrently across selected calendars
     tasks = [
@@ -700,15 +713,64 @@ async def search_calendar_events_native(
         result_dict = cast(Dict[str, Any], result)
 
         events = result_dict.get("items", [])
+        logger.info(
+            f"Found {len(events)} events in calendar '{cal.get('summary', cal['id'])}'"
+        )
+
         for event in events:
             event["calendarId"] = cal["id"]
             event["calendarTitle"] = cal.get("summary", "")
 
         filtered_events = filter_events(events)
+        logger.info(
+            f"After filtering: {len(filtered_events)} events in calendar '{cal.get('summary', cal['id'])}'"
+        )
+
         all_matching_events.extend(filtered_events)
 
         # Add to total count for statistics
         total_events_searched += len(filtered_events)
+
+    logger.info(
+        f"Total matching events across all calendars: {len(all_matching_events)}"
+    )
+
+    # If no events found in selected calendars, try searching all calendars
+    if not all_matching_events and selected_cal_objs != calendars:
+        logger.info("No events found in selected calendars, searching all calendars...")
+
+        # Search all calendars
+        all_calendar_tasks = [
+            search_events_in_calendar(cal["id"], query, valid_token, time_min, time_max)
+            for cal in calendars
+        ]
+        all_calendar_results = await asyncio.gather(
+            *all_calendar_tasks, return_exceptions=True
+        )
+
+        # Process results from all calendars
+        for cal, result in zip(calendars, all_calendar_results):
+            if isinstance(result, Exception):
+                logger.error(
+                    f"Error searching events in calendar {cal['id']}: {result}"
+                )
+                continue
+
+            result_dict = cast(Dict[str, Any], result)
+            events = result_dict.get("items", [])
+
+            if events:
+                logger.info(
+                    f"Found {len(events)} events in calendar '{cal.get('summary', cal['id'])}'"
+                )
+
+                for event in events:
+                    event["calendarId"] = cal["id"]
+                    event["calendarTitle"] = cal.get("summary", "")
+
+                filtered_events = filter_events(events)
+                all_matching_events.extend(filtered_events)
+                total_events_searched += len(filtered_events)
 
     return {
         "query": query,
@@ -747,22 +809,34 @@ async def search_events_in_calendar(
         "maxResults": 50,
         "singleEvents": True,
         "orderBy": "startTime",
-        "timeMin": time_min,
     }
 
+    # Only add time filters if they are explicitly provided
+    if time_min:
+        params["timeMin"] = time_min
     if time_max:
         params["timeMax"] = time_max
 
     try:
+        logger.info(
+            f"Searching calendar {calendar_id} with query '{query}' and params: {params}"
+        )
         response = await http_async_client.get(url, headers=headers, params=params)
         if response.status_code == 200:
-            return response.json()
+            result = response.json()
+            event_count = len(result.get("items", []))
+            logger.info(f"Calendar {calendar_id} search returned {event_count} events")
+            return result
         else:
             error_detail = (
                 response.json().get("error", {}).get("message", "Unknown error")
             )
+            logger.error(
+                f"Calendar {calendar_id} search failed: {response.status_code} - {error_detail}"
+            )
             raise HTTPException(status_code=response.status_code, detail=error_detail)
     except httpx.RequestError as e:
+        logger.error(f"HTTP search request failed for calendar {calendar_id}: {e}")
         raise HTTPException(status_code=500, detail=f"HTTP search request failed: {e}")
 
 

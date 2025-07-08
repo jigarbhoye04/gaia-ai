@@ -1,11 +1,12 @@
 import math
 import uuid
+import json
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Dict, Any, List, Optional
 
 from bson import ObjectId
 from pymongo import ReturnDocument
-
+from app.db.rabbitmq import publisher
 from app.config.loggers import todos_logger
 from app.db.mongodb.collections import projects_collection, todos_collection
 from app.db.redis import (
@@ -34,6 +35,7 @@ from app.models.todo_models import (
     TodoStats,
     UpdateProjectRequest,
     UpdateTodoRequest,
+    WorkflowStatus,
 )
 from app.utils.todo_vector_utils import (
     bulk_index_todos,
@@ -165,6 +167,19 @@ class TodoService:
         return query
 
     @staticmethod
+    async def _generate_workflow_for_todo(
+        todo_title: str, todo_description: str = None
+    ) -> Dict[str, Any]:
+        """Generate a workflow plan for a TODO item using structured LLM output."""
+        try:
+            from app.langchain.tools.workflow_tool import generate_workflow_for_todo
+
+            return await generate_workflow_for_todo(todo_title, todo_description)
+        except Exception as e:
+            todos_logger.error(f"Error generating workflow for TODO: {str(e)}")
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
     async def _calculate_stats(user_id: str) -> TodoStats:
         """Calculate todo statistics for a user."""
         cache_key = f"stats:{user_id}"
@@ -261,11 +276,33 @@ class TodoService:
                 "updated_at": datetime.now(timezone.utc),
                 "completed": False,
                 "subtasks": [],
+                "workflow_status": WorkflowStatus.GENERATING,  # Start generating immediately
             }
         )
 
         result = await todos_collection.insert_one(todo_dict)
         created_todo = await todos_collection.find_one({"_id": result.inserted_id})
+
+        # Publish workflow generation task to background queue
+
+        try:
+            await publisher.connect()
+            workflow_task_data = {
+                "todo_id": str(result.inserted_id),
+                "user_id": user_id,
+                "title": todo.title,
+                "description": todo.description,
+            }
+            await publisher.publish(
+                "workflow-generation", json.dumps(workflow_task_data).encode()
+            )
+            todos_logger.info(
+                f"Queued workflow generation for todo '{todo.title}' (ID: {result.inserted_id})"
+            )
+        except Exception as e:
+            todos_logger.warning(
+                f"Failed to queue workflow generation for todo '{todo.title}': {str(e)}"
+            )
 
         # Index for search
         try:
@@ -277,7 +314,9 @@ class TodoService:
             user_id, todo.project_id, str(result.inserted_id), "create"
         )
 
-        return TodoResponse(**serialize_document(created_todo))
+        # Return todo response without workflow (will be generated in background)
+        todo_response_data = serialize_document(created_todo)
+        return TodoResponse(**todo_response_data)
 
     @classmethod
     async def get_todo(cls, todo_id: str, user_id: str) -> TodoResponse:
@@ -412,14 +451,11 @@ class TodoService:
         try:
             await update_todo_embedding(todo_id, updated, user_id)
         except Exception as e:
-            todos_logger.warning(f"Failed to update index: {str(e)}")
-
-        # Sync subtask changes back to goals if this is a goal-related todo
+            todos_logger.warning(
+                f"Failed to update index: {str(e)}"
+            )  # Sync subtask changes back to goals if this is a goal-related todo
         if "subtasks" in update_dict:
             try:
-                # Import here to avoid circular import
-                from app.services.goals_service import sync_subtask_to_goal_completion
-
                 # Compare old vs new subtasks to find what changed
                 for new_subtask_dict in update_dict["subtasks"]:
                     new_subtask_id = new_subtask_dict.get("id")
@@ -431,6 +467,10 @@ class TodoService:
                     )
                     if old_subtask and old_subtask["completed"] != new_completed:
                         # Subtask completion status changed, sync to goal
+                        from app.services.sync_service import (
+                            sync_subtask_to_goal_completion,
+                        )
+
                         await sync_subtask_to_goal_completion(
                             todo_id, new_subtask_id, new_completed, user_id
                         )
@@ -481,7 +521,7 @@ class TodoService:
 
         # Remove from search index
         try:
-            await delete_todo_embedding(todo_id, user_id)
+            await delete_todo_embedding(todo_id)
         except Exception as e:
             todos_logger.warning(f"Failed to remove from index: {str(e)}")
 
@@ -819,7 +859,6 @@ async def get_all_todos(
     limit=50,
 ) -> List[TodoResponse]:
     """Compatibility wrapper for old get_all_todos function."""
-    from app.models.todo_models import Priority
 
     params = TodoSearchParams(
         mode=SearchMode.TEXT,

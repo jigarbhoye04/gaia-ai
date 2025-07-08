@@ -1,22 +1,21 @@
 FROM node:24-alpine
 
-# Create app directory
 WORKDIR /app
 
-# Install global pnpm (not required if using corepack)
+# Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy only required files for install step
+# Copy only the lockfile and manifest for caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies (will be cached unless package.json changes)
+# Install dependencies before bind-mounting
 RUN pnpm install
 
-# Copy the rest of the app (src, public, etc.)
+# Copy rest of the files (in case you run standalone)
 COPY . .
 
-# Expose port
+# Expose dev port
 EXPOSE 3000
 
-# Start dev server (hot reload)
-CMD ["pnpm", "dev"]
+# Default command
+CMD ["sh", "-c", "pnpm install && pnpm dev"]

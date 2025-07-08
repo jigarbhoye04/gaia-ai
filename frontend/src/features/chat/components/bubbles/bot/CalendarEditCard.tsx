@@ -1,5 +1,5 @@
 import { Button } from "@heroui/button";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { PencilEdit02Icon, Tick02Icon } from "@/components/shared/icons";
@@ -132,117 +132,109 @@ export function CalendarEditCard({ editOption }: CalendarEditCardProps) {
 
   return (
     <MotionContainer>
-      <div className="w-full max-w-sm rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-800 dark:bg-blue-950/20">
-        <div className="space-y-3">
-          {/* Header */}
-          <div className="flex items-start space-x-2">
-            <PencilEdit02Icon className="mt-1 h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <div className="flex-1">
-              <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Update Event
-              </h4>
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                Found event matching: "{editOption.original_query}"
-              </p>
-            </div>
-          </div>
-
-          {/* Original Event Details */}
-          <div className="space-y-2 rounded border border-blue-200 bg-white p-3 dark:border-blue-800 dark:bg-blue-950/30">
-            <div className="space-y-1">
-              <h5 className="text-xs font-medium tracking-wide text-blue-700 uppercase dark:text-blue-300">
-                Original Event
-              </h5>
-              <h3 className="font-medium text-blue-900 dark:text-blue-100">
-                {editOption.original_summary}
-              </h3>
-
-              {editOption.original_description && (
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  {editOption.original_description}
-                </p>
-              )}
-
-              <p className="text-sm text-blue-600 dark:text-blue-400">
-                {formatDate(editOption.original_start, editOption.original_end)}
-              </p>
+      <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-900 p-2">
+        <div className="relative flex w-full flex-row gap-3 rounded-xl rounded-l-none bg-primary/20 p-3 pt-1 pr-1">
+          <div className="absolute inset-0 w-1 rounded-full bg-primary" />
+          <div className="flex flex-1 flex-col pl-1">
+            <div className="flex w-full items-center justify-between">
+              <div className="font-medium">
+                {editOption.summary || editOption.original_summary}
+              </div>
             </div>
 
-            {/* Changes */}
-            {hasChanges && (
-              <div className="mt-3 border-t border-blue-200 pt-2 dark:border-blue-800">
-                <h5 className="text-xs font-medium tracking-wide text-blue-700 uppercase dark:text-blue-300">
-                  Proposed Changes
-                </h5>
-                <div className="mt-1 space-y-1">
-                  {editOption.summary !== undefined && (
-                    <p className="text-sm">
-                      <span className="font-medium text-blue-800 dark:text-blue-200">
-                        Title:
-                      </span>{" "}
-                      <span className="text-blue-900 dark:text-blue-100">
-                        {editOption.summary}
-                      </span>
-                    </p>
-                  )}
-                  {editOption.description !== undefined && (
-                    <p className="text-sm">
-                      <span className="font-medium text-blue-800 dark:text-blue-200">
-                        Description:
-                      </span>{" "}
-                      <span className="text-blue-900 dark:text-blue-100">
-                        {editOption.description}
-                      </span>
-                    </p>
-                  )}
-                  {(editOption.start !== undefined ||
-                    editOption.end !== undefined) && (
-                    <p className="text-sm">
-                      <span className="font-medium text-blue-800 dark:text-blue-200">
-                        Time:
-                      </span>{" "}
-                      <span className="text-blue-900 dark:text-blue-100">
-                        {editOption.start &&
-                          formatSimpleDateTime(editOption.start)}
-                        {editOption.start && editOption.end && " - "}
-                        {editOption.end &&
-                          !editOption.start &&
-                          formatSimpleDateTime(editOption.end)}
-                      </span>
-                    </p>
-                  )}
-                  {editOption.is_all_day !== undefined && (
-                    <p className="text-sm">
-                      <span className="font-medium text-blue-800 dark:text-blue-200">
-                        All-day:
-                      </span>{" "}
-                      <span className="text-blue-900 dark:text-blue-100">
-                        {editOption.is_all_day ? "Yes" : "No"}
-                      </span>
-                    </p>
+            {/* Original Event Details */}
+            <div className="mt-1 text-xs text-primary">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-md bg-primary/20 px-2 py-1 text-xs font-medium text-primary">
+                    Update Event
+                  </span>
+                </div>
+
+                <div className="font-medium">
+                  Original: {editOption.original_summary}
+                </div>
+
+                {editOption.original_description && (
+                  <div className="text-xs opacity-70">
+                    {editOption.original_description}
+                  </div>
+                )}
+
+                <div className="text-xs opacity-70">
+                  {formatDate(
+                    editOption.original_start,
+                    editOption.original_end,
                   )}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Action Button */}
-          <Button
-            className="w-full"
-            color="primary"
-            variant="flat"
-            isDisabled={status === "updated"}
-            isLoading={status === "loading"}
-            onPress={handleUpdateEvent}
-          >
-            {status === "updated" ? (
-              <Tick02Icon width={22} />
-            ) : (
-              <PencilEdit02Icon width={22} />
-            )}
-            {status === "updated" ? "Updated" : "Update Event"}
-          </Button>
+              {/* Changes */}
+              {hasChanges && (
+                <div className="mt-2 border-t border-primary/20 pt-2">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-primary">
+                      Proposed Changes:
+                    </div>
+                    {editOption.summary !== undefined && (
+                      <div className="flex items-center text-xs">
+                        <span className="w-16 min-w-16 font-medium">
+                          Title:
+                        </span>
+                        <span className="ml-1">{editOption.summary}</span>
+                      </div>
+                    )}
+                    {editOption.description !== undefined && (
+                      <div className="flex items-start text-xs">
+                        <span className="w-16 min-w-16 font-medium">Desc:</span>
+                        <span className="ml-1">{editOption.description}</span>
+                      </div>
+                    )}
+                    {(editOption.start !== undefined ||
+                      editOption.end !== undefined) && (
+                      <div className="flex items-start text-xs">
+                        <span className="w-16 min-w-16 font-medium">Time:</span>
+                        <span className="ml-1">
+                          {editOption.start &&
+                            formatSimpleDateTime(editOption.start)}
+                          {editOption.start && editOption.end && " - "}
+                          {editOption.end &&
+                            !editOption.start &&
+                            formatSimpleDateTime(editOption.end)}
+                        </span>
+                      </div>
+                    )}
+                    {editOption.is_all_day !== undefined && (
+                      <div className="flex items-center text-xs">
+                        <span className="w-16 min-w-16 font-medium">
+                          All-day:
+                        </span>
+                        <span className="ml-1">
+                          {editOption.is_all_day ? "Yes" : "No"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        <Button
+          className="w-full"
+          variant="flat"
+          isDisabled={status === "updated"}
+          isLoading={status === "loading"}
+          onPress={handleUpdateEvent}
+        >
+          {status === "updated" ? (
+            <Tick02Icon width={22} />
+          ) : (
+            <PencilEdit02Icon width={22} />
+          )}
+          {status === "updated" ? "Updated" : "Update Event"}
+        </Button>
       </div>
     </MotionContainer>
   );

@@ -1,5 +1,5 @@
 import { Button } from "@heroui/button";
-import { useCallback, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import { Cancel01Icon, Tick02Icon } from "@/components/shared/icons";
@@ -81,55 +81,50 @@ export function CalendarDeleteCard({ deleteOption }: CalendarDeleteCardProps) {
 
   return (
     <MotionContainer>
-      <div className="w-full max-w-sm rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm dark:border-red-800 dark:bg-red-950/20">
-        <div className="space-y-3">
-          {/* Header */}
-          <div className="flex items-start space-x-2">
-            <Cancel01Icon className="mt-1 h-4 w-4 text-red-600 dark:text-red-400" />
-            <div className="flex-1">
-              <h4 className="text-sm font-medium text-red-900 dark:text-red-100">
-                Delete Event
-              </h4>
-              <p className="text-xs text-red-700 dark:text-red-300">
-                Found event matching: "{deleteOption.original_query}"
-              </p>
+      <div className="mt-1 flex flex-col gap-2 rounded-xl bg-zinc-900 p-2">
+        <div className="relative flex w-full flex-row gap-3 rounded-xl rounded-l-none bg-red-500/20 p-3 pt-1 pr-1">
+          <div className="absolute inset-0 w-1 rounded-full bg-red-500" />
+          <div className="flex flex-1 flex-col pl-1">
+            <div className="flex w-full items-center justify-between">
+              <div className="font-medium">{deleteOption.summary}</div>
+            </div>
+            <div className="mt-1 text-xs text-red-500">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-md bg-red-500/20 px-2 py-1 text-xs font-medium text-red-500">
+                    Delete Event
+                  </span>
+                </div>
+
+                {deleteOption.description && (
+                  <div className="text-xs opacity-70">
+                    {deleteOption.description}
+                  </div>
+                )}
+
+                <div className="text-xs opacity-70">
+                  {formatDate(deleteOption.start, deleteOption.end)}
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Event Details */}
-          <div className="space-y-2 rounded border border-red-200 bg-white p-3 dark:border-red-800 dark:bg-red-950/30">
-            <h3 className="font-semibold text-red-900 dark:text-red-100">
-              {deleteOption.summary}
-            </h3>
-
-            {deleteOption.description && (
-              <p className="text-sm text-red-700 dark:text-red-300">
-                {deleteOption.description}
-              </p>
-            )}
-
-            <p className="text-sm text-red-600 dark:text-red-400">
-              {formatDate(deleteOption.start, deleteOption.end)}
-            </p>
-          </div>
-
-          {/* Action Button */}
-          <Button
-            className="w-full"
-            color="danger"
-            variant="flat"
-            isDisabled={status === "deleted"}
-            isLoading={status === "loading"}
-            onPress={handleDeleteEvent}
-          >
-            {status === "deleted" ? (
-              <Tick02Icon width={22} />
-            ) : (
-              <Cancel01Icon width={22} />
-            )}
-            {status === "deleted" ? "Deleted" : "Delete Event"}
-          </Button>
         </div>
+
+        <Button
+          className="w-full"
+          color="danger"
+          variant="flat"
+          isDisabled={status === "deleted"}
+          isLoading={status === "loading"}
+          onPress={handleDeleteEvent}
+        >
+          {status === "deleted" ? (
+            <Tick02Icon width={22} />
+          ) : (
+            <Cancel01Icon width={22} />
+          )}
+          {status === "deleted" ? "Deleted" : "Delete Event"}
+        </Button>
       </div>
     </MotionContainer>
   );

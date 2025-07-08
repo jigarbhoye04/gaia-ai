@@ -32,7 +32,9 @@ export default function SignupForm() {
         </div>
         <Button
           className={`text-md gap-2 rounded-full px-4 ${
-            loading ? "bg-zinc-800 text-primary hover:bg-zinc-800" : "bg-white"
+            loading
+              ? "bg-zinc-800 text-primary hover:bg-zinc-800"
+              : "bg-white hover:bg-white/20 hover:text-white"
           }`}
           size="lg"
           type="button"

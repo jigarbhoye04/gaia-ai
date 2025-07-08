@@ -7,14 +7,23 @@ import {
 } from "@/redux/slices/loadingTextSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 
+interface ToolInfo {
+  toolName?: string;
+  toolCategory?: string;
+}
+
 export const useLoadingText = () => {
   const dispatch: AppDispatch = useDispatch();
-  const loadingText = useSelector(
-    (state: RootState) => state.loadingText.loadingText,
+  const { loadingText, toolInfo } = useSelector(
+    (state: RootState) => state.loadingText,
   );
 
-  const updateLoadingText = (text: string) => {
-    dispatch(setLoadingText(text));
+  const updateLoadingText = (text: string, toolInfo?: ToolInfo) => {
+    if (toolInfo) {
+      dispatch(setLoadingText({ text, toolInfo }));
+    } else {
+      dispatch(setLoadingText(text));
+    }
   };
 
   const resetText = () => {
@@ -23,6 +32,7 @@ export const useLoadingText = () => {
 
   return {
     loadingText,
+    toolInfo,
     setLoadingText: updateLoadingText,
     resetLoadingText: resetText,
   };

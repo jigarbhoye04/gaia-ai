@@ -21,6 +21,16 @@ class NotificationStatus(str, Enum):
     ARCHIVED = "archived"
 
 
+class NotificationSourceEnum(str, Enum):
+    AI_EMAIL_DRAFT = "ai_email_draft"
+    AI_CALENDAR_EVENT = "ai_calendar_event"
+    AI_TODO_SUGGESTION = "ai_todo_suggestion"
+    AI_REMINDER = "ai_reminder"
+    AI_TODO_ADDED = "ai_todo_added"
+    EMAIL_TRIGGER = "email_trigger"
+    BACKGROUND_JOB = "background_job"
+
+
 class ActionType(str, Enum):
     REDIRECT = "redirect"
     API_CALL = "api_call"
@@ -123,7 +133,7 @@ class NotificationRules(BaseModel):
 class NotificationRequest(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
-    source: str  # 'ai-proactive', 'email-trigger', 'background-job'
+    source: NotificationSourceEnum
     type: NotificationType = NotificationType.INFO
     priority: int = Field(default=3, ge=1, le=5)  # 1 highest
     channels: List[ChannelConfig]
@@ -206,7 +216,9 @@ class UserNotificationPreferences(BaseModel):
     max_notifications_per_hour: int = 50
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    def is_channel_enabled(self, source: str, channel_type: str) -> bool:
+    def is_channel_enabled(
+        self, source: NotificationSourceEnum, channel_type: str
+    ) -> bool:
         """Check if a channel is enabled for a source"""
         return bool(self.channel_preferences.get(source, {}).get(channel_type, True))
 

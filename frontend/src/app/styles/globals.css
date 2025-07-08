@@ -124,16 +124,6 @@
   width: 100vw;
   z-index: 1000;
 }
-.navbar_content {
-  -webkit-backdrop-filter: blur(15px);
-  align-items: center;
-  backdrop-filter: blur(15px);
-  display: flex;
-  height: 45px;
-  justify-content: space-between;
-  margin: 10px;
-  padding: 0 3px;
-}
 .orbiting_circles_inner {
   height: 40px;
   width: 40px;

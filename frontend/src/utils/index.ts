@@ -3,8 +3,8 @@
  */
 
 export * from "./currency";
+export * from "./dateUtils";
+export * from "./seoUtils";
 export * from "./date/calendarDateUtils";
 export * from "./date/dateUtils";
-export * from "./dateUtils";
 export * from "./greeting/greetingUtils";
-export * from "./seoUtils";

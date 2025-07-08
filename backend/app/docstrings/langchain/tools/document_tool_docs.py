@@ -23,7 +23,7 @@ FORMATTED DOCUMENTS (is_plain_text=False):
 
 ✅ Use LaTeX (inside Markdown) when output format is `pdf` and you need:
 
-1. **Page Breaks**
+1. **Page Breaks**  
 ```latex
 \newpage
 ````

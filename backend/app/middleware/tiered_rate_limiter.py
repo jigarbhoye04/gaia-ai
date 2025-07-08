@@ -226,9 +226,11 @@ class TieredRateLimiter:
                 # Create and save comprehensive usage snapshot
                 snapshot = UserUsageSnapshot(
                     user_id=user_id,
-                    plan_type=user_plan.value
-                    if hasattr(user_plan, "value")
-                    else str(user_plan),
+                    plan_type=(
+                        user_plan.value
+                        if hasattr(user_plan, "value")
+                        else str(user_plan)
+                    ),
                     features=all_feature_usage,
                 )
 

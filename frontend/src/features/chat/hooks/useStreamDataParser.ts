@@ -100,9 +100,6 @@ export function parseStreamData(
 
   // Only include fields that are explicitly present in the stream chunk
   // This prevents overwriting existing data with undefined/null values
-  if (streamChunk.intent !== undefined) {
-    result.intent = streamChunk.intent;
-  }
 
   if (streamChunk.calendar_options !== undefined) {
     result.calendar_options = streamChunk.calendar_options;
@@ -128,8 +125,8 @@ export function parseStreamData(
     result.search_results = streamChunk.search_results;
   }
 
-  if (streamChunk.deep_search_results !== undefined) {
-    result.deep_search_results = streamChunk.deep_search_results;
+  if (streamChunk.deep_research_results !== undefined) {
+    result.deep_research_results = streamChunk.deep_research_results;
   }
 
   if (streamChunk.image_data !== undefined) {

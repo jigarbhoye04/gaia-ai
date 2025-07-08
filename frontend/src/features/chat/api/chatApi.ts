@@ -193,7 +193,7 @@ export const chatApi = {
           conversation_id: conversationId,
           message: inputText,
           search_web: enableSearch || false,
-          deep_search: enableDeepSearch || false,
+          deep_research: enableDeepSearch || false,
           pageFetchURLs,
           fileIds, // For backward compatibility
           fileData, // Send complete file data

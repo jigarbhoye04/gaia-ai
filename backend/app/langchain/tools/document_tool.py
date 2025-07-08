@@ -1,5 +1,5 @@
 import os
-from typing import Annotated, Any, Dict, Optional
+from typing import Annotated, Any, Dict, Optional, Literal, TypedDict
 from uuid import uuid4
 
 import pypandoc
@@ -14,10 +14,23 @@ from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.services.upload_service import upload_file_to_cloudinary
 
 
+# Simplified PDF configuration
+class PDFConfig(TypedDict, total=False):
+    """Simplified PDF configuration with commonly used options."""
+
+    margins: str  # e.g., "0.5in", "1cm"
+    font_family: str  # e.g., "Times New Roman", "Arial"
+    line_spacing: float  # e.g., 1.0, 1.5, 2.0
+    paper_size: Literal["letter", "a4"]
+    document_class: Literal["article", "report"]
+    table_of_contents: bool
+    number_sections: bool
+
+
 @tool
 @with_rate_limiting("document_generation")
 @with_doc(GENERATE_DOCUMENT)
-def generate_document(
+async def generate_document(
     config: RunnableConfig,
     content: Annotated[
         str,
@@ -40,6 +53,23 @@ def generate_document(
         Optional[Dict[str, Any]],
         "Additional metadata - ONLY used when is_plain_text=False",
     ] = None,
+    font_size: Annotated[
+        Optional[int],
+        "Font size in points (e.g., 12, 14, 50) - ONLY used for PDF generation",
+    ] = None,
+    pdf_config: Annotated[
+        Optional[PDFConfig],
+        """Simple PDF configuration options - ONLY used for PDF generation. Supports:
+        - margins: str (e.g., '0.5in', '1cm') - page margins
+        - font_family: str (e.g., 'Times New Roman', 'Arial') - main font
+        - line_spacing: float (e.g., 1.0, 1.5, 2.0) - line spacing multiplier
+        - paper_size: 'letter' or 'a4' - paper size
+        - document_class: 'article' or 'report' - document type
+        - table_of_contents: bool - include table of contents
+        - number_sections: bool - number sections and subsections
+        Note: Colored links are always enabled for better PDF readability.
+        """,
+    ] = None,
 ) -> str:
     output_filename = f"{filename}.{format}"
     temp_path = f"/tmp/{output_filename}"
@@ -61,15 +91,69 @@ def generate_document(
                     extra_args.extend(["-M", f"{key}={value}"])
 
             if format == "pdf":
-                extra_args.extend(["--pdf-engine=xelatex"])
+                # Determine font size - use parameter if provided, otherwise default to 14pt
+                pdf_font_size = font_size if font_size else 14
 
-            pypandoc.convert_text(
-                source=content,
-                to=format,
-                format="md",
-                outputfile=temp_path,
-                extra_args=extra_args,
-            )
+                # Base PDF configuration
+                extra_args.extend(
+                    [
+                        "--pdf-engine=xelatex",
+                        "-V",
+                        f"fontsize={pdf_font_size}pt",
+                        "-V",
+                        "colorlinks=true",
+                        "-V",
+                        "linkcolor=blue",
+                        "-V",
+                        "urlcolor=blue",
+                        "-V",
+                        "citecolor=green",
+                    ]
+                )
+
+                # Configuration mapping
+                pdf_config_mapping = {
+                    "margins": "geometry:margin",
+                    "font_family": "mainfont",
+                    "line_spacing": "linestretch",
+                    "paper_size": "papersize",
+                    "document_class": "documentclass",
+                }
+
+                # Boolean configuration mapping
+                pdf_bool_mapping = {
+                    "table_of_contents": "toc=true",
+                    "number_sections": "numbersections=true",
+                }
+
+                # Apply pdf_config if provided
+                if pdf_config:
+                    # Handle string/numeric configurations
+                    for config_key, pandoc_key in pdf_config_mapping.items():
+                        if config_key in pdf_config:
+                            extra_args.extend(
+                                ["-V", f"{pandoc_key}={pdf_config[config_key]}"]
+                            )
+
+                    # Handle boolean configurations
+                    for config_key, pandoc_value in pdf_bool_mapping.items():
+                        if pdf_config.get(config_key, False):
+                            extra_args.extend(["-V", pandoc_value])
+
+                    # Always set default margins if not specified
+                    if "margins" not in pdf_config:
+                        extra_args.extend(["-V", "geometry:margin=0.5in"])
+                else:
+                    # Default configuration if no pdf_config provided
+                    extra_args.extend(["-V", "geometry:margin=0.5in"])
+
+        pypandoc.convert_text(
+            source=content,
+            to=format,
+            format="md",
+            outputfile=temp_path,
+            extra_args=extra_args,
+        )
 
         cloudinary_url = upload_file_to_cloudinary(
             file_path=temp_path, public_id=f"{uuid4()}_{output_filename}"
@@ -87,15 +171,16 @@ def generate_document(
                     "is_plain_text": is_plain_text,
                     "title": title,
                     "metadata": metadata,
+                    "font_size": font_size,
+                    "pdf_config": pdf_config,
                 },
-                "intent": "document",
             }
         )
 
         logger.info("Document generated and uploaded successfully")
         logger.info(f"Document URL: {cloudinary_url}")
 
-        return f"Generated {output_filename}. It will be available at to users on the frontend. Do not say anything related to the generated document in the response. It's visible to users on the frontend."
+        return f"SUCCESS: Document '{output_filename}' has been generated and uploaded. The file is now available to the user through the frontend interface."
 
     except Exception as e:
         logger.error(f"Error generating document: {str(e)}")

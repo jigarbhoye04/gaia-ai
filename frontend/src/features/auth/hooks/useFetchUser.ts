@@ -50,20 +50,7 @@ const useFetchUser = () => {
   }, [searchParams, setUser, clearUser, router]);
 
   useEffect(() => {
-    // Debounce the fetch to prevent excessive calls
-    if (fetchTimeoutRef.current) {
-      clearTimeout(fetchTimeoutRef.current);
-    }
-
-    fetchTimeoutRef.current = setTimeout(() => {
-      fetchUserInfo();
-    }, 100);
-
-    return () => {
-      if (fetchTimeoutRef.current) {
-        clearTimeout(fetchTimeoutRef.current);
-      }
-    };
+    fetchUserInfo();
   }, [fetchUserInfo]);
 
   return { fetchUserInfo };

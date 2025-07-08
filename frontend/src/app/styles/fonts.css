@@ -1,6 +1,6 @@
 /* Font Utilities */
 
-/*
+/* 
   Font Family Utility Classes
   - Use these classes to quickly switch between font families
   - Example: <div className="font-sf"> or <div className="font-switzer">
@@ -27,7 +27,7 @@
   font-family: var(--font-creato), system-ui, sans-serif;
 }
 
-/*
+/* 
   Font Weight Specific Classes
   - These can be useful for specific styling needs
 */

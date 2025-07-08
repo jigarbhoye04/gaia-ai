@@ -11,7 +11,7 @@ from langgraph.config import get_stream_writer
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.calendar_tool_docs import (
     CALENDAR_EVENT,
-    DELETE_CALENDAR_EVENT,
+    # DELETE_CALENDAR_EVENT,
     EDIT_CALENDAR_EVENT,
     FETCH_CALENDAR_EVENTS,
     FETCH_CALENDAR_LIST,
@@ -87,7 +87,6 @@ async def create_calendar_event(
                 return json.dumps(
                     {
                         "error": f"Invalid event data format: {e}",
-                        "intent": "calendar",
                         "calendar_options": [],
                         "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                     }
@@ -98,7 +97,6 @@ async def create_calendar_event(
             return json.dumps(
                 {
                     "error": "Calendar event data must be an EventCreateRequest object, dict, or list of such objects",
-                    "intent": "calendar",
                     "calendar_options": [],
                     "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
@@ -110,7 +108,6 @@ async def create_calendar_event(
             return json.dumps(
                 {
                     "error": "At least one calendar event must be provided",
-                    "intent": "calendar",
                     "calendar_options": [],
                     "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
@@ -171,7 +168,6 @@ async def create_calendar_event(
                 {
                     "error": "Calendar event validation failed",
                     "details": validation_errors,
-                    "intent": "calendar",
                     "calendar_options": [],
                     "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
@@ -183,7 +179,6 @@ async def create_calendar_event(
             return json.dumps(
                 {
                     "error": "Configuration data is missing",
-                    "intent": "calendar",
                     "calendar_options": [],
                     "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                 }
@@ -197,7 +192,6 @@ async def create_calendar_event(
                 return json.dumps(
                     {
                         "error": "User ID is required to create calendar notification",
-                        "intent": "calendar",
                         "calendar_options": [],
                         "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
                     }
@@ -234,7 +228,6 @@ async def create_calendar_event(
             {
                 "error": "Unable to process calendar event",
                 "details": str(e),
-                "intent": "calendar",
                 "calendar_options": [],
                 "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
             }
@@ -256,10 +249,6 @@ async def fetch_calendar_list(
         if not access_token:
             logger.error("Missing access token in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
-
-        # Send progress update
-        writer = get_stream_writer()
-        writer({"progress": "Fetching your calendars..."})
 
         calendars = await list_calendars(access_token=access_token, short=True)
         if calendars is None:
@@ -301,10 +290,6 @@ async def fetch_calendar_events(
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
         logger.info(f"Fetching calendar events for user {user_id}")
-
-        # Send progress update
-        writer = get_stream_writer()
-        writer({"progress": "Fetching your calendar events..."})
 
         events_data = await get_calendar_events(
             user_id=user_id,
@@ -378,7 +363,6 @@ async def search_calendar_events(
         writer(
             {
                 "calendar_data": {"calendar_search_results": search_results},
-                "intent": "search_calendar_events",
             }
         )
 
@@ -407,10 +391,6 @@ async def view_calendar_event(
         if not access_token:
             logger.error("Missing access token in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
-
-        # Send progress update
-        writer = get_stream_writer()
-        writer({"progress": "Fetching event details..."})
 
         # Fetch specific event using Google Calendar API
         url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events/{event_id}"
@@ -443,80 +423,77 @@ async def view_calendar_event(
         return error_msg
 
 
-@tool(parse_docstring=True)
-@with_rate_limiting("calendar_management")
-@with_doc(DELETE_CALENDAR_EVENT)
-async def delete_calendar_event(
-    query: str,
-    user_id: str,
-    config: RunnableConfig,
-) -> str:
-    try:
-        logger.info("===== DELETE CALENDAR EVENT TOOL CALLED =====")
-        logger.info(f"Searching for event to delete with query: {query}")
+# @tool(parse_docstring=True)
+# @with_rate_limiting("calendar_management")
+# @with_doc(DELETE_CALENDAR_EVENT)
+# async def delete_calendar_event(
+#     query: str,
+#     user_id: str,
+#     config: RunnableConfig,
+# ) -> str:
+#     try:
+#         logger.info("===== DELETE CALENDAR EVENT TOOL CALLED =====")
+#         logger.info(f"Searching for event to delete with query: {query}")
 
-        if not config:
-            logger.error("Missing configuration data")
-            return "Unable to access calendar configuration. Please try again."
+#         if not config:
+#             logger.error("Missing configuration data")
+#             return "Unable to access calendar configuration. Please try again."
 
-        access_token = config.get("configurable", {}).get("access_token")
-        refresh_token = config.get("configurable", {}).get("refresh_token")
+#         access_token = config.get("configurable", {}).get("access_token")
+#         refresh_token = config.get("configurable", {}).get("refresh_token")
 
-        if not access_token:
-            logger.error("Missing access token in config")
-            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+#         if not access_token:
+#             logger.error("Missing access token in config")
+#             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
-        # Send progress update
-        writer = get_stream_writer()
-        writer({"progress": f"Searching for event '{query}' to delete..."})
+#         # Send progress update
+#         writer = get_stream_writer()
+#         writer({"progress": f"Searching for event '{query}' to delete..."})
 
-        # Search for events matching the query
-        search_results = await search_calendar_events_native(
-            query=query,
-            user_id=user_id,
-            access_token=access_token,
-            refresh_token=refresh_token,
-        )
+#         # Search for events matching the query
+#         search_results = await search_calendar_events_native(
+#             query=query,
+#             user_id=user_id,
+#             access_token=access_token,
+#             refresh_token=refresh_token,
+#         )
 
-        matching_events = search_results.get("matching_events", [])
+#         matching_events = search_results.get("matching_events", [])
 
-        if not matching_events:
-            logger.info(f"No events found matching query: {query}")
-            return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
+#         if not matching_events:
+#             logger.info(f"No events found matching query: {query}")
+#             return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
 
-        # For simplicity, take the first (most relevant) match
-        # In production, you might want to implement more sophisticated matching
-        target_event = matching_events[0]
+#         # For simplicity, take the first (most relevant) match
+#         # In production, you might want to implement more sophisticated matching
+#         target_event = matching_events[0]
 
-        logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
+#         logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
 
-        # Prepare deletion confirmation data
-        delete_option = {
-            "action": "delete",
-            "event_id": target_event.get("id"),
-            "calendar_id": target_event.get("calendarId", "primary"),
-            "summary": target_event.get("summary", ""),
-            "description": target_event.get("description", ""),
-            "start": target_event.get("start", {}),
-            "end": target_event.get("end", {}),
-            "original_query": query,
-        }
+#         # Prepare deletion confirmation data
+#         delete_option = {
+#             "action": "delete",
+#             "event_id": target_event.get("id"),
+#             "calendar_id": target_event.get("calendarId", "primary"),
+#             "summary": target_event.get("summary", ""),
+#             "description": target_event.get("description", ""),
+#             "start": target_event.get("start", {}),
+#             "end": target_event.get("end", {}),
+#             "original_query": query,
+#         }
 
-        # Send deletion options to frontend via writer
-        writer(
-            {
-                "calendar_delete_options": [delete_option],
-                "intent": "delete_calendar_event",
-            }
-        )
+#         # Send deletion options to frontend via writer
+#         writer({
+#             "calendar_delete_options": [delete_option],
+#         })
 
-        logger.info("Calendar event deletion options sent to frontend")
-        return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Please confirm the deletion."
+#         logger.info("Calendar event deletion options sent to frontend")
+#         return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Please confirm the deletion."
 
-    except Exception as e:
-        error_msg = f"Error searching for calendar event to delete: {str(e)}"
-        logger.error(error_msg)
-        return error_msg
+#     except Exception as e:
+#         error_msg = f"Error searching for calendar event to delete: {str(e)}"
+#         logger.error(error_msg)
+#         return error_msg
 
 
 @tool(parse_docstring=True)
@@ -599,7 +576,9 @@ async def edit_calendar_event(
 
         # Send edit options to frontend via writer
         writer(
-            {"calendar_edit_options": [edit_option], "intent": "edit_calendar_event"}
+            {
+                "calendar_edit_options": [edit_option],
+            }
         )
 
         logger.info("Calendar event edit options sent to frontend")
@@ -627,7 +606,7 @@ async def edit_calendar_event(
 tools = [
     fetch_calendar_list,
     create_calendar_event,
-    delete_calendar_event,
+    # delete_calendar_event,
     edit_calendar_event,
     fetch_calendar_events,
     search_calendar_events,

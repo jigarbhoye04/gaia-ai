@@ -10,11 +10,11 @@ from langgraph.config import get_stream_writer
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.search_tool_docs import (
     WEB_SEARCH_TOOL,
-    DEEP_SEARCH_TOOL,
+    DEEP_RESEARCH_TOOL,
 )
 from app.docstrings.utils import with_doc
 from app.middleware.langchain_rate_limiter import with_rate_limiting
-from app.utils.internet_utils import perform_deep_search
+from app.utils.internet_utils import perform_deep_research
 from app.utils.search_utils import format_results_for_llm, perform_search
 
 
@@ -109,8 +109,8 @@ async def web_search_tool(
 
 @tool
 @with_rate_limiting("deep_research")
-@with_doc(DEEP_SEARCH_TOOL)
-async def deep_search_tool(
+@with_doc(DEEP_RESEARCH_TOOL)
+async def deep_research_tool(
     query_text: Annotated[
         str,
         "The search query for in-depth research. Be specific to get thorough and comprehensive results.",
@@ -121,17 +121,17 @@ async def deep_search_tool(
 
     try:
         writer = get_stream_writer()
-        writer({"progress": f"Performing deep search for '{query_text}'..."})
+        writer({"progress": f"Performing deep research for '{query_text}'..."})
 
-        deep_search_results = await perform_deep_search(
+        deep_research_results = await perform_deep_research(
             query=query_text, max_results=5, take_screenshots=True
         )
 
-        enhanced_results = deep_search_results.get("enhanced_results", [])
+        enhanced_results = deep_research_results.get("enhanced_results", [])
         formatted_results = ""
 
         if enhanced_results:
-            formatted_results = "## Deep Search Results\n\n"
+            formatted_results = "## Deep Research Results\n\n"
 
             for i, result in enumerate(enhanced_results, 1):
                 title = result.get("title", "No Title")
@@ -158,34 +158,34 @@ async def deep_search_tool(
 
                 formatted_results += "---\n\n"
         else:
-            formatted_results = "No detailed information found from deep search."
+            formatted_results = "No detailed information found from deep research."
 
         elapsed_time = time.time() - start_time
-        logger.info(f"Deep search completed in {elapsed_time:.2f} seconds")
+        logger.info(f"Deep research completed in {elapsed_time:.2f} seconds")
 
-        # Send deep search data to frontend via writer
-        writer({"deep_search_results": deep_search_results})
+        # Send deep research data to frontend via writer
+        writer({"deep_research_results": deep_research_results})
 
-        return "Deep search results sent to frontend"
+        return "Deep research results sent to frontend"
 
     except (asyncio.TimeoutError, ConnectionError) as e:
-        logger.error(f"Network error in deep search: {e}", exc_info=True)
+        logger.error(f"Network error in deep research: {e}", exc_info=True)
         error_response = {
-            "formatted_text": "\n\nConnection timed out during deep search, falling back to standard results.",
+            "formatted_text": "\n\nConnection timed out during deep research, falling back to standard results.",
             "error": str(e),
         }
         return json.dumps(error_response)
     except ValueError as e:
-        logger.error(f"Value error in deep search: {e}", exc_info=True)
+        logger.error(f"Value error in deep research: {e}", exc_info=True)
         error_response = {
             "formatted_text": "\n\nInvalid search parameters, falling back to standard results.",
             "error": str(e),
         }
         return json.dumps(error_response)
     except Exception as e:
-        logger.error(f"Unexpected error in deep search: {e}", exc_info=True)
+        logger.error(f"Unexpected error in deep research: {e}", exc_info=True)
         error_response = {
-            "formatted_text": "\n\nError performing deep search, falling back to standard results.",
+            "formatted_text": "\n\nError performing deep research, falling back to standard results.",
             "error": str(e),
         }
         return json.dumps(error_response)

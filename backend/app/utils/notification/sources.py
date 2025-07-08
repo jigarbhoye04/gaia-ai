@@ -14,6 +14,7 @@ from app.models.notification.notification_models import (
     NotificationContent,
     NotificationRequest,
     NotificationRules,
+    NotificationSourceEnum,
     NotificationType,
     RedirectConfig,
 )
@@ -78,7 +79,7 @@ def create_email_draft_notification(
     """Create notification for AI-drafted email"""
     return NotificationRequest(
         user_id=user_id,
-        source="ai-email-draft",
+        source=NotificationSourceEnum.AI_EMAIL_DRAFT,
         type=NotificationType.INFO,
         priority=2,
         channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
@@ -150,7 +151,7 @@ def create_calendar_event_notification(
         return [
             NotificationRequest(
                 user_id=user_id,
-                source="ai-calendar-event",
+                source=NotificationSourceEnum.AI_CALENDAR_EVENT,
                 type=NotificationType.INFO,
                 priority=2,
                 channels=[
@@ -206,7 +207,7 @@ def create_reminder_notification(
     """Create notification for a reminder"""
     return NotificationRequest(
         user_id=user_id,
-        source="reminder",
+        source=NotificationSourceEnum.AI_REMINDER,
         type=NotificationType.INFO,
         priority=1,
         channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],

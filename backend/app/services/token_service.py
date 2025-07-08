@@ -87,22 +87,24 @@ class TokenService:
             "daily": {
                 "used": today_usage,
                 "limit": limits["daily"],
-                "percentage": (today_usage / limits["daily"] * 100)
-                if limits["daily"] > 0
-                else 0,
+                "percentage": (
+                    (today_usage / limits["daily"] * 100) if limits["daily"] > 0 else 0
+                ),
                 "remaining": max(0, limits["daily"] - today_usage),
             },
             "monthly": {
                 "used": monthly_usage,
                 "limit": limits["monthly"],
-                "percentage": (monthly_usage / limits["monthly"] * 100)
-                if limits["monthly"] > 0
-                else 0,
+                "percentage": (
+                    (monthly_usage / limits["monthly"] * 100)
+                    if limits["monthly"] > 0
+                    else 0
+                ),
                 "remaining": max(0, limits["monthly"] - monthly_usage),
             },
-            "plan_type": plan_type.value
-            if hasattr(plan_type, "value")
-            else str(plan_type),
+            "plan_type": (
+                plan_type.value if hasattr(plan_type, "value") else str(plan_type)
+            ),
         }
 
 

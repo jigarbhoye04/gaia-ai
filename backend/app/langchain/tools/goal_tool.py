@@ -23,7 +23,6 @@ from app.docstrings.utils import with_doc
 from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.goals_models import GoalCreate, UpdateNodeRequest
 from app.services.goals_service import (
-    create_goal_service,
     delete_goal_service,
     generate_roadmap_with_llm_stream,
     get_goal_service,
@@ -117,6 +116,9 @@ async def create_goal(
             title=title,
             description=description or "",
         )
+
+        # Do not remove, circular import.
+        from app.services.goals_service import create_goal_service
 
         result = await create_goal_service(goal_data, user)
         goal_dict = result.model_dump(mode="json")

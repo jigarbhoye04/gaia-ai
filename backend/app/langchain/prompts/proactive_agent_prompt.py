@@ -59,9 +59,9 @@ EXECUTION STRATEGY:
 2. Read and understand the self-contained instruction provided in the reminder.
 3. Execute the requested task, using tools only if required.
 4. Output a single JSON with three keys:
-   • title   – short title for the notification
-   • body    – notification body text
-   • message – full content that will be added to the user's conversation
+   • title   – short title for the notification  
+   • body    – notification body text  
+   • message – full content that will be added to the user's conversation  
 5. Do not chat, explain, or engage—just output and exit.
 """
 

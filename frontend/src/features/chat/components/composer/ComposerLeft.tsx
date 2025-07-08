@@ -57,7 +57,7 @@ export default function ComposerLeft({
 
   const dropdownItems: DropdownItemConfig[] = [
     // {
-    //   id: "deep_search",
+    //   id: "deep_research",
     //   label: "Deep Research",
     //   icon: (
     //     <AiWebBrowsingIcon className="min-h-[20px] min-w-[20px] text-primary" />

@@ -54,8 +54,8 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
       );
     }
 
-    // Filter by search query (only when opened via button)
-    if (openedViaButton && searchQuery.trim()) {
+    // Filter by search query (when opened via button or slash command)
+    if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (match) =>
@@ -106,11 +106,9 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           }}
           className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
           style={{
-            top: position.top,
+            bottom: "125px",
             left: position.left,
-            width: position.width || "auto",
-            minWidth: position.width ? "unset" : "320px",
-            maxWidth: position.width ? "unset" : "384px",
+            width: position.width,
             boxShadow: "0px -18px 30px 5px rgba(0, 0, 0, 0.5)",
           }}
           onClick={(e) => e.stopPropagation()}
@@ -186,12 +184,15 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           </motion.div>
 
           {/* Tool List */}
-          <div className="relative z-[1] h-96 max-h-96 overflow-y-auto">
+          <div className="relative z-[1] h-fit max-h-96 overflow-y-auto">
             <div className="py-2">
-              {/* Integrations Card - Only show in "all" category */}
-              {selectedCategory === "all" && (
-                <IntegrationsCard onClose={onClose} />
-              )}
+              {/* Integrations Card - Only show in "all" category and when not filtering */}
+              {selectedCategory === "all" &&
+                (openedViaButton
+                  ? !searchQuery.trim()
+                  : matches.length === filteredMatches.length) && (
+                  <IntegrationsCard onClose={onClose} />
+                )}
 
               {/* Render unlocked tools first */}
               {unlockedMatches.map((match, index) => (

@@ -16,6 +16,7 @@ from langsmith import traceable
 from app.config.loggers import llm_logger as logger
 from app.langchain.core.graph_manager import GraphManager
 from app.langchain.core.messages import construct_langchain_messages
+from app.langchain.tools.core.categories import get_tool_category
 from app.langchain.prompts.proactive_agent_prompt import (
     PROACTIVE_MAIL_AGENT_MESSAGE_PROMPT,
     PROACTIVE_MAIL_AGENT_SYSTEM_PROMPT,
@@ -72,7 +73,7 @@ async def call_agent(
             "query": request.message,
             "messages": history,
             "force_web_search": request.search_web,
-            "force_deep_search": request.deep_search,
+            "force_deep_research": request.deep_research,
             "current_datetime": datetime.now(timezone.utc).isoformat(),
             "mem0_user_id": user_id,
             "conversation_id": conversation_id,
@@ -105,6 +106,23 @@ async def call_agent(
                 # If we remove this check, all tool outputs will be yielded
                 if isinstance(chunk, AIMessageChunk):
                     content = str(chunk.content)
+                    tool_calls = chunk.tool_calls
+
+                    if tool_calls:
+                        for tool_call in tool_calls:
+                            logger.info(f"{tool_call=}")
+                            tool_name = tool_call.get("name").replace("_", " ").title()
+                            tool_category = get_tool_category(tool_call.get("name"))
+                            if tool_name:
+                                progress_data = {
+                                    "progress": {
+                                        "message": f"Executing {tool_name}...",
+                                        "tool_name": tool_call.get("name"),
+                                        "tool_category": tool_category,
+                                    }
+                                }
+                                yield f"data: {json.dumps(progress_data)}\n\n"
+
                     if content:
                         yield f"data: {json.dumps({'response': content})}\n\n"
                         complete_message += content

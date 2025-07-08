@@ -24,7 +24,7 @@ export const useSendMessage = (convoIdParam: string | null) => {
   ) => {
     const botMessageId = String(ObjectID());
     const isWebSearch = currentMode === "web_search";
-    const isDeepSearch = currentMode === "deep_search";
+    const isDeepSearch = currentMode === "deep_research";
 
     const userMessage: MessageType = {
       type: "user",

@@ -44,8 +44,8 @@ export type EnhancedWebResult = WebResult & {
   screenshot_url?: string;
 };
 
-// Define the DeepSearchResults type for deep search results
-export type DeepSearchResults = {
+// Define the DeepResearchResults type for deep research results
+export type DeepResearchResults = {
   original_search?: SearchResults;
   enhanced_results?: EnhancedWebResult[];
   screenshots_taken?: boolean;

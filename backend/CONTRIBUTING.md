@@ -72,7 +72,6 @@ async def create_resource(resource: ResourceModel, user_id: str) -> ResourceResp
    ```
 
 2. **Pull Requests:** Submit changes via pull request to the `main` branch
-
    - Include descriptive title and detailed description
    - Reference any related issues
 

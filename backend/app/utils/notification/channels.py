@@ -153,9 +153,9 @@ class EmailChannelAdapter(ChannelAdapter):
             actions_html = "<div style='margin-top: 20px;'>"
             for link in action_links:
                 actions_html += f"""
-                <a href="{link["url"]}"
-                   style="display: inline-block; padding: 10px 20px; margin: 5px;
-                          background-color: #007bff; color: white; text-decoration: none;
+                <a href="{link["url"]}" 
+                   style="display: inline-block; padding: 10px 20px; margin: 5px; 
+                          background-color: #007bff; color: white; text-decoration: none; 
                           border-radius: 5px;">
                     {link["text"]}
                 </a>
