@@ -3,7 +3,7 @@ import { Chip } from "@heroui/chip";
 import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
 
 import { InternetIcon } from "@/components/shared/icons";
-import DeepSearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepSearchResultsTabs";
+import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import CustomAnchor from "@/features/chat/components/code-block/CustomAnchor";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
@@ -34,9 +34,8 @@ export default function TextBubble({
   todo_data,
   goal_data,
   code_data,
-  intent,
   search_results,
-  deep_search_results,
+  deep_research_results,
   document_data,
   google_docs_data,
 }: ChatBubbleBotProps) {
@@ -46,8 +45,10 @@ export default function TextBubble({
         <SearchResultsTabs search_results={search_results} />
       )}
 
-      {deep_search_results && (
-        <DeepSearchResultsTabs deep_search_results={deep_search_results} />
+      {deep_research_results && (
+        <DeepResearchResultsTabs
+          deep_research_results={deep_research_results}
+        />
       )}
 
       {weather_data && <WeatherCard weatherData={weather_data} />}
@@ -70,7 +71,7 @@ export default function TextBubble({
               </Chip>
             )}
 
-            {(deepSearchWeb || !!deep_search_results) && (
+            {(deepSearchWeb || !!deep_research_results) && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
@@ -118,17 +119,17 @@ export default function TextBubble({
         </div>
       )}
 
-      {intent === "calendar" && calendar_options && (
+      {calendar_options && (
         <CalendarEventSection calendar_options={calendar_options} />
       )}
 
-      {intent === "delete_calendar_event" && calendar_delete_options && (
+      {calendar_delete_options && (
         <CalendarDeleteSection
           calendar_delete_options={calendar_delete_options}
         />
       )}
 
-      {intent === "edit_calendar_event" && calendar_edit_options && (
+      {calendar_edit_options && (
         <CalendarEditSection calendar_edit_options={calendar_edit_options} />
       )}
 

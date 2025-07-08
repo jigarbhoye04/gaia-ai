@@ -23,7 +23,7 @@ export interface UseToolsWithIntegrationsReturn {
  * to determine which tools are locked/available
  */
 export const useToolsWithIntegrations = (): UseToolsWithIntegrationsReturn => {
-  const { integrations, getIntegrationsWithStatus } = useIntegrations();
+  const { getIntegrationsWithStatus } = useIntegrations();
 
   // Fetch tools data
   const {

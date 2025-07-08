@@ -1,6 +1,6 @@
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import { ExternalLink,Lock } from "lucide-react";
+import { ExternalLink, Lock } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 

@@ -11,7 +11,7 @@ import {
 } from "./calendarTypes";
 import { EmailComposeData } from "./mailTypes";
 import {
-  DeepSearchResults,
+  DeepResearchResults,
   EnhancedWebResult,
   ImageResult,
   NewsResult,
@@ -37,7 +37,7 @@ export type {
   CalendarEventDateTime,
   CalendarOptions,
   CodeData,
-  DeepSearchResults,
+  DeepResearchResults,
   DocumentData,
   EmailComposeData,
   EnhancedWebResult,
@@ -71,7 +71,6 @@ export type MessageType = {
   fileIds?: string[];
   pinned?: boolean;
   fileData?: FileData[];
-  intent?: string;
   selectedTool?: string | null; // Tool selected via slash commands
   toolCategory?: string | null; // Category of the selected tool
   calendar_options?: CalendarOptions[] | null;
@@ -80,7 +79,7 @@ export type MessageType = {
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
-  deep_search_results?: DeepSearchResults | null;
+  deep_research_results?: DeepResearchResults | null;
   image_data?: ImageData | null; // Image generation data in structured format
   todo_data?: TodoToolData | null; // todo data from backend tools
   document_data?: DocumentData | null;
@@ -98,7 +97,6 @@ export type ConversationType = {
 };
 
 export interface IntentType {
-  intent: string | undefined;
   calendar_options?: CalendarOptions[] | null;
   calendar_delete_options?: CalendarDeleteOptions[] | null;
   calendar_edit_options?: CalendarEditOptions[] | null;

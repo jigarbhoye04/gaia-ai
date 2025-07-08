@@ -62,7 +62,7 @@ export default function LandingPage() {
           {/* <AdvancedConversation /> */}
           {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}
 
-          {/*
+          {/* 
           <Suspense fallback={<SuspenseLoader />}>
             <DeepSearchSection />
           </Suspense>
@@ -76,7 +76,7 @@ export default function LandingPage() {
 
           <Suspense fallback={<SuspenseLoader />}>
             <FeatureGridSection />
-          </Suspense>
+          </Suspense> 
 
            */}
           {/* <MobileSection /> */}

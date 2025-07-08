@@ -473,7 +473,7 @@ const BrowserAutomationChat = () => {
                         </div>
                       </div>
 
-                      {/*
+                      {/* 
 
                       {message.stepData &&
                         (message.stepData.url ||
@@ -482,7 +482,7 @@ const BrowserAutomationChat = () => {
                           <div className="ml-10 w-fit border-l-3 border-primary">
                             <div className="mt-1 max-w-4xl rounded-xl rounded-l-none bg-primary/10 p-3 text-sm text-zinc-300">
                               <div className="mb-2 flex items-center justify-between">
-
+                      
                                  {message.stepData.url && (
                                   <div className="flex items-center gap-1 rounded-md bg-zinc-900 px-2 py-1 text-xs text-zinc-400">
                                     <Globe className="h-3.5 w-3.5 text-blue-400" />
@@ -494,7 +494,7 @@ const BrowserAutomationChat = () => {
                                     </span>
                                   </div>
                                 )}
-
+                            
                                 <Button
                                   size="sm"
                                   variant="flat"
@@ -513,7 +513,7 @@ const BrowserAutomationChat = () => {
                                   }}
                                 >
                                   View Details
-                                </Button>
+                                </Button> 
                               </div>
 
                              {(message.stepData.screenshot_url ||
@@ -532,8 +532,8 @@ const BrowserAutomationChat = () => {
                                     unoptimized
                                   />
                                 </div>
-                              )}
-
+                              )} 
+                            
                               {message.stepData.thoughts && (
                                 <div className="mt-2 max-w-(--breakpoint-sm) space-y-2 rounded-md bg-zinc-900 p-2">
                                   <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
@@ -581,7 +581,7 @@ const BrowserAutomationChat = () => {
                                     </div>
                                   )}
                                 </div>
-                              )}
+                              )} 
 
                            {message.stepData.actions &&
                                 message.stepData.actions.length > 0 && (
@@ -648,7 +648,7 @@ const BrowserAutomationChat = () => {
                                       )}
                                     </ul>
                                   </div>
-                                )}
+                                )} 
                             </div>
                           </div>
                         )}

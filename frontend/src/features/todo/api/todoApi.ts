@@ -12,6 +12,8 @@ import {
   TodoListResponse,
   TodoStats,
   TodoUpdate,
+  Workflow,
+  WorkflowStatus,
 } from "@/types/features/todoTypes";
 
 export const todoApi = {
@@ -440,5 +442,32 @@ export const todoApi = {
       console.error("Error in semantic search:", error);
       throw error;
     }
+  },
+
+  // Generate workflow for a todo
+  generateWorkflow: async (todoId: string): Promise<Todo> => {
+    return apiService.post<Todo>(
+      `/todos/${todoId}/workflow`,
+      {},
+      {
+        successMessage: "Workflow generated successfully",
+        errorMessage: "Failed to generate workflow",
+      },
+    );
+  },
+
+  // Check workflow generation status
+  getWorkflowStatus: async (
+    todoId: string,
+  ): Promise<{
+    todo_id: string;
+    has_workflow: boolean;
+    is_generating: boolean;
+    workflow_status: WorkflowStatus;
+    workflow: Workflow | null;
+  }> => {
+    return apiService.get(`/todos/${todoId}/workflow-status`, {
+      silent: true, // Don't show success/error toasts for polling
+    });
   },
 };

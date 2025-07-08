@@ -1,5 +1,5 @@
 export type SearchMode =
-  | "deep_search"
+  | "deep_research"
   | "web_search"
   | "fetch_webpage"
   | "generate_image"

@@ -5,17 +5,21 @@ import { Input, Textarea } from "@heroui/input";
 import { formatDistanceToNow } from "date-fns";
 import { Check, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import { toast } from "sonner";
 
 import { Sheet, SheetContent } from "@/components/ui/shadcn/sheet";
+import { todoApi } from "@/features/todo/api/todoApi";
 import {
   Priority,
   Project,
   Todo,
   TodoUpdate,
+  Workflow,
 } from "@/types/features/todoTypes";
 
 import SubtaskManager from "./shared/SubtaskManager";
 import TodoFieldsRow from "./shared/TodoFieldsRow";
+import WorkflowSection from "./WorkflowSection";
 
 interface TodoDetailSheetProps {
   todo: Todo | null;
@@ -38,6 +42,7 @@ export default function TodoDetailSheet({
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
+  const [isGeneratingWorkflow, setIsGeneratingWorkflow] = useState(false);
 
   if (!todo) return null;
 
@@ -97,6 +102,29 @@ export default function TodoDetailSheet({
     value: string | string[] | Priority | undefined,
   ) => {
     onUpdate(todo.id, { [field]: value } as TodoUpdate);
+  };
+
+  const handleGenerateWorkflow = async () => {
+    setIsGeneratingWorkflow(true);
+    try {
+      const updatedTodo = await todoApi.generateWorkflow(todo.id);
+      if (updatedTodo.workflow) {
+        // Update the todo with all the new data from the backend response
+        onUpdate(todo.id, updatedTodo);
+        toast.success("Workflow generated successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to generate workflow:", error);
+      toast.error("Failed to generate workflow");
+    } finally {
+      setIsGeneratingWorkflow(false);
+    }
+  };
+
+  const handleWorkflowGenerated = (workflow: Workflow) => {
+    // Update the todo with the generated workflow
+    onUpdate(todo.id, { workflow });
+    toast.success("Workflow generated successfully!");
   };
 
   return (
@@ -253,6 +281,20 @@ export default function TodoDetailSheet({
               <SubtaskManager
                 subtasks={todo.subtasks}
                 onSubtasksChange={handleSubtasksChange}
+              />
+            </div>
+
+            {/* Workflow Section */}
+            <div className="px-6 py-4 pt-6">
+              <WorkflowSection
+                workflow={todo.workflow}
+                isGenerating={isGeneratingWorkflow}
+                workflowStatus={todo.workflow_status}
+                todoId={todo.id}
+                todoTitle={todo.title}
+                todoDescription={todo.description}
+                onGenerateWorkflow={handleGenerateWorkflow}
+                onWorkflowGenerated={handleWorkflowGenerated}
               />
             </div>
           </div>
