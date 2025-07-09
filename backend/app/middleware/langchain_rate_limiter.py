@@ -132,14 +132,14 @@ def with_rate_limiting(
                         )
                         detail_dict = {}
                         reset_time = None
-                        
+
                         if hasattr(e, "detail"):
                             if isinstance(e.detail, dict):
                                 detail_dict = e.detail
                                 reset_time = e.detail.get("reset_time")
                             elif isinstance(e.detail, str):
                                 detail_dict = {"message": e.detail}
-                        
+
                         raise LangChainRateLimitException(
                             feature=actual_feature_key,
                             detail=detail_dict,

@@ -335,10 +335,10 @@ async def scrape_url_metadata(url: str) -> dict:
             if parsed.scheme in ["http", "https"]:
                 return relative_url
             return urljoin(url, relative_url)
-        
+
         def get_attr_value(tag, attr_name: str) -> str | None:
             """Safely get attribute value from a BeautifulSoup tag."""
-            if not tag or not hasattr(tag, 'attrs'):
+            if not tag or not hasattr(tag, "attrs"):
                 return None
             if attr_name not in tag.attrs:
                 return None
@@ -362,7 +362,11 @@ async def scrape_url_metadata(url: str) -> dict:
         website_name = get_attr_value(website_name_tag, "content")
 
         # Find favicon with a more specific search
-        favicon_tag = soup.find("link", rel="icon") or soup.find("link", rel="shortcut icon") or soup.find("link", rel="apple-touch-icon")
+        favicon_tag = (
+            soup.find("link", rel="icon")
+            or soup.find("link", rel="shortcut icon")
+            or soup.find("link", rel="apple-touch-icon")
+        )
         favicon_href = get_attr_value(favicon_tag, "href")
         favicon = to_absolute(favicon_href) if favicon_href else None
 
@@ -380,7 +384,7 @@ async def scrape_url_metadata(url: str) -> dict:
             logo_url = logo_content or logo_href
             if logo_url:
                 website_image = to_absolute(logo_url)
-        
+
         if not website_image:
             website_image = og_image
 

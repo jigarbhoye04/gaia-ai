@@ -446,7 +446,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         if not current_start:
             current_start = start_at
 
-        if not current_end and plan:
+        if not current_end and plan and current_start is not None:
             # Calculate end based on plan duration
             if plan.get("duration") == "monthly":
                 current_end = current_start + timedelta(days=30)
@@ -456,7 +456,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         if not charge_at:
             charge_at = current_start
 
-        if not end_at and plan:
+        if not end_at and plan and start_at is not None:
             # Set to total billing cycles from start
             total_count = razorpay_subscription.get("total_count", 10)
             if plan.get("duration") == "monthly":

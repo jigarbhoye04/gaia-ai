@@ -219,7 +219,9 @@ async def semantic_search_todos(
         where_filter = {"user_id": str(user_id)}
 
         if completed is not None:
-            where_filter["completed"] = str(completed).lower()  # Convert to "true" or "false"
+            where_filter["completed"] = str(
+                completed
+            ).lower()  # Convert to "true" or "false"
 
         if priority and priority != "none":
             where_filter["priority"] = priority

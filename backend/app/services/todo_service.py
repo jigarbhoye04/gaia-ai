@@ -307,7 +307,9 @@ class TodoService:
         # Index for search
         try:
             if created_todo:
-                await store_todo_embedding(str(result.inserted_id), created_todo, user_id)
+                await store_todo_embedding(
+                    str(result.inserted_id), created_todo, user_id
+                )
         except Exception as e:
             todos_logger.warning(f"Failed to index todo: {str(e)}")
 

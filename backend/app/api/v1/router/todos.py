@@ -323,7 +323,7 @@ async def bulk_complete_todos(
 ):
     """Mark multiple todos as completed (convenience endpoint)."""
     request = BulkUpdateRequest(
-        todo_ids=todo_ids, 
+        todo_ids=todo_ids,
         updates=UpdateTodoRequest(
             title=None,
             description=None,
@@ -336,7 +336,7 @@ async def bulk_complete_todos(
             subtasks=None,
             workflow=None,
             workflow_status=None,
-        )
+        ),
     )
     try:
         return await TodoService.bulk_update_todos(request, user["user_id"])
@@ -452,7 +452,7 @@ async def create_subtask(
 
         # Update the todo
         return await TodoService.update_todo(
-            todo_id, 
+            todo_id,
             UpdateTodoRequest(
                 title=None,
                 description=None,
@@ -465,8 +465,8 @@ async def create_subtask(
                 subtasks=updated_subtasks,
                 workflow=None,
                 workflow_status=None,
-            ), 
-            user["user_id"]
+            ),
+            user["user_id"],
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -511,7 +511,7 @@ async def update_subtask(
 
         # Update the todo
         return await TodoService.update_todo(
-            todo_id, 
+            todo_id,
             UpdateTodoRequest(
                 title=None,
                 description=None,
@@ -524,8 +524,8 @@ async def update_subtask(
                 subtasks=updated_subtasks,
                 workflow=None,
                 workflow_status=None,
-            ), 
-            user["user_id"]
+            ),
+            user["user_id"],
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -556,7 +556,7 @@ async def delete_subtask(
 
         # Update the todo
         return await TodoService.update_todo(
-            todo_id, 
+            todo_id,
             UpdateTodoRequest(
                 title=None,
                 description=None,
@@ -569,8 +569,8 @@ async def delete_subtask(
                 subtasks=updated_subtasks,
                 workflow=None,
                 workflow_status=None,
-            ), 
-            user["user_id"]
+            ),
+            user["user_id"],
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -610,7 +610,7 @@ async def toggle_subtask_completion(
 
         # Update the todo
         return await TodoService.update_todo(
-            todo_id, 
+            todo_id,
             UpdateTodoRequest(
                 title=None,
                 description=None,
@@ -623,8 +623,8 @@ async def toggle_subtask_completion(
                 subtasks=updated_subtasks,
                 workflow=None,
                 workflow_status=None,
-            ), 
-            user["user_id"]
+            ),
+            user["user_id"],
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

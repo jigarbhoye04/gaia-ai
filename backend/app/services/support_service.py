@@ -501,7 +501,9 @@ async def create_support_request_with_attachments(
             resolved_at=None,
             tags=[],
             attachments=[SupportAttachment(**att) for att in processed_attachments],
-            metadata=support_request_doc["metadata"] if isinstance(support_request_doc["metadata"], dict) else {},
+            metadata=support_request_doc["metadata"]
+            if isinstance(support_request_doc["metadata"], dict)
+            else {},
         )
 
         logger.info(

@@ -211,7 +211,7 @@ async def create_goal_project_and_todo(
         # Now add subtasks if we have any
         if subtasks:
             await TodoService.update_todo(
-                created_todo.id, 
+                created_todo.id,
                 UpdateTodoRequest(
                     title=None,
                     description=None,
@@ -224,8 +224,8 @@ async def create_goal_project_and_todo(
                     subtasks=subtasks,
                     workflow=None,
                     workflow_status=None,
-                ), 
-                user_id
+                ),
+                user_id,
             )
 
         # Update the goal with the modified roadmap (now contains subtask_ids) and todo info
