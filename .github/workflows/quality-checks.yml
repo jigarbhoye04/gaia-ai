@@ -69,21 +69,21 @@ jobs:
         run: |
           uv venv
           echo "$PWD/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
           source .venv/bin/activate
+          uv pip install pre-commit ruff mypy types-redis types-requests
+          uv pip sync
 
-      - name: Install pre-commit and dependencies
-        working-directory: ../
-        run: |
-          uv pip install "pre-commit[default]" cfgv nodeenv pyyaml virtualenv identify
-          pre-commit install --install-hooks
-
-      - name: Install project dependencies
-        run: |
-          uv pip sync pyproject.toml
-          uv pip install types-redis types-requests
+      - name: Set up pre-commit cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit checks
-        working-directory: ../
         run: |
-          source backend/.venv/bin/activate
-          pre-commit run --all-files
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          pre-commit run --all-files --show-diff-on-failure
