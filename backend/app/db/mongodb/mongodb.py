@@ -1,7 +1,7 @@
 import sys
 from functools import lru_cache
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.server_api import ServerApi
 
 from app.config.loggers import mongo_logger as logger
@@ -14,6 +14,9 @@ class MongoDB:
     """
     A class to manage the MongoDB connection using Motor.
     """
+
+    client: AsyncIOMotorClient
+    database: AsyncIOMotorDatabase
 
     def __init__(self, uri: str | None, db_name: str):
         """
@@ -37,7 +40,6 @@ class MongoDB:
 
     def ping(self):
         try:
-
             # Use the same URI that was used to initialize the async client
             sync_client = pymongo.MongoClient(settings.MONGO_DB)
             sync_client.admin.command("ping")

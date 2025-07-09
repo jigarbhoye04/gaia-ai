@@ -72,7 +72,11 @@ async def _process_payment_webhook(
         )
         logger.info(f"Payment failed: {payment_id}")
 
-    return {"status": "processed", "event": event_type, "payment_id": payment_id}
+    return {
+        "status": "processed",
+        "event": event_type,
+        "payment_id": str(payment_id) if payment_id else "",
+    }
 
 
 async def _process_subscription_webhook(
@@ -221,5 +225,5 @@ async def _process_subscription_webhook(
     return {
         "status": "processed",
         "event": event_type,
-        "subscription_id": subscription_id,
+        "subscription_id": str(subscription_id) if subscription_id else "",
     }

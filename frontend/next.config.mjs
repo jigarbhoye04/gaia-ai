@@ -1,6 +1,5 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
 import createMDX from "@next/mdx";
-import { withNextVideo } from "next-video/process";
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -62,4 +61,4 @@ const withMDX = createMDX({
   // Add markdown plugins here, as desired
 });
 
-export default withNextVideo(withBundleAnalyzer(withMDX(nextConfig)));
+export default withBundleAnalyzer(withMDX(nextConfig));

@@ -1,4 +1,3 @@
-import Player from "next-video/player";
 import { useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -59,7 +58,7 @@ export default function DeepSearchSection() {
                   pointerEvents: activeVideo === video.id ? "auto" : "none",
                 }}
               >
-                <Player
+                <video
                   src={video.src}
                   autoPlay={activeVideo === video.id}
                   muted

@@ -311,7 +311,7 @@ async def geocode_location(location_name: str) -> Dict[str, Any]:
             "User-Agent": "GAIA-Backend/1.0"  # Properly identify your application
         }
 
-        params = {"q": location_name, "format": "json", "limit": 1}
+        params: Dict[str, str] = {"q": location_name, "format": "json", "limit": "1"}
 
         nominatim_url = "https://nominatim.openstreetmap.org/search"
         response = await http_async_client.get(

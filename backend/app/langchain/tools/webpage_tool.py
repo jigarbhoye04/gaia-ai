@@ -1,6 +1,6 @@
 import asyncio
 import re
-from typing import Annotated, Dict, List, Union
+from typing import Annotated, Dict, List, Union, Sequence
 
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
@@ -20,12 +20,12 @@ async def fetch_webpages(
     config: RunnableConfig,
     urls: Annotated[List[str], "List of URLs to fetch content from"],
     # state: Annotated[dict, InjectedState],
-) -> Dict[str, Union[str, List[str]]]:
+) -> Dict[str, Union[str, Sequence[str]]]:
     try:
         if not urls:
             return {"error": "No URLs were provided for fetching."}
 
-        processed_urls = []
+        processed_urls: List[str] = []
         combined_content = ""
         writer = get_stream_writer()
 

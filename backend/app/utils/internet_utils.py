@@ -336,52 +336,57 @@ async def scrape_url_metadata(url: str) -> dict:
                 return relative_url
             return urljoin(url, relative_url)
 
-        title = soup.title.string.strip() if soup.title else None
+        def get_attr_value(tag, attr_name: str) -> str | None:
+            """Safely get attribute value from a BeautifulSoup tag."""
+            if not tag or not hasattr(tag, "attrs"):
+                return None
+            if attr_name not in tag.attrs:
+                return None
+            attr_value = tag.attrs[attr_name]
+            if isinstance(attr_value, str):
+                return attr_value.strip()
+            elif isinstance(attr_value, list) and attr_value:
+                return str(attr_value[0]).strip()
+            return None
+
+        title = soup.title.string.strip() if soup.title and soup.title.string else None
 
         description_tag = soup.find("meta", attrs={"name": "description"}) or soup.find(
             "meta", attrs={"property": "og:description"}
         )
-        description = (
-            description_tag["content"].strip()
-            if description_tag and "content" in description_tag.attrs
-            else None
-        )
+        description = get_attr_value(description_tag, "content")
 
         website_name_tag = soup.find("meta", property="og:site_name") or soup.find(
             "meta", attrs={"name": "application-name"}
         )
-        website_name = (
-            website_name_tag["content"].strip()
-            if website_name_tag and "content" in website_name_tag.attrs
-            else None
-        )
+        website_name = get_attr_value(website_name_tag, "content")
 
-        favicon_tag = soup.find("link", rel=lambda r: r and "icon" in r.lower())
-        favicon = (
-            to_absolute(favicon_tag["href"])
-            if favicon_tag and "href" in favicon_tag.attrs
-            else None
+        # Find favicon with a more specific search
+        favicon_tag = (
+            soup.find("link", rel="icon")
+            or soup.find("link", rel="shortcut icon")
+            or soup.find("link", rel="apple-touch-icon")
         )
+        favicon_href = get_attr_value(favicon_tag, "href")
+        favicon = to_absolute(favicon_href) if favicon_href else None
 
         og_image_tag = soup.find("meta", property="og:image")
-        og_image = (
-            to_absolute(og_image_tag["content"])
-            if og_image_tag and "content" in og_image_tag.attrs
-            else None
-        )
+        og_image_content = get_attr_value(og_image_tag, "content")
+        og_image = to_absolute(og_image_content) if og_image_content else None
 
         logo_tag = soup.find("meta", property="og:logo") or soup.find(
             "link", rel="logo"
         )
-        website_image = (
-            to_absolute(
-                logo_tag["content"]
-                if logo_tag and "content" in logo_tag.attrs
-                else logo_tag["href"]
-            )
-            if logo_tag
-            else og_image
-        )
+        website_image = None
+        if logo_tag:
+            logo_content = get_attr_value(logo_tag, "content")
+            logo_href = get_attr_value(logo_tag, "href")
+            logo_url = logo_content or logo_href
+            if logo_url:
+                website_image = to_absolute(logo_url)
+
+        if not website_image:
+            website_image = og_image
 
         return {
             "title": title,

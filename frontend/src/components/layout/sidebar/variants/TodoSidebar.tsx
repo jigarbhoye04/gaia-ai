@@ -227,7 +227,7 @@ export default function TodoSidebar() {
 
   return (
     <>
-      <div className="flex h-full max-w-[270px] flex-col space-y-3">
+      <div className="flex flex-col space-y-3">
         {/* Add Task Button */}
         <div className="w-full">
           <Button

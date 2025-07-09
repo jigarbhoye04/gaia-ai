@@ -32,7 +32,7 @@ async def insert_note(
     await langchain_chroma_client.aadd_documents(
         documents=[
             Document(
-                page_content=note_data.get("plaintext"),
+                page_content=note_data.get("plaintext") or "",
                 metadata={
                     "note_id": note_id,
                     "user_id": user_id,

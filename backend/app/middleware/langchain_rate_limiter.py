@@ -130,14 +130,20 @@ def with_rate_limiting(
                         app_logger.warning(
                             f"Rate limit exceeded for user {user_id}, feature {actual_feature_key}"
                         )
+                        detail_dict = {}
+                        reset_time = None
+
+                        if hasattr(e, "detail"):
+                            if isinstance(e.detail, dict):
+                                detail_dict = e.detail
+                                reset_time = e.detail.get("reset_time")
+                            elif isinstance(e.detail, str):
+                                detail_dict = {"message": e.detail}
+
                         raise LangChainRateLimitException(
                             feature=actual_feature_key,
-                            detail=e.detail if hasattr(e, "detail") else {},
-                            reset_time=(
-                                e.detail.get("reset_time")
-                                if hasattr(e, "detail")
-                                else None
-                            ),
+                            detail=detail_dict,
+                            reset_time=reset_time,
                         )
                     except Exception as e:
                         app_logger.error(
@@ -183,7 +189,12 @@ def with_rate_limiting(
 class LangChainRateLimitException(Exception):
     """Agent-friendly rate limit exception with structured data."""
 
-    def __init__(self, feature: str, detail: dict = None, reset_time: str = None):
+    def __init__(
+        self,
+        feature: str,
+        detail: Optional[Dict[Any, Any]] = None,
+        reset_time: Optional[str] = None,
+    ):
         self.feature = feature
         self.detail = detail or {}
         self.reset_time = reset_time
@@ -191,7 +202,7 @@ class LangChainRateLimitException(Exception):
         message = f"Rate limit exceeded for {feature}."
         if reset_time:
             message += f" Resets at {reset_time}."
-        if detail.get("plan_required"):
+        if detail and detail.get("plan_required"):
             message += (
                 f" Upgrade to {detail['plan_required'].upper()} for higher limits."
             )
@@ -216,9 +227,9 @@ async def _get_cached_subscription(user_id: str):
             data = json.loads(cached)
             from types import SimpleNamespace
 
-            subscription = SimpleNamespace(**data)
-            subscription.plan_type = PlanType(data.get("plan_type", "free"))
-            return subscription
+            cached_subscription = SimpleNamespace(**data)
+            cached_subscription.plan_type = PlanType(data.get("plan_type", "free"))
+            return cached_subscription
     except Exception as e:
         app_logger.debug(f"Cache lookup failed for user {user_id}: {str(e)}")
 
@@ -230,16 +241,14 @@ async def _get_cached_subscription(user_id: str):
         cache_data = {
             "plan_type": (
                 subscription.plan_type.value
-                if hasattr(subscription.plan_type, "value")
+                if subscription.plan_type and hasattr(subscription.plan_type, "value")
                 else str(subscription.plan_type)
-            ),
-            "expires_at": (
-                subscription.expires_at.isoformat()
-                if hasattr(subscription, "expires_at") and subscription.expires_at
+                if subscription.plan_type
                 else None
             ),
+            "expires_at": None,  # This field is not available in UserSubscriptionStatus
         }
-        await redis_cache.setex(cache_key, 300, json.dumps(cache_data))
+        await redis_cache.set(cache_key, cache_data, 300)
         app_logger.debug(f"Cached subscription for user {user_id}")
     except Exception as e:
         app_logger.debug(f"Cache write failed for user {user_id}: {str(e)}")

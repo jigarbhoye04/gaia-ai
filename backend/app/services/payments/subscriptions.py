@@ -251,7 +251,7 @@ async def update_subscription(
         razorpay_subscription_id = current_subscription["razorpay_subscription_id"]
 
         # Prepare update data for Razorpay
-        update_data = {}
+        update_data: Dict[str, Any] = {}
         if subscription_data.plan_id:
             razorpay_plan_id = await get_razorpay_plan_id(subscription_data.plan_id)
             update_data["plan_id"] = razorpay_plan_id
@@ -282,7 +282,7 @@ async def update_subscription(
             )
 
         # Update subscription in database
-        db_update_data = {
+        db_update_data: Dict[str, Any] = {
             "updated_at": datetime.now(timezone.utc),
         }
 
@@ -446,7 +446,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         if not current_start:
             current_start = start_at
 
-        if not current_end and plan:
+        if not current_end and plan and current_start is not None:
             # Calculate end based on plan duration
             if plan.get("duration") == "monthly":
                 current_end = current_start + timedelta(days=30)
@@ -456,7 +456,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         if not charge_at:
             charge_at = current_start
 
-        if not end_at and plan:
+        if not end_at and plan and start_at is not None:
             # Set to total billing cycles from start
             total_count = razorpay_subscription.get("total_count", 10)
             if plan.get("duration") == "monthly":
@@ -589,6 +589,7 @@ def _create_subscription_doc(
 ) -> SubscriptionDB:
     """Create a SubscriptionDB document with all the necessary fields."""
     return SubscriptionDB(
+        _id=None,  # Will be set by MongoDB
         razorpay_subscription_id=razorpay_subscription["id"],
         user_id=user_id,
         plan_id=subscription_data.plan_id,

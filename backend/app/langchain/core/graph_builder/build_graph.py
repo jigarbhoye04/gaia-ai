@@ -89,10 +89,10 @@ async def build_graph(
 
     if in_memory_checkpointer:
         # Use in-memory checkpointer for testing or simple use cases
-        checkpointer = InMemorySaver()
+        in_memory_checkpointer_instance = InMemorySaver()
         # Setup the checkpointer
         graph = builder.compile(
-            checkpointer=checkpointer,  # type: ignore[call-arg]
+            checkpointer=in_memory_checkpointer_instance,  # type: ignore[call-arg]
             store=store,
         )
         print(graph.get_graph().draw_mermaid())
@@ -100,8 +100,8 @@ async def build_graph(
     else:
         async with AsyncPostgresSaver.from_conn_string(
             settings.POSTGRES_URL
-        ) as checkpointer:
-            await checkpointer.setup()
-            graph = builder.compile(checkpointer=checkpointer, store=store)
+        ) as postgres_checkpointer:
+            await postgres_checkpointer.setup()
+            graph = builder.compile(checkpointer=postgres_checkpointer, store=store)
             print(graph.get_graph().draw_mermaid())
             yield graph
