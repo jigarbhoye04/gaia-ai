@@ -75,6 +75,7 @@ jobs:
           source .venv/bin/activate
           uv pip install pre-commit ruff mypy types-redis types-requests
           uv pip sync pyproject.toml
+          pre-commit install
 
       - name: Set up pre-commit cache
         uses: actions/cache@v4
