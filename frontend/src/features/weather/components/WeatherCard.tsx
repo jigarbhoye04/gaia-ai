@@ -592,7 +592,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           </div>
         </AccordionItem>
       </Accordion>
-      {/* 
+      {/*
       <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2 text-[10px] text-white/80">
         <div>
           <span>Data sources: </span>

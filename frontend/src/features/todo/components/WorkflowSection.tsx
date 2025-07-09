@@ -89,7 +89,7 @@ export default function WorkflowSection({
       clearMessages();
 
       // Create workflow execution message
-      const workflowMessage = `I want to execute a workflow for my todo: "${todoTitle}". 
+      const workflowMessage = `I want to execute a workflow for my todo: "${todoTitle}".
 
 Here's the workflow plan:
 ${workflow.steps

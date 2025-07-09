@@ -3,8 +3,8 @@
  */
 
 export * from "./country-selector";
-export * from "./mdx-components";
 export * from "./layout/index";
+export * from "./mdx-components";
 export * from "./navigation/DesktopMenu";
 export * from "./navigation/Footer";
 export * from "./navigation/MobileMenu";

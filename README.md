@@ -1,16 +1,16 @@
 <div align="center">
   <img src="docs/logo/logo.png" alt="GAIA Logo" width="120" height="120" />
-  
+
   # GAIA
-  
+
   [![Website](https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white)](https://docs.heygaia.io)
-  
+
   [![PolyForm Strict](https://img.shields.io/badge/PolyForm-Strict-red)](https://polyformproject.org/licenses/strict/1.0.0/) [![GitHub Stars](https://img.shields.io/github/stars/heygaia/gaia?style=social)](https://github.com/heygaia/gaia)
-  
+
   <p align="center">
     <strong>A proactive personal AI assistant designed to enhance productivity and streamline daily tasks</strong>
   </p>
-  
+
   <p align="center">
     <a href="https://discord.heygaia.io">
       <img src="https://img.shields.io/badge/-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" />
@@ -63,9 +63,9 @@ Our comprehensive documentation is available at [docs.heygaia.io](https://docs.h
 Join our growing community of users and contributors:
 
 <div align="center">
-  
+
   [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.heygaia.io) [![Twitter](https://img.shields.io/badge/Twitter-Follow%20Us-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/_heygaia) [![WhatsApp](https://img.shields.io/badge/WhatsApp-Get%20Support-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://whatsapp.heygaia.io) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/company/heygaia)
-  
+
 </div>
 
 - **Discord**: Join our community for discussions and support
@@ -90,7 +90,7 @@ Please read our [Contributing Guidelines](https://docs.heygaia.io/developers/con
 This project is licensed under the [Polyform Strict License 1.0.0](https://polyformproject.org/licenses/strict/1.0.0/).
 
 > [!WARNING]
-> This license allows noncommercial, personal, and research use only.  
+> This license allows noncommercial, personal, and research use only.
 > **Commercial use, distribution, and modifications are not permitted.**
 
 See the full license terms at [LICENSE.md](LICENSE.md).
