@@ -187,41 +187,6 @@ def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
         raise
 
 
-# ============================================================================
-# USER ONBOARDING EMAILS
-# ============================================================================
-
-
-async def send_welcome_email(user_email: str, user_name: Optional[str] = None) -> None:
-    """
-    Send welcome email to new user after registration.
-
-    Args:
-        user_email: User's email address
-        user_name: User's name (optional)
-
-    Raises:
-        Exception: If email sending fails
-    """
-    try:
-        subject = "From the founder of GAIA, personally"
-        html_content = generate_welcome_email_html(user_name)
-
-        resend.Emails.send(
-            {
-                "from": "Aryan from GAIA <aryan@heygaia.io>",
-                "to": [user_email],
-                "subject": subject,
-                "html": html_content,
-                "reply_to": "aryan@heygaia.io",
-            }
-        )
-        logger.info(f"Welcome email sent to {user_email}")
-    except Exception as e:
-        logger.error(f"Failed to send welcome email to {user_email}: {str(e)}")
-        raise
-
-
 async def send_pro_subscription_email(
     user_name: str,
     user_email: str,
@@ -229,19 +194,7 @@ async def send_pro_subscription_email(
     whatsapp_url: str = "https://whatsapp.heygaia.io",
     twitter_url: str = "https://twitter.com/_heygaia",
 ) -> None:
-    """
-    Send welcome email to user who upgraded to Pro subscription.
-
-    Args:
-        user_name: User's name
-        user_email: User's email address
-        discord_url: Discord community URL
-        whatsapp_url: WhatsApp community URL
-        twitter_url: Twitter profile URL
-
-    Raises:
-        Exception: If email sending fails
-    """
+    """Send welcome email to user who upgraded to Pro subscription."""
     try:
         subject = "Welcome to GAIA Pro! 🚀"
         html_content = generate_pro_subscription_html(
@@ -266,19 +219,29 @@ async def send_pro_subscription_email(
         raise
 
 
-def generate_welcome_email_html(user_name: Optional[str] = None) -> str:
-    """
-    Generate HTML email content for welcome email using Jinja2 template.
+async def send_welcome_email(user_email: str, user_name: Optional[str] = None) -> None:
+    """Send welcome email to new user using Jinja2 template."""
+    try:
+        subject = "From the founder of GAIA, personally"
+        html_content = generate_welcome_email_html(user_name)
 
-    Args:
-        user_name: User's name (optional)
+        resend.Emails.send(
+            {
+                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "to": [user_email],
+                "subject": subject,
+                "html": html_content,
+                "reply_to": "aryan@heygaia.io",
+            }
+        )
+        logger.info(f"Welcome email sent to {user_email}")
+    except Exception as e:
+        logger.error(f"Failed to send welcome email to {user_email}: {str(e)}")
+        raise
 
-    Returns:
-        str: Rendered HTML email content
 
-    Raises:
-        Exception: If template rendering fails
-    """
+def generate_welcome_email_html(user_name: Optional[str] = None) -> str | None:
+    """Generate HTML email content for welcome email using Jinja2 template."""
     try:
         template = jinja_env.get_template("welcome.html")
 
@@ -297,56 +260,10 @@ def generate_welcome_email_html(user_name: Optional[str] = None) -> str:
         raise
 
 
-def generate_pro_subscription_html(
-    user_name: str, discord_url: str, whatsapp_url: str, twitter_url: str
-) -> str:
-    """
-    Generate HTML email content for pro subscription welcome using Jinja2 template.
-
-    Args:
-        user_name: User's name
-        discord_url: Discord community URL
-        whatsapp_url: WhatsApp community URL
-        twitter_url: Twitter profile URL
-
-    Returns:
-        str: Rendered HTML email content
-
-    Raises:
-        Exception: If template rendering fails
-    """
-    try:
-        template = jinja_env.get_template("subscribed.html")
-        html_content = template.render(
-            user_name=user_name,
-            discord_url=discord_url,
-            whatsapp_url=whatsapp_url,
-            twitter_url=twitter_url,
-        )
-        return html_content
-    except Exception as e:
-        logger.error(f"Error generating pro subscription email HTML: {str(e)}")
-        raise
-
-
-# ============================================================================
-# USER ENGAGEMENT EMAILS
-# ============================================================================
-
-
 async def send_inactive_user_email(
     user_email: str, user_name: Optional[str] = None
 ) -> None:
-    """
-    Send re-engagement email to users who have been inactive for more than 7 days.
-
-    Args:
-        user_email: User's email address
-        user_name: User's name (optional)
-
-    Raises:
-        Exception: If email sending fails
-    """
+    """Send email to inactive user using Jinja2 template."""
     try:
         subject = "We miss you at GAIA 🌱"
         html_content = generate_inactive_user_email_html(user_name)
@@ -366,19 +283,26 @@ async def send_inactive_user_email(
         raise
 
 
+def generate_pro_subscription_html(
+    user_name: str, discord_url: str, whatsapp_url: str, twitter_url: str
+) -> str:
+    """Generate HTML email for pro subscription welcome using the Jinja2 template."""
+    try:
+        template = jinja_env.get_template("subscribed.html")
+        html_content = template.render(
+            user_name=user_name,
+            discord_url=discord_url,
+            whatsapp_url=whatsapp_url,
+            twitter_url=twitter_url,
+        )
+        return html_content
+    except Exception as e:
+        logger.error(f"Error generating pro subscription email HTML: {str(e)}")
+        raise
+
+
 def generate_inactive_user_email_html(user_name: Optional[str] = None) -> str:
-    """
-    Generate HTML email content for inactive user re-engagement email using Jinja2 template.
-
-    Args:
-        user_name: User's name (optional)
-
-    Returns:
-        str: Rendered HTML email content
-
-    Raises:
-        Exception: If template rendering fails
-    """
+    """Generate HTML email content for inactive user email using Jinja2 template."""
     try:
         template = jinja_env.get_template("inactive.html")
 

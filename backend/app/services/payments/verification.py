@@ -166,13 +166,14 @@ async def verify_payment(
                 try:
                     user = await users_collection.find_one({"_id": ObjectId(user_id)})
                     logger.info(user)
-                    await send_pro_subscription_email(
-                        user_name=user.get("first_name", user.get("name", "there")),
-                        user_email=user["email"],
-                    )
-                    logger.info(
-                        f"Pro subscription welcome email sent to {user['email']}"
-                    )
+                    if user:
+                        await send_pro_subscription_email(
+                            user_name=user.get("first_name", user.get("name", "there")),
+                            user_email=user["email"],
+                        )
+                        logger.info(
+                            f"Pro subscription welcome email sent to {user['email']}"
+                        )
                 except Exception as e:
                     logger.error(
                         f"Failed to send pro subscription email to user {user_id}: {e}"

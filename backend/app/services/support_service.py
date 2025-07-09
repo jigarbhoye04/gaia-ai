@@ -3,7 +3,7 @@
 import asyncio
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import cloudinary
 import cloudinary.uploader
@@ -168,7 +168,7 @@ async def create_support_request(
         current_time = datetime.now(timezone.utc)
 
         # Create support request document
-        support_request_doc = {
+        support_request_doc: Dict[str, Any] = {
             "_id": request_id,
             "ticket_id": ticket_id,
             "user_id": user_id,

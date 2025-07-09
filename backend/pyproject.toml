@@ -90,9 +90,13 @@ dependencies = [
   "razorpay>=1.4.2",
   "tomli>=2.2.1",
   "cfgv>=3.4.0",
+  "types-pytz>=2025.2.0.20250516",
 ]
 
 [dependency-groups]
+dev = [
+    "mypy>=1.16.1",
+]
 heavy = [
   "sentence-transformers",
   "langchain",
