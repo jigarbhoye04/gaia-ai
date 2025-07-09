@@ -5,7 +5,11 @@ from bson import ObjectId
 from fastapi import HTTPException, status
 
 from app.db.mongodb.collections import conversations_collection
-from app.models.chat_models import ConversationModel, UpdateMessagesRequest
+from app.models.chat_models import (
+    ConversationModel,
+    SystemPurpose,
+    UpdateMessagesRequest,
+)
 
 
 async def create_conversation_service(
@@ -25,6 +29,8 @@ async def create_conversation_service(
         "user_id": user_id,
         "conversation_id": conversation.conversation_id,
         "description": conversation.description,
+        "is_system_generated": conversation.is_system_generated or False,
+        "system_purpose": conversation.system_purpose,
         "messages": [],
         "createdAt": created_at,
     }
@@ -63,6 +69,8 @@ async def get_conversations(user: dict, page: int = 1, limit: int = 10) -> dict:
         "conversation_id": 1,
         "description": 1,
         "starred": 1,
+        "is_system_generated": 1,
+        "system_purpose": 1,
         "createdAt": 1,
     }
 
@@ -230,6 +238,7 @@ async def update_messages(request: UpdateMessagesRequest, user: dict) -> dict:
         "conversation_id": conversation_id,
         "message": "Messages updated",
         "modified_count": update_result.modified_count,
+        "message_ids": [msg["message_id"] for msg in messages],
     }
 
 
@@ -300,3 +309,100 @@ async def get_starred_messages(user: dict) -> dict:
         )
 
     return {"results": results}
+
+
+async def create_system_conversation(
+    user_id: str, description: str, system_purpose: SystemPurpose
+) -> dict:
+    """
+    Create a system-generated conversation with proper flags.
+
+    Args:
+        user_id: The user ID
+        description: Description of the conversation
+        system_purpose: Purpose identifier (e.g., "email_processing", "reminder_processing")
+
+    Returns:
+        dict: Created conversation data
+    """
+    from uuid import uuid4
+
+    conversation_id = str(uuid4())
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    conversation_data = ConversationModel(
+        conversation_id=conversation_id,
+        description=description,
+        is_system_generated=True,
+        system_purpose=system_purpose,
+    ).model_dump(exclude_unset=True, exclude_none=True)
+
+    conversation_data["user_id"] = user_id
+    conversation_data["messages"] = []
+    conversation_data["createdAt"] = created_at
+
+    try:
+        insert_result = await conversations_collection.insert_one(conversation_data)
+        if not insert_result.acknowledged:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create system conversation",
+            )
+
+        return {
+            "conversation_id": conversation_id,
+            "user_id": user_id,
+            "description": description,
+            "is_system_generated": True,
+            "system_purpose": system_purpose,
+            "createdAt": created_at,
+            "detail": "System conversation created successfully",
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create system conversation: {str(e)}",
+        )
+
+
+async def get_or_create_system_conversation(
+    user_id: str, system_purpose: SystemPurpose, description: str | None = None
+) -> dict:
+    """
+    Get existing system conversation for a purpose or create a new one.
+
+    Args:
+        user_id: The user ID
+        system_purpose: Purpose identifier (e.g., "email_processing", "reminder_processing")
+        description: Optional description, defaults to purpose-based description
+
+    Returns:
+        dict: Existing or newly created system conversation
+    """
+    # Try to find existing system conversation for this purpose
+    existing_conversation = await conversations_collection.find_one(
+        {
+            "user_id": user_id,
+            "is_system_generated": True,
+            "system_purpose": system_purpose,
+        }
+    )
+
+    if existing_conversation:
+        existing_conversation["_id"] = str(existing_conversation["_id"])
+        return existing_conversation
+
+    # Create new system conversation if none exists
+    if not description:
+        description_map = {
+            "email_processing": "Email Actions & Notifications",
+            "reminder_processing": "Reminder Management",
+            "task_automation": "Automated Tasks",
+            "system_notifications": "System Notifications",
+        }
+        description = description_map.get(
+            system_purpose,
+            f"System: {system_purpose.replace('_', ' ').title()}",
+        )
+
+    return await create_system_conversation(user_id, description, system_purpose)

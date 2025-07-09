@@ -3,8 +3,8 @@ import json
 import time
 from typing import Annotated
 
-from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
@@ -28,6 +28,7 @@ async def web_search_tool(
     ],
     config: RunnableConfig,
 ) -> str:
+
     start_time = time.time()
 
     try:

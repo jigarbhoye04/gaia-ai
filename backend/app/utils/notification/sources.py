@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
@@ -13,214 +12,289 @@ from app.models.notification.notification_models import (
     NotificationAction,
     NotificationContent,
     NotificationRequest,
-    NotificationRules,
     NotificationSourceEnum,
     NotificationType,
     RedirectConfig,
 )
+from app.services.notification_service import notification_service
 
 
-class NotificationSource(ABC):
-    """Base class for notification sources"""
+class AIProactiveNotificationSource:
+    """
+    Notification source for AI-initiated proactive actions.
 
-    @property
-    @abstractmethod
-    def source_id(self) -> str:
-        pass
+    This class contains static methods to create notifications for various
+    AI-driven proactive actions like email composition, calendar events,
+    and task creation that are initiated by backend workers.
+    """
 
-    @abstractmethod
-    async def trigger(self, context: Any) -> List[NotificationRequest]:
-        pass
+    @staticmethod
+    def create_calendar_event_notification(
+        user_id: str,
+        notification_data: List[EventCreateRequest],
+    ) -> List[NotificationRequest]:
+        """Create notification for AI-generated calendar events"""
+        try:
+            return [
+                NotificationRequest(
+                    user_id=user_id,
+                    source=NotificationSourceEnum.AI_CALENDAR_EVENT,
+                    type=NotificationType.INFO,
+                    priority=2,
+                    channels=[
+                        ChannelConfig(channel_type="inapp", enabled=True, priority=1)
+                    ],
+                    content=NotificationContent(
+                        title="New Calendar Event Created",
+                        body=notification.description,
+                        actions=[
+                            NotificationAction(
+                                type=ActionType.API_CALL,
+                                label="Confirm Event",
+                                style=ActionStyle.SECONDARY,
+                                requires_confirmation=True,
+                                confirmation_message="Are you sure you want to confirm this event?",
+                                config=ActionConfig(
+                                    api_call=ApiCallConfig(
+                                        endpoint="/api/v1/calendar/event",
+                                        method="POST",
+                                        payload=notification.model_dump(),
+                                        success_message="Event confirmed successfully!",
+                                        error_message="Failed to confirm event",
+                                        is_internal=True,
+                                    )
+                                ),
+                            ),
+                        ],
+                    ),
+                    metadata={
+                        "notification": notification.model_dump(),
+                        "event_title": notification.summary,
+                        "event_description": notification.description,
+                    },
+                )
+                for notification in notification_data
+            ]
+        except Exception as e:
+            print(f"Error creating calendar event notification: {e}")
+            return []
 
-    def validate(self, request: NotificationRequest) -> bool:
-        """Optional validation for notification requests"""
-        return True
+    @staticmethod
+    def create_mail_composition_notification(
+        user_id: str,
+        email_data: Dict[str, Any],
+    ) -> NotificationRequest:
+        """Create notification for AI-composed email drafts with Preview & Edit and Send actions"""
 
+        email_id = email_data.get("email_id", "")
+        subject = email_data.get("subject", "Untitled Email")
+        body = email_data.get("body", "")
+        recipients = email_data.get("to", [])
+        recipient_query = email_data.get("recipient_query", "")
 
-# AI Proactive Source Example
-class AIEmailDraftSource(NotificationSource):
-    """Source for AI-generated email draft notifications"""
+        # Create a friendly notification body
+        recipient_text = ""
+        if recipients:
+            if len(recipients) == 1:
+                recipient_text = f" to {recipients[0]}"
+            else:
+                recipient_text = f" to {len(recipients)} recipients"
+        elif recipient_query:
+            recipient_text = f" based on your request for '{recipient_query}'"
 
-    @property
-    def source_id(self) -> str:
-        return "ai-email-draft"
+        notification_body = f"I've drafted an email{recipient_text} with the subject '{subject}'. You can preview and edit it before sending."
 
-    async def trigger(self, context: Dict[str, Any]) -> List[NotificationRequest]:
-        """Generate email draft notification"""
-
-        return [
-            create_email_draft_notification(
-                user_id=context["user_id"],
-                draft_id=context["draft_id"],
-                original_email_id=context["original_email_id"],
-            )
-        ]
-
-
-class AIEmailCalendarSource(NotificationSource):
-    """Source for AI-generated calendar event notifications"""
-
-    @property
-    def source_id(self) -> str:
-        return "ai-calendar-event"
-
-    async def trigger(self, context: Dict[str, Any]) -> List[NotificationRequest]:
-        """Generate calendar event notification"""
-        return create_calendar_event_notification(
-            user_id=context["user_id"],
-            notification_data=context["notification_data"],
+        # Create Preview & Send Action - Opens modal for editing and sending
+        preview_send_action = NotificationAction(
+            type=ActionType.MODAL,
+            label="Preview & Send",
+            style=ActionStyle.PRIMARY,
+            config=ActionConfig(
+                modal=ModalConfig(
+                    component="EmailPreviewModal",
+                    props={
+                        "email_id": email_id,
+                        "subject": subject,
+                        "body": body,
+                        "recipients": recipients,
+                        "mode": "edit",
+                        "recipient_query": recipient_query,
+                        "notificationId": "{{notification_id}}",
+                        "actionId": "{{action_id}}",
+                    },
+                )
+            ),
+            icon="mail",
         )
 
-
-# Example notification for email draft scenario
-def create_email_draft_notification(
-    user_id: str, draft_id: str, original_email_id: str
-) -> NotificationRequest:
-    """Create notification for AI-drafted email"""
-    return NotificationRequest(
-        user_id=user_id,
-        source=NotificationSourceEnum.AI_EMAIL_DRAFT,
-        type=NotificationType.INFO,
-        priority=2,
-        channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
-        content=NotificationContent(
-            title="Email draft ready for review",
-            body="I've drafted a response to John's email about the project timeline. Would you like to review and send?",
-            actions=[
-                NotificationAction(
-                    type=ActionType.API_CALL,
-                    label="Send Now",
-                    style=ActionStyle.PRIMARY,
-                    requires_confirmation=True,
-                    confirmation_message="Are you sure you want to send this email?",
-                    config=ActionConfig(
-                        api_call=ApiCallConfig(
-                            endpoint="/api/emails/send",
-                            method="POST",
-                            payload={"draft_id": draft_id},
-                            success_message="Email sent successfully!",
-                            error_message="Failed to send email",
-                        )
-                    ),
-                ),
-                NotificationAction(
-                    type=ActionType.REDIRECT,
-                    label="Review in Gmail",
-                    style=ActionStyle.SECONDARY,
-                    config=ActionConfig(
-                        redirect=RedirectConfig(
-                            url=f"https://mail.google.com/mail/u/0/#drafts/{draft_id}",
-                            open_in_new_tab=True,
-                            close_notification=False,
-                        )
-                    ),
-                ),
-                NotificationAction(
-                    type=ActionType.MODAL,
-                    label="Edit Here",
-                    style=ActionStyle.SECONDARY,
-                    config=ActionConfig(
-                        modal=ModalConfig(
-                            component="EmailEditModal", props={"draft_id": draft_id}
-                        )
-                    ),
-                ),
-            ],
-        ),
-        metadata={
-            "draft_id": draft_id,
-            "original_email_id": original_email_id,
-            "ai_confidence": 0.85,
-            "email_subject": "Re: Project Timeline Discussion",
-            "recipient": "john@example.com",
-        },
-        rules=NotificationRules(
-            max_retries=2, expire_after_hours=24, respect_quiet_hours=True
-        ),
-    )
-
-
-def create_calendar_event_notification(
-    user_id: str,
-    notification_data: List[EventCreateRequest],
-) -> List[NotificationRequest]:
-    """Create notification for AI-generated calendar event"""
-    print("Creating calendar event notifications for user:", user_id)
-
-    try:
-        return [
-            NotificationRequest(
-                user_id=user_id,
-                source=NotificationSourceEnum.AI_CALENDAR_EVENT,
-                type=NotificationType.INFO,
-                priority=2,
-                channels=[
-                    ChannelConfig(channel_type="inapp", enabled=True, priority=1)
-                ],
-                content=NotificationContent(
-                    title="New Calendar Event Created",
-                    body=notification.description,
-                    actions=[
-                        NotificationAction(
-                            type=ActionType.API_CALL,
-                            label="Confirm Event",
-                            style=ActionStyle.SECONDARY,
-                            requires_confirmation=True,
-                            confirmation_message="Are you sure you want to confirm this event?",
-                            config=ActionConfig(
-                                api_call=ApiCallConfig(
-                                    endpoint="/api/v1/calendar/event",
-                                    method="POST",
-                                    payload=notification.model_dump(),
-                                    success_message="Event confirmed successfully!",
-                                    error_message="Failed to confirm event",
-                                    is_internal=True,
-                                )
-                            ),
-                        ),
-                    ],
-                ),
-                metadata={
-                    "notification": notification.model_dump(),
-                    "event_title": notification.summary,
-                    "event_description": notification.description,
-                    "event_time": "2023-10-15T10:00:00Z",
+        return NotificationRequest(
+            user_id=user_id,
+            source=NotificationSourceEnum.AI_EMAIL_DRAFT,
+            type=NotificationType.INFO,
+            priority=2,
+            channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
+            content=NotificationContent(
+                title="Email draft ready for review",
+                body=notification_body,
+                actions=[preview_send_action],
+            ),
+            metadata={
+                "mail_data": {
+                    "id": email_id,
+                    "subject": subject,
+                    "body": body,
+                    "recipients": recipients,
                 },
-                rules=NotificationRules(
-                    max_retries=2, expire_after_hours=24, respect_quiet_hours=True
+                "recipient_query": recipient_query,
+                "composed_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+    @staticmethod
+    def create_todo_creation_notification(
+        user_id: str,
+        todo_data: Dict[str, Any],
+    ) -> NotificationRequest:
+        """Create notification for AI-created todo tasks from backend-initiated actions"""
+
+        title = todo_data.get("title", "Untitled Task")
+        description = todo_data.get("description", "")
+        due_date = todo_data.get("due_date")
+        priority = todo_data.get("priority", "none")
+        labels = todo_data.get("labels", [])
+
+        # Create a friendly notification body
+        notification_body = f"I've created a task '{title}' for you."
+
+        if due_date:
+            notification_body += f" It's due on {due_date}."
+        if priority and priority != "none":
+            notification_body += f" Priority: {priority}."
+        if labels:
+            notification_body += f" Labels: {', '.join(labels)}."
+
+        notification_body += " Would you like to review or modify it?"
+
+        return NotificationRequest(
+            user_id=user_id,
+            source=NotificationSourceEnum.AI_TODO_ADDED,
+            type=NotificationType.INFO,
+            priority=2,
+            channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
+            content=NotificationContent(
+                title="New task created",
+                body=notification_body,
+                actions=[
+                    NotificationAction(
+                        type=ActionType.REDIRECT,
+                        label="View Task",
+                        style=ActionStyle.PRIMARY,
+                        config=ActionConfig(
+                            redirect=RedirectConfig(
+                                url=f"/todos/?todoId={todo_data.get('id')}",
+                                open_in_new_tab=False,
+                                close_notification=True,
+                            )
+                        ),
+                    ),
+                    NotificationAction(
+                        type=ActionType.API_CALL,
+                        label="Mark Complete",
+                        style=ActionStyle.SECONDARY,
+                        config=ActionConfig(
+                            api_call=ApiCallConfig(
+                                endpoint=f"/api/v1/todos/{todo_data.get('id')}",
+                                method="PUT",
+                                payload={"completed": True},
+                                success_message="Task marked as complete!",
+                                error_message="Failed to complete task",
+                                is_internal=True,
+                            )
+                        ),
+                    ),
+                ],
+            ),
+            metadata={
+                "todo_id": todo_data.get("id"),
+                "todo_title": title,
+                "todo_description": (
+                    description[:200] + "..." if len(description) > 200 else description
                 ),
-            )
-            for notification in notification_data
-        ]
-    except Exception as e:
-        print(f"Error creating calendar event notification: {e}")
-        return []
+                "todo_priority": priority,
+                "todo_labels": labels,
+                "todo_due_date": due_date,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
 
+    @staticmethod
+    def create_reminder_notification(
+        user_id: str,
+        reminder_id: str,
+        title: str,
+        body: str,
+        actions: List[NotificationAction],
+    ) -> NotificationRequest:
+        """Create notification for AI-generated reminders"""
+        return NotificationRequest(
+            user_id=user_id,
+            source=NotificationSourceEnum.AI_REMINDER,
+            type=NotificationType.INFO,
+            priority=1,
+            channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
+            content=NotificationContent(
+                title=title,
+                body=body,
+                actions=actions,
+            ),
+            metadata={
+                "reminder_id": reminder_id,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
 
-def create_reminder_notification(
-    user_id: str,
-    reminder_id: str,
-    title: str,
-    body: str,
-    actions: List[NotificationAction],
-) -> NotificationRequest:
-    """Create notification for a reminder"""
-    return NotificationRequest(
-        user_id=user_id,
-        source=NotificationSourceEnum.AI_REMINDER,
-        type=NotificationType.INFO,
-        priority=1,
-        channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
-        content=NotificationContent(
-            title=title,
-            body=body,
-            actions=actions,
-        ),
-        metadata={
-            "reminder_id": reminder_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        },
-        rules=NotificationRules(
-            max_retries=3, expire_after_hours=48, respect_quiet_hours=True
-        ),
-    )
+    @staticmethod
+    async def create_proactive_notification(
+        user_id: str,
+        conversation_id: str,
+        message_id: str,
+        title: str,
+        body: str,
+        source: NotificationSourceEnum,
+        send: bool = True,
+    ) -> NotificationRequest:
+        """Create a generic proactive notification"""
+        notification = NotificationRequest(
+            user_id=user_id,
+            source=source,
+            type=NotificationType.INFO,
+            priority=1,
+            channels=[ChannelConfig(channel_type="inapp", enabled=True, priority=1)],
+            content=NotificationContent(
+                title=title,
+                body=body,
+                actions=[
+                    NotificationAction(
+                        type=ActionType.REDIRECT,
+                        label="More Details",
+                        style=ActionStyle.PRIMARY,
+                        config=ActionConfig(
+                            redirect=RedirectConfig(
+                                close_notification=True,
+                                open_in_new_tab=False,
+                                url=f"/c/{conversation_id}?messageId={message_id}",
+                            )
+                        ),
+                        icon="mail",
+                    )
+                ],
+            ),
+            metadata={
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+        if send:
+            await notification_service.create_notification(notification)
+
+        return notification

@@ -37,6 +37,7 @@ class MongoDB:
 
     def ping(self):
         try:
+
             # Use the same URI that was used to initialize the async client
             sync_client = pymongo.MongoClient(settings.MONGO_DB)
             sync_client.admin.command("ping")

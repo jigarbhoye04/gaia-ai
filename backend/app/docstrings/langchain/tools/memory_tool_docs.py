@@ -11,7 +11,7 @@ Args:
     content: The memory content to store
     metadata: Optional metadata to associate with the memory
     config: Runtime configuration containing user context
-
+    
 Returns:
     Confirmation message with the memory ID
 """
@@ -26,7 +26,7 @@ Args:
     query: The search query text
     limit: Maximum number of results to return
     config: Runtime configuration containing user context
-
+    
 Returns:
     Formatted string with search results
 """
@@ -41,7 +41,7 @@ Args:
     page: Page number to retrieve (starting from 1)
     page_size: Number of results per page
     config: Runtime configuration containing user context
-
+    
 Returns:
     Formatted string with paginated memory results
 """

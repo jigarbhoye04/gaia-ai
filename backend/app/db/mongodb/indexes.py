@@ -309,15 +309,9 @@ async def create_mail_indexes():
         # Create all mail indexes concurrently
         await asyncio.gather(
             # Unique index for email IDs
-            mail_collection.create_index("email_id", unique=True),
-            # For user-specific mail queries
-            mail_collection.create_index([("user_id", 1), ("date", -1)]),
+            mail_collection.create_index([("user_id", 1)]),
             # For thread-based queries
-            mail_collection.create_index([("user_id", 1), ("thread_id", 1)]),
-            # For label-based filtering
-            mail_collection.create_index([("user_id", 1), ("labels", 1)]),
-            # For read/unread status
-            mail_collection.create_index([("user_id", 1), ("is_read", 1)]),
+            mail_collection.create_index([("message_id", 1)]),
         )
 
         logger.info("Created mail indexes")

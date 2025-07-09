@@ -2,15 +2,15 @@
 Background task processor for workflow generation.
 """
 
-from typing import Dict, Any
 from datetime import datetime, timezone
+from typing import Any, Dict
 
 from bson import ObjectId
 
 from app.config.loggers import worker_logger as logger
 from app.db.mongodb.collections import todos_collection
-from app.services.todo_service import TodoService
 from app.models.todo_models import WorkflowStatus
+from app.services.todo_service import TodoService
 
 
 async def process_workflow_generation(task_data: Dict[str, Any]) -> None:
@@ -31,6 +31,12 @@ async def process_workflow_generation(task_data: Dict[str, Any]) -> None:
             return
 
         logger.info(f"Starting workflow generation for todo {todo_id}: {title}")
+
+        if not title or not description:
+            logger.warning(
+                f"Title or description is empty for todo {todo_id}. Skipping workflow generation."
+            )
+            return
 
         # Generate workflow using the existing method
         workflow_result = await TodoService._generate_workflow_for_todo(
@@ -53,6 +59,12 @@ async def process_workflow_generation(task_data: Dict[str, Any]) -> None:
                 logger.info(
                     f"Successfully generated and saved workflow for todo {todo_id} with {len(workflow_result['workflow'].get('steps', []))} steps"
                 )
+
+                if not user_id:
+                    logger.warning(
+                        f"User ID is missing for todo {todo_id}. Cannot invalidate cache."
+                    )
+                    return
 
                 # Invalidate cache for this todo
                 await TodoService._invalidate_cache(user_id, None, todo_id, "update")

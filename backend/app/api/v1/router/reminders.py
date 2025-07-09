@@ -398,7 +398,7 @@ async def resume_reminder_endpoint(
 
 @router.get("/cron/validate")
 async def validate_cron_endpoint(
-    expression: str = Query(..., description="Cron expression to validate"),
+    expression: str = Query(..., description="Cron expression to validate")
 ):
     """
     Validate a cron expression.

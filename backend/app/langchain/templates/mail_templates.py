@@ -1,8 +1,13 @@
 """Templates for mail-related tool responses."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
+from app.langchain.prompts.mail_prompts import (
+    COMPOSE_EMAIL_SUMMARY,
+    EMAIL_PROCESSING_PLANNER,
+    EMAIL_PROCESSING_REPLANNER,
+)
 from langchain_core.prompts import PromptTemplate
-from app.langchain.prompts.mail_prompts import COMPOSE_EMAIL_SUMMARY
 
 
 # Template for minimal message representation
@@ -177,4 +182,27 @@ def process_get_thread_response(response: Dict[str, Any]) -> Dict[str, Any]:
 COMPOSE_EMAIL_TEMPLATE = PromptTemplate(
     input_variables=["subject", "body"],
     template=COMPOSE_EMAIL_SUMMARY,
+)
+
+# Email processing plan template
+EMAIL_PROCESSING_PLAN_TEMPLATE = PromptTemplate(
+    input_variables=["messages", "format_instructions"],
+    template=EMAIL_PROCESSING_PLANNER,
+)
+
+# Email processing replan template
+EMAIL_PROCESSING_REPLAN_TEMPLATE = PromptTemplate(
+    input_variables=["input", "plan", "past_steps", "format_instructions"],
+    template=EMAIL_PROCESSING_REPLANNER,
+)
+
+MAIL_RECEIVED_USER_MESSAGE_TEMPLATE = PromptTemplate(
+    input_variables=["sender", "subject", "snippet"],
+    template="""📩 New Email Received
+From: {sender}
+Subject: {subject}
+
+📬 Content:
+{snippet}
+""",
 )
