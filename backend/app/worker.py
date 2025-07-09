@@ -8,6 +8,7 @@ from aiolimiter import AsyncLimiter
 
 from app.config.loggers import worker_logger as logger
 from app.config.settings import settings
+from app.utils.session_logger.email_session_logger import create_session, end_session
 
 # TODO: Analyze the rate limit and adjust based on actual LLM performance
 llm_limiter = AsyncLimiter(10, 1)  # 10 tasks per second
@@ -20,16 +21,54 @@ async def on_email_message(message: AbstractIncomingMessage):
 
     async with message.process():
         async with llm_limiter:
+            session = None
             try:
+                # Parse message data
                 data = json.loads(message.body.decode())
-                await process_emails.process_emails(
-                    history_id=data.get("history_id"), email=data.get("email_address")
+                history_id = data.get("history_id")
+                email_address = data.get("email_address")
+
+                # Create processing session
+                session = create_session(history_id, email_address)
+
+                session.log_milestone(
+                    "Message received",
+                    {
+                        "queue_message_id": getattr(message, "message_id", "unknown"),
+                        "routing_key": getattr(message, "routing_key", "unknown"),
+                    },
                 )
-                logger.info(
-                    f"Processing email message: {data.get('history_id')} - {data.get('email_address')}"
+
+                # Process emails with session
+                result = await process_emails.process_emails(
+                    history_id=history_id, email=email_address, session=session
                 )
+
+                session.log_session_summary(result)
+                logger.info(f"Session {session.session_id} completed successfully")
+
+            except json.JSONDecodeError as e:
+                error_msg = f"Failed to decode message JSON: {e}"
+                if session:
+                    session.log_error("JSON_DECODE_ERROR", error_msg)
+                    session.log_session_summary(
+                        {"status": "failed", "error": error_msg}
+                    )
+                logger.error(error_msg)
+
             except Exception as e:
-                logger.error(f"Failed to process email message: {e}")
+                error_msg = f"Failed to process message: {e}"
+                if session:
+                    session.log_error("PROCESSING_ERROR", error_msg)
+                    session.log_session_summary(
+                        {"status": "failed", "error": error_msg}
+                    )
+                logger.error(error_msg)
+
+            finally:
+                # Clean up session
+                if session:
+                    end_session(session.session_id)
 
 
 async def on_workflow_message(message: AbstractIncomingMessage):

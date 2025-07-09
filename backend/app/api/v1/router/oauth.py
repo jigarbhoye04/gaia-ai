@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from urllib.parse import urlencode, urlparse
 
@@ -13,14 +14,17 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import (
+    get_current_user,
+    get_user_timezone,
+)
 from app.config.loggers import auth_logger as logger
-from app.config.settings import settings
 from app.config.oauth_config import (
     OAUTH_INTEGRATIONS,
     get_integration_by_id,
     get_integration_scopes,
 )
+from app.config.settings import settings
 from app.models.user_models import (
     OnboardingPreferences,
     OnboardingRequest,
@@ -130,9 +134,9 @@ async def login_integration(
 
 @router.get("/google/callback", response_class=RedirectResponse)
 async def callback(
+    background_tasks: BackgroundTasks,
     code: Optional[str] = None,
     error: Optional[str] = None,
-    background_tasks: BackgroundTasks = None,
 ) -> RedirectResponse:
     try:
         # Handle OAuth errors (e.g., user canceled)
@@ -434,14 +438,18 @@ async def update_me(
 
 @router.post("/onboarding", response_model=OnboardingResponse)
 async def complete_user_onboarding(
-    onboarding_data: OnboardingRequest, user: dict = Depends(get_current_user)
+    onboarding_data: OnboardingRequest,
+    user: dict = Depends(get_current_user),
+    user_time: datetime = Depends(get_user_timezone),
 ):
     """
     Complete user onboarding by storing preferences.
     This endpoint should be called when the user completes the onboarding flow.
     """
     try:
-        updated_user = await complete_onboarding(user["user_id"], onboarding_data)
+        updated_user = await complete_onboarding(
+            user["user_id"], onboarding_data, user_timezone=user_time
+        )
 
         return OnboardingResponse(
             success=True, message="Onboarding completed successfully", user=updated_user

@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "GAIA",
   "colors": {
     "primary": "#00bbff",
@@ -15,7 +15,10 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": ["introduction", "quick-start"]
+            "pages": [
+              "introduction",
+              "quick-start"
+            ]
           },
           {
             "group": "Self-Hosting",
@@ -78,6 +81,7 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
+
 
       "href": "https://heygaia.io"
     }

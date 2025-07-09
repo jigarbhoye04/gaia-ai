@@ -12,11 +12,14 @@ from app.models.user_models import (
     OnboardingPreferences,
     OnboardingRequest,
 )
+from app.utils.timezone import get_timezone_from_datetime
 from app.utils.user_preferences_utils import format_user_preferences_for_agent
 
 
 async def complete_onboarding(
-    user_id: str, onboarding_data: OnboardingRequest
+    user_id: str,
+    onboarding_data: OnboardingRequest,
+    user_timezone: Optional[datetime] = None,
 ) -> Dict[str, Any]:
     """
     Complete user onboarding by storing preferences and updating user profile.
@@ -59,6 +62,23 @@ async def complete_onboarding(
             preferences=preferences,
         )
 
+        # Prepare update fields
+        update_fields = {
+            "name": onboarding_data.name.strip(),
+            "onboarding": onboarding.model_dump(),
+            "updated_at": datetime.now(timezone.utc),
+        }
+
+        # Extract and add timezone if available
+        if user_timezone:
+            try:
+                timezone_name = get_timezone_from_datetime(user_timezone)
+                update_fields["timezone"] = timezone_name
+            except Exception as e:
+                logger.warning(
+                    f"Could not determine timezone name for user {user_id}: {e}"
+                )
+
         # Atomic update with conditions to prevent race conditions and duplicate onboarding
         updated_user = await users_collection.find_one_and_update(
             {
@@ -69,13 +89,7 @@ async def complete_onboarding(
                     {"onboarding": {"$exists": False}},
                 ],
             },
-            {
-                "$set": {
-                    "name": onboarding_data.name.strip(),  # Update name from onboarding
-                    "onboarding": onboarding.model_dump(),
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
+            {"$set": update_fields},
             return_document=ReturnDocument.AFTER,
         )
 

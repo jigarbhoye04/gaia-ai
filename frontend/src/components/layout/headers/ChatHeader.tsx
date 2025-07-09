@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 
 import ChatOptionsDropdown from "@/components/layout/sidebar/ChatOptionsDropdown";
+import { NotificationCenter } from "@/components/Notifications/NotificationCenter";
 import {
   BubbleConversationChatIcon,
   ChatBubbleAddIcon,
@@ -61,18 +62,7 @@ export default function ChatHeader() {
         >
           <ChatBubbleAddIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
         </Button>
-        {/* <Button
-          aria-label="Notifications"
-          className={`group rounded-lg hover:bg-[#00bbff]/20`}
-          size="icon"
-          variant={"ghost"}
-          onClick={() => {
-            router.push("/notifications");
-            clearMessages();
-          }}
-        >
-          <NotificationIcon className="text-zinc-400 transition-all group-hover:text-primary" />
-        </Button> */}
+        <NotificationCenter />
       </div>
     </div>
   );

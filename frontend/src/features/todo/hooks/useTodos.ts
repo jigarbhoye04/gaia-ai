@@ -8,6 +8,7 @@ import {
   fetchLabels,
   fetchProjects,
   fetchTodayTodos,
+  fetchTodoById,
   fetchTodoCounts,
   fetchTodos,
   fetchTodosByLabel,
@@ -26,6 +27,7 @@ import {
 import { AppDispatch, RootState } from "@/redux/store";
 import {
   Priority,
+  Todo,
   TodoCreate,
   TodoFilters,
   TodoUpdate,
@@ -238,7 +240,7 @@ export const useTodos = () => {
   );
 
   const selectTodo = useCallback(
-    (todo: typeof todoState.selectedTodo) => {
+    (todo: Todo | null) => {
       dispatch(setSelectedTodo(todo));
     },
     [dispatch],
@@ -268,6 +270,13 @@ export const useTodos = () => {
       dispatch(fetchTodoCounts()),
     ]);
   }, [dispatch]);
+
+  const loadTodoById = useCallback(
+    async (todoId: string) => {
+      return dispatch(fetchTodoById(todoId));
+    },
+    [dispatch],
+  );
 
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -307,5 +316,6 @@ export const useTodos = () => {
     updateFilters,
     resetTodoList,
     refreshAllData,
+    loadTodoById,
   };
 };

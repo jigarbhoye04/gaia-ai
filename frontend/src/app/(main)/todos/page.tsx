@@ -9,23 +9,23 @@ import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
+import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import { Priority, TodoFilters, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
   const [_page, setPage] = useState(0);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   const {
     todos,
     projects,
-    selectedTodo,
     loading,
     hasMore,
     loadTodos,
     modifyTodo,
     removeTodo,
-    selectTodo,
   } = useTodos();
 
   // Get filter from URL params
@@ -101,6 +101,10 @@ export default function TodosPage() {
 
   const handleTodoDelete = async (todoId: string) => {
     await removeTodo(todoId);
+    // If the deleted todo was selected (shown in URL), close the detail sheet
+    if (selectedTodoId === todoId) {
+      clearSelection();
+    }
   };
 
   if (loading && todos.length === 0) {
@@ -138,7 +142,7 @@ export default function TodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoClick={(todo) => selectTodo(todo)}
+          onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => {
             const filters: TodoFilters = {
               project_id: projectId || undefined,
@@ -173,9 +177,9 @@ export default function TodosPage() {
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todo={selectedTodo}
-        isOpen={!!selectedTodo}
-        onClose={() => selectTodo(null)}
+        todoId={selectedTodoId}
+        isOpen={!!selectedTodoId}
+        onClose={clearSelection}
         onUpdate={handleTodoUpdate}
         onDelete={handleTodoDelete}
         projects={projects}

@@ -8,6 +8,7 @@ import { todoApi } from "@/features/todo/api/todoApi";
 import TodoDetailSheet from "@/features/todo/components/TodoDetailSheet";
 import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
+import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import {
   Project,
   Todo,
@@ -22,8 +23,8 @@ export default function ProjectTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   const loadProjectData = useCallback(async () => {
     setLoading(true);
@@ -104,24 +105,18 @@ export default function ProjectTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoClick={(todo) => setSelectedTodo(todo)}
+          onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={loadProjectData}
         />
       </div>
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todo={selectedTodo}
-        isOpen={!!selectedTodo}
-        onClose={() => setSelectedTodo(null)}
-        onUpdate={(todoId, updates) => {
-          handleTodoUpdate(todoId, updates);
-          setSelectedTodo((prev) => (prev ? { ...prev, ...updates } : null));
-        }}
-        onDelete={(todoId) => {
-          handleTodoDelete(todoId);
-          setSelectedTodo(null);
-        }}
+        todoId={selectedTodoId}
+        isOpen={!!selectedTodoId}
+        onClose={clearSelection}
+        onUpdate={handleTodoUpdate}
+        onDelete={handleTodoDelete}
         projects={projects}
       />
     </div>

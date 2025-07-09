@@ -11,14 +11,16 @@ import {
   Trash,
   X,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FixedSizeList as List, ListChildComponentProps } from "react-window";
 import InfiniteLoader from "react-window-infinite-loader";
 
+import { StarsIcon } from "@/components/shared/icons";
 import Spinner from "@/components/ui/shadcn/spinner";
 import { EmailFrom } from "@/features/mail/components/MailFrom";
 import ViewEmail from "@/features/mail/components/ViewMail";
 import { useEmailActions } from "@/features/mail/hooks/useEmailActions";
+import { useEmailAnalysisIndicators } from "@/features/mail/hooks/useEmailAnalysis";
 import { useEmailGrouping } from "@/features/mail/hooks/useEmailGrouping";
 import { useEmailReadStatus } from "@/features/mail/hooks/useEmailReadStatus";
 import { useEmailSelection } from "@/features/mail/hooks/useEmailSelection";
@@ -27,6 +29,24 @@ import { useInfiniteEmails } from "@/features/mail/hooks/useInfiniteEmails";
 import { formatTime } from "@/features/mail/utils/mailUtils";
 import useMediaQuery from "@/hooks/ui/useMediaQuery";
 import { EmailData } from "@/types/features/mailTypes";
+
+function AIAnalysisIndicator({ hasAnalysis }: { hasAnalysis: boolean }) {
+  if (!hasAnalysis) return null;
+
+  return (
+    <Tooltip content="AI Analysis Available" color="primary">
+      <div className="flex items-center justify-center">
+        <StarsIcon
+          width={16}
+          height={16}
+          color="#00bbff"
+          fill="#00bbff"
+          className="drop-shadow-md"
+        />
+      </div>
+    </Tooltip>
+  );
+}
 
 export default function MailsPage() {
   const isMobileScreen: boolean = useMediaQuery("(max-width: 600px)");
@@ -55,12 +75,21 @@ export default function MailsPage() {
 
   const groupedItems = useEmailGrouping(emails);
 
+  // Get all email IDs for bulk analysis check
+  const emailIds = useMemo(() => emails.map((email) => email.id), [emails]);
+
+  // Use bulk API to check which emails have analysis
+  const emailAnalysisIndicators = useEmailAnalysisIndicators(
+    emailIds,
+    emailIds.length > 0,
+  );
+
   const {
-    selectedEmail,
     threadMessages,
     isLoadingThread,
     openEmail,
     closeEmail,
+    selectedEmailId,
   } = useEmailViewer();
 
   // Handlers for single email actions
@@ -182,7 +211,10 @@ export default function MailsPage() {
                 <EmailFrom from={email.from} />
               </div>
 
-              <div className="col-span-1 mt-1 min-h-fit text-right text-sm opacity-50 sm:mt-0">
+              <div className="col-span-1 mt-1 flex min-h-fit items-center gap-2 text-right text-sm opacity-50 sm:mt-0">
+                <AIAnalysisIndicator
+                  hasAnalysis={emailAnalysisIndicators.hasAnalysis(email.id)}
+                />
                 {formatTime(email.time)}
               </div>
 
@@ -200,7 +232,10 @@ export default function MailsPage() {
                 {email.subject}
               </div>
 
-              <div className="col-span-1 mt-1 min-h-fit text-right text-sm opacity-50 sm:mt-0">
+              <div className="col-span-1 mt-1 flex min-h-fit items-center gap-2 text-right text-sm opacity-50 sm:mt-0">
+                <AIAnalysisIndicator
+                  hasAnalysis={emailAnalysisIndicators.hasAnalysis(email.id)}
+                />
                 {formatTime(email.time)}
               </div>
               <div className="absolute right-0 flex h-fit w-fit items-center gap-1 rounded-lg bg-zinc-900 p-2 text-sm text-zinc-300 opacity-0 group-hover:opacity-100">
@@ -369,7 +404,7 @@ export default function MailsPage() {
       </InfiniteLoader>
 
       <ViewEmail
-        mail={selectedEmail}
+        mailId={selectedEmailId}
         threadMessages={threadMessages}
         isLoadingThread={isLoadingThread}
         onOpenChange={closeEmail}
