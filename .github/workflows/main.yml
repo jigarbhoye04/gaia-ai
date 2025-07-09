@@ -64,11 +64,11 @@ jobs:
       - name: Install dependencies
         run: |
           # This creates the venv and installs all dependencies from pyproject.toml
-          uv sync
+          uv sync --group dev
           # Install mypy types
-          uv run mypy --install-types --non-interactive
+          mypy --install-types
           # Install pre-commit hooks
-          uv run pre-commit install
+          pre-commit install
 
       - name: Set up pre-commit cache
         uses: actions/cache@v4
