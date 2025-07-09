@@ -30,10 +30,13 @@ repos:
     # uvx no_implicit_optional app
     hooks:
       - id: mypy
+        args: [--ignore-missing-imports]
         # Install dependencies if you have issues of "Library stubs not installed"
         additional_dependencies:
           - types-redis
           - types-requests
+          - types-pytz
+          - types-croniter
 
   - repo: https://github.com/trailofbits/pip-audit
     rev: v2.7.1

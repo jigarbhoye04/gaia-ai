@@ -18,6 +18,7 @@ import {
 } from "@/components/shared/icons";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
+import { Separator } from "@/components/ui";
 
 export default function SidebarTopButtons() {
   const router = useRouter();
@@ -53,7 +54,7 @@ export default function SidebarTopButtons() {
     },
     {
       route: "/notifications",
-      icon: <NotificationIcon height={23} width={23} />,
+      icon: <NotificationIcon height={21} width={21} />,
       label: "Notifications",
     },
     // {
@@ -106,7 +107,7 @@ export default function SidebarTopButtons() {
         </Button>
       </Link> */}
 
-      <div className="flex flex-row items-start gap-1 rounded-2xl">
+      {/* <div className="grid grid-cols-6 grid-rows-1 items-start gap-1 rounded-2xl">
         {buttonData.map(({ route, icon, label }, index) => (
           <Tooltip
             key={index}
@@ -115,7 +116,7 @@ export default function SidebarTopButtons() {
             placement="bottom"
           >
             <Button
-              className="aspect-square w-full"
+              className="aspect-square w-fit"
               isIconOnly
               color={pathname === route ? "primary" : "default"}
               variant={pathname === route ? "solid" : "flat"}
@@ -127,11 +128,13 @@ export default function SidebarTopButtons() {
             </Button>
           </Tooltip>
         ))}
-      </div>
-      {/* {buttonData.map(({ route, icon, label }, index) => (
-        <Link href={route} className="w-full" key={index}>
+      </div> */}
+
+      <div className="flex flex-col gap-1">
+        {buttonData.map(({ route, icon, label }, index) => (
           <Button
-            className="flex w-full justify-start text-sm"
+            key={index}
+            className="w-full justify-start text-sm"
             size="sm"
             variant="light"
             color={pathname === route ? "primary" : "default"}
@@ -142,23 +145,25 @@ export default function SidebarTopButtons() {
           >
             {label}
           </Button>
-        </Link>
-      ))} */}
+        ))}
+      </div>
 
       <Button
-        className="mt-2 flex w-full justify-start text-sm text-primary"
-        color="primary"
+        className="mt-1 flex w-full justify-start text-sm"
         size="sm"
         variant="light"
+        color={pathname.startsWith("/c") ? "primary" : "default"}
         onPress={createNewChat}
+        startContent={
+          <ChatBubbleAddIcon color={undefined} width={21} height={21} />
+        }
       >
-        <ChatBubbleAddIcon color="#00bbff" width={18} />
         New Chat
       </Button>
 
-      {/* <div className="my-2 px-2"> */}
-      {/* <Separator className="bg-zinc-800" /> */}
-      {/* </div> */}
+      <div className="my-2 px-3">
+        <Separator className="bg-zinc-800" />
+      </div>
     </div>
   );
 }
