@@ -7,7 +7,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   // webpack: (config, { dev, isServer }) => {
   //   if (dev) {
   //     // Reduce parallel processing during development
