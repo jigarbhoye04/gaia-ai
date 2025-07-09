@@ -45,20 +45,3 @@ repos:
     hooks:
       - id: detect-secrets
         exclude: ^(mcp\.txt|frontend/pnpm-lock\.yaml)$
-
-  # Node.js hooks (using pre-commit's external hook mechanism)
-  - repo: local
-    hooks:
-      - id: prettier-frontend
-        name: Prettier (Frontend)
-        entry: bash -c 'cd frontend && npx prettier --write'
-        language: system
-        files: ^frontend/.*\.(js|jsx|ts|tsx|json|yaml|yml|css|scss|md)$
-        pass_filenames: false
-
-      - id: eslint-frontend
-        name: ESLint (Frontend)
-        entry: bash -c 'cd frontend && npx eslint --fix'
-        language: system
-        files: ^frontend/.*\.(js|jsx|ts|tsx)$
-        pass_filenames: false
