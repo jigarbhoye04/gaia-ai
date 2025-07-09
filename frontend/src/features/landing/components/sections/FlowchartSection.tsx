@@ -157,7 +157,7 @@ const FlowchartDemo = () => {
             className="px-3"
             selectedKey={activeTab}
             variant="underlined"
-            onSelectionChange={(key: Key) => {
+            onSelectionChange={(key: Key | null) => {
               setActiveTab(key as string);
               setTimeout(() => {
                 mermaid.contentLoaded();
