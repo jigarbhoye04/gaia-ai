@@ -1,6 +1,8 @@
 import logging
 import time
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone as tz
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 import httpx
@@ -302,7 +304,7 @@ def get_user_timezone(
     Returns:
         datetime: The current time in the user's timezone.
     """
-    user_tz = timezone(x_timezone)
+    user_tz = ZoneInfo(x_timezone)
     now = datetime.now(user_tz)
 
     logger.debug(f"User timezone: {user_tz}, Current time: {now}")
