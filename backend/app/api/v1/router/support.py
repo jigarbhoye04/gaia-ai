@@ -232,4 +232,3 @@ async def get_support_rate_limit_status(
         raise HTTPException(
             status_code=500, detail=f"Failed to get rate limit status: {str(e)}"
         )
-

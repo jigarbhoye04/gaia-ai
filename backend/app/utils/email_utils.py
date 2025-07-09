@@ -1,6 +1,8 @@
 """Email utilities for sending various types of emails."""
 
 import os
+from typing import Optional
+
 import resend
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -145,13 +147,23 @@ async def send_pro_subscription_email(
             whatsapp_url=whatsapp_url,
             twitter_url=twitter_url,
         )
+
+        resend.Emails.send(
+            {
+                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "to": [user_email],
+                "subject": subject,
+                "html": html_content,
+                "reply_to": "aryan@heygaia.io",
+            }
+        )
         logger.info(f"Pro subscription welcome email sent to {user_email}")
     except Exception as e:
         logger.error(f"Failed to send pro subscription email to {user_email}: {str(e)}")
         raise
 
 
-async def send_welcome_email(user_email: str, user_name: str = None) -> None:
+async def send_welcome_email(user_email: str, user_name: Optional[str] = None) -> None:
     """Send welcome email to new user using Jinja2 template."""
     try:
         subject = "From the founder of GAIA, personally"
@@ -172,7 +184,7 @@ async def send_welcome_email(user_email: str, user_name: str = None) -> None:
         raise
 
 
-def generate_welcome_email_html(user_name: str = None) -> str:
+def generate_welcome_email_html(user_name: Optional[str] = None) -> str | None:
     """Generate HTML email content for welcome email using Jinja2 template."""
     try:
         template = jinja_env.get_template("welcome.html")
@@ -192,7 +204,9 @@ def generate_welcome_email_html(user_name: str = None) -> str:
         raise
 
 
-async def send_inactive_user_email(user_email: str, user_name: str = None) -> None:
+async def send_inactive_user_email(
+    user_email: str, user_name: Optional[str] = None
+) -> None:
     """Send email to inactive user using Jinja2 template."""
     try:
         subject = "We miss you at GAIA 🌱"
@@ -228,9 +242,10 @@ def generate_pro_subscription_html(
         return html_content
     except Exception as e:
         logger.error(f"Error generating pro subscription email HTML: {str(e)}")
+        raise
 
 
-def generate_inactive_user_email_html(user_name: str = None) -> str:
+def generate_inactive_user_email_html(user_name: Optional[str] = None) -> str:
     """Generate HTML email content for inactive user email using Jinja2 template."""
     try:
         template = jinja_env.get_template("inactive.html")
