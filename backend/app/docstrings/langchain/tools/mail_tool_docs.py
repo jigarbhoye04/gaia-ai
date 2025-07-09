@@ -78,34 +78,6 @@ SEARCH_GMAIL_MESSAGES = """
     Note: If results are empty, iterate with variations — this tool is most effective when you try multiple queries or adjust filters based on feedback.
     """
 
-
-SUMMARIZE_EMAIL = """
-    Summarize an email using LLM.
-
-    This tool generates a concise summary of an email message, making it easier to
-    understand long or complex emails. Can extract action items if requested.
-
-    When to use:
-    - When user wants to quickly understand an email's key points
-    - When processing long, complex emails
-    - When creating a digest of multiple emails
-    - When extracting action items from messages
-    - When user explicitly asks for email summarization
-
-    Input:
-    - message_id: Required, the Gmail message ID to summarize
-    - include_action_items: Optional boolean, extracts tasks/requests
-    - max_length: Optional, controls summary length in words
-
-    Output:
-    - Dictionary containing email metadata and the generated summary
-    - Action items if requested
-    - Error message if operation fails
-
-    Limitations: Quality depends on email content structure; very technical or poorly
-    formatted emails may yield less useful summaries.
-    """
-
 COMPOSE_EMAIL = """
     Compose, write, or draft an email message based on the user's request.
 

@@ -16,11 +16,11 @@ def inject_web_search_tool_call(state: State):
     return {"messages": messages}
 
 
-def inject_deep_search_tool_call(state: State):
+def inject_deep_research_tool_call(state: State):
     tool_call = {
-        "name": "deep_search_tool",  # Name of tool to call
+        "name": "deep_research_tool",  # Name of tool to call
         "args": {"query_text": state.get("query", "")},  # Inject query from the state
-        "id": "forced_deep_search_call",
+        "id": "forced_deep_research_call",
         "type": "tool_call",
     }
     ai_message = AIMessage(content="", tool_calls=[tool_call])
@@ -34,7 +34,7 @@ def should_call_tool(state: State):
     Decides what to do next based on the flags in the state.
 
     - If 'force_web_search' is True, go to the node that injects a web search tool call.
-    - If 'force_deep_search' is True, go to the node that injects a deep search tool call.
+    - If 'force_deep_research' is True, go to the node that injects a deep research tool call.
     - If neither flag is set, just continue with the chatbot as usual.
 
     This helps control whether we force specific tools before letting the chatbot respond.
@@ -42,7 +42,7 @@ def should_call_tool(state: State):
     """
     if state.get("force_web_search", False):
         return "call_1"
-    elif state.get("force_deep_search", False):
+    elif state.get("force_deep_research", False):
         return "call_2"
     else:
         return "call_chatbot"

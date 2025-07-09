@@ -15,7 +15,7 @@ llm_limiter = AsyncLimiter(10, 1)  # 10 tasks per second
 stop_event = asyncio.Event()
 
 
-async def on_message(message: AbstractIncomingMessage):
+async def on_email_message(message: AbstractIncomingMessage):
     import app.worker_node.process_email as process_emails
 
     async with message.process():
@@ -26,10 +26,25 @@ async def on_message(message: AbstractIncomingMessage):
                     history_id=data.get("history_id"), email=data.get("email_address")
                 )
                 logger.info(
-                    f"Processing message: {data.get('history_id')} - {data.get('email_address')}"
+                    f"Processing email message: {data.get('history_id')} - {data.get('email_address')}"
                 )
             except Exception as e:
-                logger.error(f"Failed to process message: {e}")
+                logger.error(f"Failed to process email message: {e}")
+
+
+async def on_workflow_message(message: AbstractIncomingMessage):
+    import app.worker_node.process_workflow as process_workflow
+
+    async with message.process():
+        async with llm_limiter:
+            try:
+                data = json.loads(message.body.decode())
+                await process_workflow.process_workflow_generation(data)
+                logger.info(
+                    f"Processing workflow message for todo: {data.get('todo_id')}"
+                )
+            except Exception as e:
+                logger.error(f"Failed to process workflow message: {e}")
 
 
 async def shutdown(signal_name):
@@ -37,7 +52,7 @@ async def shutdown(signal_name):
     stop_event.set()
 
 
-async def start_worker(queue_name="email-events"):
+async def start_worker():
     from app.langchain.core.graph_builder.build_mail_processing_graph import (
         build_mail_processing_graph,
     )
@@ -47,14 +62,19 @@ async def start_worker(queue_name="email-events"):
     channel = await connection.channel()
     await channel.set_qos(prefetch_count=10)
 
-    queue = await channel.declare_queue(queue_name, durable=True)
-    await queue.consume(on_message)
+    # Set up email processing queue
+    email_queue = await channel.declare_queue("email-events", durable=True)
+    await email_queue.consume(on_email_message)
+
+    # Set up workflow generation queue
+    workflow_queue = await channel.declare_queue("workflow-generation", durable=True)
+    await workflow_queue.consume(on_workflow_message)
 
     # Build the processing graph
     async with build_mail_processing_graph() as built_graph:
         GraphManager.set_graph(built_graph, graph_name="mail_processing")
 
-    logger.info(f"Worker started on queue: {queue_name}")
+    logger.info("Worker started on queues: email-events, workflow-generation")
 
     # Handle shutdown signals
     loop = asyncio.get_running_loop()

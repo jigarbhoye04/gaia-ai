@@ -99,9 +99,10 @@ async def get_valid_access_token(
                 > current_time + TOKEN_REFRESH_THRESHOLD
             ):
                 logger.debug(f"Using cached access token for user {user_email}")
-                return cached_token_data["access_token"], cached_token_data.get(
-                    "expires_at", 0
-                ) - current_time
+                return (
+                    cached_token_data["access_token"],
+                    cached_token_data.get("expires_at", 0) - current_time,
+                )
 
     try:
         token_data = await refresh_access_token(refresh_token)
@@ -245,8 +246,11 @@ async def get_current_user(
                 {"$set": {"last_active_at": datetime.now(tz.utc)}},
             )
             # Update with new tokens if available but keep other cached data
+            updated = False
             if access_token and access_token != cached_user_data.get("access_token"):
                 cached_user_data["access_token"] = access_token
+                updated = True
+            if updated:
                 # Update the cache with new data
                 await set_cache(cache_key, cached_user_data, USER_CACHE_EXPIRY)
             return cached_user_data

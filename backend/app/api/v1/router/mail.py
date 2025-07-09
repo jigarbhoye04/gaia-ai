@@ -260,13 +260,16 @@ async def send_email_route(
         cc_list = [email.strip() for email in cc.split(",")] if cc else None
         bcc_list = [email.strip() for email in bcc.split(",")] if bcc else None
 
+        # Convert newlines to HTML breaks for proper display
+        html_body = body.replace("\n", "<br>")
+
         # Send the email
         sent_message = send_email(
             service=service,
             sender=sender,
             to_list=to_list,
             subject=subject,
-            body=body,
+            body=html_body,
             is_html=True,
             cc_list=cc_list,
             bcc_list=bcc_list,

@@ -13,7 +13,7 @@ from various web and news sources. It prioritizes speed and topical variety over
 - You need to cite multiple perspectives quickly.
 
 ❌ DO NOT USE FOR:
-- Detailed, in-depth research or full content analysis → Use `deep_search` instead.
+- Detailed, in-depth research or full content analysis → Use `deep_research` instead.
 - Visuals or screenshots of websites.
 - Internal knowledge that the assistant should already know.
 - Personal or conversational responses unrelated to external facts.
@@ -24,7 +24,7 @@ Examples:
 ✅ "What do experts say about intermittent fasting?"
 ❌ "Summarize this PDF." (Not a web search)
 ❌ "Who am I?" (Relies on memory, not web)
-❌ "Give me the full content of this article." (Use deep search)
+❌ "Give me the full content of this article." (Use deep research)
 
 Args:
     query_text: A clear and concise search query for finding high-level web results.
@@ -33,7 +33,7 @@ Returns:
     A JSON string with summarized search data, formatted text, and raw result structure.
 """
 
-DEEP_SEARCH_TOOL = """
+DEEP_RESEARCH_TOOL = """
 Conduct an in-depth search by retrieving and analyzing the full content of web pages.
 
 This tool should only be used when a user specifically requests:

@@ -1,8 +1,8 @@
+import { Spinner } from "@heroui/spinner";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-import Spinner from "@/components/ui/shadcn/spinner";
 import ChatBubbleBot from "@/features/chat/components/bubbles/bot/ChatBubbleBot";
 import SearchedImageDialog from "@/features/chat/components/bubbles/bot/SearchedImageDialog";
 import ChatBubbleUser from "@/features/chat/components/bubbles/user/ChatBubbleUser";
@@ -13,6 +13,7 @@ import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useConversationList } from "@/features/chat/hooks/useConversationList";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useLoadingText } from "@/features/chat/hooks/useLoadingText";
+import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { SetImageDataType } from "@/types/features/chatBubbleTypes";
 import { MessageType } from "@/types/features/convoTypes";
 
@@ -24,7 +25,7 @@ export default function ChatRenderer() {
   const searchParams = useSearchParams();
   const messageId = searchParams.get("messageId");
   const { isLoading } = useLoading();
-  const { loadingText } = useLoadingText();
+  const { loadingText, toolInfo } = useLoadingText();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const scrolledToMessageRef = useRef<string | null>(null);
   const [imageData, setImageData] = useState<SetImageDataType>({
@@ -120,7 +121,6 @@ export default function ChatRenderer() {
               calendar_delete_options={message.calendar_delete_options}
               calendar_edit_options={message.calendar_edit_options}
               email_compose_data={message.email_compose_data}
-              intent={message.intent}
               loading={message.loading}
               message_id={message.message_id}
               pageFetchURLs={message.pageFetchURLs}
@@ -132,7 +132,7 @@ export default function ChatRenderer() {
               disclaimer={message.disclaimer}
               date={message.date}
               search_results={message.search_results}
-              deep_search_results={message.deep_search_results}
+              deep_research_results={message.deep_research_results}
               weather_data={message.weather_data}
               image_data={message.image_data}
               memory_data={message.memory_data}
@@ -159,15 +159,17 @@ export default function ChatRenderer() {
       )}
       {isLoading && (
         <div className="flex items-center gap-4 pt-3 pl-[40px] text-sm font-medium">
-          {/* <Image
-            alt="GAIA Logo"
-            src={"/branding/logo.webp"}
-            width={30}
-            height={30}
-            className={`animate-spin`}
-          /> */}
+          {toolInfo?.toolCategory && (
+            <>
+              {getToolCategoryIcon(toolInfo.toolCategory, {
+                size: 18,
+                width: 18,
+                height: 18,
+              })}
+            </>
+          )}
           <span>{loadingText || "GAIA is thinking..."}</span>
-          <Spinner />
+          <Spinner variant="dots" color="primary" />
         </div>
       )}
     </>

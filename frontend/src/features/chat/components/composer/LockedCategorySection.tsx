@@ -1,5 +1,5 @@
 import { Button } from "@heroui/button";
-import {Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 

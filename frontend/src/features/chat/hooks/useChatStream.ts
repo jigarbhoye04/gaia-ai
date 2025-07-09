@@ -76,7 +76,18 @@ export const useChatStream = () => {
     const data = JSON.parse(event.data);
     if (data.error) return toast.error(data.error);
 
-    if (data.progress) setLoadingText(data.progress);
+    if (data.progress) {
+      // Handle both old format (string) and new format (object with tool info)
+      if (typeof data.progress === "string") {
+        setLoadingText(data.progress);
+      } else if (typeof data.progress === "object" && data.progress.message) {
+        // Enhanced progress with tool information
+        setLoadingText(data.progress.message, {
+          toolName: data.progress.tool_name,
+          toolCategory: data.progress.tool_category,
+        });
+      }
+    }
     if (data.conversation_id)
       refs.current.newConversation.id = data.conversation_id;
     if (data.conversation_description)
@@ -91,7 +102,7 @@ export const useChatStream = () => {
       return;
     }
 
-    if (data.intent === "generate_image" && data.image_data) {
+    if (data.image_data) {
       updateBotMessage({
         image_data: data.image_data,
         loading: false,

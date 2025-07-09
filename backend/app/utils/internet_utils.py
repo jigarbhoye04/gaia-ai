@@ -125,7 +125,7 @@ async def fetch_and_process_url(
 
     writer = get_stream_writer()
 
-    writer({"progress": f"Deep Search: Fetching url {url:20}..."})
+    writer({"progress": f"Deep Research: Fetching url {url:20}..."})
 
     # Try to get cached content
     cached_content = await get_cached_webpage_content(url)
@@ -144,7 +144,7 @@ async def fetch_and_process_url(
             logger.info(f"Fetching {url} with screenshot")
             result = await fetch_with_playwright(url=url, take_screenshot=True)
 
-            writer({"progress": f"Deep Search: Processing page {url:20}..."})
+            writer({"progress": f"Deep Research: Processing page {url:20}..."})
 
             html_content = result.get("content", "")
             screenshot_bytes = result.get("screenshot")
@@ -196,7 +196,7 @@ async def fetch_and_process_url(
             # Upload screenshot to Cloudinary if available and is bytes
             screenshot_url = None
             if screenshot_bytes and isinstance(screenshot_bytes, bytes):
-                writer({"progress": "Deep Search: Uploading Screenshot..."})
+                writer({"progress": "Deep Research: Uploading Screenshot..."})
 
                 screenshot_url = await upload_screenshot_to_cloudinary(
                     screenshot_bytes, url
@@ -204,7 +204,7 @@ async def fetch_and_process_url(
             else:
                 logger.info("No screenshot bytes available for upload")
 
-            writer({"progress": "Deep Search Completed!"})
+            writer({"progress": "Deep Research Completed!"})
 
             # Cache the result with screenshot URL
             cache_data = {
@@ -436,11 +436,11 @@ async def convert_to_markdown(text: str) -> str:
     return markdown_text
 
 
-async def perform_deep_search(
+async def perform_deep_research(
     query: str, max_results: int = 3, take_screenshots: bool = False
 ) -> Dict[str, Any]:
     """
-    Perform a deep search by first searching the web, then concurrently fetching
+    Perform a deep research by first searching the web, then concurrently fetching
     the content of the top results and converting them to markdown.
 
     Args:
@@ -455,14 +455,14 @@ async def perform_deep_search(
     start_time = time.time()
     writer = get_stream_writer()
 
-    writer({"progress": "Deep Search: Searching the web..."})
+    writer({"progress": "Deep Research: Searching the web..."})
 
     search_results = await perform_search(query=query, count=5)
     web_results = search_results.get("web", [])
 
     if not web_results:
-        logger.info("No web results found for deep search")
-        writer({"progress": "Deep Search: No web results found."})
+        logger.info("No web results found for deep research")
+        writer({"progress": "Deep Research: No web results found."})
         return {"original_search": search_results, "enhanced_results": []}
 
     # Create a list of URLs to process with domain information for better reporting
@@ -476,7 +476,7 @@ async def perform_deep_search(
 
     writer(
         {
-            "progress": f"Deep Search: Starting concurrent processing of {len(urls_to_process)} URLs..."
+            "progress": f"Deep Research: Starting concurrent processing of {len(urls_to_process)} URLs..."
         }
     )
 
@@ -488,7 +488,7 @@ async def perform_deep_search(
         nonlocal completed_urls
         url, domain = url_info
 
-        writer({"progress": f"Deep Search: Fetching content from {domain}..."})
+        writer({"progress": f"Deep Research: Fetching content from {domain}..."})
         result = await fetch_and_process_url(url, take_screenshot=take_screenshots)
 
         # Update progress after each URL is processed
@@ -496,7 +496,7 @@ async def perform_deep_search(
         progress_pct = int((completed_urls / len(urls_to_process)) * 100)
         writer(
             {
-                "progress": f"Deep Search: {progress_pct}% complete. Processed {completed_urls}/{len(urls_to_process)} URLs. Completed: {domain}"
+                "progress": f"Deep Research: {progress_pct}% complete. Processed {completed_urls}/{len(urls_to_process)} URLs. Completed: {domain}"
             }
         )
 
@@ -506,7 +506,7 @@ async def perform_deep_search(
     if urls_to_process:
         writer(
             {
-                "progress": f"Deep Search: Processing {len(urls_to_process)} URLs concurrently..."
+                "progress": f"Deep Research: Processing {len(urls_to_process)} URLs concurrently..."
             }
         )
         fetched_contents = await asyncio.gather(
@@ -562,13 +562,15 @@ async def perform_deep_search(
                 and content_data["screenshot_url"]
             ):
                 enhanced_result["screenshot_url"] = content_data["screenshot_url"]
-                writer({"progress": f"Deep Search: Screenshot available for {domain}"})
+                writer(
+                    {"progress": f"Deep Research: Screenshot available for {domain}"}
+                )
 
         enhanced_results.append(enhanced_result)
 
     elapsed_time = time.time() - start_time
     final_status = (
-        f"Deep Search completed in {elapsed_time:.2f} seconds. Processed {len(enhanced_results)} results"
+        f"Deep Research completed in {elapsed_time:.2f} seconds. Processed {len(enhanced_results)} results"
         + (" with screenshots" if take_screenshots else "")
     )
 

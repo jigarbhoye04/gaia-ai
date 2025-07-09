@@ -1,10 +1,10 @@
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 from app.models.calendar_models import EventCreateRequest
 from app.models.message_models import FileData
-from app.models.search_models import DeepSearchResults, SearchResults
+from app.models.search_models import DeepResearchResults, SearchResults
 from app.models.weather_models import WeatherData
 
 
@@ -25,7 +25,7 @@ class MessageModel(BaseModel):
     # New structured field for image data
     image_data: Optional[ImageData] = None
     searchWeb: Optional[bool] = False  # Whether it's a web search request
-    deepSearchWeb: Optional[bool] = False  # Whether it's a deep search request
+    deepSearchWeb: Optional[bool] = False  # Whether it's a deep research request
     pageFetchURLs: Optional[List] = []
     # Any disclaimer associated with the message
     disclaimer: Optional[str] = None
@@ -39,10 +39,11 @@ class MessageModel(BaseModel):
     fileData: Optional[List[FileData]] = []  # Complete file metadata
     selectedTool: Optional[str] = None  # Tool selected via slash commands
     toolCategory: Optional[str] = None  # Category of the selected tool
-    intent: Optional[Literal["calendar", "generate_image", "weather"]] = None
     calendar_options: Optional[List[EventCreateRequest]] = None
     search_results: Optional[SearchResults] = None
-    deep_search_results: Optional[DeepSearchResults] = None  # Results from deep search
+    deep_research_results: Optional[DeepResearchResults] = (
+        None  # Results from deep research
+    )
     weather_data: Optional[WeatherData] = None  # Weather data from OpenWeatherMap API
     email_compose_data: Optional[dict] = None  # Email compose data from mail_tool
     memory_data: Optional[dict] = None  # Complete memory operation data

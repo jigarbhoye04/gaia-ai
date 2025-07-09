@@ -164,9 +164,9 @@ async def _process_subscription_webhook(
                 {"razorpay_subscription_id": subscription_id},
                 {
                     "$set": update_data,
-                    "$inc": {"paid_count": 1}
-                    if "paid_count" not in update_data
-                    else {},
+                    "$inc": (
+                        {"paid_count": 1} if "paid_count" not in update_data else {}
+                    ),
                 },
             )
         except Exception as e:

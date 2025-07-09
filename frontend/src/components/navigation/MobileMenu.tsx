@@ -15,7 +15,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/shadcn/sheet";
-import { authNavLinks, mainNavLinks } from "@/config/navigationConfig";
+import {
+  authNavLinks,
+  companyNavLinks,
+  connectNavLinks,
+  mainNavLinks,
+  productNavLinks,
+  resourcesNavLinks,
+} from "@/config/appConfig";
 import { useUser } from "@/features/auth/hooks/useUser";
 
 export default function MobileMenu() {
@@ -56,6 +63,114 @@ export default function MobileMenu() {
                 {link.label}
               </Button>
             ))}
+
+            {/* Product Section */}
+            <div className="mt-4 border-t border-zinc-700 pt-4">
+              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+                Product
+              </p>
+              {productNavLinks.map((link) => {
+                const isCommented = link.commented;
+                return (
+                  <Button
+                    key={link.href}
+                    className={`flex w-full justify-between ${isCommented ? "cursor-not-allowed opacity-50" : ""}`}
+                    endContent={link.icon}
+                    color="default"
+                    variant="ghost"
+                    disabled={isCommented}
+                    as={!isCommented && link.external ? Link : undefined}
+                    href={!isCommented && link.external ? link.href : undefined}
+                    onPress={() => {
+                      if (!isCommented && !link.external) {
+                        router.push(link.href);
+                        setSheetOpen(false);
+                      }
+                    }}
+                  >
+                    {isCommented ? `${link.label} (Coming Soon)` : link.label}
+                  </Button>
+                );
+              })}
+            </div>
+
+            {/* Resources Section */}
+            <div className="mt-4 border-t border-zinc-700 pt-4">
+              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+                Resources
+              </p>
+              {resourcesNavLinks.map((link) => {
+                const isCommented = link.commented;
+                return (
+                  <Button
+                    key={link.href}
+                    className={`flex w-full justify-between ${isCommented ? "cursor-not-allowed opacity-50" : ""}`}
+                    endContent={link.icon}
+                    color="default"
+                    variant="ghost"
+                    disabled={isCommented}
+                    as={!isCommented && link.external ? Link : undefined}
+                    href={!isCommented && link.external ? link.href : undefined}
+                    onPress={() => {
+                      if (!isCommented && !link.external) {
+                        router.push(link.href);
+                        setSheetOpen(false);
+                      }
+                    }}
+                  >
+                    {isCommented ? `${link.label} (Coming Soon)` : link.label}
+                  </Button>
+                );
+              })}
+            </div>
+
+            {/* Company Section */}
+            <div className="mt-4 border-t border-zinc-700 pt-4">
+              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+                Company
+              </p>
+              {companyNavLinks.map((link) => (
+                <Button
+                  key={link.href}
+                  className="flex w-full justify-between"
+                  endContent={link.icon}
+                  color="default"
+                  variant="ghost"
+                  as={link.external ? Link : undefined}
+                  href={link.external ? link.href : undefined}
+                  onPress={() => {
+                    if (!link.external) {
+                      router.push(link.href);
+                      setSheetOpen(false);
+                    }
+                  }}
+                >
+                  {link.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Connect Section */}
+            <div className="mt-4 border-t border-zinc-700 pt-4">
+              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+                Connect
+              </p>
+              {connectNavLinks.map((link) => (
+                <Button
+                  key={link.href}
+                  className="flex w-full justify-between"
+                  endContent={link.icon}
+                  color="default"
+                  variant="ghost"
+                  as={Link}
+                  href={link.href}
+                  target={link.external ? "_blank" : undefined}
+                  rel={link.external ? "noopener noreferrer" : undefined}
+                >
+                  {link.label}
+                </Button>
+              ))}
+            </div>
 
             {/* Authentication related links */}
             {isAuthenticated ? (

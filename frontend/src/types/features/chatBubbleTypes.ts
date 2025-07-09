@@ -6,7 +6,7 @@ import {
   CalendarDeleteOptions,
   CalendarEditOptions,
   CalendarOptions,
-  DeepSearchResults,
+  DeepResearchResults,
   DocumentData,
   EmailComposeData,
   GoogleDocsData,
@@ -52,17 +52,16 @@ export interface ChatBubbleBotProps {
   filename?: string;
   pinned?: boolean;
 
-  intent?: string;
   calendar_options?: CalendarOptions[] | null;
   calendar_delete_options?: CalendarDeleteOptions[] | null;
   calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
-  deep_search_results?: DeepSearchResults | null;
-  document_data?: DocumentData | null; // document data from backend tools
+  deep_research_results?: DeepResearchResults | null;
+  document_data?: DocumentData | null;
   image_data?: ImageData | null;
-  todo_data?: TodoToolData | null; // todo data from backend tools
+  todo_data?: TodoToolData | null;
   code_data?: {
     language: string;
     code: string;
@@ -78,7 +77,7 @@ export interface ChatBubbleBotProps {
       text: string;
     }> | null;
     status?: "executing" | "completed" | "error";
-  } | null; // code execution data from backend
+  } | null;
 
   // memory-related fields
   memory_data?: {

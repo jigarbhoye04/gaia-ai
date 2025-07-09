@@ -5,7 +5,7 @@
   
   [![Website](https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white)](https://docs.heygaia.io)
   
-  [![PolyForm Shield](https://img.shields.io/badge/PolyForm-Shield-blue)](https://polyformproject.org/licenses/shield/1.0.0/) [![GitHub Stars](https://img.shields.io/github/stars/heygaia/gaia?style=social)](https://github.com/heygaia/gaia)
+  [![PolyForm Strict](https://img.shields.io/badge/PolyForm-Strict-red)](https://polyformproject.org/licenses/strict/1.0.0/) [![GitHub Stars](https://img.shields.io/github/stars/heygaia/gaia?style=social)](https://github.com/heygaia/gaia)
   
   <p align="center">
     <strong>A proactive personal AI assistant designed to enhance productivity and streamline daily tasks</strong>
@@ -30,20 +30,24 @@
 
 GAIA is a cutting-edge personal AI assistant that transforms how you manage your digital life. With seamless integration capabilities and intelligent features, GAIA provides a comprehensive solution for productivity enhancement and task automation.
 
-
 ## Quick Start
 
 Ready to get started with GAIA? Choose your path:
 
 #### For Users
+
 Visit [heygaia.io](https://heygaia.io) to start using GAIA immediately - no setup required!
 
 #### Self-Hosting
+
 Want to run GAIA on your own infrastructure?
+
 - [Self-Hosting Overview](https://docs.heygaia.io/self-hosting/overview)
 
 #### For Developers / Contributors
+
 Contributing to GAIA or building on top of it?
+
 - [Developer Documentation](https://docs.heygaia.io/developers/development-setup)
 
 ## Documentation
@@ -51,7 +55,7 @@ Contributing to GAIA or building on top of it?
 Our comprehensive documentation is available at [docs.heygaia.io](https://docs.heygaia.io):
 
 - **[Quick Start](https://docs.heygaia.io/quick-start)** - Get up and running in minutes
-- **[Self-Hosting](https://docs.heygaia.io/self-hosting/overview)** - Deploy GAIA on your infrastructure  
+- **[Self-Hosting](https://docs.heygaia.io/self-hosting/overview)** - Deploy GAIA on your infrastructure
 - **[For Developers](https://docs.heygaia.io/developers/introduction)** - Contribute and extend GAIA
 
 ## Community & Support
@@ -65,7 +69,7 @@ Join our growing community of users and contributors:
 </div>
 
 - **Discord**: Join our community for discussions and support
-- **Twitter**: Stay updated with the latest news and updates  
+- **Twitter**: Stay updated with the latest news and updates
 - **WhatsApp**: Get direct support and updates
 - **LinkedIn**: Connect with our team and network
 - **Blog**: Read insights and tutorials at [heygaia.io/blog](https://heygaia.io/blog)
@@ -83,11 +87,11 @@ Please read our [Contributing Guidelines](https://docs.heygaia.io/developers/con
 
 ## License
 
-This project is licensed under the [Polyform Shield License 1.0.0](https://polyformproject.org/licenses/shield/1.0.0/).
+This project is licensed under the [Polyform Strict License 1.0.0](https://polyformproject.org/licenses/strict/1.0.0/).
 
 > [!WARNING]
-> This license allows personal, academic, and evaluation use.  
-> **Commercial, production, or competitive use is not permitted.**
+> This license allows noncommercial, personal, and research use only.  
+> **Commercial use, distribution, and modifications are not permitted.**
 
 See the full license terms at [LICENSE.md](LICENSE.md).
 

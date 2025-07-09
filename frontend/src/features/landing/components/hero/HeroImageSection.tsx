@@ -7,7 +7,6 @@ import {
   Target02Icon,
 } from "@/components/shared/icons";
 import { Safari } from "@/components/ui/shadcn/safari";
-import { ShineBorder } from "@/components/ui/shadcn/shine-border";
 
 import { MotionContainer } from "../../../../layouts/MotionContainer";
 
@@ -79,31 +78,31 @@ export default function HeroImage() {
 
   return (
     <div className="flex w-screen items-center justify-center">
-      <MotionContainer className="mt-20 mb-[20vh] flex h-fit w-screen max-w-(--breakpoint-lg) flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-(--breakpoint-xl)">
+      <MotionContainer className="mb-[20vh] flex h-fit w-screen max-w-(--breakpoint-lg) flex-col items-center justify-center gap-6 sm:mb-0 lg:max-w-(--breakpoint-xl)">
         <div className="relative scale-[175%] sm:scale-100">
-          <ShineBorder
+          {/* <ShineBorder
             borderRadius={10}
             borderWidth={3}
             className="relative size-full w-fit min-w-fit! animate-pulse-shadow rounded-xl bg-zinc-800 p-0"
             color={["#00bbff", "#27272a"]}
             duration={7}
-          >
-            {/* ${isTransitioning ? "opacity-0" : "opacity-100"} */}
-            <div className={`transition-opacity duration-300`}>
-              <Safari
-                className="h-fit w-full"
-                // imageSrc={selectedFeature.imageSrc}
-                imageSrc={featureOptions[0].imageSrc}
-                mode="simple"
-                url="heygaia.io"
-              />
-            </div>
-            {/* {selectedFeature.name === "chat" && (
+          > */}
+          {/* ${isTransitioning ? "opacity-0" : "opacity-100"} */}
+          <div className={`transition-opacity duration-300`}>
+            <Safari
+              className="h-fit w-full"
+              // imageSrc={selectedFeature.imageSrc}
+              imageSrc={featureOptions[0].imageSrc}
+              mode="simple"
+              url="heygaia.io"
+            />
+          </div>
+          {/* {selectedFeature.name === "chat" && (
               <div className="absolute bottom-[-15px] left-0 flex w-full scale-50 items-center justify-center text-white sm:bottom-4 sm:scale-100">
                 <DummySearchbar />
               </div>
             )} */}
-          </ShineBorder>
+          {/* </ShineBorder> */}
 
           {/* <div className="max-w-(--breakpoint-xl) w-screen bg-linear-to-b from-[#00bbff30] animate-pulse-shadow to-black bg-zinc-950 outline outline-zinc-700 min-h-[90vh] rounded-2xl z-20 flex justify-center p-10">
             <div className="flex flex-col max-w-(--breakpoint-md) w-full gap-2">

@@ -7,21 +7,21 @@ import { useDispatch } from "react-redux";
 import { InternetIcon } from "@/components/shared/icons";
 import { openImageDialog } from "@/redux/slices/imageDialogSlice";
 import {
-  DeepSearchResults,
+  DeepResearchResults,
   EnhancedWebResult,
 } from "@/types/features/convoTypes";
 
 import SearchResultsTabs from "./SearchResultsTabs";
 
-interface DeepSearchResultsTabsProps {
-  deep_search_results: DeepSearchResults;
+interface DeepResearchResultsTabsProps {
+  deep_research_results: DeepResearchResults;
 }
 
-export default function DeepSearchResultsTabs({
-  deep_search_results,
-}: DeepSearchResultsTabsProps) {
+export default function DeepResearchResultsTabs({
+  deep_research_results,
+}: DeepResearchResultsTabsProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const { original_search, enhanced_results, metadata } = deep_search_results;
+  const { original_search, enhanced_results, metadata } = deep_research_results;
 
   return (
     <div className="w-full">
@@ -31,13 +31,13 @@ export default function DeepSearchResultsTabs({
       >
         <AccordionItem
           key="1"
-          aria-label="Deep Search Results"
+          aria-label="Deep Research Results"
           indicator={<></>}
           title={
             <div className="h-full w-fit rounded-lg bg-white/10 p-1 px-3 text-sm font-medium transition-all hover:bg-white/20">
               {isExpanded
-                ? "Hide Deep search Results"
-                : "Show Deep search Results"}
+                ? "Hide Deep research Results"
+                : "Show Deep research Results"}
             </div>
           }
           onPress={() => setIsExpanded((prev) => !prev)}
@@ -45,7 +45,7 @@ export default function DeepSearchResultsTabs({
           isCompact
         >
           <Tabs
-            aria-label="Deep Search Results"
+            aria-label="Deep Research Results"
             color="primary"
             variant="light"
             classNames={{ base: "p-0" }}

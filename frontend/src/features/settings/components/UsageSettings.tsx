@@ -6,6 +6,7 @@ import { Chip } from "@heroui/chip";
 import { Progress } from "@heroui/progress";
 import { Tab, Tabs } from "@heroui/tabs";
 import { BarChart3, Calendar, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { SettingsCard } from "@/components/shared/SettingsCard";
@@ -52,9 +53,11 @@ export default function UsageSettings() {
             support, and private Discord channels.
           </p>
           <div className="flex w-full justify-end">
-            <Button color="primary" className="font-medium" size="sm">
-              Upgrade Now
-            </Button>
+            <Link href={"/pricing"}>
+              <Button color="primary" className="font-medium" size="sm">
+                Upgrade Now
+              </Button>
+            </Link>
           </div>
         </SettingsCard>
       )}

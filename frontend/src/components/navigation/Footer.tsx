@@ -2,7 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 
 import { LinkButton } from "@/components/shared/LinkButton";
-import { siteConfig } from "@/config/siteConfig";
+import { appConfig } from "@/config/appConfig";
 import { useUser } from "@/features/auth/hooks/useUser";
 
 export default function Footer() {
@@ -21,14 +21,14 @@ export default function Footer() {
               height={40}
             />
             <div className="mt-2 text-2xl font-medium text-white">
-              {siteConfig.name}
+              {appConfig.site.name}
             </div>
             <div className="flex flex-col gap-2 text-xs text-foreground-400">
-              <div>{siteConfig.copyright}</div>
+              <div>{appConfig.site.copyright}</div>
             </div>
           </div>
 
-          {siteConfig.pageSections.map((section) => (
+          {appConfig.footerSections.map((section) => (
             <div
               key={section.title}
               className="flex h-full w-fit flex-col text-foreground-500"
@@ -39,7 +39,9 @@ export default function Footer() {
               {section.links
                 .filter(
                   (link) =>
-                    !link.isLoggedIn || (link.isLoggedIn && isAuthenticated),
+                    (!link.requiresAuth && !link.guestOnly) ||
+                    (link.requiresAuth && isAuthenticated) ||
+                    (link.guestOnly && !isAuthenticated),
                 )
                 .map((link) => (
                   <div key={link.href}>

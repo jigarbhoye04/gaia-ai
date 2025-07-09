@@ -26,7 +26,7 @@ WORKFLOW:
    • Each time the reminder fires, its `instructions` become the “user” message in a new conversation thread (AI_AGENT reminders only).
 
 PAYLOAD:
-  STATIC → {"title": str, "body": str}
+  STATIC → {"title": str, "body": str}  
   AI_AGENT → {"instructions": str}
 
 Args:

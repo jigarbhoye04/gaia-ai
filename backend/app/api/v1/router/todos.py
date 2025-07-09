@@ -22,6 +22,7 @@ from app.models.todo_models import (
     SubtaskCreateRequest,
     SubtaskUpdateRequest,
     SubTask,
+    WorkflowStatus,
 )
 from app.services.todo_service import TodoService, ProjectService
 
@@ -170,6 +171,76 @@ async def delete_todo(todo_id: str, user: dict = Depends(get_current_user)):
         )
 
 
+# Workflow Generation Endpoint
+@router.post("/todos/{todo_id}/workflow", response_model=TodoResponse)
+@tiered_rate_limit("todo_operations")
+async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)):
+    """Generate a workflow plan for a specific todo and update the todo with it."""
+    try:
+        todo = await TodoService.get_todo(todo_id, user["user_id"])
+        workflow_result = await TodoService._generate_workflow_for_todo(
+            todo.title, todo.description
+        )
+
+        if not workflow_result.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=workflow_result.get("error", "Failed to generate workflow"),
+            )
+
+        # Update the todo with the generated workflow
+        update_request = UpdateTodoRequest(workflow=workflow_result["workflow"])
+        updated_todo = await TodoService.update_todo(
+            todo_id, update_request, user["user_id"]
+        )
+
+        return updated_todo
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate workflow",
+        )
+
+
+@router.get("/todos/{todo_id}/workflow-status")
+@tiered_rate_limit("todo_operations")
+async def get_workflow_status(todo_id: str, user: dict = Depends(get_current_user)):
+    """
+    Get the workflow generation status for a todo.
+    Returns whether the workflow has been generated or is still being processed.
+    """
+    try:
+        todo = await TodoService.get_todo(todo_id, user["user_id"])
+
+        # Check if workflow exists
+        has_workflow = hasattr(todo, "workflow") and todo.workflow is not None
+
+        # Get workflow status - if not present, assume not started for old todos
+        workflow_status = getattr(todo, "workflow_status", WorkflowStatus.NOT_STARTED)
+
+        # Determine if currently generating (status is generating and no workflow yet)
+        is_generating = workflow_status == WorkflowStatus.GENERATING
+
+        return {
+            "todo_id": todo_id,
+            "has_workflow": has_workflow,
+            "is_generating": is_generating,
+            "workflow_status": workflow_status,
+            "workflow": todo.workflow if has_workflow else None,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get workflow status",
+        )
+
+
 # Bulk Operations
 @router.put("/todos/bulk", response_model=BulkOperationResponse)
 @tiered_rate_limit("todo_operations")
@@ -293,9 +364,11 @@ async def update_project(
         return await ProjectService.update_project(project_id, updates, user["user_id"])
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST
-            if "Cannot update" in str(e)
-            else status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_400_BAD_REQUEST
+                if "Cannot update" in str(e)
+                else status.HTTP_404_NOT_FOUND
+            ),
             detail=str(e),
         )
     except Exception:
@@ -313,9 +386,11 @@ async def delete_project(project_id: str, user: dict = Depends(get_current_user)
         await ProjectService.delete_project(project_id, user["user_id"])
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST
-            if "Cannot delete" in str(e)
-            else status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_400_BAD_REQUEST
+                if "Cannot delete" in str(e)
+                else status.HTTP_404_NOT_FOUND
+            ),
             detail=str(e),
         )
     except Exception:

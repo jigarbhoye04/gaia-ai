@@ -7,6 +7,29 @@ export enum Priority {
   NONE = "none",
 }
 
+export enum WorkflowStatus {
+  NOT_STARTED = "not_started",
+  GENERATING = "generating",
+  COMPLETED = "completed",
+  FAILED = "failed",
+}
+
+// Workflow types
+export interface WorkflowStep {
+  id: string;
+  title: string;
+  tool_name: string;
+  tool_category: string;
+  description: string;
+  tool_inputs: Record<string, unknown>;
+}
+
+export interface Workflow {
+  workflow_id: string;
+  title: string;
+  steps: WorkflowStep[];
+}
+
 export interface SubTask {
   id: string;
   title: string;
@@ -28,6 +51,8 @@ export interface Todo {
   subtasks: SubTask[];
   created_at: string;
   updated_at: string;
+  workflow?: Workflow; // Add workflow field
+  workflow_status: WorkflowStatus; // Add workflow status field
 }
 
 export interface TodoCreate extends Record<string, unknown> {
@@ -51,6 +76,7 @@ export interface TodoUpdate {
   project_id?: string;
   completed?: boolean;
   subtasks?: SubTask[];
+  workflow?: Workflow; // Add workflow field
 }
 
 export interface Project {

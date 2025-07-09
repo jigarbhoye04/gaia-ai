@@ -78,23 +78,15 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
             // Calculate dropdown position - use same logic as normal slash command detection
             const textarea = inputRef.current;
             if (textarea) {
-              // Find the composer container (searchbar class) - same logic as updateSlashCommandDetection
+              // Get composer container for proper width
               const composerContainer = textarea.closest(".searchbar");
               const rect =
                 composerContainer?.getBoundingClientRect() ||
                 textarea.getBoundingClientRect();
-              // Calculate dropdown height - account for search bar when opened via button
-              const searchBarHeight = 60; // Search bar height when opened via button
-              const categoriesHeight = 50; // Category tabs height
-              const dropdownContentHeight = Math.min(
-                allMatches.length * 80 + 50,
-                300,
-              );
-              const totalDropdownHeight =
-                dropdownContentHeight + searchBarHeight + categoriesHeight;
+              // Height calculation no longer needed for bottom positioning
 
               const position = {
-                top: rect.top - totalDropdownHeight - 90, // Reduced offset for better positioning
+                top: rect.top, // Position above the composer
                 left: rect.left,
                 width: rect.width, // Match the composer width
               };
@@ -124,15 +116,12 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
           // Calculate dropdown position - position above the composer and match its width
           const textarea = inputRef.current;
           if (textarea) {
-            // Find the composer container (searchbar class)
+            // Get composer container for proper width
             const composerContainer = textarea.closest(".searchbar");
             const rect =
               composerContainer?.getBoundingClientRect() ||
               textarea.getBoundingClientRect();
-            const dropdownHeight = Math.min(
-              detection.matches.length * 80 + 50,
-              400,
-            ); // Estimate dropdown height (increased max)
+            // Height calculation no longer needed for bottom positioning
 
             setSlashCommandState({
               isActive: true,
@@ -141,7 +130,7 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
               commandStart: detection.commandStart,
               commandEnd: detection.commandEnd,
               dropdownPosition: {
-                top: rect.top - dropdownHeight - 42, // Reduced offset for slash commands
+                top: rect.top - 400, // Position above the composer
                 left: rect.left,
                 width: rect.width, // Match the composer width
               },

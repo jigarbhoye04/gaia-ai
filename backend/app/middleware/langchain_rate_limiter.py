@@ -113,9 +113,11 @@ def with_rate_limiting(
                             {
                                 "feature_key": actual_feature_key,
                                 "usage_info": usage_info,
-                                "user_plan": user_plan.value
-                                if hasattr(user_plan, "value")
-                                else str(user_plan),
+                                "user_plan": (
+                                    user_plan.value
+                                    if hasattr(user_plan, "value")
+                                    else str(user_plan)
+                                ),
                             }
                         )
 
@@ -131,9 +133,11 @@ def with_rate_limiting(
                         raise LangChainRateLimitException(
                             feature=actual_feature_key,
                             detail=e.detail if hasattr(e, "detail") else {},
-                            reset_time=e.detail.get("reset_time")
-                            if hasattr(e, "detail")
-                            else None,
+                            reset_time=(
+                                e.detail.get("reset_time")
+                                if hasattr(e, "detail")
+                                else None
+                            ),
                         )
                     except Exception as e:
                         app_logger.error(
@@ -224,12 +228,16 @@ async def _get_cached_subscription(user_id: str):
     # Cache for 5 minutes
     try:
         cache_data = {
-            "plan_type": subscription.plan_type.value
-            if hasattr(subscription.plan_type, "value")
-            else str(subscription.plan_type),
-            "expires_at": subscription.expires_at.isoformat()
-            if hasattr(subscription, "expires_at") and subscription.expires_at
-            else None,
+            "plan_type": (
+                subscription.plan_type.value
+                if hasattr(subscription.plan_type, "value")
+                else str(subscription.plan_type)
+            ),
+            "expires_at": (
+                subscription.expires_at.isoformat()
+                if hasattr(subscription, "expires_at") and subscription.expires_at
+                else None
+            ),
         }
         await redis_cache.setex(cache_key, 300, json.dumps(cache_data))
         app_logger.debug(f"Cached subscription for user {user_id}")
