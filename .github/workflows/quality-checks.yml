@@ -73,6 +73,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install "pre-commit[default]"
+          pre-commit install --install-hooks
           uv pip sync pyproject.toml
           uv pip install types-redis types-requests
 
