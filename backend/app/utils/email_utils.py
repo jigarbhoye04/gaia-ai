@@ -225,6 +225,9 @@ async def send_welcome_email(user_email: str, user_name: Optional[str] = None) -
         subject = "From the founder of GAIA, personally"
         html_content = generate_welcome_email_html(user_name)
 
+        if html_content is None:
+            raise ValueError("Failed to generate email HTML content")
+
         resend.Emails.send(
             {
                 "from": "Aryan from GAIA <aryan@heygaia.io>",

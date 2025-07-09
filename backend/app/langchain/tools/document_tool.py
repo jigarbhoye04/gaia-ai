@@ -111,49 +111,50 @@ async def generate_document(
                     ]
                 )
 
-                # Configuration mapping
-                pdf_config_mapping = {
-                    "margins": "geometry:margin",
-                    "font_family": "mainfont",
-                    "line_spacing": "linestretch",
-                    "paper_size": "papersize",
-                    "document_class": "documentclass",
-                }
-
-                # Boolean configuration mapping
-                pdf_bool_mapping = {
-                    "table_of_contents": "toc=true",
-                    "number_sections": "numbersections=true",
-                }
-
                 # Apply pdf_config if provided
                 if pdf_config:
-                    # Handle string/numeric configurations
-                    for config_key, pandoc_key in pdf_config_mapping.items():
-                        if config_key in pdf_config:
-                            extra_args.extend(
-                                ["-V", f"{pandoc_key}={pdf_config[config_key]}"]
-                            )
+                    # Handle specific configurations individually to satisfy TypedDict
+                    if "margins" in pdf_config:
+                        extra_args.extend(
+                            ["-V", f"geometry:margin={pdf_config['margins']}"]
+                        )
+                    if "font_family" in pdf_config:
+                        extra_args.extend(
+                            ["-V", f"mainfont={pdf_config['font_family']}"]
+                        )
+                    if "line_spacing" in pdf_config:
+                        extra_args.extend(
+                            ["-V", f"linestretch={pdf_config['line_spacing']}"]
+                        )
+                    if "paper_size" in pdf_config:
+                        extra_args.extend(
+                            ["-V", f"papersize={pdf_config['paper_size']}"]
+                        )
+                    if "document_class" in pdf_config:
+                        extra_args.extend(
+                            ["-V", f"documentclass={pdf_config['document_class']}"]
+                        )
 
                     # Handle boolean configurations
-                    for config_key, pandoc_value in pdf_bool_mapping.items():
-                        if pdf_config.get(config_key, False):
-                            extra_args.extend(["-V", pandoc_value])
+                    if pdf_config.get("table_of_contents", False):
+                        extra_args.extend(["-V", "toc=true"])
+                    if pdf_config.get("number_sections", False):
+                        extra_args.extend(["-V", "numbersections=true"])
 
-                    # Always set default margins if not specified
+                    # Set default margins if not specified
                     if "margins" not in pdf_config:
                         extra_args.extend(["-V", "geometry:margin=0.5in"])
                 else:
                     # Default configuration if no pdf_config provided
                     extra_args.extend(["-V", "geometry:margin=0.5in"])
 
-        pypandoc.convert_text(
-            source=content,
-            to=format,
-            format="md",
-            outputfile=temp_path,
-            extra_args=extra_args,
-        )
+            pypandoc.convert_text(
+                source=content,
+                to=format,
+                format="md",
+                outputfile=temp_path,
+                extra_args=extra_args,
+            )
 
         cloudinary_url = upload_file_to_cloudinary(
             file_path=temp_path, public_id=f"{uuid4()}_{output_filename}"

@@ -92,6 +92,7 @@ async def verify_payment(
 
             current_time = datetime.now(timezone.utc)
             payment_doc = PaymentDB(
+                _id=None,  # Will be set by MongoDB
                 razorpay_payment_id=razorpay_payment["id"],
                 user_id=user_id,
                 subscription_id=callback_data.razorpay_subscription_id,

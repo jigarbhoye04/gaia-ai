@@ -251,7 +251,7 @@ async def update_subscription(
         razorpay_subscription_id = current_subscription["razorpay_subscription_id"]
 
         # Prepare update data for Razorpay
-        update_data = {}
+        update_data: Dict[str, Any] = {}
         if subscription_data.plan_id:
             razorpay_plan_id = await get_razorpay_plan_id(subscription_data.plan_id)
             update_data["plan_id"] = razorpay_plan_id
@@ -282,7 +282,7 @@ async def update_subscription(
             )
 
         # Update subscription in database
-        db_update_data = {
+        db_update_data: Dict[str, Any] = {
             "updated_at": datetime.now(timezone.utc),
         }
 
@@ -589,6 +589,7 @@ def _create_subscription_doc(
 ) -> SubscriptionDB:
     """Create a SubscriptionDB document with all the necessary fields."""
     return SubscriptionDB(
+        _id=None,  # Will be set by MongoDB
         razorpay_subscription_id=razorpay_subscription["id"],
         user_id=user_id,
         plan_id=subscription_data.plan_id,

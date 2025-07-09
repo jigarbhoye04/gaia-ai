@@ -215,25 +215,17 @@ async def semantic_search_todos(
             collection_name="todos", create_if_not_exists=True
         )
 
-        # Build filters using ChromaDB operators
-        filter_conditions = [{"user_id": str(user_id)}]
+        # Build filters using ChromaDB operators (combine into single dict)
+        where_filter = {"user_id": str(user_id)}
 
         if completed is not None:
-            filter_conditions.append(
-                {"completed": str(completed).lower()}
-            )  # Convert to "true" or "false"
+            where_filter["completed"] = str(completed).lower()  # Convert to "true" or "false"
 
         if priority and priority != "none":
-            filter_conditions.append({"priority": priority})
+            where_filter["priority"] = priority
 
         if project_id:
-            filter_conditions.append({"project_id": str(project_id)})
-
-        # Use $and operator when multiple conditions exist
-        if len(filter_conditions) == 1:
-            where_filter = filter_conditions[0]
-        else:
-            where_filter = {"$and": filter_conditions}
+            where_filter["project_id"] = str(project_id)
 
         # Perform semantic search
         results = chroma_collection.similarity_search_with_score(
@@ -367,7 +359,7 @@ async def hybrid_search_todos(
             ]
 
         # Combine results with scoring
-        combined_scores = {}
+        combined_scores: dict[str, float] = {}
 
         # Score semantic results
         for i, todo in enumerate(semantic_results[:top_k]):

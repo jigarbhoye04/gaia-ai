@@ -4,9 +4,9 @@ Middleware configuration for the GAIA FastAPI application.
 This module provides functions to configure middleware for the FastAPI application.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
@@ -14,6 +14,18 @@ from app.config.settings import settings
 from app.middleware.profiler import ProfilingMiddleware
 from app.middleware.logger import LoggingMiddleware
 from app.middleware.rate_limiter import limiter
+
+
+async def rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Handle rate limit exceeded exceptions."""
+    return JSONResponse(
+        status_code=429,
+        content={
+            "error": "rate_limit_exceeded",
+            "detail": str(exc),
+            "retry_after": getattr(exc, "retry_after", None),
+        },
+    )
 
 
 def configure_middleware(app: FastAPI) -> None:
@@ -28,7 +40,7 @@ def configure_middleware(app: FastAPI) -> None:
     app.state.limiter = limiter
 
     # Exception handler for rate limiting
-    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
     # Add rate limiting middleware
     app.add_middleware(SlowAPIMiddleware)

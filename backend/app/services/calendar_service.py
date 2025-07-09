@@ -1,6 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, Union, cast
 from zoneinfo import ZoneInfo
 
 import httpx
@@ -147,7 +147,7 @@ async def fetch_calendar_events(
     headers = {"Authorization": f"Bearer {access_token}"}
     if not time_min:
         time_min = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    params = {
+    params: Dict[str, Union[str, int, bool]] = {
         "maxResults": 50,
         "singleEvents": True,
         "orderBy": "startTime",
@@ -804,7 +804,7 @@ async def search_events_in_calendar(
     url = f"https://www.googleapis.com/calendar/v3/calendars/{calendar_id}/events"
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    params = {
+    params: Dict[str, Union[str, int, bool]] = {
         "q": query,  # This is the key parameter for native search
         "maxResults": 50,
         "singleEvents": True,

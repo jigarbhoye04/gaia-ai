@@ -118,9 +118,9 @@ class TodoService:
         return str(result.inserted_id)
 
     @staticmethod
-    async def _build_query(user_id: str, params: TodoSearchParams) -> dict:
+    async def _build_query(user_id: str, params: TodoSearchParams) -> dict[str, Any]:
         """Build MongoDB query from search parameters."""
-        query = {"user_id": user_id}
+        query: dict[str, Any] = {"user_id": user_id}
 
         # Text search
         if params.q and params.mode == SearchMode.TEXT:
@@ -168,13 +168,13 @@ class TodoService:
 
     @staticmethod
     async def _generate_workflow_for_todo(
-        todo_title: str, todo_description: str = None
+        todo_title: str, todo_description: str | None = None
     ) -> Dict[str, Any]:
         """Generate a workflow plan for a TODO item using structured LLM output."""
         try:
             from app.langchain.tools.workflow_tool import generate_workflow_for_todo
 
-            return await generate_workflow_for_todo(todo_title, todo_description)
+            return await generate_workflow_for_todo(todo_title, todo_description or "")
         except Exception as e:
             todos_logger.error(f"Error generating workflow for TODO: {str(e)}")
             return {"success": False, "error": str(e)}
@@ -306,7 +306,8 @@ class TodoService:
 
         # Index for search
         try:
-            await store_todo_embedding(str(result.inserted_id), created_todo, user_id)
+            if created_todo:
+                await store_todo_embedding(str(result.inserted_id), created_todo, user_id)
         except Exception as e:
             todos_logger.warning(f"Failed to index todo: {str(e)}")
 
@@ -315,6 +316,8 @@ class TodoService:
         )
 
         # Return todo response without workflow (will be generated in background)
+        if not created_todo:
+            raise ValueError("Failed to create todo")
         todo_response_data = serialize_document(created_todo)
         return TodoResponse(**todo_response_data)
 
@@ -460,6 +463,9 @@ class TodoService:
                 for new_subtask_dict in update_dict["subtasks"]:
                     new_subtask_id = new_subtask_dict.get("id")
                     new_completed = new_subtask_dict.get("completed", False)
+
+                    if not new_subtask_id:
+                        continue  # Skip subtasks without IDs
 
                     old_subtask = next(
                         (s for s in existing["subtasks"] if s["id"] == new_subtask_id),
@@ -705,6 +711,9 @@ class ProjectService:
         result = await projects_collection.insert_one(project_dict)
         created = await projects_collection.find_one({"_id": result.inserted_id})
 
+        if not created:
+            raise ValueError("Failed to create project")
+
         # Get todo count
         todo_count = await todos_collection.count_documents(
             {"user_id": user_id, "project_id": str(result.inserted_id)}
@@ -861,6 +870,7 @@ async def get_all_todos(
     """Compatibility wrapper for old get_all_todos function."""
 
     params = TodoSearchParams(
+        q=None,
         mode=SearchMode.TEXT,
         project_id=project_id,
         completed=completed,
@@ -945,6 +955,7 @@ async def get_todos_by_date_range(
 ) -> List[TodoResponse]:
     """Get todos within a date range."""
     params = TodoSearchParams(
+        q=None,
         mode=SearchMode.TEXT,
         due_date_start=start_date,
         due_date_end=end_date,
@@ -973,6 +984,7 @@ async def get_all_labels(user_id: str) -> List[dict]:
 async def get_todos_by_label(user_id: str, label: str) -> List[TodoResponse]:
     """Get all todos that have a specific label."""
     params = TodoSearchParams(
+        q=None,
         mode=SearchMode.TEXT,
         labels=[label],
         page=1,

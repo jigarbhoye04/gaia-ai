@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional
+from typing import Dict, Optional, Union, TypedDict
 
 import httpx
 from bs4 import BeautifulSoup
@@ -17,6 +17,11 @@ WEB_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
 IMAGE_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/images/search"
 NEWS_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/news/search"
 VIDEO_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/videos/search"
+
+
+class PlaywrightResult(TypedDict):
+    content: str
+    screenshot: Optional[bytes]
 
 
 async def fetch_endpoint(
@@ -44,7 +49,7 @@ async def fetch_endpoint(
 
     # If not in cache, make the API request
     headers = {"Ocp-Apim-Subscription-Key": settings.BING_API_KEY}
-    params = {"q": query, "count": count}
+    params: Dict[str, Union[str, int]] = {"q": query, "count": count}
     if extra_params:
         params.update(extra_params)
 
@@ -221,7 +226,7 @@ async def fetch_with_playwright(
     wait_time: int = 3,
     wait_for_element: str = "body",
     take_screenshot: bool = False,
-) -> dict:
+) -> PlaywrightResult:
     """Fetches webpage content using Playwright with optimizations.
 
     Args:
@@ -267,7 +272,7 @@ async def fetch_with_playwright(
             await page.wait_for_timeout(wait_time * 1000)
             content = await page.content()
 
-            result = {"content": content, "screenshot": None}
+            result: PlaywrightResult = {"content": content, "screenshot": None}
 
             # Take screenshot if requested
             if take_screenshot:

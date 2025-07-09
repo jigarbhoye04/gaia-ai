@@ -12,7 +12,7 @@ class ProfilingMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         # Only profile in development or when explicitly enabled
-        if not settings.ENABLE_PROFILING:
+        if not settings.ENABLE_PROFILING():
             return await call_next(request)
 
         # Skip profiling for static assets, health checks, etc.
