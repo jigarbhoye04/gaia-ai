@@ -80,9 +80,9 @@ gaia/
 </Step>
 
 <Step title="Start All Services">
-  ```bash 
+  ```bash
   # Start in detached mode (background)
-   docker compose up -d 
+   docker compose up -d
   # Or start with logs visible
    docker compose up
   ```
@@ -93,7 +93,7 @@ gaia/
     ```bash
     docker compose ps
     ```
-    
+
     Access the applications:
     - **GAIA Frontend**: http://localhost:3000
     - **Backend API**: http://localhost:8000
@@ -114,7 +114,7 @@ The Docker Compose setup includes the following services:
     - Port: 3000
     - Hot reload enabled in development
     - Serves the web interface
-    
+
     ```yaml
     frontend:
       container_name: gaia-frontend

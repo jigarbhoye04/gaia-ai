@@ -36,7 +36,9 @@ def serialize_document(document: dict) -> dict:
                 (
                     str(item)
                     if isinstance(item, ObjectId)
-                    else serialize_document(item) if isinstance(item, dict) else item
+                    else serialize_document(item)
+                    if isinstance(item, dict)
+                    else item
                 )
                 for item in value
             ]

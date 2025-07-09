@@ -9,7 +9,7 @@ icon: "user-secret"
 Infisical is a secure secret management platform that GAIA uses to centrally manage environment variables and API keys. Instead of storing sensitive information in `.env` files, Infisical allows you to:
 
 - **Centrally manage secrets** across multiple environments
-- **Secure access controls** with role-based permissions  
+- **Secure access controls** with role-based permissions
 - **Audit logging** for secret access and changes
 - **Automatic secret rotation** capabilities
 - **Team collaboration** with shared secret access
@@ -105,7 +105,7 @@ The `INFISICAL_PROJECT_ID`, `INFISICAL_MACHINE_INDENTITY_CLIENT_ID`, and `INFISI
 GAIA loads environment variables in this order (later sources override earlier ones):
 
 1. **System environment variables**
-2. **Local `.env` file variables**  
+2. **Local `.env` file variables**
 3. **Infisical secrets** (highest priority)
 
 This means:
@@ -159,7 +159,7 @@ INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET=your-prod-client-secret
   </Accordion>
 
   <Accordion title="Authentication failed">
-    **Solution**: 
+    **Solution**:
     - Verify your `INFISICAL_MACHINE_INDENTITY_CLIENT_ID` and `INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET`
     - Ensure the machine identity has proper permissions
     - Check that the identity is enabled

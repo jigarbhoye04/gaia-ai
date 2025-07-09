@@ -503,9 +503,9 @@ async def websocket_browser_endpoint(websocket: WebSocket):
                                 "title"
                             )
                             if "screenshot_url" in last_step:
-                                session["conversation_state"].last_screenshot_url = (
-                                    last_step.get("screenshot_url")
-                                )
+                                session[
+                                    "conversation_state"
+                                ].last_screenshot_url = last_step.get("screenshot_url")
 
                         # Process screenshots before sending the response
                         processed_result = await process_result_screenshots(
