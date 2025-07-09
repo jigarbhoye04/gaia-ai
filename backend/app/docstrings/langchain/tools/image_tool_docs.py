@@ -8,7 +8,7 @@ Parameters:
            with details about artistic style, lighting, composition, colors, mood, perspective,
            and specific visual elements. Make it comprehensive (50-100+ words) for best results.
 
-IMPORTANT: After calling this tool, the image will be automatically displayed to the user.
+IMPORTANT: After calling this tool, the image will be automatically displayed to the user. 
 DO NOT include markdown image syntax like ![alt](url) or attachment:// references in your response.
 Simply describe what you generated in natural language.
 

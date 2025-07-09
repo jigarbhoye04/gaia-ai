@@ -8,6 +8,7 @@ import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
+import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import { TodoUpdate } from "@/types/features/todoTypes";
 
 export default function CompletedTodosPage() {
@@ -18,10 +19,9 @@ export default function CompletedTodosPage() {
     loadCompletedTodos,
     modifyTodo,
     removeTodo,
-    selectTodo,
-    selectedTodo,
   } = useTodos();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
     loadCompletedTodos();
@@ -38,6 +38,10 @@ export default function CompletedTodosPage() {
 
   const handleTodoDelete = async (todoId: string) => {
     await removeTodo(todoId);
+    // If the deleted todo was selected (shown in URL), close the detail sheet
+    if (selectedTodoId === todoId) {
+      clearSelection();
+    }
   };
 
   if (loading) {
@@ -63,7 +67,7 @@ export default function CompletedTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoClick={(todo) => selectTodo(todo)}
+          onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => loadCompletedTodos()}
         />
       </div>
@@ -80,9 +84,9 @@ export default function CompletedTodosPage() {
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todo={selectedTodo}
-        isOpen={!!selectedTodo}
-        onClose={() => selectTodo(null)}
+        todoId={selectedTodoId}
+        isOpen={!!selectedTodoId}
+        onClose={clearSelection}
         onUpdate={handleTodoUpdate}
         onDelete={handleTodoDelete}
         projects={projects}

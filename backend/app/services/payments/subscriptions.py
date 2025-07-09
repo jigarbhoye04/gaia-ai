@@ -20,9 +20,11 @@ from app.models.payment_models import (
     UserSubscriptionStatus,
 )
 from app.services.user_service import get_user_by_id
+from app.utils.payments_utils import calculate_subscription_dates, timestamp_to_datetime
+from app.utils.timezone import add_timezone_info
+
 from .client import razorpay_service
 from .plans import get_plan_by_id, get_razorpay_plan_id
-from app.utils.payments_utils import calculate_subscription_dates, timestamp_to_datetime
 
 
 async def create_subscription(
@@ -147,6 +149,12 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
                 has_subscription=False,
                 plan_type=PlanType.FREE,
                 status=SubscriptionStatus.CANCELLED,
+                cancel_at_period_end=False,
+                current_period_end=None,
+                current_period_start=None,
+                plan_id=None,
+                subscription_id=None,
+                trial_end=None,
             )
 
         # Get plan details
@@ -154,17 +162,21 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
             {"_id": ObjectId(subscription["plan_id"])}
         )
 
+        plan_type = PlanType.FREE  # Default to free plan
         if plan:
             plan_name = plan.get("name", "").lower()
             if "pro" in plan_name:
                 plan_type = PlanType.PRO
-            else:
-                plan_type = PlanType.FREE
+
+        logger.info(f"current_end: {subscription.get('current_end')}")
+        logger.info(f"current_start: {datetime.now(timezone.utc)}")
 
         # Calculate days remaining
         days_remaining = None
         if subscription.get("current_end"):
-            remaining_delta = subscription["current_end"] - datetime.utcnow()
+            remaining_delta = add_timezone_info(
+                target_datetime=subscription["current_end"], timezone_name="UTC"
+            ) - datetime.now(timezone.utc)
             days_remaining = max(0, remaining_delta.days)
 
         # Format plan and subscription data
@@ -271,7 +283,7 @@ async def update_subscription(
 
         # Update subscription in database
         db_update_data = {
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         if subscription_data.plan_id:
@@ -365,11 +377,11 @@ async def cancel_subscription(
         update_data = {
             "status": new_status,
             "cancel_at_cycle_end": cancel_at_cycle_end,
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         if not cancel_at_cycle_end:
-            update_data["ended_at"] = datetime.utcnow()
+            update_data["ended_at"] = datetime.now(timezone.utc)
 
         result = await subscriptions_collection.update_one(
             {"_id": ObjectId(subscription["_id"])}, {"$set": update_data}
@@ -426,7 +438,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         end_at = timestamp_to_datetime(razorpay_subscription.get("end_at"))
 
         # Set defaults if fields are still null
-        created_at = subscription_doc.get("created_at", datetime.utcnow())
+        created_at = subscription_doc.get("created_at", datetime.now(timezone.utc))
 
         if not start_at:
             start_at = created_at
@@ -463,7 +475,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
             "auth_attempts": razorpay_subscription.get("auth_attempts", 0),
             "total_count": razorpay_subscription.get("total_count", 10),
             "paid_count": razorpay_subscription.get("paid_count", 0),
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         # Remove None values
@@ -502,7 +514,9 @@ async def _cleanup_old_subscriptions(user_id: str) -> None:
                 "$or": [
                     {
                         "status": "created",
-                        "created_at": {"$lt": datetime.utcnow() - timedelta(hours=1)},
+                        "created_at": {
+                            "$lt": datetime.now(timezone.utc) - timedelta(hours=1)
+                        },
                     },
                     {"status": "failed"},
                 ],

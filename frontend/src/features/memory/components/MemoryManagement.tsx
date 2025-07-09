@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AiBrain01Icon } from "@/components/shared/icons";
+import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import {
   type Memory,
   memoryApi,
@@ -12,6 +13,7 @@ import {
 } from "@/features/memory/api/memoryApi";
 import AddMemoryModal from "@/features/memory/components/AddMemoryModal";
 import MemoryGraph from "@/features/memory/components/MemoryGraph";
+import { useConfirmation } from "@/hooks/useConfirmation";
 
 export interface MemoryManagementProps {
   className?: string;
@@ -34,6 +36,7 @@ export default function MemoryManagement({
   const [isAddMemoryModalOpen, setIsAddMemoryModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState("list");
+  const { confirm, confirmationProps } = useConfirmation();
 
   const fetchMemories = useCallback(
     async (page: number = 1) => {
@@ -89,11 +92,16 @@ export default function MemoryManagement({
   );
 
   const handleClearAll = useCallback(async () => {
-    if (
-      !confirm(
+    const confirmed = await confirm({
+      title: "Clear All Memories",
+      message:
         "Are you sure you want to clear all memories? This action cannot be undone.",
-      )
-    ) {
+      confirmText: "Clear All",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -294,6 +302,9 @@ export default function MemoryManagement({
           />
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog {...confirmationProps} />
     </div>
   );
 }

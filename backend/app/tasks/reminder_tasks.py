@@ -12,8 +12,8 @@ from langchain_core.messages import AIMessage, HumanMessage
 from app.config.loggers import general_logger as logger
 from app.langchain.core.agent import call_reminder_agent
 from app.models.chat_models import (
-    ConversationModel,
     MessageModel,
+    SystemPurpose,
     UpdateMessagesRequest,
 )
 from app.models.reminder_models import (
@@ -23,13 +23,13 @@ from app.models.reminder_models import (
     StaticReminderPayload,
 )
 from app.services.conversation_service import (
-    create_conversation_service,
+    create_system_conversation,
     get_conversation,
     update_messages,
 )
 from app.services.notification_service import notification_service
 from app.services.reminder_service import update_reminder
-from app.utils.notification.sources import create_reminder_notification
+from app.utils.notification.sources import AIProactiveNotificationSource
 from app.utils.oauth_utils import get_tokens_by_user_id
 
 
@@ -67,7 +67,7 @@ async def _create_conversation_for_reminder(
     reminder: ReminderModel, notification_title: str, user_dict: dict
 ) -> str:
     """
-    Create a new conversation for a reminder and update the reminder with conversation_id.
+    Create a new system conversation for a reminder and update the reminder with conversation_id.
 
     Args:
         reminder: The reminder model
@@ -80,23 +80,24 @@ async def _create_conversation_for_reminder(
     if not reminder.id:
         raise ValueError("Reminder must have an ID")
 
-    conversation_id = str(uuid4())
-    conversation = ConversationModel(
-        conversation_id=conversation_id,
+    # Create system conversation for reminder processing
+    conversation = await create_system_conversation(
+        user_id=reminder.user_id,
         description=notification_title,
+        system_purpose=SystemPurpose.REMINDER_PROCESSING,
     )
 
-    await asyncio.gather(
-        create_conversation_service(conversation, user_dict),
-        update_reminder(
-            reminder_id=reminder.id,
-            update_data={"conversation_id": conversation_id},
-            user_id=reminder.user_id,
-        ),
+    # Update the reminder with the new conversation_id
+    await update_reminder(
+        reminder_id=reminder.id,
+        update_data={"conversation_id": conversation["conversation_id"]},
+        user_id=reminder.user_id,
     )
 
-    logger.info(f"Created conversation {conversation_id} for reminder {reminder.id}")
-    return conversation_id
+    logger.info(
+        f"Created system conversation {conversation['conversation_id']} for reminder {reminder.id}"
+    )
+    return conversation["conversation_id"]
 
 
 async def _log_reminder_execution(
@@ -219,7 +220,7 @@ async def _execute_ai_agent_reminder(reminder: ReminderModel) -> None:
         )
 
     # Prepare notification
-    notification = create_reminder_notification(
+    notification = AIProactiveNotificationSource.create_reminder_notification(
         title=notification_data.title,
         body=notification_data.body,
         reminder_id=reminder.id,
@@ -250,7 +251,7 @@ async def _execute_static_reminder(reminder: ReminderModel) -> None:
     if not reminder.id:
         raise ValueError("Reminder must have an ID")
 
-    notification = create_reminder_notification(
+    notification = AIProactiveNotificationSource.create_reminder_notification(
         title=reminder.payload.title,
         body=reminder.payload.body,
         reminder_id=reminder.id,
@@ -273,7 +274,7 @@ async def execute_reminder_by_agent(
 
     This is the main entry point for reminder execution. It routes to the appropriate
     handler based on the reminder's agent type:
-    - AI_AGENTS: Executes with conversation tracking and history context
+    - AI_AGENT: Executes with conversation tracking and history context
     - STATIC: Sends simple notification
 
     Args:
@@ -288,7 +289,7 @@ async def execute_reminder_by_agent(
         raise ValueError(f"Reminder {reminder.id} has no ID, skipping execution.")
 
     try:
-        if reminder.agent == AgentType.AI_AGENTS:
+        if reminder.agent == AgentType.AI_AGENT:
             await _execute_ai_agent_reminder(reminder)
         elif reminder.agent == AgentType.STATIC:
             await _execute_static_reminder(reminder)

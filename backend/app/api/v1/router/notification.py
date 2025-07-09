@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import (
@@ -21,7 +20,6 @@ from app.models.notification.request_models import (
     BulkActionRequest,
     NotificationResponse,
     PaginatedNotificationsResponse,
-    SnoozeRequest,
 )
 from app.services.notification_service import notification_service
 
@@ -150,53 +148,22 @@ async def mark_as_read(
         )
 
     try:
-        success = await notification_service.mark_as_read(notification_id, user_id)
-        if not success:
+        updated_notification = await notification_service.mark_as_read(
+            notification_id, user_id
+        )
+        if not updated_notification:
             raise HTTPException(status_code=404, detail="Notification not found")
 
-        return NotificationResponse(success=True, message="Notification marked as read")
+        return NotificationResponse(
+            success=True,
+            message="Notification marked as read",
+            data=updated_notification,
+        )
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Failed to mark notification as read: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.post("/notifications/{notification_id}/snooze")
-async def snooze_notification(
-    notification_id: str = Path(..., description="Notification ID"),
-    request: SnoozeRequest = Body(...),
-    current_user: dict = Depends(get_current_user),
-):
-    """Snooze notification until specified time"""
-    user_id = current_user.get("user_id")
-    if not user_id:
-        raise HTTPException(
-            status_code=401, detail="User not authenticated or user_id not found"
-        )
-
-    try:
-        if request.snooze_until <= datetime.now(timezone.utc):
-            raise HTTPException(
-                status_code=400, detail="Snooze time must be in the future"
-            )
-
-        success = await notification_service.snooze_notification(
-            notification_id, user_id, request.snooze_until
-        )
-        if not success:
-            raise HTTPException(status_code=404, detail="Notification not found")
-
-        return NotificationResponse(
-            success=True,
-            message=f"Notification snoozed until {request.snooze_until.isoformat()}",
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to snooze notification: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

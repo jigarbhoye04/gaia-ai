@@ -22,7 +22,7 @@ class AgentType(str, Enum):
     """Agent type handling the reminder task."""
 
     STATIC = "static"
-    AI_AGENTS = "ai_agents"
+    AI_AGENT = "ai_agent"
 
 
 class StaticReminderPayload(BaseModel):
@@ -33,7 +33,7 @@ class StaticReminderPayload(BaseModel):
 
 
 class AIAgentReminderPayload(BaseModel):
-    """Payload for AI_AGENTS reminders."""
+    """Payload for AI_AGENT reminders."""
 
     instructions: str = Field(
         ..., description="Special instructions for reminder generation"
@@ -109,7 +109,7 @@ class CreateReminderRequest(BaseModel):
     """Request model for creating a new reminder."""
 
     agent: AgentType = Field(
-        ..., description="Agent handling the reminder task (static or ai_agents)"
+        ..., description="Agent handling the reminder task (static or ai_agent)"
     )
     repeat: Optional[str] = Field(
         None, description="Cron expression for recurring tasks (optional)"

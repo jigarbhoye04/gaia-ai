@@ -3,7 +3,7 @@
 CODE_EXECUTION_TOOL = """
 Execute code safely in an isolated E2B sandbox environment.
 
-This tool provides a simple, direct way to run code in a secure WebAssembly-based
+This tool provides a simple, direct way to run code in a secure WebAssembly-based 
 sandbox. It executes the provided code and returns stdout, stderr, and exit code.
 
 ✅ USE THIS TOOL WHEN:
@@ -82,6 +82,6 @@ BEST PRACTICES:
 - Keep code focused and avoid overly complex operations in a single execution
 - Use print statements or console.log to display results clearly
 
-The tool provides real-time streaming progress updates during execution and
+The tool provides real-time streaming progress updates during execution and 
 comprehensive error reporting for debugging purposes.
 """

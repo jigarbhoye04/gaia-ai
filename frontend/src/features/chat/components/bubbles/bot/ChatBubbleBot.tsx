@@ -1,6 +1,7 @@
 // ChatBubbleBot.tsx
 import { useCallback, useMemo, useRef } from "react";
 
+import { SystemPurpose } from "@/features/chat/api/chatApi";
 import ChatBubble_Actions from "@/features/chat/components/bubbles/actions/ChatBubble_Actions";
 import ChatBubble_Actions_Image from "@/features/chat/components/bubbles/actions/ChatBubble_Actions_Image";
 import MemoryIndicator from "@/features/chat/components/memory/MemoryIndicator";
@@ -20,6 +21,8 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     date,
     memory_data,
     onOpenMemoryModal,
+    isConvoSystemGenerated,
+    systemPurpose,
   } = props;
 
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -45,7 +48,11 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   }, [image_data, props]);
 
   return (
-    (!!text || loading || image_data) && (
+    (loading ||
+      image_data ||
+      !!text ||
+      (isConvoSystemGenerated &&
+        systemPurpose === SystemPurpose.EMAIL_PROCESSING)) && (
       <div
         id={message_id}
         onMouseOver={handleMouseOver}

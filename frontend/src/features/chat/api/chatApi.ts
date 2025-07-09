@@ -22,12 +22,20 @@ export interface GenerateImageResponse {
   improved_prompt?: string;
 }
 
+export enum SystemPurpose {
+  EMAIL_PROCESSING = "email_processing",
+  REMINDER_PROCESSING = "reminder_processing",
+  OTHER = "other", // Add more purposes as needed
+}
+
 export interface Conversation {
   _id: string;
   user_id: string;
   conversation_id: string;
   description: string;
   starred?: boolean;
+  is_system_generated?: boolean;
+  system_purpose?: SystemPurpose;
   createdAt: string;
   updatedAt?: string;
 }

@@ -23,8 +23,8 @@ from app.models.support_models import (
 )
 from app.services.support_service import (
     create_support_request,
-    get_user_support_requests,
     create_support_request_with_attachments,
+    get_user_support_requests,
 )
 
 router = APIRouter()
@@ -233,3 +233,57 @@ async def get_support_rate_limit_status(
             status_code=500, detail=f"Failed to get rate limit status: {str(e)}"
         )
 
+
+# @router.get(
+#     "/support/requests/admin",
+#     summary="Get all support requests (Admin only)",
+#     description="Retrieve all support requests in the system. This endpoint is for administrative use.",
+# )
+# async def get_all_support_requests_admin(
+#     page: int = Query(1, ge=1, description="Page number"),
+#     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
+#     status: Optional[SupportRequestStatus] = Query(
+#         None, description="Filter by status"
+#     ),
+#     type: Optional[SupportRequestType] = Query(None, description="Filter by type"),
+#     current_user: dict = Depends(get_current_user),
+# ):
+#     """
+#     Get all support requests (admin endpoint).
+
+#     This endpoint requires admin privileges. It returns all support requests
+#     in the system with optional filtering by status and type.
+
+#     Args:
+#         page: Page number for pagination
+#         per_page: Number of items per page (max 100)
+#         status: Optional status filter
+#         type: Optional type filter
+#         current_user: Current authenticated user
+
+#     Returns:
+#         Dictionary with all support requests and pagination info
+#     """
+#     try:
+#         # Note: In a real application, you would check for admin privileges here
+#         # For now, we'll allow any authenticated user to access this endpoint
+#         # You should implement proper role-based access control
+
+#         user_id = current_user.get("user_id")
+#         if not user_id:
+#             raise HTTPException(status_code=401, detail="User authentication required")
+
+#         # TODO: Add admin role check
+#         # if not current_user.get("is_admin"):
+#         #     raise HTTPException(status_code=403, detail="Admin privileges required")
+
+#         return await get_all_support_requests(
+#             page=page, per_page=per_page, status_filter=status, type_filter=type
+#         )
+
+#     except HTTPException:
+#         raise
+#     except Exception as e:
+#         raise HTTPException(
+#             status_code=500, detail=f"Failed to fetch support requests: {str(e)}"
+#         )

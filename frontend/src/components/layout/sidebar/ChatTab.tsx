@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 
 import { BubbleConversationChatIcon } from "@/components/shared/icons";
+import { SystemPurpose } from "@/features/chat/api/chatApi";
 
 import { Button } from "../../ui/shadcn/button";
 import ChatOptionsDropdown from "./ChatOptionsDropdown";
@@ -12,9 +13,17 @@ interface ChatTabProps {
   name: string;
   id: string;
   starred: boolean | undefined;
+  isSystemGenerated?: boolean;
+  systemPurpose?: SystemPurpose;
 }
 
-export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
+export const ChatTab: FC<ChatTabProps> = ({
+  name,
+  id,
+  starred,
+  isSystemGenerated = false,
+  systemPurpose,
+}) => {
   const router = useRouter();
   const [currentConvoId, setCurrentConvoId] = useState<string | null>(null);
   const pathname = usePathname();
@@ -35,14 +44,24 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
       <Button
         className={`flex h-[32px] min-h-[32px] w-full cursor-pointer justify-start bg-transparent pr-0 pl-2 font-normal duration-0 hover:bg-white/10 ${
           currentConvoId === id ? "text-primary" : "text-white"
-        }`}
+        } ${isSystemGenerated ? "border-l-2 border-blue-400/50" : ""}`}
         onClick={() => {
           setButtonHovered(false);
           router.push(`/c/${id}`);
         }}
       >
         <div className="flex w-full items-center gap-2">
-          {starred ? (
+          {isSystemGenerated ? (
+            <div className="flex w-[17px] min-w-[17px] items-center justify-center">
+              <span className="text-xs text-blue-400">
+                {systemPurpose === SystemPurpose.EMAIL_PROCESSING
+                  ? "📧"
+                  : systemPurpose === SystemPurpose.REMINDER_PROCESSING
+                    ? "⏰"
+                    : "🤖"}
+              </span>
+            </div>
+          ) : starred ? (
             <Star
               className="w-[17px] min-w-[17px]"
               color={currentConvoId === id ? "#00bbff" : "#9b9b9b"}
@@ -55,7 +74,11 @@ export const ChatTab: FC<ChatTabProps> = ({ name, id, starred }) => {
               width="19"
             />
           )}
-          <span className="w-[calc(100%-45px)] max-w-[200px] truncate text-left">
+          <span
+            className={`w-[calc(100%-45px)] max-w-[200px] truncate text-left ${
+              isSystemGenerated ? "text-blue-200" : ""
+            }`}
+          >
             {name.replace('"', "")}
           </span>
         </div>

@@ -12,6 +12,7 @@ import {
   ChatBubbleAddIcon,
   CheckmarkCircle02Icon,
   Mail01Icon,
+  NotificationIcon,
   PinIcon,
   Route02Icon,
 } from "@/components/shared/icons";
@@ -50,6 +51,16 @@ export default function SidebarTopButtons() {
       icon: <PinIcon height={21} width={21} />,
       label: "Pins",
     },
+    {
+      route: "/notifications",
+      icon: <NotificationIcon height={23} width={23} />,
+      label: "Notifications",
+    },
+    // {
+    //   route: "/browser",
+    //   icon: <AiBrowserIcon height={23} width={23} />,
+    //   label: "Use Browser",
+    // },
   ];
 
   const createNewChat = (): void => {

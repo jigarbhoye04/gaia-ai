@@ -1,3 +1,4 @@
+import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Tooltip } from "@heroui/tooltip";
@@ -17,30 +18,30 @@ import { Drawer } from "vaul";
 
 import { MagicWand05Icon, StarsIcon } from "@/components/shared/icons";
 import Spinner from "@/components/ui/shadcn/spinner";
-import { mailApi } from "@/features/mail/api/mailApi";
 import GmailBody from "@/features/mail/components/GmailBody";
+import { useEmailSummary } from "@/features/mail/hooks/useEmailAnalysis";
 import { parseEmail } from "@/features/mail/utils/mailUtils";
 import { MenuBar } from "@/features/notes/components/NotesMenuBar";
-import { EmailData } from "@/types/features/mailTypes";
+import { EmailData, EmailImportanceSummary } from "@/types/features/mailTypes";
+
+import { useFetchEmailById } from "../hooks/useFetchEmailById";
 
 interface ViewEmailProps {
-  mail: EmailData | null;
+  mailId: string | null;
   onOpenChange: () => void;
   threadMessages?: EmailData[];
   isLoadingThread?: boolean;
 }
 
-interface EmailSummaryRequest {
-  message_id: string;
-  include_action_items: boolean;
-  max_length?: number;
-}
-
-function AISummary({ summary }: { summary: string | null }) {
-  if (!summary) return null;
-
-  return (
-    <>
+function AISummary({
+  analysis,
+  isLoading,
+}: {
+  analysis: EmailImportanceSummary | null;
+  isLoading: boolean;
+}) {
+  if (isLoading) {
+    return (
       <div className="mb-3 flex w-fit flex-col rounded-xl bg-zinc-800 p-2 shadow-md outline outline-zinc-700">
         <div className="relative flex items-center gap-3 text-sm font-medium text-white">
           <Chip
@@ -57,27 +58,133 @@ function AISummary({ summary }: { summary: string | null }) {
               color={undefined}
               fill={"#00bbff"}
             />
-            <span>GAIA Email Summary</span>
+            <span>Loading AI Analysis...</span>
           </Chip>
         </div>
-        <div className="p-2 text-sm text-white">{summary}</div>
+        <div className="p-2">
+          <Spinner />
+        </div>
       </div>
-    </>
+    );
+  }
+
+  if (!analysis) return null;
+
+  return (
+    <div className="mb-3 flex w-fit flex-col rounded-xl bg-zinc-800 p-2 shadow-md outline outline-zinc-700">
+      <div className="relative flex items-center gap-3 text-sm font-medium text-white">
+        <Chip
+          classNames={{
+            content:
+              "text-sm relative flex! flex-row text-primary items-center gap-1 pl-3 font-medium",
+          }}
+          variant="flat"
+          color="primary"
+        >
+          <StarsIcon
+            width={17}
+            height={17}
+            color={undefined}
+            fill={"#00bbff"}
+          />
+          <span>GAIA AI Analysis</span>
+        </Chip>
+      </div>
+
+      {/* Summary */}
+      <div className="p-2 text-sm text-white">
+        <strong>Summary:</strong> {analysis.summary}
+      </div>
+
+      {/* Importance and Category */}
+      <div className="flex flex-wrap gap-2 px-2 pb-2">
+        <Chip
+          size="sm"
+          variant="flat"
+          color={
+            analysis.importance_level === "URGENT"
+              ? "danger"
+              : analysis.importance_level === "HIGH"
+                ? "warning"
+                : analysis.importance_level === "MEDIUM"
+                  ? "primary"
+                  : "default"
+          }
+        >
+          {analysis.importance_level}
+        </Chip>
+
+        {analysis.category && (
+          <Chip size="sm" variant="flat" color="secondary">
+            {analysis.category}
+          </Chip>
+        )}
+
+        {analysis.intent && (
+          <Chip size="sm" variant="flat" color="secondary">
+            {analysis.intent}
+          </Chip>
+        )}
+      </div>
+
+      {/* Semantic Labels */}
+      {analysis.semantic_labels && analysis.semantic_labels.length > 0 && (
+        <div className="px-2 pb-2">
+          <Accordion variant="light" selectionMode="multiple" className="px-0">
+            <AccordionItem
+              key="labels"
+              aria-label="Semantic Labels"
+              title={
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Labels</span>
+                  <Chip size="sm" variant="flat" color="default">
+                    {analysis.semantic_labels.length}
+                  </Chip>
+                </div>
+              }
+              className="px-0"
+            >
+              <div className="flex flex-wrap gap-1 pb-2">
+                {analysis.semantic_labels.map((label, index) => (
+                  <Chip
+                    key={index}
+                    size="sm"
+                    variant="bordered"
+                    color="primary"
+                  >
+                    {label}
+                  </Chip>
+                ))}
+              </div>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function ViewEmail({
-  mail,
+  mailId,
   onOpenChange,
   threadMessages = [],
   isLoadingThread = false,
 }: ViewEmailProps) {
+  const { mail } = useFetchEmailById(mailId);
+
   const { name: nameFrom, email: emailFrom } = parseEmail(mail?.from || "");
-  const [summary, setSummary] = useState<string | null>(mail?.summary || null);
-  const [isLoadingSummary, setIsLoadingSummary] = useState(false);
   const [showReplyEditor, setShowReplyEditor] = useState(false);
   const [replyTo, setReplyTo] = useState<EmailData | null>(null);
   const [isSending, setIsSending] = useState(false);
+
+  // Only fetch individually if not in cache
+  const {
+    data: aiAnalysisData,
+    isLoading: isLoadingAnalysis,
+    error: analysisError,
+  } = useEmailSummary(mailId || "", !!mailId);
+
+  const aiAnalysis = aiAnalysisData?.email || null;
 
   const sortedThreadMessages = [...threadMessages].sort((a, b) => {
     return new Date(a.time).getTime() - new Date(b.time).getTime();
@@ -172,34 +279,27 @@ export default function ViewEmail({
     }
   };
 
-  const handleSummarize = async () => {
-    if (!mail?.id) return;
+  const handleAnalyzeEmail = async () => {
+    if (!mailId) return;
 
-    setIsLoadingSummary(true);
+    // If we already have analysis, no need to fetch again
+    if (aiAnalysis) {
+      toast.success("Email analysis already available");
+      return;
+    }
 
     try {
-      const summaryRequest: EmailSummaryRequest = {
-        message_id: mail.id,
-        include_action_items: true,
-        max_length: 250,
-      };
-
-      const summaryData = await mailApi.summarizeEmail({
-        messageId: summaryRequest.message_id,
-      });
-
-      setSummary(summaryData.summary);
+      // The analysis should be automatically triggered when email is processed
+      // For now, we'll just show a message
+      toast.info("Email analysis is processed automatically in the background");
     } catch (error) {
-      console.error("Error summarizing email:", error);
-      toast.error("Failed to summarize email. Please try again.");
-      setSummary(null);
-    } finally {
-      setIsLoadingSummary(false);
+      console.error("Error analyzing email:", error);
+      toast.error("Failed to analyze email. Please try again.");
     }
   };
 
   return (
-    <Drawer.Root direction="right" open={!!mail} onOpenChange={onOpenChange}>
+    <Drawer.Root direction="right" open={!!mailId} onOpenChange={onOpenChange}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-md" />
         <Drawer.Content
@@ -209,9 +309,9 @@ export default function ViewEmail({
           }
         >
           <div className="relative flex h-full w-full grow flex-col overflow-y-auto rounded-l-2xl bg-zinc-900 p-6 pt-4">
-            <div className="relative w-full">
+            <div className="mb-2 flex w-full justify-end">
               <Tooltip content="Close" color="foreground">
-                <div className="absolute top-0 right-0 cursor-pointer">
+                <div className="cursor-pointer">
                   <XIcon width={18} onClick={onOpenChange} />
                 </div>
               </Tooltip>
@@ -221,11 +321,15 @@ export default function ViewEmail({
                 color="primary"
                 className="font-medium"
                 startContent={<MagicWand05Icon color={undefined} />}
-                isLoading={isLoadingSummary}
-                onPress={handleSummarize}
-                isDisabled={isLoadingSummary}
+                isLoading={isLoadingAnalysis}
+                onPress={handleAnalyzeEmail}
+                isDisabled={isLoadingAnalysis}
               >
-                {isLoadingSummary ? "Summarizing..." : "Summarise"}
+                {isLoadingAnalysis
+                  ? "Loading..."
+                  : aiAnalysis
+                    ? "AI Analysis"
+                    : "Get AI Analysis"}
               </Button>
 
               <div className="ml-auto flex gap-2">
@@ -248,7 +352,16 @@ export default function ViewEmail({
               </div>
             </header>
 
-            <AISummary summary={summary} />
+            <AISummary analysis={aiAnalysis} isLoading={isLoadingAnalysis} />
+
+            {analysisError && (
+              <div className="mb-3 flex w-fit flex-col rounded-xl bg-red-900/20 p-2 shadow-md outline outline-red-700">
+                <div className="p-2 text-sm text-red-300">
+                  Failed to load AI analysis. The email may not have been
+                  processed yet.
+                </div>
+              </div>
+            )}
 
             {mail?.subject && (
               <Drawer.Title className="font-medium text-foreground">
@@ -272,7 +385,7 @@ export default function ViewEmail({
                       name: messageSenderName,
                       email: messageSenderEmail,
                     } = parseEmail(message.from);
-                    const isCurrentEmail = mail?.id === message.id;
+                    const isCurrentEmail = mailId === message.id;
 
                     return (
                       <div

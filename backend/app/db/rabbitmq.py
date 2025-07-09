@@ -6,6 +6,7 @@ from app.config.settings import settings
 
 
 class RabbitMQPublisher:
+
     def __init__(self, amqp_url=settings.RABBITMQ_URL):
         self.amqp_url = amqp_url
         self.connection = None

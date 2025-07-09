@@ -4,6 +4,7 @@
 
 export * from "./components/index";
 export * from "./config/appConfig";
+export * from "./data/notifications";
 export * from "./hooks/index";
 export * from "./layouts/HeroUIProvider";
 export * from "./layouts/MotionContainer";
@@ -13,6 +14,6 @@ export * from "./layouts/SidebarLayout";
 export * from "./lib/index";
 export * from "./middleware";
 export * from "./redux/index";
-export * from "./services/apiService";
+export * from "./services/index";
 export * from "./types/index";
 export * from "./utils/index";

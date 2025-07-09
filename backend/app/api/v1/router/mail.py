@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.mail_models import (
     ApplyLabelRequest,
@@ -15,8 +16,15 @@ from app.models.mail_models import (
     LabelRequest,
     SendEmailRequest,
 )
-from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
-from app.utils.chat_utils import do_prompt_no_stream
+from app.services.email_importance_service import (
+    get_bulk_email_importance_summaries as get_bulk_importance_summaries_service,
+)
+from app.services.email_importance_service import (
+    get_email_importance_summaries as get_importance_summaries_service,
+)
+from app.services.email_importance_service import (
+    get_single_email_importance_summary as get_single_importance_summary_service,
+)
 from app.services.mail_service import (
     apply_labels,
     archive_messages,
@@ -43,6 +51,7 @@ from app.services.mail_service import (
     update_draft,
     update_label,
 )
+from app.utils.chat_utils import do_prompt_no_stream
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
 
@@ -91,6 +100,38 @@ def list_messages(
             "messages": [transform_gmail_message(msg) for msg in detailed_messages],
             "nextPageToken": results.get("nextPageToken"),
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gmail/message/{message_id}", summary="Get Gmail Message by ID")
+async def get_email_by_id(
+    message_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Get a Gmail message by its ID.
+
+    - **message_id**: The ID of the Gmail message to retrieve
+    """
+    try:
+        service = get_gmail_service(
+            access_token=current_user.get("access_token", ""),
+            refresh_token=current_user.get("refresh_token", ""),
+        )
+
+        # Fetch the message by ID
+        message = (
+            service.users()
+            .messages()
+            .get(userId="me", id=message_id, format="full")
+            .execute()
+        )
+
+        # Transform the message into a readable format
+        email_data = transform_gmail_message(message)
+
+        return email_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1038,3 +1079,90 @@ async def send_draft_route(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/gmail/importance-summaries", summary="Get email importance summaries")
+async def get_email_importance_summaries(
+    limit: int = 50,
+    important_only: bool = False,
+    current_user: dict = Depends(get_current_user),
+) -> dict:
+    """
+    Get email importance summaries for the current user.
+
+    - **limit**: Maximum number of emails to return (default: 50)
+    - **important_only**: If True, only return important emails (default: False)
+
+    Returns list of email summaries with importance analysis.
+    """
+    try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User ID not found")
+
+        # Use service function to get email summaries
+        return await get_importance_summaries_service(user_id, limit, important_only)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving email summaries: {str(e)}"
+        )
+
+
+@router.get(
+    "/gmail/importance-summary/{message_id}",
+    summary="Get single email importance summary",
+)
+async def get_single_email_importance_summary(
+    message_id: str, current_user: dict = Depends(get_current_user)
+) -> dict:
+    """
+    Get importance summary for a specific email.
+
+    - **message_id**: Gmail message ID
+
+    Returns the importance analysis for the specified email.
+    """
+    try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User ID not found")
+
+        # Use service function to get email summary
+        result = await get_single_importance_summary_service(user_id, message_id)
+
+        if result is None:
+            raise HTTPException(status_code=404, detail="Email summary not found")
+
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving email summary: {str(e)}"
+        )
+
+
+@router.post(
+    "/gmail/importance-summaries/bulk", summary="Get bulk email importance summaries"
+)
+async def get_bulk_email_importance_summaries(
+    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+) -> dict:
+    """
+    Get importance summaries for multiple emails in bulk.
+
+    - **message_ids**: List of Gmail message IDs
+
+    Returns summaries for all available emails. Does not throw error for missing summaries.
+    """
+    try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="User ID not found")
+
+        # Use service function to get bulk email summaries
+        return await get_bulk_importance_summaries_service(user_id, request.message_ids)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving bulk email summaries: {str(e)}"
+        )

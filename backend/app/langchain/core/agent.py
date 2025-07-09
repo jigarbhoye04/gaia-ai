@@ -23,6 +23,7 @@ from app.langchain.prompts.proactive_agent_prompt import (
     PROACTIVE_REMINDER_AGENT_MESSAGE_PROMPT,
     PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
 )
+from app.langchain.templates.mail_templates import MAIL_RECEIVED_USER_MESSAGE_TEMPLATE
 from app.models.message_models import MessageRequestWithHistory
 from app.models.reminder_models import ReminderProcessingAgentResult
 from app.utils.memory_utils import store_user_message_memory
@@ -190,6 +191,7 @@ async def call_mail_processing_agent(
     processing_id = f"email_processing_{user_id}_{int(datetime.now().timestamp())}"
 
     initial_state = {
+        "input": email_content,  # Use 'input' instead of 'messages' for EmailPlanExecute state
         "messages": messages,
         "current_datetime": datetime.now(timezone.utc).isoformat(),
         "mem0_user_id": user_id,
@@ -197,9 +199,8 @@ async def call_mail_processing_agent(
         "processing_id": processing_id,
     }
 
-    actions_taken = []
-    processing_errors = []
-
+    complete_message = ""
+    tool_data = {}
     try:
         # Get the email processing graph
         graph = await GraphManager.get_graph("mail_processing")
@@ -212,9 +213,10 @@ async def call_mail_processing_agent(
             f"Graph for email processing retrieved successfully for user {user_id}"
         )
 
-        # Just invoke the graph directly - no streaming needed
-        result = await graph.ainvoke(
+        # Stream the graph execution to collect both message and tool data
+        async for event in graph.astream(
             initial_state,
+            stream_mode=["messages", "custom"],
             config={
                 "configurable": {
                     "thread_id": processing_id,
@@ -223,73 +225,62 @@ async def call_mail_processing_agent(
                     "refresh_token": refresh_token,
                     "initiator": "backend",  # This will be used to identify either to send notification or stream to the user
                 },
-                "recursion_limit": 5,  # Lower limit for email processing
+                "recursion_limit": 15,  # Lower limit for email processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "email",
                     "email_subject": email_metadata.get("subject", ""),
                 },
             },
-        )
+        ):
+            stream_mode, payload = event
+            if stream_mode == "messages":
+                chunk, metadata = payload
+                if chunk is None:
+                    continue
 
-        logger.info(
-            f"Email processing result for user {user_id}: {result}"
-            if result
-            else "No result returned"
-        )
+                # Collect AI message content
+                if isinstance(chunk, AIMessageChunk):
+                    content = str(chunk.content)
+                    if content:
+                        complete_message += content
 
-        # Extract actions taken from the result
-        if result and "messages" in result:
-            for message in result["messages"]:
-                if hasattr(message, "tool_calls") and message.tool_calls:
-                    for tool_call in message.tool_calls:
-                        actions_taken.append(
-                            {
-                                "tool": tool_call.get("name", "unknown"),
-                                "args": tool_call.get("args", {}),
-                                "timestamp": datetime.now(timezone.utc).isoformat(),
-                            }
-                        )
-                        logger.info(
-                            f"Email processing tool called: {tool_call.get('name')}"
-                        )
+            elif stream_mode == "custom":
+                # Extract tool data from custom stream events
+                from app.services.chat_service import extract_tool_data
 
-        # Prepare results
+                try:
+                    new_data = extract_tool_data(json.dumps(payload))
+                    if new_data:
+                        tool_data.update(new_data)
+                except Exception as e:
+                    logger.error(
+                        f"Error extracting tool data during email processing: {e}"
+                    )
+
+        # Prepare results with conversation data for process_email to handle
         processing_results = {
-            "success": True,
-            "processing_id": processing_id,
-            "user_id": user_id,
-            "email_metadata": email_metadata,
-            "actions_taken": actions_taken,
-            "actions_count": len(actions_taken),
-            "errors": processing_errors,
-            "processed_at": datetime.now(timezone.utc).isoformat(),
+            "conversation_data": {
+                "conversation_id": user_id,  # Use user_id as conversation_id
+                "user_message_content": MAIL_RECEIVED_USER_MESSAGE_TEMPLATE.format(
+                    subject=email_metadata.get("subject", "No Subject"),
+                    sender=email_metadata.get("sender", "Unknown Sender"),
+                    snippet=email_content.strip()[:200]
+                    + ("..." if len(email_content.strip()) > 200 else ""),
+                ),
+                "bot_message_content": complete_message,
+                "tool_data": tool_data,
+            },
         }
 
         logger.info(
-            f"Email processing completed for user {user_id}. Actions taken: {len(actions_taken)}"
+            f"Email processing completed for user {user_id}. Tool data collected: {len(tool_data)}"
         )
 
         return processing_results
     except Exception as e:
         logger.error(f"Error in email processing for user {user_id}: {str(e)}")
-
-        return {
-            "success": False,
-            "processing_id": processing_id,
-            "user_id": user_id,
-            "email_metadata": email_metadata,
-            "actions_taken": actions_taken,
-            "actions_count": len(actions_taken),
-            "errors": processing_errors
-            + [{"error": str(e), "timestamp": datetime.now(timezone.utc).isoformat()}],
-            "processed_at": datetime.now(timezone.utc).isoformat(),
-        }
-
-
-reminder_agent_result_parser = PydanticOutputParser(
-    pydantic_object=ReminderProcessingAgentResult
-)
+        raise e
 
 
 @traceable
@@ -360,7 +351,7 @@ async def call_reminder_agent(
                     "reminder_id": reminder_id,
                     "initiator": "backend",
                 },
-                "recursion_limit": 5,  # Lower limit for reminder processing
+                "recursion_limit": 9,  # Lower limit for reminder processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "reminder",
@@ -404,3 +395,8 @@ async def call_reminder_agent(
         logger.error(f"Error in reminder processing for user {user_id}: {str(e)}")
         # Handle the error as needed, e.g., log it, notify the user, etc.
         raise e
+
+
+reminder_agent_result_parser = PydanticOutputParser(
+    pydantic_object=ReminderProcessingAgentResult
+)
