@@ -9,15 +9,16 @@ import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
+import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import { Project, Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function UpcomingTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTodo, setSelectedTodo] = useState<Todo | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const { refreshAllData } = useTodos();
+  const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
     loadUpcomingTodos();
@@ -88,7 +89,7 @@ export default function UpcomingTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
-          onTodoClick={(todo) => setSelectedTodo(todo)}
+          onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={loadUpcomingTodos}
         />
       </div>
@@ -106,17 +107,11 @@ export default function UpcomingTodosPage() {
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todo={selectedTodo}
-        isOpen={!!selectedTodo}
-        onClose={() => setSelectedTodo(null)}
-        onUpdate={(todoId, updates) => {
-          handleTodoUpdate(todoId, updates);
-          setSelectedTodo((prev) => (prev ? { ...prev, ...updates } : null));
-        }}
-        onDelete={(todoId) => {
-          handleTodoDelete(todoId);
-          setSelectedTodo(null);
-        }}
+        todoId={selectedTodoId}
+        isOpen={!!selectedTodoId}
+        onClose={clearSelection}
+        onUpdate={handleTodoUpdate}
+        onDelete={handleTodoDelete}
         projects={projects}
       />
     </div>

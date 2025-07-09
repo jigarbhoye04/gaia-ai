@@ -1,7 +1,7 @@
 import { Spinner } from "@heroui/spinner";
 import Image from "next/image";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import ChatBubbleBot from "@/features/chat/components/bubbles/bot/ChatBubbleBot";
 import SearchedImageDialog from "@/features/chat/components/bubbles/bot/SearchedImageDialog";
@@ -13,6 +13,7 @@ import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useConversationList } from "@/features/chat/hooks/useConversationList";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useLoadingText } from "@/features/chat/hooks/useLoadingText";
+import { filterEmptyMessagePairs } from "@/features/chat/utils/messageContentUtils";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { SetImageDataType } from "@/types/features/chatBubbleTypes";
 import { MessageType } from "@/types/features/convoTypes";
@@ -34,16 +35,37 @@ export default function ChatRenderer() {
     improvedPrompt: "",
   });
 
+  const conversation = useMemo(() => {
+    return conversations.find(
+      (convo) => convo.conversation_id === convoIdParam,
+    );
+  }, [conversations, convoIdParam]);
+
+  // Filter out empty message pairs
+  const filteredMessages = useMemo(() => {
+    if (!convoMessages) return [];
+
+    return filterEmptyMessagePairs(
+      convoMessages,
+      conversation?.is_system_generated || false,
+      conversation?.system_purpose,
+    );
+  }, [
+    convoMessages,
+    conversation?.is_system_generated,
+    conversation?.system_purpose,
+  ]);
+
   useEffect(() => {
     if (
       messageId &&
-      convoMessages.length > 0 &&
+      filteredMessages.length > 0 &&
       scrolledToMessageRef.current !== messageId
     ) {
       scrollToMessage(messageId);
       scrolledToMessageRef.current = messageId;
     }
-  }, [messageId, convoMessages]);
+  }, [messageId, filteredMessages]);
 
   const scrollToMessage = (messageId: string) => {
     if (!messageId) return;
@@ -52,7 +74,7 @@ export default function ChatRenderer() {
 
     if (!messageElement) return;
 
-    messageElement.scrollIntoView({ behavior: "smooth", block: "center" });
+    messageElement.scrollIntoView({ behavior: "smooth", block: "start" });
     messageElement.style.transition = "all 0.3s ease";
 
     setTimeout(() => {
@@ -61,10 +83,10 @@ export default function ChatRenderer() {
       setTimeout(() => {
         messageElement.style.scale = "1";
       }, 300);
-    }, 300);
+    }, 700);
   };
 
-  if (!!convoMessages && convoMessages?.length === 0) {
+  if (!!filteredMessages && filteredMessages?.length === 0) {
     return (
       <div className="relative flex flex-1 flex-col items-center justify-center gap-2">
         <Image
@@ -100,7 +122,7 @@ export default function ChatRenderer() {
 
       <SearchedImageDialog />
 
-      {convoMessages?.map((message: MessageType, index: number) =>
+      {filteredMessages?.map((message: MessageType, index: number) =>
         message.type === "bot" ? (
           <div
             key={index}
@@ -141,6 +163,10 @@ export default function ChatRenderer() {
               code_data={message.code_data}
               onOpenMemoryModal={() => setOpenMemoryModal(true)}
               google_docs_data={message.google_docs_data}
+              isConvoSystemGenerated={
+                conversation?.is_system_generated || false
+              }
+              systemPurpose={conversation?.system_purpose}
             />
           </div>
         ) : (
@@ -154,6 +180,7 @@ export default function ChatRenderer() {
             fileData={message.fileData}
             selectedTool={message.selectedTool}
             toolCategory={message.toolCategory}
+            isConvoSystemGenerated={conversation?.is_system_generated || false}
           />
         ),
       )}

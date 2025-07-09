@@ -12,12 +12,11 @@ async def chatbot(
 ):
     """Chatbot function that uses the state graph and model."""
     try:
-        # Call the Groq API with the provided messages
         response = await llm.ainvoke(state.messages)
 
         return {"messages": [response]}
     except Exception as e:
-        logger.error(f"Error in Groq API call: {str(e)}")
+        logger.error(f"Error in LLM API call: {str(e)}")
 
         return {
             "messages": [

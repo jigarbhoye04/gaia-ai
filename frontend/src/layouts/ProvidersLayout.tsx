@@ -8,6 +8,7 @@ import LoginModal from "@/features/auth/components/LoginModal";
 import CalendarModal from "@/features/calendar/components/CalendarModal";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
+import GlobalNotifications from "@/hooks/providers/GlobalNotifications";
 import { HeroUIProvider } from "@/layouts/HeroUIProvider";
 import QueryProvider from "@/layouts/QueryProvider";
 import ReduxProviders from "@/redux/providers";
@@ -19,6 +20,7 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
         <QueryProvider>
           <ReduxProviders>
             <GlobalInterceptor />
+            <GlobalNotifications />
             <GlobalAuth />
             <LoginModal />
             <CalendarModal />

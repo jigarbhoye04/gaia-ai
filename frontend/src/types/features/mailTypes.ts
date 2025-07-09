@@ -56,3 +56,37 @@ export type EmailComposeData = {
   subject: string;
   body: string;
 };
+
+// AI Email Analysis Types
+export interface EmailImportanceSummary {
+  _id: string;
+  user_id: string;
+  message_id: string;
+  subject: string;
+  sender: string;
+  date: string;
+  labels: string[];
+  is_important: boolean;
+  importance_level: "URGENT" | "HIGH" | "MEDIUM" | "LOW";
+  summary: string;
+  semantic_labels: string[];
+  category: string;
+  intent: string;
+  analyzed_at: string;
+  content_preview: string;
+}
+
+export interface EmailSummariesResponse {
+  status: string;
+  emails: EmailImportanceSummary[];
+  count: number;
+  filtered_by_importance?: boolean;
+  searched_labels?: string[];
+}
+
+export interface SemanticLabelsStats {
+  status: string;
+  semantic_labels: Array<{ _id: string; count: number }>;
+  categories: Array<{ _id: string; count: number }>;
+  intents: Array<{ _id: string; count: number }>;
+}

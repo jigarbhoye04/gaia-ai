@@ -17,7 +17,6 @@ class NotificationStatus(str, Enum):
     PENDING = "pending"
     DELIVERED = "delivered"
     READ = "read"
-    SNOOZED = "snoozed"
     ARCHIVED = "archived"
 
 
@@ -92,6 +91,18 @@ class ActionConfig(BaseModel):
         return self
 
 
+class NotificationSource(str, Enum):
+    """Enumeration of notification sources"""
+
+    AI_EMAIL_DRAFT = "ai_email_draft"
+    AI_CALENDAR_EVENT = "ai_calendar_event"
+    AI_TODO_SUGGESTION = "ai_todo_suggestion"
+    AI_REMINDER = "ai_reminder"
+    AI_TODO_ADDED = "ai_todo_added"
+    EMAIL_TRIGGER = "email_trigger"
+    BACKGROUND_JOB = "background_job"
+
+
 class NotificationAction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     type: ActionType
@@ -102,13 +113,31 @@ class NotificationAction(BaseModel):
     confirmation_message: Optional[str] = None
     icon: Optional[str] = None
     disabled: bool = False
+    executed: bool = False
+    executed_at: Optional[datetime] = None
+
+    def mark_as_executed(self) -> None:
+        """Mark this action as executed"""
+        self.executed = True
+        self.executed_at = datetime.now(timezone.utc)
+
+    def is_executable(self) -> bool:
+        """Check if this action can be executed"""
+        if self.disabled:
+            return False
+
+        # For API calls, check if already executed
+        if self.type == ActionType.API_CALL:
+            return not self.executed
+
+        # Other action types may be executed multiple times
+        return True
 
 
 class NotificationContent(BaseModel):
     title: str
     body: str
     actions: Optional[List[NotificationAction]] = None
-    template_data: Optional[Dict[str, Any]] = None
     rich_content: Optional[Dict[str, Any]] = None  # For HTML, markdown, etc.
 
 
@@ -120,16 +149,6 @@ class ChannelConfig(BaseModel):
     config: Dict[str, Any] = Field(default_factory=dict)
 
 
-class NotificationRules(BaseModel):
-    """Rules for notification behavior"""
-
-    max_retries: int = 3
-    retry_interval_seconds: int = 300
-    expire_after_hours: Optional[int] = None
-    respect_quiet_hours: bool = True
-    deduplicate_within_minutes: Optional[int] = None
-
-
 class NotificationRequest(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
@@ -139,7 +158,6 @@ class NotificationRequest(BaseModel):
     channels: List[ChannelConfig]
     content: NotificationContent
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    rules: Optional[NotificationRules] = None
     scheduled_for: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -177,17 +195,33 @@ class NotificationRecord(BaseModel):
         self.read_at = datetime.now(timezone.utc)
         self.updated_at = datetime.now(timezone.utc)
 
-    def snooze_until(self, until: datetime) -> None:
-        """Snooze notification until specified time"""
-        self.status = NotificationStatus.SNOOZED
-        self.snoozed_until = until
-        self.updated_at = datetime.now(timezone.utc)
-
     def archive(self) -> None:
         """Archive notification"""
         self.status = NotificationStatus.ARCHIVED
         self.archived_at = datetime.now(timezone.utc)
         self.updated_at = datetime.now(timezone.utc)
+
+    def mark_action_as_executed(self, action_id: str) -> bool:
+        """Mark a specific action as executed"""
+        if not self.original_request.content.actions:
+            return False
+
+        for action in self.original_request.content.actions:
+            if action.id == action_id:
+                action.mark_as_executed()
+                self.updated_at = datetime.now(timezone.utc)
+                return True
+        return False
+
+    def get_action_by_id(self, action_id: str) -> Optional[NotificationAction]:
+        """Get a specific action by ID"""
+        if not self.original_request.content.actions:
+            return None
+
+        for action in self.original_request.content.actions:
+            if action.id == action_id:
+                return action
+        return None
 
 
 class ActionResult(BaseModel):
@@ -196,6 +230,7 @@ class ActionResult(BaseModel):
     data: Optional[Dict[str, Any]] = None
     next_actions: Optional[List[NotificationAction]] = None
     update_notification: Optional[Dict[str, Any]] = None
+    update_action: Optional[Dict[str, Any]] = None
     error_code: Optional[str] = None
 
 

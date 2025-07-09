@@ -2,7 +2,7 @@
 Webhook event processing for Razorpay.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import HTTPException
@@ -10,8 +10,9 @@ from fastapi import HTTPException
 from app.config.loggers import general_logger as logger
 from app.db.mongodb.collections import payments_collection, subscriptions_collection
 from app.models.payment_models import WebhookEvent
-from .client import razorpay_service
 from app.utils.payments_utils import timestamp_to_datetime
+
+from .client import razorpay_service
 
 
 async def process_webhook(event: WebhookEvent) -> Dict[str, str]:
@@ -50,7 +51,7 @@ async def _process_payment_webhook(
                 "$set": {
                     "status": "captured",
                     "captured": True,
-                    "updated_at": datetime.utcnow(),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )
@@ -65,7 +66,7 @@ async def _process_payment_webhook(
                     "status": "failed",
                     "error_code": payment_entity.get("error_code"),
                     "error_description": payment_entity.get("error_description"),
-                    "updated_at": datetime.utcnow(),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )
@@ -106,7 +107,7 @@ async def _process_subscription_webhook(
                 "auth_attempts": complete_subscription.get("auth_attempts", 0),
                 "total_count": complete_subscription.get("total_count", 10),
                 "paid_count": complete_subscription.get("paid_count", 0),
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(timezone.utc),
             }
 
             # Remove None values to avoid overwriting existing data
@@ -129,7 +130,7 @@ async def _process_subscription_webhook(
                         "current_end": timestamp_to_datetime(
                             subscription_entity.get("current_end")
                         ),
-                        "updated_at": datetime.utcnow(),
+                        "updated_at": datetime.now(timezone.utc),
                     }
                 },
             )
@@ -154,7 +155,7 @@ async def _process_subscription_webhook(
                     complete_subscription.get("charge_at")
                 ),
                 "paid_count": complete_subscription.get("paid_count", 0),
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(timezone.utc),
             }
 
             # Remove None values
@@ -183,7 +184,7 @@ async def _process_subscription_webhook(
                         "current_end": timestamp_to_datetime(
                             subscription_entity.get("current_end")
                         ),
-                        "updated_at": datetime.utcnow(),
+                        "updated_at": datetime.now(timezone.utc),
                     },
                 },
             )
@@ -196,8 +197,8 @@ async def _process_subscription_webhook(
             {
                 "$set": {
                     "status": "cancelled",
-                    "ended_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
+                    "ended_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )
@@ -210,8 +211,8 @@ async def _process_subscription_webhook(
             {
                 "$set": {
                     "status": "completed",
-                    "ended_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
+                    "ended_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(timezone.utc),
                 }
             },
         )

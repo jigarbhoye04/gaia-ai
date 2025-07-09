@@ -1,5 +1,6 @@
 import React, { Dispatch } from "react";
 
+import { SystemPurpose } from "@/features/chat/api/chatApi";
 import { FileData } from "@/types/shared/fileTypes";
 
 import {
@@ -30,6 +31,7 @@ export interface ChatBubbleUserProps {
   fileData?: FileData[];
   selectedTool?: string | null;
   toolCategory?: string | null;
+  isConvoSystemGenerated: boolean;
 }
 
 export interface SetImageDataType {
@@ -157,4 +159,7 @@ export interface ChatBubbleBotProps {
 
   // Function to open the shared memory modal
   onOpenMemoryModal?: () => void;
+
+  isConvoSystemGenerated: boolean;
+  systemPurpose?: SystemPurpose;
 }

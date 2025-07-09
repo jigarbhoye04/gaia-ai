@@ -6,6 +6,26 @@ import { InternetIcon } from "@/components/shared/icons";
 import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import CustomAnchor from "@/features/chat/components/code-block/CustomAnchor";
+import {
+  hasCalendarDeleteOptions,
+  hasCalendarEditOptions,
+  hasCalendarOptions,
+  hasCodeData,
+  hasDeepSearchResults,
+  hasDocumentData,
+  hasEmailComposeData,
+  hasGoalData,
+  hasGoogleDocsData,
+  hasSearchResults,
+  hasTextContent,
+  hasTodoData,
+  hasWeatherData,
+  shouldShowDeepSearchIndicator,
+  shouldShowDisclaimer,
+  shouldShowPageFetchURLs,
+  shouldShowTextBubble,
+  shouldShowWebSearchIndicator,
+} from "@/features/chat/utils/messageContentUtils";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
@@ -38,28 +58,36 @@ export default function TextBubble({
   deep_research_results,
   document_data,
   google_docs_data,
+  isConvoSystemGenerated,
+  systemPurpose,
 }: ChatBubbleBotProps) {
   return (
     <>
-      {!!search_results && (
-        <SearchResultsTabs search_results={search_results} />
+      {hasSearchResults(search_results) && (
+        <SearchResultsTabs search_results={search_results!} />
       )}
 
-      {deep_research_results && (
+      {hasDeepSearchResults(deep_research_results) && (
         <DeepResearchResultsTabs
-          deep_research_results={deep_research_results}
+          deep_research_results={deep_research_results!}
         />
       )}
 
-      {weather_data && <WeatherCard weatherData={weather_data} />}
+      {hasWeatherData(weather_data) && (
+        <WeatherCard weatherData={weather_data!} />
+      )}
 
-      {(!!searchWeb ||
-        !!deepSearchWeb ||
-        (!!pageFetchURLs && pageFetchURLs?.length > 0) ||
-        !!text.trim()) && (
+      {shouldShowTextBubble(
+        text,
+        searchWeb,
+        deepSearchWeb,
+        pageFetchURLs,
+        isConvoSystemGenerated,
+        systemPurpose,
+      ) && (
         <div className="chat_bubble bg-zinc-800">
           <div className="flex flex-col gap-3">
-            {(searchWeb || !!search_results) && (
+            {shouldShowWebSearchIndicator(searchWeb, search_results) && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
@@ -71,7 +99,10 @@ export default function TextBubble({
               </Chip>
             )}
 
-            {(deepSearchWeb || !!deep_research_results) && (
+            {shouldShowDeepSearchIndicator(
+              deepSearchWeb,
+              deep_research_results,
+            ) && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
@@ -83,8 +114,8 @@ export default function TextBubble({
               </Chip>
             )}
 
-            {!!pageFetchURLs &&
-              pageFetchURLs.map((pageFetchURL, index) => (
+            {shouldShowPageFetchURLs(pageFetchURLs) &&
+              pageFetchURLs!.map((pageFetchURL, index) => (
                 <Chip
                   key={index}
                   color="primary"
@@ -100,9 +131,11 @@ export default function TextBubble({
                 </Chip>
               ))}
 
-            {!!text && <MarkdownRenderer content={text.toString()} />}
+            {hasTextContent(text) && (
+              <MarkdownRenderer content={text.toString()} />
+            )}
 
-            {!!disclaimer && (
+            {shouldShowDisclaimer(disclaimer) && (
               <Chip
                 className="text-xs font-medium text-warning-500"
                 color="warning"
@@ -112,60 +145,64 @@ export default function TextBubble({
                 }
                 variant="flat"
               >
-                {disclaimer}
+                {disclaimer!}
               </Chip>
             )}
           </div>
         </div>
       )}
 
-      {calendar_options && (
-        <CalendarEventSection calendar_options={calendar_options} />
+      {hasCalendarOptions(calendar_options) && (
+        <CalendarEventSection calendar_options={calendar_options!} />
       )}
 
-      {calendar_delete_options && (
+      {hasCalendarDeleteOptions(calendar_delete_options) && (
         <CalendarDeleteSection
-          calendar_delete_options={calendar_delete_options}
+          calendar_delete_options={calendar_delete_options!}
         />
       )}
 
-      {calendar_edit_options && (
-        <CalendarEditSection calendar_edit_options={calendar_edit_options} />
+      {hasCalendarEditOptions(calendar_edit_options) && (
+        <CalendarEditSection calendar_edit_options={calendar_edit_options!} />
       )}
 
-      {email_compose_data && (
-        <EmailComposeSection email_compose_data={email_compose_data} />
+      {hasEmailComposeData(email_compose_data) && (
+        <EmailComposeSection email_compose_data={email_compose_data!} />
       )}
 
-      {todo_data && (
+      {hasTodoData(todo_data) && (
         <TodoSection
-          todos={todo_data.todos}
-          projects={todo_data.projects}
-          stats={todo_data.stats}
-          action={todo_data.action}
-          message={todo_data.message}
+          todos={todo_data!.todos}
+          projects={todo_data!.projects}
+          stats={todo_data!.stats}
+          action={todo_data!.action}
+          message={todo_data!.message}
         />
       )}
 
-      {document_data && <DocumentSection document_data={document_data} />}
-
-      {google_docs_data && (
-        <GoogleDocsSection google_docs_data={google_docs_data} />
+      {hasDocumentData(document_data) && (
+        <DocumentSection document_data={document_data!} />
       )}
 
-      {goal_data && (
+      {hasGoogleDocsData(google_docs_data) && (
+        <GoogleDocsSection google_docs_data={google_docs_data!} />
+      )}
+
+      {hasGoalData(goal_data) && (
         <GoalSection
-          goals={goal_data.goals}
-          stats={goal_data.stats}
-          action={goal_data.action as GoalAction}
-          message={goal_data.message}
-          goal_id={goal_data.goal_id}
-          deleted_goal_id={goal_data.deleted_goal_id}
-          error={goal_data.error}
+          goals={goal_data!.goals}
+          stats={goal_data!.stats}
+          action={goal_data!.action as GoalAction}
+          message={goal_data!.message}
+          goal_id={goal_data!.goal_id}
+          deleted_goal_id={goal_data!.deleted_goal_id}
+          error={goal_data!.error}
         />
       )}
 
-      {code_data && <CodeExecutionSection code_data={code_data} />}
+      {hasCodeData(code_data) && (
+        <CodeExecutionSection code_data={code_data!} />
+      )}
     </>
   );
 }

@@ -109,8 +109,18 @@ export default function ChatsList() {
     };
   }, [currentPage, isFetchingMore, paginationMeta, fetchConversations]);
 
-  // Group conversations by time frame.
-  const groupedConversations = conversations.reduce(
+  // Separate system-generated conversations using the new flags
+  const systemConversations = conversations.filter(
+    (conversation) => conversation.is_system_generated === true,
+  );
+
+  // Regular conversations (excluding system-generated ones)
+  const regularConversations = conversations.filter(
+    (conversation) => conversation.is_system_generated !== true,
+  );
+
+  // Group regular conversations by time frame.
+  const groupedConversations = regularConversations.reduce(
     (acc, conversation) => {
       const timeFrame = getTimeFrame(conversation.createdAt);
 
@@ -130,7 +140,7 @@ export default function ChatsList() {
       timeFramePriority(timeFrameA) - timeFramePriority(timeFrameB),
   );
 
-  const starredConversations = conversations.filter(
+  const starredConversations = regularConversations.filter(
     (conversation) => conversation.starred,
   );
 
@@ -142,6 +152,48 @@ export default function ChatsList() {
         </div>
       ) : (
         <>
+          {/* System-generated conversations */}
+          {systemConversations.length > 0 && (
+            <Accordion
+              type="single"
+              collapsible
+              className="w-full p-0"
+              defaultValue="system-conversations"
+            >
+              <AccordionItem
+                value="system-conversations"
+                className="my-1 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border border-b-0 border-blue-500/30 bg-blue-900/20 px-1 py-2"
+              >
+                <AccordionTrigger className="w-full px-2 pt-0 pb-1 text-xs text-blue-300">
+                  🤖 System Actions
+                </AccordionTrigger>
+                <AccordionContent className="w-full p-0!">
+                  <div className="-mr-4 flex w-full flex-col">
+                    {systemConversations
+                      .sort(
+                        (a: Conversation, b: Conversation) =>
+                          new Date(b.createdAt).getTime() -
+                          new Date(a.createdAt).getTime(),
+                      )
+                      .map((conversation: Conversation) => (
+                        <ChatTab
+                          key={conversation.conversation_id}
+                          id={conversation.conversation_id}
+                          name={conversation.description || "System Actions"}
+                          starred={conversation.starred || false}
+                          isSystemGenerated={
+                            conversation.is_system_generated || false
+                          }
+                          systemPurpose={conversation.system_purpose}
+                        />
+                      ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          )}
+
+          {/* Starred conversations */}
           {starredConversations.length > 0 && (
             <Accordion
               type="single"

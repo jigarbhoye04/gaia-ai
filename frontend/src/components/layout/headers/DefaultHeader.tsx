@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
-import { ChatBubbleAddIcon, NotificationIcon } from "@/components/shared/icons";
+import { NotificationCenter } from "@/components/Notifications/NotificationCenter";
+import { ChatBubbleAddIcon } from "@/components/shared/icons";
 import { Button } from "@/components/ui/shadcn/button";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 
@@ -26,18 +27,7 @@ export default function DefaultHeader() {
         >
           <ChatBubbleAddIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
         </Button>
-        <Button
-          aria-label="Notifications"
-          className={`group rounded-lg hover:bg-[#00bbff]/20`}
-          size="icon"
-          variant={"ghost"}
-          onClick={() => {
-            router.push("/notifications");
-            clearMessages();
-          }}
-        >
-          <NotificationIcon className="min-h-[20px] min-w-[20px] text-zinc-400 transition-all group-hover:text-primary" />
-        </Button>
+        <NotificationCenter />
       </div>
     </>
   );

@@ -102,9 +102,9 @@ async def execute_code(
         # Include chart processing errors in output if any
         if chart_errors:
             if code_data["code_data"]["output"]["stderr"]:
-                code_data["code_data"]["output"]["stderr"] += (
-                    "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
-                )
+                code_data["code_data"]["output"][
+                    "stderr"
+                ] += "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
             else:
                 code_data["code_data"]["output"]["stderr"] = (
                     "Chart Processing Warnings:\n" + "\n".join(chart_errors)
