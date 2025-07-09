@@ -3,7 +3,7 @@ Calendar-related prompt templates for the chat agent.
 """
 
 CALENDAR_LIST_PROMPT = """
-You have retrieved the user's calendar list. 
+You have retrieved the user's calendar list.
 
 IMPORTANT INSTRUCTIONS:
 - This calendar data is for YOUR internal use only - NEVER show raw JSON to the user

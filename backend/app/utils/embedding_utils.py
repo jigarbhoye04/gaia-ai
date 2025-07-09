@@ -55,12 +55,12 @@ async def search_by_similarity(
             }
 
         # Query ChromaDB for similar items
-        chroma_results: List[Tuple[Document, float]] = (
-            await chroma_collection.asimilarity_search_with_score(
-                query=input_text,
-                k=top_k,
-                filter=where_filter,  # Filter by metadata
-            )
+        chroma_results: List[
+            Tuple[Document, float]
+        ] = await chroma_collection.asimilarity_search_with_score(
+            query=input_text,
+            k=top_k,
+            filter=where_filter,  # Filter by metadata
         )
 
         # Check if results are empty

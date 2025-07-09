@@ -21,7 +21,6 @@ async def generate_image(
     ],
     config: RunnableConfig,
 ) -> dict:
-
     try:
         writer = get_stream_writer()
         writer({"status": "generating_image"})

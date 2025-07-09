@@ -153,11 +153,11 @@ class EmailChannelAdapter(ChannelAdapter):
             actions_html = "<div style='margin-top: 20px;'>"
             for link in action_links:
                 actions_html += f"""
-                <a href="{link['url']}" 
-                   style="display: inline-block; padding: 10px 20px; margin: 5px; 
-                          background-color: #007bff; color: white; text-decoration: none; 
+                <a href="{link["url"]}"
+                   style="display: inline-block; padding: 10px 20px; margin: 5px;
+                          background-color: #007bff; color: white; text-decoration: none;
                           border-radius: 5px;">
-                    {link['text']}
+                    {link["text"]}
                 </a>
                 """
             actions_html += "</div>"
@@ -170,7 +170,7 @@ class EmailChannelAdapter(ChannelAdapter):
             {actions_html}
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
             <p style="color: #999; font-size: 12px;">
-                This notification was sent from your AI Assistant at {notification.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')}
+                This notification was sent from your AI Assistant at {notification.created_at.strftime("%Y-%m-%d %H:%M:%S UTC")}
             </p>
         </body>
         </html>
