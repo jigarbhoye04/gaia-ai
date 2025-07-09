@@ -41,7 +41,7 @@
   "python.linting.ruffEnabled": true,
   "python.linting.ruffPath": "ruff",
   "python.formatting.provider": "none",
-  "python.defaultInterpreterPath": "backend/venv/bin/python",
+  "python.defaultInterpreterPath": "./backend/.venv/bin/python",
   "python.analysis.extraPaths": ["./backend"],
   "python.analysis.autoSearchPaths": true,
   "python.analysis.useLibraryCodeForTypes": true,

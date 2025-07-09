@@ -15,17 +15,11 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": [
-              "introduction",
-              "quick-start"
-            ]
+            "pages": ["introduction", "quick-start"]
           },
           {
             "group": "Self-Hosting",
-            "pages": [
-              "self-hosting/overview",
-              "self-hosting/docker-setup"
-            ]
+            "pages": ["self-hosting/overview", "self-hosting/docker-setup"]
           },
           {
             "group": "For Developers",
@@ -84,13 +78,14 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
+
       "href": "https://heygaia.io"
     }
   },
   "footer": {
     "socials": {
       "website": "https://heygaia.io",
-      "x": "https://x.com/heygaia_io",
+      "x": "https://x.com/_heygaia",
       "github": "https://github.com/heygaia",
       "discord": "https://discord.heygaia.io",
       "linkedin": "https://linkedin.com/company/heygaia"
