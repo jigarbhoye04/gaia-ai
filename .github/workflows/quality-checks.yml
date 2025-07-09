@@ -25,7 +25,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20.9.0"
+          node-version: "22.17.0"
           cache: "pnpm"
           cache-dependency-path: "frontend/pnpm-lock.yaml"
 
@@ -57,7 +57,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: |
             backend/pyproject.toml
-            backend/.pre-commit-config.yaml
+            .pre-commit-config.yaml
 
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -72,10 +72,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install "pre-commit[default]"
-          pre-commit install --install-hooks
+          uv pip install "pre-commit[default]" ruff
           uv pip sync pyproject.toml
           uv pip install types-redis types-requests
 
       - name: Run pre-commit checks
-        run: pre-commit run --all-files
+        working-directory: ${{ github.workspace }}
+        run: |
+          pre-commit install --install-hooks
+          pre-commit run --all-files
