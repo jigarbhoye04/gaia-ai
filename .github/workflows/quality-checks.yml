@@ -29,7 +29,9 @@ jobs:
           cache-dependency-path: "frontend/pnpm-lock.yaml"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm install
 
       - name: Create Build
         env:
@@ -61,6 +63,11 @@ jobs:
 
       - name: Add uv to PATH
         run: echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Create virtual environment
+        run: |
+          uv venv
+          echo "$PWD/.venv/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
         run: |
