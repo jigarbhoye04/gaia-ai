@@ -94,6 +94,9 @@ dependencies = [
 ]
 
 [dependency-groups]
+dev = [
+    "mypy>=1.16.1",
+]
 heavy = [
   "sentence-transformers",
   "langchain",

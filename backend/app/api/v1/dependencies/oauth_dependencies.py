@@ -1,11 +1,10 @@
 import logging
 import time
-from datetime import datetime, timezone as tz
+from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
 from fastapi import Cookie, Header, HTTPException
-from pytz import timezone
 
 from app.config.settings import settings
 from app.db.mongodb.collections import users_collection
