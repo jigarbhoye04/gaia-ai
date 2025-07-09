@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/shadcn/sidebar";
 import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
 import { useOnboardingGuard } from "@/features/auth/hooks/useOnboardingGuard";
+import { NotificationProvider } from "@/hooks/providers/NotificationContext";
 import { useIsMobile } from "@/hooks/ui/useMobile";
 import SidebarLayout from "@/layouts/SidebarLayout";
 import {
@@ -116,34 +117,36 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   return (
     <TooltipProvider>
-      <SidebarProvider
-        open={currentOpen}
-        onOpenChange={handleOpenChange}
-        defaultOpen={defaultOpen}
-      >
-        <div
-          className="flex min-h-screen w-full dark"
-          style={{ touchAction: "pan-y" }}
-          ref={dragRef}
+      <NotificationProvider>
+        <SidebarProvider
+          open={currentOpen}
+          onOpenChange={handleOpenChange}
+          defaultOpen={defaultOpen}
         >
-          <SidebarLayout>
-            <Sidebar />
-          </SidebarLayout>
+          <div
+            className="flex min-h-screen w-full dark"
+            style={{ touchAction: "pan-y" }}
+            ref={dragRef}
+          >
+            <SidebarLayout>
+              <Sidebar />
+            </SidebarLayout>
 
-          <SidebarInset className="flex h-screen flex-col">
-            <header
-              className="z-10 flex flex-shrink-0 items-start justify-between bg-zinc-900/80 px-4 pt-3 backdrop-blur-sm"
-              onClick={closeOnTouch}
-            >
-              {!currentOpen && <HeaderSidebarTrigger />}
-              <HeaderManager />
-            </header>
-            <main className="flex flex-1 flex-col overflow-hidden bg-zinc-900/80">
-              {children}
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+            <SidebarInset className="flex h-screen flex-col">
+              <header
+                className="z-10 flex flex-shrink-0 items-start justify-between bg-zinc-900/80 px-4 pt-3 backdrop-blur-sm"
+                onClick={closeOnTouch}
+              >
+                {!currentOpen && <HeaderSidebarTrigger />}
+                <HeaderManager />
+              </header>
+              <main className="flex flex-1 flex-col overflow-hidden bg-zinc-900/80">
+                {children}
+              </main>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </NotificationProvider>
     </TooltipProvider>
   );
 }

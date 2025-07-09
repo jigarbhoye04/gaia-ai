@@ -2,7 +2,9 @@ import { apiService } from "@/lib/api";
 import { EmailActionResponse } from "@/types/api/mailApiTypes";
 import {
   EmailData,
+  EmailImportanceSummary,
   EmailsResponse,
+  EmailSummariesResponse,
   EmailThreadResponse,
 } from "@/types/features/mailTypes";
 
@@ -20,6 +22,13 @@ export const mailApi = {
       errorMessage: "Failed to fetch emails",
     });
     return { emails: data.messages, nextPageToken: data.nextPageToken };
+  },
+
+  // Fetch email by ID
+  fetchEmailById: async (messageId: string): Promise<EmailData> => {
+    return apiService.get<EmailData>(`/gmail/message/${messageId}`, {
+      errorMessage: "Failed to fetch email",
+    });
   },
 
   // Mark email as read/unread (uses backend bulk endpoint with single message)
@@ -259,6 +268,62 @@ export const mailApi = {
     return apiService.post("/mail/ai/compose", params, {
       errorMessage: "Failed to compose email with AI",
     });
+  },
+
+  // AI Email Analysis endpoints
+  fetchEmailSummaries: async (
+    limit: number = 50,
+    importantOnly: boolean = false,
+  ): Promise<EmailSummariesResponse> => {
+    return apiService.get<EmailSummariesResponse>(
+      `/gmail/importance-summaries?limit=${limit}&important_only=${importantOnly}`,
+      {
+        errorMessage: "Failed to fetch email summaries",
+        silent: true,
+      },
+    );
+  },
+
+  fetchEmailSummaryById: async (
+    messageId: string,
+  ): Promise<{
+    status: string;
+    email: EmailImportanceSummary;
+  }> => {
+    return apiService.get<{
+      status: string;
+      email: EmailImportanceSummary;
+    }>(`/gmail/importance-summary/${messageId}`, {
+      errorMessage: "Failed to fetch email summary",
+      silent: true,
+    });
+  },
+
+  fetchEmailSummaryByIds: async (
+    messageIds: string[],
+  ): Promise<{
+    status: string;
+    emails: Record<string, EmailImportanceSummary>;
+    found_count: number;
+    missing_count: number;
+    found_message_ids: string[];
+    missing_message_ids: string[];
+  }> => {
+    return apiService.post<{
+      status: string;
+      emails: Record<string, EmailImportanceSummary>;
+      found_count: number;
+      missing_count: number;
+      found_message_ids: string[];
+      missing_message_ids: string[];
+    }>(
+      "/gmail/importance-summaries/bulk",
+      { message_ids: messageIds },
+      {
+        errorMessage: "Failed to fetch email summaries by IDs",
+        silent: true,
+      },
+    );
   },
 
   // Fetch email thread

@@ -5,15 +5,17 @@ import { mailApi } from "@/features/mail/api/mailApi";
 import { EmailData } from "@/types/features/mailTypes";
 
 import { useEmailReadStatus } from "./useEmailReadStatus";
+import { useUrlEmailSelection } from "./useUrlEmailSelection";
 
 /**
  * Hook for managing the currently selected/viewed email
  */
 export const useEmailViewer = () => {
-  const [selectedEmail, setSelectedEmail] = useState<EmailData | null>(null);
   const [threadMessages, setThreadMessages] = useState<EmailData[]>([]);
   const [isLoadingThread, setIsLoadingThread] = useState<boolean>(false);
   const { markAsRead } = useEmailReadStatus();
+  const { selectedEmailId, selectEmail, clearSelection } =
+    useUrlEmailSelection();
 
   // Fetch all messages in the email thread
   const fetchEmailThread = async (threadId: string) => {
@@ -34,7 +36,7 @@ export const useEmailViewer = () => {
 
   // Open email and mark as read if it's unread
   const openEmail = async (email: EmailData) => {
-    setSelectedEmail(email);
+    selectEmail(email.id); // Update URL
     setThreadMessages([]);
 
     if (email.labelIds?.includes("UNREAD")) {
@@ -49,15 +51,15 @@ export const useEmailViewer = () => {
 
   // Close the email detail view
   const closeEmail = () => {
-    setSelectedEmail(null);
+    clearSelection(); // Update URL
     setThreadMessages([]);
   };
 
   return {
-    selectedEmail,
     threadMessages,
     isLoadingThread,
     openEmail,
     closeEmail,
+    selectedEmailId, // Expose for URL-based opening
   };
 };

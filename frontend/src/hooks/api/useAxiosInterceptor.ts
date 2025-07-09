@@ -82,8 +82,6 @@ export default function useAxiosInterceptor() {
               }
             } else if (status >= 500)
               toast.error("Server error. Please try again later.");
-            else if (status === 404)
-              toast.error("Resource not found. Please check the URL.");
           }
         } catch (handlerError) {
           console.error("Error handling axios interceptor:", handlerError);

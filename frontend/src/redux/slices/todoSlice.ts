@@ -234,6 +234,13 @@ export const fetchTodosByLabel = createAsyncThunk(
   },
 );
 
+export const fetchTodoById = createAsyncThunk(
+  "todos/fetchTodoById",
+  async (todoId: string) => {
+    return await todoApi.getTodo(todoId);
+  },
+);
+
 // Redux slice
 const todoSlice = createSlice({
   name: "todos",
@@ -689,6 +696,19 @@ const todoSlice = createSlice({
         state.todos = action.payload;
         state.loading = false;
         state.hasMore = action.payload.length === 50;
+      })
+      // Handle fetch todo by ID
+      .addCase(fetchTodoById.fulfilled, (state, action) => {
+        const todo = action.payload;
+        // Add or update the todo in the list if it doesn't exist
+        const existingIndex = state.todos.findIndex((t) => t.id === todo.id);
+        if (existingIndex !== -1) {
+          state.todos[existingIndex] = todo;
+        } else {
+          state.todos.unshift(todo);
+        }
+        // Set as selected todo
+        state.selectedTodo = todo;
       });
   },
 });

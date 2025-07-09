@@ -1,6 +1,11 @@
 "use client";
 
-import { useParams, usePathname, useRouter } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 import Composer from "@/features/chat/components/composer/Composer";
@@ -13,8 +18,12 @@ import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
 const ChatPage = React.memo(function MainChat() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const { updateConvoMessages } = useConversation();
   const { id: convoIdParam } = useParams<{ id: string }>();
+  const messageId = searchParams.get("messageId");
+
   const chatRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   // const [isAtBottom, setIsAtBottom] = useState(false);
@@ -31,6 +40,10 @@ const ChatPage = React.memo(function MainChat() {
   // }, 100);
 
   const scrollToBottom = () => {
+    // If a specific message is being viewed, do not scroll to bottom, scroll to that message instead.
+    // This is to prevent the chat from scrolling to the bottom when a user is redirected to a specific message.
+    // Scrolling to message is handled in ChatRenderer.
+    if (messageId) return;
     if (chatRef.current)
       chatRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
   };

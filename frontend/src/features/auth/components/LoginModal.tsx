@@ -38,9 +38,8 @@ export default function LoginModal() {
             </div>
           </div>
           <Button
-            className="text-md gap-2 rounded-full px-4"
             size="lg"
-            variant="secondary"
+            className={`text-md gap-2 rounded-full bg-zinc-800 px-4 text-foreground hover:bg-zinc-800`}
             onClick={handleGoogleLogin}
           >
             <GoogleColouredIcon />

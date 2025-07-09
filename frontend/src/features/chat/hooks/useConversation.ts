@@ -1,9 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 
-import {
-  resetMessages,
-  setMessages,
-} from "@/redux/slices/conversationSlice";
+import { resetMessages, setMessages } from "@/redux/slices/conversationSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import { MessageType } from "@/types/features/convoTypes";
 
