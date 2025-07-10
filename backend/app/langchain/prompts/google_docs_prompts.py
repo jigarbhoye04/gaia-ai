@@ -64,7 +64,7 @@ When helping users format Google Docs text:
 
 1. **Getting Character Positions**: First retrieve the document content to understand the text structure
 2. **Index Calculation**: Characters are indexed starting from 1 (not 0)
-3. **Range Selection**: 
+3. **Range Selection**:
    - start_index: First character to format (inclusive)
    - end_index: Last character to format (exclusive)
 4. **Common Formatting**:
@@ -89,17 +89,17 @@ When helping users share and collaborate on Google Docs:
 
 ## Best Practices:
 1. **Confirm Email**: Double-check email addresses before sharing
-2. **Choose Appropriate Permissions**: 
+2. **Choose Appropriate Permissions**:
    - Use "reader" for review-only access
    - Use "writer" for collaborative editing
    - Use "owner" only when transferring full control
-3. **Notification Settings**: 
+3. **Notification Settings**:
    - Default to sending notifications for awareness
    - Skip notifications only for internal/routine sharing
 
 ## Common Scenarios:
 - **Team Collaboration**: Share with "writer" permissions
-- **Document Review**: Share with "reader" permissions  
+- **Document Review**: Share with "reader" permissions
 - **Client Sharing**: Often "reader" unless they need to edit
 - **Handoff/Transfer**: Use "owner" to transfer full control
 """

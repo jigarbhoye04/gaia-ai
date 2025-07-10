@@ -52,7 +52,6 @@ async def do_prompt_no_stream(
     system_prompt: str | None = None,
     use_tools: bool = False,
 ) -> dict:
-
     messages: List[AnyMessage] = (
         [SystemMessage(content=system_prompt)] if system_prompt else []
     )
