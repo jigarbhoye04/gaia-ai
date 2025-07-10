@@ -103,7 +103,7 @@ export default function SidebarTopButtons() {
             color={pathname === route ? "primary" : "default"}
             onPress={() => router.push(route)}
             startContent={React.cloneElement(icon, {
-              color: undefined,
+              color: pathname === route ? "#00bbff" : "#9b9b9b",
             })}
           >
             {label}

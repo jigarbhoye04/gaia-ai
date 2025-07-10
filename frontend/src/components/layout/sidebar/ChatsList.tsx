@@ -162,13 +162,13 @@ export default function ChatsList() {
             >
               <AccordionItem
                 value="system-conversations"
-                className="my-1 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden rounded-lg border border-b-0 border-blue-500/30 bg-blue-900/20 px-1 py-2"
+                className="my-1 flex min-h-fit w-full flex-col items-start justify-start overflow-hidden border-none py-2"
               >
-                <AccordionTrigger className="w-full px-2 pt-0 pb-1 text-xs text-blue-300">
-                  🤖 System Actions
+                <AccordionTrigger className="px-2 w-full pt-0 pb-1 text-xs text-primary">
+                  Created by GAIA
                 </AccordionTrigger>
                 <AccordionContent className="w-full p-0!">
-                  <div className="-mr-4 flex w-full flex-col">
+                  <div className="flex w-full flex-col">
                     {systemConversations
                       .sort(
                         (a: Conversation, b: Conversation) =>
