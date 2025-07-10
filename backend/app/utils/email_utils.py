@@ -19,9 +19,6 @@ from app.config.loggers import app_logger as logger
 from app.config.settings import settings
 from app.models.support_models import SupportEmailNotification, SupportRequestType
 
-# ============================================================================
-# EMAIL SERVICE CONFIGURATION
-# ============================================================================
 
 # Initialize Resend with API key
 resend.api_key = settings.RESEND_API_KEY
@@ -35,10 +32,10 @@ jinja_env = Environment(
     autoescape=select_autoescape(["html", "xml"]),
 )
 
-
-# ============================================================================
-# SUPPORT & FEATURE REQUEST EMAILS
-# ============================================================================
+CONTACT_EMAIL = "aryan@heygaia.io"
+DISCORD_URL = "https://discord.heygaia.io"
+WHATSAPP_URL = "https://whatsapp.heygaia.io"
+TWITTER_URL = "https://twitter.com/_heygaia"
 
 
 async def send_support_team_notification(
@@ -190,9 +187,9 @@ def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
 async def send_pro_subscription_email(
     user_name: str,
     user_email: str,
-    discord_url: str = "https://discord.heygaia.io",
-    whatsapp_url: str = "https://whatsapp.heygaia.io",
-    twitter_url: str = "https://twitter.com/_heygaia",
+    discord_url: str = DISCORD_URL,
+    whatsapp_url: str = WHATSAPP_URL,
+    twitter_url: str = TWITTER_URL,
 ) -> None:
     """Send welcome email to user who upgraded to Pro subscription."""
     try:
@@ -206,11 +203,11 @@ async def send_pro_subscription_email(
 
         resend.Emails.send(
             {
-                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "from": f"Aryan from GAIA <{CONTACT_EMAIL}>",
                 "to": [user_email],
                 "subject": subject,
                 "html": html_content,
-                "reply_to": "aryan@heygaia.io",
+                "reply_to": CONTACT_EMAIL,
             }
         )
         logger.info(f"Pro subscription welcome email sent to {user_email}")
@@ -230,11 +227,11 @@ async def send_welcome_email(user_email: str, user_name: Optional[str] = None) -
 
         resend.Emails.send(
             {
-                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "from": f"Aryan from GAIA <{CONTACT_EMAIL}>",
                 "to": [user_email],
                 "subject": subject,
                 "html": html_content,
-                "reply_to": "aryan@heygaia.io",
+                "reply_to": CONTACT_EMAIL,
             }
         )
         logger.info(f"Welcome email sent to {user_email}")
@@ -251,10 +248,10 @@ def generate_welcome_email_html(user_name: Optional[str] = None) -> str | None:
         # Render template with data
         html_content = template.render(
             user_name=user_name,
-            contact_email="aryan@heygaia.io",
-            discord_url="https://discord.gg/gaia",
-            whatsapp_url="https://chat.whatsapp.com/gaia",
-            twitter_url="https://twitter.com/heygaia",
+            contact_email=CONTACT_EMAIL,
+            discord_url=DISCORD_URL,
+            whatsapp_url=WHATSAPP_URL,
+            twitter_url=TWITTER_URL,
         )
 
         return html_content
@@ -273,11 +270,11 @@ async def send_inactive_user_email(
 
         resend.Emails.send(
             {
-                "from": "Aryan from GAIA <aryan@heygaia.io>",
+                "from": f"Aryan from GAIA <{CONTACT_EMAIL}>",
                 "to": [user_email],
                 "subject": subject,
                 "html": html_content,
-                "reply_to": "aryan@heygaia.io",
+                "reply_to": CONTACT_EMAIL,
             }
         )
         logger.info(f"Inactive user email sent to {user_email}")
@@ -312,7 +309,7 @@ def generate_inactive_user_email_html(user_name: Optional[str] = None) -> str:
         # Render template with data
         html_content = template.render(
             user_name=user_name,
-            contact_email="aryan@heygaia.io",
+            contact_email=CONTACT_EMAIL,
         )
 
         return html_content
