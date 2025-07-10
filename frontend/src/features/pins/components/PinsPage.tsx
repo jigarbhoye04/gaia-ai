@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@heroui/input";
-import { DeleteIcon, Pin } from "lucide-react";
+import { Pin } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
