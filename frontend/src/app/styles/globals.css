@@ -236,9 +236,6 @@
   background: #00364b;
   color: #0bf;
 }
-body {
-  font-family: var(--font-switzer), sans-serif;
-}
 
 code,
 .monospace {
@@ -254,17 +251,7 @@ body {
 main {
   overflow-x: hidden !important;
 }
-p,
-span,
-button,
-text,
-input,
-textarea,
-div,
-:where([data-sonner-toaster]),
-:not(body) {
-  font-family: inherit !important;
-}
+
 @media (max-width: 1024px) {
   .faq_container {
     width: 90vw;
