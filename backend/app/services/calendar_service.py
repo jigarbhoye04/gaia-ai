@@ -901,8 +901,10 @@ async def delete_calendar_event(
                                     error_msg = error_json.get("error", {}).get(
                                         "message", error_msg
                                     )
-                            except Exception:
-                                pass
+                            except Exception as json_error:
+                                logger.warning(
+                                    f"Failed to parse error response JSON: {str(json_error)}"
+                                )
                         raise HTTPException(
                             status_code=retry_response.status_code, detail=error_msg
                         )
@@ -921,8 +923,10 @@ async def delete_calendar_event(
                         error_msg = error_json.get("error", {}).get(
                             "message", error_msg
                         )
-                except Exception:
-                    pass
+                except Exception as json_error:
+                    logger.warning(
+                        f"Failed to parse error response JSON: {str(json_error)}"
+                    )
             raise HTTPException(status_code=response.status_code, detail=error_msg)
     except httpx.RequestError as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete event: {str(e)}")

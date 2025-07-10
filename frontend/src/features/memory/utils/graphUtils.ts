@@ -37,7 +37,7 @@ export function transformMemoryDataToGraph(
   const userId =
     memories[0]?.user_id ||
     relations.find((r) => r.source_type === "user")?.source ||
-    "683094592b73305765dbb175";
+    "";
 
   // Add user as central node
   const userNode: GraphNode = {

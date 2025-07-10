@@ -1,4 +1,5 @@
 import os
+import tempfile
 from typing import Annotated, Any, Dict, Optional, Literal, TypedDict
 from uuid import uuid4
 
@@ -72,7 +73,9 @@ async def generate_document(
     ] = None,
 ) -> str:
     output_filename = f"{filename}.{format}"
-    temp_path = f"/tmp/{output_filename}"
+    # Use secure temporary directory instead of hardcoded /tmp
+    temp_dir = tempfile.gettempdir()
+    temp_path = os.path.join(temp_dir, output_filename)
 
     try:
         if is_plain_text:

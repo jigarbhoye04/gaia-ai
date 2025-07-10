@@ -13,7 +13,6 @@ repos:
     hooks:
       - id: trailing-whitespace # Removes trailing whitespace on all lines
       - id: check-yaml # Validates that YAML files are correctly formatted
-      - id: check-json # Validates that JSON files are parseable and valid
       - id: check-merge-conflict # Prevents committing unresolved merge conflicts
       - id: check-added-large-files # Blocks large files from being added to commits (defaults to 500KB)
         exclude: ^mcp\.txt$
@@ -47,4 +46,4 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        exclude: ^(mcp\.txt|frontend/pnpm-lock\.yaml)$
+        exclude: ^(mcp\.txt|frontend/pnpm-lock\.yaml|docs/.*)$

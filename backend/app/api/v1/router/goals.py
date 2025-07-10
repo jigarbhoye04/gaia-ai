@@ -182,12 +182,14 @@ async def websocket_generate_roadmap(websocket: WebSocket):
         logger.error(f"WebSocket error: {str(e)}")
         try:
             await websocket.send_json({"error": f"WebSocket error: {str(e)}"})
-        except Exception:
-            pass
+        except Exception as send_error:
+            logger.error(
+                f"Failed to send error message via WebSocket: {str(send_error)}"
+            )
     finally:
         # Ensure WebSocket is closed
         try:
             if websocket.client_state == WebSocketState.CONNECTED:
                 await websocket.close()
-        except Exception:
-            pass
+        except Exception as close_error:
+            logger.error(f"Failed to close WebSocket: {str(close_error)}")
