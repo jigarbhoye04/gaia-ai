@@ -302,12 +302,6 @@ async def get_starred_messages(user: dict) -> dict:
         ]
     ).to_list(None)
 
-    if not results:
-        raise HTTPException(
-            status_code=404,
-            detail="No pinned messages found across any conversation",
-        )
-
     return {"results": results}
 
 
