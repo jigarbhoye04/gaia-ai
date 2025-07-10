@@ -20,7 +20,7 @@ import { useState } from "react";
 import { CalendarSimpleIcon, Target04Icon } from "@/components/shared/icons";
 import { goalsApi } from "@/features/goals/api/goalsApi";
 import { GoalData } from "@/types/features/goalTypes";
-import { formatRelativeDate, parseDate, parseDate2 } from "@/utils";
+import { parseDate2 } from "@/utils";
 
 export function GoalCard({
   goal,

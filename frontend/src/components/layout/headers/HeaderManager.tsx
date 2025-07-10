@@ -9,7 +9,6 @@ import { HeaderComponentType } from "@/redux/slices/headerSlice";
 import BrowserHeader from "./BrowserHeader";
 import ChatHeader from "./ChatHeader";
 import DefaultHeader from "./DefaultHeader";
-import MailHeader from "./MailHeader";
 import SettingsHeader from "./SettingsHeader";
 
 // Declare the global window interface to include our custom property

@@ -237,7 +237,7 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
 
 async def update_subscription(
     user_id: str, subscription_data: UpdateSubscriptionRequest
-) -> SubscriptionResponse:
+) -> SubscriptionResponse | None:
     """Update user's subscription with proper error handling and rollback."""
     try:
         # Get current subscription
@@ -270,7 +270,7 @@ async def update_subscription(
 
         # Update subscription in Razorpay
         try:
-            updated_subscription = razorpay_service.client.subscription.update(
+            razorpay_service.client.subscription.update(
                 razorpay_subscription_id, update_data
             )
             logger.info(f"Updated Razorpay subscription: {razorpay_subscription_id}")
@@ -304,29 +304,33 @@ async def update_subscription(
             {"_id": ObjectId(current_subscription["_id"])}
         )
 
-        return SubscriptionResponse(
-            id=str(updated_subscription_doc["_id"]),
-            razorpay_subscription_id=updated_subscription_doc[
-                "razorpay_subscription_id"
-            ],
-            user_id=updated_subscription_doc["user_id"],
-            plan_id=updated_subscription_doc["plan_id"],
-            status=SubscriptionStatus(updated_subscription_doc["status"]),
-            quantity=updated_subscription_doc["quantity"],
-            current_start=updated_subscription_doc.get("current_start"),
-            current_end=updated_subscription_doc.get("current_end"),
-            ended_at=updated_subscription_doc.get("ended_at"),
-            charge_at=updated_subscription_doc.get("charge_at"),
-            start_at=updated_subscription_doc.get("start_at"),
-            end_at=updated_subscription_doc.get("end_at"),
-            auth_attempts=updated_subscription_doc.get("auth_attempts", 0),
-            total_count=updated_subscription_doc["total_count"],
-            paid_count=updated_subscription_doc["paid_count"],
-            customer_notify=updated_subscription_doc["customer_notify"],
-            created_at=updated_subscription_doc["created_at"],
-            updated_at=updated_subscription_doc["updated_at"],
-            notes=updated_subscription_doc.get("notes", {}),
-        )
+        if updated_subscription_doc:
+            return SubscriptionResponse(
+                id=str(updated_subscription_doc["_id"]),
+                razorpay_subscription_id=updated_subscription_doc[
+                    "razorpay_subscription_id"
+                ],
+                user_id=updated_subscription_doc["user_id"],
+                plan_id=updated_subscription_doc["plan_id"],
+                status=SubscriptionStatus(updated_subscription_doc["status"]),
+                quantity=updated_subscription_doc["quantity"],
+                current_start=updated_subscription_doc.get("current_start"),
+                current_end=updated_subscription_doc.get("current_end"),
+                ended_at=updated_subscription_doc.get("ended_at"),
+                charge_at=updated_subscription_doc.get("charge_at"),
+                start_at=updated_subscription_doc.get("start_at"),
+                end_at=updated_subscription_doc.get("end_at"),
+                auth_attempts=updated_subscription_doc.get("auth_attempts", 0),
+                total_count=updated_subscription_doc["total_count"],
+                paid_count=updated_subscription_doc["paid_count"],
+                customer_notify=updated_subscription_doc["customer_notify"],
+                created_at=updated_subscription_doc["created_at"],
+                updated_at=updated_subscription_doc["updated_at"],
+                notes=updated_subscription_doc.get("notes", {}),
+            )
+
+        else:
+            return None
 
     except HTTPException:
         raise
@@ -354,15 +358,13 @@ async def cancel_subscription(
         try:
             if cancel_at_cycle_end:
                 # Cancel at cycle end
-                cancelled_subscription = razorpay_service.client.subscription.update(
+                razorpay_service.client.subscription.update(
                     razorpay_subscription_id, {"cancel_at_cycle_end": True}
                 )
                 new_status = "active"  # Remains active until cycle end
             else:
                 # Cancel immediately
-                cancelled_subscription = razorpay_service.client.subscription.cancel(
-                    razorpay_subscription_id
-                )
+                razorpay_service.client.subscription.cancel(razorpay_subscription_id)
                 new_status = "cancelled"
 
             logger.info(f"Cancelled Razorpay subscription: {razorpay_subscription_id}")

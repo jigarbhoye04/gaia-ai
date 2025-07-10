@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Tooltip } from "@heroui/tooltip";
 import { CircleArrowUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -16,9 +15,9 @@ import {
   PinIcon,
   Route02Icon,
 } from "@/components/shared/icons";
+import { Separator } from "@/components/ui";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
-import { Separator } from "@/components/ui";
 
 export default function SidebarTopButtons() {
   const router = useRouter();

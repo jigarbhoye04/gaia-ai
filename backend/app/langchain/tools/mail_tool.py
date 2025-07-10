@@ -327,15 +327,7 @@ async def compose_email(
         # Regular frontend flow
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
-        writer(
-            {
-                "email_compose_data": {
-                    "to": resolved_emails if resolved_emails else [],
-                    "subject": subject,
-                    "body": body,
-                }
-            }
-        )
+        writer(email_data)
 
         # Generate summary of the composed email
         return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)

@@ -33,6 +33,24 @@ jobs:
         run: |
           pnpm install --no-frozen-lockfile
           pnpm install
+
+      - name: Run ESLint with autofix
+        run: pnpm lint:fix
+
+      - name: Commit ESLint fixes (if any)
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+          if ! git diff --exit-code; then
+            echo "Files were modified by ESLint. Committing changes..."
+            git add .
+            git commit -m "ci(auto-fix): Apply ESLint formatting"
+            git push origin HEAD:${{ github.head_ref }}
+          else
+            echo "✅ No ESLint fixes needed"
+          fi
+
       - name: Create Build
         env:
           NEXT_PUBLIC_API_BASE_URL: "http://fake-api-for-build.example.com"
