@@ -171,7 +171,10 @@ async def initialize_conversation(
 
     if conversation_id is None:
         last_message = body.messages[-1] if body.messages else None
-        conversation = await create_conversation(last_message=last_message, user=user)
+        selectedTool = body.selectedTool if body.selectedTool else None
+        conversation = await create_conversation(
+            last_message, user=user, selectedTool=selectedTool
+        )
         conversation_id = conversation.get("conversation_id", "")
 
         init_chunk = f"""data: {
