@@ -3,9 +3,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { apiauth } from "@/lib/api";
-
 import { useLoginModalActions } from "@/features/auth/hooks/useLoginModal";
+import { apiauth } from "@/lib/api";
 import { isOnLandingRoute, processAxiosError } from "@/utils";
 
 export default function useAxiosInterceptor() {
