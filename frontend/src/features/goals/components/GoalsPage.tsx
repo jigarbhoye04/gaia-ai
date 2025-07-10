@@ -35,21 +35,10 @@ export default function GoalsPage() {
 
   return (
     <>
-      <div className="flex h-full w-full flex-col justify-between">
+      <div className="flex h-full w-full flex-col justify-between p-5">
         <div className="w-full overflow-y-auto">
-          <div className="flex w-full flex-col items-center gap-2">
-            <div className="text-center text-3xl font-bold sm:text-5xl">
-              Roadmaps
-            </div>
-            <div className="text-md max-w-(--breakpoint-md) pb-6 text-center">
-              A tool that instantly generates personalized goal roadmaps from a
-              single prompt, helping you plan and track your objectives
-              efficiently.
-            </div>
-          </div>
-
           {goals.length > 0 ? (
-            <div className="grid grid-cols-1 justify-center gap-4 px-1 pb-28 sm:grid-cols-1 sm:px-16 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 justify-center gap-4 px-1 pb-28 sm:grid-cols-1 sm:px-16 md:grid-cols-2 lg:grid-cols-3">
               {goals.map((goal, index) => (
                 <GoalCard
                   key={index}
@@ -100,8 +89,6 @@ export default function GoalsPage() {
             className="gap-2 font-semibold"
             color="primary"
             radius="full"
-            size="lg"
-            variant="shadow"
             onPress={() => setOpenDialog(true)}
           >
             <Target04Icon height={23} width={23} />

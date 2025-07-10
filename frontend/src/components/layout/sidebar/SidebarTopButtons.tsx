@@ -28,35 +28,36 @@ export default function SidebarTopButtons() {
 
   const buttonData = [
     {
+      route: "/notifications",
+      icon: <NotificationIcon width={19} height={19} />,
+      label: "Notifications",
+    },
+    {
       route: "/calendar",
-      icon: <CalendarIcon height={21} width={21} />,
+      icon: <CalendarIcon width={19} height={19} />,
       label: "Calendar",
     },
     {
       route: "/goals",
-      icon: <Route02Icon height={21} width={21} />,
+      icon: <Route02Icon width={19} height={19} />,
       label: "Goals",
     },
     {
       route: "/todos",
-      icon: <CheckmarkCircle02Icon height={21} width={21} />,
+      icon: <CheckmarkCircle02Icon width={19} height={19} />,
       label: "Todos",
     },
     {
       route: "/mail",
-      icon: <Mail01Icon height={21} width={21} />,
+      icon: <Mail01Icon width={19} height={19} />,
       label: "Mail",
     },
     {
       route: "/pins",
-      icon: <PinIcon height={21} width={21} />,
+      icon: <PinIcon width={19} height={19} />,
       label: "Pins",
     },
-    {
-      route: "/notifications",
-      icon: <NotificationIcon height={21} width={21} />,
-      label: "Notifications",
-    },
+
     // {
     //   route: "/browser",
     //   icon: <AiBrowserIcon height={23} width={23} />,
@@ -93,44 +94,7 @@ export default function SidebarTopButtons() {
         </Link>
       )}
 
-      {/* <Link href={"/dashboard"} className="w-full">
-        <Button
-          className="flex w-full justify-start text-sm"
-          size="sm"
-          variant="light"
-          // color={pathname === route ? "primary" : "default"}
-          // variant={pathname === route ? "solid" : "flat"}
-          // onPress={() => router.push(route)}
-          startContent={<DashboardSquare01Icon height={21} width={21} />}
-        >
-          Dashboard
-        </Button>
-      </Link> */}
-
-      {/* <div className="grid grid-cols-6 grid-rows-1 items-start gap-1 rounded-2xl">
-        {buttonData.map(({ route, icon, label }, index) => (
-          <Tooltip
-            key={index}
-            content={label}
-            showArrow={true}
-            placement="bottom"
-          >
-            <Button
-              className="aspect-square w-fit"
-              isIconOnly
-              color={pathname === route ? "primary" : "default"}
-              variant={pathname === route ? "solid" : "flat"}
-              onPress={() => router.push(route)}
-            >
-              {React.cloneElement(icon, {
-                color: pathname === route ? "#000000AA" : "#FFFFFFAA",
-              })}
-            </Button>
-          </Tooltip>
-        ))}
-      </div> */}
-
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-0.5">
         {buttonData.map(({ route, icon, label }, index) => (
           <Button
             key={index}
@@ -149,13 +113,13 @@ export default function SidebarTopButtons() {
       </div>
 
       <Button
-        className="mt-1 flex w-full justify-start text-sm"
+        className="flex w-full justify-start text-sm"
         size="sm"
         variant="light"
         color={pathname.startsWith("/c") ? "primary" : "default"}
         onPress={createNewChat}
         startContent={
-          <ChatBubbleAddIcon color={undefined} width={21} height={21} />
+          <ChatBubbleAddIcon color={undefined} width={19} height={19} />
         }
       >
         New Chat

@@ -33,28 +33,30 @@ export default function TodoList({
   }
 
   return (
-    <div className="w-screen max-w-xl space-y-4 p-4">
-      {Object.entries(groupedTodos).map(([date, todosForDate]) => (
-        <div key={date}>
-          {date !== "No Due Date" && (
-            <h3 className="mb-2 text-sm font-medium text-foreground-600">
-              {date}
-            </h3>
-          )}
-          <div className="w-full space-y-2">
-            {todosForDate.map((todo) => (
-              <TodoItem
-                key={todo.id}
-                todo={todo}
-                isSelected={false}
-                onUpdate={onTodoUpdate}
-                onDelete={onTodoDelete}
-                onClick={onTodoClick}
-              />
-            ))}
+    <div className="flex w-full justify-center">
+      <div className="w-full max-w-(--breakpoint-sm) space-y-4 py-4">
+        {Object.entries(groupedTodos).map(([date, todosForDate]) => (
+          <div key={date}>
+            {date !== "No Due Date" && (
+              <h3 className="mb-2 text-sm font-medium text-foreground-600">
+                {date}
+              </h3>
+            )}
+            <div className="w-full space-y-2">
+              {todosForDate.map((todo) => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  isSelected={false}
+                  onUpdate={onTodoUpdate}
+                  onDelete={onTodoDelete}
+                  onClick={onTodoClick}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

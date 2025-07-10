@@ -77,25 +77,23 @@ export default function Calendar() {
   return (
     <>
       <div className="relative flex h-full w-full flex-col overflow-y-auto">
-        <div className="flex flex-col items-center gap-2 pb-6">
-          <div className="sticky top-0 z-20 text-center text-4xl font-medium">
-            Your Calendar
+        {(error.calendars || error.events) && (
+          <div className="flex flex-col items-center gap-2 pb-6">
+            {error.calendars && (
+              <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
+                {error.calendars}
+              </div>
+            )}
+
+            {error.events && (
+              <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
+                {error.events}
+              </div>
+            )}
           </div>
+        )}
 
-          {error.calendars && (
-            <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
-              {error.calendars}
-            </div>
-          )}
-
-          {error.events && (
-            <div className="mb-4 w-full max-w-md rounded-lg bg-red-500/20 p-3 text-center text-sm text-red-500">
-              {error.events}
-            </div>
-          )}
-        </div>
-
-        <div className="mx-auto max-w-(--breakpoint-sm)">
+        <div className="mx-auto w-full max-w-(--breakpoint-sm)">
           {groupedEventsByMonth &&
             Object.entries(groupedEventsByMonth).map(([month, days]) => (
               <div key={month}>

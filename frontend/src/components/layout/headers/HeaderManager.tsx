@@ -85,11 +85,12 @@ export default function HeaderManager() {
   switch (currentHeaderType) {
     case "chat":
       return <ChatHeader {...componentSpecificProps} />;
-    case "mail":
-      return <MailHeader {...componentSpecificProps} />;
+    // case "mail":
+    // return <MailHeader {...componentSpecificProps} />;
     case "settings":
       return <SettingsHeader {...componentSpecificProps} />;
     case "goals":
+    case "mail":
     case "notes":
     case "todos":
       return <></>;
