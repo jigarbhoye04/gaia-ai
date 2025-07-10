@@ -70,7 +70,7 @@ async def get_usage_history(
 
     formatted_history = []
     for snapshot in history:
-        features_formatted = {}
+        features_formatted: Dict[str, Dict[str, Any]] = {}
         for feature in snapshot.features:
             key = feature.feature_key
             if key not in features_formatted:
@@ -101,7 +101,7 @@ async def get_usage_history(
 
 def _format_empty_features(user_plan: PlanType) -> Dict[str, Any]:
     """Format empty features with zero usage."""
-    features_formatted = {}
+    features_formatted: Dict[str, Dict[str, Any]] = {}
 
     for feature_key in FEATURE_LIMITS:
         feature_info = get_feature_info(feature_key)
@@ -131,7 +131,7 @@ def _format_empty_features(user_plan: PlanType) -> Dict[str, Any]:
 def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]:
     """Format features with actual usage data."""
     # Create mapping of actual usage data
-    usage_data = {}
+    usage_data: Dict[str, Dict[str, Any]] = {}
     for feature in snapshot.features:
         if feature.feature_key not in usage_data:
             usage_data[feature.feature_key] = {}
@@ -146,7 +146,7 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
         }
 
     # Format ALL configured features
-    features_formatted = {}
+    features_formatted: Dict[str, Dict[str, Any]] = {}
     for feature_key in FEATURE_LIMITS:
         feature_info = get_feature_info(feature_key)
         features_formatted[feature_key] = {
@@ -190,7 +190,7 @@ def _format_features_with_usage(snapshot, user_plan: PlanType) -> Dict[str, Any]
 
 async def _get_realtime_usage(user_id: str, user_plan: PlanType) -> Dict[str, Any]:
     """Get real-time usage data directly from Redis for all features."""
-    features_formatted = {}
+    features_formatted: Dict[str, Dict[str, Any]] = {}
 
     for feature_key in FEATURE_LIMITS:
         feature_info = get_feature_info(feature_key)

@@ -9,7 +9,6 @@ import { HeaderComponentType } from "@/redux/slices/headerSlice";
 import BrowserHeader from "./BrowserHeader";
 import ChatHeader from "./ChatHeader";
 import DefaultHeader from "./DefaultHeader";
-import MailHeader from "./MailHeader";
 import SettingsHeader from "./SettingsHeader";
 
 // Declare the global window interface to include our custom property
@@ -85,11 +84,12 @@ export default function HeaderManager() {
   switch (currentHeaderType) {
     case "chat":
       return <ChatHeader {...componentSpecificProps} />;
-    case "mail":
-      return <MailHeader {...componentSpecificProps} />;
+    // case "mail":
+    // return <MailHeader {...componentSpecificProps} />;
     case "settings":
       return <SettingsHeader {...componentSpecificProps} />;
     case "goals":
+    case "mail":
     case "notes":
     case "todos":
       return <></>;

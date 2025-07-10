@@ -1,34 +1,38 @@
-name: gaia-prod
+name: gaia-dev
 
 services:
   # FastAPI Application
-  gaia:
-    container_name: gaia
-    build: .
+  gaia-backend:
+    container_name: gaia-backend
+    profiles: ["", "backend-only"]
+    build: ./backend
     image: gaia
     working_dir: /app
     command:
-      - "python"
-      - "-m"
-      - "uvicorn"
-      - "app.main:app"
-      - "--host"
-      - "0.0.0.0"
-      - "--port"
-      - "80"
-      - "--no-access-log"
-      # - "--workers"
-      # - "4"
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "80",
+        "--reload",
+        "--no-access-log",
+      ]
     environment:
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
     env_file:
-      - .env
+      - ./backend/.env
     volumes:
-      - .:/app
+      - ./backend:/app
     ports:
       - "8000:80"
-    restart: always
+    restart: on-failure
+    tty: true
+    stdin_open: true
     depends_on:
       chromadb:
         condition: service_healthy
@@ -46,6 +50,7 @@ services:
   chromadb:
     image: chromadb/chroma:1.0.0
     container_name: chromadb
+    profiles: ["", "backend-only"]
     volumes:
       - chroma_data:/chroma/chroma
     environment:
@@ -54,7 +59,7 @@ services:
       - CHROMA_SERVER_PORT=8000
     ports:
       - "8080:8000"
-    restart: always
+    restart: on-failure
     healthcheck:
       test:
         ["CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000"]
@@ -68,6 +73,7 @@ services:
   postgres:
     image: postgres:alpine
     container_name: postgres
+    profiles: ["", "backend-only"]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres # pragma: allowlist secret
@@ -76,7 +82,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    restart: always
+    restart: on-failure
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
@@ -89,6 +95,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
+    profiles: ["", "backend-only"]
     ports:
       - "5672:5672" # AMQP protocol
       - "15672:15672" # Management UI
@@ -107,18 +114,34 @@ services:
   worker:
     container_name: worker
     image: gaia
+    profiles: ["", "backend-only"]
     working_dir: /app
     env_file:
-      - .env
+      - ./backend/.env
     command: ["python", "-m", "app.worker"]
     restart: always
     volumes:
-      - .:/app
+      - ./backend:/app
     depends_on:
       rabbitmq:
         condition: service_healthy
       chromadb:
         condition: service_healthy
+    networks:
+      - gaia_network
+
+  # Arq Worker
+  arq_worker:
+    container_name: arq_worker
+    image: gaia
+    profiles: ["", "backend-only"]
+    working_dir: /app
+    env_file:
+      - ./backend/.env
+    command: ["python", "-m", "arq", "app.arq_worker.WorkerSettings"]
+    restart: always
+    volumes:
+      - ./backend:/app
     networks:
       - gaia_network
 

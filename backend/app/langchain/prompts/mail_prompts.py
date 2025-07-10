@@ -57,7 +57,7 @@ EMAIL_COMPOSER = """
         Now, generate a well-structured email accordingly.
         """
 
-EMAIL_PROCESSING_PLANNER = """For the given email content, come up with a simple step by step plan to process it effectively. 
+EMAIL_PROCESSING_PLANNER = """For the given email content, come up with a simple step by step plan to process it effectively.
 This plan should involve individual tasks that can be executed using available tools such as:
 - Creating a draft reply
 - Adding a calendar event
@@ -66,14 +66,14 @@ This plan should involve individual tasks that can be executed using available t
 - Searching for information
 - Any other relevant email processing actions
 
-Do not add any superfluous steps. The result of the final step should be the final action taken. 
+Do not add any superfluous steps. The result of the final step should be the final action taken.
 Make sure that each step has all the information needed - do not skip steps.
 
 {format_instructions}"""
 
-EMAIL_PROCESSING_REPLANNER = """For the given email processing objective, come up with a simple step by step plan. 
-This plan should involve individual tasks that can be executed using available tools to properly process the email. 
-Do not add any superfluous steps. The result of the final step should be the final action taken. 
+EMAIL_PROCESSING_REPLANNER = """For the given email processing objective, come up with a simple step by step plan.
+This plan should involve individual tasks that can be executed using available tools to properly process the email.
+Do not add any superfluous steps. The result of the final step should be the final action taken.
 Make sure that each step has all the information needed - do not skip steps.
 
 Your objective was this:
@@ -85,8 +85,8 @@ Your original plan was this:
 You have currently done the following steps:
 {past_steps}
 
-Update your plan accordingly. If no more steps are needed and you can return the final result, set action to "complete" and provide the final response. 
-Otherwise, set action to "continue" and provide a list of remaining steps to be done. Only add steps to the plan that still NEED to be done. 
+Update your plan accordingly. If no more steps are needed and you can return the final result, set action to "complete" and provide the final response.
+Otherwise, set action to "continue" and provide a list of remaining steps to be done. Only add steps to the plan that still NEED to be done.
 Do not return previously done steps as part of the plan.
 
 {format_instructions}"""
@@ -180,7 +180,7 @@ Analysis Requirements:
 2. SEMANTIC LABELING:
    - Generate semantic labels that capture:
      * Content topics and themes
-     * Business context (if applicable) 
+     * Business context (if applicable)
      * Action requirements
      * People/organizations mentioned
      * Technical domains

@@ -5,9 +5,9 @@ This module provides functions to handle timezone operations while preserving
 the actual time values (not converting them across timezones).
 """
 
-from datetime import datetime
+from datetime import datetime, tzinfo
 from datetime import timezone as builtin_timezone
-from typing import Union
+from typing import Union, Optional
 
 import pytz
 
@@ -58,7 +58,7 @@ def replace_timezone_info(
         )
 
     # Determine the target timezone to apply
-    target_timezone_info = None
+    target_timezone_info: Optional[tzinfo] = None
 
     if new_timezone is not None:
         target_timezone_info = _parse_timezone(new_timezone)

@@ -20,6 +20,7 @@ import { useState } from "react";
 import { CalendarSimpleIcon, Target04Icon } from "@/components/shared/icons";
 import { goalsApi } from "@/features/goals/api/goalsApi";
 import { GoalData } from "@/types/features/goalTypes";
+import { parseDate2 } from "@/utils";
 
 export function GoalCard({
   goal,
@@ -80,9 +81,9 @@ export function GoalCard({
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <div className="group bg-opacity-50 flex w-full flex-col rounded-lg bg-black p-4">
-        <div className="relative flex w-full items-center gap-2 text-lg font-medium">
-          <Target04Icon height={20} width={20} color="#9b9b9b" />
+      <div className="group bg-opacity-50 flex w-full flex-col rounded-xl bg-zinc-800 p-4">
+        <div className="relative flex w-full items-center gap-2 text-base font-medium">
+          <Target04Icon height={18} width={18} color="#9b9b9b" />
           <span className="w-[85%] truncate">
             {goal?.roadmap?.title || goal.title}
           </span>
@@ -136,15 +137,14 @@ export function GoalCard({
         </Chip>
 
         <div className="my-3 flex items-center justify-between gap-2">
-          <div className="relative h-3 w-[100%] rounded-full bg-black">
+          <div className="relative h-3 w-[100%] rounded-full">
             <div
-              className={`absolute top-0 left-0 h-3 rounded-full bg-[#00bbff]`}
+              className={`absolute top-0 left-0 h-3 rounded-full bg-primary`}
               style={{ width: `${goal?.progress || 0}%` }}
             />
 
             <div
-              className={`absolute top-0 left-0 h-3 w-full rounded-full bg-[#00bbff40]`}
-              // style={{ width: `${goal?.progress || 0}%` }}
+              className={`absolute top-0 left-0 h-3 w-full rounded-full bg-black/70`}
             />
           </div>
           <span className="text-xs">{goal?.progress || 0}%</span>
@@ -152,15 +152,11 @@ export function GoalCard({
         <div className="flex items-center justify-between">
           <div className="mt-2 flex items-center gap-1 text-sm text-foreground-500">
             <CalendarSimpleIcon width={20} />
-            {new Intl.DateTimeFormat("en-GB", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "2-digit",
-            }).format(new Date(goal?.created_at))}
+            {parseDate2(`${goal?.created_at}`)}
           </div>
           <Button
             color="primary"
-            // size="sm"
+            size="sm"
             variant="flat"
             className="text-primary"
             onPress={() => router.push(`/goals/${goal.id}`)}

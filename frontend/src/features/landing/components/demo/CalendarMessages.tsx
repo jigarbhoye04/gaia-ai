@@ -77,7 +77,7 @@ export default function CalendarMessages({
       <div className="max-w-[90%] space-y-3">
         <SimpleChatBubbleBot className="whitespace-pre-wrap">
           <ReadMoreText maxHeight={45}>
-            {`Got it! Start your morning with the landing page (9 AM - 12 PM). After lunch, do DSA (12:30 PM - 2 PM), write your blog (2 PM - 3:30 PM), and do a quick exam review (3:30 PM - 3:50 PM).  
+            {`Got it! Start your morning with the landing page (9 AM - 12 PM). After lunch, do DSA (12:30 PM - 2 PM), write your blog (2 PM - 3:30 PM), and do a quick exam review (3:30 PM - 3:50 PM).
 Your client calls are at 4 PM and 7 PM, with a gym session in between (5:15 PM - 6:30 PM), then dinner (6:30 PM - 7 PM). End the day with exam prep (8 PM - 10 PM), and if you have time, wrap up any work. Sound good?`}
           </ReadMoreText>
         </SimpleChatBubbleBot>

@@ -116,6 +116,10 @@ async def update_note(note_id: str, note: NoteModel, user_id: str) -> NoteRespon
     updated_note = await notes_collection.find_one(
         {"_id": ObjectId(note_id), "user_id": user_id}
     )
+
+    if not updated_note:
+        raise ValueError(f"Note {note_id} not found after update")
+
     serialized_note = serialize_document(updated_note)
 
     # Update ChromaDB with the new content if client is provided
@@ -125,8 +129,8 @@ async def update_note(note_id: str, note: NoteModel, user_id: str) -> NoteRespon
                 collection_name="notes"
             )
 
-            # Update the existing document in ChromaDB
-            await chroma_notes_collection.update_document(
+            # Update the existing document in ChromaDB (no return value expected)
+            await chroma_notes_collection.update_document(  # type: ignore[func-returns-value]
                 document_id=note_id,
                 document=Document(
                     page_content=update_data["plaintext"],

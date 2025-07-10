@@ -112,13 +112,14 @@ async def call_agent(
                     if tool_calls:
                         for tool_call in tool_calls:
                             logger.info(f"{tool_call=}")
-                            tool_name = tool_call.get("name").replace("_", " ").title()
-                            tool_category = get_tool_category(tool_call.get("name"))
-                            if tool_name:
+                            tool_name_raw = tool_call.get("name")
+                            if tool_name_raw:
+                                tool_name = tool_name_raw.replace("_", " ").title()
+                                tool_category = get_tool_category(tool_name_raw)
                                 progress_data = {
                                     "progress": {
                                         "message": f"Executing {tool_name}...",
-                                        "tool_name": tool_call.get("name"),
+                                        "tool_name": tool_name_raw,
                                         "tool_category": tool_category,
                                     }
                                 }

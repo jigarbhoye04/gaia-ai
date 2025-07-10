@@ -71,7 +71,7 @@ class DeepgramTranscriber:
 
 @router.post("/synthesize", responses={200: {"content": {"audio/wav": {}}}})
 async def synthesize(request: TTSRequest):
-    return await tts_service.synthesize_speech(request)
+    return await tts_service.synthesize_speech(request.text)
 
 
 @router.websocket("/transcribe")

@@ -1,6 +1,6 @@
 """Structured workflow generation tool using Langchain."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 
@@ -98,7 +98,7 @@ async def generate_workflow_plan(
 
 
 async def generate_workflow_for_todo(
-    todo_title: str, todo_description: str = None
+    todo_title: str, todo_description: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Generate a workflow plan for a TODO item using structured output.
