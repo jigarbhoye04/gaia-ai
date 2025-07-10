@@ -1,54 +1,34 @@
 <div align="center">
-  <img src="docs/logo/logo.png" alt="GAIA Logo" width="120" height="120" />
+  <img src="docs/logo/logo.png" alt="GAIA Logo" width="100" height="100" />
 
-  # GAIA
-
-  [![Website](https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white)](https://docs.heygaia.io)
-
-  [![PolyForm Strict](https://img.shields.io/badge/PolyForm-Strict-red)](https://polyformproject.org/licenses/strict/1.0.0/) [![GitHub Stars](https://img.shields.io/github/stars/heygaia/gaia?style=social)](https://github.com/heygaia/gaia)
-
-  <p align="center">
-    <strong>A proactive personal AI assistant designed to enhance productivity and streamline daily tasks</strong>
-  </p>
-
-  <p align="center">
-    <a href="https://discord.heygaia.io">
-      <img src="https://img.shields.io/badge/-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" />
+  <br/>
+  <br/>
+  <p>
+    <a href="https://heygaia.io">
+      <img src="https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white" alt="Website" />
     </a>
-    <a href="https://whatsapp.heygaia.io">
-      <img src="https://img.shields.io/badge/-WhatsApp-25D366?style=flat&logo=whatsapp&logoColor=white" alt="WhatsApp" />
-    </a>
-    <a href="https://twitter.com/_heygaia">
-      <img src="https://img.shields.io/twitter/follow/_heygaia?style=social" alt="Twitter" />
+    <a href="https://docs.heygaia.io">
+      <img src="https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white" alt="Docs" />
     </a>
   </p>
+
 </div>
 
----
+## GAIA
+
+Your proactive, personal AI assistant designed to increase your productivity
 
 ## What is GAIA?
 
-GAIA is a cutting-edge personal AI assistant that transforms how you manage your digital life. With seamless integration capabilities and intelligent features, GAIA provides a comprehensive solution for productivity enhancement and task automation.
+A proactive, personal AI assistant designed to help users manage their digital lives by automating tasks, handling communication, and increasing productivity — going beyond traditional assistants like Siri, Google Assistant and ChatGPT.
 
 ## Quick Start
 
-Ready to get started with GAIA? Choose your path:
+Choose how you'd like to use GAIA:
 
-#### For Users
-
-Visit [heygaia.io](https://heygaia.io) to start using GAIA immediately - no setup required!
-
-#### Self-Hosting
-
-Want to run GAIA on your own infrastructure?
-
-- [Self-Hosting Overview](https://docs.heygaia.io/self-hosting/overview)
-
-#### For Developers / Contributors
-
-Contributing to GAIA or building on top of it?
-
-- [Developer Documentation](https://docs.heygaia.io/developers/development-setup)
+- **Use GAIA instantly**: No setup required — just visit [heygaia.io](https://heygaia.io).
+- **Self-host GAIA**: See the [Self-Hosting Guide](https://docs.heygaia.io/self-hosting/overview).
+- **Develop or contribute**: Contribute to its development - [Developer Docs](https://docs.heygaia.io/developers/development-setup).
 
 ## Documentation
 
@@ -62,26 +42,13 @@ Our comprehensive documentation is available at [docs.heygaia.io](https://docs.h
 
 Join our growing community of users and contributors:
 
-<div align="center">
-
-  [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.heygaia.io) [![Twitter](https://img.shields.io/badge/Twitter-Follow%20Us-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/_heygaia) [![WhatsApp](https://img.shields.io/badge/WhatsApp-Get%20Support-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://whatsapp.heygaia.io) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/company/heygaia)
-
-</div>
-
-- **Discord**: Join our community for discussions and support
-- **Twitter**: Stay updated with the latest news and updates
-- **WhatsApp**: Get direct support and updates
-- **LinkedIn**: Connect with our team and network
-- **Blog**: Read insights and tutorials at [heygaia.io/blog](https://heygaia.io/blog)
+- <img src="https://cdn.simpleicons.org/discord/5865F2" alt="Discord" width="16" /> &nbsp;**[Discord](https://discord.heygaia.io)** — Chat with the team and other users.
+- <img src="https://cdn.simpleicons.org/x/ffffff" alt="Twitter" width="16" /> &nbsp;**[Twitter](https://twitter.com/_heygaia)** — Get the latest news and updates.
+- <img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="WhatsApp" width="16" /> &nbsp;**[WhatsApp](https://whatsapp.heygaia.io)** — Get direct support from our team.
 
 ## Contributing
 
-We welcome contributions from the community! Whether it's:
-
-- Bug reports and fixes
-- New feature suggestions and implementations
-- Documentation improvements
-- Testing and quality assurance
+We welcome contributions of all kinds, from bug fixes and new features to documentation and testing.
 
 Please read our [Contributing Guidelines](https://docs.heygaia.io/developers/contributing) to get started.
 
@@ -100,5 +67,17 @@ See the full license terms at [LICENSE.md](LICENSE.md).
 <div align="center">
   <strong>Made with ❤️ by GAIA Labs</strong>
   <br>
+  <br>
+   <p>
+    <a href="https://discord.heygaia.io">
+      <img src="https://img.shields.io/badge/-Discord-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" />
+    </a>
+    <a href="https://whatsapp.heygaia.io">
+      <img src="https://img.shields.io/badge/-WhatsApp-25D366?style=flat&logo=whatsapp&logoColor=white" alt="WhatsApp" />
+    </a>
+    <a href="https://twitter.com/_heygaia">
+      <img src="https://img.shields.io/twitter/follow/_heygaia?style=social" alt="Twitter" />
+    </a>
+  </p>
   <a href="https://heygaia.io">heygaia.io</a> • <a href="https://docs.heygaia.io">Documentation</a> • <a href="https://heygaia.io/contact">Contact Us</a>
 </div>

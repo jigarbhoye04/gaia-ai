@@ -12,21 +12,6 @@
     "*.css": "tailwindcss"
   },
 
-  // File & folder exclude (explorer + search)
-  "files.exclude": {
-    "**/.git": false,
-    "**/.svn": false,
-    "**/.hg": false,
-    "**/.DS_Store": false,
-    "**/Thumbs.db": false,
-    "**/__pycache__": false,
-    "**/.venv": false,
-    ".venv": false,
-    "backend/venv": false,
-    "**/.mypy_cache": false,
-    "**/.ruff_cache": false
-  },
-
   // Backup for any custom excludes (optional)
   "explorerExclude.backup": {},
 
@@ -45,5 +30,6 @@
   "python.analysis.extraPaths": ["./backend"],
   "python.analysis.autoSearchPaths": true,
   "python.analysis.useLibraryCodeForTypes": true,
-  "ruff.organizeImports": true
+  "ruff.organizeImports": true,
+  "explorer.excludeGitIgnore": true
 }
