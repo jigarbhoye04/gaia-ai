@@ -198,7 +198,7 @@ def extract_contacts_from_messages_batch(
         batch_ids = message_ids[batch_start:batch_end]
 
         logger.debug(
-            f"CONTACT_SERVICE: Processing batch {batch_start//batch_size + 1}: {len(batch_ids)} messages"
+            f"CONTACT_SERVICE: Processing batch {batch_start // batch_size + 1}: {len(batch_ids)} messages"
         )
 
         # Use batch request to fetch multiple messages at once

@@ -83,19 +83,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# next-video
-videos/*
-!videos/*.json
-!videos/*.js
-!videos/*.ts
-public/_next-video
-
 dist/
 
 .VScodeCounter
 
 .idea
-
-_next-video
 
 .pnpm-store/

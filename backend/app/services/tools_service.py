@@ -61,7 +61,7 @@ async def get_tools_by_category(category: str) -> ToolsCategoryResponse:
 async def get_tool_categories() -> Dict[str, int]:
     """Get all tool categories with their counts."""
     all_tools_response = await get_available_tools()
-    category_counts = {}
+    category_counts: Dict[str, int] = {}
 
     for tool in all_tools_response.tools:
         category = tool.category

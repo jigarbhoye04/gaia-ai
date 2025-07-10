@@ -125,7 +125,7 @@ async def build_mail_processing_graph():
     async def execute_step(state: EmailPlanExecute):
         """Execute the next step in the plan"""
         plan = state["plan"]
-        plan_str = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan))
+        plan_str = "\n".join(f"{i + 1}. {step}" for i, step in enumerate(plan))
         task = plan[0]
         task_formatted = f"""For the following email processing plan:
 {plan_str}

@@ -22,9 +22,9 @@ function CalendarChip({ calendar, selected, onSelect }: CalendarChipProps) {
         variant="faded"
         startContent={
           selected ? (
-            <Eye className="mr-1" width={21} height={21} />
+            <Eye className="mr-1" width={18} height={18} />
           ) : (
-            <EyeOffIcon className="mr-1" width={21} height={21} />
+            <EyeOffIcon className="mr-1" width={18} height={18} />
           )
         }
         style={{

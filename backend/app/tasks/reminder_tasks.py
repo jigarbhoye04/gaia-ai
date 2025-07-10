@@ -4,7 +4,7 @@ Reminder task handlers for different types of reminders.
 
 import asyncio
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Union
 from uuid import uuid4
 
 from langchain_core.messages import AIMessage, HumanMessage
@@ -185,14 +185,14 @@ async def _execute_ai_agent_reminder(reminder: ReminderModel) -> None:
         )
 
     # Convert message history to LangChain message format
-    formatted_conversation_history = []
+    formatted_conversation_history: List[Union[HumanMessage, AIMessage]] = []
     for msg in conversation_history:
         if msg.type == "user":
-            langchain_message = HumanMessage(content=msg.response)
-            formatted_conversation_history.append(langchain_message)
+            user_message = HumanMessage(content=msg.response)
+            formatted_conversation_history.append(user_message)
         elif msg.type == "bot":
-            langchain_message = AIMessage(content=msg.response)
-            formatted_conversation_history.append(langchain_message)
+            ai_message = AIMessage(content=msg.response)
+            formatted_conversation_history.append(ai_message)
 
     # Call AI agent with enhanced instructions
     notification_data = await call_reminder_agent(

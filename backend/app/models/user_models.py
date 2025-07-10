@@ -1,6 +1,5 @@
 import re
-from datetime import datetime
-from time import timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -16,7 +15,9 @@ class CurrentUserModel(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp when the user data was cached",
     )
-    picture: str = Field(default=None, description="URL of the user's profile picture")
+    picture: Optional[str] = Field(
+        default=None, description="URL of the user's profile picture"
+    )
     is_active: bool = Field(default=True, description="Indicates if the user is active")
 
 

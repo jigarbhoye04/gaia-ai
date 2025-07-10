@@ -338,7 +338,7 @@ async def format_google_doc(
         requests = []
 
         # Build formatting request
-        text_style = {}
+        text_style: Dict[str, Any] = {}
         if formatting.get("bold"):
             text_style["bold"] = True
         if formatting.get("italic"):

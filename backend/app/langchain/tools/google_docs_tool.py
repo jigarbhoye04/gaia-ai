@@ -1,4 +1,4 @@
-from typing import Annotated, Dict, Optional
+from typing import Annotated, Dict, Optional, Union
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -362,7 +362,7 @@ async def format_google_doc_tool(
         writer = get_stream_writer()
         writer({"progress": "Applying formatting to Google Doc..."})
 
-        formatting = {}
+        formatting: Dict[str, Union[bool, int, Dict[str, float]]] = {}
         if bold is not None:
             formatting["bold"] = bold
         if italic is not None:

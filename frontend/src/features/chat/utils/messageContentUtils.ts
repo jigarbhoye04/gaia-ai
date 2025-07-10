@@ -185,6 +185,7 @@ export const shouldShowDisclaimer = (disclaimer?: string): boolean => {
 export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
   const {
     text,
+    loading,
     searchWeb,
     deepSearchWeb,
     pageFetchURLs,
@@ -206,6 +207,12 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
     isConvoSystemGenerated,
     systemPurpose,
   } = props;
+
+  // If the message is currently loading, it should never be considered empty
+  // This ensures streaming messages remain visible during the streaming process
+  if (loading) {
+    return false;
+  }
 
   // Check all possible content types
   const hasAnyContent =
@@ -257,8 +264,8 @@ export const shouldFilterMessagePair = (
     deepSearchWeb: botMessage.deepSearchWeb,
     disclaimer: botMessage.disclaimer,
     date: botMessage.date,
-    setOpenImage: () => {}, // Mock function
-    setImageData: () => {}, // Mock function
+    setOpenImage: () => { }, // Mock function
+    setImageData: () => { }, // Mock function
     pageFetchURLs: botMessage.pageFetchURLs,
     pinned: botMessage.pinned,
     calendar_options: botMessage.calendar_options,
@@ -310,8 +317,8 @@ export const filterEmptyMessagePairs = (
           deepSearchWeb: nextMessage.deepSearchWeb,
           disclaimer: nextMessage.disclaimer,
           date: nextMessage.date,
-          setOpenImage: () => {}, // Mock function
-          setImageData: () => {}, // Mock function
+          setOpenImage: () => { }, // Mock function
+          setImageData: () => { }, // Mock function
           pageFetchURLs: nextMessage.pageFetchURLs,
           pinned: nextMessage.pinned,
           calendar_options: nextMessage.calendar_options,
@@ -355,8 +362,8 @@ export const filterEmptyMessagePairs = (
         deepSearchWeb: currentMessage.deepSearchWeb,
         disclaimer: currentMessage.disclaimer,
         date: currentMessage.date,
-        setOpenImage: () => {}, // Mock function
-        setImageData: () => {}, // Mock function
+        setOpenImage: () => { }, // Mock function
+        setImageData: () => { }, // Mock function
         pageFetchURLs: currentMessage.pageFetchURLs,
         pinned: currentMessage.pinned,
         calendar_options: currentMessage.calendar_options,

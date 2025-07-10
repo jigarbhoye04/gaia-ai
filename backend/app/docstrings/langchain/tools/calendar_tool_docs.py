@@ -99,9 +99,9 @@ Use this tool when a user wants to:
 - Search for meetings with certain people
 - Look for events related to specific topics
 
-IMPORTANT: By default, search across ALL calendar events regardless of date/time. 
-Only use time_min and time_max filters when the user specifically requests to limit 
-the search to a particular date range. For general keyword searches, omit these 
+IMPORTANT: By default, search across ALL calendar events regardless of date/time.
+Only use time_min and time_max filters when the user specifically requests to limit
+the search to a particular date range. For general keyword searches, omit these
 parameters to search through the entire calendar history.
 
 Args:
@@ -141,7 +141,7 @@ CALENDAR ID (calendar_id):
 
 WHEN NOT TO USE THIS TOOL:
 - User asks for "all events" or "upcoming events" → use fetch_calendar_events
-- User asks to "find events about X" → use search_calendar_events  
+- User asks to "find events about X" → use search_calendar_events
 - User asks for "today's events" → use fetch_calendar_events with time filters
 
 Args:
@@ -155,20 +155,20 @@ Returns:
 DELETE_CALENDAR_EVENT = """
 Delete a calendar event after searching and finding it by name or description.
 
-This tool allows users to delete calendar events using non-exact event names. It performs the 
+This tool allows users to delete calendar events using non-exact event names. It performs the
 following steps:
 1. Search for events matching the provided query
-2. Find the best matching event 
+2. Find the best matching event
 3. Send the event details to the frontend for user confirmation
 4. Delete the event only after user confirmation
 
 IMPORTANT: This tool does NOT directly delete events. Instead, it finds the event and sends
-deletion confirmation options to the frontend. The user must click a confirmation button 
+deletion confirmation options to the frontend. The user must click a confirmation button
 to actually delete the event.
 
 Use this tool when a user wants to:
 - Delete an event by mentioning its name (even if not exact)
-- Remove a meeting or appointment 
+- Remove a meeting or appointment
 - Cancel an event they reference by description
 - Delete events like "delete my meeting with John" or "cancel the dentist appointment"
 
@@ -188,16 +188,16 @@ Returns:
 EDIT_CALENDAR_EVENT = """
 Edit/update a calendar event after searching and finding it by name or description.
 
-This tool allows users to edit calendar events using non-exact event names. It performs the 
+This tool allows users to edit calendar events using non-exact event names. It performs the
 following steps:
 1. Search for events matching the provided query
 2. Find the best matching event
 3. Apply the requested changes
-4. Send the updated event details to the frontend for user confirmation  
+4. Send the updated event details to the frontend for user confirmation
 5. Update the event only after user confirmation
 
 IMPORTANT: This tool does NOT directly update events. Instead, it finds the event, applies
-changes, and sends update confirmation options to the frontend. The user must click a 
+changes, and sends update confirmation options to the frontend. The user must click a
 confirmation button to actually update the event.
 
 Use this tool when a user wants to:
@@ -215,7 +215,7 @@ Args:
     query (str): Search query to find the event to edit (e.g., "meeting with John", "dentist appointment")
     user_id (str): The user's unique identifier
     summary (str, optional): New event title/summary
-    description (str, optional): New event description  
+    description (str, optional): New event description
     start (str, optional): New start time in ISO 8601 format
     end (str, optional): New end time in ISO 8601 format
     is_all_day (bool, optional): Whether to make it an all-day event

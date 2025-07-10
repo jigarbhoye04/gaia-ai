@@ -3,9 +3,9 @@ Token tracking and management service.
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
-from app.db.redis import redis_cache
+from app.db.redis import redis_cache, get_cache
 from app.models.payment_models import PlanType
 
 # Constants
@@ -30,11 +30,12 @@ class TokenService:
         date_key = datetime.now(timezone.utc).strftime("%Y%m%d")
         redis_key = f"tokens:{user_id}:{feature_key}:{date_key}"
 
-        await self.redis.redis.incrby(redis_key, tokens_used)
-        await self.redis.redis.expire(redis_key, SECONDS_PER_DAY)
+        if self.redis.redis:
+            await self.redis.redis.incrby(redis_key, tokens_used)
+            await self.redis.redis.expire(redis_key, SECONDS_PER_DAY)
 
     async def get_token_usage(
-        self, user_id: str, feature_key: str = None, days: int = 1
+        self, user_id: str, feature_key: Optional[str] = None, days: int = 1
     ) -> Dict[str, int]:
         """Get token usage for the last N days."""
         usage = {}
@@ -45,15 +46,16 @@ class TokenService:
 
             if feature_key:
                 redis_key = f"tokens:{user_id}:{feature_key}:{date_key}"
-                tokens = await self.redis.get(redis_key)
+                tokens = await get_cache(redis_key)
                 usage[date_key] = int(tokens) if tokens else 0
             else:
                 # Get all features for this date
                 pattern = f"tokens:{user_id}:*:{date_key}"
                 total = 0
-                async for key in self.redis.redis.scan_iter(match=pattern):
-                    tokens = await self.redis.get(key)
-                    total += int(tokens) if tokens else 0
+                if self.redis.redis:
+                    async for key in self.redis.redis.scan_iter(match=pattern):
+                        tokens = await get_cache(key)
+                        total += int(tokens) if tokens else 0
                 usage[date_key] = total
 
         return usage

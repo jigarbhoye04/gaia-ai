@@ -518,7 +518,18 @@ async def _process_emails_batch(
                     }
                 )
             else:
-                processing_results.append(result)
+                # result is not an exception, so it should be a valid result
+                if isinstance(result, dict):
+                    processing_results.append(result)
+                else:
+                    # Handle unexpected result type
+                    processing_results.append(
+                        {
+                            "status": "error",
+                            "error": f"Unexpected result type: {type(result)}",
+                            "message_id": batch[j].get("id", "unknown"),
+                        }
+                    )
                 session.increment_processed_messages()
 
     session.log_milestone(

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, EmailStr
 
@@ -83,7 +83,9 @@ class SupportRequestResponse(BaseModel):
     updated_at: datetime = Field(..., description="Last update timestamp")
     resolved_at: Optional[datetime] = Field(None, description="Resolution timestamp")
     tags: List[str] = Field(default_factory=list, description="Tags for categorization")
-    metadata: Dict = Field(default_factory=dict, description="Additional metadata")
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
     attachments: List[SupportAttachment] = Field(
         default_factory=list, description="File attachments"
     )

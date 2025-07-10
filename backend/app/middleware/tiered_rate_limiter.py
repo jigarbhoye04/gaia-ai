@@ -13,7 +13,7 @@ Usage:
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, Callable
+from typing import Dict, Callable, Optional
 from functools import wraps
 
 from fastapi import HTTPException
@@ -42,7 +42,10 @@ class UsageInfo(BaseModel):
 
 class RateLimitExceededException(HTTPException):
     def __init__(
-        self, feature: str, plan_required: str = None, reset_time: datetime = None
+        self,
+        feature: str,
+        plan_required: Optional[str] = None,
+        reset_time: Optional[datetime] = None,
     ):
         detail = {
             "error": "rate_limit_exceeded",
@@ -104,7 +107,7 @@ class TieredRateLimiter:
             if token_limit > 0 and tokens_used > token_limit:
                 plan_required = "pro" if user_plan == PlanType.FREE else None
                 raise RateLimitExceededException(
-                    f"{feature_key} (token limit)", plan_required
+                    f"{feature_key} (token limit)", plan_required, None
                 )
 
         # Increment usage atomically
@@ -306,7 +309,7 @@ def tiered_rate_limit(feature_key: str, count_tokens: bool = False):
             return result
 
         # Store metadata for usage tracking
-        wrapper._rate_limit_metadata = {"feature_key": feature_key}
+        setattr(wrapper, "_rate_limit_metadata", {"feature_key": feature_key})
 
         return wrapper
 
