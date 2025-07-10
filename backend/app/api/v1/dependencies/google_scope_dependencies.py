@@ -5,7 +5,7 @@ This module provides FastAPI dependencies for validating Google OAuth scopes
 before allowing access to protected endpoints that require specific integrations.
 """
 
-from typing import Literal, Union, List
+from typing import Literal, Union, List, Dict
 
 import httpx
 from fastapi import HTTPException, Depends, status
@@ -86,7 +86,7 @@ def require_google_scope(scope: Union[str, List[str]]):
 
 
 # Mapping of integration names to their required OAuth scope URLs
-GOOGLE_SCOPE_URLS = {
+GOOGLE_SCOPE_URLS: Dict[str, Union[str, List[str]]] = {
     "gmail": "https://www.googleapis.com/auth/gmail.modify",
     "calendar": [
         "https://www.googleapis.com/auth/calendar.events",

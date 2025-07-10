@@ -73,11 +73,16 @@ export const processAxiosError = (
 
 // Handle 403 Forbidden errors
 const handleForbiddenError = (errorData: unknown, router: AppRouterInstance): void => {
-    const detail = (errorData as any)?.detail;
+    // Safely extract detail from unknown error data structure
+    const detail = errorData && typeof errorData === "object" && "detail" in errorData
+        ? (errorData as { detail: unknown }).detail
+        : undefined;
 
     // Handle integration errors with redirect action
-    if (typeof detail === "object" && detail?.type === "integration") {
-        toast.error(detail.message || "Integration required.", {
+    if (typeof detail === "object" && detail !== null &&
+        "type" in detail && detail.type === "integration") {
+        const integrationDetail = detail as { type: string; message?: string };
+        toast.error(integrationDetail.message || "Integration required.", {
             duration: Infinity,
             classNames: {
                 actionButton: "bg-red-500/30! py-4! px-3!"
@@ -98,14 +103,27 @@ const handleForbiddenError = (errorData: unknown, router: AppRouterInstance): vo
 
 // Handle 429 Rate Limit errors
 const handleRateLimitError = (errorData: unknown): void => {
-    const rateLimitData = (errorData as any)?.detail;
+    // Safely extract rate limit data from unknown error data structure
+    const rateLimitData = errorData && typeof errorData === "object" && "detail" in errorData
+        ? (errorData as { detail: unknown }).detail
+        : undefined;
 
     // Validate rate limit error structure
-    if (typeof rateLimitData !== "object" || rateLimitData?.error !== "rate_limit_exceeded") {
+    if (typeof rateLimitData !== "object" || rateLimitData === null ||
+        !("error" in rateLimitData) || rateLimitData.error !== "rate_limit_exceeded") {
         return;
     }
 
-    const { feature, plan_required, reset_time, message } = rateLimitData;
+    // Type-safe extraction of rate limit properties
+    const rateLimit = rateLimitData as {
+        error: string;
+        feature?: string;
+        plan_required?: string;
+        reset_time?: string;
+        message?: string;
+    };
+
+    const { feature, plan_required, reset_time, message } = rateLimit;
 
     if (plan_required) {
         showFeatureRestrictedToast(feature || "This feature", plan_required);
