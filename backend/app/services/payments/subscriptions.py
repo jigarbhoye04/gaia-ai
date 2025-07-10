@@ -20,9 +20,11 @@ from app.models.payment_models import (
     UserSubscriptionStatus,
 )
 from app.services.user_service import get_user_by_id
+from app.utils.payments_utils import calculate_subscription_dates, timestamp_to_datetime
+from app.utils.timezone import add_timezone_info
+
 from .client import razorpay_service
 from .plans import get_plan_by_id, get_razorpay_plan_id
-from app.utils.payments_utils import calculate_subscription_dates, timestamp_to_datetime
 
 
 async def create_subscription(
@@ -147,6 +149,12 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
                 has_subscription=False,
                 plan_type=PlanType.FREE,
                 status=SubscriptionStatus.CANCELLED,
+                cancel_at_period_end=False,
+                current_period_end=None,
+                current_period_start=None,
+                plan_id=None,
+                subscription_id=None,
+                trial_end=None,
             )
 
         # Get plan details
@@ -154,17 +162,21 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
             {"_id": ObjectId(subscription["plan_id"])}
         )
 
+        plan_type = PlanType.FREE  # Default to free plan
         if plan:
             plan_name = plan.get("name", "").lower()
             if "pro" in plan_name:
                 plan_type = PlanType.PRO
-            else:
-                plan_type = PlanType.FREE
+
+        logger.info(f"current_end: {subscription.get('current_end')}")
+        logger.info(f"current_start: {datetime.now(timezone.utc)}")
 
         # Calculate days remaining
         days_remaining = None
         if subscription.get("current_end"):
-            remaining_delta = subscription["current_end"] - datetime.utcnow()
+            remaining_delta = add_timezone_info(
+                target_datetime=subscription["current_end"], timezone_name="UTC"
+            ) - datetime.now(timezone.utc)
             days_remaining = max(0, remaining_delta.days)
 
         # Format plan and subscription data
@@ -225,7 +237,7 @@ async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
 
 async def update_subscription(
     user_id: str, subscription_data: UpdateSubscriptionRequest
-) -> SubscriptionResponse:
+) -> SubscriptionResponse | None:
     """Update user's subscription with proper error handling and rollback."""
     try:
         # Get current subscription
@@ -239,7 +251,7 @@ async def update_subscription(
         razorpay_subscription_id = current_subscription["razorpay_subscription_id"]
 
         # Prepare update data for Razorpay
-        update_data = {}
+        update_data: Dict[str, Any] = {}
         if subscription_data.plan_id:
             razorpay_plan_id = await get_razorpay_plan_id(subscription_data.plan_id)
             update_data["plan_id"] = razorpay_plan_id
@@ -258,7 +270,7 @@ async def update_subscription(
 
         # Update subscription in Razorpay
         try:
-            updated_subscription = razorpay_service.client.subscription.update(
+            razorpay_service.client.subscription.update(
                 razorpay_subscription_id, update_data
             )
             logger.info(f"Updated Razorpay subscription: {razorpay_subscription_id}")
@@ -270,8 +282,8 @@ async def update_subscription(
             )
 
         # Update subscription in database
-        db_update_data = {
-            "updated_at": datetime.utcnow(),
+        db_update_data: Dict[str, Any] = {
+            "updated_at": datetime.now(timezone.utc),
         }
 
         if subscription_data.plan_id:
@@ -292,29 +304,33 @@ async def update_subscription(
             {"_id": ObjectId(current_subscription["_id"])}
         )
 
-        return SubscriptionResponse(
-            id=str(updated_subscription_doc["_id"]),
-            razorpay_subscription_id=updated_subscription_doc[
-                "razorpay_subscription_id"
-            ],
-            user_id=updated_subscription_doc["user_id"],
-            plan_id=updated_subscription_doc["plan_id"],
-            status=SubscriptionStatus(updated_subscription_doc["status"]),
-            quantity=updated_subscription_doc["quantity"],
-            current_start=updated_subscription_doc.get("current_start"),
-            current_end=updated_subscription_doc.get("current_end"),
-            ended_at=updated_subscription_doc.get("ended_at"),
-            charge_at=updated_subscription_doc.get("charge_at"),
-            start_at=updated_subscription_doc.get("start_at"),
-            end_at=updated_subscription_doc.get("end_at"),
-            auth_attempts=updated_subscription_doc.get("auth_attempts", 0),
-            total_count=updated_subscription_doc["total_count"],
-            paid_count=updated_subscription_doc["paid_count"],
-            customer_notify=updated_subscription_doc["customer_notify"],
-            created_at=updated_subscription_doc["created_at"],
-            updated_at=updated_subscription_doc["updated_at"],
-            notes=updated_subscription_doc.get("notes", {}),
-        )
+        if updated_subscription_doc:
+            return SubscriptionResponse(
+                id=str(updated_subscription_doc["_id"]),
+                razorpay_subscription_id=updated_subscription_doc[
+                    "razorpay_subscription_id"
+                ],
+                user_id=updated_subscription_doc["user_id"],
+                plan_id=updated_subscription_doc["plan_id"],
+                status=SubscriptionStatus(updated_subscription_doc["status"]),
+                quantity=updated_subscription_doc["quantity"],
+                current_start=updated_subscription_doc.get("current_start"),
+                current_end=updated_subscription_doc.get("current_end"),
+                ended_at=updated_subscription_doc.get("ended_at"),
+                charge_at=updated_subscription_doc.get("charge_at"),
+                start_at=updated_subscription_doc.get("start_at"),
+                end_at=updated_subscription_doc.get("end_at"),
+                auth_attempts=updated_subscription_doc.get("auth_attempts", 0),
+                total_count=updated_subscription_doc["total_count"],
+                paid_count=updated_subscription_doc["paid_count"],
+                customer_notify=updated_subscription_doc["customer_notify"],
+                created_at=updated_subscription_doc["created_at"],
+                updated_at=updated_subscription_doc["updated_at"],
+                notes=updated_subscription_doc.get("notes", {}),
+            )
+
+        else:
+            return None
 
     except HTTPException:
         raise
@@ -342,15 +358,13 @@ async def cancel_subscription(
         try:
             if cancel_at_cycle_end:
                 # Cancel at cycle end
-                cancelled_subscription = razorpay_service.client.subscription.update(
+                razorpay_service.client.subscription.update(
                     razorpay_subscription_id, {"cancel_at_cycle_end": True}
                 )
                 new_status = "active"  # Remains active until cycle end
             else:
                 # Cancel immediately
-                cancelled_subscription = razorpay_service.client.subscription.cancel(
-                    razorpay_subscription_id
-                )
+                razorpay_service.client.subscription.cancel(razorpay_subscription_id)
                 new_status = "cancelled"
 
             logger.info(f"Cancelled Razorpay subscription: {razorpay_subscription_id}")
@@ -365,11 +379,11 @@ async def cancel_subscription(
         update_data = {
             "status": new_status,
             "cancel_at_cycle_end": cancel_at_cycle_end,
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         if not cancel_at_cycle_end:
-            update_data["ended_at"] = datetime.utcnow()
+            update_data["ended_at"] = datetime.now(timezone.utc)
 
         result = await subscriptions_collection.update_one(
             {"_id": ObjectId(subscription["_id"])}, {"$set": update_data}
@@ -426,7 +440,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         end_at = timestamp_to_datetime(razorpay_subscription.get("end_at"))
 
         # Set defaults if fields are still null
-        created_at = subscription_doc.get("created_at", datetime.utcnow())
+        created_at = subscription_doc.get("created_at", datetime.now(timezone.utc))
 
         if not start_at:
             start_at = created_at
@@ -434,7 +448,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         if not current_start:
             current_start = start_at
 
-        if not current_end and plan:
+        if not current_end and plan and current_start is not None:
             # Calculate end based on plan duration
             if plan.get("duration") == "monthly":
                 current_end = current_start + timedelta(days=30)
@@ -444,7 +458,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
         if not charge_at:
             charge_at = current_start
 
-        if not end_at and plan:
+        if not end_at and plan and start_at is not None:
             # Set to total billing cycles from start
             total_count = razorpay_subscription.get("total_count", 10)
             if plan.get("duration") == "monthly":
@@ -463,7 +477,7 @@ async def sync_subscription_from_razorpay(razorpay_subscription_id: str) -> bool
             "auth_attempts": razorpay_subscription.get("auth_attempts", 0),
             "total_count": razorpay_subscription.get("total_count", 10),
             "paid_count": razorpay_subscription.get("paid_count", 0),
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         # Remove None values
@@ -502,7 +516,9 @@ async def _cleanup_old_subscriptions(user_id: str) -> None:
                 "$or": [
                     {
                         "status": "created",
-                        "created_at": {"$lt": datetime.utcnow() - timedelta(hours=1)},
+                        "created_at": {
+                            "$lt": datetime.now(timezone.utc) - timedelta(hours=1)
+                        },
                     },
                     {"status": "failed"},
                 ],
@@ -575,6 +591,7 @@ def _create_subscription_doc(
 ) -> SubscriptionDB:
     """Create a SubscriptionDB document with all the necessary fields."""
     return SubscriptionDB(
+        _id=None,  # Will be set by MongoDB
         razorpay_subscription_id=razorpay_subscription["id"],
         user_id=user_id,
         plan_id=subscription_data.plan_id,

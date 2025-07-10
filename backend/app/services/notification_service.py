@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import Request
@@ -17,7 +16,6 @@ from app.utils.notification.actions import (
 )
 from app.utils.notification.channels import ChannelAdapter
 from app.utils.notification.orchestrator import NotificationOrchestrator
-from app.utils.notification.sources import NotificationSource
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -48,15 +46,10 @@ class NotificationService:
             notification_id, action_id, user_id, request=request
         )
 
-    async def mark_as_read(self, notification_id: str, user_id: str) -> bool:
+    async def mark_as_read(
+        self, notification_id: str, user_id: str
+    ) -> NotificationRecord | None:
         return await self.orchestrator.mark_as_read(notification_id, user_id)
-
-    async def snooze_notification(
-        self, notification_id: str, user_id: str, snooze_until: datetime
-    ) -> bool:
-        return await self.orchestrator.snooze_notification(
-            notification_id, user_id, snooze_until
-        )
 
     async def get_user_notifications(
         self,
@@ -112,9 +105,6 @@ class NotificationService:
 
     def register_action_handler(self, handler: ActionHandler) -> None:
         self.orchestrator.register_action_handler(handler)
-
-    def register_source(self, source: NotificationSource) -> None:
-        self.orchestrator.register_source(source)
 
 
 # Global instance of the notification service

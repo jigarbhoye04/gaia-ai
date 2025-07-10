@@ -1,6 +1,6 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "maple",
   "name": "GAIA",
   "colors": {
     "primary": "#00bbff",
@@ -22,10 +22,7 @@
           },
           {
             "group": "Self-Hosting",
-            "pages": [
-              "self-hosting/overview",
-              "self-hosting/docker-setup"
-            ]
+            "pages": ["self-hosting/overview", "self-hosting/docker-setup"]
           },
           {
             "group": "For Developers",
@@ -84,13 +81,15 @@
     "primary": {
       "type": "button",
       "label": "Get Started",
+
+
       "href": "https://heygaia.io"
     }
   },
   "footer": {
     "socials": {
       "website": "https://heygaia.io",
-      "x": "https://x.com/heygaia_io",
+      "x": "https://x.com/_heygaia",
       "github": "https://github.com/heygaia",
       "discord": "https://discord.heygaia.io",
       "linkedin": "https://linkedin.com/company/heygaia"

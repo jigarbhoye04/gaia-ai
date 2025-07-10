@@ -5,9 +5,9 @@ This module provides functions to handle timezone operations while preserving
 the actual time values (not converting them across timezones).
 """
 
-from datetime import datetime
+from datetime import datetime, tzinfo
 from datetime import timezone as builtin_timezone
-from typing import Union
+from typing import Union, Optional
 
 import pytz
 
@@ -58,7 +58,7 @@ def replace_timezone_info(
         )
 
     # Determine the target timezone to apply
-    target_timezone_info = None
+    target_timezone_info: Optional[tzinfo] = None
 
     if new_timezone is not None:
         target_timezone_info = _parse_timezone(new_timezone)
@@ -188,6 +188,63 @@ def set_timezone_preserving_time(
         datetime: Datetime with the specified timezone, same time values
     """
     return replace_timezone_info(target_datetime, new_timezone=timezone_name)
+
+
+def add_timezone_info(
+    target_datetime: Union[str, datetime],
+    timezone_name: str,
+) -> datetime:
+    """
+    Add timezone info to a datetime if it doesn't have one, while preserving time values.
+
+    Args:
+        target_datetime: The datetime to modify (string or datetime object)
+        timezone_name: Timezone name (e.g., 'UTC', 'Asia/Kolkata', 'America/New_York')
+
+    Returns:
+        datetime: Datetime with the specified timezone, same time values
+    """
+    # Convert string datetime to datetime object if needed
+    if isinstance(target_datetime, str):
+        target_datetime = datetime.fromisoformat(target_datetime)
+
+    # Parse the target timezone
+    target_timezone_info = _parse_timezone(timezone_name)
+
+    # If the datetime already has timezone info, just return it
+    if target_datetime.tzinfo is not None:
+        return target_datetime
+
+    # Otherwise, replace the timezone info while keeping the same time values
+    return target_datetime.replace(tzinfo=target_timezone_info)
+
+
+def get_timezone_from_datetime(target_datetime: Union[str, datetime]) -> str:
+    """
+    Get the timezone name from a datetime object or string.
+
+    Args:
+        target_datetime: The datetime to extract timezone from (string or datetime object)
+
+    Returns:
+        str: The name of the timezone (e.g., 'UTC', 'Asia/Kolkata')
+
+    Raises:
+        ValueError: If the datetime has no timezone info
+    """
+    if isinstance(target_datetime, str):
+        target_datetime = datetime.fromisoformat(target_datetime)
+
+    if target_datetime.tzinfo is None:
+        raise ValueError(
+            "Datetime must have timezone information to extract timezone name."
+        )
+
+    tz_name = target_datetime.tzinfo.tzname(target_datetime)
+    if not tz_name:
+        raise ValueError("Could not determine timezone name from datetime.")
+
+    return tz_name
 
 
 # Commonly used timezone constants for convenience

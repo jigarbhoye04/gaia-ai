@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from langchain_core.messages import HumanMessage, SystemMessage, AnyMessage
 from uuid_extensions import uuid7str
@@ -15,7 +15,9 @@ from app.services.conversation_service import (
 )
 
 
-async def create_conversation(last_message: MessageDict | None, user: dict) -> dict:
+async def create_conversation(
+    last_message: MessageDict | None, user: dict, selectedTool: Optional[str] | None
+) -> dict:
     uuid_value = uuid7str()
 
     # If last_message is None or doesn't have content, use a fallback prompt
@@ -25,8 +27,12 @@ async def create_conversation(last_message: MessageDict | None, user: dict) -> d
         else "New conversation started"
     )
 
+    print(selectedTool, "selectedTool")
+
     response = await do_prompt_no_stream(
-        prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(user_message=user_message),
+        prompt=CONVERSATION_DESCRIPTION_GENERATOR.format(
+            user_message=user_message, selectedTool=selectedTool
+        ),
     )
 
     # Validate LLM response

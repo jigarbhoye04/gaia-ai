@@ -1,4 +1,3 @@
-import asyncio
 import json
 import pprint
 from typing import Any, Dict, List, Optional, Union
@@ -19,19 +18,17 @@ from app.docstrings.langchain.tools.calendar_tool_docs import (
     VIEW_CALENDAR_EVENT,
 )
 from app.docstrings.utils import with_doc
-from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.langchain.templates.calendar_template import (
     CALENDAR_LIST_TEMPLATE,
     CALENDAR_PROMPT_TEMPLATE,
 )
+from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.calendar_models import EventCreateRequest
 from app.services.calendar_service import (
     get_calendar_events,
     list_calendars,
     search_calendar_events_native,
 )
-from app.services.notification_service import notification_service
-from app.utils.notification.sources import create_calendar_event_notification
 
 
 @tool(parse_docstring=True)
@@ -184,32 +181,34 @@ async def create_calendar_event(
                 }
             )
 
-        # If initiated by backend then create notification
-        if configurable.get("initiator") == "backend":
-            user_id = configurable.get("user_id")
-            if not user_id:
-                logger.error("Missing user_id in configuration")
-                return json.dumps(
-                    {
-                        "error": "User ID is required to create calendar notification",
-                        "calendar_options": [],
-                        "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
-                    }
-                )
+        # # If initiated by backend then create notification
+        # if configurable.get("initiator") == "backend":
+        #     user_id = configurable.get("user_id")
+        #     if not user_id:
+        #         logger.error("Missing user_id in configuration")
+        #         return json.dumps(
+        #             {
+        #                 "error": "User ID is required to create calendar notification",
+        #                 "calendar_options": [],
+        #                 "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
+        #             }
+        #         )
 
-            # Create a notification for the user
-            notifications = create_calendar_event_notification(
-                user_id=user_id,
-                notification_data=event_list,
-            )
-            await asyncio.gather(
-                *[
-                    notification_service.create_notification(notification)
-                    for notification in notifications
-                ]
-            )
+        #     # Create a notification for the user
+        #     notifications = (
+        #         AIProactiveNotificationSource.create_calendar_event_notification(
+        #             user_id=user_id,
+        #             notification_data=event_list,
+        #         )
+        #     )
+        #     await asyncio.gather(
+        #         *[
+        #             notification_service.create_notification(notification)
+        #             for notification in notifications
+        #         ]
+        #     )
 
-            return "Calendar notification created successfully. Please check your frontend for options."
+        #     return "Calendar notification created successfully."
 
         # Return the successfully processed events
         writer = get_stream_writer()

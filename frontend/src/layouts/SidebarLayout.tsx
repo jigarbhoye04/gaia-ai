@@ -43,7 +43,7 @@ const SidebarHeaderButton = ({
     aria-label={ariaLabel}
     size="icon"
     variant="ghost"
-    className="h-8 w-8 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+    className="hover:bg-zinc-950-accent h-8 w-8 rounded-lg text-sidebar-foreground/70 hover:text-sidebar-foreground"
     onClick={onClick}
   >
     {children}
@@ -73,7 +73,9 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
 
   return (
     <Sidebar variant="sidebar" collapsible="offcanvas" className="border-none!">
-      <div className="pointer-events-none absolute right-0 bottom-16 left-0 z-1 h-1/3 w-full bg-gradient-to-b from-transparent to-black" />
+      {pathname.startsWith("/c") && (
+        <div className="pointer-events-none absolute right-0 bottom-16 left-0 z-1 h-1/3 w-full bg-gradient-to-b from-transparent to-black" />
+      )}
 
       <SearchCommand
         openSearchDialog={openSearchDialog}
@@ -117,12 +119,13 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
             <CustomSidebarTrigger />
           </div>
         </div>
-        <SidebarTopButtons />
       </SidebarHeader>
 
       <SidebarContent className="flex-1">
         <SidebarGroup>
           <SidebarGroupContent className="space-y-1">
+            <SidebarTopButtons />
+
             {children}
           </SidebarGroupContent>
         </SidebarGroup>

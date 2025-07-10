@@ -1,0 +1,44 @@
+name: PR Naming Conventions
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  semantic-pull-request:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title follows Conventional Commit format
+        uses: amannn/action-semantic-pull-request@v5.5.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Configure allowed types
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            test
+            chore
+            ci
+            build
+            revert
+            ci-cd
+            perf
+            release
+            deps
+            infra
+            security
+            env
+            i18n
+            ux
+            config
+            assets
+            meta
+          # Require scope (optional)
+          requireScope: false
+          # Disable validation of commits
+          validateSingleCommit: false

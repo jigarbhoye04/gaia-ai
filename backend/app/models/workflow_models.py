@@ -1,6 +1,6 @@
 """Structured models for workflow generation using Pydantic."""
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field
 import uuid
 
@@ -31,7 +31,7 @@ class WorkflowStep(BaseModel):
         tool_name: str,
         tool_category: str,
         description: str,
-        tool_inputs: Dict[str, Any] = None,
+        tool_inputs: Optional[Dict[str, Any]] = None,
     ):
         """Create a workflow step with auto-generated ID."""
         return cls(
@@ -54,8 +54,8 @@ class WorkflowPlan(BaseModel):
     title: str = Field(description="Title of the workflow")
     steps: List[WorkflowStep] = Field(
         description="List of workflow steps to complete the todo",
-        min_items=2,
-        max_items=4,
+        min_length=2,
+        max_length=4,
     )
 
     class Config:

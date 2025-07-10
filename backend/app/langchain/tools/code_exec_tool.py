@@ -1,6 +1,6 @@
 """E2B code execution tool with chart detection and streaming support."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Any
 
 from langchain_core.runnables.config import RunnableConfig
 from langchain_core.tools import tool
@@ -50,7 +50,7 @@ async def execute_code(
         writer({"progress": f"Executing {language} code in secure E2B sandbox..."})
 
         # Send initial code data to frontend
-        code_data = {
+        code_data: dict[str, Any] = {
             "code_data": {
                 "language": language,
                 "code": code,
@@ -101,14 +101,16 @@ async def execute_code(
 
         # Include chart processing errors in output if any
         if chart_errors:
-            if code_data["code_data"]["output"]["stderr"]:
-                code_data["code_data"]["output"]["stderr"] += (
-                    "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
-                )
-            else:
-                code_data["code_data"]["output"]["stderr"] = (
-                    "Chart Processing Warnings:\n" + "\n".join(chart_errors)
-                )
+            current_output = code_data["code_data"]["output"]
+            if isinstance(current_output, dict) and "stderr" in current_output:
+                if current_output["stderr"]:
+                    current_output["stderr"] += (
+                        "\n\nChart Processing Warnings:\n" + "\n".join(chart_errors)
+                    )
+                else:
+                    current_output["stderr"] = (
+                        "Chart Processing Warnings:\n" + "\n".join(chart_errors)
+                    )
 
         code_data["code_data"]["status"] = "completed"
         logger.info(f"Streaming final code_data: {code_data}")

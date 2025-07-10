@@ -48,7 +48,7 @@ def get_user_from_config(config: RunnableConfig) -> dict:
     return {"user_id": user_id}
 
 
-async def invalidate_goal_caches(user_id: str, goal_id: str = None) -> None:
+async def invalidate_goal_caches(user_id: str, goal_id: Optional[str] = None) -> None:
     """
     Invalidate goal-related caches for a user.
 

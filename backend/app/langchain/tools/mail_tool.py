@@ -6,30 +6,31 @@ from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.mail_tool_docs import (
+    APPLY_LABELS_TO_EMAILS,
+    ARCHIVE_EMAILS,
+    COMPOSE_EMAIL,
+    CREATE_GMAIL_LABEL,
+    DELETE_GMAIL_LABEL,
+    GET_EMAIL_THREAD,
+    GET_GMAIL_CONTACTS,
     LIST_GMAIL_LABELS,
     LIST_GMAIL_MESSAGES,
+    REMOVE_LABELS_FROM_EMAILS,
     SEARCH_GMAIL_MESSAGES,
-    COMPOSE_EMAIL,
     STAR_EMAILS,
     UNSTAR_EMAILS,
-    ARCHIVE_EMAILS,
-    GET_EMAIL_THREAD,
-    CREATE_GMAIL_LABEL,
     UPDATE_GMAIL_LABEL,
-    DELETE_GMAIL_LABEL,
-    APPLY_LABELS_TO_EMAILS,
-    REMOVE_LABELS_FROM_EMAILS,
-    GET_GMAIL_CONTACTS,
 )
 from app.docstrings.utils import with_doc
-from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.langchain.templates.mail_templates import (
+    COMPOSE_EMAIL_TEMPLATE,
     process_get_thread_response,
     process_list_labels_response,
     process_list_messages_response,
     process_search_messages_response,
-    COMPOSE_EMAIL_TEMPLATE,
 )
+from app.middleware.langchain_rate_limiter import with_rate_limiting
+from app.services.contact_service import get_gmail_contacts
 from app.services.mail_service import (
     apply_labels,
     archive_messages,
@@ -44,7 +45,6 @@ from app.services.mail_service import (
     unstar_messages,
     update_label,
 )
-from app.services.contact_service import get_gmail_contacts
 from app.utils.general_utils import transform_gmail_message
 
 
@@ -293,17 +293,41 @@ async def compose_email(
                 writer({"progress": f"Contact search failed for '{recipient_query}'"})
                 # Continue with empty resolved_emails if contact resolution fails
 
+        # Prepare email data
+        email_data = {
+            "to": resolved_emails if resolved_emails else [],
+            "subject": subject,
+            "body": body,
+            "recipient_query": recipient_query,
+        }
+
+        # Check if initiated by backend
+        # configurable = config.get("configurable", {})
+        # if configurable.get("initiator") == "backend":
+        #     user_id = configurable.get("user_id")
+        #     if not user_id:
+        #         logger.error(
+        #             "Missing user_id in configuration for backend-initiated email composition"
+        #         )
+        #         return {
+        #             "error": "User ID is required to create email composition notification"
+        #         }
+
+        #     # Create a notification for the user
+        #     notification = (
+        #         AIProactiveNotificationSource.create_mail_composition_notification(
+        #             user_id=user_id,
+        #             email_data=email_data,
+        #         )
+        #     )
+        #     await notification_service.create_notification(notification)
+
+        #     return "Email composition notification created successfully. Please check your frontend for the draft."
+
+        # Regular frontend flow
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
-        writer(
-            {
-                "email_compose_data": {
-                    "to": resolved_emails if resolved_emails else [],
-                    "subject": subject,
-                    "body": body,
-                }
-            }
-        )
+        writer(email_data)
 
         # Generate summary of the composed email
         return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)

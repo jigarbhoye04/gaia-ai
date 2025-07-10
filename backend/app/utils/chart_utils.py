@@ -5,7 +5,7 @@ import io
 import re
 import time
 import uuid
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import cloudinary.uploader
 
@@ -65,7 +65,7 @@ async def upload_chart_to_cloudinary(
 
 async def process_chart_results(
     execution_results: List, user_id: str = "anonymous"
-) -> tuple[List[Dict], List[str]]:
+) -> tuple[List[Dict[str, Any]], List[str]]:
     """
     Process execution results to extract and upload charts.
 
@@ -76,8 +76,8 @@ async def process_chart_results(
     Returns:
         Tuple of (charts_list, error_messages)
     """
-    charts = []
-    chart_errors = []
+    charts: List[Dict[str, Any]] = []
+    chart_errors: List[str] = []
 
     if not execution_results:
         logger.info("No execution results to process for charts")

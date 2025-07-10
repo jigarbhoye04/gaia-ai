@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Tooltip } from "@heroui/tooltip";
 import { CircleArrowUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,9 +11,11 @@ import {
   ChatBubbleAddIcon,
   CheckmarkCircle02Icon,
   Mail01Icon,
+  NotificationIcon,
   PinIcon,
   Route02Icon,
 } from "@/components/shared/icons";
+import { Separator } from "@/components/ui";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
 
@@ -26,30 +27,41 @@ export default function SidebarTopButtons() {
 
   const buttonData = [
     {
+      route: "/notifications",
+      icon: <NotificationIcon width={19} height={19} />,
+      label: "Notifications",
+    },
+    {
       route: "/calendar",
-      icon: <CalendarIcon height={21} width={21} />,
+      icon: <CalendarIcon width={19} height={19} />,
       label: "Calendar",
     },
     {
       route: "/goals",
-      icon: <Route02Icon height={21} width={21} />,
+      icon: <Route02Icon width={19} height={19} />,
       label: "Goals",
     },
     {
       route: "/todos",
-      icon: <CheckmarkCircle02Icon height={21} width={21} />,
+      icon: <CheckmarkCircle02Icon width={19} height={19} />,
       label: "Todos",
     },
     {
       route: "/mail",
-      icon: <Mail01Icon height={21} width={21} />,
+      icon: <Mail01Icon width={19} height={19} />,
       label: "Mail",
     },
     {
       route: "/pins",
-      icon: <PinIcon height={21} width={21} />,
+      icon: <PinIcon width={19} height={19} />,
       label: "Pins",
     },
+
+    // {
+    //   route: "/browser",
+    //   icon: <AiBrowserIcon height={23} width={23} />,
+    //   label: "Use Browser",
+    // },
   ];
 
   const createNewChat = (): void => {
@@ -81,46 +93,11 @@ export default function SidebarTopButtons() {
         </Link>
       )}
 
-      {/* <Link href={"/dashboard"} className="w-full">
-        <Button
-          className="flex w-full justify-start text-sm"
-          size="sm"
-          variant="light"
-          // color={pathname === route ? "primary" : "default"}
-          // variant={pathname === route ? "solid" : "flat"}
-          // onPress={() => router.push(route)}
-          startContent={<DashboardSquare01Icon height={21} width={21} />}
-        >
-          Dashboard
-        </Button>
-      </Link> */}
-
-      <div className="flex flex-row items-start gap-1 rounded-2xl">
+      <div className="flex flex-col gap-0.5">
         {buttonData.map(({ route, icon, label }, index) => (
-          <Tooltip
-            key={index}
-            content={label}
-            showArrow={true}
-            placement="bottom"
-          >
-            <Button
-              className="aspect-square w-full"
-              isIconOnly
-              color={pathname === route ? "primary" : "default"}
-              variant={pathname === route ? "solid" : "flat"}
-              onPress={() => router.push(route)}
-            >
-              {React.cloneElement(icon, {
-                color: pathname === route ? "#000000AA" : "#FFFFFFAA",
-              })}
-            </Button>
-          </Tooltip>
-        ))}
-      </div>
-      {/* {buttonData.map(({ route, icon, label }, index) => (
-        <Link href={route} className="w-full" key={index}>
           <Button
-            className="flex w-full justify-start text-sm"
+            key={index}
+            className="w-full justify-start text-sm"
             size="sm"
             variant="light"
             color={pathname === route ? "primary" : "default"}
@@ -131,23 +108,25 @@ export default function SidebarTopButtons() {
           >
             {label}
           </Button>
-        </Link>
-      ))} */}
+        ))}
+      </div>
 
       <Button
-        className="mt-2 flex w-full justify-start text-sm text-primary"
-        color="primary"
+        className="flex w-full justify-start text-sm"
         size="sm"
         variant="light"
+        color={pathname.startsWith("/c") ? "primary" : "default"}
         onPress={createNewChat}
+        startContent={
+          <ChatBubbleAddIcon color={undefined} width={19} height={19} />
+        }
       >
-        <ChatBubbleAddIcon color="#00bbff" width={18} />
         New Chat
       </Button>
 
-      {/* <div className="my-2 px-2"> */}
-      {/* <Separator className="bg-zinc-800" /> */}
-      {/* </div> */}
+      <div className="my-2 px-3">
+        <Separator className="bg-zinc-800" />
+      </div>
     </div>
   );
 }

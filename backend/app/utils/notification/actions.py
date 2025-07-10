@@ -6,7 +6,7 @@ from typing import Optional
 import httpx
 from fastapi import Request
 
-from app.config.loggers import notification_logger
+from app.config.loggers import notification_logger as logger
 from app.models.notification.notification_models import (
     ActionResult,
     ActionType,
@@ -59,6 +59,8 @@ class ApiCallActionHandler(ActionHandler):
     ) -> ActionResult:
         api_config = action.config.api_call
 
+        logger.info(api_config)
+
         if api_config is None:
             logging.error(
                 f"API call configuration missing for action {action.id} in notification {notification.id}"
@@ -87,16 +89,15 @@ class ApiCallActionHandler(ActionHandler):
                 "metadata": notification.original_request.metadata,
             }
 
-            url = api_config.endpoint
-            if api_config.is_internal:
-                # For internal API calls, use the request's base URL
-                if request:
-                    url = f"{request.base_url}{api_config.endpoint.lstrip('/')}"
+            # If the action is internal, use the request base URL
+            if request and api_config.is_internal:
+                base_url = request.base_url
+                api_config.endpoint = f"{base_url}{api_config.endpoint.lstrip('/')}"
 
             async with httpx.AsyncClient() as client:
                 response = await client.request(
                     method=api_config.method,
-                    url=url,
+                    url=api_config.endpoint,
                     headers=headers,
                     json=payload,
                     timeout=30.0,
@@ -115,29 +116,16 @@ class ApiCallActionHandler(ActionHandler):
                     data=result_data,
                     update_notification={
                         "status": NotificationStatus.ARCHIVED,
-                        "metadata": {
-                            **notification.original_request.metadata,
-                            "actions_executed": [
-                                *(
-                                    notification.original_request.metadata.get(
-                                        "actions_executed", []
-                                    )
-                                ),
-                                {
-                                    "id": action.id,
-                                    "result": result_data,
-                                    "executed_at": datetime.now(
-                                        timezone.utc
-                                    ).isoformat(),
-                                },
-                            ],
-                        },
+                    },
+                    update_action={
+                        "executed": True,
+                        "executed_at": datetime.now(timezone.utc).isoformat(),
                     },
                 )
 
         except httpx.HTTPError as e:
-            notification_logger.error(
-                f"Unexpected error in API call action {action.id} for notification {notification.id}: {str(e)}",
+            logger.error(
+                f"API call failed for action {action.id} in notification {notification.id}: {str(e)}"
             )
             return ActionResult(
                 success=False,
@@ -145,8 +133,8 @@ class ApiCallActionHandler(ActionHandler):
                 error_code="API_ERROR",
             )
         except Exception as e:
-            notification_logger.error(
-                f"Unexpected error in API call action {action.id} for notification {notification.id}: {str(e)}",
+            logger.error(
+                f"Unexpected error during API call for action {action.id} in notification {notification.id}: {str(e)}"
             )
             return ActionResult(
                 success=False,
@@ -199,3 +187,77 @@ class RedirectActionHandler(ActionHandler):
                 )
             },
         )
+
+
+class ModalActionHandler(ActionHandler):
+    """Handler for modal actions (client-side)"""
+
+    @property
+    def action_type(self) -> str:
+        return "modal"
+
+    def can_handle(self, action: NotificationAction) -> bool:
+        return action.type == ActionType.MODAL and action.config.modal is not None
+
+    async def execute(
+        self,
+        action: NotificationAction,
+        notification: NotificationRecord,
+        user_id: str,
+        request: Optional[Request],
+    ) -> ActionResult:
+        modal_config = action.config.modal
+
+        if modal_config is None:
+            logging.error(
+                f"Modal configuration missing for action {action.id} in notification {notification.id}"
+            )
+            return ActionResult(
+                success=False,
+                message="Modal configuration is missing",
+                error_code="CONFIG_ERROR",
+            )
+
+        # Process template variables in modal props
+        processed_props = self._process_template_variables(
+            modal_config.props, notification.id, action.id, user_id
+        )
+
+        return ActionResult(
+            success=True,
+            message="Modal action executed successfully",
+            data={
+                "modal_component": modal_config.component,
+                "modal_props": processed_props,
+            },
+            update_action={
+                "executed": True,
+                "executed_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+
+    def _process_template_variables(
+        self, props: dict, notification_id: str, action_id: str, user_id: str
+    ) -> dict:
+        """Process template variables in modal props"""
+        if not props:
+            return {}
+
+        processed_props = {}
+        template_map = {
+            "{{notification_id}}": notification_id,
+            "{{action_id}}": action_id,
+            "{{user_id}}": user_id,
+        }
+
+        for key, value in props.items():
+            if isinstance(value, str):
+                # Replace template variables
+                for template, replacement in template_map.items():
+                    if template in value:
+                        value = value.replace(template, replacement)
+                processed_props[key] = value
+            else:
+                processed_props[key] = value
+
+        return processed_props

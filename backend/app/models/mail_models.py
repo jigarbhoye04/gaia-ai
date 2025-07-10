@@ -1,6 +1,7 @@
 import base64
 import json
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional, Union
 
 from pydantic import BaseModel, Field, model_validator
@@ -128,3 +129,61 @@ class EmailWebhookRequest(BaseModel):
 
     message: EmailWebhookMessage
     subscription: str
+
+
+class EmailProcessingPlan(BaseModel):
+    """Plan to follow for email processing with structured output"""
+
+    steps: List[str] = Field(
+        description="Different steps to follow for processing the email, should be in sorted order"
+    )
+
+
+class EmailProcessingReplanResult(BaseModel):
+    """Result model for email processing replanning step"""
+
+    action: str = Field(
+        description="Action to take: 'continue' to continue with remaining steps, 'complete' to finish processing"
+    )
+    steps: Optional[List[str]] = Field(
+        default=None,
+        description="Remaining steps to execute if action is 'continue'. Not needed if action is 'complete'",
+    )
+    response: Optional[str] = Field(
+        default=None,
+        description="Final response to user if action is 'complete'. Not needed if action is 'continue'",
+    )
+
+
+class EmailImportanceLevelEnum(str, Enum):
+    """Enumeration for email importance levels."""
+
+    URGENT = "URGENT"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+    @classmethod
+    def list(cls) -> List[str]:
+        """Return a list of all importance levels."""
+        return [level.value for level in cls]
+
+
+class EmailComprehensiveAnalysis(BaseModel):
+    """Combined response model for email importance and semantic analysis."""
+
+    # Importance analysis fields
+    is_important: bool = Field(
+        description="Whether the email is important and requires attention"
+    )
+    importance_level: EmailImportanceLevelEnum = Field(
+        description="Importance level: URGENT, HIGH, MEDIUM, or LOW"
+    )
+    summary: str = Field(
+        description="Brief summary of the email if important, empty string if not important"
+    )
+
+    # Semantic labeling fields
+    semantic_labels: List[str] = Field(
+        description="List of semantic labels that categorize the email content and context"
+    )

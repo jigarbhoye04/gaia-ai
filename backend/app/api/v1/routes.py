@@ -8,7 +8,6 @@ from fastapi import APIRouter
 
 from app.api.v1.router import (
     blog,
-    browser,
     calendar,
     chat,
     conversations,
@@ -51,7 +50,6 @@ router.include_router(mail.router, tags=["Mail"])
 router.include_router(blog.router, tags=["Blog"])
 router.include_router(team.router, tags=["Team"])
 router.include_router(file.router, tags=["File"])
-router.include_router(browser.router, tags=["Browser"])
 router.include_router(notification.router, tags=["Notification"])
 router.include_router(websocket.router, tags=["WebSocket"])
 router.include_router(mail_webhook.router, tags=["Mail Webhook"])

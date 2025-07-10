@@ -165,15 +165,15 @@ def _process_file_summary(
         return file_summary, None
     elif isinstance(file_summary, list):
         content_str = ""
-        content_model = []
+        content_model: list[dict[str, Any]] = []
         for x in file_summary:
             content_model.append(x.model_dump(mode="json"))
             content_str += x.summary
         return content_str, content_model
     elif isinstance(file_summary, DocumentSummaryModel):
         content_str = file_summary.summary
-        content_model = file_summary.model_dump(mode="json")
-        return content_str, content_model
+        content_model_dict = file_summary.model_dump(mode="json")
+        return content_str, content_model_dict
     else:
         logger.error("Invalid file description format")
         raise HTTPException(status_code=400, detail="Invalid file description format")

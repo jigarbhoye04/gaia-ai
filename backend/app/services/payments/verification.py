@@ -2,10 +2,9 @@
 Payment verification and processing.
 """
 
-from datetime import datetime
-from bson import ObjectId
+from datetime import datetime, timezone
 
-from app.utils.email_utils import send_pro_subscription_email
+from bson import ObjectId
 from fastapi import HTTPException
 
 from app.config.loggers import general_logger as logger
@@ -21,8 +20,10 @@ from app.models.payment_models import (
     PaymentResponse,
     PaymentStatus,
 )
-from .client import razorpay_service
+from app.utils.email_utils import send_pro_subscription_email
 from app.utils.payments_utils import safe_get_notes
+
+from .client import razorpay_service
 
 
 async def verify_payment(
@@ -89,8 +90,9 @@ async def verify_payment(
                 except ValueError:
                     payment_method = None
 
-            current_time = datetime.utcnow()
+            current_time = datetime.now(timezone.utc)
             payment_doc = PaymentDB(
+                _id=None,  # Will be set by MongoDB
                 razorpay_payment_id=razorpay_payment["id"],
                 user_id=user_id,
                 subscription_id=callback_data.razorpay_subscription_id,
@@ -141,7 +143,7 @@ async def verify_payment(
                         "$set": {
                             "status": "active",
                             "paid_count": 1,
-                            "updated_at": datetime.utcnow(),
+                            "updated_at": datetime.now(timezone.utc),
                         }
                     },
                 )

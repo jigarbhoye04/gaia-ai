@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import Request
@@ -17,6 +17,7 @@ from app.utils.common_utils import websocket_manager
 from app.utils.notification.actions import (
     ActionHandler,
     ApiCallActionHandler,
+    ModalActionHandler,
     RedirectActionHandler,
 )
 from app.utils.notification.channels import (
@@ -24,41 +25,42 @@ from app.utils.notification.channels import (
     EmailChannelAdapter,
     InAppChannelAdapter,
 )
-from app.utils.notification.sources import (
-    AIEmailCalendarSource,
-    AIEmailDraftSource,
-    NotificationSource,
-)
 from app.utils.notification.storage import (
     MongoDBNotificationStorage,
 )
 
 
 class NotificationOrchestrator:
-    """Core notification orchestration engine"""
+    """
+    Core notification orchestration engine.
+
+    This class manages the complete lifecycle of notifications including:
+    - Creation and validation
+    - Delivery through multiple channels
+    - Action execution
+    - Bulk operations
+    - Status management
+    """
 
     def __init__(self, storage=MongoDBNotificationStorage()):
         self.storage = storage
         self.channel_adapters: Dict[str, ChannelAdapter] = {}
         self.action_handlers: Dict[str, ActionHandler] = {}
-        self.sources: Dict[str, NotificationSource] = {}
 
         # Register default components
         self._register_default_components()
 
+    # INITIALIZATION & REGISTRATION METHODS
     def _register_default_components(self) -> None:
         """Register default adapters, handlers, and sources"""
         # Channel adapters
         self.register_channel_adapter(InAppChannelAdapter())
-        self.register_channel_adapter(EmailChannelAdapter())
+        self.register_channel_adapter(adapter=EmailChannelAdapter())
 
         # Action handlers
         self.register_action_handler(ApiCallActionHandler())
         self.register_action_handler(RedirectActionHandler())
-
-        # Sources
-        self.register_source(AIEmailDraftSource())
-        self.register_source(AIEmailCalendarSource())
+        self.register_action_handler(ModalActionHandler())
 
     def register_channel_adapter(self, adapter: ChannelAdapter) -> None:
         """Register a new channel adapter"""
@@ -70,23 +72,20 @@ class NotificationOrchestrator:
         self.action_handlers[handler.action_type] = handler
         logger.info(f"Registered action handler: {handler.action_type}")
 
-    def register_source(self, source: NotificationSource) -> None:
-        """Register a new notification source"""
-        self.sources[source.source_id] = source
-        logger.info(f"Registered notification source: {source.source_id}")
-
+    # NOTIFICATION CREATION & MANAGEMENT
     async def create_notification(
         self, request: NotificationRequest
     ) -> NotificationRecord | None:
-        """Create and process a new notification"""
-        logger.info(f"Creating notification {request.id} for user {request.user_id}")
+        """
+        Create and process a new notification.
 
-        # Check for duplicates if deduplication is enabled
-        if request.rules and request.rules.deduplicate_within_minutes:
-            is_duplicate = await self._check_duplicate(request)
-            if is_duplicate:
-                logger.info(f"Notification {request.id} is a duplicate, skipping")
-                return None
+        Args:
+            request: The notification request containing all notification data
+
+        Returns:
+            NotificationRecord if created successfully, None if duplicate
+        """
+        logger.info(f"Creating notification {request.id} for user {request.user_id}")
 
         # Create notification record
         notification_record = NotificationRecord(
@@ -100,64 +99,19 @@ class NotificationOrchestrator:
         # Save to storage
         await self.storage.save_notification(notification_record)
 
-        # Schedule delivery
-        if request.scheduled_for:
-            await self._schedule_delivery(notification_record)
-        else:
-            await self._deliver_notification(notification_record)
+        # Deliver the notification
+        await self._deliver_notification(notification_record)
 
         return notification_record
 
-    async def _check_duplicate(self, request: NotificationRequest) -> bool:
-        """Check if this notification is a duplicate within the specified time window"""
-
-        if not request.rules or not request.rules.deduplicate_within_minutes:
-            return False
-
-        cutoff_time = datetime.now(timezone.utc) - timedelta(
-            minutes=request.rules.deduplicate_within_minutes
-        )
-
-        recent_notifications = await self.storage.get_user_notifications(
-            request.user_id, status=None, limit=100
-        )
-
-        for notification in recent_notifications:
-            if (
-                notification.created_at >= cutoff_time
-                and notification.original_request.source == request.source
-                and notification.original_request.content.title == request.content.title
-            ):
-                return True
-
-        return False
-
-    async def _schedule_delivery(self, notification: NotificationRecord) -> None:
-        """Schedule notification for future delivery"""
-        if not notification.original_request.scheduled_for:
-            logger.warning(
-                f"Notification {notification.id} has no scheduled time, delivering immediately"
-            )
-            await self._deliver_notification(notification)
-            return
-
-        delay = (
-            notification.original_request.scheduled_for - datetime.now(timezone.utc)
-        ).total_seconds()
-        if delay > 0:
-            asyncio.create_task(self._delayed_delivery(notification, delay))
-        else:
-            await self._deliver_notification(notification)
-
-    async def _delayed_delivery(
-        self, notification: NotificationRecord, delay: float
-    ) -> None:
-        """Deliver notification after delay"""
-        await asyncio.sleep(delay)
-        await self._deliver_notification(notification)
-
+    # NOTIFICATION DELIVERY SYSTEM
     async def _deliver_notification(self, notification: NotificationRecord) -> None:
-        """Deliver notification through all configured channels"""
+        """
+        Deliver notification through all configured channels.
+
+        Args:
+            notification: The notification record to deliver
+        """
         logger.info(f"Delivering notification {notification.id}")
 
         delivery_tasks = []
@@ -171,7 +125,9 @@ class NotificationOrchestrator:
         if delivery_tasks:
             delivery_results = await asyncio.gather(
                 *delivery_tasks, return_exceptions=True
-            )  # Update notification with delivery results
+            )
+
+            # Process delivery results
             channel_statuses = []
             for result in delivery_results:
                 if isinstance(result, ChannelDeliveryStatus):
@@ -179,7 +135,7 @@ class NotificationOrchestrator:
                 elif isinstance(result, Exception):
                     logger.error(f"Delivery failed: {result}")
 
-            # Update the existing notification record instead of saving a new one
+            # Update the notification record with delivery results
             await self.storage.update_notification(
                 notification.id,
                 {
@@ -194,7 +150,7 @@ class NotificationOrchestrator:
             notification.status = NotificationStatus.DELIVERED
             notification.delivered_at = datetime.now(timezone.utc)
 
-            # Broadcast real-time update
+            # Broadcast real-time update to user
             await websocket_manager.broadcast_to_user(
                 notification.user_id,
                 {
@@ -206,7 +162,16 @@ class NotificationOrchestrator:
     async def _deliver_via_channel(
         self, notification: NotificationRecord, adapter: ChannelAdapter
     ) -> ChannelDeliveryStatus:
-        """Deliver notification via a specific channel"""
+        """
+        Deliver notification via a specific channel.
+
+        Args:
+            notification: The notification to deliver
+            adapter: The channel adapter to use for delivery
+
+        Returns:
+            ChannelDeliveryStatus indicating success or failure
+        """
         try:
             content = await adapter.transform(notification.original_request)
             return await adapter.deliver(content, notification.user_id)
@@ -218,6 +183,7 @@ class NotificationOrchestrator:
                 error_message=str(e),
             )
 
+    # ACTION EXECUTION SYSTEM
     async def execute_action(
         self,
         notification_id: str,
@@ -225,7 +191,18 @@ class NotificationOrchestrator:
         user_id: str,
         request: Optional[Request],
     ) -> ActionResult:
-        """Execute a notification action"""
+        """
+        Execute a notification action.
+
+        Args:
+            notification_id: ID of the notification containing the action
+            action_id: ID of the specific action to execute
+            user_id: ID of the user executing the action
+            request: Optional FastAPI request object for context
+
+        Returns:
+            ActionResult containing execution status and results
+        """
         logger.info(f"Executing action {action_id} for notification {notification_id}")
 
         # Get notification
@@ -236,28 +213,24 @@ class NotificationOrchestrator:
             )
 
         # Find action
-        action = None
-        for a in notification.original_request.content.actions or []:
-            if a.id == action_id:
-                action = a
-                break
-
+        action = notification.get_action_by_id(action_id)
         if not action:
             return ActionResult(
                 success=False, message="Action not found", error_code="ACTION_NOT_FOUND"
             )
 
-        # Check if action is already executed
-        if action.id in list(
-            map(
-                lambda _notification: _notification["id"],
-                notification.original_request.metadata.get("actions_executed", []),
-            )
-        ):
+        # Check if action can be executed
+        if not action.is_executable():
             return ActionResult(
                 success=False,
-                message="Action has already been executed",
-                error_code="ACTION_ALREADY_EXECUTED",
+                message=(
+                    "Action has already been executed"
+                    if action.executed
+                    else "Action is disabled"
+                ),
+                error_code=(
+                    "ACTION_ALREADY_EXECUTED" if action.executed else "ACTION_DISABLED"
+                ),
             )
 
         # Get handler
@@ -269,16 +242,29 @@ class NotificationOrchestrator:
                 error_code="NO_HANDLER",
             )
 
-        # Execute action
+        # Execute the action
         result = await handler.execute(action, notification, user_id, request=request)
 
-        # Update notification if needed
+        # If action was successful, mark it as executed
+        if result.success:
+            notification.mark_action_as_executed(action_id)
+
+            # Update the notification in storage with the executed action
+            await self.storage.update_notification(
+                notification_id,
+                {
+                    "original_request": notification.original_request.model_dump(),
+                    "updated_at": notification.updated_at,
+                },
+            )
+
+        # Update notification if needed (additional updates from handler)
         if result.update_notification:
             await self.storage.update_notification(
                 notification_id, result.update_notification
             )
 
-            # Broadcast update
+            # Broadcast update to user via websocket
             await websocket_manager.broadcast_to_user(
                 user_id,
                 {
@@ -288,22 +274,52 @@ class NotificationOrchestrator:
                 },
             )
 
-        # Create follow-up notifications if needed
+        # Handle follow-up actions if any
         if result.next_actions:
-            for next_action in result.next_actions:
-                # Create new notification with next action
-                # Implementation depends on specific requirements
-                pass
+            await self._handle_follow_up_actions(result.next_actions, user_id)
 
         return result
 
-    async def mark_as_read(self, notification_id: str, user_id: str) -> bool:
-        """Mark notification as read"""
+    def _find_action_in_notification(
+        self, notification: NotificationRecord, action_id: str
+    ):
+        """Find a specific action within a notification."""
+        for action in notification.original_request.content.actions or []:
+            if action.id == action_id:
+                return action
+        return None
+
+    async def _handle_follow_up_actions(
+        self, next_actions: List[Any], user_id: str
+    ) -> None:
+        """Handle any follow-up actions that need to be executed."""
+        for next_action in next_actions:
+            # Create new notification with next action
+            # Implementation depends on specific requirements
+            logger.info(f"Processing follow-up action for user {user_id}")
+            pass
+
+    # NOTIFICATION STATUS MANAGEMENT
+    async def mark_as_read(
+        self, notification_id: str, user_id: str
+    ) -> NotificationRecord | None:
+        """
+        Mark notification as read.
+
+        Args:
+            notification_id: ID of the notification to mark as read
+            user_id: ID of the user marking the notification
+
+        Returns:
+            Updated notification record if successful, None otherwise
+        """
         notification = await self.storage.get_notification(notification_id, user_id)
         if not notification:
-            return False
+            return None
 
-        logger.info(f"{NotificationStatus.READ.value=}")
+        logger.info(
+            f"Marking notification {notification_id} as read for user {user_id}"
+        )
 
         await self.storage.update_notification(
             notification_id,
@@ -313,60 +329,46 @@ class NotificationOrchestrator:
             },
         )
 
-        # Broadcast update
+        # Get the updated notification
+        updated_notification = await self.storage.get_notification(
+            notification_id, user_id
+        )
+
+        # Broadcast update via websocket
         await websocket_manager.broadcast_to_user(
             user_id, {"type": "notification.read", "notification_id": notification_id}
         )
 
-        return True
+        return updated_notification
 
-    async def snooze_notification(
-        self, notification_id: str, user_id: str, snooze_until: datetime
-    ) -> bool:
-        """Snooze notification until specified time"""
+    async def archive_notification(self, notification_id: str, user_id: str) -> bool:
+        """
+        Archive a notification.
+
+        Args:
+            notification_id: ID of the notification to archive
+            user_id: ID of the user archiving the notification
+
+        Returns:
+            True if successfully archived, False otherwise
+        """
         notification = await self.storage.get_notification(notification_id, user_id)
         if not notification:
             return False
 
+        logger.info(f"Archiving notification {notification_id} for user {user_id}")
+
         await self.storage.update_notification(
             notification_id,
-            {"status": NotificationStatus.SNOOZED, "snoozed_until": snooze_until},
+            {
+                "status": NotificationStatus.ARCHIVED,
+                "archived_at": datetime.now(timezone.utc),
+            },
         )
-
-        # Schedule reactivation
-        delay = (snooze_until - datetime.now(timezone.utc)).total_seconds()
-        if delay > 0:
-            asyncio.create_task(
-                self._reactivate_snoozed_notification(notification_id, delay)
-            )
 
         return True
 
-    async def _reactivate_snoozed_notification(
-        self, notification_id: str, delay: float
-    ) -> None:
-        """Reactivate snoozed notification after delay"""
-        await asyncio.sleep(delay)
-
-        # Get current notification state
-        notification = await self.storage.get_notification(
-            notification_id, None
-        )  # Skip user check for internal use
-        if notification and notification.status == NotificationStatus.SNOOZED:
-            await self.storage.update_notification(
-                notification_id,
-                {"status": NotificationStatus.DELIVERED, "snoozed_until": None},
-            )
-
-            # Broadcast reactivation
-            await websocket_manager.broadcast_to_user(
-                notification.user_id,
-                {
-                    "type": "notification.reactivated",
-                    "notification_id": notification_id,
-                },
-            )
-
+    # NOTIFICATION RETRIEVAL & QUERIES
     async def get_user_notifications(
         self,
         user_id: str,
@@ -375,7 +377,19 @@ class NotificationOrchestrator:
         offset: int = 0,
         channel_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        """Get notifications for a user with optional status and channel filtering"""
+        """
+        Get notifications for a user with optional filtering.
+
+        Args:
+            user_id: ID of the user whose notifications to retrieve
+            status: Optional status filter
+            limit: Maximum number of notifications to return
+            offset: Number of notifications to skip (for pagination)
+            channel_type: Optional channel type filter
+
+        Returns:
+            List of serialized notifications
+        """
         notifications = await self.storage.get_user_notifications(
             user_id, status, limit, offset, channel_type
         )
@@ -384,22 +398,43 @@ class NotificationOrchestrator:
     async def get_notification(
         self, notification_id: str, user_id: str
     ) -> Optional[Dict[str, Any]]:
-        """Get a specific notification by ID for a user"""
+        """
+        Get a specific notification by ID for a user.
+
+        Args:
+            notification_id: ID of the notification to retrieve
+            user_id: ID of the user requesting the notification
+
+        Returns:
+            Serialized notification if found, None otherwise
+        """
         notification = await self.storage.get_notification(notification_id, user_id)
         if not notification:
             return None
         return await self._serialize_notification(notification)
 
+    # BULK OPERATIONS
     async def bulk_actions(
         self, notification_ids: List[str], user_id: str, action: BulkActions
     ) -> Dict[str, bool]:
-        """Perform bulk actions on multiple notifications"""
+        """
+        Perform bulk actions on multiple notifications.
+
+        Args:
+            notification_ids: List of notification IDs to operate on
+            user_id: ID of the user performing the bulk action
+            action: The type of bulk action to perform
+
+        Returns:
+            Dictionary mapping notification IDs to success/failure status
+        """
         results = {}
 
         for notification_id in notification_ids:
             try:
                 if action == BulkActions.MARK_READ:
-                    success = await self.mark_as_read(notification_id, user_id)
+                    result = await self.mark_as_read(notification_id, user_id)
+                    success = result is not None
                 elif action == BulkActions.ARCHIVE:
                     success = await self.archive_notification(notification_id, user_id)
                 else:
@@ -412,26 +447,19 @@ class NotificationOrchestrator:
 
         return results
 
-    async def archive_notification(self, notification_id: str, user_id: str) -> bool:
-        """Archive a notification"""
-        notification = await self.storage.get_notification(notification_id, user_id)
-        if not notification:
-            return False
-
-        await self.storage.update_notification(
-            notification_id,
-            {
-                "status": NotificationStatus.ARCHIVED,
-                "archived_at": datetime.now(timezone.utc),
-            },
-        )
-
-        return True
-
+    # UTILITY & SERIALIZATION METHODS
     async def _serialize_notification(
         self, notification: NotificationRecord
     ) -> Dict[str, Any]:
-        """Serialize notification for API response"""
+        """
+        Serialize notification for API response.
+
+        Args:
+            notification: The notification record to serialize
+
+        Returns:
+            Dictionary representation suitable for API responses
+        """
         return {
             "id": notification.id,
             "user_id": notification.user_id,
@@ -462,6 +490,13 @@ class NotificationOrchestrator:
                         "requires_confirmation": action.requires_confirmation,
                         "confirmation_message": action.confirmation_message,
                         "config": action.config.model_dump() if action.config else None,
+                        "executed": action.executed,
+                        "executed_at": (
+                            action.executed_at.isoformat()
+                            if action.executed_at
+                            else None
+                        ),
+                        "disabled": action.disabled,
                     }
                     for action in (notification.original_request.content.actions or [])
                 ],

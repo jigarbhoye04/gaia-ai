@@ -1,4 +1,13 @@
-"""Email utilities for sending various types of emails."""
+"""
+Email utilities for sending various types of emails.
+
+This module provides functions for sending different types of emails including:
+- Support and feature request emails
+- User onboarding emails (welcome, pro subscription)
+- User engagement emails (inactive user notifications)
+
+All emails use Jinja2 templates for HTML generation and Resend for email delivery.
+"""
 
 import os
 from typing import Optional
@@ -10,23 +19,40 @@ from app.config.loggers import app_logger as logger
 from app.config.settings import settings
 from app.models.support_models import SupportEmailNotification, SupportRequestType
 
+# ============================================================================
+# EMAIL SERVICE CONFIGURATION
+# ============================================================================
+
 # Initialize Resend with API key
 resend.api_key = settings.RESEND_API_KEY
 
 # Get the directory where templates are stored
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
 
-# Initialize Jinja2 environment
+# Initialize Jinja2 environment for template rendering
 jinja_env = Environment(
     loader=FileSystemLoader(TEMPLATES_DIR),
     autoescape=select_autoescape(["html", "xml"]),
 )
 
 
+# ============================================================================
+# SUPPORT & FEATURE REQUEST EMAILS
+# ============================================================================
+
+
 async def send_support_team_notification(
     notification_data: SupportEmailNotification,
 ) -> None:
-    """Send email notification to support team."""
+    """
+    Send email notification to support team when a new support/feature request is created.
+
+    Args:
+        notification_data: Support email notification data containing ticket details
+
+    Raises:
+        Exception: If email sending fails
+    """
     try:
         subject = f"[{notification_data.ticket_id}] New {notification_data.type.value.title()} Request: {notification_data.title}"
         html_content = generate_support_team_email_html(notification_data)
@@ -55,7 +81,15 @@ async def send_support_team_notification(
 async def send_support_to_user_email(
     notification_data: SupportEmailNotification,
 ) -> None:
-    """Send confirmation email to user that support request has been received."""
+    """
+    Send confirmation email to user that their support request has been received.
+
+    Args:
+        notification_data: Support email notification data containing ticket details
+
+    Raises:
+        Exception: If email sending fails
+    """
     try:
         subject = f"[{notification_data.ticket_id}] Your {notification_data.type.value} request has been received"
         html_content = generate_support_to_user_email_html(notification_data)
@@ -75,7 +109,18 @@ async def send_support_to_user_email(
 
 
 def generate_support_team_email_html(data: SupportEmailNotification) -> str:
-    """Generate HTML email for support team using Jinja2 template."""
+    """
+    Generate HTML email content for support team notifications using Jinja2 template.
+
+    Args:
+        data: Support email notification data
+
+    Returns:
+        str: Rendered HTML email content
+
+    Raises:
+        Exception: If template rendering fails
+    """
     try:
         template = jinja_env.get_template("support_to_admin.html")
 
@@ -104,7 +149,18 @@ def generate_support_team_email_html(data: SupportEmailNotification) -> str:
 
 
 def generate_support_to_user_email_html(data: SupportEmailNotification) -> str:
-    """Generate HTML email content for support to user using Jinja2 template."""
+    """
+    Generate HTML email content for user confirmation emails using Jinja2 template.
+
+    Args:
+        data: Support email notification data
+
+    Returns:
+        str: Rendered HTML email content
+
+    Raises:
+        Exception: If template rendering fails
+    """
     try:
         template = jinja_env.get_template("support_to_user.html")
 
@@ -168,6 +224,9 @@ async def send_welcome_email(user_email: str, user_name: Optional[str] = None) -
     try:
         subject = "From the founder of GAIA, personally"
         html_content = generate_welcome_email_html(user_name)
+
+        if html_content is None:
+            raise ValueError("Failed to generate email HTML content")
 
         resend.Emails.send(
             {

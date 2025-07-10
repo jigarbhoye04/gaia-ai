@@ -24,7 +24,7 @@ class WebSocketManager:
         # Only initialize once
         if not hasattr(self, "initialized") or not self.initialized:
             self.connections: Dict[str, Set[WebSocket]] = {}
-            self.initialized = True
+            self.initialized: bool = True
 
     def add_connection(self, user_id: str, websocket: WebSocket) -> None:
         """Add a WebSocket connection for a user"""
