@@ -1,5 +1,5 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -15,6 +15,7 @@ import { useLoginModalActions } from "../../features/auth/hooks/useLoginModal";
 export default function useAxiosInterceptor() {
   const { setLoginModalOpen } = useLoginModalActions();
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     const onLandingRoutes = [
@@ -49,6 +50,27 @@ export default function useAxiosInterceptor() {
             if (status === 401) {
               toast.error("Session expired. Please log in again.");
               setLoginModalOpen(true);
+            } else if (status === 403) {
+              // Handle OAuth scope errors
+              const detail = data?.detail;
+              if (typeof detail === "object" && detail?.type === "integration") {
+                toast.error(detail.message || "Integration required.", {
+                  duration: Infinity,
+                  classNames: {
+                    actionButton: "bg-red-500/30! py-4! px-3!"
+                  },
+                  action: {
+                    label: "Connect",
+                    onClick: () => {
+                      router.push("/settings?section=integrations");
+                    },
+                  },
+                });
+              } else {
+                const fallbackMessage = typeof detail === "string" ? detail : "You don't have permission to access this resource.";
+                toast.error(fallbackMessage);
+              }
+
             } else if (status === 429) {
               // Handle rate limiting errors
               const errorData = data?.detail;
@@ -95,5 +117,5 @@ export default function useAxiosInterceptor() {
     return () => {
       apiauth.interceptors.response.eject(interceptor);
     };
-  }, [pathname, setLoginModalOpen]);
+  }, [pathname, setLoginModalOpen, router]);
 }
