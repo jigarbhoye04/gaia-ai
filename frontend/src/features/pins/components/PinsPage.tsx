@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "@heroui/input";
-import { DeleteIcon } from "lucide-react";
+import { DeleteIcon, Pin } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import Spinner from "@/components/ui/shadcn/spinner";
@@ -32,18 +32,8 @@ export default function Pins() {
   return (
     <div className="flex h-full flex-col justify-between">
       <div className="overflow-y-auto">
-        {/* <div className="flex items-center flex-col gap-2"> */}
-        <h1 className="pb-6 text-center text-4xl font-bold sm:text-5xl">
-          Pinned Messages
-        </h1>
-        {/* <div className="text-center text-md pb-6 max-w-(--breakpoint-md)">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Facilis,
-            sed!
-          </div> */}
-        {/* </div> */}
-
         {loading ? (
-          <div className="flex h-[80vh] items-center justify-center">
+          <div className="flex h-[90vh] items-center justify-center">
             <Spinner />
           </div>
         ) : (
@@ -51,7 +41,7 @@ export default function Pins() {
             <div className="flex flex-wrap justify-center gap-4 pb-8 sm:px-[10vw]">
               {/* // <div className="grid gap-3 px-1 sm:px-[10%] sm:grid-cols-[repeat(auto-fill,minmax(15vw,1fr))] grid-cols-[repeat(auto-fill,minmax(1fr,1fr))] pb-24 sm:pb-20"> */}
               {!!filteredResults && filteredResults.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 pb-24 sm:grid-cols-3 sm:pb-20">
+                <div className="grid grid-cols-1 gap-4 pt-10 pb-24 sm:grid-cols-3 sm:pb-20">
                   {filteredResults.map((result) => (
                     <PinCard
                       key={result.message.message_id}
@@ -61,7 +51,23 @@ export default function Pins() {
                   ))}
                 </div>
               ) : (
-                <></>
+                <div className="flex h-[90vh] flex-col items-center justify-center text-center">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-zinc-800">
+                    <Pin className="h-8 w-8 text-zinc-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">
+                      {searchQuery.trim().length > 0
+                        ? "No pins match your search"
+                        : "No pinned messages yet"}
+                    </h3>
+                    <p className="mt-1 text-sm text-zinc-400">
+                      {searchQuery.trim().length > 0
+                        ? "Try adjusting your search terms or clear the filter"
+                        : "Pin important messages during conversations to find them easily later"}
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -70,20 +76,6 @@ export default function Pins() {
 
       <div className="absolute bottom-4 left-0 z-10 flex w-full flex-col items-center justify-center px-3 sm:bottom-5">
         <div className="relative flex w-full max-w-(--breakpoint-sm) items-center gap-3">
-          {searchQuery.trim().length > 0 && (
-            <div className="div absolute right-2 bottom-14 flex w-full justify-end text-sm">
-              <div
-                className="flex w-fit cursor-pointer flex-row items-center gap-1 rounded-full bg-foreground-100 px-4 py-1 text-foreground-600"
-                onClick={() => {
-                  setSearchQuery("");
-                  filterPins("");
-                }}
-              >
-                Clear Query <DeleteIcon height={17} width={17} />
-              </div>
-            </div>
-          )}
-
           <Input
             autoFocus
             className="w-full"
@@ -92,10 +84,9 @@ export default function Pins() {
             radius="full"
             size="lg"
             value={searchQuery}
+            isClearable
             variant="faded"
-            onChange={(e) => {
-              const query = e.target.value;
-
+            onValueChange={(query) => {
               setSearchQuery(query);
               filterPins(query);
             }}
