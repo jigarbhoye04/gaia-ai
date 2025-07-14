@@ -98,7 +98,7 @@ export function parseStreamData(
   for (const [key, value] of Object.entries(streamChunk)) {
     if (value !== undefined) {
       // Type assertion is safe here since we're iterating over streamChunk properties
-      (result as any)[key] = value;
+      (result as Record<string, unknown>)[key] = value;
     }
   }
 
