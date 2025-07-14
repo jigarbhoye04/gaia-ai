@@ -15,6 +15,12 @@ class ImageData(BaseModel):
     improved_prompt: Optional[str] = None
 
 
+class EmailFetchData(BaseModel):
+    from_: str
+    subject: str
+    time: str
+
+
 class MessageModel(BaseModel):
     type: str  # "user" or "bot"
     response: str  # Content of the message
@@ -47,6 +53,9 @@ class MessageModel(BaseModel):
     )
     weather_data: Optional[WeatherData] = None  # Weather data from OpenWeatherMap API
     email_compose_data: Optional[dict] = None  # Email compose data from mail_tool
+    email_fetch_data: Optional[List[EmailFetchData]] = (
+        None  # Email fetch data from mail_tool
+    )
     memory_data: Optional[dict] = None  # Complete memory operation data
     todo_data: Optional[dict] = None  # Data related to todo operations
     document_data: Optional[dict] = None  # Data related to todo operations

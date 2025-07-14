@@ -104,7 +104,7 @@ const ChatPage = React.memo(function MainChat() {
 
         <div
           ref={chatRef}
-          className="conversation_history w-full max-w-(--breakpoint-md) p-2 sm:p-4"
+          className="conversation_history w-full max-w-(--breakpoint-lg) p-2 sm:p-4"
         >
           <ChatRenderer />
         </div>

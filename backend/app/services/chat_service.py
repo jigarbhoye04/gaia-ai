@@ -148,6 +148,9 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
         elif "google_docs_data" in data:
             tool_data["google_docs_data"] = data["google_docs_data"]
 
+        elif "email_fetch_data" in data:
+            tool_data["email_fetch_data"] = data["email_fetch_data"]
+
         return tool_data
     except json.JSONDecodeError:
         return {}

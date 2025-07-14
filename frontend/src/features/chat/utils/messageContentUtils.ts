@@ -94,6 +94,15 @@ export const hasEmailComposeData = (
 };
 
 /**
+ * Check if email fetch data content exists
+ */
+export const hasEmailFetchData = (
+  email_fetch_data?: ChatBubbleBotProps["email_fetch_data"],
+): boolean => {
+  return !!email_fetch_data;
+};
+
+/**
  * Check if todo data content exists
  */
 export const hasTodoData = (
@@ -194,6 +203,7 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
     calendar_delete_options,
     calendar_edit_options,
     email_compose_data,
+    email_fetch_data,
     weather_data,
     todo_data,
     goal_data,
@@ -231,6 +241,7 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
     hasCalendarDeleteOptions(calendar_delete_options) ||
     hasCalendarEditOptions(calendar_edit_options) ||
     hasEmailComposeData(email_compose_data) ||
+    hasEmailFetchData(email_fetch_data) ||
     hasTodoData(todo_data) ||
     hasDocumentData(document_data) ||
     hasGoogleDocsData(google_docs_data) ||
@@ -325,6 +336,7 @@ export const filterEmptyMessagePairs = (
           calendar_delete_options: nextMessage.calendar_delete_options,
           calendar_edit_options: nextMessage.calendar_edit_options,
           email_compose_data: nextMessage.email_compose_data,
+          email_fetch_data: nextMessage.email_fetch_data,
           weather_data: nextMessage.weather_data,
           search_results: nextMessage.search_results,
           deep_research_results: nextMessage.deep_research_results,
@@ -370,6 +382,7 @@ export const filterEmptyMessagePairs = (
         calendar_delete_options: currentMessage.calendar_delete_options,
         calendar_edit_options: currentMessage.calendar_edit_options,
         email_compose_data: currentMessage.email_compose_data,
+        email_fetch_data: currentMessage.email_fetch_data,
         weather_data: currentMessage.weather_data,
         search_results: currentMessage.search_results,
         deep_research_results: currentMessage.deep_research_results,

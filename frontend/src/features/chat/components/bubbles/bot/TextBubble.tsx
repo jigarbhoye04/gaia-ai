@@ -14,6 +14,7 @@ import {
   hasDeepSearchResults,
   hasDocumentData,
   hasEmailComposeData,
+  hasEmailFetchData,
   hasGoalData,
   hasGoogleDocsData,
   hasSearchResults,
@@ -39,6 +40,8 @@ import EmailComposeSection from "./EmailComposeSection";
 import GoalSection, { type GoalAction } from "./GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
+import EmailListCard from "@/features/mail/components/EmailListCard";
+import EmailComposeCard from "@/features/mail/components/EmailComposeCard";
 
 export default function TextBubble({
   text,
@@ -50,6 +53,7 @@ export default function TextBubble({
   calendar_delete_options,
   calendar_edit_options,
   email_compose_data,
+  email_fetch_data,
   weather_data,
   todo_data,
   goal_data,
@@ -168,6 +172,10 @@ export default function TextBubble({
 
       {hasEmailComposeData(email_compose_data) && (
         <EmailComposeSection email_compose_data={email_compose_data!} />
+      )}
+
+      {hasEmailFetchData(email_fetch_data) && (
+        <EmailListCard emails={email_fetch_data} />
       )}
 
       {hasTodoData(todo_data) && (
