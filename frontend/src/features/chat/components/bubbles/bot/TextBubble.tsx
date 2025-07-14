@@ -14,6 +14,7 @@ import {
   hasDeepSearchResults,
   hasDocumentData,
   hasEmailComposeData,
+  hasEmailFetchData,
   hasGoalData,
   hasGoogleDocsData,
   hasSearchResults,
@@ -26,6 +27,7 @@ import {
   shouldShowTextBubble,
   shouldShowWebSearchIndicator,
 } from "@/features/chat/utils/messageContentUtils";
+import EmailListCard from "@/features/mail/components/EmailListCard";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
@@ -50,6 +52,7 @@ export default function TextBubble({
   calendar_delete_options,
   calendar_edit_options,
   email_compose_data,
+  email_fetch_data,
   weather_data,
   todo_data,
   goal_data,
@@ -168,6 +171,10 @@ export default function TextBubble({
 
       {hasEmailComposeData(email_compose_data) && (
         <EmailComposeSection email_compose_data={email_compose_data!} />
+      )}
+
+      {hasEmailFetchData(email_fetch_data) && (
+        <EmailListCard emails={email_fetch_data} />
       )}
 
       {hasTodoData(todo_data) && (

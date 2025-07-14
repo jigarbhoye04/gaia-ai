@@ -20,7 +20,7 @@ export default function EmailComposeSection({
   };
 
   return (
-    <div className="mt-3">
+    <div className="mt-3 w-full">
       <EmailComposeCard
         emailData={email_compose_data}
         onSent={handleEmailSent}

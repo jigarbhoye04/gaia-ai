@@ -15,6 +15,7 @@ import {
   SearchResults,
   WeatherData,
 } from "./convoTypes";
+import { EmailFetchData } from "./mailTypes";
 import { TodoToolData } from "./todoToolTypes";
 
 export interface ChatBubbleUserProps {
@@ -58,6 +59,7 @@ export interface ChatBubbleBotProps {
   calendar_delete_options?: CalendarDeleteOptions[] | null;
   calendar_edit_options?: CalendarEditOptions[] | null;
   email_compose_data?: EmailComposeData | null;
+  email_fetch_data?: EmailFetchData[] | null;
   weather_data?: WeatherData | null;
   search_results?: SearchResults | null;
   deep_research_results?: DeepResearchResults | null;
