@@ -27,6 +27,7 @@ import {
   shouldShowTextBubble,
   shouldShowWebSearchIndicator,
 } from "@/features/chat/utils/messageContentUtils";
+import EmailListCard from "@/features/mail/components/EmailListCard";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
@@ -40,8 +41,6 @@ import EmailComposeSection from "./EmailComposeSection";
 import GoalSection, { type GoalAction } from "./GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
-import EmailListCard from "@/features/mail/components/EmailListCard";
-import EmailComposeCard from "@/features/mail/components/EmailComposeCard";
 
 export default function TextBubble({
   text,

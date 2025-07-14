@@ -15,8 +15,8 @@ import {
   SearchResults,
   WeatherData,
 } from "./convoTypes";
-import { TodoToolData } from "./todoToolTypes";
 import { EmailFetchData } from "./mailTypes";
+import { TodoToolData } from "./todoToolTypes";
 
 export interface ChatBubbleUserProps {
   message_id: string;

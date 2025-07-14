@@ -1,6 +1,7 @@
+import { ScrollShadow } from "@heroui/scroll-shadow";
+
 import { Gmail } from "@/components";
 import { EmailFetchData } from "@/types/features/mailTypes";
-import { ScrollShadow } from "@heroui/scroll-shadow";
 
 interface EmailListProps {
   emails?: EmailFetchData[] | null;
