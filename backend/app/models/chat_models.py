@@ -15,6 +15,12 @@ class ImageData(BaseModel):
     improved_prompt: Optional[str] = None
 
 
+class EmailFetchData(BaseModel):
+    from_: str
+    subject: str
+    time: str
+
+
 class MessageModel(BaseModel):
     type: str
     response: str

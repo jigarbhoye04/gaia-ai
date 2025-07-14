@@ -31,6 +31,7 @@ export default function TextBubble({
   calendar_delete_options,
   calendar_edit_options,
   email_compose_data,
+  email_fetch_data,
   weather_data,
   todo_data,
   goal_data,

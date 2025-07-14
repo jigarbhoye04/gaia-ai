@@ -131,6 +131,8 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
 
     except json.JSONDecodeError:
         return {}
+
+
 async def initialize_conversation(
     body: MessageRequestWithHistory, user: dict
 ) -> tuple[str, Optional[str]]:

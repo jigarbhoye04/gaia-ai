@@ -1,4 +1,4 @@
-import { BotMessageData, SetImageDataType,UserMessageData } from "./baseMessageTypes";
+import { BotMessageData, SetImageDataType, UserMessageData } from "./baseMessageTypes";
 
 // Chat bubble props extending base message data
 export interface ChatBubbleUserProps extends UserMessageData { }

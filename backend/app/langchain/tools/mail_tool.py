@@ -126,10 +126,22 @@ async def fetch_gmail_messages(
         # Use batching to fetch full details for each message
         detailed_messages = fetch_detailed_messages(service, messages)
 
-        # Transform messages to standard format first, then process to minimize
-        transformed_messages = [
-            transform_gmail_message(msg) for msg in detailed_messages
-        ]
+        # Build array of {from, subject, time} for all messages
+        email_fetch_data = []
+        transformed_messages = []
+        for msg in detailed_messages:
+            transformed = transform_gmail_message(msg)
+            transformed_messages.append(transformed)
+            email_fetch_data.append(
+                {
+                    "from": transformed.get("from"),
+                    "subject": transformed.get("subject"),
+                    "time": transformed.get("date"),
+                }
+            )
+
+        writer = get_stream_writer()
+        writer({"email_fetch_data": email_fetch_data})
 
         # Process to minimize data for LLM
         return process_list_messages_response(
@@ -327,7 +339,7 @@ async def compose_email(
         # Regular frontend flow
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
-        writer(email_data)
+        writer({"email_compose_data": email_data})
 
         # Generate summary of the composed email
         return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)

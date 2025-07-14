@@ -1,4 +1,5 @@
 import { MessageType } from "@/types/features/convoTypes";
+import { EmailFetchData } from "@/types/features/mailTypes";
 
 type StreamChunk = Partial<MessageType> & {
   searchWeb?: boolean;
@@ -100,6 +101,11 @@ export function parseStreamData(
       // Type assertion is safe here since we're iterating over streamChunk properties
       (result as Record<string, unknown>)[key] = value;
     }
+  }
+
+  // Email fetch data
+  if (streamChunk.email_fetch_data !== undefined) {
+    result.email_fetch_data = streamChunk.email_fetch_data as EmailFetchData[];
   }
 
   return result;
