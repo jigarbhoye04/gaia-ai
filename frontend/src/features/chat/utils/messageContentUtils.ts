@@ -23,13 +23,10 @@ export const shouldShowTextBubble = (
     return false;
   }
 
-  const hasContent =
-    !!searchWeb ||
+  return !!searchWeb ||
     !!deepSearchWeb ||
     (!!pageFetchURLs && pageFetchURLs.length > 0) ||
     !!text.trim();
-
-  return hasContent;
 };
 
 
@@ -67,9 +64,9 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
 
   // If the message is currently loading, it should never be considered empty
   // This ensures streaming messages remain visible during the streaming process
-  if (loading) {
+  if (loading)
     return false;
-  }
+
 
   // Check all possible content types
   const hasAnyContent =
@@ -99,52 +96,6 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
   return !hasAnyContent;
 };
 
-/**
- * Check if a message pair (user + bot) should be filtered out
- * This checks if the bot message is completely empty of content
- */
-export const shouldFilterMessagePair = (
-  userMessage: MessageType,
-  botMessage: MessageType,
-): boolean => {
-  // Only filter if this is actually a bot message
-  if (botMessage.type !== "bot") {
-    return false;
-  }
-
-  // Create a mock ChatBubbleBotProps from MessageType
-  const botProps: ChatBubbleBotProps = {
-    message_id: botMessage.message_id || "",
-    text: botMessage.response || "",
-    loading: botMessage.loading,
-    searchWeb: botMessage.searchWeb,
-    deepSearchWeb: botMessage.deepSearchWeb,
-    disclaimer: botMessage.disclaimer,
-    date: botMessage.date,
-    setOpenImage: () => { }, // Mock function
-    setImageData: () => { }, // Mock function
-    pageFetchURLs: botMessage.pageFetchURLs,
-    pinned: botMessage.pinned,
-    calendar_options: botMessage.calendar_options,
-    calendar_delete_options: botMessage.calendar_delete_options,
-    calendar_edit_options: botMessage.calendar_edit_options,
-    email_compose_data: botMessage.email_compose_data,
-    weather_data: botMessage.weather_data,
-    search_results: botMessage.search_results,
-    deep_research_results: botMessage.deep_research_results,
-    document_data: botMessage.document_data,
-    image_data: botMessage.image_data,
-    todo_data: botMessage.todo_data,
-    code_data: botMessage.code_data,
-    memory_data: botMessage.memory_data,
-    goal_data: botMessage.goal_data,
-    google_docs_data: botMessage.google_docs_data,
-    isConvoSystemGenerated: false, // This will be set by the calling component
-    systemPurpose: undefined, // This will be set by the calling component
-  };
-
-  return isBotMessageEmpty(botProps);
-};
 
 /**
  * Filter out empty message pairs from a conversation

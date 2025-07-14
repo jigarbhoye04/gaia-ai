@@ -6,9 +6,7 @@ import { InternetIcon } from "@/components/shared/icons";
 import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import CustomAnchor from "@/features/chat/components/code-block/CustomAnchor";
-import {
-  shouldShowTextBubble,
-} from "@/features/chat/utils/messageContentUtils";
+import { shouldShowTextBubble } from "@/features/chat/utils/messageContentUtils";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
@@ -56,9 +54,7 @@ export default function TextBubble({
         />
       )}
 
-      {!!weather_data && (
-        <WeatherCard weatherData={weather_data!} />
-      )}
+      {!!weather_data && <WeatherCard weatherData={weather_data!} />}
 
       {shouldShowTextBubble(
         text,
@@ -111,9 +107,7 @@ export default function TextBubble({
                 </Chip>
               ))}
 
-            {!!text && (
-              <MarkdownRenderer content={text.toString()} />
-            )}
+            {!!text && <MarkdownRenderer content={text.toString()} />}
 
             {!!disclaimer && (
               <Chip
@@ -160,9 +154,7 @@ export default function TextBubble({
         />
       )}
 
-      {!!document_data && (
-        <DocumentSection document_data={document_data!} />
-      )}
+      {!!document_data && <DocumentSection document_data={document_data!} />}
 
       {!!google_docs_data && (
         <GoogleDocsSection google_docs_data={google_docs_data!} />
@@ -180,9 +172,7 @@ export default function TextBubble({
         />
       )}
 
-      {!!code_data && (
-        <CodeExecutionSection code_data={code_data!} />
-      )}
+      {!!code_data && <CodeExecutionSection code_data={code_data!} />}
     </>
   );
 }
