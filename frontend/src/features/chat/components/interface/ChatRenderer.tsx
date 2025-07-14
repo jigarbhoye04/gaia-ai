@@ -143,6 +143,7 @@ export default function ChatRenderer() {
               calendar_delete_options={message.calendar_delete_options}
               calendar_edit_options={message.calendar_edit_options}
               email_compose_data={message.email_compose_data}
+              email_fetch_data={message.email_fetch_data}
               loading={message.loading}
               message_id={message.message_id}
               pageFetchURLs={message.pageFetchURLs}

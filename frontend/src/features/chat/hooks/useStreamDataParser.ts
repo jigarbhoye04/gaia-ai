@@ -1,4 +1,5 @@
 import { MessageType } from "@/types/features/convoTypes";
+import { EmailFetchData } from "@/types/features/mailTypes";
 
 type StreamChunk = Partial<MessageType> & {
   searchWeb?: boolean;
@@ -175,6 +176,11 @@ export function parseStreamData(
   // Google Docs related fields
   if (streamChunk.google_docs_data !== undefined) {
     result.google_docs_data = streamChunk.google_docs_data;
+  }
+
+  // Email fetch data
+  if (streamChunk.email_fetch_data !== undefined) {
+    result.email_fetch_data = streamChunk.email_fetch_data as EmailFetchData[];
   }
 
   return result;
