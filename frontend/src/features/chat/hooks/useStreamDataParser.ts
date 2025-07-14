@@ -93,88 +93,13 @@ export function parseStreamData(
 
   const result: Partial<MessageType> = {};
 
-  // Basic message fields
-  if (streamChunk.response !== undefined) {
-    result.response = streamChunk.response;
-  }
-
-  // Only include fields that are explicitly present in the stream chunk
-  // This prevents overwriting existing data with undefined/null values
-
-  if (streamChunk.calendar_options !== undefined) {
-    result.calendar_options = streamChunk.calendar_options;
-  }
-
-  if (streamChunk.calendar_delete_options !== undefined) {
-    result.calendar_delete_options = streamChunk.calendar_delete_options;
-  }
-
-  if (streamChunk.calendar_edit_options !== undefined) {
-    result.calendar_edit_options = streamChunk.calendar_edit_options;
-  }
-
-  if (streamChunk.email_compose_data !== undefined) {
-    result.email_compose_data = streamChunk.email_compose_data;
-  }
-
-  if (streamChunk.weather_data !== undefined) {
-    result.weather_data = streamChunk.weather_data;
-  }
-
-  if (streamChunk.search_results !== undefined) {
-    result.search_results = streamChunk.search_results;
-  }
-
-  if (streamChunk.deep_research_results !== undefined) {
-    result.deep_research_results = streamChunk.deep_research_results;
-  }
-
-  if (streamChunk.image_data !== undefined) {
-    result.image_data = streamChunk.image_data;
-  }
-
-  if (streamChunk.todo_data !== undefined) {
-    result.todo_data = streamChunk.todo_data;
-  }
-
-  if (streamChunk.code_data !== undefined) {
-    result.code_data = streamChunk.code_data;
-  }
-
-  // Include other stream-specific fields
-  if (streamChunk.searchWeb !== undefined) {
-    result.searchWeb = streamChunk.searchWeb;
-  }
-
-  if (streamChunk.deepSearchWeb !== undefined) {
-    result.deepSearchWeb = streamChunk.deepSearchWeb;
-  }
-
-  if (streamChunk.pageFetchURLs !== undefined) {
-    result.pageFetchURLs = streamChunk.pageFetchURLs;
-  }
-
-  if (streamChunk.disclaimer !== undefined) {
-    result.disclaimer = streamChunk.disclaimer;
-  }
-
-  // memory-related fields
-  if (streamChunk.memory_data !== undefined) {
-    result.memory_data = streamChunk.memory_data;
-  }
-
-  if (streamChunk.document_data !== undefined) {
-    result.document_data = streamChunk.document_data;
-  }
-
-  // goal-related fields
-  if (streamChunk.goal_data !== undefined) {
-    result.goal_data = streamChunk.goal_data;
-  }
-
-  // Google Docs related fields
-  if (streamChunk.google_docs_data !== undefined) {
-    result.google_docs_data = streamChunk.google_docs_data;
+  // Dynamically copy all defined properties from streamChunk to result
+  // This automatically handles any tool data without manual if conditions
+  for (const [key, value] of Object.entries(streamChunk)) {
+    if (value !== undefined) {
+      // Type assertion is safe here since we're iterating over streamChunk properties
+      (result as any)[key] = value;
+    }
   }
 
   return result;
