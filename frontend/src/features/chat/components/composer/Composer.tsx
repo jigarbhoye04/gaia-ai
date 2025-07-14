@@ -382,8 +382,8 @@ const Composer: React.FC<MainSearchbarProps> = ({
         onOpenChange={setFileUploadModal}
         onFilesUploaded={handleFilesUploaded}
         initialFiles={pendingDroppedFiles}
-        isPastedFile={pendingDroppedFiles.some(
-          (file) => file.type.indexOf("image") !== -1,
+        isPastedFile={pendingDroppedFiles.some((file) =>
+          file.type.includes("image"),
         )}
       />
     </>

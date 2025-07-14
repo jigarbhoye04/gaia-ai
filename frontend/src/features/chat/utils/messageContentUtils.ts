@@ -2,32 +2,7 @@ import { SystemPurpose } from "@/features/chat/api/chatApi";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 import { MessageType } from "@/types/features/convoTypes";
 
-/**
- * Check if search results content exists
- */
-export const hasSearchResults = (
-  search_results?: ChatBubbleBotProps["search_results"],
-): boolean => {
-  return !!search_results;
-};
 
-/**
- * Check if deep search results content exists
- */
-export const hasDeepSearchResults = (
-  deep_research_results?: ChatBubbleBotProps["deep_research_results"],
-): boolean => {
-  return !!deep_research_results;
-};
-
-/**
- * Check if weather data content exists
- */
-export const hasWeatherData = (
-  weather_data?: ChatBubbleBotProps["weather_data"],
-): boolean => {
-  return !!weather_data;
-};
 
 /**
  * Check if text bubble should be shown (considering system-generated conversations)
@@ -57,127 +32,9 @@ export const shouldShowTextBubble = (
   return hasContent;
 };
 
-/**
- * Check if calendar options content exists
- */
-export const hasCalendarOptions = (
-  calendar_options?: ChatBubbleBotProps["calendar_options"],
-): boolean => {
-  return !!calendar_options;
-};
 
-/**
- * Check if calendar delete options content exists
- */
-export const hasCalendarDeleteOptions = (
-  calendar_delete_options?: ChatBubbleBotProps["calendar_delete_options"],
-): boolean => {
-  return !!calendar_delete_options;
-};
 
-/**
- * Check if calendar edit options content exists
- */
-export const hasCalendarEditOptions = (
-  calendar_edit_options?: ChatBubbleBotProps["calendar_edit_options"],
-): boolean => {
-  return !!calendar_edit_options;
-};
 
-/**
- * Check if email compose data content exists
- */
-export const hasEmailComposeData = (
-  email_compose_data?: ChatBubbleBotProps["email_compose_data"],
-): boolean => {
-  return !!email_compose_data;
-};
-
-/**
- * Check if todo data content exists
- */
-export const hasTodoData = (
-  todo_data?: ChatBubbleBotProps["todo_data"],
-): boolean => {
-  return !!todo_data;
-};
-
-/**
- * Check if document data content exists
- */
-export const hasDocumentData = (
-  document_data?: ChatBubbleBotProps["document_data"],
-): boolean => {
-  return !!document_data;
-};
-
-/**
- * Check if Google Docs data content exists
- */
-export const hasGoogleDocsData = (
-  google_docs_data?: ChatBubbleBotProps["google_docs_data"],
-): boolean => {
-  return !!google_docs_data;
-};
-
-/**
- * Check if goal data content exists
- */
-export const hasGoalData = (
-  goal_data?: ChatBubbleBotProps["goal_data"],
-): boolean => {
-  return !!goal_data;
-};
-
-/**
- * Check if code execution data content exists
- */
-export const hasCodeData = (
-  code_data?: ChatBubbleBotProps["code_data"],
-): boolean => {
-  return !!code_data;
-};
-
-/**
- * Check if web search indicators should be shown
- */
-export const shouldShowWebSearchIndicator = (
-  searchWeb?: boolean,
-  search_results?: ChatBubbleBotProps["search_results"],
-): boolean => {
-  return !!(searchWeb || search_results);
-};
-
-/**
- * Check if deep search indicators should be shown
- */
-export const shouldShowDeepSearchIndicator = (
-  deepSearchWeb?: boolean,
-  deep_research_results?: ChatBubbleBotProps["deep_research_results"],
-): boolean => {
-  return !!(deepSearchWeb || deep_research_results);
-};
-
-/**
- * Check if page fetch URLs should be shown
- */
-export const shouldShowPageFetchURLs = (pageFetchURLs?: string[]): boolean => {
-  return !!(pageFetchURLs && pageFetchURLs.length > 0);
-};
-
-/**
- * Check if text content exists
- */
-export const hasTextContent = (text: string): boolean => {
-  return !!text;
-};
-
-/**
- * Check if disclaimer should be shown
- */
-export const shouldShowDisclaimer = (disclaimer?: string): boolean => {
-  return !!disclaimer;
-};
 
 /**
  * Comprehensive check to determine if a bot message has any meaningful content
@@ -216,9 +73,9 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
 
   // Check all possible content types
   const hasAnyContent =
-    hasSearchResults(search_results) ||
-    hasDeepSearchResults(deep_research_results) ||
-    hasWeatherData(weather_data) ||
+    !!search_results ||
+    !!deep_research_results ||
+    !!weather_data ||
     shouldShowTextBubble(
       text,
       searchWeb,
@@ -227,15 +84,15 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
       isConvoSystemGenerated,
       systemPurpose,
     ) ||
-    hasCalendarOptions(calendar_options) ||
-    hasCalendarDeleteOptions(calendar_delete_options) ||
-    hasCalendarEditOptions(calendar_edit_options) ||
-    hasEmailComposeData(email_compose_data) ||
-    hasTodoData(todo_data) ||
-    hasDocumentData(document_data) ||
-    hasGoogleDocsData(google_docs_data) ||
-    hasGoalData(goal_data) ||
-    hasCodeData(code_data) ||
+    !!calendar_options ||
+    !!calendar_delete_options ||
+    !!calendar_edit_options ||
+    !!email_compose_data ||
+    !!todo_data ||
+    !!document_data ||
+    !!google_docs_data ||
+    !!goal_data ||
+    !!code_data ||
     !!image_data ||
     !!memory_data;
 
