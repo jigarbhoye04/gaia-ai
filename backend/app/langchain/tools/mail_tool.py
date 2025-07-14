@@ -327,7 +327,7 @@ async def compose_email(
         # Regular frontend flow
         # Progress update for drafting
         writer({"progress": "Drafting email..."})
-        writer(email_data)
+        writer({"email_compose_data": email_data})
 
         # Generate summary of the composed email
         return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)
