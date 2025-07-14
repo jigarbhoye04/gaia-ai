@@ -1,10 +1,22 @@
 "use client";
 
+import { Button } from "@heroui/button";
+import {
+  Badge,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tab,
+  Tabs,
+  Tooltip,
+} from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { Button as ShadcnButton } from "@/components/";
 import { ConfirmationDialog } from "@/components/ui/ConfirmationDialog";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
@@ -15,19 +27,7 @@ import {
   NotificationRecord,
   NotificationStatus,
 } from "../../types/features/notificationTypes";
-import {
-  Tooltip,
-  Tabs,
-  Tab,
-  Badge,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@heroui/react";
 import { NotificationIcon } from "../shared";
-import { Button } from "@heroui/button";
-import { Button as ShadcnButton } from "@/components/";
-import { useRouter } from "next/navigation";
 
 interface NotificationCenterProps {
   className?: string;

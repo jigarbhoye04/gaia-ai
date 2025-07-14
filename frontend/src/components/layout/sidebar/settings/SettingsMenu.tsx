@@ -8,21 +8,20 @@ import {
   DropdownTrigger,
 } from "@heroui/dropdown";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
+import { CircleArrowUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 
-import { CircleArrowUp, Puzzle } from "lucide-react";
-
 import {
+  Brain02Icon,
+  BubbleChatQuestionIcon,
+  ConnectIcon,
+  CustomerService01Icon,
   Logout02Icon,
   Settings01Icon,
   ThreeDotsMenu,
-  CustomerService01Icon,
-  BubbleChatQuestionIcon,
-  Brain02Icon,
-  ConnectIcon,
 } from "@/components/shared/icons";
 import { authApi } from "@/features/auth/api/authApi";
 import { useUserActions } from "@/features/auth/hooks/useUser";

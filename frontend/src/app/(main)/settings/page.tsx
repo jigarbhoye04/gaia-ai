@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter,useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import AccountSettings from "@/components/layout/sidebar/settings/AccountSettings";

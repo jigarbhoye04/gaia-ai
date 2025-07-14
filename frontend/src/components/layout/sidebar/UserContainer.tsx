@@ -1,8 +1,9 @@
+import Image from "next/image";
+
 import SettingsMenu from "@/components/layout/sidebar/settings/SettingsMenu";
 import { useUser } from "@/features/auth/hooks/useUser";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/shadcn/avatar";
-import Image from "next/image";
 
 export default function UserContainer() {
   const user = useUser();
