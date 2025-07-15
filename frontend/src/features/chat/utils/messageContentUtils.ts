@@ -2,8 +2,6 @@ import { SystemPurpose } from "@/features/chat/api/chatApi";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 import { MessageType } from "@/types/features/convoTypes";
 
-
-
 /**
  * Check if text bubble should be shown (considering system-generated conversations)
  */
@@ -23,15 +21,13 @@ export const shouldShowTextBubble = (
     return false;
   }
 
-  return !!searchWeb ||
+  return (
+    !!searchWeb ||
     !!deepSearchWeb ||
     (!!pageFetchURLs && pageFetchURLs.length > 0) ||
-    !!text.trim();
+    !!text.trim()
+  );
 };
-
-
-
-
 
 /**
  * Comprehensive check to determine if a bot message has any meaningful content
@@ -65,9 +61,7 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
 
   // If the message is currently loading, it should never be considered empty
   // This ensures streaming messages remain visible during the streaming process
-  if (loading)
-    return false;
-
+  if (loading) return false;
 
   // Check all possible content types
   const hasAnyContent =
@@ -97,7 +91,6 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
   return !hasAnyContent;
 };
 
-
 /**
  * Filter out empty message pairs from a conversation
  * This will remove user+bot message pairs where the bot response is completely empty
@@ -126,8 +119,8 @@ export const filterEmptyMessagePairs = (
           deepSearchWeb: nextMessage.deepSearchWeb,
           disclaimer: nextMessage.disclaimer,
           date: nextMessage.date,
-          setOpenImage: () => { }, // Mock function
-          setImageData: () => { }, // Mock function
+          setOpenImage: () => {}, // Mock function
+          setImageData: () => {}, // Mock function
           pageFetchURLs: nextMessage.pageFetchURLs,
           pinned: nextMessage.pinned,
           calendar_options: nextMessage.calendar_options,
@@ -172,8 +165,8 @@ export const filterEmptyMessagePairs = (
         deepSearchWeb: currentMessage.deepSearchWeb,
         disclaimer: currentMessage.disclaimer,
         date: currentMessage.date,
-        setOpenImage: () => { }, // Mock function
-        setImageData: () => { }, // Mock function
+        setOpenImage: () => {}, // Mock function
+        setImageData: () => {}, // Mock function
         pageFetchURLs: currentMessage.pageFetchURLs,
         pinned: currentMessage.pinned,
         calendar_options: currentMessage.calendar_options,
