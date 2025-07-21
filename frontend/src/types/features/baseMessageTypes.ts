@@ -3,8 +3,8 @@
 import React, { Dispatch } from "react";
 
 import { SystemPurpose } from "@/features/chat/api/chatApi";
-import { FileData } from "@/types/shared/fileTypes";
 
+import { BaseMessageData } from "./baseMessageRegistry";
 import {
   CalendarDeleteOptions,
   CalendarEditOptions,
@@ -22,7 +22,6 @@ import {
   MemoryData,
 } from "./toolDataTypes";
 import { WeatherData } from "./weatherTypes";
-import { BaseMessageData } from "./baseMessageRegistry";
 
 // Type for image data used in UI callbacks
 export interface SetImageDataType {
@@ -53,7 +52,7 @@ export interface BotMessageData extends BaseMessageData {
 }
 
 // Message type for conversations (combines user and bot data)
-export interface ConversationMessage extends BaseMessageData {
+export interface ConversationMessage extends Partial<BaseMessageData> {
   type: "user" | "bot";
   response: string; // The main content field for conversations
   loading?: boolean;

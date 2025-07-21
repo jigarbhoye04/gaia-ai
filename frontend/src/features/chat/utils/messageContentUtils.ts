@@ -1,7 +1,11 @@
 import { SystemPurpose } from "@/features/chat/api/chatApi";
-import { BASE_MESSAGE_SCHEMA, BASE_MESSAGE_KEYS, BaseMessageData } from "@/types/features/baseMessageRegistry";
+import {
+  BASE_MESSAGE_KEYS,
+  BASE_MESSAGE_SCHEMA,
+  BaseMessageData,
+} from "@/types/features/baseMessageRegistry";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
-import { MessageType } from "@/types/features/convoTypes";
+import { ConversationMessage, MessageType } from "@/types/features/convoTypes";
 
 /**
  * Check if text bubble should be shown (considering system-generated conversations)
@@ -47,9 +51,7 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
   if (loading) return false;
 
   // Only check keys that are in BASE_MESSAGE_KEYS
-  const hasAnyContent = BASE_MESSAGE_KEYS.some(
-    (key) => !!props[key]
-  );
+  const hasAnyContent = BASE_MESSAGE_KEYS.some((key) => !!props[key]);
 
   return !(
     hasAnyContent ||
@@ -84,15 +86,20 @@ export const filterEmptyMessagePairs = (
       if (nextMessage.type === "bot") {
         // Build base fields from BASE_MESSAGE_KEYS
         const baseFields: BaseMessageData = Object.fromEntries(
-          BASE_MESSAGE_KEYS.map((key) => [key, key in nextMessage ? (nextMessage as any)[key] : BASE_MESSAGE_SCHEMA[key]])
+          BASE_MESSAGE_KEYS.map((key) => [
+            key,
+            key in nextMessage
+              ? (nextMessage as ConversationMessage)[key]
+              : BASE_MESSAGE_SCHEMA[key],
+          ]),
         ) as BaseMessageData;
         // Build the full botProps object
         const botProps: ChatBubbleBotProps = {
           ...baseFields,
           text: nextMessage.response || "",
           loading: nextMessage.loading,
-          setOpenImage: () => { },
-          setImageData: () => { },
+          setOpenImage: () => {},
+          setImageData: () => {},
           systemPurpose,
           isConvoSystemGenerated,
         };
@@ -108,14 +115,19 @@ export const filterEmptyMessagePairs = (
     } else if (currentMessage.type === "bot") {
       // Standalone bot message (not part of a pair)
       const baseFields: BaseMessageData = Object.fromEntries(
-        BASE_MESSAGE_KEYS.map((key) => [key, key in currentMessage ? (currentMessage as any)[key] : BASE_MESSAGE_SCHEMA[key]])
+        BASE_MESSAGE_KEYS.map((key) => [
+          key,
+          key in currentMessage
+            ? (currentMessage as ConversationMessage)[key]
+            : BASE_MESSAGE_SCHEMA[key],
+        ]),
       ) as BaseMessageData;
       const botProps: ChatBubbleBotProps = {
         ...baseFields,
         text: currentMessage.response || "",
         loading: currentMessage.loading,
-        setOpenImage: () => { },
-        setImageData: () => { },
+        setOpenImage: () => {},
+        setImageData: () => {},
         systemPurpose,
         isConvoSystemGenerated,
       };
