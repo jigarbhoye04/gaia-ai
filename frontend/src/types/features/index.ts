@@ -2,7 +2,6 @@
 
 // Base message types - the core types that eliminate redundancy
 export type {
-    BaseMessageData,
     BotMessageData,
     ConversationMessage,
     SetImageDataType,
