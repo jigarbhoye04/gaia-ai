@@ -18,11 +18,12 @@ echo "Activating virtual environment..."
 source .venv/bin/activate
 
 echo "Installing backend dependencies with uv..."
-uv pip install -r backend/requirements.txt
+cd ../backend
+uv sync
 
 # --- Frontend Setup ---
 echo "Setting up frontend..."
-cd frontend
+cd ../frontend
 
 echo "Installing frontend dependencies with pnpm..."
 pnpm install
