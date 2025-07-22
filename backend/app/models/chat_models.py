@@ -64,6 +64,7 @@ class MessageModel(BaseModel):
         None  # Code execution data with language, code, and output
     )
     google_docs_data: Optional[dict] = None  # Google Docs data from google_docs_tool
+    
 
 
 class SystemPurpose(str, Enum):

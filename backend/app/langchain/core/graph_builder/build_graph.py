@@ -5,12 +5,14 @@ from langchain_core.language_models import LanguageModelLike
 from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.constants import END
 from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
 from app.config.settings import settings
 from app.langchain.llm.client import init_llm
+from app.langchain.core.nodes.follow_up_actions_node import follow_up_actions_node
 from app.langchain.tools.core.injectors import (
     inject_deep_research_tool_call,
     inject_web_search_tool_call,
@@ -86,6 +88,14 @@ async def build_graph(
     # After injecting tool call, route to shared tools node to execute
     builder.add_edge("inject_web_search", "tools")
     builder.add_edge("inject_deep_research", "tools")
+
+    # Add follow-up actions node
+    builder.add_node("follow_up_actions", follow_up_actions_node)
+
+    # Route from tools to follow-up actions, then to END
+    builder.add_edge("tools", "follow_up_actions")
+    builder.add_edge("agent", "follow_up_actions")
+    builder.add_edge("follow_up_actions", END)
 
     if in_memory_checkpointer:
         # Use in-memory checkpointer for testing or simple use cases
