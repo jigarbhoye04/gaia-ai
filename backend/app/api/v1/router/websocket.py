@@ -46,5 +46,5 @@ async def websocket_endpoint(
             await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
         except Exception:
             # Ignore if WebSocket is already closed
-            pass
+            pass  # nosec B110
         raise e
