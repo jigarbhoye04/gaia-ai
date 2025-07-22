@@ -93,7 +93,7 @@ async def build_graph(
     builder.add_node("follow_up_actions", follow_up_actions_node)
 
     # Route from tools to follow-up actions, then to END
-    builder.add_edge("tools", "follow_up_actions")
+    # builder.add_edge("tools", "follow_up_actions")
     builder.add_edge("agent", "follow_up_actions")
     builder.add_edge("follow_up_actions", END)
 

@@ -5,17 +5,19 @@ This module provides functionality to suggest contextual follow-up actions
 to users based on the conversation context and tool usage patterns.
 """
 
+import asyncio
 from typing import Dict, Any, List
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
-from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.follow_up_actions_tool_docs import (
     SUGGEST_FOLLOW_UP_ACTIONS,
 )
+from langgraph.config import get_stream_writer
 from app.langchain.llm.client import init_llm
+from app.langchain.prompts.agent_prompts import AGENT_SYSTEM_PROMPT
 
 
 class FollowUpActions(BaseModel):
@@ -26,15 +28,27 @@ class FollowUpActions(BaseModel):
     )
 
 
-llm = init_llm(streaming=False)
+llm = init_llm()
 
 
-async def follow_up_actions_node(state: Dict[str, Any]) -> Dict[str, Any]:
+async def follow_up_actions_node(state: Dict[str, Any]):
     """
     Analyze conversation context and suggest relevant follow-up actions.
 
-    This node runs after all other tool execution is complete to provide
-    contextual suggestions for what the user might want to do next.
+    PROBLEM SOLVED:
+    ==============
+    LangGraph was automatically streaming our follow-up actions LLM call along with
+    the main agent response, causing unwanted mixed output. We needed the follow-up
+    actions to be generated silently and streamed separately with controlled timing.
+
+    THREADING SOLUTION:
+    ==================
+    Using run_in_executor() executes the LLM call in an isolated thread where
+    LangGraph cannot detect it. This prevents automatic streaming while allowing
+    us to manually stream the results when we want using get_stream_writer().
+
+    The key insight: LangGraph only monitors LLM calls in the main async thread context.
+    Thread pool workers are invisible to this monitoring system.
 
     Args:
         state: The current state of the conversation
@@ -44,52 +58,47 @@ async def follow_up_actions_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     try:
         messages = state.get("messages", [])
-        # Skip if this is just an initial conversation setup or no messages
+
+        # Skip if insufficient conversation history for meaningful suggestions
         if not messages or len(messages) < 2:
-            logger.info("Skipping follow-up actions: insufficient message history")
             return {}
 
-        # Create the parser for structured output
+        # Set up structured output parsing
         parser = PydanticOutputParser(pydantic_object=FollowUpActions)
-
-        # Create prompt with format instructions
         prompt = PromptTemplate(
             template=SUGGEST_FOLLOW_UP_ACTIONS,
-            input_variables=["conversation_summary"],
+            input_variables=["conversation_summary", "agent_prompt"],
             partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
-        # Initialize LLM
-
-        # Create chain: prompt | model | parser
         chain = prompt | llm | parser
-
-        # Create a summary of recent conversation for context
         recent_messages = messages[-4:] if len(messages) > 4 else messages
-        conversation_summary = "\n".join(
-            [
-                f"{msg.type}: {msg.content[:200]}..."
-                if len(msg.content) > 200
-                else f"{msg.type}: {msg.content}"
-                for msg in recent_messages
-            ]
+
+        # THREADING SOLUTION TO PREVENT AUTO-STREAMING:
+        # Problem: LangGraph automatically detects and streams any LLM calls within the graph context,
+        # causing our follow-up actions to be mixed with the main agent response output.
+        # Solution: run_in_executor() executes the LLM call in an isolated thread where LangGraph
+        # cannot detect it, allowing us to control streaming manually with get_stream_writer().
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,  # Use default thread pool
+            lambda: chain.invoke(
+                {  # Synchronous call in isolated thread
+                    "conversation_summary": recent_messages,
+                    "agent_prompt": AGENT_SYSTEM_PROMPT,
+                }
+            ),
         )
 
-        # Invoke chain and get structured output
-        result = chain.invoke({"conversation_summary": conversation_summary})
-
-        logger.info(f"Follow-up actions generated: {result.actions}")
-
-        # Stream follow-up actions to frontend
+        # CONTROLLED STREAMING:
+        # Now we explicitly stream the follow-up actions when and how we want
         writer = get_stream_writer()
         writer({"follow_up_actions": result.actions})
 
-        logger.info("Follow-up actions streamed successfully to frontend")
-
-        # Return empty dict to indicate successful completion without state changes
+        logger.info(
+            f"Follow-up actions generated and streamed: {len(result.actions)} actions"
+        )
         return {}
 
     except Exception as e:
         logger.error(f"Error in follow-up actions node: {e}")
-        # Return empty dict instead of None to prevent state corruption
         return {}

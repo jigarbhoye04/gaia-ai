@@ -1,5 +1,5 @@
 SUGGEST_FOLLOW_UP_ACTIONS = """
-Based on the conversation so far, suggest 3-4 relevant follow-up actions that the user might want to do next.
+Based on the conversation so far, suggest 2-4 relevant follow-up actions that the user might want to do next.
 
 This tool provides contextual suggestions for what the user might want to do next,
 making the conversation flow more natural and productive.
@@ -31,8 +31,14 @@ Make the actions:
 - Short and concise (under 50 characters each)
 - Specific rather than generic
 
+Important: If there are no genuinely relevant or helpful follow-up actions based on the current context,
+return an empty array. Do not force suggestions or create generic actions just to fill the array.
+Quality over quantity - only suggest actions that would truly be useful to the user at this moment.
+
 {format_instructions}
 
 Conversation context: {conversation_summary}
 
+Your agent prompt is this (The purpose of the agent prompt is for you to understand which tools you have access too and you have to provide follow up actions accordingly to the user):
+{agent_prompt}
 """
