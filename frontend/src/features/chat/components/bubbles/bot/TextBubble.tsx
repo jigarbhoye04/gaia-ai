@@ -20,8 +20,7 @@ import EmailComposeSection from "./EmailComposeSection";
 import GoalSection, { type GoalAction } from "./GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
-import { Button } from "@heroui/button";
-import { useLoading } from "@/features/chat/hooks/useLoading";
+import FollowUpActions from "./FollowUpActions";
 
 export default function TextBubble({
   text,
@@ -46,8 +45,6 @@ export default function TextBubble({
   systemPurpose,
   follow_up_actions,
 }: ChatBubbleBotProps) {
-  const { isLoading } = useLoading();
-
   return (
     <>
       {!!search_results && (
@@ -180,18 +177,8 @@ export default function TextBubble({
 
       {!!code_data && <CodeExecutionSection code_data={code_data!} />}
 
-      {!!follow_up_actions && follow_up_actions?.length > 0 && !isLoading && (
-        <div className="flex max-w-xl flex-wrap gap-2 px-1 pt-3 pb-1">
-          {follow_up_actions.map((action) => (
-            <Button
-              className="text-xs text-foreground-500"
-              variant="flat"
-              size="sm"
-            >
-              {action}
-            </Button>
-          ))}
-        </div>
+      {!!follow_up_actions && follow_up_actions?.length > 0 && (
+        <FollowUpActions actions={follow_up_actions} />
       )}
     </>
   );

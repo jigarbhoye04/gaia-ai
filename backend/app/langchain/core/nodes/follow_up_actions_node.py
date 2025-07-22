@@ -18,6 +18,7 @@ from app.docstrings.langchain.tools.follow_up_actions_tool_docs import (
 from langgraph.config import get_stream_writer
 from app.langchain.llm.client import init_llm
 from app.langchain.prompts.agent_prompts import AGENT_SYSTEM_PROMPT
+from app.langchain.tools.core.registry import tool_names
 
 
 class FollowUpActions(BaseModel):
@@ -67,7 +68,7 @@ async def follow_up_actions_node(state: Dict[str, Any]):
         parser = PydanticOutputParser(pydantic_object=FollowUpActions)
         prompt = PromptTemplate(
             template=SUGGEST_FOLLOW_UP_ACTIONS,
-            input_variables=["conversation_summary", "agent_prompt"],
+            input_variables=["conversation_summary", "agent_prompt", "tool_names"],
             partial_variables={"format_instructions": parser.get_format_instructions()},
         )
 
@@ -85,6 +86,7 @@ async def follow_up_actions_node(state: Dict[str, Any]):
                 {  # Synchronous call in isolated thread
                     "conversation_summary": recent_messages,
                     "agent_prompt": AGENT_SYSTEM_PROMPT,
+                    "tool_names": tool_names,
                 }
             ),
         )
