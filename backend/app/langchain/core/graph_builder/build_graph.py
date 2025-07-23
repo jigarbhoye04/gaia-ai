@@ -5,17 +5,17 @@ from langchain_core.language_models import LanguageModelLike
 from langchain_huggingface import HuggingFaceEmbeddings
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
-from langgraph.graph import START
 from langgraph.store.memory import InMemoryStore
 from langgraph_bigtool import create_agent
 
 from app.config.settings import settings
 from app.langchain.llm.client import init_llm
-from app.langchain.tools.core.injectors import (
-    inject_deep_research_tool_call,
-    inject_web_search_tool_call,
-    should_call_tool,
-)
+
+# from app.langchain.tools.core.injectors import (
+# inject_deep_research_tool_call,
+# inject_web_search_tool_call,
+# should_call_tool,
+# )
 from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS, tools
 from app.langchain.tools.core.retrieval import retrieve_tools
 
@@ -67,25 +67,25 @@ async def build_graph(
     )
 
     # Injector nodes add tool calls to the state messages
-    builder.add_node("inject_web_search", inject_web_search_tool_call)
-    builder.add_node("inject_deep_research", inject_deep_research_tool_call)
+    # builder.add_node("inject_web_search", inject_web_search_tool_call)
+    # builder.add_node("inject_deep_research", inject_deep_research_tool_call)
 
     # Conditional edges from chatbot to injector nodes or end
-    builder.add_conditional_edges(
-        START,
-        should_call_tool,
-        {
-            # call_1, call_2, and call_chatbot are the return values from should_call_tool
-            # "return_value" : "name of node to call"
-            "call_1": "inject_web_search",
-            "call_2": "inject_deep_research",
-            "call_chatbot": "agent",
-        },
-    )
+    # builder.add_conditional_edges(
+    #     START,
+    #     should_call_tool,
+    #     {
+    #         # call_1, call_2, and call_chatbot are the return values from should_call_tool
+    #         # "return_value" : "name of node to call"
+    #         "call_1": "inject_web_search",
+    #         "call_2": "inject_deep_research",
+    #         "call_chatbot": "agent",
+    #     },
+    # )
 
     # After injecting tool call, route to shared tools node to execute
-    builder.add_edge("inject_web_search", "tools")
-    builder.add_edge("inject_deep_research", "tools")
+    # builder.add_edge("inject_web_search", "tools")
+    # builder.add_edge("inject_deep_research", "tools")
 
     if in_memory_checkpointer:
         # Use in-memory checkpointer for testing or simple use cases

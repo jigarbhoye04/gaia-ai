@@ -123,13 +123,9 @@ const Composer: React.FC<MainSearchbarProps> = ({
     }
     setIsLoading(true);
 
-    // Send the message with complete file data
-    const messageText = searchbarText;
-
     sendMessage(
-      messageText,
+      searchbarText,
       currentMode,
-      [], // No page fetch URLs since we removed that functionality
       uploadedFileData,
       selectedTool, // Pass the selected tool name
       selectedToolCategory, // Pass the selected tool category
@@ -178,11 +174,10 @@ const Composer: React.FC<MainSearchbarProps> = ({
     setSelectedTool(null);
     setSelectedToolCategory(null);
     // If the user selects upload_file mode, open the file selector immediately
-    if (mode === "upload_file") {
+    if (mode === "upload_file")
       setTimeout(() => {
         openFileUploadModal();
       }, 100);
-    }
   };
 
   const handleSlashCommandSelect = (toolName: string, toolCategory: string) => {
