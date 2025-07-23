@@ -64,6 +64,7 @@ async def chat_stream(
         # Process data chunk - potentially contains tool outputs
         elif chunk.startswith("data: "):
             try:
+                print(f"{chunk=}")
                 # Extract tool data from the chunk
                 new_data = extract_tool_data(chunk[6:])
                 if new_data:

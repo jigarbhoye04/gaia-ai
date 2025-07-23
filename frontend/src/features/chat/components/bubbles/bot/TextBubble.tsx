@@ -20,6 +20,7 @@ import EmailComposeSection from "./EmailComposeSection";
 import GoalSection, { type GoalAction } from "./GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
+import FollowUpActions from "./FollowUpActions";
 
 export default function TextBubble({
   text,
@@ -42,6 +43,7 @@ export default function TextBubble({
   google_docs_data,
   isConvoSystemGenerated,
   systemPurpose,
+  follow_up_actions,
 }: ChatBubbleBotProps) {
   return (
     <>
@@ -174,6 +176,10 @@ export default function TextBubble({
       )}
 
       {!!code_data && <CodeExecutionSection code_data={code_data!} />}
+
+      {!!follow_up_actions && follow_up_actions?.length > 0 && (
+        <FollowUpActions actions={follow_up_actions} />
+      )}
     </>
   );
 }
