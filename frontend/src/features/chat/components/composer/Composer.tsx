@@ -13,11 +13,15 @@ import FilePreview, {
 import FileUpload from "@/features/chat/components/files/FileUpload";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
+import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
 import { FileData, SearchMode } from "@/types/shared";
 
 import ComposerInput, { ComposerInputRef } from "./ComposerInput";
 import ComposerToolbar from "./ComposerToolbar";
 import SelectedToolIndicator from "./SelectedToolIndicator";
+import { Button } from "@/components";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 
 interface MainSearchbarProps {
   scrollToBottom: () => void;
@@ -28,6 +32,7 @@ interface MainSearchbarProps {
   } | null>;
   droppedFiles?: File[];
   onDroppedFilesProcessed?: () => void;
+  hasMessages: boolean;
 }
 
 const Composer: React.FC<MainSearchbarProps> = ({
@@ -36,6 +41,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   fileUploadRef,
   droppedFiles,
   onDroppedFilesProcessed,
+  hasMessages,
 }) => {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const [currentHeight, setCurrentHeight] = useState<number>(24);
@@ -56,6 +62,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
     useState(false);
   const sendMessage = useSendMessage(convoIdParam ?? null);
   const { isLoading, setIsLoading } = useLoading();
+  const { integrations, isLoading: integrationsLoading } = useIntegrations();
   const currentMode = useMemo(
     () => Array.from(selectedMode)[0],
     [selectedMode],
@@ -111,11 +118,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     // Only prevent submission if there's no text AND no files AND no selected tool
-    if (
-      !searchbarText &&
-      uploadedFiles.length === 0 &&
-      !selectedTool
-    ) {
+    if (!searchbarText && uploadedFiles.length === 0 && !selectedTool) {
       return;
     }
     setIsLoading(true);
@@ -302,7 +305,36 @@ const Composer: React.FC<MainSearchbarProps> = ({
   return (
     <>
       <div className="searchbar_container relative pb-1">
-        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
+        {!integrationsLoading && integrations.length > 0 && !hasMessages && (
+          <Button
+            className="absolute -top-4 z-[0] flex h-fit w-full max-w-[calc(36rem-15px)] rounded-full bg-zinc-800/40 px-4 py-2 pb-8 text-xs text-foreground-300 hover:bg-zinc-800/70 hover:text-zinc-400"
+            onClick={handleToggleSlashCommandDropdown}
+          >
+            <div className="flex w-full items-center justify-between">
+              <span className="text-xs">Connect your tools to GAIA</span>
+              <div className="ml-3 flex items-center gap-1">
+                {integrations.slice(0, 8).map((integration) => (
+                  <div
+                    key={integration.id}
+                    className="opacity-60 transition duration-200 hover:scale-150 hover:rotate-6 hover:opacity-120"
+                    title={integration.name}
+                  >
+                    <Image
+                      width={14}
+                      height={14}
+                      src={integration.icon}
+                      alt={integration.name}
+                      className="h-[14px] w-[14px] object-contain"
+                    />
+                  </div>
+                ))}
+
+                <ChevronRight width={18} height={18} className="ml-3" />
+              </div>
+            </div>
+          </Button>
+        )}
+        <div className="searchbar z-[1] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
           <SelectedToolIndicator
             toolName={selectedTool}

@@ -7,7 +7,6 @@ import ChatBubbleBot from "@/features/chat/components/bubbles/bot/ChatBubbleBot"
 import SearchedImageDialog from "@/features/chat/components/bubbles/bot/SearchedImageDialog";
 import ChatBubbleUser from "@/features/chat/components/bubbles/user/ChatBubbleUser";
 import GeneratedImageSheet from "@/features/chat/components/image/GeneratedImageSheet";
-import StarterText from "@/features/chat/components/interface/StarterText";
 import MemoryModal from "@/features/chat/components/memory/MemoryModal";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useConversationList } from "@/features/chat/hooks/useConversationList";
@@ -96,17 +95,7 @@ export default function ChatRenderer() {
   };
 
   if (!!filteredMessages && filteredMessages?.length === 0) {
-    return (
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-2">
-        <Image
-          alt="GAIA Logo"
-          src={"/branding/logo.webp"}
-          width={110}
-          height={110}
-        />
-        <StarterText />
-      </div>
-    );
+    return null; // Empty state is now handled by ChatPage
   }
 
   return (
