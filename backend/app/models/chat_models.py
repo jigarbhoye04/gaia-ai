@@ -27,6 +27,12 @@ class CalendarFetchData(BaseModel):
     calendar_name: str
 
 
+class CalendarListFetchData(BaseModel):
+    name: str
+    id: str
+    description: str
+
+
 class MessageModel(BaseModel):
     type: str
     response: str
@@ -52,6 +58,7 @@ class MessageModel(BaseModel):
     email_compose_data: Optional[dict] = None
     email_fetch_data: Optional[List[EmailFetchData]] = None
     calendar_fetch_data: Optional[List[CalendarFetchData]] = None
+    calendar_list_fetch_data: Optional[List[CalendarListFetchData]] = None
     memory_data: Optional[dict] = None
     todo_data: Optional[dict] = None
     document_data: Optional[dict] = None

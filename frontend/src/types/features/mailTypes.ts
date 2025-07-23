@@ -96,9 +96,3 @@ export type EmailFetchData = {
   subject: string;
   time: string;
 };
-
-export type CalendarFetchData = {
-  summary: string;
-  start_time: string;
-  calendar_name: string;
-};

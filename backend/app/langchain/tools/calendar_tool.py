@@ -256,6 +256,22 @@ async def fetch_calendar_list(
 
         logger.info(f"Fetched {len(calendars)} calendars")
 
+        # Build array of {name, id, description} for all calendars
+        calendar_list_fetch_data = []
+        if calendars and isinstance(calendars, list):
+            for calendar in calendars:
+                if isinstance(calendar, dict):
+                    calendar_list_fetch_data.append(
+                        {
+                            "name": calendar.get("summary", "Unknown Calendar"),
+                            "id": calendar.get("id", ""),
+                            "description": calendar.get("description", ""),
+                        }
+                    )
+
+        writer = get_stream_writer()
+        writer({"calendar_list_fetch_data": calendar_list_fetch_data})
+
         formatted_response = CALENDAR_LIST_TEMPLATE.format(
             calendars=json.dumps(calendars)
         )

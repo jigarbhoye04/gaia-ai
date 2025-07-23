@@ -1,7 +1,7 @@
 import { ScrollShadow } from "@heroui/scroll-shadow";
 
 import { GoogleCalendarIcon } from "@/components";
-import { CalendarFetchData } from "@/types/features/mailTypes";
+import { CalendarFetchData } from "@/types/features/calendarTypes";
 
 interface CalendarListProps {
   events?: CalendarFetchData[] | null;
@@ -48,8 +48,8 @@ export default function CalendarListCard({ events }: CalendarListProps) {
           </div>
         </div>
 
-        {events.map((event, index) => (
-          <ScrollShadow className="mt-2 max-h-[300px] space-y-1 divide-y divide-gray-700">
+        <ScrollShadow className="mt-2 max-h-[300px] space-y-1 divide-y divide-gray-700">
+          {events.map((event, index) => (
             <div
               key={index}
               className="group grid grid-cols-5 items-center justify-evenly gap-4 rounded-lg p-2 transition-colors hover:bg-zinc-700"
@@ -72,8 +72,8 @@ export default function CalendarListCard({ events }: CalendarListProps) {
                 </span>
               </div>
             </div>
-          </ScrollShadow>
-        ))}
+          ))}
+        </ScrollShadow>
       </div>
     );
 }
