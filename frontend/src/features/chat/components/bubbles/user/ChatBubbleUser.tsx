@@ -2,10 +2,12 @@ import { Chip } from "@heroui/chip";
 import { ArrowUpRight } from "lucide-react";
 
 import { StarsIcon } from "@/components/shared/icons";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui";
+import { useUser } from "@/features/auth/hooks/useUser";
 import SelectedToolIndicator from "@/features/chat/components/composer/SelectedToolIndicator";
 import { ChatBubbleUserProps } from "@/types/features/chatBubbleTypes";
 import { parseDate } from "@/utils/date/dateUtils";
-
+import Image from "next/image";
 import ChatBubbleFilePreview from "./ChatBubbleFilePreview";
 
 export default function ChatBubbleUser({
@@ -25,10 +27,12 @@ export default function ChatBubbleUser({
     (pageFetchURLs && pageFetchURLs.length > 0) ||
     !!selectedTool;
 
+  const user = useUser();
+
   if (!hasContent) return null;
 
   return (
-    <>
+    <div className="flex w-full items-end justify-end gap-3">
       <div className="chat_bubble_container user group" id={message_id}>
         {fileData.length > 0 && <ChatBubbleFilePreview files={fileData} />}
 
@@ -101,6 +105,19 @@ export default function ChatBubbleUser({
           )}
         </div>
       </div>
-    </>
+      <div className="sticky bottom-0 min-w-[40px]">
+        <Avatar className="relative bottom-4 rounded-full bg-black">
+          <AvatarImage src={user?.profilePicture} alt="User Avatar" />
+          <AvatarFallback>
+            <Image
+              src={"/media/default.webp"}
+              width={35}
+              height={35}
+              alt="Default profile picture"
+            />
+          </AvatarFallback>
+        </Avatar>
+      </div>
+    </div>
   );
 }

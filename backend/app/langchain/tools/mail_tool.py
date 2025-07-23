@@ -30,6 +30,7 @@ from app.langchain.templates.mail_templates import (
     process_search_messages_response,
 )
 from app.middleware.langchain_rate_limiter import with_rate_limiting
+from app.models.mail_models import EmailComposeRequest
 from app.services.contact_service import get_gmail_contacts
 from app.services.mail_service import (
     apply_labels,
@@ -249,69 +250,90 @@ async def search_gmail_messages(
 @with_doc(COMPOSE_EMAIL)
 async def compose_email(
     config: RunnableConfig,
-    body: Annotated[str, "Body content of the email"],
-    subject: Annotated[str, "Subject line for the email"],
-    recipient_query: Annotated[
-        Optional[str],
-        "Name or partial information about the recipient to search for their email address. Leave empty if no recipient information is provided.",
-    ] = None,
+    emails: Annotated[
+        List[EmailComposeRequest],
+        "Array of email objects to compose. Each email should have 'body', 'subject', and optional 'recipient_query' (recipient name/info to search for)",
+    ],
 ) -> Dict[str, Any] | str:
     try:
         writer = get_stream_writer()
-        resolved_emails = []
+        auth = get_auth_from_config(config)
+        composed_emails = []
 
-        # If recipient_query is provided, try to resolve contact emails
-        if recipient_query and recipient_query.strip():
-            writer({"progress": f"Searching contacts for '{recipient_query}'..."})
-            try:
-                auth = get_auth_from_config(config)
+        # Process each email in the array
+        for email_index, email in enumerate(emails):
+            subject = email.subject
+            body = email.body
+            recipient_query = email.recipient_query
 
-                if not auth["access_token"] or not auth["refresh_token"]:
-                    logger.warning(
-                        "Missing authentication credentials for contact resolution"
-                    )
-                else:
-                    service = get_gmail_service(
-                        access_token=auth["access_token"],
-                        refresh_token=auth["refresh_token"],
-                    )
+            resolved_emails = []
 
-                    # Use the service function directly instead of calling the tool
-                    contacts_result = get_gmail_contacts(
-                        service=service,
-                        query=recipient_query,
-                    )
+            # If recipient_query is provided, try to resolve contact email
+            if recipient_query:
+                writer(
+                    {
+                        "progress": f"Processing email {email_index + 1}/{len(emails)}: Searching contacts..."
+                    }
+                )
 
-                    if contacts_result.get("success") and contacts_result.get(
-                        "contacts"
-                    ):
-                        resolved_emails = [
-                            contact["email"] for contact in contacts_result["contacts"]
-                        ]
-                        writer(
-                            {
-                                "progress": f"Found {len(resolved_emails)} contact(s) for '{recipient_query}'"
-                            }
+                writer({"progress": f"Searching contacts for '{recipient_query}'..."})
+                try:
+                    if not auth["access_token"] or not auth["refresh_token"]:
+                        logger.warning(
+                            "Missing authentication credentials for contact resolution"
                         )
                     else:
-                        writer(
-                            {"progress": f"No contacts found for '{recipient_query}'"}
+                        service = get_gmail_service(
+                            access_token=auth["access_token"],
+                            refresh_token=auth["refresh_token"],
                         )
-                    logger.info(f"Resolved emails: {resolved_emails}")
-            except Exception as contact_error:
-                logger.warning(
-                    f"Failed to resolve contacts for '{recipient_query}': {contact_error}"
-                )
-                writer({"progress": f"Contact search failed for '{recipient_query}'"})
-                # Continue with empty resolved_emails if contact resolution fails
 
-        # Prepare email data
-        email_data = {
-            "to": resolved_emails if resolved_emails else [],
-            "subject": subject,
-            "body": body,
-            "recipient_query": recipient_query,
-        }
+                        # Use the service function directly instead of calling the tool
+                        contacts_result = get_gmail_contacts(
+                            service=service,
+                            query=recipient_query,
+                        )
+
+                        if contacts_result.get("success") and contacts_result.get(
+                            "contacts"
+                        ):
+                            query_resolved_emails = [
+                                contact["email"]
+                                for contact in contacts_result["contacts"]
+                            ]
+                            resolved_emails.extend(query_resolved_emails)
+                            writer(
+                                {
+                                    "progress": f"Found {len(query_resolved_emails)} contact(s) for '{recipient_query}'"
+                                }
+                            )
+                            logger.info(
+                                f"Resolved emails for '{recipient_query}': {query_resolved_emails}"
+                            )
+                        else:
+                            writer(
+                                {
+                                    "progress": f"No contacts found for '{recipient_query}'"
+                                }
+                            )
+                except Exception as contact_error:
+                    logger.warning(
+                        f"Failed to resolve contacts for '{recipient_query}': {contact_error}"
+                    )
+                    writer(
+                        {"progress": f"Contact search failed for '{recipient_query}'"}
+                    )
+                    # Continue with empty resolved_emails if contact resolution fails
+
+            # Prepare email data for this email
+            email_data = {
+                "to": resolved_emails if resolved_emails else [],
+                "subject": subject,
+                "body": body,
+                "recipient_query": recipient_query,
+            }
+
+            composed_emails.append(email_data)
 
         # Check if initiated by backend
         # configurable = config.get("configurable", {})
@@ -329,7 +351,7 @@ async def compose_email(
         #     notification = (
         #         AIProactiveNotificationSource.create_mail_composition_notification(
         #             user_id=user_id,
-        #             email_data=email_data,
+        #             email_data=composed_emails,
         #         )
         #     )
         #     await notification_service.create_notification(notification)
@@ -338,11 +360,20 @@ async def compose_email(
 
         # Regular frontend flow
         # Progress update for drafting
-        writer({"progress": "Drafting email..."})
-        writer({"email_compose_data": email_data})
+        writer({"progress": f"Drafting {len(composed_emails)} email(s)..."})
+        writer({"email_compose_data": composed_emails})
 
-        # Generate summary of the composed email
-        return COMPOSE_EMAIL_TEMPLATE.format(subject=subject, body=body)
+        # Generate summary of the composed emails
+        if len(composed_emails) == 1:
+            email = composed_emails[0]
+            return COMPOSE_EMAIL_TEMPLATE.format(
+                subject=email["subject"], body=email["body"]
+            )
+        else:
+            summary = f"Composed {len(composed_emails)} emails:\n"
+            for i, email in enumerate(composed_emails, 1):
+                summary += f"{i}. Subject: {email['subject']}\n"
+            return summary
 
     except Exception as e:
         error_msg = f"Error composing email: {str(e)}"

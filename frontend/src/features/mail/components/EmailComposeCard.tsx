@@ -381,14 +381,13 @@ export default function EmailComposeCard({
     toast.success(`Added ${trimmedEmail}`);
   };
 
-  const handleRemoveSelectedEmail = (email: string) => {
-    setSelectedEmails((prev) => prev.filter((e) => e !== email));
-  };
+  // const handleRemoveSelectedEmail = (email: string) => {
+  //   setSelectedEmails((prev) => prev.filter((e) => e !== email));
+  // };
 
   const handleConfirmRecipients = () => {
     setEditData((prev) => ({ ...prev, to: selectedEmails }));
     setIsRecipientModalOpen(false);
-    toast.success(`Selected ${selectedEmails.length} recipient(s)`);
   };
 
   // Filter suggestions based on search term - commented out as not used
@@ -407,7 +406,6 @@ export default function EmailComposeCard({
             <span className="text-sm font-medium">Email Draft</span>
           </div>
         </div>
-        {/* Email meta info */}
         <div className="flex flex-col gap-1 px-6">
           <div className="flex items-center gap-2 text-sm text-zinc-400">
             <span>To:</span>
@@ -464,8 +462,7 @@ export default function EmailComposeCard({
             {editData.body}
           </ScrollShadow>
         </div>
-        {/* Send button */}
-        <div className="flex justify-end px-6 pt-3 pb-5">
+        <div className="flex justify-end px-6 pb-5">
           <Button
             color="primary"
             onPress={handleSend}

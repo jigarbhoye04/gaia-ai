@@ -8,7 +8,9 @@ import CalendarSidebar from "@/components/layout/sidebar/variants/CalendarSideba
 import EmailSidebar from "@/components/layout/sidebar/variants/MailSidebar";
 import SettingsSidebar from "@/components/layout/sidebar/variants/SettingsSidebar";
 import TodoSidebar from "@/components/layout/sidebar/variants/TodoSidebar";
+import { PlusSignIcon } from "@/components/shared/icons";
 import ComingSoonModal from "@/features/coming-soon/components/ComingSoonModal";
+import { Button } from "@heroui/button";
 
 export default function Sidebar() {
   const [open, setOpen] = useState<boolean>(false);
@@ -23,6 +25,18 @@ export default function Sidebar() {
   // Default to chat sidebar
   return (
     <div>
+      <div className="flex w-full justify-center">
+        <Button
+          color="primary"
+          size="sm"
+          className="mb-4 flex w-full justify-start text-sm font-medium text-primary"
+          onPress={() => setOpen(true)}
+          variant="flat"
+        >
+          <PlusSignIcon color={undefined} width={18} height={18} />
+          New Chat
+        </Button>
+      </div>
       <ChatsList />
       <ComingSoonModal isOpen={open} setOpen={setOpen} />
     </div>

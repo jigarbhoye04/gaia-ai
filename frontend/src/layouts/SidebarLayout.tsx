@@ -72,9 +72,13 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
 
   return (
-    <Sidebar variant="sidebar" collapsible="offcanvas" className="border-none!">
+    <Sidebar
+      variant="sidebar"
+      collapsible="offcanvas"
+      className="sidebar border-none!"
+    >
       {pathname.startsWith("/c") && (
-        <div className="pointer-events-none absolute right-0 bottom-16 left-0 z-1 h-1/3 w-full bg-gradient-to-b from-transparent to-black" />
+        <div className="pointer-events-none absolute right-0 bottom-20 left-0 z-1 h-1/4 w-full bg-gradient-to-b from-transparent to-[#141414]" />
       )}
 
       <SearchCommand
@@ -123,7 +127,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
 
       <SidebarContent className="flex-1">
         <SidebarGroup>
-          <SidebarGroupContent className="space-y-1">
+          <SidebarGroupContent className="space-y-1 overflow-hidden">
             <SidebarTopButtons />
 
             {children}

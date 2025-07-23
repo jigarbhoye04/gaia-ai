@@ -79,29 +79,51 @@ SEARCH_GMAIL_MESSAGES = """
     """
 
 COMPOSE_EMAIL = """
-    Compose, write, or draft an email message based on the user's request.
+    Compose, write, or draft multiple email messages based on the user's request.
 
-    This tool helps create emails of any type - from simple personal messages to detailed professional communications.
+    This tool helps create one or more emails of any type - from simple personal messages to detailed professional communications.
 
     When to use:
-    - User wants to compose, write, send, or draft any email
+    - User wants to compose, write, send, or draft any email(s)
     - User mentions writing to someone via email
     - User asks to email someone (e.g., "email John", "send an email to Sarah")
     - User provides email content or instructions (e.g., "tell her I love her", "ask about the meeting")
     - User needs help with any email-related task
+    - User wants to send similar emails to multiple recipients
 
     The tool will:
     - Create appropriate email content based on the context
     - Handle both brief personal messages and detailed professional emails
     - Automatically resolve recipient names to email addresses when possible
     - Adapt tone and style to match the user's intent
+    - Support composing multiple emails at once
+    - Validate email content and recipient queries
 
     Input requirements:
-    - Body content or instructions for what to write
-    - Subject line or topic
-    - Optional: recipient name or query to search for their email
+    - emails: Array of EmailComposeRequest objects, each containing:
+      - body: Email content or instructions for what to write (required, 1-10000 chars)
+      - subject: Subject line or topic (required, 1-200 chars)
+      - recipient_query: Optional recipient name/info to search for their email address (max 200 chars)
 
-    Note: The tool can handle any email request, from "email mom happy birthday" to complex business proposals.
+    Example input structure:
+    [
+        EmailComposeRequest(
+            body="Happy birthday! Hope you have a great day.",
+            subject="Happy Birthday!",
+            recipient_query="mom"
+        ),
+        EmailComposeRequest(
+            body="Meeting scheduled for tomorrow at 2 PM.",
+            subject="Tomorrow's Meeting",
+            recipient_query="john doe"
+        )
+    ]
+
+    Important: Always call this tool only ONCE per request, even when composing multiple emails.
+    The tool is designed to handle multiple emails in a single call through the emails array parameter.
+    Do not make separate tool calls for each email - batch them all together.
+
+    Note: The tool can handle any email request, from "email mom happy birthday" to complex business proposals for multiple recipients.
     """
 
 STAR_EMAILS = """
