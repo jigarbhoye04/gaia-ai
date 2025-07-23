@@ -18,13 +18,21 @@ function CalendarChip({ calendar, selected, onSelect }: CalendarChipProps) {
       onClick={() => onSelect(calendar.id)}
     >
       <Chip
-        className={``}
+        className={`${selected ? "text-foreground-600" : "text-foreground-400"} `}
         variant="faded"
         startContent={
+          <div
+            className="mr-2 aspect-square min-h-[10px] min-w-[10px] rounded-full"
+            style={{
+              backgroundColor: computedColor,
+            }}
+          />
+        }
+        endContent={
           selected ? (
-            <Eye className="mr-1" width={18} height={18} />
+            <Eye className="mr-1" width={17} height={17} />
           ) : (
-            <EyeOffIcon className="mr-1" width={18} height={18} />
+            <EyeOffIcon className="mr-1" width={17} height={17} />
           )
         }
         style={{
@@ -33,7 +41,7 @@ function CalendarChip({ calendar, selected, onSelect }: CalendarChipProps) {
           margin: "0",
           background: "transparent",
           borderWidth: "0px",
-          color: computedColor,
+          // color: computedColor,
           borderRadius: "7px",
         }}
       >
