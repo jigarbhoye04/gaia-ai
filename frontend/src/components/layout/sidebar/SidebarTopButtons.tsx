@@ -87,6 +87,13 @@ export default function SidebarTopButtons() {
     clearMessages();
   };
 
+  const handleButtonPress = (route: string): void => {
+    if (route === "/c") {
+      clearMessages();
+    }
+    router.push(route);
+  };
+
   return (
     <div className="flex flex-col">
       {/* Only show Upgrade to Pro button when user doesn't have an active subscription */}
@@ -121,10 +128,17 @@ export default function SidebarTopButtons() {
               className="w-full justify-start text-sm"
               size="sm"
               variant="light"
-              color={pathname === route ? "primary" : "default"}
-              onPress={() => router.push(route)}
+              color={
+                route === "/c" 
+                  ? (pathname === "/c" || pathname.startsWith("/c/") ? "primary" : "default")
+                  : (pathname === route ? "primary" : "default")
+              }
+              onPress={() => handleButtonPress(route)}
               startContent={React.cloneElement(icon, {
-                color: pathname === route ? "#00bbff" : "#9b9b9b",
+                color: 
+                  route === "/c"
+                    ? (pathname === "/c" || pathname.startsWith("/c/") ? "#00bbff" : "#9b9b9b")
+                    : (pathname === route ? "#00bbff" : "#9b9b9b"),
                 width: 18,
                 height: 18,
               })}

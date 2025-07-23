@@ -105,7 +105,7 @@ export default function ChatBubbleUser({
           )}
         </div>
       </div>
-      <div className="sticky bottom-0 min-w-[40px]">
+      <div className="sticky -bottom-3 min-w-[40px]">
         <Avatar className="relative bottom-4 rounded-full bg-black">
           <AvatarImage src={user?.profilePicture} alt="User Avatar" />
           <AvatarFallback>

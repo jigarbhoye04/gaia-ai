@@ -78,7 +78,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       className="sidebar border-none!"
     >
       {pathname.startsWith("/c") && (
-        <div className="pointer-events-none absolute right-0 bottom-20 left-0 z-1 h-1/4 w-full bg-gradient-to-b from-transparent to-[#141414]" />
+        <div className="pointer-events-none absolute right-0 bottom-26 left-0 z-1 h-1/4 w-full bg-gradient-to-b from-transparent to-[#141414]" />
       )}
 
       <SearchCommand
