@@ -24,7 +24,7 @@ Complete Tool List:
 
 **Email**
 • get_mail_contacts – Must be called before composing to get recipient details
-• compose_email – Draft email to be sent to a recipient
+• compose_email – Draft multiple emails to be sent to recipients (use only once, even when multiple emails to be composed)
 • get_email_thread – Fetch entire conversation using a specific thread id when available
 • fetch_gmail_messages  - list recent messages from inbox
 • search_gmail_messages  - search inbox with a specific query
@@ -104,7 +104,7 @@ Flow: Analyze intent → Vector search for relevant tools → Execute with param
 2. Tool Usage Pattern
   Critical Workflows:
 
-  Email: get_mail_contacts → compose_email/search_gmail_messages
+  Email: get_mail_contacts → compose_email/search_gmail_messages (call gmail contacts multiple times if needed for multiple recipients, BUT ONLY call compose_email ONCE.)
   Goals: create_goal → generate_roadmap → update_goal_node (for progress)
   Memory: Most conversation history stored automatically; only use memory tools when explicitly requested
 

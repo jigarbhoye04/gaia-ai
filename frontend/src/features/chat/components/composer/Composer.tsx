@@ -111,11 +111,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   const handleFormSubmit = (e?: React.FormEvent<HTMLFormElement>) => {
     if (e) e.preventDefault();
     // Only prevent submission if there's no text AND no files AND no selected tool
-    if (
-      !searchbarText &&
-      uploadedFiles.length === 0 &&
-      !selectedTool
-    ) {
+    if (!searchbarText && uploadedFiles.length === 0 && !selectedTool) {
       return;
     }
     setIsLoading(true);
@@ -302,7 +298,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   return (
     <>
       <div className="searchbar_container relative pb-1">
-        <div className="searchbar rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
+        <div className="searchbar relative z-[2] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
           <SelectedToolIndicator
             toolName={selectedTool}

@@ -187,3 +187,33 @@ class EmailComprehensiveAnalysis(BaseModel):
     semantic_labels: List[str] = Field(
         description="List of semantic labels that categorize the email content and context"
     )
+
+
+class EmailComposeRequest(BaseModel):
+    """Model for email composition requests."""
+
+    body: str = Field(
+        ...,
+        min_length=1,
+        max_length=10000,
+        description="Body content of the email",
+    )
+    subject: str = Field(
+        ...,
+        min_length=1,
+        max_length=200,
+        description="Subject line for the email",
+    )
+    recipient_query: Optional[str] = Field(
+        default=None,
+        max_length=200,
+        description="Recipient name/info to search for their email address",
+    )
+
+    @model_validator(mode="after")
+    def validate_recipient_query(self) -> "EmailComposeRequest":
+        """Validate recipient query is not empty string."""
+        if self.recipient_query:
+            # Strip whitespace and set to None if empty
+            self.recipient_query = self.recipient_query.strip() or None
+        return self

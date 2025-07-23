@@ -11,9 +11,11 @@ import {
   ChatBubbleAddIcon,
   CheckmarkCircle02Icon,
   Mail01Icon,
+  MessageMultiple02Icon,
   NotificationIcon,
   PinIcon,
   Route02Icon,
+  Target04Icon,
 } from "@/components/shared/icons";
 import { Separator } from "@/components/ui";
 import { useConversation } from "@/features/chat/hooks/useConversation";
@@ -40,35 +42,39 @@ export default function SidebarTopButtons() {
   const buttonData = [
     {
       route: "/notifications",
-      icon: <NotificationIcon width={19} height={19} />,
+      icon: <NotificationIcon />,
       label: "Notifications",
     },
     {
       route: "/calendar",
-      icon: <CalendarIcon width={19} height={19} />,
+      icon: <CalendarIcon />,
       label: "Calendar",
     },
     {
       route: "/goals",
-      icon: <Route02Icon width={19} height={19} />,
+      icon: <Target04Icon />,
       label: "Goals",
     },
     {
       route: "/todos",
-      icon: <CheckmarkCircle02Icon width={19} height={19} />,
+      icon: <CheckmarkCircle02Icon />,
       label: "Todos",
     },
     {
       route: "/mail",
-      icon: <Mail01Icon width={19} height={19} />,
+      icon: <Mail01Icon />,
       label: "Mail",
     },
     {
       route: "/pins",
-      icon: <PinIcon width={19} height={19} />,
+      icon: <PinIcon />,
       label: "Pins",
     },
-
+    {
+      route: "/c",
+      icon: <MessageMultiple02Icon />,
+      label: "Chats",
+    },
     // {
     //   route: "/browser",
     //   icon: <AiBrowserIcon height={23} width={23} />,
@@ -76,9 +82,11 @@ export default function SidebarTopButtons() {
     // },
   ];
 
-  const createNewChat = (): void => {
-    router.push(`/c`);
-    clearMessages();
+  const handleButtonPress = (route: string): void => {
+    if (route === "/c") {
+      clearMessages();
+    }
+    router.push(route);
   };
 
   return (
@@ -105,17 +113,37 @@ export default function SidebarTopButtons() {
         </Link>
       )}
 
-      <div className="flex flex-col gap-0.5">
+      <div className="mb-3 flex flex-col gap-0.5">
+        <div className="w-full px-2 pt-0 pb-1 text-xs font-medium text-foreground-400">
+          Menu
+        </div>
         {buttonData.map(({ route, icon, label }, index) => (
           <div key={index} className="relative">
             <Button
               className="w-full justify-start text-sm"
               size="sm"
               variant="light"
-              color={pathname === route ? "primary" : "default"}
-              onPress={() => router.push(route)}
+              color={
+                route === "/c"
+                  ? pathname === "/c" || pathname.startsWith("/c/")
+                    ? "primary"
+                    : "default"
+                  : pathname === route
+                    ? "primary"
+                    : "default"
+              }
+              onPress={() => handleButtonPress(route)}
               startContent={React.cloneElement(icon, {
-                color: pathname === route ? "#00bbff" : "#9b9b9b",
+                color:
+                  route === "/c"
+                    ? pathname === "/c" || pathname.startsWith("/c/")
+                      ? "#00bbff"
+                      : "#9b9b9b"
+                    : pathname === route
+                      ? "#00bbff"
+                      : "#9b9b9b",
+                width: 18,
+                height: 18,
               })}
             >
               {label}
@@ -132,7 +160,7 @@ export default function SidebarTopButtons() {
         ))}
       </div>
 
-      <Button
+      {/* <Button
         className="flex w-full justify-start text-sm"
         size="sm"
         variant="light"
@@ -153,11 +181,12 @@ export default function SidebarTopButtons() {
         }
       >
         New Chat
-      </Button>
+      </Button> */}
 
-      <div className="my-2 px-3">
+      {/*
+      <div className="my-3 mt-1 px-1">
         <Separator className="bg-zinc-800" />
-      </div>
+      </div> */}
     </div>
   );
 }
