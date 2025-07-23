@@ -14,9 +14,11 @@ import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";
 import CalendarEventSection from "./CalendarEventSection";
+import CalendarListCard from "@/features/calendar/components/CalendarListCard";
 import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
+import EmailListCard from "@/features/mail/components/EmailListCard";
 import GoalSection, { type GoalAction } from "./GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
@@ -32,6 +34,7 @@ export default function TextBubble({
   calendar_edit_options,
   email_compose_data,
   email_fetch_data,
+  calendar_fetch_data,
   weather_data,
   todo_data,
   goal_data,
@@ -143,6 +146,12 @@ export default function TextBubble({
 
       {!!email_compose_data && (
         <EmailComposeSection email_compose_data={email_compose_data!} />
+      )}
+
+      {!!email_fetch_data && <EmailListCard emails={email_fetch_data!} />}
+
+      {!!calendar_fetch_data && (
+        <CalendarListCard events={calendar_fetch_data!} />
       )}
 
       {!!todo_data && (
