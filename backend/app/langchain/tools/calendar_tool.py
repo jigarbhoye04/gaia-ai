@@ -266,6 +266,7 @@ async def fetch_calendar_list(
                             "name": calendar.get("summary", "Unknown Calendar"),
                             "id": calendar.get("id", ""),
                             "description": calendar.get("description", ""),
+                            "backgroundColor": calendar.get("backgroundColor"),
                         }
                     )
 

@@ -190,4 +190,5 @@ export type CalendarListFetchData = {
   name: string;
   id: string;
   description: string;
+  backgroundColor?: string;
 };

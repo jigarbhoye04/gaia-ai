@@ -25,23 +25,35 @@ export default function CalendarListFetchCard({
         </div>
 
         <ScrollShadow className="max-h-[200px] divide-y divide-gray-700 overflow-x-hidden">
-          {calendars.map((calendar, index) => (
-            <div
-              key={index}
-              className="group flex cursor-pointer items-center gap-4 p-3 transition-colors hover:bg-zinc-700"
-            >
-              <div className="flex-1">
-                <span className="block truncate text-sm font-medium text-gray-300 group-hover:text-white">
-                  {calendar.name}
-                </span>
-                {calendar.description && (
-                  <span className="block truncate text-xs text-gray-500 group-hover:text-gray-400">
-                    {calendar.description}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
+          {calendars.length > 0 &&
+            calendars
+              .slice() // Slice to copy the array because of immutability
+              .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphebetically
+              .map((calendar, index) => (
+                <div
+                  key={index}
+                  className="group flex items-center gap-3 p-3 transition-colors hover:bg-zinc-700"
+                >
+                  {/* Color dot - centered vertically */}
+                  <div
+                    className="h-3 w-3 flex-shrink-0 rounded-full"
+                    style={{
+                      backgroundColor: calendar.backgroundColor || "#4285F4",
+                    }}
+                  />
+
+                  <div className="flex-1">
+                    <span className="block truncate text-sm font-medium text-gray-300 group-hover:text-white">
+                      {calendar.name}
+                    </span>
+                    {calendar.description && (
+                      <span className="block truncate text-xs text-gray-500 group-hover:text-gray-400">
+                        {calendar.description}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
         </ScrollShadow>
       </div>
     );

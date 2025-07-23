@@ -31,6 +31,7 @@ class CalendarListFetchData(BaseModel):
     name: str
     id: str
     description: str
+    backgroundColor: Optional[str] = None
 
 
 class MessageModel(BaseModel):
