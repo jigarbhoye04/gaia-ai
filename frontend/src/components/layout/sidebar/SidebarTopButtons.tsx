@@ -82,11 +82,6 @@ export default function SidebarTopButtons() {
     // },
   ];
 
-  const createNewChat = (): void => {
-    router.push(`/c`);
-    clearMessages();
-  };
-
   const handleButtonPress = (route: string): void => {
     if (route === "/c") {
       clearMessages();
@@ -129,16 +124,24 @@ export default function SidebarTopButtons() {
               size="sm"
               variant="light"
               color={
-                route === "/c" 
-                  ? (pathname === "/c" || pathname.startsWith("/c/") ? "primary" : "default")
-                  : (pathname === route ? "primary" : "default")
+                route === "/c"
+                  ? pathname === "/c" || pathname.startsWith("/c/")
+                    ? "primary"
+                    : "default"
+                  : pathname === route
+                    ? "primary"
+                    : "default"
               }
               onPress={() => handleButtonPress(route)}
               startContent={React.cloneElement(icon, {
-                color: 
+                color:
                   route === "/c"
-                    ? (pathname === "/c" || pathname.startsWith("/c/") ? "#00bbff" : "#9b9b9b")
-                    : (pathname === route ? "#00bbff" : "#9b9b9b"),
+                    ? pathname === "/c" || pathname.startsWith("/c/")
+                      ? "#00bbff"
+                      : "#9b9b9b"
+                    : pathname === route
+                      ? "#00bbff"
+                      : "#9b9b9b",
                 width: 18,
                 height: 18,
               })}
