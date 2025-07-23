@@ -5,7 +5,6 @@ import React from "react";
 import {
   AttachmentIcon,
   PlusSignIcon,
-  ToolsIcon,
 } from "@/components/shared/icons";
 import { Button } from "@/components/ui/shadcn/button";
 import {

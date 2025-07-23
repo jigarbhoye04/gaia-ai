@@ -1,5 +1,6 @@
 import { Chip } from "@heroui/chip";
 import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
 
 import { StarsIcon } from "@/components/shared/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui";
@@ -7,7 +8,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 import SelectedToolIndicator from "@/features/chat/components/composer/SelectedToolIndicator";
 import { ChatBubbleUserProps } from "@/types/features/chatBubbleTypes";
 import { parseDate } from "@/utils/date/dateUtils";
-import Image from "next/image";
+
 import ChatBubbleFilePreview from "./ChatBubbleFilePreview";
 
 export default function ChatBubbleUser({

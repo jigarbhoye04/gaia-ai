@@ -8,16 +8,13 @@ import React from "react";
 
 import {
   CalendarIcon,
-  ChatBubbleAddIcon,
   CheckmarkCircle02Icon,
   Mail01Icon,
   MessageMultiple02Icon,
   NotificationIcon,
   PinIcon,
-  Route02Icon,
   Target04Icon,
 } from "@/components/shared/icons";
-import { Separator } from "@/components/ui";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";

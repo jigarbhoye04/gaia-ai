@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@heroui/button";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -10,7 +11,6 @@ import SettingsSidebar from "@/components/layout/sidebar/variants/SettingsSideba
 import TodoSidebar from "@/components/layout/sidebar/variants/TodoSidebar";
 import { PlusSignIcon } from "@/components/shared/icons";
 import ComingSoonModal from "@/features/coming-soon/components/ComingSoonModal";
-import { Button } from "@heroui/button";
 
 export default function Sidebar() {
   const [open, setOpen] = useState<boolean>(false);

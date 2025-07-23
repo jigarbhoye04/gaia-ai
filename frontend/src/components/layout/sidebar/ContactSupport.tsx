@@ -3,7 +3,6 @@ import { useDisclosure } from "@heroui/modal";
 import { Tooltip } from "@heroui/react";
 
 import {
-  CustomerService01Icon,
   HelpCircleIcon,
 } from "@/components/shared/icons";
 import { ContactSupportModal } from "@/features/support";
