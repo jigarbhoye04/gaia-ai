@@ -7,9 +7,9 @@ import { FileData } from "@/types/shared/fileTypes";
 import {
   CalendarDeleteOptions,
   CalendarEditOptions,
-  CalendarOptions,
   CalendarFetchData,
   CalendarListFetchData,
+  CalendarOptions,
 } from "./calendarTypes";
 import { EmailComposeData, EmailFetchData } from "./mailTypes";
 import { DeepResearchResults, SearchResults } from "./searchTypes";
