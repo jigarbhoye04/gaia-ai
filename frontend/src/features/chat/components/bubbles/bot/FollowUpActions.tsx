@@ -1,8 +1,8 @@
 import { Button } from "@heroui/button";
 import { useParams } from "next/navigation";
 
-import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
 import { useLoading } from "@/features/chat/hooks/useLoading";
+import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
 
 interface FollowUpActionsProps {
   actions: string[];

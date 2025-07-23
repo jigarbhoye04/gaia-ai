@@ -17,10 +17,10 @@ import CalendarEventSection from "./CalendarEventSection";
 import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
+import FollowUpActions from "./FollowUpActions";
 import GoalSection, { type GoalAction } from "./GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
-import FollowUpActions from "./FollowUpActions";
 
 export default function TextBubble({
   text,
