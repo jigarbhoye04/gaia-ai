@@ -73,12 +73,10 @@ async def call_agent(
         initial_state = {
             "query": request.message,
             "messages": history,
-            "force_web_search": request.search_web,
-            "force_deep_research": request.deep_research,
             "current_datetime": datetime.now(timezone.utc).isoformat(),
             "mem0_user_id": user_id,
             "conversation_id": conversation_id,
-            "selected_tool": request.selectedTool,  # Add selectedTool to agent state
+            "selected_tool": request.selectedTool,
         }
 
         # Begin streaming the AI output

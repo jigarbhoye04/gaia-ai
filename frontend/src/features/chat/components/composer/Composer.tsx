@@ -1,3 +1,5 @@
+import { ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import React, {
   useEffect,
@@ -7,12 +9,14 @@ import React, {
   useState,
 } from "react";
 
+import { Button } from "@/components";
 import FilePreview, {
   UploadedFilePreview,
 } from "@/features/chat/components/files/FilePreview";
 import FileUpload from "@/features/chat/components/files/FileUpload";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
+import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
 import { FileData, SearchMode } from "@/types/shared";
 
 import ComposerInput, { ComposerInputRef } from "./ComposerInput";
@@ -28,6 +32,7 @@ interface MainSearchbarProps {
   } | null>;
   droppedFiles?: File[];
   onDroppedFilesProcessed?: () => void;
+  hasMessages: boolean;
 }
 
 const Composer: React.FC<MainSearchbarProps> = ({
@@ -36,6 +41,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   fileUploadRef,
   droppedFiles,
   onDroppedFilesProcessed,
+  hasMessages,
 }) => {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const [currentHeight, setCurrentHeight] = useState<number>(24);
@@ -56,6 +62,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
     useState(false);
   const sendMessage = useSendMessage(convoIdParam ?? null);
   const { isLoading, setIsLoading } = useLoading();
+  const { integrations, isLoading: integrationsLoading } = useIntegrations();
   const currentMode = useMemo(
     () => Array.from(selectedMode)[0],
     [selectedMode],
@@ -116,13 +123,9 @@ const Composer: React.FC<MainSearchbarProps> = ({
     }
     setIsLoading(true);
 
-    // Send the message with complete file data
-    const messageText = searchbarText;
-
     sendMessage(
-      messageText,
+      searchbarText,
       currentMode,
-      [], // No page fetch URLs since we removed that functionality
       uploadedFileData,
       selectedTool, // Pass the selected tool name
       selectedToolCategory, // Pass the selected tool category
@@ -171,11 +174,10 @@ const Composer: React.FC<MainSearchbarProps> = ({
     setSelectedTool(null);
     setSelectedToolCategory(null);
     // If the user selects upload_file mode, open the file selector immediately
-    if (mode === "upload_file") {
+    if (mode === "upload_file")
       setTimeout(() => {
         openFileUploadModal();
       }, 100);
-    }
   };
 
   const handleSlashCommandSelect = (toolName: string, toolCategory: string) => {
@@ -298,6 +300,35 @@ const Composer: React.FC<MainSearchbarProps> = ({
   return (
     <>
       <div className="searchbar_container relative pb-1">
+        {!integrationsLoading && integrations.length > 0 && !hasMessages && (
+          <Button
+            className="absolute -top-4 z-[0] flex h-fit w-full max-w-[calc(36rem-15px)] rounded-full bg-zinc-800/40 px-4 py-2 pb-8 text-xs text-foreground-300 hover:bg-zinc-800/70 hover:text-zinc-400"
+            onClick={handleToggleSlashCommandDropdown}
+          >
+            <div className="flex w-full items-center justify-between">
+              <span className="text-xs">Connect your tools to GAIA</span>
+              <div className="ml-3 flex items-center gap-1">
+                {integrations.slice(0, 8).map((integration) => (
+                  <div
+                    key={integration.id}
+                    className="opacity-60 transition duration-200 hover:scale-150 hover:rotate-6 hover:opacity-120"
+                    title={integration.name}
+                  >
+                    <Image
+                      width={14}
+                      height={14}
+                      src={integration.icon}
+                      alt={integration.name}
+                      className="h-[14px] w-[14px] object-contain"
+                    />
+                  </div>
+                ))}
+
+                <ChevronRight width={18} height={18} className="ml-3" />
+              </div>
+            </div>
+          </Button>
+        )}
         <div className="searchbar relative z-[2] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
           <SelectedToolIndicator

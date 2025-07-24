@@ -252,12 +252,16 @@ export default function EmailComposeCard({
   const [customEmailInput, setCustomEmailInput] = useState("");
   const [customEmailError, setCustomEmailError] = useState("");
 
-  // Initialize with email addresses from emailData (these are resolved by the agent)
+  // Initialize with empty emails array - user must select recipients
+  // If there's only one email, select it by default
   useEffect(() => {
-    const emails = emailData.to || [];
-    setEditData((prev) => ({ ...prev, to: emails }));
-    setSelectedEmails(emails);
-    setSuggestions(emails);
+    const suggestions = emailData.to || [];
+    setEditData((prev) => ({ ...prev, to: [] }));
+    setSuggestions(suggestions);
+
+    // If there's exactly one email suggestion, select it by default
+    if (suggestions.length === 1) setSelectedEmails([suggestions[0]]);
+    else setSelectedEmails([]);
   }, [emailData.to]);
 
   const validateForm = () => {

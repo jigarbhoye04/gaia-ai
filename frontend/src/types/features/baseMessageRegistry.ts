@@ -33,9 +33,6 @@ export const BASE_MESSAGE_SCHEMA = {
   message_id: "" as string, // required string field
   date: undefined as string | undefined,
   pinned: undefined as boolean | undefined,
-  searchWeb: undefined as boolean | undefined,
-  deepSearchWeb: undefined as boolean | undefined,
-  pageFetchURLs: undefined as string[] | undefined,
   fileIds: undefined as string[] | undefined,
   fileData: undefined as FileData[] | undefined,
   selectedTool: undefined as string | null | undefined,
