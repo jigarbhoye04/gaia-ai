@@ -15,17 +15,24 @@ interface AnimatedSectionProps
 }
 
 const STATIC_ITEM_VARIANTS = {
-  hidden: { opacity: 0, y: 50 },
-  visible: { opacity: 1, y: 0 },
+  hidden: { opacity: 0, filter: "blur(10px)" },
+  visible: { 
+    opacity: 1, 
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.8,
+      ease: "easeOut"
+    }
+  },
 };
 
 const NO_ANIMATION_VARIANTS = {
-  visible: { opacity: 1, y: 0 },
+  visible: { opacity: 1, filter: "blur(0px)" },
 };
 
 const AnimatedSectionComponent = ({
   children,
-  staggerDelay = 0.2,
+  staggerDelay = 0.4,
   className = "",
   childClassName = "",
   disableAnimation = false,
@@ -57,7 +64,7 @@ const AnimatedSectionComponent = ({
       animate={disableAnimation || isVisible ? "visible" : "hidden"}
       variants={containerVariants}
       className={cn(className)}
-      style={{ willChange: "transform, opacity" }}
+      style={{ willChange: "transform, opacity, filter" }}
       {...restProps}
     >
       {Children.map(children, (child, index) => {
@@ -69,7 +76,7 @@ const AnimatedSectionComponent = ({
             variants={
               disableAnimation ? NO_ANIMATION_VARIANTS : STATIC_ITEM_VARIANTS
             }
-            style={{ willChange: "transform, opacity" }}
+            style={{ willChange: "transform, opacity, filter" }}
             className={cn(childClassName)}
           >
             {child}

@@ -4,7 +4,14 @@ import { lazy, useEffect } from "react";
 
 import HeroSection from "@/features/landing/components/hero/HeroSection";
 import Integrations from "@/features/landing/components/sections/IntegrationsSection";
-
+import Description from "@/features/landing/components/sections/new/Description";
+import Personalised from "@/features/landing/components/sections/new/Personalised";
+import Proactive from "@/features/landing/components/sections/new/Proactive";
+import Mail from "@/features/landing/components/sections/new/Mail";
+import Calendar from "@/features/calendar/components/Calendar";
+import Todo from "@/features/landing/components/sections/new/Todo";
+import InternetSection from "@/features/landing/components/sections/new/InternetSection";
+import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
 
@@ -50,16 +57,16 @@ export default function LandingPage() {
         // className="mt-40 space-y-26"
         // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
         >
-          {/* <Description /> */}
+          <Description />
           {/* <Personalised /> */}
           <Integrations />
-          {/* <Proactive /> */}
+          <Proactive />
           {/* <Mail /> */}
           {/* <Calendar /> */}
-          {/* <Todo /> */}
-          {/* <Goals /> */}
+          <Todo />
+          <Goals />
           {/* <InternetSection /> */}
-          {/* <AdvancedConversation /> */}
+          <AdvancedConversation />
           {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}
 
           {/*

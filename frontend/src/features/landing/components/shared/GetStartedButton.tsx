@@ -9,11 +9,11 @@ export default function GetStartedButton({
   text?: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 ">
       <Button
         as={Link}
         // size="lg"
-        className="group relative overflow-hidden border-none font-medium transition-all! duration-300 hover:scale-105"
+        className="group relative overflow-hidden border-none font-medium transition-all! duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)]"
         color="primary"
         href={"/signup"}
       >
