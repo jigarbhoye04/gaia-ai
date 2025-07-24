@@ -40,9 +40,6 @@ class MessageModel(BaseModel):
     response: str
     date: Optional[str] = None
     image_data: Optional[ImageData] = None
-    searchWeb: Optional[bool] = False
-    deepSearchWeb: Optional[bool] = False
-    pageFetchURLs: Optional[List] = []
     disclaimer: Optional[str] = None
     subtype: Optional[str] = None
     file: Optional[bytes] = None

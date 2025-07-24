@@ -27,9 +27,6 @@ import TodoSection from "./TodoSection";
 
 export default function TextBubble({
   text,
-  searchWeb,
-  deepSearchWeb,
-  pageFetchURLs,
   disclaimer,
   calendar_options,
   calendar_delete_options,
@@ -64,17 +61,10 @@ export default function TextBubble({
 
       {!!weather_data && <WeatherCard weatherData={weather_data!} />}
 
-      {shouldShowTextBubble(
-        text,
-        searchWeb,
-        deepSearchWeb,
-        pageFetchURLs,
-        isConvoSystemGenerated,
-        systemPurpose,
-      ) && (
+      {shouldShowTextBubble(text, isConvoSystemGenerated, systemPurpose) && (
         <div className="chat_bubble bg-zinc-800">
           <div className="flex flex-col gap-3">
-            {!!(searchWeb || search_results) && (
+            {!!search_results && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
@@ -86,7 +76,7 @@ export default function TextBubble({
               </Chip>
             )}
 
-            {!!(deepSearchWeb || deep_research_results) && (
+            {!!deep_research_results && (
               <Chip
                 color="primary"
                 startContent={<InternetIcon color="#00bbff" height={20} />}
@@ -97,23 +87,6 @@ export default function TextBubble({
                 </div>
               </Chip>
             )}
-
-            {!!(pageFetchURLs && pageFetchURLs.length > 0) &&
-              pageFetchURLs!.map((pageFetchURL, index) => (
-                <Chip
-                  key={index}
-                  color="primary"
-                  startContent={<ArrowUpRight color="#00bbff" height={20} />}
-                  variant="flat"
-                >
-                  <div className="flex items-center gap-1 font-medium text-primary">
-                    Fetched{" "}
-                    <CustomAnchor href={pageFetchURL}>
-                      {pageFetchURL.replace(/^https?:\/\//, "")}
-                    </CustomAnchor>
-                  </div>
-                </Chip>
-              ))}
 
             {!!text && <MarkdownRenderer content={text.toString()} />}
 
