@@ -21,10 +21,11 @@ LIST_GMAIL_LABELS = """
 
 
 LIST_GMAIL_MESSAGES = """
-    List Gmail messages in the user's inbox.
+    List Gmail messages in the user's inbox with comprehensive analysis.
 
     This tool fetches messages from the Gmail inbox with details like sender,
-    subject, snippet, and timestamp.
+    subject, snippet, and timestamp. When analyzing retrieved emails, provide
+    a structured analysis covering key business aspects.
 
     When to use:
     - When user wants to check their recent emails
@@ -32,12 +33,41 @@ LIST_GMAIL_MESSAGES = """
     - When you need email IDs for other operations (like marking as read)
     - When user asks about their inbox contents
 
+    Analysis Framework:
+    When fetching and analyzing inbox messages, always include:
+
+    ✓ Urgent Action Required:
+    - Identify any time-sensitive items that need immediate attention
+    - Flag deadlines, urgent requests, or critical decisions needed
+    - Highlight any escalations or priority communications
+
+    ✓ Key Issues Identified:
+    - Extract main problems, concerns, or challenges discussed
+    - Identify blockers, conflicts, or unresolved matters
+    - Note any recurring issues or patterns across emails
+
+    ✓ Required Actions:
+    - List specific tasks, deliverables, or next steps mentioned
+    - Identify who is responsible for each action item
+    - Extract any commitments, agreements, or promises made
+
+    ✓ Timeline:
+    - Extract all dates, deadlines, and time-sensitive milestones
+    - Identify project phases, meeting schedules, or delivery dates
+    - Note any timeline changes or delays discussed
+
+    ✓ Current Status:
+    - Summarize the current state of projects or discussions
+    - Identify what has been completed vs. what remains pending
+    - Note any status updates, progress reports, or milestone achievements
+
     Input:
     - max_results: Optional, number of messages to return (default: 20)
     - page_token: Optional, for pagination through large inboxes
 
     Output:
     - Dictionary with "messages" containing email details
+    - Structured analysis covering the five key areas above
     - nextPageToken for pagination if more results exist
     - Error message if operation fails
 
@@ -171,10 +201,11 @@ ARCHIVE_EMAILS = """
     """
 
 GET_EMAIL_THREAD = """
-    Get complete email thread.
+    Get complete email thread with comprehensive analysis.
 
     This tool fetches all messages in a specified Gmail thread, showing the complete
-    conversation history in chronological order.
+    conversation history in chronological order. When analyzing email threads,
+    provide a structured analysis covering key business aspects.
 
     When to use:
     - When user wants to see an entire email conversation
@@ -183,11 +214,40 @@ GET_EMAIL_THREAD = """
     - When user asks about previous messages in a thread
     - When summarizing multi-message conversations
 
+    Analysis Framework:
+    When fetching and analyzing email threads, always include:
+
+    ✓ Urgent Action Required:
+    - Identify any time-sensitive items that need immediate attention
+    - Flag deadlines, urgent requests, or critical decisions needed
+    - Highlight any escalations or priority communications
+
+    ✓ Key Issues Identified:
+    - Extract main problems, concerns, or challenges discussed
+    - Identify blockers, conflicts, or unresolved matters
+    - Note any recurring issues or patterns in the conversation
+
+    ✓ Required Actions:
+    - List specific tasks, deliverables, or next steps mentioned
+    - Identify who is responsible for each action item
+    - Extract any commitments, agreements, or promises made
+
+    ✓ Timeline:
+    - Extract all dates, deadlines, and time-sensitive milestones
+    - Identify project phases, meeting schedules, or delivery dates
+    - Note any timeline changes or delays discussed
+
+    ✓ Current Status:
+    - Summarize the current state of projects or discussions
+    - Identify what has been completed vs. what remains pending
+    - Note any status updates, progress reports, or milestone achievements
+
     Input:
     - thread_id: Required, the Gmail thread ID to fetch
 
     Output:
     - Dictionary with thread_id and messages array containing all emails
+    - Structured analysis covering the five key areas above
     - Error message if operation fails
 
     Limitations: Long threads may contain large amounts of data; specific messages
