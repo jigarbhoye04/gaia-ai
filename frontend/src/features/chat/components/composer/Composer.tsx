@@ -125,7 +125,6 @@ const Composer: React.FC<MainSearchbarProps> = ({
 
     sendMessage(
       searchbarText,
-      currentMode,
       uploadedFileData,
       selectedTool, // Pass the selected tool name
       selectedToolCategory, // Pass the selected tool category

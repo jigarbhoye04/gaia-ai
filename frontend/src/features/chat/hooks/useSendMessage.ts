@@ -7,7 +7,7 @@ import { useDispatch } from "react-redux";
 import { useChatStream } from "@/features/chat/hooks/useChatStream";
 import { addMessage } from "@/redux/slices/conversationSlice";
 import { MessageType } from "@/types/features/convoTypes";
-import { FileData, SearchMode } from "@/types/shared";
+import { FileData } from "@/types/shared";
 import fetchDate from "@/utils/date/dateUtils";
 
 export const useSendMessage = (convoIdParam: string | null) => {
@@ -16,7 +16,6 @@ export const useSendMessage = (convoIdParam: string | null) => {
 
   return async (
     inputText: string,
-    currentMode: SearchMode,
     fileData: FileData[] = [],
     selectedTool: string | null = null,
     toolCategory: string | null = null,

@@ -20,8 +20,6 @@ export default function FollowUpActions({ actions }: FollowUpActionsProps) {
       // Send the follow-up action as a message
       await sendMessage(
         action,
-        null, // No search mode
-        [], // No page fetch URLs
         [], // No file data
         null, // No selected tool
         null, // No tool category

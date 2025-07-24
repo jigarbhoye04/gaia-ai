@@ -101,7 +101,7 @@ ${workflow.steps
 
 Please execute these steps in order and use the appropriate tools for each step.`;
 
-      await sendMessage(workflowMessage, null);
+      await sendMessage(workflowMessage);
     } catch (error) {
       console.error("Failed to run workflow:", error);
     } finally {
