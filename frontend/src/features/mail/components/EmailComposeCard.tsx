@@ -254,10 +254,15 @@ export default function EmailComposeCard({
   const [_searchTerm, _setSearchTerm] = useState("");
 
   // Initialize with empty emails array - user must select recipients
+  // If there's only one email, select it by default
   useEffect(() => {
+    const suggestions = emailData.to || [];
     setEditData((prev) => ({ ...prev, to: [] }));
-    setSelectedEmails([]);
-    setSuggestions(emailData.to || []);
+    setSuggestions(suggestions);
+
+    // If there's exactly one email suggestion, select it by default
+    if (suggestions.length === 1) setSelectedEmails([suggestions[0]]);
+    else setSelectedEmails([]);
   }, [emailData.to]);
 
   const validateForm = () => {
