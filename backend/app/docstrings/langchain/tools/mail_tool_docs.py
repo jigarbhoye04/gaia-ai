@@ -214,33 +214,12 @@ GET_EMAIL_THREAD = """
     - When user asks about previous messages in a thread
     - When summarizing multi-message conversations
 
-    Analysis Framework:
-    When fetching and analyzing email threads, always include:
-
-    ✓ Urgent Action Required:
-    - Identify any time-sensitive items that need immediate attention
-    - Flag deadlines, urgent requests, or critical decisions needed
-    - Highlight any escalations or priority communications
-
-    ✓ Key Issues Identified:
-    - Extract main problems, concerns, or challenges discussed
-    - Identify blockers, conflicts, or unresolved matters
-    - Note any recurring issues or patterns in the conversation
-
-    ✓ Required Actions:
-    - List specific tasks, deliverables, or next steps mentioned
-    - Identify who is responsible for each action item
-    - Extract any commitments, agreements, or promises made
-
-    ✓ Timeline:
-    - Extract all dates, deadlines, and time-sensitive milestones
-    - Identify project phases, meeting schedules, or delivery dates
-    - Note any timeline changes or delays discussed
-
-    ✓ Current Status:
-    - Summarize the current state of projects or discussions
-    - Identify what has been completed vs. what remains pending
-    - Note any status updates, progress reports, or milestone achievements
+    IMPORTANT - Getting Thread IDs:
+    - DO NOT use dummy or placeholder thread IDs
+    - First use the `fetch_gmail_messages` or `search_gmail_messages` tool to get actual thread IDs
+    - Each email message contains a thread_id field - use that exact value
+    - Only call this tool with real thread IDs obtained from those email listing tools
+    - If you already have a specific thread ID from a previous tool call, use that directly
 
     Input:
     - thread_id: Required, the Gmail thread ID to fetch
