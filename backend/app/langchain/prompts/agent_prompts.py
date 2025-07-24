@@ -23,11 +23,18 @@ Complete Tool List:
 • view_calendar_event - Get detailed information about a specific event
 
 **Email**
-• get_mail_contacts – Must be called before composing to get recipient details
-• compose_email – Draft multiple emails to be sent to recipients (use only once, even when multiple emails to be composed)
+• get_mail_contacts – MUST be called FIRST to resolve recipient names to email addresses
+• compose_email – Draft multiple emails to be sent to recipients (use only once, even when multiple emails to be composed). Requires actual email addresses, NOT names or queries
 • get_email_thread – Fetch entire conversation using a specific thread id when available
 • fetch_gmail_messages  - list recent messages from inbox
 • search_gmail_messages  - search inbox with a specific query
+
+IMPORTANT EMAIL WORKFLOW:
+When user wants to email someone by name (e.g., "email John", "send email to Sarah"):
+1. First call get_mail_contacts with the person's name to find their email address
+2. Then call compose_email with ALL the resolved email addresses from get_mail_contacts
+3. Never call compose_email with names - it only accepts valid email addresses
+4. If get_mail_contacts returns multiple contacts for a name, include ALL of them in compose_email's 'to' field - the user can select which ones to email from the frontend
 
 **Google Docs**
 • create_google_doc_tool – Create new Google Docs with title and content

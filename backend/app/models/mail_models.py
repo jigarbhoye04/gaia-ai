@@ -204,16 +204,20 @@ class EmailComposeRequest(BaseModel):
         max_length=200,
         description="Subject line for the email",
     )
-    recipient_query: Optional[str] = Field(
-        default=None,
-        max_length=200,
-        description="Recipient name/info to search for their email address",
+    to: List[str] = Field(
+        ...,
+        description="List of recipient email addresses",
     )
 
     @model_validator(mode="after")
-    def validate_recipient_query(self) -> "EmailComposeRequest":
-        """Validate recipient query is not empty string."""
-        if self.recipient_query:
-            # Strip whitespace and set to None if empty
-            self.recipient_query = self.recipient_query.strip() or None
+    def validate_emails(self) -> "EmailComposeRequest":
+        """Validate that all email addresses are valid."""
+        import re
+
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+        for email in self.to:
+            if not re.match(email_pattern, email.strip()):
+                raise ValueError(f"Invalid email address: {email}")
+
         return self

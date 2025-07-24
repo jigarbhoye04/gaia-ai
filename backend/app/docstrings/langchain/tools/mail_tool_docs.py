@@ -83,6 +83,15 @@ COMPOSE_EMAIL = """
 
     This tool helps create one or more emails of any type - from simple personal messages to detailed professional communications.
 
+    IMPORTANT WORKFLOW:
+    1. First, call get_mail_contacts to find recipient email addresses if user provides names/queries
+    2. Then use this tool with ALL the resolved email addresses from get_mail_contacts
+
+    CRITICAL: Always include ALL email addresses returned by get_mail_contacts in the 'to' field:
+    - If get_mail_contacts returns 1 contact → include that 1 email address
+    - If get_mail_contacts returns multiple contacts → include ALL email addresses
+    This ensures the user can see all matching contacts and choose which one(s) to send to from the frontend interface.
+
     When to use:
     - User wants to compose, write, send, or draft any email(s)
     - User mentions writing to someone via email
@@ -94,28 +103,43 @@ COMPOSE_EMAIL = """
     The tool will:
     - Create appropriate email content based on the context
     - Handle both brief personal messages and detailed professional emails
-    - Automatically resolve recipient names to email addresses when possible
     - Adapt tone and style to match the user's intent
     - Support composing multiple emails at once
-    - Validate email content and recipient queries
+    - Validate email addresses
 
     Input requirements:
     - emails: Array of EmailComposeRequest objects, each containing:
       - body: Email content or instructions for what to write (required, 1-10000 chars)
       - subject: Subject line or topic (required, 1-200 chars)
-      - recipient_query: Optional recipient name/info to search for their email address (max 200 chars)
+      - to: List of recipient email addresses (required, must be valid email addresses)
+
+    Example workflow with multiple contacts:
+    1. User says: "Email John about the meeting"
+    2. Call get_mail_contacts("John") returns: [
+           {"name": "John Smith", "email": "john.smith@company.com"},
+           {"name": "John Doe", "email": "john.doe@startup.com"}
+       ]
+    3. Call compose_email with ALL found emails:
+       [
+           EmailComposeRequest(
+               body="Meeting scheduled for tomorrow at 2 PM.",
+               subject="Tomorrow's Meeting",
+               to=["john.smith@company.com", "john.doe@startup.com"]  # Include ALL contacts
+           )
+       ]
+    4. Frontend will show both contacts, allowing user to select which John(s) to email
 
     Example input structure:
     [
         EmailComposeRequest(
             body="Happy birthday! Hope you have a great day.",
             subject="Happy Birthday!",
-            recipient_query="mom"
+            to=["mom@example.com"]
         ),
         EmailComposeRequest(
             body="Meeting scheduled for tomorrow at 2 PM.",
             subject="Tomorrow's Meeting",
-            recipient_query="john doe"
+            to=["john.doe@company.com", "sarah@company.com"]
         )
     ]
 
@@ -123,7 +147,7 @@ COMPOSE_EMAIL = """
     The tool is designed to handle multiple emails in a single call through the emails array parameter.
     Do not make separate tool calls for each email - batch them all together.
 
-    Note: The tool can handle any email request, from "email mom happy birthday" to complex business proposals for multiple recipients.
+    Note: The tool expects valid email addresses. Use get_mail_contacts first if you need to resolve names to emails.
     """
 
 STAR_EMAILS = """

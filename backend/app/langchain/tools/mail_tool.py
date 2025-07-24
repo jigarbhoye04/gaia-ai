@@ -252,113 +252,34 @@ async def compose_email(
     config: RunnableConfig,
     emails: Annotated[
         List[EmailComposeRequest],
-        "Array of email objects to compose. Each email should have 'body', 'subject', and optional 'recipient_query' (recipient name/info to search for)",
+        "Array of email objects to compose. Each email should have 'body', 'subject', and 'to' (list of recipient email addresses)",
     ],
 ) -> Dict[str, Any] | str:
     try:
         writer = get_stream_writer()
-        auth = get_auth_from_config(config)
         composed_emails = []
 
         # Process each email in the array
         for email_index, email in enumerate(emails):
             subject = email.subject
             body = email.body
-            recipient_query = email.recipient_query
+            recipient_emails = email.to
 
-            resolved_emails = []
-
-            # If recipient_query is provided, try to resolve contact email
-            if recipient_query:
-                writer(
-                    {
-                        "progress": f"Processing email {email_index + 1}/{len(emails)}: Searching contacts..."
-                    }
-                )
-
-                writer({"progress": f"Searching contacts for '{recipient_query}'..."})
-                try:
-                    if not auth["access_token"] or not auth["refresh_token"]:
-                        logger.warning(
-                            "Missing authentication credentials for contact resolution"
-                        )
-                    else:
-                        service = get_gmail_service(
-                            access_token=auth["access_token"],
-                            refresh_token=auth["refresh_token"],
-                        )
-
-                        # Use the service function directly instead of calling the tool
-                        contacts_result = get_gmail_contacts(
-                            service=service,
-                            query=recipient_query,
-                        )
-
-                        if contacts_result.get("success") and contacts_result.get(
-                            "contacts"
-                        ):
-                            query_resolved_emails = [
-                                contact["email"]
-                                for contact in contacts_result["contacts"]
-                            ]
-                            resolved_emails.extend(query_resolved_emails)
-                            writer(
-                                {
-                                    "progress": f"Found {len(query_resolved_emails)} contact(s) for '{recipient_query}'"
-                                }
-                            )
-                            logger.info(
-                                f"Resolved emails for '{recipient_query}': {query_resolved_emails}"
-                            )
-                        else:
-                            writer(
-                                {
-                                    "progress": f"No contacts found for '{recipient_query}'"
-                                }
-                            )
-                except Exception as contact_error:
-                    logger.warning(
-                        f"Failed to resolve contacts for '{recipient_query}': {contact_error}"
-                    )
-                    writer(
-                        {"progress": f"Contact search failed for '{recipient_query}'"}
-                    )
-                    # Continue with empty resolved_emails if contact resolution fails
+            writer(
+                {
+                    "progress": f"Processing email {email_index + 1}/{len(emails)}: Preparing email..."
+                }
+            )
 
             # Prepare email data for this email
             email_data = {
-                "to": resolved_emails if resolved_emails else [],
+                "to": recipient_emails,
                 "subject": subject,
                 "body": body,
-                "recipient_query": recipient_query,
             }
 
             composed_emails.append(email_data)
 
-        # Check if initiated by backend
-        # configurable = config.get("configurable", {})
-        # if configurable.get("initiator") == "backend":
-        #     user_id = configurable.get("user_id")
-        #     if not user_id:
-        #         logger.error(
-        #             "Missing user_id in configuration for backend-initiated email composition"
-        #         )
-        #         return {
-        #             "error": "User ID is required to create email composition notification"
-        #         }
-
-        #     # Create a notification for the user
-        #     notification = (
-        #         AIProactiveNotificationSource.create_mail_composition_notification(
-        #             user_id=user_id,
-        #             email_data=composed_emails,
-        #         )
-        #     )
-        #     await notification_service.create_notification(notification)
-
-        #     return "Email composition notification created successfully. Please check your frontend for the draft."
-
-        # Regular frontend flow
         # Progress update for drafting
         writer({"progress": f"Drafting {len(composed_emails)} email(s)..."})
         writer({"email_compose_data": composed_emails})
