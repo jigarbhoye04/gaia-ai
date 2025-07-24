@@ -99,6 +99,7 @@ async def call_agent(
             },
         ):
             stream_mode, payload = event
+
             if stream_mode == "messages":
                 chunk, metadata = payload
                 if chunk is None:

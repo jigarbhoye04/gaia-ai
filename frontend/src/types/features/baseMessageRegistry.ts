@@ -7,6 +7,8 @@ import { FileData } from "@/types/shared/fileTypes";
 import {
   CalendarDeleteOptions,
   CalendarEditOptions,
+  CalendarFetchData,
+  CalendarListFetchData,
   CalendarOptions,
 } from "./calendarTypes";
 import { EmailComposeData, EmailFetchData } from "./mailTypes";
@@ -45,7 +47,7 @@ export const BASE_MESSAGE_SCHEMA = {
     | undefined,
   calendar_edit_options: undefined as CalendarEditOptions[] | null | undefined,
   email_compose_data: undefined as EmailComposeData[] | null | undefined,
-  email_fetch_data: undefined as EmailFetchData | null | undefined,
+  email_fetch_data: undefined as EmailFetchData[] | null | undefined,
   weather_data: undefined as WeatherData | null | undefined,
   search_results: undefined as SearchResults | null | undefined,
   deep_research_results: undefined as DeepResearchResults | null | undefined,
@@ -57,6 +59,12 @@ export const BASE_MESSAGE_SCHEMA = {
   goal_data: undefined as GoalDataMessageType | null | undefined,
   google_docs_data: undefined as GoogleDocsData | null | undefined,
   isConvoSystemGenerated: undefined as boolean | undefined,
+  calendar_fetch_data: undefined as CalendarFetchData[] | null | undefined,
+  calendar_list_fetch_data: undefined as
+    | CalendarListFetchData[]
+    | null
+    | undefined,
+  follow_up_actions: undefined as string[] | undefined,
 };
 
 export type BaseMessageData = typeof BASE_MESSAGE_SCHEMA;
