@@ -195,18 +195,6 @@
   width: 100%;
   padding-top: 0.8rem;
 }
-.sidebar {
-  /* background-color: #020202; */
-  flex-direction: column;
-  height: 100dvh;
-  justify-content: space-between;
-  overflow: hidden;
-  position: relative;
-  transition:
-    all 0.2s ease-in-out,
-    opacity 0.1s ease;
-  z-index: 1;
-}
 .starter_container2 {
   align-items: center;
   display: flex;
@@ -331,9 +319,6 @@ main {
   .conversation_history {
     width: 100vw;
   }
-  .sidebar {
-    min-width: 65vw !important;
-  }
   .starter_container2 {
     margin-top: 5vh;
   }
@@ -362,18 +347,34 @@ main {
 .editor code {
   background-color: #00000080;
 }
+
+.sidebar:hover div::-webkit-scrollbar-thumb {
+  background: #5e5e5e;
+}
 .sidebar div::-webkit-scrollbar {
+  opacity: 0;
+}
+.sidebar div::-webkit-scrollbar,
+.chat_page div::-webkit-scrollbar {
   border-radius: 100px;
   width: 9px;
 }
+
+.chat_page div::-webkit-scrollbar {
+  background: rgba(94, 94, 94, 0.2);
+}
+
 .sidebar div::-webkit-scrollbar-thumb {
+  border-radius: 100px;
+  background: transparent;
+}
+.chat_page div::-webkit-scrollbar-thumb {
+  border-radius: 100px;
   background: #5e5e5e;
-  border-radius: 100px;
 }
-.sidebar div::-webkit-scrollbar-track {
-  background: #1e1e1e;
-  border-radius: 100px;
-}
+/* .sidebar div::-webkit-scrollbar-track {
+border-radius: 100px;
+} */
 .tiptap {
   height: 90vh;
   max-height: 90vh;

@@ -240,18 +240,17 @@ export default function EmailComposeCard({
   const [editData, setEditData] = useState<EmailData>(emailData);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Suggestions come from emailData.to - these are the initial suggestions
+  // Suggestions come from emailData.to - these are resolved email addresses from the agent
   const [suggestions, setSuggestions] = useState<string[]>(emailData.to || []);
 
-  // Selected emails state - starts empty, user must select
-  const [selectedEmails, setSelectedEmails] = useState<string[]>([]);
+  // Selected emails state - starts with emails from emailData (resolved by agent)
+  const [selectedEmails, setSelectedEmails] = useState<string[]>(
+    emailData.to || [],
+  );
 
   // Custom email input state
   const [customEmailInput, setCustomEmailInput] = useState("");
   const [customEmailError, setCustomEmailError] = useState("");
-
-  // search/filter state
-  const [_searchTerm, _setSearchTerm] = useState("");
 
   // Initialize with empty emails array - user must select recipients
   // If there's only one email, select it by default
@@ -322,8 +321,6 @@ export default function EmailComposeCard({
       formData.append("body", editData.body);
 
       await mailApi.sendEmail(formData);
-
-      toast.success("Email sent successfully!");
       onSent?.();
     } catch (error) {
       console.error("Failed to send email:", error);
@@ -386,14 +383,13 @@ export default function EmailComposeCard({
     toast.success(`Added ${trimmedEmail}`);
   };
 
-  const handleRemoveSelectedEmail = (email: string) => {
-    setSelectedEmails((prev) => prev.filter((e) => e !== email));
-  };
+  // const handleRemoveSelectedEmail = (email: string) => {
+  //   setSelectedEmails((prev) => prev.filter((e) => e !== email));
+  // };
 
   const handleConfirmRecipients = () => {
     setEditData((prev) => ({ ...prev, to: selectedEmails }));
     setIsRecipientModalOpen(false);
-    toast.success(`Selected ${selectedEmails.length} recipient(s)`);
   };
 
   // Filter suggestions based on search term - commented out as not used
@@ -404,7 +400,7 @@ export default function EmailComposeCard({
   return (
     <>
       {/* Main Email Card - Redesigned UI */}
-      <div className="mx-auto w-full max-w-xl overflow-hidden rounded-3xl bg-zinc-800">
+      <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-zinc-800">
         {/* Header with status chip */}
         <div className="flex items-center justify-between px-6 py-1">
           <div className="flex flex-row items-center gap-2 pt-3 pb-2">
@@ -412,7 +408,6 @@ export default function EmailComposeCard({
             <span className="text-sm font-medium">Email Draft</span>
           </div>
         </div>
-        {/* Email meta info */}
         <div className="flex flex-col gap-1 px-6">
           <div className="flex items-center gap-2 text-sm text-zinc-400">
             <span>To:</span>
@@ -455,7 +450,7 @@ export default function EmailComposeCard({
           </div>
           <Separator className="my-1.5 bg-zinc-700" />
 
-          <ScrollShadow className="relative z-[1] max-h-54 overflow-y-auto text-sm leading-relaxed whitespace-pre-line text-zinc-200">
+          <ScrollShadow className="relative z-[1] max-h-46 overflow-y-auto text-sm leading-relaxed whitespace-pre-line text-zinc-200">
             <div className="absolute top-0 right-0 z-[2] flex w-full justify-end">
               <Button
                 variant="light"
@@ -469,8 +464,7 @@ export default function EmailComposeCard({
             {editData.body}
           </ScrollShadow>
         </div>
-        {/* Send button */}
-        <div className="flex justify-end px-6 pt-3 pb-5">
+        <div className="flex justify-end px-6 pb-5">
           <Button
             color="primary"
             onPress={handleSend}

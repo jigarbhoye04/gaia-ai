@@ -122,15 +122,17 @@ export default function ChatRenderer() {
             key={message.message_id || index}
             className="relative flex items-end gap-1 pt-1 pb-5 pl-1"
           >
-            <div className="min-w-[40px]">
-              <Image
-                alt="GAIA Logo"
-                src={"/branding/logo.webp"}
-                width={30}
-                height={30}
-                className={`${isLoading ? "opacity-0" : "opacity-100"} relative transition duration-150`}
-              />
-            </div>
+            {message.response.trim().length > 0 && (
+              <div className="sticky bottom-0 min-w-[40px]">
+                <Image
+                  alt="GAIA Logo"
+                  src={"/branding/logo.webp"}
+                  width={30}
+                  height={30}
+                  className={`${isLoading && index == filteredMessages.length - 1 ? "animate-spin" : ""} relative transition duration-900`}
+                />
+              </div>
+            )}
 
             <ChatBubbleBot
               {...getMessageProps(message, "bot", messagePropsOptions)}

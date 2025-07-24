@@ -329,7 +329,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
             </div>
           </Button>
         )}
-        <div className="searchbar z-[1] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
+        <div className="searchbar relative z-[2] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
           <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
           <SelectedToolIndicator
             toolName={selectedTool}

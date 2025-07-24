@@ -256,6 +256,23 @@ async def fetch_calendar_list(
 
         logger.info(f"Fetched {len(calendars)} calendars")
 
+        # Build array of {name, id, description} for all calendars
+        calendar_list_fetch_data = []
+        if calendars and isinstance(calendars, list):
+            for calendar in calendars:
+                if isinstance(calendar, dict):
+                    calendar_list_fetch_data.append(
+                        {
+                            "name": calendar.get("summary", "Unknown Calendar"),
+                            "id": calendar.get("id", ""),
+                            "description": calendar.get("description", ""),
+                            "backgroundColor": calendar.get("backgroundColor"),
+                        }
+                    )
+
+        writer = get_stream_writer()
+        writer({"calendar_list_fetch_data": calendar_list_fetch_data})
+
         formatted_response = CALENDAR_LIST_TEMPLATE.format(
             calendars=json.dumps(calendars)
         )
@@ -301,6 +318,28 @@ async def fetch_calendar_events(
 
         events = events_data.get("events", [])
         logger.info(f"Fetched {len(events)} events")
+
+        # Build array of {summary, start_time, calendar_name} for all events
+        calendar_fetch_data = []
+        for event in events:
+            start_time = ""
+            if event.get("start"):
+                start_obj = event["start"]
+                if start_obj.get("dateTime"):
+                    start_time = start_obj["dateTime"]
+                elif start_obj.get("date"):
+                    start_time = start_obj["date"]
+
+            calendar_fetch_data.append(
+                {
+                    "summary": event.get("summary", "No Title"),
+                    "start_time": start_time,
+                    "calendar_name": event.get("calendarTitle", ""),
+                }
+            )
+
+        writer = get_stream_writer()
+        writer({"calendar_fetch_data": calendar_fetch_data})
 
         return json.dumps(
             {
@@ -358,10 +397,30 @@ async def search_calendar_events(
             f"Found {len(search_results.get('matching_events', []))} matching events for query: {query}"
         )
 
+        # Build array of {summary, start_time, calendar_name} for search results
+        calendar_search_data = []
+        for event in search_results.get("matching_events", []):
+            start_time = ""
+            if event.get("start"):
+                start_obj = event["start"]
+                if start_obj.get("dateTime"):
+                    start_time = start_obj["dateTime"]
+                elif start_obj.get("date"):
+                    start_time = start_obj["date"]
+
+            calendar_search_data.append(
+                {
+                    "summary": event.get("summary", "No Title"),
+                    "start_time": start_time,
+                    "calendar_name": event.get("calendarTitle", ""),
+                }
+            )
+
         # Send search results to frontend via writer using grouped structure
         writer(
             {
                 "calendar_data": {"calendar_search_results": search_results},
+                "calendar_fetch_data": calendar_search_data,
             }
         )
 
