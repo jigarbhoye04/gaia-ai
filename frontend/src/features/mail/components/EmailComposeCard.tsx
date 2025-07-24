@@ -248,7 +248,6 @@ export default function EmailComposeCard({
     emailData.to || [],
   );
 
-  console.log(emailData, "emailData");
   // Custom email input state
   const [customEmailInput, setCustomEmailInput] = useState("");
   const [customEmailError, setCustomEmailError] = useState("");
