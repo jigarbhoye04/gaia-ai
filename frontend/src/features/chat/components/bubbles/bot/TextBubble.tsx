@@ -3,10 +3,13 @@ import { Chip } from "@heroui/chip";
 import { AlertTriangleIcon, ArrowUpRight } from "lucide-react";
 
 import { InternetIcon } from "@/components/shared/icons";
+import CalendarListCard from "@/features/calendar/components/CalendarListCard";
+import CalendarListFetchCard from "@/features/calendar/components/CalendarListFetchCard";
 import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import CustomAnchor from "@/features/chat/components/code-block/CustomAnchor";
 import { shouldShowTextBubble } from "@/features/chat/utils/messageContentUtils";
+import EmailListCard from "@/features/mail/components/EmailListCard";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
@@ -32,6 +35,8 @@ export default function TextBubble({
   calendar_edit_options,
   email_compose_data,
   email_fetch_data,
+  calendar_fetch_data,
+  calendar_list_fetch_data,
   weather_data,
   todo_data,
   goal_data,
@@ -143,6 +148,16 @@ export default function TextBubble({
 
       {!!email_compose_data && (
         <EmailComposeSection email_compose_data={email_compose_data!} />
+      )}
+
+      {!!email_fetch_data && <EmailListCard emails={email_fetch_data} />}
+
+      {!!calendar_fetch_data && (
+        <CalendarListCard events={calendar_fetch_data!} />
+      )}
+
+      {!!calendar_list_fetch_data && (
+        <CalendarListFetchCard calendars={calendar_list_fetch_data} />
       )}
 
       {!!todo_data && (
