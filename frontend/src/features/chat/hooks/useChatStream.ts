@@ -28,6 +28,7 @@ export const useChatStream = () => {
     botMessage: null as MessageType | null,
     accumulatedResponse: "",
     userPrompt: "",
+    currentStreamingMessages: [] as MessageType[], // Track messages for current streaming session
     newConversation: {
       id: null as string | null,
       description: null as string | null,
@@ -55,7 +56,8 @@ export const useChatStream = () => {
       ...overrides, // Apply new updates
     };
 
-    const currentConvo = [...refs.current.convoMessages];
+    // Use the streaming messages if available, otherwise fall back to refs
+    const currentConvo = [...refs.current.currentStreamingMessages];
 
     if (
       currentConvo.length > 0 &&
@@ -148,6 +150,7 @@ export const useChatStream = () => {
     localStorage.removeItem("gaia-searchbar-text");
 
     refs.current.botMessage = null;
+    refs.current.currentStreamingMessages = []; // Reset streaming messages
     refs.current.newConversation = { id: null, description: null };
   };
 
@@ -162,6 +165,13 @@ export const useChatStream = () => {
   ) => {
     refs.current.accumulatedResponse = "";
     refs.current.userPrompt = inputText;
+
+    // Set up the complete message array for this streaming session
+    refs.current.currentStreamingMessages = [
+      ...refs.current.convoMessages,
+      ...currentMessages,
+    ];
+
     refs.current.botMessage = {
       type: "bot",
       message_id: botMessageId,

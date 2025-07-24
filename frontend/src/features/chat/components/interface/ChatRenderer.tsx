@@ -94,10 +94,6 @@ export default function ChatRenderer() {
     }, 700);
   };
 
-  if (!!filteredMessages && filteredMessages?.length === 0) {
-    return null; // Empty state is now handled by ChatPage
-  }
-
   return (
     <>
       <title id="chat_title">
