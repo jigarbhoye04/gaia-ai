@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from app.models.calendar_models import EventCreateRequest
+from app.models.mail_models import EmailComposeRequest
 from app.models.message_models import FileData
 from app.models.search_models import DeepResearchResults, SearchResults
 from app.models.weather_models import WeatherData
@@ -56,7 +57,7 @@ class MessageModel(BaseModel):
     search_results: Optional[SearchResults] = None
     deep_research_results: Optional[DeepResearchResults] = None
     weather_data: Optional[WeatherData] = None
-    email_compose_data: Optional[dict] = None
+    email_compose_data: Optional[List[EmailComposeRequest]] = None
     email_fetch_data: Optional[List[EmailFetchData]] = None
     calendar_fetch_data: Optional[List[CalendarFetchData]] = None
     calendar_list_fetch_data: Optional[List[CalendarListFetchData]] = None

@@ -46,7 +46,7 @@ export const BASE_MESSAGE_SCHEMA = {
     | null
     | undefined,
   calendar_edit_options: undefined as CalendarEditOptions[] | null | undefined,
-  email_compose_data: undefined as EmailComposeData | null | undefined,
+  email_compose_data: undefined as EmailComposeData[] | null | undefined,
   email_fetch_data: undefined as EmailFetchData[] | null | undefined,
   weather_data: undefined as WeatherData | null | undefined,
   search_results: undefined as SearchResults | null | undefined,

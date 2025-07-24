@@ -95,7 +95,7 @@ const ChatPage = React.memo(function MainChat() {
   // }, [handleScroll]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="chat_page flex h-full flex-col pr-1">
       <div
         className={`relative flex w-full flex-1 justify-center overflow-y-auto ${isDragging ? "bg-zinc-800/30" : ""}`}
         {...dragHandlers}
