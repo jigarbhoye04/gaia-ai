@@ -19,6 +19,8 @@ from app.langchain.llm.client import init_llm
 # )
 from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS, tools
 from app.langchain.tools.core.retrieval import retrieve_tools
+from app.langchain.core.nodes.follow_up_actions_node import follow_up_actions_node
+
 
 llm = init_llm()
 
@@ -68,7 +70,7 @@ async def build_graph(
     )
 
     # Injector nodes add tool calls to the state messages
-    # builder.add_node("inject_web_search", inject_web_search_tool_call)
+    builder.add_node("follow_up_actions", follow_up_actions_node)
     # builder.add_node("inject_deep_research", inject_deep_research_tool_call)
 
     # Conditional edges from chatbot to injector nodes or end
@@ -86,7 +88,8 @@ async def build_graph(
 
     # After injecting tool call, route to shared tools node to execute
     # builder.add_edge("inject_web_search", "tools")
-    # builder.add_edge("inject_deep_research", "tools")
+    builder.add_edge("agent", "follow_up_actions")
+    builder.add_edge("follow_up_actions", END)
 
     if in_memory_checkpointer:
         # Use in-memory checkpointer for testing or simple use cases

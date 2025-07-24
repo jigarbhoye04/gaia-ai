@@ -234,6 +234,7 @@ async def create_calendar_event(
 
 
 @tool
+@with_rate_limiting("calendar_management")
 @with_doc(FETCH_CALENDAR_LIST)
 async def fetch_calendar_list(
     config: RunnableConfig,
@@ -285,6 +286,7 @@ async def fetch_calendar_list(
 
 
 @tool(parse_docstring=True)
+@with_rate_limiting("calendar_management")
 @with_doc(FETCH_CALENDAR_EVENTS)
 async def fetch_calendar_events(
     user_id: str,
@@ -358,6 +360,7 @@ async def fetch_calendar_events(
 
 @tool(parse_docstring=True)
 @with_doc(SEARCH_CALENDAR_EVENTS)
+@with_rate_limiting("calendar_management")
 async def search_calendar_events(
     query: str,
     user_id: str,
@@ -434,6 +437,7 @@ async def search_calendar_events(
 
 @tool(parse_docstring=True)
 @with_doc(VIEW_CALENDAR_EVENT)
+@with_rate_limiting("calendar_management")
 async def view_calendar_event(
     event_id: str,
     config: RunnableConfig,
