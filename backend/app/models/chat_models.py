@@ -66,6 +66,7 @@ class MessageModel(BaseModel):
     goal_data: Optional[dict] = None
     code_data: Optional[dict] = None
     google_docs_data: Optional[dict] = None
+    follow_up_actions: Optional[List[str]] = []
 
 
 class SystemPurpose(str, Enum):
