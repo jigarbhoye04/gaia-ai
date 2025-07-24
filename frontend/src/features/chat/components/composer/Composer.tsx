@@ -1,3 +1,5 @@
+import { ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import React, {
   useEffect,
@@ -7,6 +9,7 @@ import React, {
   useState,
 } from "react";
 
+import { Button } from "@/components";
 import FilePreview, {
   UploadedFilePreview,
 } from "@/features/chat/components/files/FilePreview";
@@ -19,9 +22,6 @@ import { FileData, SearchMode } from "@/types/shared";
 import ComposerInput, { ComposerInputRef } from "./ComposerInput";
 import ComposerToolbar from "./ComposerToolbar";
 import SelectedToolIndicator from "./SelectedToolIndicator";
-import { Button } from "@/components";
-import Image from "next/image";
-import { ChevronRight } from "lucide-react";
 
 interface MainSearchbarProps {
   scrollToBottom: () => void;

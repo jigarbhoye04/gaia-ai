@@ -1,5 +1,4 @@
 import { Chip } from "@heroui/chip";
-import { ArrowUpRight, GlobeIcon } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 

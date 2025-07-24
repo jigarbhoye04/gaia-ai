@@ -1,11 +1,10 @@
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import { ArrowUpRight, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import { InternetIcon } from "@/components/shared/icons";
 import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 import Spinner from "@/components/ui/shadcn/spinner";
 import { parseDate } from "@/utils/date/dateUtils";
