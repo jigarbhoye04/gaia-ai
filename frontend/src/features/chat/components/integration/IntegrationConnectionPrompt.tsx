@@ -1,5 +1,5 @@
 import { Button } from "@heroui/button";
-import { Settings, Zap, ExternalLink } from "lucide-react";
+import { Settings } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 import { toast } from "sonner";
@@ -8,7 +8,6 @@ import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
 import { IntegrationConnectionData } from "@/types/features/integrationTypes";
 import { Tooltip } from "@heroui/tooltip";
 import Link from "next/link";
-import { Separator } from "@/components/ui";
 
 interface IntegrationConnectionPromptProps {
   data: IntegrationConnectionData;
@@ -18,8 +17,12 @@ interface IntegrationConnectionPromptProps {
 export const IntegrationConnectionPrompt: React.FC<
   IntegrationConnectionPromptProps
 > = ({ data, onConnected }) => {
-  const { connectIntegration } = useIntegrations();
+  const { connectIntegration, getIntegrationStatus } = useIntegrations();
   const [isConnecting, setIsConnecting] = useState(false);
+
+  // Check if the integration is already connected
+  const integrationStatus = getIntegrationStatus(data.integration_id);
+  const isConnected = integrationStatus?.connected || false;
 
   const handleConnect = async () => {
     setIsConnecting(true);
@@ -54,7 +57,9 @@ export const IntegrationConnectionPrompt: React.FC<
               }}
             />
           </div>
-          <span className="text-sm font-medium">Connection Required</span>
+          <span className="text-sm font-medium">
+            {isConnected ? "Already Connected" : "Connection Required"}
+          </span>
         </div>
         <Tooltip content="Open Integration Settings">
           <Link href={data.settings_url}>
@@ -74,13 +79,18 @@ export const IntegrationConnectionPrompt: React.FC<
       {/* Action button */}
       <div className="flex justify-end px-6 pt-4 pb-5">
         <Button
-          color="primary"
-          onPress={handleConnect}
+          color={isConnected ? "success" : "primary"}
+          onPress={isConnected ? undefined : handleConnect}
           isLoading={isConnecting}
+          isDisabled={isConnected}
           size="sm"
           className="font-medium"
         >
-          {isConnecting ? "Connecting..." : "Connect"} {data.integration_name}
+          {isConnecting
+            ? "Connecting..."
+            : isConnected
+              ? "Connected"
+              : `Connect ${data.integration_name}`}
         </Button>
       </div>
     </div>
