@@ -1,5 +1,6 @@
 from collections.abc import MutableMapping
-from typing import Annotated, List, Optional
+from typing import List, Optional
+from typing import Annotated
 
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages

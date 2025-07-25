@@ -35,6 +35,20 @@ class CalendarListFetchData(BaseModel):
     backgroundColor: Optional[str] = None
 
 
+class IntegrationConnectionData(BaseModel):
+    """Data structure for integration connection prompts."""
+
+    integration_id: str
+    integration_name: str
+    integration_icon: str
+    integration_description: str
+    integration_category: str
+    integration_features: List[str]
+    message: str
+    connect_url: str
+    settings_url: Optional[str] = None
+
+
 class MessageModel(BaseModel):
     type: str
     response: str
@@ -65,6 +79,7 @@ class MessageModel(BaseModel):
     code_data: Optional[dict] = None
     google_docs_data: Optional[dict] = None
     follow_up_actions: Optional[List[str]] = []
+    integration_connection_required: Optional[IntegrationConnectionData] = None
 
 
 class SystemPurpose(str, Enum):
