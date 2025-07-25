@@ -301,7 +301,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
       <div className="searchbar_container relative pb-1">
         {!integrationsLoading && integrations.length > 0 && !hasMessages && (
           <Button
-            className="absolute -top-4 z-[0] flex h-fit w-full max-w-[calc(36rem-15px)] rounded-full bg-zinc-800/40 px-4 py-2 pb-8 text-xs text-foreground-300 hover:bg-zinc-800/70 hover:text-zinc-400"
+            className="absolute -top-4 z-[0] flex h-fit w-[92%] rounded-full bg-zinc-800/40 px-4 py-2 pb-8 text-xs text-foreground-300 hover:bg-zinc-800/70 hover:text-zinc-400 sm:w-[46%]"
             onClick={handleToggleSlashCommandDropdown}
           >
             <div className="flex w-full items-center justify-between">
