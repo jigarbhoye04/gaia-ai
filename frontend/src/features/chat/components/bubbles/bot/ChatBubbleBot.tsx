@@ -6,12 +6,12 @@ import ChatBubble_Actions from "@/features/chat/components/bubbles/actions/ChatB
 import ChatBubble_Actions_Image from "@/features/chat/components/bubbles/actions/ChatBubble_Actions_Image";
 import { IntegrationConnectionPrompt } from "@/features/chat/components/integration/IntegrationConnectionPrompt";
 import MemoryIndicator from "@/features/chat/components/memory/MemoryIndicator";
+import { useLoading } from "@/features/chat/hooks/useLoading";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 import { parseDate } from "@/utils/date/dateUtils";
 
 import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
-import { useLoading } from "@/features/chat/hooks/useLoading";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   const {

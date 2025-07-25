@@ -1,13 +1,13 @@
 import { Button } from "@heroui/button";
+import { Tooltip } from "@heroui/tooltip";
 import { Settings } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
 import { IntegrationConnectionData } from "@/types/features/integrationTypes";
-import { Tooltip } from "@heroui/tooltip";
-import Link from "next/link";
 
 interface IntegrationConnectionPromptProps {
   data: IntegrationConnectionData;

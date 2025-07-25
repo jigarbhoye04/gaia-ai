@@ -1,5 +1,4 @@
 import { Button } from "@heroui/button";
-
 import { motion } from "framer-motion";
 
 import { useComposer } from "@/features/chat/contexts/ComposerContext";

@@ -11,8 +11,8 @@ import {
   CalendarListFetchData,
   CalendarOptions,
 } from "./calendarTypes";
-import { EmailComposeData, EmailFetchData } from "./mailTypes";
 import { IntegrationConnectionData } from "./integrationTypes";
+import { EmailComposeData, EmailFetchData } from "./mailTypes";
 import { DeepResearchResults, SearchResults } from "./searchTypes";
 import { TodoToolData } from "./todoToolTypes";
 import {
