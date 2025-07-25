@@ -17,13 +17,11 @@ from app.docstrings.langchain.tools.calendar_tool_docs import (
     SEARCH_CALENDAR_EVENTS,
     VIEW_CALENDAR_EVENT,
 )
-from app.docstrings.utils import with_doc
+from app.decorators import with_doc, with_rate_limiting, require_integration
 from app.langchain.templates.calendar_template import (
     CALENDAR_LIST_TEMPLATE,
     CALENDAR_PROMPT_TEMPLATE,
 )
-from app.middleware.langchain_rate_limiter import with_rate_limiting
-from app.utils.integration_decorator import require_integration
 from app.models.calendar_models import EventCreateRequest
 from app.services.calendar_service import (
     get_calendar_events,

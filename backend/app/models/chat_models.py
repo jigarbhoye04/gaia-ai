@@ -43,7 +43,6 @@ class IntegrationConnectionData(BaseModel):
     integration_icon: str
     integration_description: str
     integration_category: str
-    integration_features: List[str]
     message: str
     connect_url: str
     settings_url: Optional[str] = None

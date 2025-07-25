@@ -8,7 +8,6 @@ export interface IntegrationConnectionData {
   integration_icon: string;
   integration_description: string;
   integration_category: string;
-  integration_features: string[];
   tool_name?: string;
   tool_category?: string;
   message: string;

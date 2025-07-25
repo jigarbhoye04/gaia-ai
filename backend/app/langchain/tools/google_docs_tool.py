@@ -5,8 +5,7 @@ from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
 
 from app.config.loggers import chat_logger as logger
-from app.middleware.langchain_rate_limiter import with_rate_limiting
-from app.utils.integration_decorator import require_integration
+from app.decorators import with_rate_limiting, require_integration, with_doc
 from app.docstrings.langchain.tools.google_docs_tool_docs import (
     CREATE_GOOGLE_DOC,
     LIST_GOOGLE_DOCS,
@@ -16,7 +15,6 @@ from app.docstrings.langchain.tools.google_docs_tool_docs import (
     SHARE_GOOGLE_DOC,
     SEARCH_GOOGLE_DOCS,
 )
-from app.docstrings.utils import with_doc
 
 from app.langchain.templates.google_docs_templates import (
     GOOGLE_DOCS_CREATE_TEMPLATE,

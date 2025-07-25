@@ -24,6 +24,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     onOpenMemoryModal,
     isConvoSystemGenerated,
     systemPurpose,
+    integration_connection_required,
   } = props;
 
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -44,13 +45,10 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
 
   const renderedComponent = useMemo(() => {
     // Integration connection prompt takes priority
-    if (props.integration_connection_required) {
+    if (integration_connection_required)
       return (
-        <IntegrationConnectionPrompt
-          data={props.integration_connection_required}
-        />
+        <IntegrationConnectionPrompt data={integration_connection_required} />
       );
-    }
 
     if (image_data) return <ImageBubble {...props} />;
 
