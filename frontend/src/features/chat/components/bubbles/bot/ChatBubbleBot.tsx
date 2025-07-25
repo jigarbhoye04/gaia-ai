@@ -11,6 +11,7 @@ import { parseDate } from "@/utils/date/dateUtils";
 
 import ImageBubble from "./ImageBubble";
 import TextBubble from "./TextBubble";
+import { useLoading } from "@/features/chat/hooks/useLoading";
 
 export default function ChatBubbleBot(props: ChatBubbleBotProps) {
   const {
@@ -26,6 +27,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     systemPurpose,
     integration_connection_required,
   } = props;
+  const { isLoading } = useLoading();
 
   const actionsRef = useRef<HTMLDivElement>(null);
 
@@ -79,7 +81,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
           </div>
         </div>
 
-        {!loading && (
+        {!loading && !isLoading && (
           <div
             ref={actionsRef}
             className="absolute flex flex-col transition-all"
