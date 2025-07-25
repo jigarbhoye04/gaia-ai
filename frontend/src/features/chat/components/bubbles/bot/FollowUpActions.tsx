@@ -1,9 +1,8 @@
 import { Button } from "@heroui/button";
-import { useParams } from "next/navigation";
 
-import { useLoading } from "@/features/chat/hooks/useLoading";
-import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
 import { motion } from "framer-motion";
+
+import { useComposer } from "@/features/chat/contexts/ComposerContext";
 
 interface FollowUpActionsProps {
   actions: string[];
@@ -14,28 +13,18 @@ export default function FollowUpActions({
   actions,
   loading,
 }: FollowUpActionsProps) {
-  const { id: convoIdParam } = useParams<{ id: string }>();
-  const sendMessage = useSendMessage(convoIdParam ?? null);
-
+  const { appendToInput } = useComposer();
   const handleActionClick = async (action: string) => {
     if (loading) return;
 
     try {
-      // Send the follow-up action as a message
-      await sendMessage(
-        action,
-        [], // No file data
-        null, // No selected tool
-        null, // No tool category
-      );
+      appendToInput(action);
     } catch (error) {
-      console.error("Failed to send follow-up action:", error);
+      console.error("Failed to handle follow-up action:", error);
     }
   };
 
-  if (!actions || actions.length === 0 || loading) {
-    return null;
-  }
+  if (!actions || actions.length === 0 || loading) return null;
 
   return (
     <motion.div
