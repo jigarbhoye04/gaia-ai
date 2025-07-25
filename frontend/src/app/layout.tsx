@@ -7,6 +7,7 @@ import Script from "next/script";
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 
 import { defaultFont, getAllFontVariables } from "./fonts";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -94,13 +95,16 @@ export default function RootLayout({
           type="text/javascript"
         />
 
-        {/* Analytics */}
+        {/* Rybbit Analytics */}
         <Script
           src="https://analytics.heygaia.io/api/script.js"
           data-site-id="1"
           defer
           data-session-replay="true"
         />
+
+        {/* Google Analytics */}
+        <GoogleAnalytics gaId="G-R6EGV9FG2Q" />
       </body>
     </html>
   );
