@@ -45,6 +45,7 @@ export default function TextBubble({
   isConvoSystemGenerated,
   systemPurpose,
   follow_up_actions,
+  loading,
 }: ChatBubbleBotProps) {
   return (
     <>
@@ -165,7 +166,7 @@ export default function TextBubble({
       {!!code_data && <CodeExecutionSection code_data={code_data!} />}
 
       {!!follow_up_actions && follow_up_actions?.length > 0 && (
-        <FollowUpActions actions={follow_up_actions} />
+        <FollowUpActions actions={follow_up_actions} loading={!!loading} />
       )}
     </>
   );
