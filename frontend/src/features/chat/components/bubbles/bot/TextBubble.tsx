@@ -62,6 +62,10 @@ export default function TextBubble({
 
       {!!weather_data && <WeatherCard weatherData={weather_data!} />}
 
+      {!!email_thread_data && (
+        <EmailThreadCard emailThreadData={email_thread_data} />
+      )}
+
       {shouldShowTextBubble(text, isConvoSystemGenerated, systemPurpose) && (
         <div className="chat_bubble bg-zinc-800">
           <div className="flex flex-col gap-3">
@@ -127,10 +131,6 @@ export default function TextBubble({
       )}
 
       {!!email_fetch_data && <EmailListCard emails={email_fetch_data} />}
-
-      {!!email_thread_data && (
-        <EmailThreadCard emailThreadData={email_thread_data} />
-      )}
 
       {!!calendar_fetch_data && (
         <CalendarListCard events={calendar_fetch_data!} />

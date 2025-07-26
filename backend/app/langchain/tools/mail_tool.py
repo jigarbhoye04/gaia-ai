@@ -137,7 +137,8 @@ async def fetch_gmail_messages(
                 {
                     "from": transformed.get("from"),
                     "subject": transformed.get("subject"),
-                    "time": transformed.get("date"),
+                    "time": transformed.get("time"),
+                    "thread_id": transformed.get("threadId"),
                 }
             )
 

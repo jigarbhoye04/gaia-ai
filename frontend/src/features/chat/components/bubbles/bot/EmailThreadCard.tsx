@@ -61,12 +61,15 @@ export default function EmailThreadCard({
   emailThreadData,
 }: EmailThreadCardProps) {
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(
-    new Set(),
+    new Set(
+      emailThreadData.messages.length > 0
+        ? [emailThreadData.messages[0].id]
+        : [],
+    ),
   );
 
-  console.log(emailThreadData);
   return (
-    <div className="mx-auto mt-3 w-full max-w-4xl rounded-3xl bg-zinc-800 p-4 text-white">
+    <div className="mx-auto mb-3 w-full max-w-4xl rounded-3xl bg-zinc-800 p-4 text-white">
       {/* Header */}
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -82,7 +85,7 @@ export default function EmailThreadCard({
       </div>
 
       {/* Messages */}
-      <ScrollShadow className="max-h-[150vh]">
+      <ScrollShadow className="max-h-[50vh]">
         <Accordion
           variant="splitted"
           selectionMode="multiple"

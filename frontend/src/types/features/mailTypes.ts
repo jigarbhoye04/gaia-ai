@@ -95,6 +95,7 @@ export type EmailFetchData = {
   from: string;
   subject: string;
   time: string;
+  thread_id?: string;
 };
 
 export type EmailThreadData = {

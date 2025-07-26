@@ -33,7 +33,7 @@ def minimal_message_template(
         "time": email_data.get("time", ""),
         "isRead": "UNREAD" not in email_data.get("labelIds", []),
         "hasAttachment": "HAS_ATTACHMENT" in email_data.get("labelIds", []),
-        "body": email_data.get("body", "")[:3000]
+        "body": email_data.get("body", "")[:100]
         if short_body
         else email_data.get("body", ""),
         "labels": email_data.get("labelIds", []),
