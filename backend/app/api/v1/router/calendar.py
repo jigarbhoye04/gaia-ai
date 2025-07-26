@@ -99,7 +99,7 @@ async def get_events_by_calendar(
         return await calendar_service.get_calendar_events_by_id(
             calendar_id=calendar_id,
             access_token=current_user["access_token"],
-            refresh_token=None,  # Already handled
+            user_id=current_user["id"],
             page_token=page_token,
             time_min=time_min,
             time_max=time_max,
@@ -129,7 +129,7 @@ async def create_event(
     """
     try:
         return await calendar_service.create_calendar_event(
-            event, current_user["access_token"], None
+            event, current_user["access_token"], current_user["id"]
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -152,7 +152,7 @@ async def get_all_events(
     """
     try:
         return await calendar_service.get_all_calendar_events(
-            current_user["access_token"], None, time_min, time_max
+            current_user["access_token"], current_user["id"], time_min, time_max
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

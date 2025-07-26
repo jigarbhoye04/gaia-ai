@@ -3,17 +3,6 @@ from typing import Optional
 from urllib.parse import urlencode, urlparse
 
 import httpx
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Depends,
-    File,
-    Form,
-    HTTPException,
-    UploadFile,
-)
-from fastapi.responses import JSONResponse, RedirectResponse
-
 from app.api.v1.dependencies.oauth_dependencies import (
     get_current_user,
     get_user_timezone,
@@ -42,6 +31,16 @@ from app.services.user_service import update_user_profile
 # from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 from app.utils.watch_mail import watch_mail
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
+from fastapi.responses import JSONResponse, RedirectResponse
 
 router = APIRouter()
 
@@ -156,6 +155,7 @@ async def callback(
             redirect_url = f"{settings.FRONTEND_URL}/redirect?oauth_error=no_code"
             return RedirectResponse(url=redirect_url)
 
+        # Get tokens from authorization code
         tokens = await get_tokens_from_code(code)
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
@@ -165,6 +165,7 @@ async def callback(
                 status_code=400, detail="Missing access or refresh token"
             )
 
+        # Get user info using access token
         user_info = await fetch_user_info_from_google(access_token)
         user_email = user_info.get("email")
         user_name = user_info.get("name")
@@ -173,15 +174,38 @@ async def callback(
         if not user_email:
             raise HTTPException(status_code=400, detail="Email not found in user info")
 
+        # Store user info and get user_id
         user_id = await store_user_info(user_name, user_email, user_picture)
+
+        # Store tokens in the repository
+        import time
+
+        from app.config.token_repository import token_repository
+
+        # Calculate token expiry
+        expires_in = tokens.get("expires_in", 3600)  # Default 1 hour
+        expires_at = int(time.time()) + expires_in
+
+        # Store token in the repository
+        await token_repository.store_token(
+            user_id=str(user_id),
+            provider="google",
+            token_data={
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": tokens.get("token_type", "Bearer"),
+                "expires_at": expires_at,
+                "scope": tokens.get("scope", ""),
+            },
+        )
 
         # Redirect URL can include tokens if needed
         redirect_url = f"{settings.FRONTEND_URL}/redirect"
         response = RedirectResponse(url=redirect_url)
 
-        # Set cookie expiration: access token (1 hour), refresh token (30 days)
+        # Set cookie expiration: access token (1 hour)
+        # No longer storing refresh_token in cookies - using token repository instead
         access_token_max_age = 3600  # seconds
-        refresh_token_max_age = 30 * 24 * 3600  # 30 days in seconds
 
         env = settings.ENV
         if env == "production":
@@ -197,16 +221,6 @@ async def callback(
                 domain=production_domain,
                 max_age=access_token_max_age,
             )
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                path="/",
-                secure=True,
-                httponly=True,
-                samesite="none",
-                domain=production_domain,
-                max_age=refresh_token_max_age,
-            )
         else:
             response.set_cookie(
                 key="access_token",
@@ -214,13 +228,6 @@ async def callback(
                 path="/",
                 samesite="lax",
                 max_age=access_token_max_age,
-            )
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                path="/",
-                samesite="lax",
-                max_age=refresh_token_max_age,
             )
 
         # Add background task to register user to watch emails
