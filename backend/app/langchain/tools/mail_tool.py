@@ -149,6 +149,7 @@ async def fetch_gmail_messages(
             {
                 "messages": transformed_messages,
                 "nextPageToken": results.get("nextPageToken"),
+                "instructions": "Don't repeat or summarize the email contents — the user already sees them on the frontend. If the user hasn't said anything yet, prompt them to choose an email to view in more detail. Use clear, minimal language like: 'Which email should I open?', 'Want to look into one of these?', or 'Pick an email to view more details.' Avoid vague terms like 'help' or 'take care of it'.",
             }
         )
     except Exception as e:

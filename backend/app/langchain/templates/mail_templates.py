@@ -165,6 +165,8 @@ def process_list_messages_response(response: Dict[str, Any]) -> Dict[str, Any]:
     if "error" in response:
         processed_response["error"] = response["error"]
 
+    if "instructions" in response:
+        processed_response["instructions"] = response.get("instructions")
     return processed_response
 
 
