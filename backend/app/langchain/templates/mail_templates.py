@@ -11,7 +11,9 @@ from langchain_core.prompts import PromptTemplate
 
 
 # Template for minimal message representation
-def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
+def minimal_message_template(
+    email_data: Dict[str, Any], short_body=True
+) -> Dict[str, Any]:
     """
     Convert a Gmail message to a minimal representation with only essential fields.
 
@@ -31,7 +33,9 @@ def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
         "time": email_data.get("time", ""),
         "isRead": "UNREAD" not in email_data.get("labelIds", []),
         "hasAttachment": "HAS_ATTACHMENT" in email_data.get("labelIds", []),
-        "body": email_data.get("body", ""),
+        "body": email_data.get("body", "")[:3000]
+        if short_body
+        else email_data.get("body", ""),
         "labels": email_data.get("labelIds", []),
     }
 
@@ -165,8 +169,6 @@ def process_list_messages_response(response: Dict[str, Any]) -> Dict[str, Any]:
     if "error" in response:
         processed_response["error"] = response["error"]
 
-    if "instructions" in response:
-        processed_response["instructions"] = response.get("instructions")
     return processed_response
 
 

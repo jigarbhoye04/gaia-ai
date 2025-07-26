@@ -2,37 +2,36 @@
 
 // Base message types - the core types that eliminate redundancy
 export type {
-    BotMessageData,
-    ConversationMessage,
-    SetImageDataType,
-    UserMessageData,
+  BotMessageData,
+  ConversationMessage,
+  SetImageDataType,
+  UserMessageData,
 } from "./baseMessageTypes";
 
 // Legacy types that now extend base types (for backwards compatibility)
 export type {
-    ChatBubbleBotProps,
-    ChatBubbleUserProps,
+  ChatBubbleBotProps,
+  ChatBubbleUserProps,
 } from "./chatBubbleTypes";
-export type {
-    ConversationType,
-} from "./convoTypes";
+export type { ConversationType } from "./convoTypes";
 
 // All tool-specific types
 export type {
-    CalendarDeleteOptions,
-    CalendarEditOptions,
-    CalendarOptions,
-    CodeData,
-    DeepResearchResults,
-    DocumentData,
-    EmailComposeData,
-    GoalDataMessageType,
-    GoogleDocsData,
-    ImageData,
-    MemoryData,
-    SearchResults,
-    TodoToolData,
-    WeatherData,
+  CalendarDeleteOptions,
+  CalendarEditOptions,
+  CalendarOptions,
+  CodeData,
+  DeepResearchResults,
+  DocumentData,
+  EmailComposeData,
+  EmailThreadData,
+  GoalDataMessageType,
+  GoogleDocsData,
+  ImageData,
+  MemoryData,
+  SearchResults,
+  TodoToolData,
+  WeatherData,
 } from "./baseMessageTypes";
 
 // Other feature types

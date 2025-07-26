@@ -12,6 +12,7 @@ import EmailListCard from "@/features/mail/components/EmailListCard";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
+import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
 import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";
@@ -32,6 +33,7 @@ export default function TextBubble({
   calendar_edit_options,
   email_compose_data,
   email_fetch_data,
+  email_thread_data,
   calendar_fetch_data,
   calendar_list_fetch_data,
   weather_data,
@@ -125,6 +127,10 @@ export default function TextBubble({
       )}
 
       {!!email_fetch_data && <EmailListCard emails={email_fetch_data} />}
+
+      {!!email_thread_data && (
+        <EmailThreadCard emailThreadData={email_thread_data} />
+      )}
 
       {!!calendar_fetch_data && (
         <CalendarListCard events={calendar_fetch_data!} />

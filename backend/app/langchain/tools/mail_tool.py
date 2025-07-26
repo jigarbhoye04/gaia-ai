@@ -145,13 +145,15 @@ async def fetch_gmail_messages(
         writer({"email_fetch_data": email_fetch_data})
 
         # Process to minimize data for LLM
-        return process_list_messages_response(
-            {
-                "messages": transformed_messages,
-                "nextPageToken": results.get("nextPageToken"),
-                "instructions": "Don't repeat or summarize the email contents — the user already sees them on the frontend. If the user hasn't said anything yet, prompt them to choose an email to view in more detail. Use clear, minimal language like: 'Which email should I open?', 'Want to look into one of these?', or 'Pick an email to view more details.' Avoid vague terms like 'help' or 'take care of it'.",
-            }
-        )
+        return {
+            **process_list_messages_response(
+                {
+                    "messages": transformed_messages,
+                    "nextPageToken": results.get("nextPageToken"),
+                }
+            ),
+            "instructions": "Don't tell the user about the email contents — the user already sees them on the frontend in an email component. If the user hasn't said anything yet, prompt them to choose an email to view in more detail. Use clear, minimal language like: 'Which email should I open?', 'Want to look into one of these?', or 'Pick an email to view more details.' Avoid vague terms like 'help' or 'take care of it'.",
+        }
     except Exception as e:
         error_msg = f"Error listing Gmail messages: {str(e)}"
         logger.error(error_msg)
@@ -406,6 +408,27 @@ async def get_email_thread(
         )
 
         thread = fetch_thread(service, thread_id)
+
+        writer = get_stream_writer()
+
+        # Prepare thread data for frontend component
+        thread_data = {
+            "thread_id": thread.get("id", ""),
+            "messages": [
+                {
+                    "id": msg.get("id", ""),
+                    "from": msg.get("from", ""),
+                    "subject": msg.get("subject", ""),
+                    "time": msg.get("time", ""),
+                    "snippet": msg.get("snippet", ""),
+                    "body": msg.get("body", ""),
+                }
+                for msg in thread.get("messages", [])
+            ],
+            "messages_count": len(thread.get("messages", [])),
+        }
+
+        writer({"email_thread_data": thread_data})
 
         # Process to minimize data for LLM
         return process_get_thread_response(thread)

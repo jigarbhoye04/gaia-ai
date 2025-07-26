@@ -35,6 +35,12 @@ class CalendarListFetchData(BaseModel):
     backgroundColor: Optional[str] = None
 
 
+class EmailThreadData(BaseModel):
+    thread_id: str
+    messages: List[dict]  # Simplified message data for chat display
+    messages_count: int
+
+
 class MessageModel(BaseModel):
     type: str
     response: str
@@ -56,6 +62,7 @@ class MessageModel(BaseModel):
     weather_data: Optional[WeatherData] = None
     email_compose_data: Optional[List[EmailComposeRequest]] = None
     email_fetch_data: Optional[List[EmailFetchData]] = None
+    email_thread_data: Optional[EmailThreadData] = None
     calendar_fetch_data: Optional[List[CalendarFetchData]] = None
     calendar_list_fetch_data: Optional[List[CalendarListFetchData]] = None
     memory_data: Optional[dict] = None
