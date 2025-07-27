@@ -81,6 +81,11 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
+    # WorkOS Authentication
+    WORKOS_API_KEY: str = ""
+    WORKOS_CLIENT_ID: str = ""
+    WORKOS_COOKIE_PASSWORD: str = ""
+
     # External API Keys
     BING_API_KEY: str
     ASSEMBLYAI_API_KEY: str
@@ -132,15 +137,23 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_ID: str
     RAZORPAY_KEY_SECRET: str
 
+    @property
     @computed_field
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only if explicitly enabled in production."""
         return self.ENV == "production" and not self.DISABLE_PROFILING
 
+    @property
     @computed_field
     def GOOGLE_CALLBACK_URL(self) -> str:
         """Google OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/google/callback"
+
+    @property
+    @computed_field
+    def WORKOS_REDIRECT_URI(self) -> str:
+        """WorkOS OAuth callback URL."""
+        return f"{self.HOST}/api/v1/oauth/workos/callback"
 
     model_config = SettingsConfigDict(
         env_file_encoding="utf-8",

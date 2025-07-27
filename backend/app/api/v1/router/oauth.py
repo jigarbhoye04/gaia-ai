@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from typing import Optional
 from urllib.parse import urlencode, urlparse
@@ -14,6 +15,7 @@ from app.config.oauth_config import (
     get_integration_scopes,
 )
 from app.config.settings import settings
+from app.config.token_repository import token_repository
 from app.models.user_models import (
     OnboardingPreferences,
     OnboardingRequest,
@@ -27,13 +29,12 @@ from app.services.onboarding_service import (
     update_onboarding_preferences,
 )
 from app.services.user_service import update_user_profile
-
-# from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 from app.utils.watch_mail import watch_mail
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Cookie,
     Depends,
     File,
     Form,
@@ -41,13 +42,17 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.responses import JSONResponse, RedirectResponse
+from workos import WorkOSClient
 
 router = APIRouter()
-
-
 http_async_client = httpx.AsyncClient()
 
+workos = WorkOSClient(
+    api_key=settings.WORKOS_API_KEY, client_id=settings.WORKOS_CLIENT_ID
+)
 
+
+# We'll use the utility functions from workos_utils.py instead of the SDK
 @router.get("/login/google")
 async def login_google():
     """Basic Google OAuth for signup - only requests essential scopes."""
@@ -66,6 +71,85 @@ async def login_google():
     }
     auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
     return RedirectResponse(url=auth_url)
+
+
+@router.get("/login/workos")
+async def login_workos():
+    """
+    Start the WorkOS SSO authentication flow.
+
+    Returns:
+        RedirectResponse: Redirects the user to the WorkOS SSO authorization URL
+    """
+    # Add any needed parameters for your SSO implementation
+    authorization_url = workos.user_management.get_authorization_url(
+        provider="authkit", redirect_uri=settings.WORKOS_REDIRECT_URI
+    )
+
+    return RedirectResponse(url=authorization_url)
+
+
+@router.get("/workos/callback")
+async def workos_callback(
+    code: Optional[str] = None,
+) -> RedirectResponse:
+    """
+    Handle the WorkOS SSO callback.
+
+    Args:
+        background_tasks: FastAPI background tasks
+        code: Authorization code from WorkOS
+        error: Error message (if any)
+
+    Returns:
+        RedirectResponse to the frontend with auth tokens
+    """
+    try:
+        # Validate code parameter
+        if not code:
+            logger.error("No authorization code received from WorkOS")
+            return RedirectResponse(
+                url=f"{settings.FRONTEND_URL}/login?error=missing_code"
+            )
+
+        auth_response = workos.user_management.authenticate_with_code(
+            code=code,
+            session={
+                "seal_session": True,
+                "cookie_password": settings.WORKOS_COOKIE_PASSWORD,
+            },
+        )
+
+        # Extract user information
+        email = auth_response.user.email
+        name = f"{auth_response.user.first_name} {auth_response.user.last_name}"
+        picture_url = auth_response.user.profile_picture_url
+
+        # Store user info in our database
+        await store_user_info(name, email, picture_url)
+
+        # Set cookies and redirect to frontend
+        redirect_url = settings.FRONTEND_URL
+        response = RedirectResponse(url=redirect_url)
+
+        # Set cookies with appropriate security settings
+        response.set_cookie(
+            key="wos_session",
+            value=auth_response.sealed_session or auth_response.access_token,
+            httponly=True,
+            secure=settings.ENV == "production",
+            samesite="lax",
+        )
+
+        return response
+
+    except HTTPException as e:
+        logger.error(f"HTTP error during WorkOS callback: {e.detail}")
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error={e.detail}")
+
+    except Exception as e:
+        logger.error(f"Unexpected error during WorkOS callback: {str(e)}")
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=server_error")
 
 
 @router.get("/login/integration/{integration_id}")
@@ -176,11 +260,6 @@ async def callback(
 
         # Store user info and get user_id
         user_id = await store_user_info(user_name, user_email, user_picture)
-
-        # Store tokens in the repository
-        import time
-
-        from app.config.token_repository import token_repository
 
         # Calculate token expiry
         expires_in = tokens.get("expires_in", 3600)  # Default 1 hour
@@ -524,39 +603,18 @@ async def update_user_name(
 
 
 @router.post("/logout")
-async def logout():
-    response = JSONResponse(content={"detail": "Logged out successfully"})
-    env = settings.ENV
+async def logout(wos_session: Optional[str] = Cookie(None)):
+    """
+    Log out the user by revoking tokens for both Google and WorkOS.
 
-    if env == "production":
-        parsed_frontend = urlparse(settings.FRONTEND_URL)
-        production_domain = parsed_frontend.hostname
-        response.set_cookie(
-            key="access_token",
-            value="",
-            expires=0,
-            path="/",
-            domain=production_domain,
-            samesite="none",
-            secure=True,
-            httponly=True,
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value="",
-            expires=0,
-            path="/",
-            domain=production_domain,
-            samesite="none",
-            secure=True,
-            httponly=True,
-        )
-    else:
-        response.set_cookie(
-            key="access_token", value="", expires=0, path="/", samesite="lax"
-        )
-        response.set_cookie(
-            key="refresh_token", value="", expires=0, path="/", samesite="lax"
-        )
+    Args:
+        access_token: JWT access token or Google token
+
+    Returns:
+        JSONResponse with logout status
+    """
+    response = JSONResponse(content={"detail": "Logged out successfully"})
+
+    response.delete_cookie("wos_session")
 
     return response

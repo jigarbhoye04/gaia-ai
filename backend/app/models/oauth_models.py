@@ -38,5 +38,7 @@ class OAuthToken(Base):
 
     # Composite index for efficient lookups
     __table_args__ = (
-        {"postgresql_using": "btree", "postgresql_with": {"fillfactor": 90}},
+        {
+            "postgresql_using": "btree",
+        },
     )
