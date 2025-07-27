@@ -1,4 +1,5 @@
 import io
+from typing import cast
 
 import cloudinary
 import cloudinary.uploader
@@ -7,6 +8,7 @@ from fastapi import HTTPException
 
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
+from app.config.token_repository import token_repository
 
 http_async_client = httpx.AsyncClient()
 
@@ -90,10 +92,6 @@ async def get_tokens_by_user_id(user_id: str) -> tuple[str, str, bool]:
     Returns:
         tuple: (access_token, refresh_token, success_flag)
     """
-    from typing import cast
-
-    from app.config.token_repository import token_repository
-
     try:
         # Get token from repository
         token = await token_repository.get_token(user_id, "google")

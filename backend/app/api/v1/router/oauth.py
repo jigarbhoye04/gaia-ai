@@ -34,7 +34,6 @@ from app.utils.watch_mail import watch_mail
 from fastapi import (
     APIRouter,
     BackgroundTasks,
-    Cookie,
     Depends,
     File,
     Form,
@@ -52,28 +51,27 @@ workos = WorkOSClient(
 )
 
 
-# We'll use the utility functions from workos_utils.py instead of the SDK
+# @router.get("/login/google")
+# async def login_google():
+#     """Basic Google OAuth for signup - only requests essential scopes."""
+#     scopes = [
+#         "openid",
+#         "profile",
+#         "email",
+#     ]
+#     params = {
+#         "response_type": "code",
+#         "client_id": settings.GOOGLE_CLIENT_ID,
+#         "redirect_uri": settings.GOOGLE_CALLBACK_URL,
+#         "scope": " ".join(scopes),
+#         "access_type": "offline",
+#         "prompt": "select_account",  # Only force account selection for initial login
+#     }
+#     auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
+#     return RedirectResponse(url=auth_url)
+
+
 @router.get("/login/google")
-async def login_google():
-    """Basic Google OAuth for signup - only requests essential scopes."""
-    scopes = [
-        "openid",
-        "profile",
-        "email",
-    ]
-    params = {
-        "response_type": "code",
-        "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.GOOGLE_CALLBACK_URL,
-        "scope": " ".join(scopes),
-        "access_type": "offline",
-        "prompt": "select_account",  # Only force account selection for initial login
-    }
-    auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
-    return RedirectResponse(url=auth_url)
-
-
-@router.get("/login/workos")
 async def login_workos():
     """
     Start the WorkOS SSO authentication flow.
@@ -99,7 +97,7 @@ async def workos_callback(
     Args:
         background_tasks: FastAPI background tasks
         code: Authorization code from WorkOS
-        error: Error message (if any)
+        error: Error message (if any)access_token
 
     Returns:
         RedirectResponse to the frontend with auth tokens
@@ -179,15 +177,21 @@ async def login_integration(
 
         # Get existing scopes from user's current token
         existing_scopes = []
-        access_token = user.get("access_token")
-        if access_token:
+        user_id = user.get("user_id")
+
+        if user_id:
             try:
-                token_info_response = await http_async_client.get(
-                    f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                token = await token_repository.get_token(
+                    str(user_id), "google", renew_if_expired=False
                 )
-                if token_info_response.status_code == 200:
-                    token_data = token_info_response.json()
-                    existing_scopes = token_data.get("scope", "").split()
+                if token and token.get("access_token"):
+                    access_token = token.get("access_token")
+                    token_info_response = await http_async_client.get(
+                        f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                    )
+                    if token_info_response.status_code == 200:
+                        token_data = token_info_response.json()
+                        existing_scopes = token_data.get("scope", "").split()
             except Exception as e:
                 logger.warning(f"Could not get existing scopes: {e}")
 
@@ -386,18 +390,32 @@ async def get_integrations_status(
     Get the integration status for the current user based on OAuth scopes.
     """
     try:
-        access_token = user.get("access_token")
         authorized_scopes = []
+        user_id = user.get("user_id")
 
-        # Check Google token info if we have an access token
-        if access_token:
-            token_info_response = await http_async_client.get(
-                f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+        # Get token from repository
+        try:
+            if not user_id:
+                logger.warning("User ID not found in user object")
+                raise ValueError("User ID not found")
+
+            token = await token_repository.get_token(
+                str(user_id), "google", renew_if_expired=True
             )
+            if token:
+                access_token = token.get("access_token")
+                if access_token:
+                    # Check Google token info
+                    token_info_response = await http_async_client.get(
+                        f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                    )
 
-            if token_info_response.status_code == 200:
-                token_data = token_info_response.json()
-                authorized_scopes = token_data.get("scope", "").split()
+                    if token_info_response.status_code == 200:
+                        token_data = token_info_response.json()
+                        authorized_scopes = token_data.get("scope", "").split()
+        except Exception as e:
+            logger.warning(f"Error retrieving token from repository: {e}")
+            # Continue with empty scopes
 
         # Dynamically check each integration's status
         integration_statuses = []
@@ -438,45 +456,6 @@ async def get_integrations_status(
                 ]
             }
         )
-
-
-# async def me(access_token: str = Cookie(None)):
-# if not access_token:
-#     raise HTTPException(status_code=401, detail="Authentication required")
-# try:
-#     # Validate the access token with Google's API
-#     user_info_response = requests.get(
-#         settings.GOOGLE_USERINFO_URL,
-#         headers={"Authorization": f"Bearer {access_token}"},
-#     )
-#     if user_info_response.status_code != 200:
-#         raise HTTPException(
-#             status_code=401, detail="Invalid or expired access token"
-#         )
-
-#     user_info = user_info_response.json()
-#     user_email = user_info.get("email")
-#     if not user_email:
-#         raise HTTPException(status_code=400, detail="Email not found in user info")
-
-#     user_data = await users_collection.find_one({"email": user_email})
-#     if not user_data:
-#         raise HTTPException(status_code=404, detail="User not found")
-
-#     return JSONResponse(
-#         content={
-#             "email": user_data["email"],
-#             "name": user_data["name"],
-#             "picture": user_data["picture"],
-#         }
-#     )
-
-# except requests.exceptions.RequestException as e:
-#     logger.error(f"Error fetching user info from Google: {str(e)}")
-#     raise HTTPException(status_code=500, detail="Error contacting Google API")
-# except Exception as e:
-#     logger.error(f"Unexpected error: {str(e)}")
-#     raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.patch("/me", response_model=UserUpdateResponse)
@@ -603,7 +582,7 @@ async def update_user_name(
 
 
 @router.post("/logout")
-async def logout(wos_session: Optional[str] = Cookie(None)):
+async def logout():
     """
     Log out the user by revoking tokens for both Google and WorkOS.
 

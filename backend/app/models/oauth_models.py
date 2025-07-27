@@ -35,10 +35,3 @@ class OAuthToken(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
     )
-
-    # Composite index for efficient lookups
-    __table_args__ = (
-        {
-            "postgresql_using": "btree",
-        },
-    )
