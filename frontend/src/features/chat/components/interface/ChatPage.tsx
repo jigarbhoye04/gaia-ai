@@ -24,7 +24,8 @@ const ChatPage = React.memo(function MainChat() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const { updateConvoMessages, convoMessages } = useConversation();
+  const { updateConvoMessages, convoMessages, clearMessages } =
+    useConversation();
   const { conversations } = useConversationList();
   const { id: convoIdParam } = useParams<{ id: string }>();
   const messageId = searchParams.get("messageId");
@@ -97,7 +98,11 @@ const ChatPage = React.memo(function MainChat() {
       fetchMessages(convoIdParam, updateConvoMessages, router).then(() => {
         setTimeout(scrollToBottom, 500);
       });
-    } else if (pathname !== "/c") router.push("/c");
+    } else {
+      // Clear messages when navigating to /c without an ID (new chat)
+      clearMessages();
+      if (pathname !== "/c") router.push("/c");
+    }
 
     if (inputRef?.current) inputRef.current.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
