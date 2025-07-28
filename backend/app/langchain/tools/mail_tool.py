@@ -17,7 +17,7 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     UNSTAR_EMAILS,
     UPDATE_GMAIL_LABEL,
 )
-from app.docstrings.utils import with_doc
+from app.decorators import with_doc, with_rate_limiting, require_integration
 from app.langchain.templates.mail_templates import (
     COMPOSE_EMAIL_TEMPLATE,
     process_get_thread_response,
@@ -25,7 +25,6 @@ from app.langchain.templates.mail_templates import (
     process_list_messages_response,
     process_search_messages_response,
 )
-from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.mail_models import EmailComposeRequest
 from app.services.contact_service import get_gmail_contacts
 from app.services.mail_service import (
@@ -91,6 +90,7 @@ async def list_gmail_labels(config: RunnableConfig) -> Dict[str, Any]:
 
 @tool
 @with_doc(LIST_GMAIL_MESSAGES)
+@require_integration("mail")
 async def fetch_gmail_messages(
     config: RunnableConfig,
     max_results: Annotated[
@@ -255,6 +255,7 @@ async def search_gmail_messages(
 @tool
 @with_rate_limiting("mail_actions")
 @with_doc(COMPOSE_EMAIL)
+@require_integration("mail")
 async def compose_email(
     config: RunnableConfig,
     emails: Annotated[

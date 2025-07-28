@@ -11,6 +11,7 @@ import {
   CalendarListFetchData,
   CalendarOptions,
 } from "./calendarTypes";
+import { IntegrationConnectionData } from "./integrationTypes";
 import { EmailComposeData, EmailFetchData } from "./mailTypes";
 import { DeepResearchResults, SearchResults } from "./searchTypes";
 import { TodoToolData } from "./todoToolTypes";
@@ -62,6 +63,10 @@ export const BASE_MESSAGE_SCHEMA = {
     | null
     | undefined,
   follow_up_actions: undefined as string[] | undefined,
+  integration_connection_required: undefined as
+    | IntegrationConnectionData
+    | null
+    | undefined,
 };
 
 export type BaseMessageData = typeof BASE_MESSAGE_SCHEMA;

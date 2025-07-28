@@ -363,7 +363,6 @@ async def get_integrations_config():
                     "icon": integration.icon,
                     "category": integration.category,
                     "provider": integration.provider,
-                    "features": integration.features,
                     "available": integration.available,
                     "loginEndpoint": (
                         f"oauth/login/integration/{integration.id}"

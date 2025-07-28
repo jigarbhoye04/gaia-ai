@@ -6,15 +6,14 @@ This module provides functions to configure middleware for the FastAPI applicati
 
 from app.config.settings import settings
 from app.middleware.auth_middleware import WorkOSAuthMiddleware
-from app.middleware.logger import LoggingMiddleware
-from app.middleware.profiler import ProfilingMiddleware
-from app.middleware.rate_limiter import limiter
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from workos import WorkOSClient
+from app.decorators import ProfilingMiddleware, LoggingMiddleware
+from app.middleware.rate_limiter import limiter
 
 
 async def rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:

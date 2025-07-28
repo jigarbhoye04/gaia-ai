@@ -1,52 +1,62 @@
 import { Button } from "@heroui/button";
-import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
 
-import { useLoading } from "@/features/chat/hooks/useLoading";
-import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
+import { useComposer } from "@/features/chat/contexts/ComposerContext";
 
 interface FollowUpActionsProps {
   actions: string[];
+  loading: boolean;
 }
 
-export default function FollowUpActions({ actions }: FollowUpActionsProps) {
-  const { id: convoIdParam } = useParams<{ id: string }>();
-  const sendMessage = useSendMessage(convoIdParam ?? null);
-  const { isLoading } = useLoading();
-
+export default function FollowUpActions({
+  actions,
+  loading,
+}: FollowUpActionsProps) {
+  const { appendToInput } = useComposer();
   const handleActionClick = async (action: string) => {
-    if (isLoading) return;
+    if (loading) return;
 
     try {
-      // Send the follow-up action as a message
-      await sendMessage(
-        action,
-        [], // No file data
-        null, // No selected tool
-        null, // No tool category
-      );
+      appendToInput(action);
     } catch (error) {
-      console.error("Failed to send follow-up action:", error);
+      console.error("Failed to handle follow-up action:", error);
     }
   };
 
-  if (!actions || actions.length === 0) {
-    return null;
-  }
+  if (!actions || actions.length === 0 || loading) return null;
 
   return (
-    <div className="flex max-w-xl flex-wrap gap-2 px-1 pt-3 pb-1">
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        visible: {
+          transition: {
+            staggerChildren: 0.05,
+          },
+        },
+      }}
+      className="flex max-w-xl flex-wrap gap-2 px-1 pt-3 pb-1"
+    >
       {actions.map((action, index) => (
-        <Button
+        <motion.div
           key={index}
-          className="text-xs text-foreground-500 transition-colors hover:text-foreground-700"
-          variant="flat"
-          size="sm"
-          onPress={() => handleActionClick(action)}
-          isDisabled={isLoading}
+          variants={{
+            hidden: { opacity: 0, y: 10 },
+            visible: { opacity: 1, y: 0 },
+          }}
         >
-          {action}
-        </Button>
+          <Button
+            className="text-xs text-foreground-500 transition-colors hover:bg-zinc-700 hover:text-foreground-700"
+            variant="flat"
+            size="sm"
+            onPress={() => handleActionClick(action)}
+            isDisabled={loading}
+          >
+            {action}
+          </Button>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
