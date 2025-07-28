@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 import httpx
 from app.api.v1.dependencies.oauth_dependencies import (
@@ -70,7 +70,7 @@ workos = WorkOSClient(
 #     return RedirectResponse(url=auth_url)
 
 
-@router.get("/login/google")
+@router.get("/login/workos")
 async def login_workos():
     """
     Start the WorkOS SSO authentication flow.
@@ -141,7 +141,7 @@ async def workos_callback(
         return response
 
     except HTTPException as e:
-        logger.error(f"HTTP error during WorkOS callback: {e.detail}")
+        logger.error(f"HTTP error during WorkOS : {e.detail}")
         return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error={e.detail}")
 
     except Exception as e:
@@ -280,33 +280,6 @@ async def callback(
         # Redirect URL can include tokens if needed
         redirect_url = f"{settings.FRONTEND_URL}/redirect"
         response = RedirectResponse(url=redirect_url)
-
-        # Set cookie expiration: access token (1 hour)
-        # No longer storing refresh_token in cookies - using token repository instead
-        access_token_max_age = 3600  # seconds
-
-        env = settings.ENV
-        if env == "production":
-            parsed_frontend = urlparse(settings.FRONTEND_URL)
-            production_domain = parsed_frontend.hostname
-            response.set_cookie(
-                key="access_token",
-                value=access_token,
-                path="/",
-                secure=True,  # HTTPS only
-                httponly=True,
-                samesite="none",
-                domain=production_domain,
-                max_age=access_token_max_age,
-            )
-        else:
-            response.set_cookie(
-                key="access_token",
-                value=access_token,
-                path="/",
-                samesite="lax",
-                max_age=access_token_max_age,
-            )
 
         # Add background task to register user to watch emails
         background_tasks.add_task(
@@ -589,6 +562,12 @@ async def logout():
     """
     response = JSONResponse(content={"detail": "Logged out successfully"})
 
-    response.delete_cookie("wos_session")
+    response.delete_cookie(
+        "wos_session",
+        httponly=True,
+        path="/",
+        secure=settings.ENV == "production",
+        samesite="lax",
+    )
 
     return response

@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { apiauth } from "@/lib";
 
-import SignupForm from "@/features/auth/components/SignupForm";
+// import SignupForm from "@/features/auth/components/SignupForm";
 
 export const metadata: Metadata = {
   title: "Sign Up",
@@ -22,6 +24,9 @@ export const metadata: Metadata = {
   },
 };
 
+// Redirect to the OAuth signup endpoint directly
 export default function SignupPage() {
-  return <SignupForm />;
+  redirect(`${apiauth.getUri()}oauth/login/workos`);
+
+  // return <SignupForm />;
 }
