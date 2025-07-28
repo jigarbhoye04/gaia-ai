@@ -29,7 +29,7 @@ from app.models.reminder_models import ReminderProcessingAgentResult
 from app.utils.memory_utils import store_user_message_memory
 
 
-@traceable
+@traceable(run_type="llm", name="Call Agent")
 async def call_agent(
     request: MessageRequestWithHistory,
     conversation_id,
