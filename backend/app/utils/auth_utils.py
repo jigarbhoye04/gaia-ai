@@ -143,6 +143,12 @@ def auth_required(provider: str = "google"):
                 # No user_id found, can't handle token refresh
                 return await func(*args, **kwargs)
 
+            # Remove user_id from kwargs and args if it exists
+            if "user_id" in kwargs:
+                del kwargs["user_id"]
+            if user_id in args:
+                args = tuple(arg for arg in args if arg != user_id)
+
             # Fix: We need to avoid passing the same parameter both as keyword and in *args/**kwargs
             async def call_func():
                 return await with_token_refresh(

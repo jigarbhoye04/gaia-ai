@@ -44,7 +44,7 @@ async def get_calendar_list(
         )
         access_token = token.get("access_token")
 
-        return await calendar_service.list_calendars(user_id, access_token)
+        return await calendar_service.list_calendars(access_token)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

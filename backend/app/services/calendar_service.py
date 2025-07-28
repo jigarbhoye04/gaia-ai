@@ -138,9 +138,7 @@ async def fetch_calendar_events(
 
 
 @auth_required()
-async def list_calendars(
-    user_id: str, access_token: Optional[str] = None, short=False
-) -> Optional[Dict[str, Any]]:
+async def list_calendars(access_token: str, short=False) -> Optional[Dict[str, Any]]:
     """
     Retrieve the user's calendar list. If the access token is invalid,
     it will get a new token from the token repository.
@@ -153,16 +151,6 @@ async def list_calendars(
     Returns:
         Optional[Dict[str, Any]]: Calendar list data or None if retrieval fails.
     """
-    # If no access_token is provided, get one from the repository
-    if not access_token:
-        token = await token_repository.get_token(
-            user_id, "google", renew_if_expired=True
-        )
-        access_token = str(token.get("access_token", ""))
-
-    if not access_token:
-        raise HTTPException(status_code=401, detail="No valid access token available")
-
     # Token refresh will be handled by the decorator if needed
     return await fetch_calendar_list(access_token, short)
 
