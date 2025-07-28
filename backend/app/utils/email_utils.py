@@ -18,6 +18,9 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
 from app.models.support_models import SupportEmailNotification, SupportRequestType
+from app.db.mongodb.collections import users_collection
+from datetime import datetime, timezone
+from bson import ObjectId
 
 
 # Initialize Resend with API key
@@ -261,10 +264,45 @@ def generate_welcome_email_html(user_name: Optional[str] = None) -> str | None:
 
 
 async def send_inactive_user_email(
-    user_email: str, user_name: Optional[str] = None
-) -> None:
-    """Send email to inactive user using Jinja2 template."""
+    user_email: str, user_name: Optional[str] = None, user_id: Optional[str] = None
+) -> bool:
+    """
+    Send email to inactive user and track when sent to prevent spam.
+
+    Args:
+        user_email: Email address of the inactive user
+        user_name: Name of the user (optional)
+        user_id: User ID for tracking (optional)
+
+    Returns:
+        True if email was sent, False if skipped
+    """
+
     try:
+        # If user_id provided, check if we should send email
+        if user_id:
+            user = await users_collection.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                logger.error(f"User {user_id} not found")
+                return False
+
+            now = datetime.now(timezone.utc)
+            last_active = user.get("last_active_at")
+            last_email_sent = user.get("last_inactive_email_sent")
+
+            # Check if user is inactive long enough (7+ days)
+            if not last_active or (now - last_active).days < 7:
+                return False
+
+            # Skip if email sent in last 7 days
+            if last_email_sent and (now - last_email_sent).days < 7:
+                return False
+
+            # Max 2 emails: first after 7 days, second after 14 days
+            days_inactive = (now - last_active).days
+            if last_email_sent and days_inactive >= 14:
+                return False  # Already sent 2 emails, stop
+
         subject = "We miss you at GAIA 🌱"
         html_content = generate_inactive_user_email_html(user_name)
 
@@ -277,7 +315,17 @@ async def send_inactive_user_email(
                 "reply_to": CONTACT_EMAIL,
             }
         )
+
+        # Update tracking if user_id provided
+        if user_id:
+            await users_collection.update_one(
+                {"_id": ObjectId(user_id)},
+                {"$set": {"last_inactive_email_sent": datetime.now(timezone.utc)}},
+            )
+
         logger.info(f"Inactive user email sent to {user_email}")
+        return True
+
     except Exception as e:
         logger.error(f"Failed to send inactive user email to {user_email}: {str(e)}")
         raise
