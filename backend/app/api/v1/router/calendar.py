@@ -2,7 +2,8 @@ from typing import List, Optional
 
 from app.api.v1.dependencies.google_scope_dependencies import require_google_integration
 from app.config.token_repository import token_repository
-from app.middleware.tiered_rate_limiter import tiered_rate_limit
+from fastapi import APIRouter, Depends, HTTPException, Query
+from app.decorators import tiered_rate_limit
 from app.models.calendar_models import (
     CalendarPreferencesUpdateRequest,
     EventCreateRequest,
@@ -14,7 +15,6 @@ from app.services.calendar_service import (
     delete_calendar_event,
     update_calendar_event,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
 

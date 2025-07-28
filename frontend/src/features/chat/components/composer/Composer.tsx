@@ -26,10 +26,11 @@ import SelectedToolIndicator from "./SelectedToolIndicator";
 interface MainSearchbarProps {
   scrollToBottom: () => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  fileUploadRef?: React.MutableRefObject<{
+  fileUploadRef?: React.RefObject<{
     openFileUploadModal: () => void;
     handleDroppedFiles: (files: File[]) => void;
   } | null>;
+  appendToInputRef?: React.RefObject<((text: string) => void) | null>;
   droppedFiles?: File[];
   onDroppedFilesProcessed?: () => void;
   hasMessages: boolean;
@@ -39,6 +40,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   scrollToBottom,
   inputRef,
   fileUploadRef,
+  appendToInputRef,
   droppedFiles,
   onDroppedFilesProcessed,
   hasMessages,
@@ -81,7 +83,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
     localStorage.setItem("gaia-searchbar-text", searchbarText);
   }, [searchbarText]);
 
-  // Expose functions to parent component via ref
+  // Expose file upload functions to parent component via ref
   useImperativeHandle(
     fileUploadRef,
     () => ({
@@ -233,14 +235,12 @@ const Composer: React.FC<MainSearchbarProps> = ({
     }
     // These are the final uploaded files, replace temp files with final versions
     setUploadedFiles((prev) => {
-      // Map through the previous files
-      const updatedFiles = prev.map((prevFile) => {
+      return prev.map((prevFile) => {
         // Find the corresponding final file (if any)
         const finalFile = files.find((f) => f.tempId === prevFile.id);
         // If found, return the final file, otherwise keep the previous file
         return finalFile || prevFile;
       });
-      return updatedFiles;
     });
 
     // Now process the complete file data from the response
@@ -296,67 +296,79 @@ const Composer: React.FC<MainSearchbarProps> = ({
     };
   }, []);
 
-  return (
-    <>
-      <div className="searchbar_container relative pb-1">
-        {!integrationsLoading && integrations.length > 0 && !hasMessages && (
-          <Button
-            className="absolute -top-4 z-[0] flex h-fit w-full max-w-[calc(36rem-15px)] rounded-full bg-zinc-800/40 px-4 py-2 pb-8 text-xs text-foreground-300 hover:bg-zinc-800/70 hover:text-zinc-400"
-            onClick={handleToggleSlashCommandDropdown}
-          >
-            <div className="flex w-full items-center justify-between">
-              <span className="text-xs">Connect your tools to GAIA</span>
-              <div className="ml-3 flex items-center gap-1">
-                {integrations.slice(0, 8).map((integration) => (
-                  <div
-                    key={integration.id}
-                    className="opacity-60 transition duration-200 hover:scale-150 hover:rotate-6 hover:opacity-120"
-                    title={integration.name}
-                  >
-                    <Image
-                      width={14}
-                      height={14}
-                      src={integration.icon}
-                      alt={integration.name}
-                      className="h-[14px] w-[14px] object-contain"
-                    />
-                  </div>
-                ))}
+  // Function to append text to the input
+  const appendToInput = (text: string) => {
+    const currentText = searchbarText;
+    const newText = currentText ? `${currentText} ${text}` : text;
+    setSearchbarText(newText);
+    // Focus the input after appending
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
-                <ChevronRight width={18} height={18} className="ml-3" />
-              </div>
+  // Expose appendToInput function to parent via ref
+  useImperativeHandle(appendToInputRef, () => appendToInput, [appendToInput]);
+
+  return (
+    <div className="searchbar_container relative pb-1">
+      {!integrationsLoading && integrations.length > 0 && !hasMessages && (
+        <Button
+          className="absolute -top-4 z-[0] flex h-fit w-[92%] rounded-full bg-zinc-800/40 px-4 py-2 pb-8 text-xs text-foreground-300 hover:bg-zinc-800/70 hover:text-zinc-400 sm:w-[46%]"
+          onClick={handleToggleSlashCommandDropdown}
+        >
+          <div className="flex w-full items-center justify-between">
+            <span className="text-xs">Connect your tools to GAIA</span>
+            <div className="ml-3 flex items-center gap-1">
+              {integrations.slice(0, 8).map((integration) => (
+                <div
+                  key={integration.id}
+                  className="opacity-60 transition duration-200 hover:scale-150 hover:rotate-6 hover:opacity-120"
+                  title={integration.name}
+                >
+                  <Image
+                    width={14}
+                    height={14}
+                    src={integration.icon}
+                    alt={integration.name}
+                    className="h-[14px] w-[14px] object-contain"
+                  />
+                </div>
+              ))}
+
+              <ChevronRight width={18} height={18} className="ml-3" />
             </div>
-          </Button>
-        )}
-        <div className="searchbar relative z-[2] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
-          <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
-          <SelectedToolIndicator
-            toolName={selectedTool}
-            toolCategory={selectedToolCategory}
-            onRemove={handleRemoveSelectedTool}
-          />
-          <ComposerInput
-            ref={composerInputRef}
-            searchbarText={searchbarText}
-            onSearchbarTextChange={setSearchbarText}
-            handleFormSubmit={handleFormSubmit}
-            handleKeyDown={handleKeyDown}
-            currentHeight={currentHeight}
-            onHeightChange={setCurrentHeight}
-            inputRef={inputRef}
-            onSlashCommandSelect={handleSlashCommandSelect}
-          />
-          <ComposerToolbar
-            selectedMode={selectedMode}
-            openFileUploadModal={openFileUploadModal}
-            handleFormSubmit={handleFormSubmit}
-            searchbarText={searchbarText}
-            handleSelectionChange={handleSelectionChange}
-            selectedTool={selectedTool}
-            onToggleSlashCommandDropdown={handleToggleSlashCommandDropdown}
-            isSlashCommandDropdownOpen={isSlashCommandDropdownOpen}
-          />
-        </div>
+          </div>
+        </Button>
+      )}
+      <div className="searchbar relative z-[2] rounded-3xl bg-zinc-800 px-1 pt-1 pb-2">
+        <FilePreview files={uploadedFiles} onRemove={removeUploadedFile} />
+        <SelectedToolIndicator
+          toolName={selectedTool}
+          toolCategory={selectedToolCategory}
+          onRemove={handleRemoveSelectedTool}
+        />
+        <ComposerInput
+          ref={composerInputRef}
+          searchbarText={searchbarText}
+          onSearchbarTextChange={setSearchbarText}
+          handleFormSubmit={handleFormSubmit}
+          handleKeyDown={handleKeyDown}
+          currentHeight={currentHeight}
+          onHeightChange={setCurrentHeight}
+          inputRef={inputRef}
+          onSlashCommandSelect={handleSlashCommandSelect}
+        />
+        <ComposerToolbar
+          selectedMode={selectedMode}
+          openFileUploadModal={openFileUploadModal}
+          handleFormSubmit={handleFormSubmit}
+          searchbarText={searchbarText}
+          handleSelectionChange={handleSelectionChange}
+          selectedTool={selectedTool}
+          onToggleSlashCommandDropdown={handleToggleSlashCommandDropdown}
+          isSlashCommandDropdownOpen={isSlashCommandDropdownOpen}
+        />
       </div>
       <FileUpload
         open={fileUploadModal}
@@ -367,7 +379,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
           file.type.includes("image"),
         )}
       />
-    </>
+    </div>
   );
 };
 
