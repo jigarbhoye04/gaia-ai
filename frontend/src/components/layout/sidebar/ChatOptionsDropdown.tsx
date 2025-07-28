@@ -23,7 +23,6 @@ import { toast } from "sonner";
 
 import { PencilRenameIcon } from "@/components/shared/icons";
 import { chatApi } from "@/features/chat/api/chatApi";
-import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useFetchConversations } from "@/features/chat/hooks/useConversationList";
 
 export default function ChatOptionsDropdown({
@@ -44,7 +43,6 @@ export default function ChatOptionsDropdown({
   const fetchConversations = useFetchConversations();
   const [dangerStateHovered, setDangerStateHovered] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { clearMessages } = useConversation();
   const [newName, setNewName] = useState(chatName);
   const router = useRouter();
   const [modalAction, setModalAction] = useState<"edit" | "delete" | null>(
@@ -90,7 +88,6 @@ export default function ChatOptionsDropdown({
   const handleDelete = async () => {
     try {
       router.push("/c");
-      clearMessages();
       await chatApi.deleteConversation(chatId);
       setIsOpen(false);
       // Toast is already shown by the API service
