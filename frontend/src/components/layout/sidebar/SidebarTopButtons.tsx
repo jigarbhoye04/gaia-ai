@@ -3,7 +3,7 @@
 import { Button } from "@heroui/button";
 import { CircleArrowUp } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import React from "react";
 
 import {
@@ -15,15 +15,12 @@ import {
   PinIcon,
   Target04Icon,
 } from "@/components/shared/icons";
-import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
 import { NotificationStatus } from "@/types/features/notificationTypes";
 
 export default function SidebarTopButtons() {
-  const router = useRouter();
   const pathname = usePathname();
-  const { clearMessages } = useConversation();
   const { data: subscriptionStatus } = useUserSubscriptionStatus();
 
   // Get unread notifications count
@@ -79,13 +76,6 @@ export default function SidebarTopButtons() {
     // },
   ];
 
-  const handleButtonPress = (route: string): void => {
-    if (route === "/c") {
-      clearMessages();
-    }
-    router.push(route);
-  };
-
   return (
     <div className="flex flex-col">
       {/* Only show Upgrade to Pro button when user doesn't have an active subscription */}
@@ -119,6 +109,8 @@ export default function SidebarTopButtons() {
             <Button
               className="w-full justify-start text-sm"
               size="sm"
+              as={Link}
+              href={route}
               variant="light"
               color={
                 route === "/c"
@@ -129,7 +121,7 @@ export default function SidebarTopButtons() {
                     ? "primary"
                     : "default"
               }
-              onPress={() => handleButtonPress(route)}
+              // onPress={() => handleButtonPress(route)}
               startContent={React.cloneElement(icon, {
                 color:
                   route === "/c"
