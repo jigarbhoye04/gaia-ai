@@ -11,9 +11,10 @@ import SettingsSidebar from "@/components/layout/sidebar/variants/SettingsSideba
 import TodoSidebar from "@/components/layout/sidebar/variants/TodoSidebar";
 import { PlusSignIcon } from "@/components/shared/icons";
 import ComingSoonModal from "@/features/coming-soon/components/ComingSoonModal";
+import Link from "next/link";
 
 export default function Sidebar() {
-  const [open, setOpen] = useState<boolean>(false);
+  // const [open, setOpen] = useState<boolean>(false);
   const pathname = usePathname();
 
   // Determine which sidebar to show based on the current route
@@ -29,8 +30,10 @@ export default function Sidebar() {
         <Button
           color="primary"
           size="sm"
-          className="mb-4 flex w-full justify-start text-sm font-medium text-primary"
-          onPress={() => setOpen(true)}
+          fullWidth
+          as={Link}
+          href="/c"
+          className="mb-4 flex justify-start text-sm font-medium text-primary"
           variant="flat"
         >
           <PlusSignIcon color={undefined} width={18} height={18} />
@@ -38,7 +41,7 @@ export default function Sidebar() {
         </Button>
       </div>
       <ChatsList />
-      <ComingSoonModal isOpen={open} setOpen={setOpen} />
+      {/* <ComingSoonModal isOpen={open} setOpen={setOpen} /> */}
     </div>
   );
 }
