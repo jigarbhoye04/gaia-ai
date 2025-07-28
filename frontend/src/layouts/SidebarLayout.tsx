@@ -22,7 +22,6 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/shadcn/sidebar";
-import { useConversation } from "@/features/chat/hooks/useConversation";
 import SearchCommand from "@/features/search/components/SearchCommand";
 
 interface SidebarLayoutProps {
@@ -66,7 +65,6 @@ const CustomSidebarTrigger = () => {
 };
 
 export default function SidebarLayout({ children }: SidebarLayoutProps) {
-  const { clearMessages } = useConversation();
   const router = useRouter();
   const pathname = usePathname();
   const [openSearchDialog, setOpenSearchDialog] = useState(false);
@@ -108,10 +106,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
             </SidebarHeaderButton>
             {!pathname.startsWith("/c") && (
               <SidebarHeaderButton
-                onClick={() => {
-                  router.push("/c");
-                  clearMessages();
-                }}
+                onClick={() => router.push("/c")}
                 aria-label="New chat"
               >
                 <ChatBubbleAddIcon
