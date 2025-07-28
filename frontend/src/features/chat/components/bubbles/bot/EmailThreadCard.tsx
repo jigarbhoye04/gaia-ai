@@ -3,6 +3,7 @@ import { ScrollShadow } from "@heroui/scroll-shadow";
 import { User } from "@heroui/user";
 import DOMPurify from "dompurify";
 import { Mail } from "lucide-react";
+import { useState } from "react";
 
 import { Gmail } from "@/components";
 import { EmailThreadData } from "@/types/features/mailTypes";
@@ -82,10 +83,24 @@ function renderEmailBody(rawBody: string) {
 export default function EmailThreadCard({
   emailThreadData,
 }: EmailThreadCardProps) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const handleSelectionChange = (keys: any) => {
+    setIsExpanded(keys.has("email-thread"));
+  };
+
   console.log(emailThreadData);
   return (
-    <div className="mx-auto mb-3 w-full max-w-4xl min-w-[700px] rounded-3xl bg-zinc-800 p-3 py-0 text-white">
-      <Accordion variant="light" defaultExpandedKeys={["email-thread"]}>
+    <div
+      className={`mx-auto mb-3 max-w-4xl bg-zinc-800 p-3 py-0 text-white transition-all duration-300 ${
+        isExpanded ? "w-screen rounded-3xl" : "w-full rounded-2xl"
+      }`}
+    >
+      <Accordion
+        variant="light"
+        defaultExpandedKeys={["email-thread"]}
+        onSelectionChange={handleSelectionChange}
+      >
         <AccordionItem
           key="email-thread"
           aria-label="Email Thread"
@@ -93,10 +108,8 @@ export default function EmailThreadCard({
             <div className="flex items-center gap-3">
               <Gmail width={22} height={22} />
               <div className="flex flex-col">
-                <span className="text-sm font-medium">Email Thread</span>
-                <span className="text-xs text-gray-400">
-                  {emailThreadData.messages_count} message
-                  {emailThreadData.messages_count === 1 ? "" : "s"}
+                <span className="text-sm font-medium">
+                  Fetched Email Thread
                 </span>
               </div>
             </div>
@@ -111,12 +124,14 @@ export default function EmailThreadCard({
 
                 return (
                   <div key={message.id} className="pt-0 pb-2">
-                    <div className="mb-4 flex w-full flex-col items-start justify-start gap-3">
+                    <div className="mb-4 flex w-full flex-col items-start justify-start gap-1">
                       <div className="flex w-full flex-row items-center justify-between">
                         <div className="flex flex-row items-center gap-2">
-                          <Chip variant="flat" size="sm" radius="sm">
-                            From
-                          </Chip>
+                          <div className="w-15">
+                            <Chip variant="flat" size="sm" radius="sm">
+                              From
+                            </Chip>
+                          </div>
                           <span className="text-sm text-foreground-600">
                             {senderName}
                           </span>
@@ -128,8 +143,15 @@ export default function EmailThreadCard({
                           {formatTime(message.time)}
                         </span>
                       </div>
-                      <div className="text-sm font-medium text-foreground-600">
-                        {message.subject}
+                      <div className="flex flex-row items-center gap-2">
+                        <div className="w-15">
+                          <Chip variant="flat" size="sm" radius="sm">
+                            Subject
+                          </Chip>
+                        </div>
+                        <div className="text-sm font-medium text-foreground-600">
+                          {message.subject}
+                        </div>
                       </div>
                     </div>
                     {message.body && (
