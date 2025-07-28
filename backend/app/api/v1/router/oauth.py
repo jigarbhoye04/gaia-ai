@@ -1,19 +1,8 @@
 from datetime import datetime
 from typing import Optional
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 import httpx
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Depends,
-    File,
-    Form,
-    HTTPException,
-    UploadFile,
-)
-from fastapi.responses import JSONResponse, RedirectResponse
-
 from app.api.v1.dependencies.oauth_dependencies import (
     get_current_user,
     get_user_timezone,
@@ -25,6 +14,7 @@ from app.config.oauth_config import (
     get_integration_scopes,
 )
 from app.config.settings import settings
+from app.config.token_repository import token_repository
 from app.models.user_models import (
     OnboardingPreferences,
     OnboardingRequest,
@@ -38,35 +28,125 @@ from app.services.onboarding_service import (
     update_onboarding_preferences,
 )
 from app.services.user_service import update_user_profile
-
-# from app.tasks.mail_tasks import fetch_last_week_emails
 from app.utils.oauth_utils import fetch_user_info_from_google, get_tokens_from_code
 from app.utils.watch_mail import watch_mail
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
+from fastapi.responses import JSONResponse, RedirectResponse
+from workos import WorkOSClient
 
 router = APIRouter()
-
-
 http_async_client = httpx.AsyncClient()
 
+workos = WorkOSClient(
+    api_key=settings.WORKOS_API_KEY, client_id=settings.WORKOS_CLIENT_ID
+)
 
-@router.get("/login/google")
-async def login_google():
-    """Basic Google OAuth for signup - only requests essential scopes."""
-    scopes = [
-        "openid",
-        "profile",
-        "email",
-    ]
-    params = {
-        "response_type": "code",
-        "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.GOOGLE_CALLBACK_URL,
-        "scope": " ".join(scopes),
-        "access_type": "offline",
-        "prompt": "select_account",  # Only force account selection for initial login
-    }
-    auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
-    return RedirectResponse(url=auth_url)
+
+# @router.get("/login/google")
+# async def login_google():
+#     """Basic Google OAuth for signup - only requests essential scopes."""
+#     scopes = [
+#         "openid",
+#         "profile",
+#         "email",
+#     ]
+#     params = {
+#         "response_type": "code",
+#         "client_id": settings.GOOGLE_CLIENT_ID,
+#         "redirect_uri": settings.GOOGLE_CALLBACK_URL,
+#         "scope": " ".join(scopes),
+#         "access_type": "offline",
+#         "prompt": "select_account",  # Only force account selection for initial login
+#     }
+#     auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode(params)}"
+#     return RedirectResponse(url=auth_url)
+
+
+@router.get("/login/workos")
+async def login_workos():
+    """
+    Start the WorkOS SSO authentication flow.
+
+    Returns:
+        RedirectResponse: Redirects the user to the WorkOS SSO authorization URL
+    """
+    # Add any needed parameters for your SSO implementation
+    authorization_url = workos.user_management.get_authorization_url(
+        provider="authkit", redirect_uri=settings.WORKOS_REDIRECT_URI
+    )
+
+    return RedirectResponse(url=authorization_url)
+
+
+@router.get("/workos/callback")
+async def workos_callback(
+    code: Optional[str] = None,
+) -> RedirectResponse:
+    """
+    Handle the WorkOS SSO callback.
+
+    Args:
+        background_tasks: FastAPI background tasks
+        code: Authorization code from WorkOS
+        error: Error message (if any)access_token
+
+    Returns:
+        RedirectResponse to the frontend with auth tokens
+    """
+    try:
+        # Validate code parameter
+        if not code:
+            logger.error("No authorization code received from WorkOS")
+            return RedirectResponse(
+                url=f"{settings.FRONTEND_URL}/login?error=missing_code"
+            )
+
+        auth_response = workos.user_management.authenticate_with_code(
+            code=code,
+            session={
+                "seal_session": True,
+                "cookie_password": settings.WORKOS_COOKIE_PASSWORD,
+            },
+        )
+
+        # Extract user information
+        email = auth_response.user.email
+        name = f"{auth_response.user.first_name} {auth_response.user.last_name}"
+        picture_url = auth_response.user.profile_picture_url
+
+        # Store user info in our database
+        await store_user_info(name, email, picture_url)
+
+        # Set cookies and redirect to frontend
+        redirect_url = settings.FRONTEND_URL
+        response = RedirectResponse(url=redirect_url)
+
+        # Set cookies with appropriate security settings
+        response.set_cookie(
+            key="wos_session",
+            value=auth_response.sealed_session or auth_response.access_token,
+            httponly=True,
+            secure=settings.ENV == "production",
+            samesite="lax",
+        )
+
+        return response
+
+    except HTTPException as e:
+        logger.error(f"HTTP error during WorkOS : {e.detail}")
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error={e.detail}")
+
+    except Exception as e:
+        logger.error(f"Unexpected error during WorkOS callback: {str(e)}")
+        return RedirectResponse(url=f"{settings.FRONTEND_URL}/login?error=server_error")
 
 
 @router.get("/login/integration/{integration_id}")
@@ -96,15 +176,21 @@ async def login_integration(
 
         # Get existing scopes from user's current token
         existing_scopes = []
-        access_token = user.get("access_token")
-        if access_token:
+        user_id = user.get("user_id")
+
+        if user_id:
             try:
-                token_info_response = await http_async_client.get(
-                    f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                token = await token_repository.get_token(
+                    str(user_id), "google", renew_if_expired=False
                 )
-                if token_info_response.status_code == 200:
-                    token_data = token_info_response.json()
-                    existing_scopes = token_data.get("scope", "").split()
+                if token and token.get("access_token"):
+                    access_token = token.get("access_token")
+                    token_info_response = await http_async_client.get(
+                        f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                    )
+                    if token_info_response.status_code == 200:
+                        token_data = token_info_response.json()
+                        existing_scopes = token_data.get("scope", "").split()
             except Exception as e:
                 logger.warning(f"Could not get existing scopes: {e}")
 
@@ -156,6 +242,7 @@ async def callback(
             redirect_url = f"{settings.FRONTEND_URL}/redirect?oauth_error=no_code"
             return RedirectResponse(url=redirect_url)
 
+        # Get tokens from authorization code
         tokens = await get_tokens_from_code(code)
         access_token = tokens.get("access_token")
         refresh_token = tokens.get("refresh_token")
@@ -165,6 +252,7 @@ async def callback(
                 status_code=400, detail="Missing access or refresh token"
             )
 
+        # Get user info using access token
         user_info = await fetch_user_info_from_google(access_token)
         user_email = user_info.get("email")
         user_name = user_info.get("name")
@@ -173,55 +261,25 @@ async def callback(
         if not user_email:
             raise HTTPException(status_code=400, detail="Email not found in user info")
 
+        # Store user info and get user_id
         user_id = await store_user_info(user_name, user_email, user_picture)
+
+        # Store token in the repository
+        await token_repository.store_token(
+            user_id=str(user_id),
+            provider="google",
+            token_data={
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": tokens.get("token_type", "Bearer"),
+                "expires_in": tokens.get("expires_in", 3600),  # Default 1 hour,
+                "scope": tokens.get("scope", ""),
+            },
+        )
 
         # Redirect URL can include tokens if needed
         redirect_url = f"{settings.FRONTEND_URL}/redirect"
         response = RedirectResponse(url=redirect_url)
-
-        # Set cookie expiration: access token (1 hour), refresh token (30 days)
-        access_token_max_age = 3600  # seconds
-        refresh_token_max_age = 30 * 24 * 3600  # 30 days in seconds
-
-        env = settings.ENV
-        if env == "production":
-            parsed_frontend = urlparse(settings.FRONTEND_URL)
-            production_domain = parsed_frontend.hostname
-            response.set_cookie(
-                key="access_token",
-                value=access_token,
-                path="/",
-                secure=True,  # HTTPS only
-                httponly=True,
-                samesite="none",
-                domain=production_domain,
-                max_age=access_token_max_age,
-            )
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                path="/",
-                secure=True,
-                httponly=True,
-                samesite="none",
-                domain=production_domain,
-                max_age=refresh_token_max_age,
-            )
-        else:
-            response.set_cookie(
-                key="access_token",
-                value=access_token,
-                path="/",
-                samesite="lax",
-                max_age=access_token_max_age,
-            )
-            response.set_cookie(
-                key="refresh_token",
-                value=refresh_token,
-                path="/",
-                samesite="lax",
-                max_age=refresh_token_max_age,
-            )
 
         # Add background task to register user to watch emails
         background_tasks.add_task(
@@ -299,18 +357,32 @@ async def get_integrations_status(
     Get the integration status for the current user based on OAuth scopes.
     """
     try:
-        access_token = user.get("access_token")
         authorized_scopes = []
+        user_id = user.get("user_id")
 
-        # Check Google token info if we have an access token
-        if access_token:
-            token_info_response = await http_async_client.get(
-                f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+        # Get token from repository
+        try:
+            if not user_id:
+                logger.warning("User ID not found in user object")
+                raise ValueError("User ID not found")
+
+            token = await token_repository.get_token(
+                str(user_id), "google", renew_if_expired=True
             )
+            if token:
+                access_token = token.get("access_token")
+                if access_token:
+                    # Check Google token info
+                    token_info_response = await http_async_client.get(
+                        f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+                    )
 
-            if token_info_response.status_code == 200:
-                token_data = token_info_response.json()
-                authorized_scopes = token_data.get("scope", "").split()
+                    if token_info_response.status_code == 200:
+                        token_data = token_info_response.json()
+                        authorized_scopes = token_data.get("scope", "").split()
+        except Exception as e:
+            logger.warning(f"Error retrieving token from repository: {e}")
+            # Continue with empty scopes
 
         # Dynamically check each integration's status
         integration_statuses = []
@@ -351,45 +423,6 @@ async def get_integrations_status(
                 ]
             }
         )
-
-
-# async def me(access_token: str = Cookie(None)):
-# if not access_token:
-#     raise HTTPException(status_code=401, detail="Authentication required")
-# try:
-#     # Validate the access token with Google's API
-#     user_info_response = requests.get(
-#         settings.GOOGLE_USERINFO_URL,
-#         headers={"Authorization": f"Bearer {access_token}"},
-#     )
-#     if user_info_response.status_code != 200:
-#         raise HTTPException(
-#             status_code=401, detail="Invalid or expired access token"
-#         )
-
-#     user_info = user_info_response.json()
-#     user_email = user_info.get("email")
-#     if not user_email:
-#         raise HTTPException(status_code=400, detail="Email not found in user info")
-
-#     user_data = await users_collection.find_one({"email": user_email})
-#     if not user_data:
-#         raise HTTPException(status_code=404, detail="User not found")
-
-#     return JSONResponse(
-#         content={
-#             "email": user_data["email"],
-#             "name": user_data["name"],
-#             "picture": user_data["picture"],
-#         }
-#     )
-
-# except requests.exceptions.RequestException as e:
-#     logger.error(f"Error fetching user info from Google: {str(e)}")
-#     raise HTTPException(status_code=500, detail="Error contacting Google API")
-# except Exception as e:
-#     logger.error(f"Unexpected error: {str(e)}")
-#     raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @router.patch("/me", response_model=UserUpdateResponse)
@@ -517,38 +550,23 @@ async def update_user_name(
 
 @router.post("/logout")
 async def logout():
-    response = JSONResponse(content={"detail": "Logged out successfully"})
-    env = settings.ENV
+    """
+    Log out the user by revoking tokens for both Google and WorkOS.
 
-    if env == "production":
-        parsed_frontend = urlparse(settings.FRONTEND_URL)
-        production_domain = parsed_frontend.hostname
-        response.set_cookie(
-            key="access_token",
-            value="",
-            expires=0,
-            path="/",
-            domain=production_domain,
-            samesite="none",
-            secure=True,
-            httponly=True,
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value="",
-            expires=0,
-            path="/",
-            domain=production_domain,
-            samesite="none",
-            secure=True,
-            httponly=True,
-        )
-    else:
-        response.set_cookie(
-            key="access_token", value="", expires=0, path="/", samesite="lax"
-        )
-        response.set_cookie(
-            key="refresh_token", value="", expires=0, path="/", samesite="lax"
-        )
+    Args:
+        access_token: JWT access token or Google token
+
+    Returns:
+        JSONResponse with logout status
+    """
+    response = JSONResponse(content={"detail": "Logged out successfully"})
+
+    response.delete_cookie(
+        "wos_session",
+        httponly=True,
+        path="/",
+        secure=settings.ENV == "production",
+        samesite="lax",
+    )
 
     return response

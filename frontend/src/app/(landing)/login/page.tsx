@@ -1,6 +1,8 @@
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { apiauth } from "@/lib";
 
-import LoginForm from "@/features/auth/components/LoginForm";
+// import LoginForm from "@/features/auth/components/LoginForm";
 
 export const metadata: Metadata = {
   title: "login",
@@ -22,6 +24,8 @@ export const metadata: Metadata = {
   },
 };
 
+// Redirect to the OAuth login endpoint directly
 export default function LoginPage() {
-  return <LoginForm />;
+  redirect(`${apiauth.getUri()}oauth/login/workos`);
+  // return <LoginForm />;
 }

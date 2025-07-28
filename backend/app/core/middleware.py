@@ -4,13 +4,14 @@ Middleware configuration for the GAIA FastAPI application.
 This module provides functions to configure middleware for the FastAPI application.
 """
 
+from app.config.settings import settings
+from app.middleware.auth_middleware import WorkOSAuthMiddleware
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-
-from app.config.settings import settings
+from workos import WorkOSClient
 from app.decorators import ProfilingMiddleware, LoggingMiddleware
 from app.middleware.rate_limiter import limiter
 
@@ -49,6 +50,12 @@ def configure_middleware(app: FastAPI) -> None:
 
     # Add logging middleware
     app.add_middleware(LoggingMiddleware)
+
+    # Add WorkOS authentication middleware
+    workos_client = WorkOSClient(
+        api_key=settings.WORKOS_API_KEY, client_id=settings.WORKOS_CLIENT_ID
+    )
+    app.add_middleware(WorkOSAuthMiddleware, workos_client=workos_client)
 
     # Configure CORS
     app.add_middleware(

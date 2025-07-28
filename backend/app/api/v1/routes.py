@@ -4,8 +4,6 @@ GAIA API v1 package.
 This package contains the API routes and dependencies for version 1 of the GAIA API.
 """
 
-from fastapi import APIRouter
-
 from app.api.v1.router import (
     blog,
     calendar,
@@ -32,6 +30,7 @@ from app.api.v1.router import (
     waitlist,
     websocket,
 )
+from fastapi import APIRouter
 
 router = APIRouter()
 

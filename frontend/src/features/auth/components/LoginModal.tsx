@@ -4,8 +4,8 @@ import { Modal, ModalBody, ModalContent } from "@heroui/modal";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { GoogleColouredIcon } from "@/components/shared/icons";
-import { handleGoogleLogin } from "@/features/auth/hooks/handleGoogleLogin";
+import { UserIcon } from "lucide-react";
+import { handleAuthLogin } from "@/features/auth/hooks/handleAuthLogin";
 import {
   useLoginModal,
   useLoginModalActions,
@@ -39,19 +39,12 @@ export default function LoginModal() {
           </div>
           <Button
             size="lg"
-            className={`text-md gap-2 rounded-full bg-zinc-800 px-4 text-foreground hover:bg-zinc-800`}
-            onClick={handleGoogleLogin}
+            className="text-md w-full gap-2 rounded-full bg-primary px-4 text-primary-foreground hover:bg-primary/90"
+            onClick={handleAuthLogin}
           >
-            <GoogleColouredIcon />
-            Sign in with Google
+            <UserIcon size={18} />
+            Sign in
           </Button>
-          <Link
-            href="/signup"
-            className="text-md w-full gap-2 rounded-full px-4 text-center font-normal text-primary"
-            onClick={() => setLoginModalOpen(false)}
-          >
-            New to GAIA? Create an Account
-          </Link>
         </ModalBody>
       </ModalContent>
     </Modal>
