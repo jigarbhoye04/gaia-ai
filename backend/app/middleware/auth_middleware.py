@@ -3,7 +3,6 @@ This is a simplified version of the auth middleware that avoids complex type che
 with the WorkOS SDK. It implements the same functionality but with a more dynamic approach.
 """
 
-import time
 from datetime import datetime
 from datetime import timezone as tz
 from typing import Any, Awaitable, Callable, Dict, Optional
@@ -11,7 +10,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
 from app.db.mongodb.collections import users_collection
-from app.db.redis import set_cache
+from app.utils.auth_utils import authenticate_workos_session
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
@@ -127,82 +126,22 @@ class WorkOSAuthMiddleware(BaseHTTPMiddleware):
         Raises:
             Exception: On authentication failure
         """
-        try:
-            # Load and authenticate the WorkOS session
-            session = self.workos.user_management.load_sealed_session(
-                sealed_session=wos_session,
-                cookie_password=settings.WORKOS_COOKIE_PASSWORD,
-            )
 
-            auth_response = session.authenticate()
-            new_session = None
-            workos_user = None
+        user_info, new_session = await authenticate_workos_session(
+            session_token=wos_session, workos_client=self.workos
+        )
 
-            # Handle authentication result
-            if auth_response.authenticated:
-                # Authentication successful
-                workos_user = auth_response.user
-            else:
-                # Try to refresh the session
-                try:
-                    refresh_result = session.refresh()
-
-                    if not refresh_result.authenticated:
-                        # Authentication failed, even after refresh
-                        return None, None
-
-                    # Get user information
-                    workos_user = refresh_result.user  # type: ignore
-                    # Get new session token
-                    new_session = refresh_result.sealed_session  # type: ignore
-
-                except Exception as e:
-                    logger.error(f"Session refresh error: {e}")
-                    return None, None
-
-            # Make sure we have a valid user before continuing
-            if not workos_user:
-                logger.error("Invalid user data from WorkOS")
-                return None, new_session
-
+        if user_info:  # If authentication successful, add additional processing
             try:
-                # Retrieve user from database
-                user_email = workos_user.email
-                user_data = await users_collection.find_one({"email": user_email})
-
-                if not user_data:
-                    # User doesn't exist in our database
-                    logger.warning(
-                        f"User {user_email} authenticated but not found in database"
-                    )
-                    return None, new_session
-
-                # Prepare user info for return
-                user_info = {
-                    "user_id": str(user_data.get("_id")),
-                    "email": user_email,
-                    "name": user_data.get("name"),  # Use name from our database
-                    "picture": user_data.get("picture"),
-                    "auth_provider": "workos",
-                }
-
                 # Update user's last activity
                 await users_collection.update_one(
-                    {"email": user_email},
+                    {"email": user_info["email"]},
                     {"$set": {"last_active_at": datetime.now(tz.utc)}},
                 )
 
-                # Cache user data in Redis for performance
-                cache_key = f"user_cache:{user_email}"
-                user_info["cached_at"] = int(time.time())
-                await set_cache(cache_key, user_info, self.user_cache_expiry)
-
                 return user_info, new_session
-
             except Exception as e:
-                logger.error(f"Error processing user data: {e}")
+                logger.error(f"Error in middleware additional processing: {e}")
                 return None, new_session
 
-        except Exception as e:
-            logger.error(f"Error in _authenticate_session: {e}")
-            return None, None
+        return None, new_session

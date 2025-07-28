@@ -2,7 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from app.config.loggers import auth_logger as logger
-from fastapi import Header, HTTPException, Request
+from fastapi import Header, HTTPException, Request, WebSocket, status
 
 
 async def get_current_user(request: Request):
@@ -31,6 +31,41 @@ async def get_current_user(request: Request):
 
     # Return user info from request state
     return request.state.user
+
+
+async def get_current_user_ws(websocket: WebSocket):
+    """
+    Authenticate a user from a WebSocket connection using cookies.
+    This is a special version of get_current_user for WebSocket connections.
+
+    Args:
+        websocket: The WebSocket connection with cookies
+
+    Returns:
+        User data dictionary with authentication info
+
+    Raises:
+        WebSocketException: Connection will be closed on auth failure
+    """
+    from app.utils.auth_utils import authenticate_workos_session
+
+    # Extract the session cookie from WebSocket
+    wos_session = websocket.cookies.get("wos_session")
+
+    if not wos_session:
+        logger.info("No session cookie in WebSocket request")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return {}
+
+    # Use shared authentication logic
+    user_info, _ = await authenticate_workos_session(session_token=wos_session)
+
+    if not user_info:
+        logger.warning("WebSocket authentication failed")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return {}
+
+    return user_info
 
 
 def get_user_timezone(

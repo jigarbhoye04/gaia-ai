@@ -5,15 +5,15 @@ This module provides functions to configure middleware for the FastAPI applicati
 """
 
 from app.config.settings import settings
+from app.decorators import LoggingMiddleware, ProfilingMiddleware
 from app.middleware.auth_middleware import WorkOSAuthMiddleware
+from app.middleware.rate_limiter import limiter
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from workos import WorkOSClient
-from app.decorators import ProfilingMiddleware, LoggingMiddleware
-from app.middleware.rate_limiter import limiter
 
 
 async def rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -51,12 +51,6 @@ def configure_middleware(app: FastAPI) -> None:
     # Add logging middleware
     app.add_middleware(LoggingMiddleware)
 
-    # Add WorkOS authentication middleware
-    workos_client = WorkOSClient(
-        api_key=settings.WORKOS_API_KEY, client_id=settings.WORKOS_CLIENT_ID
-    )
-    app.add_middleware(WorkOSAuthMiddleware, workos_client=workos_client)
-
     # Configure CORS
     app.add_middleware(
         CORSMiddleware,
@@ -65,6 +59,12 @@ def configure_middleware(app: FastAPI) -> None:
         allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    # Add WorkOS authentication middleware
+    workos_client = WorkOSClient(
+        api_key=settings.WORKOS_API_KEY, client_id=settings.WORKOS_CLIENT_ID
+    )
+    app.add_middleware(WorkOSAuthMiddleware, workos_client=workos_client)
 
 
 def get_allowed_origins() -> list[str]:
