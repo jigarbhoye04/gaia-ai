@@ -153,7 +153,29 @@ async def fetch_gmail_messages(
                     "nextPageToken": results.get("nextPageToken"),
                 }
             ),
-            "instructions": "Don't tell the user about the email contents — the user already sees them on the frontend in an email component. If the user hasn't said anything yet, prompt them to choose an email to view in more detail. Use clear, minimal language like: 'Which email should I open?', 'Want to look into one of these?', or 'Pick an email to view more details.' Avoid vague terms like 'help' or 'take care of it'.",
+            "instructions": """
+            The user has already seen the list of their recent emails in the UI.
+
+            Now, based on these fetched email metadata:
+            - Sender
+            - Subject
+            - Timestamp
+            - Read/unread status
+
+            Do not repeat the full list.
+
+            Instead, briefly highlight useful insights and offer helpful actions.
+
+            Include:
+            - A count of total and unread emails
+            - Notable senders (e.g. support, newsletters, people)
+            - Any reply-worthy or time-sensitive messages
+            - Groupings (e.g. newsletters, social, support)
+
+            End with a concise prompt asking what they'd like to do next (e.g. summarize, reply, filter, etc).
+
+            Use a clear, assistant-like tone. Avoid over-explaining or verbosity.
+            """,
         }
     except Exception as e:
         error_msg = f"Error listing Gmail messages: {str(e)}"
@@ -428,7 +450,6 @@ async def get_email_thread(
             ],
             "messages_count": len(thread.get("messages", [])),
         }
-
         writer({"email_thread_data": thread_data})
 
         # Process to minimize data for LLM

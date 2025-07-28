@@ -53,18 +53,7 @@ function formatTime(time: string | null): string {
 }
 
 export default function EmailListCard({ emails }: EmailListProps) {
-  console.log("Emails with thread IDs:", emails);
-
-  // Log each email's thread_id specifically
-  if (emails) {
-    emails.forEach((email, index) => {
-      console.log(
-        `Email ${index + 1}: Subject="${email.subject}", Thread ID="${email.thread_id}"`,
-      );
-    });
-  }
-
-  if (!!emails)
+  if (emails)
     return (
       <div className="mx-auto mt-3 w-full max-w-2xl rounded-3xl bg-zinc-800 p-3 text-white">
         {/* Header */}

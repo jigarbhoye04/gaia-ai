@@ -1,16 +1,38 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { User } from "@heroui/user";
-import { ChevronDown, Mail } from "lucide-react";
-import { useState } from "react";
 import DOMPurify from "dompurify";
-import parse from "html-react-parser";
+import { Mail } from "lucide-react";
 
 import { Gmail } from "@/components";
 import { EmailThreadData } from "@/types/features/mailTypes";
 
 import { parseEmail } from "../../../../mail/utils/mailUtils";
-import { parseDate } from "@/utils/date/dateUtils";
+import { Chip } from "@heroui/chip";
+
+// Use the same formatTime function as EmailListCard
+function formatTime(time: string | null): string {
+  if (!time) return "Yesterday";
+
+  const date = new Date(time);
+  const now = new Date();
+  const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+  if (diffInHours < 24) {
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } else if (diffInHours < 48) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  }
+}
 
 interface EmailThreadCardProps {
   emailThreadData: EmailThreadData;
@@ -42,7 +64,7 @@ function renderEmailBody(rawBody: string) {
         color: "#374151",
         backgroundColor: "#ffffff",
         padding: "16px",
-        borderRadius: "8px",
+        borderRadius: "18px",
         border: "1px solid #e5e7eb",
         overflow: "auto",
 
@@ -60,86 +82,68 @@ function renderEmailBody(rawBody: string) {
 export default function EmailThreadCard({
   emailThreadData,
 }: EmailThreadCardProps) {
-  const [selectedMessages, setSelectedMessages] = useState<Set<string>>(
-    new Set(
-      emailThreadData.messages.length > 0
-        ? [emailThreadData.messages[0].id]
-        : [],
-    ),
-  );
-
+  console.log(emailThreadData);
   return (
-    <div className="mx-auto mb-3 w-full max-w-4xl rounded-3xl bg-zinc-800 p-4 text-white">
-      {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Gmail width={22} height={22} />
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">Email Thread</span>
-            <span className="text-xs text-gray-400">
-              {emailThreadData.messages_count} message
-              {emailThreadData.messages_count === 1 ? "" : "s"}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <ScrollShadow className="max-h-[50vh]">
-        <Accordion
-          variant="splitted"
-          selectionMode="multiple"
-          selectedKeys={selectedMessages}
-          onSelectionChange={(keys) =>
-            setSelectedMessages(new Set(keys as Set<string>))
+    <div className="mx-auto mb-3 w-full max-w-4xl min-w-[700px] rounded-3xl bg-zinc-800 p-3 py-0 text-white">
+      <Accordion variant="light" defaultExpandedKeys={["email-thread"]}>
+        <AccordionItem
+          key="email-thread"
+          aria-label="Email Thread"
+          title={
+            <div className="flex items-center gap-3">
+              <Gmail width={22} height={22} />
+              <div className="flex flex-col">
+                <span className="text-sm font-medium">Email Thread</span>
+                <span className="text-xs text-gray-400">
+                  {emailThreadData.messages_count} message
+                  {emailThreadData.messages_count === 1 ? "" : "s"}
+                </span>
+              </div>
+            </div>
           }
-          className="px-0"
         >
-          {emailThreadData.messages.map((message, index) => {
-            const { name: senderName, email: senderEmail } = parseEmail(
-              message.from,
-            );
+          <ScrollShadow className="max-h-[50vh]">
+            <div className="space-y-3">
+              {emailThreadData.messages.map((message, index) => {
+                const { name: senderName, email: senderEmail } = parseEmail(
+                  message.from,
+                );
 
-            return (
-              <AccordionItem
-                key={message.id}
-                aria-label={`Email from ${senderName || senderEmail}`}
-                title={
-                  <div className="flex w-full items-center justify-between pr-4">
-                    <div className="flex items-center gap-3">
-                      <User
-                        name={
-                          <div className="flex items-center gap-3">
-                            {senderName}{" "}
-                            <span className="text-xs font-light text-foreground-400">
-                              {senderEmail}
-                            </span>
-                          </div>
-                        }
-                        description={message.subject || "No subject"}
-                        avatarProps={{
-                          size: "sm",
-                          src: "/profile_photo/profile_photo.webp",
-                          fallback: <Mail size={16} />,
-                        }}
-                      />
+                return (
+                  <div key={message.id} className="pt-0 pb-2">
+                    <div className="mb-4 flex w-full flex-col items-start justify-start gap-3">
+                      <div className="flex w-full flex-row items-center justify-between">
+                        <div className="flex flex-row items-center gap-2">
+                          <Chip variant="flat" size="sm" radius="sm">
+                            From
+                          </Chip>
+                          <span className="text-sm text-foreground-600">
+                            {senderName}
+                          </span>
+                          <span className="text-xs font-light text-foreground-400">
+                            {senderEmail}
+                          </span>
+                        </div>
+                        <span className="text-xs text-foreground-500">
+                          {formatTime(message.time)}
+                        </span>
+                      </div>
+                      <div className="text-sm font-medium text-foreground-600">
+                        {message.subject}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
-                        {parseDate(message.time)}
-                      </span>
-                    </div>
+                    {message.body && (
+                      <div className="mt-3">
+                        {renderEmailBody(message.body)}
+                      </div>
+                    )}
                   </div>
-                }
-              >
-                {message.body && (
-                  <div className="p-3">{renderEmailBody(message.body)}</div>
-                )}
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
-      </ScrollShadow>
+                );
+              })}
+            </div>
+          </ScrollShadow>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }
