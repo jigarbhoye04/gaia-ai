@@ -15,7 +15,6 @@ from app.services.calendar_service import (
     delete_calendar_event,
     update_calendar_event,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
 
