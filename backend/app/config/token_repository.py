@@ -12,6 +12,7 @@ import json
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
+from app.config.loggers import token_repository_logger as logger
 from app.config.settings import settings
 from app.db.postgresql import get_db_session
 from app.models.oauth_models import OAuthToken
@@ -65,9 +66,29 @@ class TokenRepository:
                 "Google OAuth credentials not found, client not registered"
             )
 
+    def _get_token_expiration(self, token_data: dict) -> datetime:
+        """Get token expiration time with fallback logic."""
+
+        # Try expires_at first
+        expires_at = token_data.get("expires_at")
+        if expires_at:
+            try:
+                return datetime.fromtimestamp(float(expires_at))
+            except (ValueError, TypeError, OverflowError):
+                logger.warning(f"Invalid expires_at: {expires_at}")
+
+        # Fall back to expires_in
+        expires_in = token_data.get("expires_in", 3500)  # Default about 1 hour
+        try:
+            expires_in = float(expires_in)
+            return datetime.now() + timedelta(seconds=expires_in)
+        except (ValueError, TypeError):
+            logger.warning(f"Invalid expires_in: {expires_in}, using default")
+            return datetime.utcnow() + timedelta(seconds=3600)
+
     async def store_token(
         self, user_id: str, provider: str, token_data: Dict[str, Any]
-    ) -> None:
+    ) -> OAuth2Token:
         """
         Store a new integration OAuth token in the database.
 
@@ -75,6 +96,9 @@ class TokenRepository:
             user_id: The ID of the user
             provider: The OAuth provider (google, slack, notion, etc.)
             token_data: The token data returned from OAuth provider
+
+        Returns:
+            OAuth2Token object with the stored token data
         """
         async with get_db_session() as session:
             # Check if a token already exists for this user and provider
@@ -85,11 +109,21 @@ class TokenRepository:
             existing_token = result.scalar_one_or_none()
 
             # Get expiration time
-            expires_at = None
-            if "expires_in" in token_data:
-                expires_at = datetime.now() + timedelta(
-                    seconds=token_data["expires_in"]
-                )
+            expires_at = self._get_token_expiration(token_data=token_data)
+
+            # Extract the access and refresh tokens
+            access_token_value = token_data.get("access_token")
+            refresh_token_value = token_data.get("refresh_token")
+
+            # If no new refresh token is provided and there's an existing one, keep it
+            if (
+                not refresh_token_value
+                and existing_token
+                and existing_token.refresh_token
+            ):
+                refresh_token_value = existing_token.refresh_token
+                # Update token_data to include the preserved refresh token
+                token_data["refresh_token"] = refresh_token_value
 
             # Store all token data as JSON for future reference/debugging
             token_json = json.dumps(token_data)
@@ -100,10 +134,8 @@ class TokenRepository:
                     update(OAuthToken)
                     .where(OAuthToken.id == existing_token.id)
                     .values(
-                        access_token=token_data.get("access_token"),
-                        # Only update refresh token if a new one is provided
-                        refresh_token=token_data.get("refresh_token")
-                        or existing_token.refresh_token,
+                        access_token=access_token_value,
+                        refresh_token=refresh_token_value,
                         token_data=token_json,
                         expires_at=expires_at,
                         updated_at=datetime.now(),
@@ -115,15 +147,28 @@ class TokenRepository:
                 new_token = OAuthToken(
                     user_id=user_id,
                     provider=provider,
-                    access_token=token_data.get("access_token"),
-                    refresh_token=token_data.get("refresh_token"),
+                    access_token=access_token_value,
+                    refresh_token=refresh_token_value,
                     token_data=token_json,
                     expires_at=expires_at,
                     scopes=token_data.get("scope", ""),
                 )
                 session.add(new_token)
 
+            # Commit the changes to the database
             await session.commit()
+
+            # Create an OAuth2Token directly from our local data
+            oauth_token = OAuth2Token(
+                params={
+                    "access_token": access_token_value,
+                    "refresh_token": refresh_token_value,
+                    "token_type": token_data.get("token_type", "Bearer"),
+                    "expires_at": expires_at.timestamp(),
+                }
+            )
+
+            return oauth_token
 
     async def get_token(
         self, user_id: str, provider: str, renew_if_expired: bool = False
@@ -137,7 +182,10 @@ class TokenRepository:
             renew_if_expired: Whether to attempt token refresh if expired
 
         Returns:
-            OAuth2Token or None if not found
+            OAuth2Token with the token data
+
+        Raises:
+            HTTPException: If no token is found or refresh fails when needed
         """
         async with get_db_session() as session:
             # Query the token for this specific provider
@@ -167,6 +215,11 @@ class TokenRepository:
                 }
             )
 
+            # Log token status for debugging
+            logger.debug(
+                f"Token expiry status - is_expired: {oauth_token.is_expired()}, will_renew: {renew_if_expired}"
+            )
+
             # Check if token is expired
             if renew_if_expired and oauth_token.is_expired():
                 # Token is expired, attempt to refresh it
@@ -181,7 +234,7 @@ class TokenRepository:
 
     async def update_token(
         self, user_id: str, provider: str, token: Dict[str, Any]
-    ) -> None:
+    ) -> OAuth2Token:
         """
         Update an existing token with new data (typically after refresh).
 
@@ -189,8 +242,81 @@ class TokenRepository:
             user_id: The ID of the user
             provider: The OAuth provider
             token: The new token data
+
+        Returns:
+            OAuth2Token: The updated token object
         """
-        await self.store_token(user_id, provider, token)
+        return await self.store_token(user_id, provider, token)
+
+    async def _refresh_google_token(self, refresh_token: str) -> Optional[OAuth2Token]:
+        """
+        Refresh a Google OAuth token using the refresh token.
+
+        Args:
+            refresh_token: The refresh token to use
+
+        Returns:
+            A new OAuth2Token or None if refreshing failed
+        """
+        import httpx
+
+        if not self.oauth.google:
+            logger.error("Google OAuth client not properly initialized")
+            return None
+
+        client = self.oauth.google
+        try:
+            # Prepare the refresh token request
+            data = {
+                "client_id": client.client_id,
+                "client_secret": client.client_secret,
+                "refresh_token": refresh_token,
+                "grant_type": "refresh_token",
+            }
+
+            # Make the refresh token request
+            async with httpx.AsyncClient() as http_client:
+                response = await http_client.post(
+                    settings.GOOGLE_TOKEN_URL,
+                    data=data,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"},
+                )
+
+            if response.status_code != 200:
+                logger.error(f"Failed to refresh token: {response.text}")
+                return None
+
+            token_data = response.json()
+
+            # Google refresh token responses don't include the refresh token
+            # Add it back to maintain the full token
+            token_data["refresh_token"] = refresh_token
+
+            # Create OAuth2Token from response
+            return OAuth2Token(token_data)
+        except Exception as e:
+            logger.error(f"Error refreshing Google token: {str(e)}")
+            return None
+
+    async def _refresh_provider_token(
+        self, provider: str, refresh_token: str
+    ) -> Optional[OAuth2Token]:
+        """
+        Dispatch token refresh to the appropriate provider-specific method.
+
+        Args:
+            provider: The OAuth provider (google, slack, notion, etc.)
+            refresh_token: The refresh token to use
+
+        Returns:
+            A new OAuth2Token or None if refreshing failed
+        """
+        if provider == "google":
+            return await self._refresh_google_token(refresh_token)
+        # Add more providers as needed
+        else:
+            logger.error(f"Provider {provider} not supported for token refresh")
+            return None
 
     async def refresh_token(self, user_id: str, provider: str) -> Optional[OAuth2Token]:
         """
@@ -203,11 +329,6 @@ class TokenRepository:
         Returns:
             The refreshed OAuth2Token or None if it couldn't be refreshed
         """
-        # Import logger here to avoid circular import
-        from app.config.loggers import get_logger
-
-        logger = get_logger(__name__)
-
         # Get the token record for this provider
         async with get_db_session() as session:
             stmt = select(OAuthToken).where(
@@ -230,25 +351,10 @@ class TokenRepository:
                 )
                 return None
 
-            # Configure the OAuth client based on the provider
-            client = None
-            if provider == "google":
-                client = self.oauth.google
-            else:
-                # For future integrations like Slack, Notion, etc.
-                logger.error(f"Provider {provider} not yet supported for token refresh")
-                return None
-
-            # Refresh the token
+            # Refresh the token using the appropriate provider handler
             try:
-                # Only attempt to refresh if we have a valid client
-                if not client:
-                    logger.error(f"No OAuth client available for {provider}")
-                    return None
-
-                # Try to refresh the token using the provider's OAuth client
                 logger.info(f"Refreshing {provider} token for user {user_id}")
-                token = await client.refresh_token(refresh_token)
+                token = await self._refresh_provider_token(provider, refresh_token)
 
                 if not token:
                     logger.error(
@@ -256,51 +362,32 @@ class TokenRepository:
                     )
                     return None
 
-                # Parse existing token data
-                token_data = json.loads(token_record.token_data)
+                # Convert OAuth2Token to a dictionary we can store
+                token_dict = {}
 
-                # Update token data with new values from the refreshed token
-                token_data.update(
-                    {
-                        "access_token": token.access_token,
-                        "token_type": token.token_type,
-                        "scope": token.scope
-                        if hasattr(token, "scope")
-                        else token_data.get("scope", ""),
-                    }
+                # Extract necessary attributes safely
+                token_dict["access_token"] = token.get("access_token", None)
+                token_dict["token_type"] = token.get("token_type", "Bearer")
+                token_dict["scope"] = token.get("scope", token_record.scopes)
+                token_dict["expires_in"] = token.get("expires_in", None)
+                token_dict["expires_at"] = token.get("expires_at", None)
+
+                # Preserve the refresh token
+                # If the new token has a refresh token, use it; otherwise keep the existing one
+                token_dict["refresh_token"] = token.get(
+                    "refresh_token", token_record.refresh_token
                 )
 
-                if hasattr(token, "expires_at"):
-                    token_data["expires_at"] = token.expires_at
-
-                # Calculate expiration time
-                expires_at = None
-                if hasattr(token, "expires_in"):
-                    expires_at = datetime.now() + timedelta(seconds=token.expires_in)
-                elif hasattr(token, "expires_at"):
-                    expires_at = datetime.fromtimestamp(token.expires_at)
-
-                # Update the token record with refreshed data
-                await session.execute(
-                    update(OAuthToken)
-                    .where(OAuthToken.id == token_record.id)
-                    .values(
-                        access_token=token.access_token,
-                        # Only update refresh token if a new one is provided
-                        refresh_token=token.refresh_token
-                        if hasattr(token, "refresh_token") and token.refresh_token
-                        else token_record.refresh_token,
-                        token_data=json.dumps(token_data),
-                        expires_at=expires_at,
-                        updated_at=datetime.now(),
-                    )
-                )
-                await session.commit()
+                # Store the refreshed token using our existing store_token method
+                # This will return the properly formatted OAuth2Token object directly
+                # without querying the database again
+                refreshed_token = await self.store_token(user_id, provider, token_dict)
 
                 logger.info(
                     f"Successfully refreshed {provider} token for user {user_id}"
                 )
-                return token
+
+                return refreshed_token
             except Exception as e:
                 logger.error(f"Error refreshing {provider} token: {str(e)}")
                 return None
