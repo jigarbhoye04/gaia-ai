@@ -17,12 +17,11 @@ from app.docstrings.langchain.tools.calendar_tool_docs import (
     SEARCH_CALENDAR_EVENTS,
     VIEW_CALENDAR_EVENT,
 )
-from app.docstrings.utils import with_doc
+from app.decorators import with_doc, with_rate_limiting, require_integration
 from app.langchain.templates.calendar_template import (
     CALENDAR_LIST_TEMPLATE,
     CALENDAR_PROMPT_TEMPLATE,
 )
-from app.middleware.langchain_rate_limiter import with_rate_limiting
 from app.models.calendar_models import EventCreateRequest
 from app.services.calendar_service import (
     get_calendar_events,
@@ -34,6 +33,7 @@ from app.services.calendar_service import (
 @tool(parse_docstring=True)
 @with_rate_limiting("calendar_management")
 @with_doc(CALENDAR_EVENT)
+@require_integration("calendar")
 async def create_calendar_event(
     event_data: Union[
         List[Union[EventCreateRequest, Dict[str, Any]]],
@@ -236,6 +236,7 @@ async def create_calendar_event(
 @tool
 @with_rate_limiting("calendar_management")
 @with_doc(FETCH_CALENDAR_LIST)
+@require_integration("calendar")
 async def fetch_calendar_list(
     config: RunnableConfig,
 ) -> str | dict:
@@ -288,6 +289,7 @@ async def fetch_calendar_list(
 @tool(parse_docstring=True)
 @with_rate_limiting("calendar_management")
 @with_doc(FETCH_CALENDAR_EVENTS)
+@require_integration("calendar")
 async def fetch_calendar_events(
     user_id: str,
     config: RunnableConfig,
@@ -361,6 +363,7 @@ async def fetch_calendar_events(
 @tool(parse_docstring=True)
 @with_doc(SEARCH_CALENDAR_EVENTS)
 @with_rate_limiting("calendar_management")
+@require_integration("calendar")
 async def search_calendar_events(
     query: str,
     user_id: str,
@@ -438,6 +441,7 @@ async def search_calendar_events(
 @tool(parse_docstring=True)
 @with_doc(VIEW_CALENDAR_EVENT)
 @with_rate_limiting("calendar_management")
+@require_integration("calendar")
 async def view_calendar_event(
     event_id: str,
     config: RunnableConfig,

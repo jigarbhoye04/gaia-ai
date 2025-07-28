@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.v1.dependencies.google_scope_dependencies import require_google_integration
 from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
-from app.middleware.tiered_rate_limiter import tiered_rate_limit
+from app.decorators import tiered_rate_limit
 from app.models.mail_models import (
     ApplyLabelRequest,
     DraftRequest,

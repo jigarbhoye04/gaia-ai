@@ -12,6 +12,7 @@ import Composer from "@/features/chat/components/composer/Composer";
 import { FileDropModal } from "@/features/chat/components/files/FileDropModal";
 import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
 import StarterText from "@/features/chat/components/interface/StarterText";
+import { ComposerProvider } from "@/features/chat/contexts/ComposerContext";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useConversationList } from "@/features/chat/hooks/useConversationList";
 import { fetchMessages } from "@/features/chat/utils/chatUtils";
@@ -36,6 +37,8 @@ const ChatPage = React.memo(function MainChat() {
     openFileUploadModal: () => void;
     handleDroppedFiles: (files: File[]) => void;
   } | null>(null);
+
+  const appendToInputRef = useRef<((text: string) => void) | null>(null);
 
   // Find the current conversation
   const conversation = useMemo(() => {
@@ -127,6 +130,7 @@ const ChatPage = React.memo(function MainChat() {
     inputRef,
     scrollToBottom,
     fileUploadRef,
+    appendToInputRef,
     droppedFiles,
     onDroppedFilesProcessed: () => setDroppedFiles([]),
     hasMessages,
@@ -135,51 +139,61 @@ const ChatPage = React.memo(function MainChat() {
   // Common drag container props
   const dragContainerClass = `relative flex w-full ${isDragging ? "bg-zinc-800/30" : ""}`;
 
+  // Function to append text to input - provided to context
+  const appendToInput = (text: string) => {
+    // Call the function from Composer via ref
+    if (appendToInputRef.current) {
+      appendToInputRef.current(text);
+    }
+  };
+
   return (
-    <div className="flex h-full flex-col">
-      {hasMessages ? (
-        // Layout with messages: Chat at top, composer at bottom
-        <>
+    <ComposerProvider value={{ appendToInput }}>
+      <div className="flex h-full flex-col">
+        {hasMessages ? (
+          // Layout with messages: Chat at top, composer at bottom
+          <>
+            <div
+              className={`${dragContainerClass} flex-1 justify-center overflow-y-auto`}
+              {...dragHandlers}
+            >
+              <FileDropModal isDragging={isDragging} />
+              <div
+                ref={chatRef}
+                className="conversation_history w-full max-w-(--breakpoint-lg) p-2 sm:p-4"
+              >
+                <ChatRenderer />
+              </div>
+            </div>
+            <div className="flex-shrink-0 pb-2">
+              <Composer {...composerProps} />
+            </div>
+          </>
+        ) : (
+          // Layout without messages: Centered composer
           <div
-            className={`${dragContainerClass} flex-1 justify-center overflow-y-auto`}
+            className={`${dragContainerClass} h-[calc(100%-80px)] items-center justify-center`}
             {...dragHandlers}
           >
             <FileDropModal isDragging={isDragging} />
-            <div
-              ref={chatRef}
-              className="conversation_history w-full max-w-(--breakpoint-lg) p-2 sm:p-4"
-            >
-              <ChatRenderer />
+            <div className="flex w-full max-w-(--breakpoint-xl) flex-col items-center justify-center gap-10 p-4">
+              <div className="flex flex-col items-center gap-2">
+                <img
+                  alt="GAIA Logo"
+                  src="/branding/logo.webp"
+                  width={110}
+                  height={110}
+                />
+                <StarterText />
+              </div>
+              <div className="w-full">
+                <Composer {...composerProps} />
+              </div>
             </div>
           </div>
-          <div className="flex-shrink-0 pb-2">
-            <Composer {...composerProps} />
-          </div>
-        </>
-      ) : (
-        // Layout without messages: Centered composer
-        <div
-          className={`${dragContainerClass} h-[calc(100%-80px)] items-center justify-center`}
-          {...dragHandlers}
-        >
-          <FileDropModal isDragging={isDragging} />
-          <div className="flex w-full max-w-(--breakpoint-xl) flex-col items-center justify-center gap-10 p-4">
-            <div className="flex flex-col items-center gap-2">
-              <img
-                alt="GAIA Logo"
-                src="/branding/logo.webp"
-                width={110}
-                height={110}
-              />
-              <StarterText />
-            </div>
-            <div className="w-full">
-              <Composer {...composerProps} />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </ComposerProvider>
   );
 });
 

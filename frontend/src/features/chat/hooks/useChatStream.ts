@@ -24,7 +24,7 @@ export const useChatStream = () => {
 
   // Unified ref storage
   const refs = useRef({
-    convoMessages: convoMessages,
+    convoMessages,
     botMessage: null as MessageType | null,
     accumulatedResponse: "",
     userPrompt: "",

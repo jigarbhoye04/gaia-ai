@@ -36,6 +36,7 @@ export type {
 
 // Other feature types
 export type * from "./goalTypes";
+export type * from "./integrationTypes";
 export type * from "./noteTypes";
 export type * from "./notificationTypes";
 export type * from "./pinTypes";

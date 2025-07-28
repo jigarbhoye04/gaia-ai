@@ -1,13 +1,13 @@
 import "./styles/globals.css";
 import "./styles/tailwind.css";
 
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 
 import { defaultFont, getAllFontVariables } from "./fonts";
-import { GoogleAnalytics } from "@next/third-parties/google";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
