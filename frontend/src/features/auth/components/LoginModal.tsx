@@ -1,10 +1,9 @@
 "use client";
 
 import { Modal, ModalBody, ModalContent } from "@heroui/modal";
-import Link from "next/link";
+import { UserIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-import { UserIcon } from "lucide-react";
 import { handleAuthLogin } from "@/features/auth/hooks/handleAuthLogin";
 import {
   useLoginModal,

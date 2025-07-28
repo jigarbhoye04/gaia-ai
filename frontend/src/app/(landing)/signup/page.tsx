@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+
 import { apiauth } from "@/lib";
 
 // import SignupForm from "@/features/auth/components/SignupForm";
