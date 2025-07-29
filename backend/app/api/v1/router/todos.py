@@ -267,11 +267,21 @@ async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)
     """Generate a workflow plan for a specific todo and update the todo with it."""
     try:
         todo = await TodoService.get_todo(todo_id, user["user_id"])
+
+        # Set status to generating first
+        await TodoService.update_workflow_status(
+            todo_id, user["user_id"], WorkflowStatus.GENERATING
+        )
+
         workflow_result = await TodoService._generate_workflow_for_todo(
-            todo.title, todo.description
+            todo.title, todo.description or ""
         )
 
         if not workflow_result.get("success"):
+            # Mark as failed
+            await TodoService.update_workflow_status(
+                todo_id, user["user_id"], WorkflowStatus.FAILED
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=workflow_result.get("error", "Failed to generate workflow"),
@@ -289,7 +299,7 @@ async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)
             completed=None,
             subtasks=None,
             workflow=workflow_result["workflow"],
-            workflow_status=None,
+            workflow_status=WorkflowStatus.COMPLETED,
         )
         updated_todo = await TodoService.update_todo(
             todo_id, update_request, user["user_id"]

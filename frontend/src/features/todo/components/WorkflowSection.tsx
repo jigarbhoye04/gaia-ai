@@ -63,11 +63,20 @@ export default function WorkflowSection({
         }
       } catch (error) {
         console.error("Failed to check workflow status:", error);
-        // Continue polling despite errors (might be temporary)
       }
-    }, 4000);
+    }, 3000); // Poll every 3 seconds
 
-    return () => clearInterval(pollInterval);
+    // Cleanup after 60 seconds to prevent infinite polling
+    const timeoutId = setTimeout(() => {
+      setLocalIsGenerating(false);
+      clearInterval(pollInterval);
+      console.warn("Workflow generation timed out");
+    }, 60000);
+
+    return () => {
+      clearInterval(pollInterval);
+      clearTimeout(timeoutId);
+    };
   }, [localIsGenerating, workflow, todoId, onWorkflowGenerated]);
 
   // Update local generating state when props change

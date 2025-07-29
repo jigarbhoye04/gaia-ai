@@ -190,6 +190,26 @@ class TodoService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
+    async def update_workflow_status(
+        todo_id: str, user_id: str, status: WorkflowStatus
+    ) -> None:
+        """Update workflow status for a todo."""
+        try:
+            await todos_collection.update_one(
+                {"_id": ObjectId(todo_id), "user_id": user_id},
+                {
+                    "$set": {
+                        "workflow_status": status,
+                        "updated_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+            # Invalidate cache
+            await TodoService._invalidate_cache(user_id, None, todo_id, "update")
+        except Exception as e:
+            todos_logger.error(f"Failed to update workflow status: {e}")
+
+    @staticmethod
     async def _calculate_stats(user_id: str) -> TodoStats:
         """Calculate todo statistics for a user."""
         cache_key = f"stats:{user_id}"
