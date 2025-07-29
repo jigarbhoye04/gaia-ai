@@ -10,12 +10,19 @@ import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
-import { Priority, TodoFilters, TodoUpdate } from "@/types/features/todoTypes";
+import {
+  Priority,
+  Todo,
+  TodoFilters,
+  TodoUpdate,
+} from "@/types/features/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
   const [_page, setPage] = useState(0);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   const {
@@ -105,6 +112,11 @@ export default function TodosPage() {
     }
   };
 
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
+  };
+
   if (loading && todos.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -140,6 +152,7 @@ export default function TodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => {
             const filters: TodoFilters = {};
@@ -172,6 +185,18 @@ export default function TodosPage() {
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
         initialProjectId={projectId || undefined}
+      />
+
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+        }}
       />
 
       {/* Todo Detail Sheet */}

@@ -1,14 +1,16 @@
 "use client";
 
+import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@heroui/modal";
 import { useEffect } from "react";
 
-import { Button } from "@/components/ui/shadcn/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from "@/components/ui/shadcn/dialog";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useModalForm } from "@/hooks/ui/useModalForm";
 import {
@@ -143,6 +145,7 @@ export default function TodoModal({
         subtasks: todo.subtasks || [],
       });
     }
+    console.log("this is a test");
   }, [open, mode, todo, setFormData]);
 
   const handleDateChange = (date?: string, timezone?: string) => {
@@ -154,89 +157,91 @@ export default function TodoModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-2xl border-none bg-zinc-900">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col">
-            {/* Title */}
-            <Input
-              placeholder="Task title"
-              classNames={{
-                input:
-                  "text-2xl font-semibold bg-transparent border-0 text-zinc-100 placeholder:text-zinc-500",
-                inputWrapper:
-                  "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
-              }}
-              value={formData.title}
-              variant="underlined"
-              onChange={(e) => updateField("title", e.target.value)}
-              required
-              autoFocus
-            />
+    <Modal isOpen={open} onOpenChange={onOpenChange} size="lg">
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              {mode === "edit" ? "Edit Task" : "Add Task"}
+            </ModalHeader>
+            <ModalBody className="gap-6">
+              <div className="flex flex-col">
+                {/* Title */}
+                <Input
+                  placeholder="Task title"
+                  classNames={{
+                    input:
+                      "text-2xl font-semibold bg-transparent border-0 text-zinc-100 placeholder:text-zinc-500",
+                    inputWrapper:
+                      "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
+                  }}
+                  value={formData.title}
+                  variant="underlined"
+                  onChange={(e) => updateField("title", e.target.value)}
+                  required
+                  autoFocus
+                />
 
-            {/* Description */}
-            <Textarea
-              placeholder="Add a description..."
-              value={formData.description || ""}
-              onChange={(e) => updateField("description", e.target.value)}
-              minRows={1}
-              maxRows={5}
-              variant="underlined"
-              classNames={{
-                input:
-                  "bg-transparent border-0 text-zinc-200 placeholder:text-zinc-500",
-                inputWrapper:
-                  "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
-              }}
-            />
-          </div>
+                {/* Description */}
+                <Textarea
+                  placeholder="Add a description..."
+                  value={formData.description || ""}
+                  onChange={(e) => updateField("description", e.target.value)}
+                  minRows={1}
+                  maxRows={5}
+                  variant="underlined"
+                  classNames={{
+                    input:
+                      "bg-transparent border-0 text-zinc-200 placeholder:text-zinc-500",
+                    inputWrapper:
+                      "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
+                  }}
+                />
+              </div>
 
-          {/* Fields Row with Chips */}
-          <TodoFieldsRow
-            priority={formData.priority}
-            projectId={formData.project_id}
-            projects={projects}
-            dueDate={formData.due_date}
-            dueDateTimezone={formData.due_date_timezone}
-            labels={formData.labels}
-            onPriorityChange={(priority) => updateField("priority", priority)}
-            onProjectChange={(projectId) =>
-              updateField("project_id", projectId)
-            }
-            onDateChange={handleDateChange}
-            onLabelsChange={(labels) => updateField("labels", labels)}
-          />
+              {/* Fields Row with Chips */}
+              <TodoFieldsRow
+                priority={formData.priority}
+                projectId={formData.project_id}
+                projects={projects}
+                dueDate={formData.due_date}
+                dueDateTimezone={formData.due_date_timezone}
+                labels={formData.labels}
+                onPriorityChange={(priority) =>
+                  updateField("priority", priority)
+                }
+                onProjectChange={(projectId) =>
+                  updateField("project_id", projectId)
+                }
+                onDateChange={handleDateChange}
+                onLabelsChange={(labels) => updateField("labels", labels)}
+              />
 
-          {/* Subtasks Manager */}
-          <SubtaskManager
-            subtasks={formData.subtasks || []}
-            onSubtasksChange={(subtasks) => updateField("subtasks", subtasks)}
-          />
-        </div>
+              {/* Subtasks Manager */}
+              <SubtaskManager
+                subtasks={formData.subtasks || []}
+                onSubtasksChange={(subtasks) =>
+                  updateField("subtasks", subtasks)
+                }
+              />
+            </ModalBody>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-0 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="border-0 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:bg-zinc-800 disabled:text-zinc-500"
-          >
-            {loading
-              ? mode === "edit"
-                ? "Saving..."
-                : "Adding..."
-              : mode === "edit"
-                ? "Save Changes"
-                : "Add Task"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+            <ModalFooter>
+              <Button variant="light" onPress={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button
+                color="primary"
+                onPress={handleSubmit}
+                isDisabled={loading}
+                isLoading={loading}
+              >
+                {mode === "edit" ? "Save Changes" : "Add Task"}
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
   );
 }

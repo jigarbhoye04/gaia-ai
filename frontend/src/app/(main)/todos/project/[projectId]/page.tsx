@@ -8,6 +8,7 @@ import { todoApi } from "@/features/todo/api/todoApi";
 import TodoDetailSheet from "@/features/todo/components/TodoDetailSheet";
 import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
+import TodoModal from "@/features/todo/components/TodoModal";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import {
   Project,
@@ -23,6 +24,8 @@ export default function ProjectTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
@@ -80,6 +83,11 @@ export default function ProjectTodosPage() {
     }
   };
 
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -105,10 +113,24 @@ export default function ProjectTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={loadProjectData}
         />
       </div>
+
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+          loadProjectData();
+        }}
+      />
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet

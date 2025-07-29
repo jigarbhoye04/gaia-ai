@@ -9,7 +9,7 @@ import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
-import { TodoUpdate } from "@/types/features/todoTypes";
+import { Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function CompletedTodosPage() {
   const {
@@ -21,6 +21,8 @@ export default function CompletedTodosPage() {
     removeTodo,
   } = useTodos();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
@@ -42,6 +44,11 @@ export default function CompletedTodosPage() {
     if (selectedTodoId === todoId) {
       clearSelection();
     }
+  };
+
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
   };
 
   if (loading) {
@@ -67,6 +74,7 @@ export default function CompletedTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => loadCompletedTodos()}
         />
@@ -78,6 +86,19 @@ export default function CompletedTodosPage() {
         open={addModalOpen}
         onOpenChange={setAddModalOpen}
         onSuccess={() => {
+          loadCompletedTodos();
+        }}
+      />
+
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
           loadCompletedTodos();
         }}
       />

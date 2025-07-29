@@ -11,6 +11,7 @@ interface TodoListProps {
   onTodoUpdate: (todoId: string, updates: TodoUpdate) => void;
   onTodoDelete: (todoId: string) => void;
   onTodoClick?: (todo: Todo) => void;
+  onTodoEdit?: (todo: Todo) => void;
   onRefresh?: () => void;
 }
 
@@ -19,6 +20,7 @@ export default function TodoList({
   onTodoUpdate,
   onTodoDelete,
   onTodoClick,
+  onTodoEdit,
 }: TodoListProps) {
   // Group todos by date if they have due dates - memoized to prevent recalculation
   const groupedTodos = useMemo(() => groupTodosByDate(todos), [todos]);
@@ -50,6 +52,7 @@ export default function TodoList({
                   isSelected={false}
                   onUpdate={onTodoUpdate}
                   onDelete={onTodoDelete}
+                  onEdit={onTodoEdit}
                   onClick={onTodoClick}
                 />
               ))}
