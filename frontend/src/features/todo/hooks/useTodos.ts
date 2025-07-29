@@ -7,14 +7,12 @@ import {
   fetchCompletedTodos,
   fetchLabels,
   fetchProjects,
-  fetchTodayTodos,
   fetchTodoById,
   fetchTodoCounts,
   fetchTodos,
   fetchTodosByLabel,
   fetchTodosByPriority,
   fetchTodosByProject,
-  fetchUpcomingTodos,
   optimisticDeleteTodo,
   optimisticUpdateTodo,
   resetTodos,
@@ -58,12 +56,18 @@ export const useTodos = () => {
   }, [dispatch]);
 
   const loadTodayTodos = useCallback(async () => {
-    return dispatch(fetchTodayTodos());
+    // Use the main todos endpoint with today filter
+    return dispatch(
+      fetchTodos({ filters: { due_today: true }, loadMore: false }),
+    );
   }, [dispatch]);
 
   const loadUpcomingTodos = useCallback(
     async (days = 7) => {
-      return dispatch(fetchUpcomingTodos(days));
+      // Use the main todos endpoint with upcoming filter
+      return dispatch(
+        fetchTodos({ filters: { due_this_week: true }, loadMore: false }),
+      );
     },
     [dispatch],
   );
@@ -214,7 +218,8 @@ export const useTodos = () => {
           refreshDebounceRef.current = setTimeout(async () => {
             await Promise.all([
               dispatch(fetchTodoCounts()),
-              dispatch(fetchProjects()),
+              // Only refresh projects if needed (no need to always refresh)
+              ...(originalTodo?.project_id ? [dispatch(fetchProjects())] : []),
               // Only refresh labels if the deleted todo had labels
               ...(originalTodo?.labels && originalTodo.labels.length > 0
                 ? [dispatch(fetchLabels())]
@@ -263,13 +268,27 @@ export const useTodos = () => {
       clearTimeout(refreshDebounceRef.current);
     }
 
-    // Fetch all data including counts
-    await Promise.all([
-      dispatch(fetchProjects()),
-      dispatch(fetchLabels()),
-      dispatch(fetchTodoCounts()),
-    ]);
-  }, [dispatch]);
+    // Only refresh data that might be stale (avoid redundant calls)
+    const now = Date.now();
+    const refreshTasks = [];
+
+    // Refresh projects if stale (more than 5 minutes old)
+    if (now - todoState.lastFetch.projects > 5 * 60 * 1000) {
+      refreshTasks.push(dispatch(fetchProjects()));
+    }
+
+    // Refresh labels if stale (more than 5 minutes old)
+    if (now - todoState.lastFetch.labels > 5 * 60 * 1000) {
+      refreshTasks.push(dispatch(fetchLabels()));
+    }
+
+    // Always refresh counts as they change frequently
+    refreshTasks.push(dispatch(fetchTodoCounts()));
+
+    if (refreshTasks.length > 0) {
+      await Promise.all(refreshTasks);
+    }
+  }, [dispatch, todoState.lastFetch]);
 
   const loadTodoById = useCallback(
     async (todoId: string) => {

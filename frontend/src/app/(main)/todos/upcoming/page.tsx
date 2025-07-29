@@ -17,7 +17,7 @@ export default function UpcomingTodosPage() {
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
-  const { refreshAllData } = useTodos();
+  const { refreshAllData, loadCounts } = useTodos();
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
@@ -28,7 +28,8 @@ export default function UpcomingTodosPage() {
   const loadUpcomingTodos = async () => {
     setLoading(true);
     try {
-      const todoList = await todoApi.getUpcomingTodos(7); // Next 7 days
+      // Use the unified todos endpoint with upcoming filter
+      const todoList = await todoApi.getAllTodos({ due_this_week: true });
       setTodos(todoList);
     } catch (error) {
       console.error("Failed to load upcoming todos:", error);
@@ -101,7 +102,8 @@ export default function UpcomingTodosPage() {
         onOpenChange={setAddModalOpen}
         onSuccess={() => {
           loadUpcomingTodos();
-          refreshAllData();
+          // Only refresh counts, not all data
+          loadCounts();
         }}
       />
 

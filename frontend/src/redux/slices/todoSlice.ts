@@ -110,33 +110,8 @@ export const fetchLabels = createAsyncThunk("todos/fetchLabels", async () => {
 export const fetchTodoCounts = createAsyncThunk(
   "todos/fetchCounts",
   async () => {
-    // Fetch all necessary data in parallel
-    const [stats, todayTodos, upcomingTodos, projects] = await Promise.all([
-      todoApi.getTodoStats(),
-      todoApi.getTodayTodos(),
-      todoApi.getUpcomingTodos(7),
-      todoApi.getAllProjects(),
-    ]);
-
-    // Get inbox project and calculate its pending count
-    const inboxProject = projects.find((p) => p.is_default);
-    let inboxCount = 0;
-
-    if (inboxProject) {
-      // Fetch only pending todos for inbox
-      const inboxTodos = await todoApi.getAllTodos({
-        project_id: inboxProject.id,
-        completed: false,
-      });
-      inboxCount = inboxTodos.length;
-    }
-
-    return {
-      inbox: inboxCount,
-      today: todayTodos.filter((todo) => !todo.completed).length,
-      upcoming: upcomingTodos.filter((todo) => !todo.completed).length,
-      completed: stats.completed,
-    };
+    // Use the new optimized counts endpoint
+    return await todoApi.getTodoCounts();
   },
 );
 
@@ -161,20 +136,6 @@ export const deleteTodo = createAsyncThunk(
   async (todoId: string) => {
     await todoApi.deleteTodo(todoId);
     return todoId;
-  },
-);
-
-export const fetchTodayTodos = createAsyncThunk(
-  "todos/fetchToday",
-  async () => {
-    return await todoApi.getTodayTodos();
-  },
-);
-
-export const fetchUpcomingTodos = createAsyncThunk(
-  "todos/fetchUpcoming",
-  async (days: number = 7) => {
-    return await todoApi.getUpcomingTodos(days);
   },
 );
 
@@ -626,28 +587,6 @@ const todoSlice = createSlice({
       })
       .addCase(deleteTodo.rejected, (state, action) => {
         state.error = action.error.message || "Failed to delete todo";
-      });
-
-    // Handle today todos
-    builder
-      .addCase(fetchTodayTodos.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchTodayTodos.fulfilled, (state, action) => {
-        state.todos = action.payload;
-        state.loading = false;
-        state.hasMore = false;
-      });
-
-    // Handle upcoming todos
-    builder
-      .addCase(fetchUpcomingTodos.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchUpcomingTodos.fulfilled, (state, action) => {
-        state.todos = action.payload;
-        state.loading = false;
-        state.hasMore = false;
       });
 
     // Handle completed todos

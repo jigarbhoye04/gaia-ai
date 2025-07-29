@@ -104,30 +104,43 @@ export default function TodoSidebar() {
   } = useTodos();
   const todoState = useSelector((state: RootState) => state.todos);
 
-  // Check if initial data has been loaded
+  // Check if initial data has been loaded (labels are optional)
   const isInitialDataLoaded =
     todoState.initialDataLoaded.projects &&
-    todoState.initialDataLoaded.labels &&
     todoState.initialDataLoaded.counts;
 
   // Load initial data
   useEffect(() => {
     const loadData = async () => {
-      // Load all data in parallel - fetchTodoCounts now handles dependencies internally
-      await Promise.all([loadProjects(), loadLabels(), loadCounts()]);
+      // Load core data first (projects and counts are most important)
+      await Promise.all([loadProjects(), loadCounts()]);
     };
 
     if (!isInitialDataLoaded) {
       loadData();
     }
-  }, [loadProjects, loadLabels, loadCounts, isInitialDataLoaded]);
+  }, [loadProjects, loadCounts, isInitialDataLoaded]);
 
-  // Refresh counts when pathname changes (e.g., when navigating between views)
+  // Load labels lazily when they are actually needed (only once)
+  useEffect(() => {
+    if (!todoState.initialDataLoaded.labels && isInitialDataLoaded) {
+      // Only load labels if we don't have them yet and core data is loaded
+      loadLabels();
+    }
+  }, [isInitialDataLoaded, todoState.initialDataLoaded.labels, loadLabels]);
+
+  // Only refresh counts on navigation if they are stale (more than 2 minutes old)
   useEffect(() => {
     if (isInitialDataLoaded) {
-      loadCounts();
+      const now = Date.now();
+      const countsFreshTime = 2 * 60 * 1000; // 2 minutes
+      const isCountsStale = now - todoState.lastFetch.counts > countsFreshTime;
+
+      if (isCountsStale) {
+        loadCounts();
+      }
     }
-  }, [pathname, loadCounts, isInitialDataLoaded]);
+  }, [pathname, loadCounts, isInitialDataLoaded, todoState.lastFetch.counts]);
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -393,15 +406,18 @@ export default function TodoSidebar() {
         open={addTodoOpen}
         onOpenChange={setAddTodoOpen}
         onSuccess={() => {
-          // Refresh data after creating a todo
-          refreshAllData();
+          // Refresh counts and projects only
+          loadCounts();
+          loadProjects();
         }}
       />
       <AddProjectModal
         open={addProjectOpen}
         onOpenChange={setAddProjectOpen}
         onSuccess={() => {
-          refreshAllData();
+          // Refresh counts and projects only
+          loadCounts();
+          loadProjects();
         }}
       />
     </>

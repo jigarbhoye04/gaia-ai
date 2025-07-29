@@ -16,47 +16,26 @@ export default function TestTodoPage() {
   const testNewAPI = async () => {
     setLoading(true);
     try {
-      // Test 1: Get todos with new API (should return paginated response)
+      // Test 1: Get todos with new API using todoApi
       console.log("Testing new API endpoint...");
-      const response = await fetch("/api/v1/todos?include_stats=true", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      const data: TodoListResponse = await response.json();
-
-      console.log("New API Response:", data);
-
-      if (data.data && Array.isArray(data.data)) {
-        setTodos(data.data);
-        if (data.stats) {
-          setStats(data.stats);
-        }
-        console.log("✅ New API is working correctly!");
-      }
+      const todos = await todoApi.getAllTodos();
+      setTodos(todos);
+      console.log("✅ Todo API is working correctly!");
 
       // Test 2: search with semantic mode
       console.log("Testing semantic search...");
-      const searchResponse = await fetch(
-        "/api/v1/todos?q=important&mode=semantic",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-        },
-      );
-      const searchData = await searchResponse.json();
+      const searchData = await todoApi.semanticSearchTodos("important");
       console.log("Semantic search Response:", searchData);
 
       // Test 3: Get today's todos
       console.log("Testing today filter...");
-      const todayTodos = await todoApi.getTodayTodos();
+      const todayTodos = await todoApi.getAllTodos({ due_today: true });
       console.log("Today's todos:", todayTodos);
 
-      // Test 4: Get stats
-      console.log("Testing stats...");
-      const todoStats = await todoApi.getTodoStats();
-      console.log("Stats:", todoStats);
+      // Test 4: Get counts
+      console.log("Testing counts...");
+      const todoCounts = await todoApi.getTodoCounts();
+      console.log("Counts:", todoCounts);
     } catch (error) {
       console.error("Test failed:", error);
     } finally {

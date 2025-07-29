@@ -10,7 +10,6 @@ import {
   TodoCreate,
   TodoFilters,
   TodoListResponse,
-  TodoStats,
   TodoUpdate,
   Workflow,
   WorkflowStatus,
@@ -271,100 +270,54 @@ export const todoApi = {
     return response as Todo[];
   },
 
-  getTodoStats: async (): Promise<TodoStats> => {
-    const response = await apiService.get<TodoListResponse>(
-      "/todos?include_stats=true&per_page=1",
-      {
-        silent: true, // Stats fetching is usually silent
-      },
-    );
-    // Extract stats from new API response
-    if (response.stats) {
-      return response.stats;
-    }
-    // Fallback to old endpoint
-    return apiService.get<TodoStats>("/todos/stats", {
+  // New optimized counts endpoint
+  getTodoCounts: async (): Promise<{
+    inbox: number;
+    today: number;
+    upcoming: number;
+    completed: number;
+  }> => {
+    return apiService.get("/todos/counts", {
       silent: true,
     });
   },
 
-  getTodayTodos: async (): Promise<Todo[]> => {
-    const response = await apiService.get<TodoListResponse | Todo[]>(
-      "/todos?due_today=true",
-      {
-        silent: true, // Fetching operations are usually silent
-      },
-    );
-    // Handle new API response format
-    if (
-      typeof response === "object" &&
-      response !== null &&
-      "data" in response &&
-      Array.isArray(response.data)
-    ) {
-      return response.data;
-    }
-    return response as Todo[];
-  },
-
-  getUpcomingTodos: async (_days: number = 7): Promise<Todo[]> => {
-    // Note: Backend uses due_this_week=true for 7 days, doesn't support custom days
-    const response = await apiService.get<TodoListResponse | Todo[]>(
-      `/todos?due_this_week=true`,
-      {
-        silent: true, // Fetching operations are usually silent
-      },
-    );
-    // Handle new API response format
-    if (
-      typeof response === "object" &&
-      response !== null &&
-      "data" in response &&
-      Array.isArray(response.data)
-    ) {
-      return response.data;
-    }
-    return response as Todo[];
-  },
-
   getAllLabels: async (): Promise<{ name: string; count: number }[]> => {
     try {
-      // Try to get labels from stats first (more efficient)
-      const response = await apiService.get<TodoListResponse>(
-        "/todos?include_stats=true&per_page=1",
+      // Use a smaller, more reasonable page size to reduce data transfer
+      const response = await apiService.get<TodoListResponse | Todo[]>(
+        "/todos?completed=false&per_page=100",
+        { silent: true },
       );
 
-      if (response.stats?.labels) {
-        return response.stats.labels;
+      let todos: Todo[] = [];
+      if (
+        typeof response === "object" &&
+        response !== null &&
+        "data" in response &&
+        Array.isArray(response.data)
+      ) {
+        todos = response.data;
+      } else {
+        todos = response as Todo[];
       }
 
-      // Fallback: fetch todos and extract labels
-      if (response.data && Array.isArray(response.data)) {
-        const fullResponse = await apiService.get<TodoListResponse>(
-          "/todos?per_page=1000",
-        );
-        if (fullResponse.data && Array.isArray(fullResponse.data)) {
-          const todos = fullResponse.data;
-          const labelCounts: Record<string, number> = {};
+      const labelCounts: Record<string, number> = {};
 
-          // Count labels from todos
-          todos.forEach((todo: Todo) => {
-            if (todo.labels && Array.isArray(todo.labels)) {
-              todo.labels.forEach((label: string) => {
-                labelCounts[label] = (labelCounts[label] || 0) + 1;
-              });
-            }
+      // Count labels from active todos only
+      todos.forEach((todo: Todo) => {
+        if (todo.labels && Array.isArray(todo.labels)) {
+          todo.labels.forEach((label: string) => {
+            labelCounts[label] = (labelCounts[label] || 0) + 1;
           });
-
-          // Convert to array format
-          return Object.entries(labelCounts)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count);
         }
-      }
+      });
 
-      // Return empty array if no data
-      return [];
+      // Convert to array format and return top 10 most used labels
+      return Object.entries(labelCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
     } catch (error) {
       console.error("Error fetching labels:", error);
       // Return empty array instead of throwing to prevent app crashes

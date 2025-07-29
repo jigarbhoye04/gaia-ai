@@ -17,7 +17,7 @@ export default function TodayTodosPage() {
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
-  const { refreshAllData } = useTodos();
+  const { refreshAllData, loadCounts } = useTodos();
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
@@ -28,7 +28,8 @@ export default function TodayTodosPage() {
   const loadTodayTodos = async () => {
     setLoading(true);
     try {
-      const todoList = await todoApi.getTodayTodos();
+      // Use the unified todos endpoint with today filter
+      const todoList = await todoApi.getAllTodos({ due_today: true });
       setTodos(todoList);
     } catch (error) {
       console.error("Failed to load today's todos:", error);
@@ -101,7 +102,8 @@ export default function TodayTodosPage() {
         onOpenChange={setAddModalOpen}
         onSuccess={() => {
           loadTodayTodos();
-          refreshAllData();
+          // Only refresh counts, not all data
+          loadCounts();
         }}
       />
 

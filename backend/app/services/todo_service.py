@@ -133,6 +133,16 @@ class TodoService:
         # Filters
         if params.project_id is not None:
             query["project_id"] = params.project_id
+        elif (
+            not params.q
+            and params.completed is None
+            and not params.priority
+            and not params.labels
+        ):
+            # Default to inbox when no filters are specified (main /todos page)
+            inbox_id = await TodoService._get_or_create_inbox(user_id)
+            query["project_id"] = inbox_id
+
         if params.completed is not None:
             query["completed"] = params.completed
         if params.priority:

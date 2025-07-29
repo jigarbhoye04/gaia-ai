@@ -45,50 +45,48 @@ export default function TodosPage() {
   };
 
   useEffect(() => {
-    const filters: TodoFilters = {
-      project_id: projectId || undefined,
-      priority: getPriorityFilter(priority),
-    };
+    const filters: TodoFilters = {};
 
-    // Handle completed filter
-    if (completedParam !== null) {
-      filters.completed = completed;
-    } else if (!projectId && !priority) {
-      // Default to showing only non-completed todos in inbox
-      filters.completed = false;
+    // Only add filters if they are explicitly specified in URL
+    if (projectId) {
+      filters.project_id = projectId;
     }
 
-    // Default to inbox project if no project specified
-    if (!projectId && !priority) {
-      const inboxProject = projects.find((p) => p.is_default);
-      if (inboxProject) {
-        filters.project_id = inboxProject.id;
+    if (priority) {
+      const priorityValue = getPriorityFilter(priority);
+      if (priorityValue) {
+        filters.priority = priorityValue;
       }
     }
 
+    // Handle completed filter only if explicitly set
+    if (completedParam !== null) {
+      filters.completed = completed;
+    }
+
+    // Let the backend handle default inbox behavior when no filters are specified
     loadTodos(filters, false);
     setPage(0);
-  }, [projectId, priority, completed, completedParam, loadTodos, projects]);
+  }, [projectId, priority, completed, completedParam, loadTodos]);
 
   const handleLoadMore = () => {
-    const filters: TodoFilters = {
-      project_id: projectId || undefined,
-      priority: getPriorityFilter(priority),
-    };
+    const filters: TodoFilters = {};
 
-    // Handle completed filter
-    if (completedParam !== null) {
-      filters.completed = completed;
-    } else if (!projectId && !priority) {
-      filters.completed = false;
+    // Only add filters if they are explicitly specified in URL
+    if (projectId) {
+      filters.project_id = projectId;
     }
 
-    // Default to inbox project if needed
-    if (!projectId && !priority) {
-      const inboxProject = projects.find((p) => p.is_default);
-      if (inboxProject) {
-        filters.project_id = inboxProject.id;
+    if (priority) {
+      const priorityValue = getPriorityFilter(priority);
+      if (priorityValue) {
+        filters.priority = priorityValue;
       }
+    }
+
+    // Handle completed filter only if explicitly set
+    if (completedParam !== null) {
+      filters.completed = completed;
     }
 
     loadTodos(filters, true);
@@ -144,22 +142,23 @@ export default function TodosPage() {
           onTodoDelete={handleTodoDelete}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => {
-            const filters: TodoFilters = {
-              project_id: projectId || undefined,
-              priority: getPriorityFilter(priority),
-            };
+            const filters: TodoFilters = {};
 
-            if (completedParam !== null) {
-              filters.completed = completed;
-            } else if (!projectId && !priority) {
-              filters.completed = false;
+            // Only add filters if they are explicitly specified in URL
+            if (projectId) {
+              filters.project_id = projectId;
             }
 
-            if (!projectId && !priority) {
-              const inboxProject = projects.find((p) => p.is_default);
-              if (inboxProject) {
-                filters.project_id = inboxProject.id;
+            if (priority) {
+              const priorityValue = getPriorityFilter(priority);
+              if (priorityValue) {
+                filters.priority = priorityValue;
               }
+            }
+
+            // Handle completed filter only if explicitly set
+            if (completedParam !== null) {
+              filters.completed = completed;
             }
 
             loadTodos(filters, false);
