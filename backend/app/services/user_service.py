@@ -1,12 +1,10 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from bson import ObjectId
-from fastapi import HTTPException
-
 from app.config.loggers import app_logger as logger
 from app.db.mongodb.collections import users_collection
-from app.db.redis import set_cache
+from bson import ObjectId
+from fastapi import HTTPException
 
 
 async def get_user_by_id(user_id: str) -> Optional[dict]:
@@ -90,10 +88,6 @@ async def update_user_profile(
         await users_collection.update_one(
             {"_id": ObjectId(user_id)}, {"$set": update_data}
         )
-
-        # Clear user cache
-        cache_key = f"user_cache:{user.get('email')}"
-        await set_cache(cache_key, None, 0)  # Clear cache
 
         # Fetch and return updated user
         updated_user = await get_user_by_id(user_id)

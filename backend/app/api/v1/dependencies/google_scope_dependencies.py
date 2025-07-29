@@ -5,13 +5,13 @@ This module provides FastAPI dependencies for validating Google OAuth scopes
 before allowing access to protected endpoints that require specific integrations.
 """
 
-from typing import Literal, Union, List, Dict
+from typing import Dict, List, Literal, Union
 
 import httpx
-from fastapi import HTTPException, Depends, status
-
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import auth_logger as logger
+from app.config.token_repository import token_repository
+from fastapi import Depends, HTTPException, status
 
 http_async_client = httpx.AsyncClient(timeout=10.0)
 
@@ -32,14 +32,24 @@ def require_google_scope(scope: Union[str, List[str]]):
     """
 
     async def wrapper(user: dict = Depends(get_current_user)):
-        access_token = user.get("access_token")
-        if not access_token:
+        user_id = user.get("user_id")
+        if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Access token not found",
+                detail="User ID not found",
             )
 
         try:
+            token = await token_repository.get_token(
+                user_id, "google", renew_if_expired=True
+            )
+            access_token = token.get("access_token")
+            if not access_token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Access token not available",
+                )
+
             # Check Google token info to get authorized scopes
             token_info_response = await http_async_client.get(
                 f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
