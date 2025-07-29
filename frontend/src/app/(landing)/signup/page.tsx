@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-import { apiauth } from "@/lib";
 import { RedirectLoader } from "@/components/shared/RedirectLoader";
+import { apiauth } from "@/lib";
 // import SignupForm from "@/features/auth/components/SignupForm";
 
 export const metadata: Metadata = {
