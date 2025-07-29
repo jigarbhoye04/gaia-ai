@@ -197,7 +197,19 @@ export const fetchTodosByLabel = createAsyncThunk(
 
 export const fetchTodoById = createAsyncThunk(
   "todos/fetchTodoById",
-  async (todoId: string) => {
+  async (todoId: string, { getState }) => {
+    const state = getState() as { todos: TodoState };
+
+    // Check if todo already exists in state and is fresh (less than 5 minutes old)
+    const existingTodo = state.todos.todos.find((t) => t.id === todoId);
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+    if (existingTodo && state.todos.lastFetch.todos > fiveMinutesAgo) {
+      // Return existing todo without making API call
+      return existingTodo;
+    }
+
+    // Fetch from API if not in state or stale
     return await todoApi.getTodo(todoId);
   },
 );

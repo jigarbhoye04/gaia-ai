@@ -65,7 +65,7 @@ export default function WorkflowSection({
         console.error("Failed to check workflow status:", error);
         // Continue polling despite errors (might be temporary)
       }
-    }, 3000); // Poll every 2 seconds
+    }, 4000);
 
     return () => clearInterval(pollInterval);
   }, [localIsGenerating, workflow, todoId, onWorkflowGenerated]);

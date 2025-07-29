@@ -291,10 +291,24 @@ export const useTodos = () => {
   }, [dispatch, todoState.lastFetch]);
 
   const loadTodoById = useCallback(
-    async (todoId: string) => {
+    async (todoId: string, forceRefresh = false) => {
+      // Check if todo exists in local state and is fresh (unless forced refresh)
+      if (!forceRefresh) {
+        const existingTodo = todoState.todos.find((t) => t.id === todoId);
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+        if (existingTodo && todoState.lastFetch.todos > fiveMinutesAgo) {
+          // Return a fulfilled action with the existing todo
+          return {
+            type: "todos/fetchTodoById/fulfilled",
+            payload: existingTodo,
+          };
+        }
+      }
+
       return dispatch(fetchTodoById(todoId));
     },
-    [dispatch],
+    [dispatch, todoState.todos, todoState.lastFetch.todos],
   );
 
   // Cleanup debounce timer on unmount

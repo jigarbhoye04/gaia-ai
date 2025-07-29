@@ -308,7 +308,7 @@ async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)
 
 
 @router.get("/todos/{todo_id}/workflow-status")
-@tiered_rate_limit("todo_operations")
+# @tiered_rate_limit("todo_operations") # Commented out because it's a polling endpoint
 async def get_workflow_status(todo_id: str, user: dict = Depends(get_current_user)):
     """
     Get the workflow generation status for a todo.

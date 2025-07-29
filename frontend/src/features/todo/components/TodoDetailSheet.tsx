@@ -4,7 +4,7 @@ import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { formatDistanceToNow } from "date-fns";
 import { Check, Trash2 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Sheet, SheetContent } from "@/components/ui/shadcn/sheet";
@@ -50,54 +50,57 @@ export default function TodoDetailSheet({
 
   const { todos, loadTodoById } = useTodos();
 
-  // Find todo in local state first, then fetch if needed
+  // Memoized function to find todo in current state
+  const findTodoInState = useCallback(
+    (id: string) => {
+      return todos.find((t) => t.id === id);
+    },
+    [todos],
+  );
+
+  // Load todo data when todoId or isOpen changes
   useEffect(() => {
     if (!todoId || !isOpen) {
       setTodo(null);
       return;
     }
 
-    // First check if todo exists in local state
-    const localTodo = todos.find((t) => t.id === todoId);
+    // Check if todo exists in local state
+    const localTodo = findTodoInState(todoId);
     if (localTodo) {
       setTodo(localTodo);
-
-      // Background refresh to ensure we have latest data
-      loadTodoById(todoId).catch((error: unknown) => {
-        console.warn("Background todo refresh failed:", error);
-      });
-    } else {
-      // Need to fetch from server
-      setLoading(true);
-      loadTodoById(todoId)
-        .then((result) => {
-          if (result.payload && typeof result.payload === "object") {
-            setTodo(result.payload as Todo);
-          } else {
-            console.error("Failed to load todo");
-            onClose();
-          }
-        })
-        .catch((error: unknown) => {
-          console.error("Failed to load todo:", error);
-          // Close sheet if todo doesn't exist
-          onClose();
-        })
-        .finally(() => {
-          setLoading(false);
-        });
+      return;
     }
-  }, [todoId, isOpen, todos, loadTodoById, onClose]);
 
-  // Update local todo when Redux state changes
+    // Fetch from server if not found locally (this will now check cache first)
+    setLoading(true);
+    loadTodoById(todoId, false) // false = don't force refresh, use cache if available
+      .then((result) => {
+        if (result.payload && typeof result.payload === "object") {
+          setTodo(result.payload as Todo);
+        } else {
+          console.error("Failed to load todo");
+          onClose();
+        }
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load todo:", error);
+        onClose();
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [todoId, isOpen, loadTodoById, onClose, findTodoInState]);
+
+  // Update local todo when Redux state changes (only if we have a current todo)
   useEffect(() => {
     if (todoId && todo) {
-      const updatedTodo = todos.find((t) => t.id === todoId);
-      if (updatedTodo) {
+      const updatedTodo = findTodoInState(todoId);
+      if (updatedTodo && updatedTodo !== todo) {
         setTodo(updatedTodo);
       }
     }
-  }, [todos, todoId, todo]);
+  }, [findTodoInState, todoId, todo]);
 
   if (!isOpen) return null;
 
