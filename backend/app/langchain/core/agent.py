@@ -92,7 +92,7 @@ async def call_agent(
                     "email": user.get("email"),
                     "user_time": user_time.isoformat(),
                 },
-                "recursion_limit": 15,
+                "recursion_limit": 25,
                 "metadata": {"user_id": user_id},
             },
         ):
@@ -225,7 +225,7 @@ async def call_mail_processing_agent(
                     "refresh_token": refresh_token,
                     "initiator": "backend",  # This will be used to identify either to send notification or stream to the user
                 },
-                "recursion_limit": 15,  # Lower limit for email processing
+                "recursion_limit": 25,  # Increased limit for complex email processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "email",
@@ -351,7 +351,7 @@ async def call_reminder_agent(
                     "reminder_id": reminder_id,
                     "initiator": "backend",
                 },
-                "recursion_limit": 9,  # Lower limit for reminder processing
+                "recursion_limit": 20,  # Increased limit for complex reminder processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "reminder",
