@@ -19,14 +19,14 @@ import { useState } from "react";
 
 import { CalendarSimpleIcon, Target04Icon } from "@/components/shared/icons";
 import { goalsApi } from "@/features/goals/api/goalsApi";
-import { GoalData } from "@/types/features/goalTypes";
+import { Goal } from "@/types/api/goalsApiTypes";
 import { parseDate2 } from "@/utils";
 
 export function GoalCard({
   goal,
   fetchGoals,
 }: {
-  goal: GoalData;
+  goal: Goal;
   fetchGoals: () => void;
 }) {
   const router = useRouter();
@@ -45,6 +45,8 @@ export function GoalCard({
     deleteGoal(goal?.id);
     setOpenDeleteDialog(false);
   };
+
+  console.log(goal);
 
   return (
     <>
@@ -118,9 +120,9 @@ export function GoalCard({
           color={
             !goal.roadmap?.nodes?.length || !goal.roadmap?.edges?.length
               ? "warning"
-              : goal.progress === 100
+              : (goal.progress || 0) === 100
                 ? "success"
-                : goal.progress > 0
+                : (goal.progress || 0) > 0
                   ? "primary"
                   : "warning"
           }
@@ -129,9 +131,9 @@ export function GoalCard({
         >
           {!goal.roadmap?.nodes?.length || !goal.roadmap?.edges?.length
             ? "Not Started"
-            : goal.progress === 100
+            : (goal.progress || 0) === 100
               ? "Completed"
-              : goal.progress > 0
+              : (goal.progress || 0) > 0
                 ? "In Progress"
                 : "Not Started"}
         </Chip>
@@ -152,7 +154,7 @@ export function GoalCard({
         <div className="flex items-center justify-between">
           <div className="mt-2 flex items-center gap-1 text-sm text-foreground-500">
             <CalendarSimpleIcon width={20} />
-            {parseDate2(`${goal?.created_at}`)}
+            {parseDate2(goal?.created_at || new Date().toISOString())}
           </div>
           <Button
             color="primary"

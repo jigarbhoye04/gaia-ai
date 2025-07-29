@@ -1,5 +1,14 @@
 import React from "react";
+import {
+  Goal as ApiGoal,
+  GoalRoadmap as ApiGoalRoadmap,
+} from "@/types/api/goalsApiTypes";
 
+// Re-export API types for consistency
+export type Goal = ApiGoal;
+export type GoalRoadmap = ApiGoalRoadmap;
+
+// Extend the API Goal type for chat-specific use cases
 export interface GoalNode {
   id: string;
   data: {
@@ -9,26 +18,6 @@ export interface GoalNode {
     type?: string;
     subtask_id?: string;
   };
-}
-
-export interface GoalRoadmap {
-  nodes: GoalNode[];
-  edges: Array<{
-    id: string;
-    source: string;
-    target: string;
-  }>;
-}
-
-export interface Goal {
-  id: string;
-  title: string;
-  description?: string;
-  progress?: number;
-  roadmap?: GoalRoadmap;
-  created_at?: string;
-  todo_project_id?: string;
-  todo_id?: string;
 }
 
 export interface GoalStats {
