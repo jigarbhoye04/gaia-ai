@@ -24,8 +24,8 @@ export function RedirectLoader({ url, replace = false }: RedirectLoaderProps) {
         <Image
           src="/branding/logo.webp"
           alt="GAIA"
-          width={120}
-          height={120}
+          width={100}
+          height={100}
           priority
         />
       </div>

@@ -22,7 +22,6 @@ async def websocket_endpoint(websocket: WebSocket):
 
     if not user_id or not isinstance(user_id, str):
         logger.warning("WebSocket connection attempted with invalid user_id")
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
     # Accept the connection now that we've verified the user
