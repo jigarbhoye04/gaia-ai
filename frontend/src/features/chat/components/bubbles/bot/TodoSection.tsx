@@ -157,7 +157,7 @@ export default function TodoSection({
           {projects.map((project) => (
             <div
               key={project.id}
-              className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/80"
+              className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/70"
               onClick={() => router.push(`/todos/project/${project.id}`)}
             >
               <div className="flex items-center gap-3">
@@ -211,7 +211,11 @@ export default function TodoSection({
               todo.description || (todo.subtasks && todo.subtasks.length > 0);
 
             return (
-              <div key={todo.id} className="rounded-xl bg-zinc-900 p-3">
+              <div
+                key={todo.id}
+                className="cursor-pointer rounded-xl bg-zinc-900 p-3 transition-colors hover:bg-zinc-900/70"
+                onClick={() => router.push(`/todos?todoId=${todo.id}`)}
+              >
                 {/* todo Header */}
                 <div className="flex items-start gap-3">
                   <button
@@ -220,6 +224,7 @@ export default function TodoSection({
                         ? "border-success bg-success"
                         : "border-zinc-600 hover:border-zinc-500"
                     }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {todo.completed && (
                       <Check className="h-2.5 w-2.5 text-white" />
@@ -239,8 +244,11 @@ export default function TodoSection({
                       </h4>
                       {hasDetails && (
                         <button
-                          onClick={() => toggleTodoExpansion(todo.id)}
-                          className="rounded p-1 hover:bg-zinc-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTodoExpansion(todo.id);
+                          }}
+                          className="rounded p-1 hover:bg-zinc-900/70"
                         >
                           <ChevronRight
                             className={`h-4 w-4 text-zinc-500 transition-transform ${
@@ -327,6 +335,7 @@ export default function TodoSection({
                               <div
                                 key={subtask.id}
                                 className="flex items-center gap-2 pl-2"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <div
                                   className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
