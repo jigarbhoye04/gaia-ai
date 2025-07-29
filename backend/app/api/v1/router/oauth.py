@@ -127,7 +127,7 @@ async def workos_callback(
 
         # Set cookies and redirect to frontend
         redirect_url = settings.FRONTEND_URL
-        response = RedirectResponse(url=redirect_url)
+        response = RedirectResponse(url=f"{redirect_url}/redirect")
 
         # Set cookies with appropriate security settings
         response.set_cookie(
