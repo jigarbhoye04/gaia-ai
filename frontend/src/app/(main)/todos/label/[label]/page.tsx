@@ -7,6 +7,7 @@ import Spinner from "@/components/ui/shadcn/spinner";
 import { todoApi } from "@/features/todo/api/todoApi";
 import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
+import TodoModal from "@/features/todo/components/TodoModal";
 import { Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function LabelTodosPage() {
@@ -14,6 +15,8 @@ export default function LabelTodosPage() {
   const label = decodeURIComponent(params.label as string);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [selectedTodos, setSelectedTodos] = useState<Set<string>>(new Set());
 
   const loadTodosByLabel = useCallback(async () => {
@@ -52,6 +55,11 @@ export default function LabelTodosPage() {
     } catch (error) {
       console.error("Failed to delete todo:", error);
     }
+  };
+
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
   };
 
   const handleBulkComplete = async () => {
@@ -126,8 +134,22 @@ export default function LabelTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
         />
       </div>
+
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+          loadTodosByLabel();
+        }}
+      />
     </div>
   );
 }

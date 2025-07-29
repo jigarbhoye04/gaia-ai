@@ -16,6 +16,8 @@ export default function TodayTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const { refreshAllData, loadCounts } = useTodos();
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
@@ -67,6 +69,11 @@ export default function TodayTodosPage() {
     }
   };
 
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -90,6 +97,7 @@ export default function TodayTodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={loadTodayTodos}
         />
@@ -104,6 +112,19 @@ export default function TodayTodosPage() {
           loadTodayTodos();
           // Only refresh counts, not all data
           loadCounts();
+        }}
+      />
+
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+          loadTodayTodos();
         }}
       />
 

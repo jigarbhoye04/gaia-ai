@@ -82,7 +82,6 @@ export default function TodoSection({
     }
     setExpandedTodos(newExpanded);
   };
-
   const handleRunWorkflow = (todo: TodoItem) => {
     if (!todo.workflow) return;
 
@@ -98,13 +97,8 @@ ${todo.workflow.steps
 
 Please execute these steps in order and use the appropriate tools for each step.`;
 
-    // Navigate first, then append to ensure composer is ready
+    appendToInput(workflowMessage);
     router.push("/c");
-
-    // Use setTimeout to ensure navigation completes before appending
-    setTimeout(() => {
-      appendToInput(workflowMessage);
-    }, 100);
   };
 
   const formatDueDate = (date: string) => {

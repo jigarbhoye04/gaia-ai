@@ -11,18 +11,16 @@ import {
 } from "@heroui/dropdown";
 import { format } from "date-fns";
 import { Edit2, MoreVertical, Trash2 } from "lucide-react";
-import { useState } from "react";
 
 import { CalendarIcon } from "@/components/shared/icons";
 import { Priority, Todo, TodoUpdate } from "@/types/features/todoTypes";
-
-import TodoModal from "./TodoModal";
 
 interface TodoItemProps {
   todo: Todo;
   isSelected: boolean;
   onUpdate: (todoId: string, updates: TodoUpdate) => void;
   onDelete: (todoId: string) => void;
+  onEdit?: (todo: Todo) => void;
   onClick?: (todo: Todo) => void;
 }
 
@@ -38,10 +36,9 @@ export default function TodoItem({
   isSelected,
   onUpdate,
   onDelete,
+  onEdit,
   onClick,
 }: TodoItemProps) {
-  const [editOpen, setEditOpen] = useState(false);
-
   const handleToggleComplete = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     onUpdate(todo.id, { completed: !todo.completed });
@@ -154,7 +151,7 @@ export default function TodoItem({
                 <DropdownItem
                   key="edit"
                   startContent={<Edit2 className="h-4 w-4" />}
-                  onPress={() => setEditOpen(true)}
+                  onPress={() => onEdit?.(todo)}
                 >
                   Edit
                 </DropdownItem>
@@ -172,17 +169,6 @@ export default function TodoItem({
           </div>
         </div>
       </div>
-
-      {/* Edit Modal */}
-      <TodoModal
-        mode="edit"
-        todo={todo}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSuccess={() => {
-          setEditOpen(false);
-        }}
-      />
     </>
   );
 }
