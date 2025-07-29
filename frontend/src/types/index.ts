@@ -9,7 +9,6 @@ export * from "./api/mailApiTypes";
 export * from "./features/calendarTypes";
 export * from "./features/chatBubbleTypes";
 export * from "./features/convoTypes";
-export * from "./features/goalTypes";
 export * from "./features/mailTypes";
 export * from "./features/noteTypes";
 export * from "./features/notificationTypes";

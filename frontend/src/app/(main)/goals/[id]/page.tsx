@@ -91,7 +91,7 @@ export default function GoalPage() {
       if (goal?.roadmap) {
         setGoalData({
           ...goal,
-          created_at: new Date(goal.created_at || Date.now()),
+          created_at: new Date(goal.created_at || Date.now()).toString(),
           description: goal.description || "",
           progress: goal.progress || 0,
           roadmap: goal.roadmap,

@@ -6,7 +6,7 @@ import {
 
 // For backward compatibility, export a GoalData type that extends the API Goal
 export interface GoalData extends ApiGoal {
-  created_at: Date; // This component expects Date objects
+  created_at: string; // This component expects Date objects
 }
 
 // Re-export API types with legacy names for backward compatibility

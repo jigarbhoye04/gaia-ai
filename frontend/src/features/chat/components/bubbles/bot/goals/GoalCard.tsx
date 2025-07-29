@@ -264,11 +264,13 @@ export function GoalCard({
   onViewTasks,
 }: GoalCardProps) {
   const hasRoadmap = goal.roadmap?.nodes && goal.roadmap.nodes.length > 0;
-  const roadmapTasks = hasRoadmap
-    ? goal.roadmap!.nodes.filter(
-        (node) => node.data.type !== "start" && node.data.type !== "end",
-      )
-    : [];
+
+  const roadmapTasks =
+    goal.roadmap?.nodes?.length && goal.roadmap.nodes.length > 0
+      ? goal.roadmap.nodes.filter(
+          (node) => node.data.type !== "start" && node.data.type !== "end",
+        )
+      : [];
   const completedTasks = roadmapTasks.filter((node) => node.data.isComplete);
   const progress =
     roadmapTasks.length > 0
