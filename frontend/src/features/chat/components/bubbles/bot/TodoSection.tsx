@@ -9,10 +9,14 @@ import {
   Flag,
   FolderOpen,
   Hash,
+  Play,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/shadcn/button";
+import { useComposer } from "@/features/chat/contexts/ComposerContext";
+import { formatToolName } from "@/features/chat/utils/chatUtils";
 import {
   TodoAction,
   TodoItem,
@@ -66,6 +70,9 @@ export default function TodoSection({
   const router = useRouter();
   const [expandedTodos, setExpandedTodos] = useState<Set<string>>(new Set());
 
+  // Use the composer context to append text to input
+  const { appendToInput } = useComposer();
+
   const toggleTodoExpansion = (todoId: string) => {
     const newExpanded = new Set(expandedTodos);
     if (newExpanded.has(todoId)) {
@@ -74,6 +81,30 @@ export default function TodoSection({
       newExpanded.add(todoId);
     }
     setExpandedTodos(newExpanded);
+  };
+
+  const handleRunWorkflow = (todo: TodoItem) => {
+    if (!todo.workflow) return;
+
+    const workflowMessage = `I want to execute a workflow for my todo: "${todo.title}".
+
+Here's the workflow plan:
+${todo.workflow.steps
+  .map(
+    (step, index) =>
+      `${index + 1}. ${step.title} (${formatToolName(step.tool_name)}): ${step.description}`,
+  )
+  .join("\n")}
+
+Please execute these steps in order and use the appropriate tools for each step.`;
+
+    // Navigate first, then append to ensure composer is ready
+    router.push("/c");
+
+    // Use setTimeout to ensure navigation completes before appending
+    setTimeout(() => {
+      appendToInput(workflowMessage);
+    }, 100);
   };
 
   const formatDueDate = (date: string) => {
@@ -208,7 +239,9 @@ export default function TodoSection({
           {todos.map((todo) => {
             const isExpanded = expandedTodos.has(todo.id);
             const hasDetails =
-              todo.description || (todo.subtasks && todo.subtasks.length > 0);
+              todo.description ||
+              (todo.subtasks && todo.subtasks.length > 0) ||
+              todo.workflow;
 
             return (
               <div
@@ -359,6 +392,27 @@ export default function TodoSection({
                                 </span>
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {/* Workflow Section */}
+                        {todo.workflow && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-zinc-500">
+                              Workflow ({todo.workflow.steps.length} steps)
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 border-green-500/30 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRunWorkflow(todo);
+                              }}
+                            >
+                              <Play className="mr-1 h-3 w-3" />
+                              Run Workflow
+                            </Button>
                           </div>
                         )}
                       </div>
