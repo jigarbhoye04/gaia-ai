@@ -2,7 +2,6 @@ from typing import List, Optional
 
 from app.api.v1.dependencies.google_scope_dependencies import require_google_integration
 from app.config.token_repository import token_repository
-from fastapi import APIRouter, Depends, HTTPException, Query
 from app.decorators import tiered_rate_limit
 from app.models.calendar_models import (
     CalendarPreferencesUpdateRequest,
@@ -15,6 +14,7 @@ from app.services.calendar_service import (
     delete_calendar_event,
     update_calendar_event,
 )
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
 
@@ -42,7 +42,7 @@ async def get_calendar_list(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
+        access_token = str(token.get("access_token", ""))
 
         return await calendar_service.list_calendars(access_token)
     except Exception as e:
@@ -77,13 +77,11 @@ async def get_events(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
-        refresh_token = token.get("refresh_token")
+        access_token = str(token.get("access_token", ""))
 
         return await calendar_service.get_calendar_events(
             user_id=user_id,
             access_token=access_token,
-            refresh_token=refresh_token,  # Using refresh token from repository
             page_token=page_token,
             selected_calendars=selected_calendars,
             time_min=time_min,
@@ -125,7 +123,7 @@ async def get_events_by_calendar(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
+        access_token = str(token.get("access_token", ""))
 
         return await calendar_service.get_calendar_events_by_id(
             calendar_id=calendar_id,
@@ -167,7 +165,7 @@ async def create_event(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
+        access_token = str(token.get("access_token", ""))
 
         return await calendar_service.create_calendar_event(
             event, access_token, user_id
@@ -200,7 +198,7 @@ async def get_all_events(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
+        access_token = str(token.get("access_token", ""))
 
         return await calendar_service.get_all_calendar_events(
             access_token, user_id, time_min, time_max
@@ -224,7 +222,7 @@ async def get_calendar_preferences(
     """
     try:
         return await calendar_service.get_user_calendar_preferences(
-            current_user["user_id"]
+            str(current_user.get("user_id", ""))
         )
     except HTTPException as e:
         raise e
@@ -285,7 +283,7 @@ async def delete_event(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
+        access_token = str(token.get("access_token", ""))
 
         return await delete_calendar_event(event, access_token, user_id)
     except Exception as e:
@@ -320,8 +318,9 @@ async def update_event(
         token = await token_repository.get_token(
             str(user_id), "google", renew_if_expired=True
         )
-        access_token = token.get("access_token")
+        access_token = str(token.get("access_token", ""))
 
         return await update_calendar_event(event, access_token, user_id)
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500, detail=str(e))
