@@ -12,7 +12,6 @@ from app.models.calendar_models import (
     EventDeleteRequest,
     EventUpdateRequest,
 )
-from app.utils.auth_utils import auth_required
 from app.utils.calendar_utils import resolve_timezone
 from fastapi import HTTPException
 
@@ -137,7 +136,6 @@ async def fetch_calendar_events(
         raise HTTPException(status_code=500, detail=f"HTTP request failed: {e}")
 
 
-@auth_required()
 async def list_calendars(access_token: str, short=False) -> Optional[Dict[str, Any]]:
     """
     Retrieve the user's calendar list. If the access token is invalid,
@@ -155,7 +153,6 @@ async def list_calendars(access_token: str, short=False) -> Optional[Dict[str, A
     return await fetch_calendar_list(access_token, short)
 
 
-@auth_required()
 async def get_calendar_events(
     user_id: str,
     access_token: Optional[str] = None,
@@ -268,7 +265,6 @@ async def get_calendar_events(
     }
 
 
-@auth_required()
 async def get_calendar_events_by_id(
     calendar_id: str,
     access_token: str,
@@ -305,7 +301,6 @@ async def get_calendar_events_by_id(
     }
 
 
-@auth_required()
 async def get_all_calendar_events(
     access_token: str,
     user_id: Optional[str] = None,
@@ -360,7 +355,6 @@ async def get_all_calendar_events(
     return {"calendars": events_by_calendar}
 
 
-@auth_required()
 async def create_calendar_event(
     event: EventCreateRequest,
     access_token: str,
@@ -369,10 +363,10 @@ async def create_calendar_event(
     """
     Create a new calendar event using the Google Calendar API.
     The function normalizes the provided timezone and ensures the event datetimes are timezone-aware.
-    Supports full-day events and custom calendar selection.
+    Supports full-day events, recurring events, and custom calendar selection.
 
     Args:
-        event (EventCreateRequest): The event details.
+        event (EventCreateRequest): The event details, including optional recurrence rules.
         access_token (str): The access token.
         user_id (Optional[str]): User ID for token refresh.
 
@@ -392,7 +386,7 @@ async def create_calendar_event(
     }
 
     # Create the basic event payload
-    event_payload: dict[str, str | dict] = {
+    event_payload: dict[str, Any] = {
         "summary": event.summary,
         "description": event.description,
     }
@@ -408,7 +402,6 @@ async def create_calendar_event(
             end_date = event.end.split("T")[0] if "T" in event.end else event.end
         elif event.start:
             # If only start date is provided, end date is the next day
-
             start_date = (
                 event.start.split("T")[0] if "T" in event.start else event.start
             )
@@ -452,6 +445,28 @@ async def create_calendar_event(
                 status_code=400, detail=f"Invalid timezone or datetime format: {str(e)}"
             )
 
+    # Handle recurrence rules if provided
+    if event.recurrence:
+        try:
+            # Convert recurrence data to Google Calendar format
+            recurrence_rules = event.recurrence.to_google_calendar_format()
+            event_payload["recurrence"] = recurrence_rules
+
+            # For recurring events, Google Calendar requires that a single timezone is specified
+            # If this is a timed event (not all-day), ensure a timezone is set
+            if not event.is_all_day:
+                canonical_timezone = resolve_timezone(event.timezone or "UTC")
+                # Make sure both start and end have the same timezone
+                if "timeZone" in event_payload["start"]:
+                    event_payload["start"]["timeZone"] = canonical_timezone
+                if "timeZone" in event_payload["end"]:
+                    event_payload["end"]["timeZone"] = canonical_timezone
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid recurrence rule format: {str(e)}"
+            )
+
     # Send request to create the event
     try:
         async with httpx.AsyncClient() as client:
@@ -459,7 +474,8 @@ async def create_calendar_event(
 
         # Handle response
         if response.status_code in (200, 201):
-            return response.json()
+            response_data = response.json()
+            return response_data
         elif response.status_code == 403:
             raise HTTPException(
                 status_code=403,
@@ -469,16 +485,22 @@ async def create_calendar_event(
             # The decorator will handle token refresh, but we need to raise a 401 to trigger it
             raise HTTPException(status_code=401, detail="Authentication failed")
         else:
-            response_json = response.json()
-            if isinstance(response_json, dict):
-                error_detail = response_json.get("error", {}).get(
-                    "message", "Unknown error"
-                )
-            else:
-                error_detail = "Unknown error"
+            try:
+                response_json = response.json()
+                if isinstance(response_json, dict):
+                    error_detail = response_json.get("error", {}).get(
+                        "message", "Unknown error"
+                    )
+                else:
+                    error_detail = "Unknown error"
+            except Exception:
+                error_detail = "Unknown error, could not parse response"
+
             raise HTTPException(status_code=response.status_code, detail=error_detail)
     except httpx.RequestError as e:
         raise HTTPException(status_code=500, detail=f"Failed to create event: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 
 async def get_user_calendar_preferences(user_id: str) -> Dict[str, List[str]]:
@@ -525,7 +547,6 @@ async def update_user_calendar_preferences(
         return {"message": "No changes made to calendar preferences"}
 
 
-@auth_required()
 async def search_calendar_events_native(
     query: str,
     user_id: str,
@@ -738,7 +759,6 @@ async def search_events_in_calendar(
         raise HTTPException(status_code=500, detail=f"HTTP search request failed: {e}")
 
 
-@auth_required()
 async def delete_calendar_event(
     event: EventDeleteRequest,
     access_token: str,
@@ -794,7 +814,6 @@ async def delete_calendar_event(
         raise HTTPException(status_code=500, detail=f"Failed to delete event: {str(e)}")
 
 
-@auth_required()
 async def update_calendar_event(
     event: EventUpdateRequest,
     access_token: str,
@@ -854,6 +873,21 @@ async def update_calendar_event(
             else existing_event.get("description", "")
         ),
     }
+
+    # Handle recurrence updates if provided
+    if event.recurrence is not None:
+        try:
+            # Convert recurrence data to Google Calendar format
+            recurrence_rules = event.recurrence.to_google_calendar_format()
+            event_payload["recurrence"] = recurrence_rules
+        except Exception as e:
+            logger.error(f"Error processing recurrence rules: {e}")
+            raise HTTPException(
+                status_code=400, detail=f"Invalid recurrence rule format: {str(e)}"
+            )
+    elif "recurrence" in existing_event:
+        # Preserve existing recurrence if not being updated
+        event_payload["recurrence"] = existing_event.get("recurrence", [])
 
     # Handle time updates
     if event.start is not None or event.end is not None or event.is_all_day is not None:
@@ -948,4 +982,5 @@ async def update_calendar_event(
                 error_detail = "Unknown error"
             raise HTTPException(status_code=response.status_code, detail=error_detail)
     except httpx.RequestError as e:
+        print(e)
         raise HTTPException(status_code=500, detail=f"Failed to update event: {str(e)}")

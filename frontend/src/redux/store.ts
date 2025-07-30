@@ -2,7 +2,6 @@
 
 import { configureStore } from "@reduxjs/toolkit";
 
-import calendarModalReducer from "./slices/calendarModalSlice";
 import calendarReducer from "./slices/calendarSlice";
 import convoReducer from "./slices/conversationSlice";
 import conversationReducer from "./slices/conversationsSlice";
@@ -25,7 +24,6 @@ export const store = configureStore({
     conversations: conversationReducer,
     imageDialog: imageDialogReducer,
     calendar: calendarReducer,
-    calendarModal: calendarModalReducer,
     header: headerReducer,
     todos: todoReducer,
     sidebar: sidebarReducer,

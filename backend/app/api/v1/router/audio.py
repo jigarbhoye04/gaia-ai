@@ -1,11 +1,10 @@
 import asyncio
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-
 from app.config.loggers import audio_logger as logger
 from app.config.settings import settings
 from app.models.audio_models import TTSRequest
 from app.services.audio_service import TTSService
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 router = APIRouter()
 tts_service = TTSService()
