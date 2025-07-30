@@ -1,11 +1,12 @@
 "use client";
 
-import { Badge,Tab, Tabs } from "@heroui/react";
+import { Badge, Tab, Tabs } from "@heroui/react";
 import { Bell, BellRing } from "lucide-react";
 import { useState } from "react";
 
 import { EmailPreviewModal } from "@/components/Modals/EmailPreviewModal";
 import { NotificationsList } from "@/components/Notifications/NotificationsList";
+import { Button } from "@/components/ui";
 import { useAllNotifications } from "@/features/notification/hooks/useAllNotifications";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { NotificationsAPI } from "@/services/api/notifications";
@@ -13,6 +14,7 @@ import {
   ModalConfig,
   NotificationStatus,
 } from "@/types/features/notificationTypes";
+import { toast } from "sonner";
 
 export default function NotificationsPage() {
   const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);
@@ -50,6 +52,19 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleBulkMarkAsRead = async (notificationIds: string[]) => {
+    try {
+      if (notificationIds.length == 0)
+        return toast.error("No events to mark as read");
+      await NotificationsAPI.bulkMarkAsRead(notificationIds);
+      // Refresh both lists after marking as read
+      await refetchUnread();
+      await refetchAll();
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
   // Simple refresh function
   const refreshNotifications = async () => {
     await refetchAll();
@@ -74,6 +89,16 @@ export default function NotificationsPage() {
 
   return (
     <div className="flex w-full flex-col items-center justify-center overflow-y-auto p-5 py-2">
+      <div className="mb-4 flex w-full justify-end">
+        <Button
+          size="sm"
+          onClick={async () => {
+            await handleBulkMarkAsRead(unreadNotifications.map((n) => n.id));
+          }}
+        >
+          Mark All as Read
+        </Button>
+      </div>
       <Tabs
         aria-label="Notifications"
         color="primary"
@@ -102,7 +127,7 @@ export default function NotificationsPage() {
                   }
                   size="sm"
                 >
-                  <span></span>
+                  <span />
                 </Badge>
               )}
             </div>

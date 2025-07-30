@@ -168,8 +168,8 @@ export default function ChatOptionsDropdown({
                 <Input
                   label={
                     <div className="space-x-1 text-xs">
-                      <span>Previous Name</span>
-                      <b>{chatName}</b>
+                      <span>Previous Name:</span>
+                      <span className="text-red-500">{chatName}</span>
                     </div>
                   }
                   labelPlacement="outside"
