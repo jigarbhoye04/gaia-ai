@@ -43,26 +43,7 @@ def require_google_scope(scope: Union[str, List[str]]):
             token = await token_repository.get_token(
                 user_id, "google", renew_if_expired=True
             )
-            access_token = token.get("access_token")
-            if not access_token:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Access token not available",
-                )
-
-            # Check Google token info to get authorized scopes
-            token_info_response = await http_async_client.get(
-                f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
-            )
-
-            if token_info_response.status_code != 200:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid access token",
-                )
-
-            token_data = token_info_response.json()
-            authorized_scopes = token_data.get("scope", "").split()
+            authorized_scopes = str(token.get("scope", "")).split()
 
             # Handle both single scope and list of scopes
             required_scopes = [scope] if isinstance(scope, str) else scope
