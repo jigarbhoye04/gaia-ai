@@ -133,6 +133,16 @@ class TodoService:
         # Filters
         if params.project_id is not None:
             query["project_id"] = params.project_id
+        elif (
+            not params.q
+            and params.completed is None
+            and not params.priority
+            and not params.labels
+        ):
+            # Default to inbox when no filters are specified (main /todos page)
+            inbox_id = await TodoService._get_or_create_inbox(user_id)
+            query["project_id"] = inbox_id
+
         if params.completed is not None:
             query["completed"] = params.completed
         if params.priority:
@@ -178,6 +188,26 @@ class TodoService:
         except Exception as e:
             todos_logger.error(f"Error generating workflow for TODO: {str(e)}")
             return {"success": False, "error": str(e)}
+
+    @staticmethod
+    async def update_workflow_status(
+        todo_id: str, user_id: str, status: WorkflowStatus
+    ) -> None:
+        """Update workflow status for a todo."""
+        try:
+            await todos_collection.update_one(
+                {"_id": ObjectId(todo_id), "user_id": user_id},
+                {
+                    "$set": {
+                        "workflow_status": status,
+                        "updated_at": datetime.now(timezone.utc),
+                    }
+                },
+            )
+            # Invalidate cache
+            await TodoService._invalidate_cache(user_id, None, todo_id, "update")
+        except Exception as e:
+            todos_logger.error(f"Failed to update workflow status: {e}")
 
     @staticmethod
     async def _calculate_stats(user_id: str) -> TodoStats:

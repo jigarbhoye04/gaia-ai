@@ -32,15 +32,12 @@ async def process_workflow_generation(task_data: Dict[str, Any]) -> None:
 
         logger.info(f"Starting workflow generation for todo {todo_id}: {title}")
 
-        if not title or not description:
-            logger.warning(
-                f"Title or description is empty for todo {todo_id}. Skipping workflow generation."
-            )
-            return
-
         # Generate workflow using the existing method
         workflow_result = await TodoService._generate_workflow_for_todo(
-            title, description
+            str(title),
+            str(description)
+            if description
+            else "",  # Always provide empty string fallback
         )
 
         if workflow_result.get("success"):

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Body
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.decorators import tiered_rate_limit
+from app.db.mongodb.collections import todos_collection, projects_collection
 from app.models.todo_models import (
     TodoCreate,
     TodoResponse,
@@ -27,6 +28,94 @@ from app.models.todo_models import (
 from app.services.todo_service import TodoService, ProjectService
 
 router = APIRouter()
+
+
+# Counts endpoint for efficient dashboard data
+@router.get("/todos/counts")
+async def get_todo_counts(user: dict = Depends(get_current_user)):
+    """
+    Get all todo counts for dashboard/sidebar in a single efficient call.
+    Returns inbox count, today count, upcoming count, and completed count.
+    """
+    try:
+        # Use the stats calculation to get counts efficiently
+        stats = await TodoService._calculate_stats(user["user_id"])
+
+        # Get today's date for filtering
+        today = datetime.now(timezone.utc).date()
+        today_start = datetime.combine(today, datetime.min.time()).replace(
+            tzinfo=timezone.utc
+        )
+        today_end = datetime.combine(today, datetime.max.time()).replace(
+            tzinfo=timezone.utc
+        )
+
+        # Get upcoming end date (7 days from now)
+        upcoming_end = datetime.now(timezone.utc) + timedelta(days=7)
+
+        # Get inbox project
+        inbox_project = await projects_collection.find_one(
+            {"user_id": user["user_id"], "is_default": True}
+        )
+        inbox_project_id = (
+            str(inbox_project["_id"]) if inbox_project else "no_inbox_found"
+        )
+
+        # Count todos efficiently with a single aggregation
+        counts_pipeline = [
+            {"$match": {"user_id": user["user_id"]}},
+            {
+                "$facet": {
+                    "inbox": [
+                        {
+                            "$match": {
+                                "project_id": inbox_project_id,
+                                "completed": False,
+                            }
+                        },
+                        {"$count": "count"},
+                    ],
+                    "today": [
+                        {
+                            "$match": {
+                                "due_date": {"$gte": today_start, "$lte": today_end},
+                                "completed": False,
+                            }
+                        },
+                        {"$count": "count"},
+                    ],
+                    "upcoming": [
+                        {
+                            "$match": {
+                                "due_date": {"$gt": today_end, "$lte": upcoming_end},
+                                "completed": False,
+                            }
+                        },
+                        {"$count": "count"},
+                    ],
+                }
+            },
+        ]
+
+        counts_result = await todos_collection.aggregate(counts_pipeline).to_list(1)
+        facets = counts_result[0] if counts_result else {}
+
+        # Safely extract counts from facets (handle empty arrays)
+        def safe_get_count(facet_result):
+            return facet_result[0].get("count", 0) if facet_result else 0
+
+        return {
+            "inbox": safe_get_count(facets.get("inbox", [])),
+            "today": safe_get_count(facets.get("today", [])),
+            "upcoming": safe_get_count(facets.get("upcoming", [])),
+            "completed": stats.completed,
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve counts: {e}",
+        )
 
 
 # Main Todo CRUD Endpoints
@@ -178,11 +267,21 @@ async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)
     """Generate a workflow plan for a specific todo and update the todo with it."""
     try:
         todo = await TodoService.get_todo(todo_id, user["user_id"])
+
+        # Set status to generating first
+        await TodoService.update_workflow_status(
+            todo_id, user["user_id"], WorkflowStatus.GENERATING
+        )
+
         workflow_result = await TodoService._generate_workflow_for_todo(
-            todo.title, todo.description
+            todo.title, todo.description or ""
         )
 
         if not workflow_result.get("success"):
+            # Mark as failed
+            await TodoService.update_workflow_status(
+                todo_id, user["user_id"], WorkflowStatus.FAILED
+            )
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=workflow_result.get("error", "Failed to generate workflow"),
@@ -200,7 +299,7 @@ async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)
             completed=None,
             subtasks=None,
             workflow=workflow_result["workflow"],
-            workflow_status=None,
+            workflow_status=WorkflowStatus.COMPLETED,
         )
         updated_todo = await TodoService.update_todo(
             todo_id, update_request, user["user_id"]
@@ -219,7 +318,7 @@ async def generate_workflow(todo_id: str, user: dict = Depends(get_current_user)
 
 
 @router.get("/todos/{todo_id}/workflow-status")
-@tiered_rate_limit("todo_operations")
+# @tiered_rate_limit("todo_operations") # Commented out because it's a polling endpoint
 async def get_workflow_status(todo_id: str, user: dict = Depends(get_current_user)):
     """
     Get the workflow generation status for a todo.

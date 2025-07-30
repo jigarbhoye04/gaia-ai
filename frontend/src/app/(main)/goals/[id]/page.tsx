@@ -31,7 +31,6 @@ import {
   EdgeType,
   GoalData,
   NodeData,
-  NodeType,
 } from "@/types/features/goalTypes";
 
 export default function GoalPage() {
@@ -87,35 +86,47 @@ export default function GoalPage() {
     try {
       if (!goalId) return;
       setLoading(true);
-      const goal = (await goalsApi.fetchGoalById(goalId as string)) as Goal & {
-        roadmap?: GoalData["roadmap"];
-      };
+      const goal = (await goalsApi.fetchGoalById(goalId as string)) as Goal;
       if (goal?.roadmap) {
         setGoalData({
           ...goal,
-          created_at: new Date(goal.created_at || Date.now()),
+          created_at: new Date(goal.created_at || Date.now()).toString(),
           description: goal.description || "",
-          progress: 0,
+          progress: goal.progress || 0,
           roadmap: goal.roadmap,
         });
         setLoading(false);
         const graph = new dagre.graphlib.Graph();
         graph.setGraph({ rankdir: "TD" });
         graph.setDefaultEdgeLabel(() => ({}));
-        goal.roadmap.nodes?.forEach((node: NodeType) => {
+        goal.roadmap.nodes?.forEach((node) => {
           graph.setNode(node.id, { width: 350, height: 100 });
         });
-        goal.roadmap.edges?.forEach((edge: EdgeType) => {
+        goal.roadmap.edges?.forEach((edge) => {
           graph.setEdge(edge.source, edge.target);
         });
         dagre.layout(graph);
-        const updatedNodes = goal.roadmap.nodes?.map((node: NodeType) => {
-          const { x, y } = graph.node(node.id);
+        const updatedNodes = goal.roadmap.nodes?.map((node) => {
+          const nodePosition = graph.node(node.id);
           return {
             id: node.id,
-            position: { x, y },
+            position: {
+              x: nodePosition?.x || 0,
+              y: nodePosition?.y || 0,
+            },
             type: "customNode",
-            data: { ...node.data, id: node.id, goalId: goal.id },
+            data: {
+              id: node.data.id || node.id,
+              goalId: node.data.goalId || goal.id,
+              title: node.data.title,
+              label: node.data.label || node.data.title || "Untitled",
+              details: node.data.details || [],
+              estimatedTime: node.data.estimatedTime || [],
+              resources: node.data.resources || [],
+              isComplete: node.data.isComplete || false,
+              type: node.data.type,
+              subtask_id: node.data.subtask_id,
+            },
           };
         });
         setNodes(updatedNodes || []);
