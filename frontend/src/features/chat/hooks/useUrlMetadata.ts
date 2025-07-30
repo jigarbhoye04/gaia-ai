@@ -86,7 +86,10 @@ export const usePrefetchUrlMetadata = () => {
   const queryClient = useQueryClient();
 
   return (url: string) => {
-    if (!url) return;
+    const isValidUrl =
+      url && isValidHttpUrl(url) && !isEmail(url) && !url.startsWith("mailto:");
+
+    if (!isValidUrl) return;
 
     queryClient.prefetchQuery({
       queryKey: ["url-metadata", url],
