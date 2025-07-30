@@ -82,19 +82,24 @@ export default function UpcomingTodosPage() {
     );
   }
 
+  // Only show todos that are due in the future and not completed
+  const upcomingTodos = todos.filter(
+    (t) => t.due_date && new Date(t.due_date) >= new Date() && !t.completed,
+  );
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title="Upcoming"
-          todoCount={todos.length}
+          todoCount={upcomingTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>
 
       <div className="w-full flex-1 overflow-y-auto px-4">
         <TodoList
-          todos={todos}
+          todos={upcomingTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
           onTodoEdit={handleTodoEdit}

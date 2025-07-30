@@ -82,19 +82,23 @@ export default function TodayTodosPage() {
     );
   }
 
+  const incompleteTodos = todos.filter(
+    (t) => t.due_date && new Date(t.due_date) < new Date() && !t.completed,
+  );
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title="Today"
-          todoCount={todos.length}
+          todoCount={incompleteTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>
 
       <div className="w-full flex-1 overflow-y-auto px-4">
         <TodoList
-          todos={todos}
+          todos={incompleteTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
           onTodoEdit={handleTodoEdit}

@@ -24,16 +24,9 @@ export default function TodoList({
   onTodoEdit,
   showCompleted = false,
 }: TodoListProps) {
-  const filteredTodos = useMemo(
-    () => (showCompleted ? todos : todos.filter((t) => !t.completed)),
-    [todos, showCompleted],
-  );
-
   const sortedTodos = useMemo(() => {
-    return [...filteredTodos].sort(
-      (a, b) => Number(a.completed) - Number(b.completed),
-    );
-  }, [filteredTodos]);
+    return [...todos].sort((a, b) => Number(a.completed) - Number(b.completed));
+  }, [todos]);
 
   if (sortedTodos.length === 0) {
     return (

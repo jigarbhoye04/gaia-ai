@@ -125,12 +125,14 @@ export default function TodosPage() {
     );
   }
 
+  const incompleteTodos = todos.filter((t) => !t.completed);
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title={getPageTitle()}
-          todoCount={todos.length}
+          todoCount={incompleteTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>

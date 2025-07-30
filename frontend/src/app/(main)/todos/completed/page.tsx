@@ -59,19 +59,21 @@ export default function CompletedTodosPage() {
     );
   }
 
+  const completeTodos = todos.filter((t) => t.completed);
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title="Completed"
-          todoCount={todos.length}
+          todoCount={completeTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>
 
       <div className="w-full flex-1 overflow-y-auto px-4">
         <TodoList
-          todos={todos}
+          todos={completeTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
           onTodoEdit={handleTodoEdit}
