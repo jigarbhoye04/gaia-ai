@@ -145,7 +145,6 @@ export default function TodoModal({
         subtasks: todo.subtasks || [],
       });
     }
-    console.log("this is a test");
   }, [open, mode, todo, setFormData]);
 
   const handleDateChange = (date?: string, timezone?: string) => {

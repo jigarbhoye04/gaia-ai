@@ -74,7 +74,7 @@ function SidebarSection({
                 </span>
               )
             }
-            className={`justify-start px-1 text-start text-sm ${
+            className={`justify-start px-2 text-start text-sm ${
               activeItem === item.href
                 ? "bg-primary/10 text-primary"
                 : "text-foreground-600"
@@ -301,7 +301,7 @@ export default function TodoSidebar() {
             <Spinner />
           </div>
         ) : (
-          <div className="space-y-4 divide-y-1 divide-solid divide-zinc-700 px-2">
+          <div className="space-y-4 divide-y-1 divide-solid divide-zinc-700">
             {/* Main Menu */}
             <SidebarSection
               items={mainMenuItems}
