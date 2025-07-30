@@ -9,7 +9,6 @@ import React from "react";
 import {
   CalendarIcon,
   CheckmarkCircle02Icon,
-  Mail01Icon,
   MessageMultiple02Icon,
   NotificationIcon,
   PinIcon,
@@ -54,11 +53,11 @@ export default function SidebarTopButtons() {
       icon: <CheckmarkCircle02Icon />,
       label: "Todos",
     },
-    {
-      route: "/mail",
-      icon: <Mail01Icon />,
-      label: "Mail",
-    },
+    // {
+    //   route: "/mail",
+    //   icon: <Mail01Icon />,
+    //   label: "Mail",
+    // },
     {
       route: "/pins",
       icon: <PinIcon />,

@@ -12,7 +12,7 @@ import {
   CalendarOptions,
 } from "./calendarTypes";
 import { IntegrationConnectionData } from "./integrationTypes";
-import { EmailComposeData, EmailFetchData } from "./mailTypes";
+import { EmailComposeData, EmailFetchData, EmailThreadData } from "./mailTypes";
 import { DeepResearchResults, SearchResults } from "./searchTypes";
 import { TodoToolData } from "./todoToolTypes";
 import {
@@ -46,6 +46,7 @@ export const BASE_MESSAGE_SCHEMA = {
   calendar_edit_options: undefined as CalendarEditOptions[] | null | undefined,
   email_compose_data: undefined as EmailComposeData[] | null | undefined,
   email_fetch_data: undefined as EmailFetchData[] | null | undefined,
+  email_thread_data: undefined as EmailThreadData | null | undefined,
   weather_data: undefined as WeatherData | null | undefined,
   search_results: undefined as SearchResults | null | undefined,
   deep_research_results: undefined as DeepResearchResults | null | undefined,

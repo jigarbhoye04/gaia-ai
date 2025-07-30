@@ -1,6 +1,8 @@
+import { Tooltip } from "@heroui/react";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 
 import { Gmail } from "@/components";
+import { useComposer } from "@/features/chat/contexts/ComposerContext";
 import { EmailFetchData } from "@/types/features/mailTypes";
 
 interface EmailListProps {
@@ -53,7 +55,18 @@ function formatTime(time: string | null): string {
 }
 
 export default function EmailListCard({ emails }: EmailListProps) {
-  if (!!emails)
+  const { appendToInput } = useComposer();
+
+  const handleEmailClick = (email: EmailFetchData) => {
+    if (email.thread_id) {
+      const sender = extractSenderName(email.from);
+      appendToInput(
+        `Tell me about the mail with thread id: ${email.thread_id} from ${sender} with subject "${email.subject}"`,
+      );
+    }
+  };
+
+  if (emails)
     return (
       <div className="mx-auto mt-3 w-full max-w-2xl rounded-3xl bg-zinc-800 p-3 text-white">
         {/* Header */}
@@ -70,32 +83,37 @@ export default function EmailListCard({ emails }: EmailListProps) {
         <ScrollShadow className="max-h-[300px] divide-y divide-gray-700">
           {!!emails &&
             emails.length > 0 &&
-            emails.map((email, index) => (
-              <div
-                key={index}
-                className="group flex cursor-pointer items-center gap-4 p-3 transition-colors hover:bg-zinc-700"
+            emails.map((email) => (
+              <Tooltip
+                key={email.thread_id}
+                content={`Ask about this email from ${extractSenderName(email.from)}`}
+                showArrow
+                color="foreground"
               >
-                {/* Sender Name */}
-                <div className="w-40 flex-shrink-0">
-                  <span className="block truncate text-sm font-medium text-gray-300">
-                    {extractSenderName(email.from)}
-                  </span>
-                </div>
+                <div
+                  className="group flex cursor-pointer items-center gap-4 p-3 transition-colors hover:bg-zinc-700"
+                  onClick={() => handleEmailClick(email)}
+                >
+                  <div className="w-40 flex-shrink-0">
+                    <span className="block truncate text-sm font-medium text-gray-300">
+                      {extractSenderName(email.from)}
+                    </span>
+                  </div>
 
-                {/* Subject */}
-                <div className="min-w-0 flex-1">
-                  <span className="block truncate text-sm text-white group-hover:text-gray-100">
-                    {email.subject}
-                  </span>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate text-sm text-white group-hover:text-gray-100">
+                      {email.subject}
+                    </span>
+                  </div>
 
-                {/* Time */}
-                <div className="w-20 flex-shrink-0 text-right">
-                  <span className="text-xs text-gray-400">
-                    {formatTime(email.time)}
-                  </span>
+                  {/* Time */}
+                  <div className="w-20 flex-shrink-0 text-right">
+                    <span className="text-xs text-gray-400">
+                      {formatTime(email.time)}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </Tooltip>
             ))}
         </ScrollShadow>
       </div>
