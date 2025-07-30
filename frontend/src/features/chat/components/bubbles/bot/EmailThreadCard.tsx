@@ -1,5 +1,6 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Chip } from "@heroui/chip";
+import { Selection } from "@heroui/react";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import DOMPurify from "dompurify";
 import { useState } from "react";
@@ -83,8 +84,10 @@ export default function EmailThreadCard({
 }: EmailThreadCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  const handleSelectionChange = (keys: any) => {
-    setIsExpanded(keys.has("email-thread"));
+  const handleSelectionChange = (keys: Selection) => {
+    const expanded =
+      keys === "all" || (keys instanceof Set && keys.has("email-thread"));
+    setIsExpanded(expanded);
   };
 
   return (

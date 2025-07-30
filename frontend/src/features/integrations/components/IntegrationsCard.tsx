@@ -1,5 +1,6 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Chip } from "@heroui/chip";
+import { Selection } from "@heroui/react";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
@@ -34,7 +35,7 @@ const IntegrationItem: React.FC<{
     >
       {/* Icon */}
       <div className="flex-shrink-0">
-        <div className="w-57items-center flex h-7 justify-center rounded">
+        <div className="flex h-7 w-7 items-center justify-center rounded">
           <Image
             width={25}
             height={25}
@@ -87,7 +88,11 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
   // Load saved accordion state from localStorage
   // This preserves the expand/collapse state of the integrations accordion
   // across multiple opens of the slash command dropdown
-  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => {
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(() => {
+    if (typeof window === "undefined") {
+      return new Set(["integrations"]);
+    }
+
     const saved = localStorage.getItem("gaia-integrations-accordion-expanded");
     if (saved !== null) {
       try {
@@ -103,13 +108,17 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
   });
 
   // Save accordion state to localStorage whenever it changes
-  const handleSelectionChange = (keys: any) => {
+  const handleSelectionChange = (keys: Selection) => {
     setSelectedKeys(keys);
-    const isExpanded = keys.has("integrations");
-    localStorage.setItem(
-      "gaia-integrations-accordion-expanded",
-      JSON.stringify(isExpanded),
-    );
+
+    if (typeof window !== "undefined") {
+      const isExpanded =
+        keys === "all" || (keys instanceof Set && keys.has("integrations"));
+      localStorage.setItem(
+        "gaia-integrations-accordion-expanded",
+        JSON.stringify(isExpanded),
+      );
+    }
   };
 
   // Force refresh integration status on mount
@@ -141,7 +150,7 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
         className="rounded-xl bg-zinc-900/50"
       >
         <AccordionItem
-          key={"integrations"}
+          key="integrations"
           title={
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">

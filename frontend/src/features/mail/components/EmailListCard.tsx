@@ -83,14 +83,14 @@ export default function EmailListCard({ emails }: EmailListProps) {
         <ScrollShadow className="max-h-[300px] divide-y divide-gray-700">
           {!!emails &&
             emails.length > 0 &&
-            emails.map((email, index) => (
+            emails.map((email) => (
               <Tooltip
+                key={email.thread_id}
                 content={`Ask about this email from ${extractSenderName(email.from)}`}
                 showArrow
                 color="foreground"
               >
                 <div
-                  key={index}
                   className="group flex cursor-pointer items-center gap-4 p-3 transition-colors hover:bg-zinc-700"
                   onClick={() => handleEmailClick(email)}
                 >
