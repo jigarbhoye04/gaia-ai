@@ -1,9 +1,9 @@
+import { Tooltip } from "@heroui/react";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 
 import { Gmail } from "@/components";
 import { useComposer } from "@/features/chat/contexts/ComposerContext";
 import { EmailFetchData } from "@/types/features/mailTypes";
-import { Tooltip } from "@heroui/react";
 
 interface EmailListProps {
   emails?: EmailFetchData[] | null;

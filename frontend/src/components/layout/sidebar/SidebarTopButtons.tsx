@@ -54,11 +54,11 @@ export default function SidebarTopButtons() {
       icon: <CheckmarkCircle02Icon />,
       label: "Todos",
     },
-    {
-      route: "/mail",
-      icon: <Mail01Icon />,
-      label: "Mail",
-    },
+    // {
+    //   route: "/mail",
+    //   icon: <Mail01Icon />,
+    //   label: "Mail",
+    // },
     {
       route: "/pins",
       icon: <PinIcon />,

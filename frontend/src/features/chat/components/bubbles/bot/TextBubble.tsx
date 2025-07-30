@@ -6,13 +6,13 @@ import { InternetIcon } from "@/components/shared/icons";
 import CalendarListCard from "@/features/calendar/components/CalendarListCard";
 import CalendarListFetchCard from "@/features/calendar/components/CalendarListFetchCard";
 import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
+import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import { shouldShowTextBubble } from "@/features/chat/utils/messageContentUtils";
 import EmailListCard from "@/features/mail/components/EmailListCard";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
 import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
 
-import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
 import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
 import { CalendarEditSection } from "./CalendarEditSection";

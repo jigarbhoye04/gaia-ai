@@ -1,15 +1,13 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
+import { Chip } from "@heroui/chip";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { User } from "@heroui/user";
 import DOMPurify from "dompurify";
-import { Mail } from "lucide-react";
 import { useState } from "react";
 
 import { Gmail } from "@/components";
 import { EmailThreadData } from "@/types/features/mailTypes";
 
 import { parseEmail } from "../../../../mail/utils/mailUtils";
-import { Chip } from "@heroui/chip";
 
 // Use the same formatTime function as EmailListCard
 function formatTime(time: string | null): string {
