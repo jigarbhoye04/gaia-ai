@@ -13,6 +13,7 @@ interface TodoListProps {
   onTodoClick?: (todo: Todo) => void;
   onTodoEdit?: (todo: Todo) => void;
   onRefresh?: () => void;
+  showCompleted?: boolean;
 }
 
 export default function TodoList({
@@ -21,13 +22,20 @@ export default function TodoList({
   onTodoDelete,
   onTodoClick,
   onTodoEdit,
+  showCompleted = false,
 }: TodoListProps) {
-  // Sort todos by completion status (incomplete first) - memoized to prevent recalculation
-  const sortedTodos = useMemo(() => {
-    return [...todos].sort((a, b) => Number(a.completed) - Number(b.completed));
-  }, [todos]);
+  const filteredTodos = useMemo(
+    () => (showCompleted ? todos : todos.filter((t) => !t.completed)),
+    [todos, showCompleted],
+  );
 
-  if (todos.length === 0) {
+  const sortedTodos = useMemo(() => {
+    return [...filteredTodos].sort(
+      (a, b) => Number(a.completed) - Number(b.completed),
+    );
+  }, [filteredTodos]);
+
+  if (sortedTodos.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-foreground-500 sm:min-w-5xl">
         <p className="mb-2 text-lg">No tasks found</p>

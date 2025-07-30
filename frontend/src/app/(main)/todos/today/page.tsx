@@ -19,7 +19,7 @@ export default function TodayTodosPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const { refreshAllData, loadCounts } = useTodos();
+  const { loadCounts } = useTodos();
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {

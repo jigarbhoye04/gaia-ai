@@ -124,15 +124,17 @@ export default function TodoSidebar() {
     loadProjects,
     loadLabels,
     loadCounts,
-    refreshAllData,
+    // refreshAllData,
   } = useTodos();
 
-  // Always fetch fresh sidebar data on mount and route change
+  // Load initial data on mount
   useEffect(() => {
-    loadProjects();
-    loadLabels();
-    loadCounts();
-  }, [pathname, loadProjects, loadLabels, loadCounts]);
+    const loadData = async () => {
+      await Promise.all([loadProjects(), loadCounts(), loadLabels()]);
+    };
+
+    loadData();
+  }, [loadProjects, loadCounts, loadLabels]);
 
   const handleNavigation = (href: string) => {
     router.push(href);
