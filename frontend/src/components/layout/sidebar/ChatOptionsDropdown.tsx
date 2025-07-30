@@ -56,17 +56,9 @@ export default function ChatOptionsDropdown({
         starred === undefined ? true : !starred,
       );
       setIsOpen(false);
-      toast.success(
-        starred === undefined
-          ? "Conversation added to starred"
-          : starred
-            ? "Conversation removed from starred"
-            : "Conversation added to starred",
-      );
 
       await fetchConversations();
     } catch (error) {
-      toast.error("Could not rename conversation ");
 
       console.error("Failed to update star", error);
     }
@@ -79,7 +71,6 @@ export default function ChatOptionsDropdown({
       setIsOpen(false);
       await fetchConversations(1, 20, false);
     } catch (error) {
-      toast.error("Could not rename conversation ");
       console.error("Failed to update chat name", error);
     }
   };
