@@ -183,14 +183,7 @@ async def login_integration(
                 token = await token_repository.get_token(
                     str(user_id), "google", renew_if_expired=False
                 )
-                if token and token.get("access_token"):
-                    access_token = token.get("access_token")
-                    token_info_response = await http_async_client.get(
-                        f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
-                    )
-                    if token_info_response.status_code == 200:
-                        token_data = token_info_response.json()
-                        existing_scopes = token_data.get("scope", "").split()
+                existing_scopes = str(token.get("scope", "")).split()
             except Exception as e:
                 logger.warning(f"Could not get existing scopes: {e}")
 
@@ -369,17 +362,8 @@ async def get_integrations_status(
             token = await token_repository.get_token(
                 str(user_id), "google", renew_if_expired=True
             )
-            if token:
-                access_token = token.get("access_token")
-                if access_token:
-                    # Check Google token info
-                    token_info_response = await http_async_client.get(
-                        f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
-                    )
+            authorized_scopes = str(token.get("scope", "")).split()
 
-                    if token_info_response.status_code == 200:
-                        token_data = token_info_response.json()
-                        authorized_scopes = token_data.get("scope", "").split()
         except Exception as e:
             logger.warning(f"Error retrieving token from repository: {e}")
             # Continue with empty scopes

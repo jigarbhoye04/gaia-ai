@@ -1,6 +1,4 @@
-import inspect
-from functools import wraps
-from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, TypeVar, cast
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple, TypeVar
 
 import httpx
 from fastapi import HTTPException
@@ -111,63 +109,6 @@ async def with_token_refresh(
                 status_code=e.response.status_code,
                 detail=f"API request failed: {error_detail}",
             )
-
-
-def auth_required(provider: str = "google"):
-    """
-    Decorator that handles token refresh for API calls.
-
-    Usage:
-        @auth_required()
-        async def my_function(user_id: str, access_token: str, ...):
-            # Function implementation
-
-    Args:
-        provider: The provider name (e.g., "google")
-
-    Returns:
-        Decorated function with token refresh capability
-    """
-
-    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
-        @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
-            # Find user_id in the arguments
-            user_id = kwargs.get("user_id")
-            if not user_id:
-                # Look for user_id in positional args based on function signature
-                sig = inspect.signature(func)
-                param_names = list(sig.parameters.keys())
-                for i, param_name in enumerate(param_names):
-                    if param_name == "user_id" and i < len(args):
-                        user_id = args[i]
-                        break
-
-            if not user_id:
-                # No user_id found, can't handle token refresh
-                return await func(*args, **kwargs)
-
-            # Remove user_id from kwargs and args if it exists
-            if "user_id" in kwargs:
-                del kwargs["user_id"]
-            if user_id in args:
-                args = tuple(arg for arg in args if arg != user_id)
-
-            # Fix: We need to avoid passing the same parameter both as keyword and in *args/**kwargs
-            async def call_func():
-                return await with_token_refresh(
-                    user_id=cast(str, user_id),
-                    provider=provider,
-                    func=func,
-                    *args,
-                    **kwargs,
-                )
-
-            return await call_func()
-
-        return wrapper
-
-    return decorator
 
 
 async def authenticate_workos_session(

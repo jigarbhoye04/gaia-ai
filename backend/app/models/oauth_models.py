@@ -7,7 +7,7 @@ This module defines SQLAlchemy models for OAuth tokens.
 from datetime import datetime
 
 from app.db.postgresql import Base
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql import func
 
@@ -34,4 +34,10 @@ class OAuthToken(Base):
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix_oauth_tokens_user_id", "user_id"),
+        UniqueConstraint("access_token", name="uq_oauth_tokens_access_token"),
+        {"sqlite_autoincrement": True},
     )

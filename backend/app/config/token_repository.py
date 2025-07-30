@@ -165,6 +165,7 @@ class TokenRepository:
                     "refresh_token": refresh_token_value,
                     "token_type": token_data.get("token_type", "Bearer"),
                     "expires_at": expires_at.timestamp(),
+                    "scope": token_data.get("scope", ""),
                 }
             )
 
@@ -212,6 +213,7 @@ class TokenRepository:
                     "expires_at": int(token_record.expires_at.timestamp())
                     if token_record.expires_at
                     else None,
+                    "scope": token_data.get("scope", ""),
                 }
             )
 
@@ -568,6 +570,59 @@ class TokenRepository:
             result["tokens"] = token_details
 
         return result
+
+    async def get_token_by_auth_token(
+        self, access_token: str, renew_if_expired: bool = False
+    ) -> Optional[OAuth2Token]:
+        """
+        Retrieve a token using the access token.
+
+        Args:
+            access_token: The access token to search for
+
+        Returns:
+            OAuth2Token if found, None otherwise
+        """
+        async with get_db_session() as session:
+            stmt = select(OAuthToken).where(OAuthToken.access_token == access_token)
+            result = await session.execute(stmt)
+            token_record = result.scalar_one_or_none()
+
+            if not token_record:
+                return None
+
+            # Create OAuth2Token from the record
+            oauth_token = OAuth2Token(
+                params={
+                    "access_token": token_record.access_token,
+                    "refresh_token": token_record.refresh_token,
+                    "token_type": "Bearer",
+                    "expires_at": int(token_record.expires_at.timestamp())
+                    if token_record.expires_at
+                    else None,
+                    "scope": token_record.scopes,
+                }
+            )
+
+            # Log token status for debugging
+            logger.debug(
+                f"Token expiry status - is_expired: {oauth_token.is_expired()}, will_renew: {renew_if_expired}"
+            )
+
+            # Check if token is expired
+            if renew_if_expired and oauth_token.is_expired():
+                # Token is expired, attempt to refresh it
+                refreshed_token = await self.refresh_token(
+                    token_record.user_id, token_record.provider
+                )
+                if not refreshed_token:
+                    raise HTTPException(
+                        status_code=401,
+                        detail=f"Failed to refresh {token_record.provider} token",
+                    )
+                return refreshed_token
+
+            return oauth_token
 
 
 # Singleton instance
