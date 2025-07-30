@@ -31,19 +31,6 @@ interface TodoState {
   pendingDeletes: string[];
   // Pagination metadata
   totalCount: number;
-  // Initial data loading states
-  initialDataLoaded: {
-    projects: boolean;
-    labels: boolean;
-    counts: boolean;
-  };
-  // Cache timestamps for smart invalidation
-  lastFetch: {
-    todos: number;
-    projects: number;
-    labels: number;
-    counts: number;
-  };
 }
 
 const initialState: TodoState = {
@@ -65,17 +52,6 @@ const initialState: TodoState = {
   pendingUpdates: {},
   pendingDeletes: [],
   totalCount: 0,
-  initialDataLoaded: {
-    projects: false,
-    labels: false,
-    counts: false,
-  },
-  lastFetch: {
-    todos: 0,
-    projects: 0,
-    labels: 0,
-    counts: 0,
-  },
 };
 
 // Async thunks
@@ -197,19 +173,8 @@ export const fetchTodosByLabel = createAsyncThunk(
 
 export const fetchTodoById = createAsyncThunk(
   "todos/fetchTodoById",
-  async (todoId: string, { getState }) => {
-    const state = getState() as { todos: TodoState };
-
-    // Check if todo already exists in state and is fresh (less than 5 minutes old)
-    const existingTodo = state.todos.todos.find((t) => t.id === todoId);
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-
-    if (existingTodo && state.todos.lastFetch.todos > fiveMinutesAgo) {
-      // Return existing todo without making API call
-      return existingTodo;
-    }
-
-    // Fetch from API if not in state or stale
+  async (todoId: string) => {
+    // Always fetch from API - no caching
     return await todoApi.getTodo(todoId);
   },
 );
@@ -434,7 +399,6 @@ const todoSlice = createSlice({
         state.hasMore = todos.length >= 50;
         state.totalCount = loadMore ? state.totalCount : todos.length;
         state.loading = false;
-        state.lastFetch.todos = Date.now();
       })
       .addCase(fetchTodos.rejected, (state, action) => {
         state.loading = false;
@@ -448,8 +412,6 @@ const todoSlice = createSlice({
       })
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.projects = action.payload;
-        state.initialDataLoaded.projects = true;
-        state.lastFetch.projects = Date.now();
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.error = action.error.message || "Failed to fetch projects";
@@ -462,8 +424,6 @@ const todoSlice = createSlice({
       })
       .addCase(fetchLabels.fulfilled, (state, action) => {
         state.labels = action.payload;
-        state.initialDataLoaded.labels = true;
-        state.lastFetch.labels = Date.now();
       })
       .addCase(fetchLabels.rejected, (state, action) => {
         state.error = action.error.message || "Failed to fetch labels";
@@ -473,8 +433,6 @@ const todoSlice = createSlice({
     builder
       .addCase(fetchTodoCounts.fulfilled, (state, action) => {
         state.counts = action.payload;
-        state.initialDataLoaded.counts = true;
-        state.lastFetch.counts = Date.now();
       })
       .addCase(fetchTodoCounts.rejected, (_state, action) => {
         console.error("Failed to fetch counts:", action.error.message);

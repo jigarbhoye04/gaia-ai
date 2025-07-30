@@ -126,44 +126,13 @@ export default function TodoSidebar() {
     loadCounts,
     refreshAllData,
   } = useTodos();
-  const todoState = useSelector((state: RootState) => state.todos);
 
-  // Check if initial data has been loaded (labels are optional)
-  const isInitialDataLoaded =
-    todoState.initialDataLoaded.projects && todoState.initialDataLoaded.counts;
-
-  // Load initial data
+  // Always fetch fresh sidebar data on mount and route change
   useEffect(() => {
-    const loadData = async () => {
-      // Load core data first (projects and counts are most important)
-      await Promise.all([loadProjects(), loadCounts()]);
-    };
-
-    if (!isInitialDataLoaded) {
-      loadData();
-    }
-  }, [loadProjects, loadCounts, isInitialDataLoaded]);
-
-  // Load labels lazily when they are actually needed (only once)
-  useEffect(() => {
-    if (!todoState.initialDataLoaded.labels && isInitialDataLoaded) {
-      // Only load labels if we don't have them yet and core data is loaded
-      loadLabels();
-    }
-  }, [isInitialDataLoaded, todoState.initialDataLoaded.labels, loadLabels]);
-
-  // Only refresh counts on navigation if they are stale (more than 2 minutes old)
-  useEffect(() => {
-    if (isInitialDataLoaded) {
-      const now = Date.now();
-      const countsFreshTime = 2 * 60 * 1000; // 2 minutes
-      const isCountsStale = now - todoState.lastFetch.counts > countsFreshTime;
-
-      if (isCountsStale) {
-        loadCounts();
-      }
-    }
-  }, [pathname, loadCounts, isInitialDataLoaded, todoState.lastFetch.counts]);
+    loadProjects();
+    loadLabels();
+    loadCounts();
+  }, [pathname, loadProjects, loadLabels, loadCounts]);
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -296,7 +265,7 @@ export default function TodoSidebar() {
           />
         </form> */}
 
-        {!isInitialDataLoaded ? (
+        {loading ? (
           <div className="flex h-[400px] w-full items-center justify-center">
             <Spinner />
           </div>

@@ -49,9 +49,10 @@ export const todoApi = {
           }
         });
       }
-      const response = await apiService.get<TodoListResponse | Todo[]>(
-        `/todos?${params.toString()}`,
-      );
+        const response = await apiService.get<TodoListResponse | Todo[]>(
+          `/todos?${params.toString()}`,
+          { silent: true }
+        );
       // Handle new API response format
       if (
         typeof response === "object" &&

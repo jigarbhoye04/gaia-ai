@@ -268,47 +268,20 @@ export const useTodos = () => {
       clearTimeout(refreshDebounceRef.current);
     }
 
-    // Only refresh data that might be stale (avoid redundant calls)
-    const now = Date.now();
-    const refreshTasks = [];
-
-    // Refresh projects if stale (more than 5 minutes old)
-    if (now - todoState.lastFetch.projects > 5 * 60 * 1000) {
-      refreshTasks.push(dispatch(fetchProjects()));
-    }
-
-    // Refresh labels if stale (more than 5 minutes old)
-    if (now - todoState.lastFetch.labels > 5 * 60 * 1000) {
-      refreshTasks.push(dispatch(fetchLabels()));
-    }
-
-    // Always refresh counts as they change frequently
-    refreshTasks.push(dispatch(fetchTodoCounts()));
-
-    if (refreshTasks.length > 0) {
-      await Promise.all(refreshTasks);
-    }
-  }, [dispatch, todoState.lastFetch]);
+    // Always refresh all data - no caching
+    await Promise.all([
+      dispatch(fetchProjects()),
+      dispatch(fetchLabels()),
+      dispatch(fetchTodoCounts()),
+    ]);
+  }, [dispatch]);
 
   const loadTodoById = useCallback(
-    async (todoId: string, forceRefresh = false) => {
-      // Check if todo exists in local state and is fresh (unless forced refresh)
-      if (!forceRefresh) {
-        const existingTodo = todoState.todos.find((t) => t.id === todoId);
-        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-
-        if (existingTodo && todoState.lastFetch.todos > fiveMinutesAgo) {
-          // Return a fulfilled action with the existing todo
-          return {
-            type: "todos/fetchTodoById/fulfilled",
-            payload: existingTodo,
-          };
-        }
-      }
-
+    async (todoId: string) => {
+      // Always fetch fresh data - no caching
       return dispatch(fetchTodoById(todoId));
     },
-    [dispatch, todoState.todos, todoState.lastFetch.todos],
+    [dispatch],
   );
 
   // Cleanup debounce timer on unmount
