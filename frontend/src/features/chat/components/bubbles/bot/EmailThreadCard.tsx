@@ -89,7 +89,6 @@ export default function EmailThreadCard({
     setIsExpanded(keys.has("email-thread"));
   };
 
-  console.log(emailThreadData);
   return (
     <div
       className={`mx-auto mb-3 max-w-4xl bg-zinc-800 p-3 py-0 text-white transition-all duration-300 ${
