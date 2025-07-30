@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useParams,
   usePathname,
@@ -183,7 +184,7 @@ const ChatPage = React.memo(function MainChat() {
             <FileDropModal isDragging={isDragging} />
             <div className="flex w-full max-w-(--breakpoint-xl) flex-col items-center justify-center gap-10 p-4">
               <div className="flex flex-col items-center gap-2">
-                <img
+                <Image
                   alt="GAIA Logo"
                   src="/branding/logo.webp"
                   width={110}

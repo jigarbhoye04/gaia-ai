@@ -30,7 +30,7 @@ function formatTime(time: string | null): string {
         day: "numeric",
       });
     }
-  } catch (error) {
+  } catch {
     return time; // Return original string if parsing fails
   }
 }

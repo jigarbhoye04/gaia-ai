@@ -35,7 +35,7 @@ export const EnhancedNotificationCard = ({
 
   const { executeAction, loading, getActionButtonProps, confirmationProps } =
     useNotificationActions({
-      onSuccess: (result) => {
+      onSuccess: () => {
         // Refresh the notifications list if an action was successful
         onRefresh?.();
       },
@@ -81,7 +81,6 @@ export const EnhancedNotificationCard = ({
     addSuffix: true,
   });
   const isUnread = notification.status === NotificationStatus.DELIVERED;
-  const isRead = notification.status === NotificationStatus.READ;
 
   return (
     <div

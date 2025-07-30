@@ -86,7 +86,7 @@ export default function TodoModal({
 
   const initialData = useMemo(
     () => getInitialData(),
-    [mode, todo?.id, initialProjectId],
+    [mode, todo?.id, initialProjectId, getInitialData],
   );
 
   const { formData, setFormData, loading, handleSubmit, updateField } =

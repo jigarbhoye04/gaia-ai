@@ -20,8 +20,8 @@ import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import FollowUpActions from "./FollowUpActions";
-import { GoalAction } from "./goals/types";
 import GoalSection from "./goals/GoalSection";
+import { GoalAction } from "./goals/types";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
 

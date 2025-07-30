@@ -11,8 +11,6 @@ import { EmailImportanceSummary } from "@/types/features/mailTypes";
  * @returns Query result with email analysis data
  */
 export function useEmailSummary(emailId: string, enabled: boolean = true) {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: ["email-summary", emailId],
     queryFn: async () => {
