@@ -57,7 +57,7 @@ export function useModalForm<T extends Record<string, unknown>>({
   useEffect(() => {
     setFormData(initialData);
     setErrors({});
-  }, []);
+  }, [initialData]);
 
   const validateField = useCallback(
     (field: keyof T): string | null => {

@@ -22,7 +22,6 @@ export default function TodoList({
   onTodoDelete,
   onTodoClick,
   onTodoEdit,
-  showCompleted = false,
 }: TodoListProps) {
   const sortedTodos = useMemo(() => {
     return [...todos].sort((a, b) => Number(a.completed) - Number(b.completed));

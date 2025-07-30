@@ -1,4 +1,4 @@
-export { default as GoalSection } from "./GoalSection";
 export { GoalCard } from "./GoalCard";
-export * from "./types";
+export { default as GoalSection } from "./GoalSection";
 export { default } from "./GoalSection";
+export * from "./types";

@@ -31,7 +31,6 @@ import {
   EdgeType,
   GoalData,
   NodeData,
-  NodeType,
 } from "@/types/features/goalTypes";
 
 export default function GoalPage() {

@@ -6,13 +6,12 @@ import {
   Clock,
   Target,
   TrendingUp,
-  Trophy,
   Users,
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import React from "react";
+
 import { GoalCard } from "./GoalCard";
 import type { GoalSectionProps } from "./types";
 
@@ -114,7 +113,7 @@ export default function GoalSection({
               {stats.active_goals.map((goal) => (
                 <GoalCard
                   key={goal.id}
-                  goal={{ ...goal, description: "" } as any}
+                  goal={goal}
                   variant="compact"
                   showActions={false}
                   showExpandToggle={false}

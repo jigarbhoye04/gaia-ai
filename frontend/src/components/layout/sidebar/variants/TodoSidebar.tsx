@@ -1,11 +1,9 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Divider } from "@heroui/divider";
 import { Plus, Tag } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 
 import {
   Appointment01Icon,
@@ -19,7 +17,6 @@ import Spinner from "@/components/ui/shadcn/spinner";
 import AddProjectModal from "@/features/todo/components/AddProjectModal";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
-import { RootState } from "@/redux/store";
 import { Priority } from "@/types/features/todoTypes";
 
 type MenuItem = {

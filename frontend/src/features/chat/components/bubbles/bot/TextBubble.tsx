@@ -20,10 +20,10 @@ import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import FollowUpActions from "./FollowUpActions";
-import GoalSection from "./GoalSection";
+import { GoalAction } from "./goals/types";
+import GoalSection from "./goals/GoalSection";
 import GoogleDocsSection from "./GoogleDocsSection";
 import TodoSection from "./TodoSection";
-import { GoalAction } from "./goals/types";
 
 export default function TextBubble({
   text,

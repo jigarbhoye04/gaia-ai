@@ -1,6 +1,5 @@
 "use client";
 
-import { Target02Icon } from "@/components";
 import { format } from "date-fns";
 import {
   Calendar,
@@ -11,8 +10,10 @@ import {
   Users,
 } from "lucide-react";
 import React from "react";
+
+import { Target02Icon } from "@/components";
+
 import type {
-  Goal,
   GoalCardActionsProps,
   GoalCardContainerProps,
   GoalCardContentProps,

@@ -10,7 +10,6 @@ import Spinner from "@/components/ui/shadcn/spinner";
 import AddGoalDialog from "@/features/goals/components/AddGoalDialog";
 import { GoalCard } from "@/features/goals/components/GoalCard";
 import { useGoals } from "@/features/goals/hooks/useGoals";
-import { Goal } from "@/types/api/goalsApiTypes";
 
 const allGoalSuggestions = [
   // Technical & Creative Projects
