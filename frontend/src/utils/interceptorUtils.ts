@@ -50,7 +50,6 @@ export const processAxiosError = (
 
         switch (status) {
             case 401:
-                toast.error("Session expired. Please log in again.");
                 setLoginModalOpen(true);
                 break;
 
@@ -59,6 +58,7 @@ export const processAxiosError = (
                 break;
 
             case 429:
+                toast.error("Too many Requests!");
                 handleRateLimitError(data);
                 break;
 
