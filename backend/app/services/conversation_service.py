@@ -400,3 +400,28 @@ async def get_or_create_system_conversation(
         )
 
     return await create_system_conversation(user_id, description, system_purpose)
+
+
+async def update_conversation_description(
+    conversation_id: str, description: str, user: dict
+) -> dict:
+    """
+    Update the description of a specific conversation.
+    """
+    user_id = user.get("user_id")
+    update_result = await conversations_collection.update_one(
+        {"user_id": user_id, "conversation_id": conversation_id},
+        {"$set": {"description": description}},
+    )
+
+    if update_result.modified_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found or description not updated",
+        )
+
+    return {
+        "message": "Conversation description updated successfully",
+        "conversation_id": conversation_id,
+        "description": description,
+    }

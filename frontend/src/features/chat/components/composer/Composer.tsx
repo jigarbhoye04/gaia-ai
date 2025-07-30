@@ -357,6 +357,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
           currentHeight={currentHeight}
           onHeightChange={setCurrentHeight}
           inputRef={inputRef}
+          hasMessages={hasMessages}
           onSlashCommandSelect={handleSlashCommandSelect}
         />
         <ComposerToolbar

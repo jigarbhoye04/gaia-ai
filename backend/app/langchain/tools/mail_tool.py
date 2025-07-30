@@ -144,7 +144,8 @@ async def fetch_gmail_messages(
                 {
                     "from": transformed.get("from"),
                     "subject": transformed.get("subject"),
-                    "time": transformed.get("date"),
+                    "time": transformed.get("time"),
+                    "thread_id": transformed.get("threadId"),
                 }
             )
 
@@ -152,12 +153,37 @@ async def fetch_gmail_messages(
         writer({"email_fetch_data": email_fetch_data})
 
         # Process to minimize data for LLM
-        return process_list_messages_response(
-            {
-                "messages": transformed_messages,
-                "nextPageToken": results.get("nextPageToken"),
-            }
-        )
+        return {
+            **process_list_messages_response(
+                {
+                    "messages": transformed_messages,
+                    "nextPageToken": results.get("nextPageToken"),
+                }
+            ),
+            "instructions": """
+            The user has already seen the list of their recent emails in the UI.
+
+            Now, based on these fetched email metadata:
+            - Sender
+            - Subject
+            - Timestamp
+            - Read/unread status
+
+            Do not repeat the full list.
+
+            Instead, briefly highlight useful insights and offer helpful actions.
+
+            Include:
+            - A count of total and unread emails
+            - Notable senders (e.g. support, newsletters, people)
+            - Any reply-worthy or time-sensitive messages
+            - Groupings (e.g. newsletters, social, support)
+
+            End with a concise prompt asking what they'd like to do next (e.g. summarize, reply, filter, etc).
+
+            Use a clear, assistant-like tone. Avoid over-explaining or verbosity.
+            """,
+        }
     except Exception as e:
         error_msg = f"Error listing Gmail messages: {str(e)}"
         logger.error(error_msg)
@@ -396,6 +422,26 @@ async def get_email_thread(
         )
 
         thread = fetch_thread(service, thread_id)
+
+        writer = get_stream_writer()
+
+        # Prepare thread data for frontend component
+        thread_data = {
+            "thread_id": thread.get("id", ""),
+            "messages": [
+                {
+                    "id": msg.get("id", ""),
+                    "from": msg.get("from", ""),
+                    "subject": msg.get("subject", ""),
+                    "time": msg.get("time", ""),
+                    "snippet": msg.get("snippet", ""),
+                    "body": msg.get("body", ""),
+                }
+                for msg in thread.get("messages", [])
+            ],
+            "messages_count": len(thread.get("messages", [])),
+        }
+        writer({"email_thread_data": thread_data})
 
         # Process to minimize data for LLM
         return process_get_thread_response(thread)
