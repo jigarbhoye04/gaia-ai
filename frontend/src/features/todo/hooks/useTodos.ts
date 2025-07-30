@@ -62,15 +62,12 @@ export const useTodos = () => {
     );
   }, [dispatch]);
 
-  const loadUpcomingTodos = useCallback(
-    async (days = 7) => {
-      // Use the main todos endpoint with upcoming filter
-      return dispatch(
-        fetchTodos({ filters: { due_this_week: true }, loadMore: false }),
-      );
-    },
-    [dispatch],
-  );
+  const loadUpcomingTodos = useCallback(async () => {
+    // Use the main todos endpoint with upcoming filter
+    return dispatch(
+      fetchTodos({ filters: { due_this_week: true }, loadMore: false }),
+    );
+  }, [dispatch]);
 
   const loadCompletedTodos = useCallback(
     async (skip = 0, limit = 50) => {
