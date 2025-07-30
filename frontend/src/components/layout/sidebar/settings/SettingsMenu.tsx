@@ -60,7 +60,6 @@ export default function SettingsMenu() {
       await authApi.logout();
       clearUser();
     } catch (error) {
-      toast.error("Could not log out. Please try again.");
       console.error("Error during logout:", error);
     } finally {
       setModalAction(null);
