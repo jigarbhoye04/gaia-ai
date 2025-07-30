@@ -100,7 +100,8 @@ export default function TodoItem({
                     variant="flat"
                     color={priorityColors[todo.priority]}
                   >
-                    {todo.priority}
+                    {todo.priority.charAt(0).toUpperCase() +
+                      todo.priority.slice(1)}
                   </Chip>
                 )}
 
@@ -119,7 +120,7 @@ export default function TodoItem({
                 {/* Labels */}
                 {todo.labels.map((label) => (
                   <Chip key={label} size="sm" variant="flat">
-                    {label}
+                    {label.charAt(0).toUpperCase() + label.slice(1)}
                   </Chip>
                 ))}
 
