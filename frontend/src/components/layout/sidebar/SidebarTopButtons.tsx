@@ -9,7 +9,6 @@ import React from "react";
 import {
   CalendarIcon,
   CheckmarkCircle02Icon,
-  Mail01Icon,
   MessageMultiple02Icon,
   NotificationIcon,
   PinIcon,
