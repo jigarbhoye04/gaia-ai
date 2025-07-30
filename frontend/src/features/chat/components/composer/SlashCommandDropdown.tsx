@@ -21,6 +21,7 @@ interface SlashCommandDropdownProps {
   position: { top: number; left: number; width?: number };
   isVisible: boolean;
   openedViaButton?: boolean;
+  hasMessages: boolean;
 }
 
 const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
@@ -31,6 +32,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
   position,
   isVisible,
   openedViaButton = false,
+  hasMessages,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -106,7 +108,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           }}
           className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
           style={{
-            bottom: "117px",
+            bottom: hasMessages ? "117px" : "414px",
             left: position.left,
             width: position.width,
             boxShadow: "0px -18px 30px 5px rgba(0, 0, 0, 0.5)",
