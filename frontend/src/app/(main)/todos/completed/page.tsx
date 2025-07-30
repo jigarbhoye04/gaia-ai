@@ -105,7 +105,11 @@ export default function CompletedTodosPage() {
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todoId={selectedTodoId}
+        todo={
+          selectedTodoId
+            ? todos.find((t) => t.id === selectedTodoId) || null
+            : null
+        }
         isOpen={!!selectedTodoId}
         onClose={clearSelection}
         onUpdate={handleTodoUpdate}

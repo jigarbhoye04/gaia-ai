@@ -4,13 +4,11 @@ import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { formatDistanceToNow } from "date-fns";
 import { Check, Trash2 } from "lucide-react";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 
 import { Sheet, SheetContent } from "@/components/ui/shadcn/sheet";
-import Spinner from "@/components/ui/shadcn/spinner";
 import { todoApi } from "@/features/todo/api/todoApi";
-import { useTodos } from "@/features/todo/hooks/useTodos";
 import {
   Priority,
   Project,
@@ -24,7 +22,7 @@ import TodoFieldsRow from "./shared/TodoFieldsRow";
 import WorkflowSection from "./WorkflowSection";
 
 interface TodoDetailSheetProps {
-  todoId: string | null;
+  todo: Todo | null;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (todoId: string, updates: TodoUpdate) => void;
@@ -33,7 +31,7 @@ interface TodoDetailSheetProps {
 }
 
 export default function TodoDetailSheet({
-  todoId,
+  todo,
   isOpen,
   onClose,
   onUpdate,
@@ -45,76 +43,8 @@ export default function TodoDetailSheet({
   const [editedTitle, setEditedTitle] = useState("");
   const [editedDescription, setEditedDescription] = useState("");
   const [isGeneratingWorkflow, setIsGeneratingWorkflow] = useState(false);
-  const [todo, setTodo] = useState<Todo | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const { todos, loadTodoById } = useTodos();
-
-  // Memoized function to find todo in current state
-  const findTodoInState = useCallback(
-    (id: string) => {
-      return todos.find((t) => t.id === id);
-    },
-    [todos],
-  );
-
-  // Load todo data when todoId or isOpen changes
-  useEffect(() => {
-    if (!todoId || !isOpen) {
-      setTodo(null);
-      return;
-    }
-
-    // Check if todo exists in local state
-    const localTodo = findTodoInState(todoId);
-    if (localTodo) {
-      setTodo(localTodo);
-      return;
-    }
-
-    // Fetch from server if not found locally (this will now check cache first)
-    setLoading(true);
-    loadTodoById(todoId, false) // false = don't force refresh, use cache if available
-      .then((result) => {
-        if (result.payload && typeof result.payload === "object") {
-          setTodo(result.payload as Todo);
-        } else {
-          console.error("Failed to load todo");
-          onClose();
-        }
-      })
-      .catch((error: unknown) => {
-        console.error("Failed to load todo:", error);
-        onClose();
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [todoId, isOpen, loadTodoById, onClose, findTodoInState]);
-
-  // Update local todo when Redux state changes (only if we have a current todo)
-  useEffect(() => {
-    if (todoId && todo) {
-      const updatedTodo = findTodoInState(todoId);
-      if (updatedTodo && updatedTodo !== todo) {
-        setTodo(updatedTodo);
-      }
-    }
-  }, [findTodoInState, todoId, todo]);
-
-  if (!isOpen) return null;
-
-  if (loading || !todo) {
-    return (
-      <Sheet open={isOpen} onOpenChange={() => onClose()}>
-        <SheetContent className="w-full max-w-lg overflow-y-auto">
-          <div className="flex h-full items-center justify-center">
-            <Spinner />
-          </div>
-        </SheetContent>
-      </Sheet>
-    );
-  }
+  if (!isOpen || !todo) return null;
 
   const handleToggleComplete = () => {
     try {
