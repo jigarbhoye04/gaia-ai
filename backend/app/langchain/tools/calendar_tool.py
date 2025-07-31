@@ -17,8 +17,9 @@ from app.langchain.templates.calendar_template import (
     CALENDAR_LIST_TEMPLATE,
     CALENDAR_PROMPT_TEMPLATE,
 )
-from app.models.calendar_models import EventCreateRequest
+from app.models.calendar_models import EventCreateRequest, EventLookupRequest
 from app.services.calendar_service import (
+    find_event_for_action,
     get_calendar_events,
     list_calendars,
     search_calendar_events_native,
@@ -239,7 +240,6 @@ async def fetch_calendar_list(
 @with_doc(FETCH_CALENDAR_EVENTS)
 @require_integration("calendar")
 async def fetch_calendar_events(
-    user_id: str,
     config: RunnableConfig,
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
@@ -251,9 +251,13 @@ async def fetch_calendar_events(
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
+        user_id = config.get("configurable", {}).get("user_id")
 
         if not access_token:
             logger.error("Missing access token in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+        if not user_id:
+            logger.error("Missing user_id in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
         logger.info(f"Fetching calendar events for user {user_id}")
@@ -312,7 +316,6 @@ async def fetch_calendar_events(
 @require_integration("calendar")
 async def search_calendar_events(
     query: str,
-    user_id: str,
     config: RunnableConfig,
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
@@ -323,9 +326,13 @@ async def search_calendar_events(
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
+        user_id = config.get("configurable", {}).get("user_id")
 
         if not access_token:
             logger.error("Missing access token in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+        if not user_id:
+            logger.error("Missing user_id in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
         logger.info(f"Searching calendar events for query: {query}")
@@ -337,10 +344,10 @@ async def search_calendar_events(
         # Use the new search function with Google Calendar API's native search
         search_results = await search_calendar_events_native(
             query=query,
-            user_id=user_id,
             access_token=access_token,
             time_min=time_min,
             time_max=time_max,
+            user_id=user_id,
         )
 
         logger.info(
@@ -433,50 +440,43 @@ async def view_calendar_event(
         return error_msg
 
 
-@tool(parse_docstring=True)
+@tool()
 @with_rate_limiting("calendar_management")
 @with_doc(DELETE_CALENDAR_EVENT)
 async def delete_calendar_event(
-    query: str,
-    user_id: str,
     config: RunnableConfig,
+    event_lookup_data: EventLookupRequest,
 ) -> str:
     try:
-        logger.info("===== DELETE CALENDAR EVENT TOOL CALLED =====")
-        logger.info(f"Searching for event to delete with query: {query}")
-
         if not config:
             logger.error("Missing configuration data")
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
+        user_id = config.get("configurable", {}).get("user_id")
 
+        # Ensure access_token and user_id are available
+        if not user_id:
+            logger.error("Missing user_id in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
         if not access_token:
             logger.error("Missing access token in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
-        # Send progress update
         writer = get_stream_writer()
-        writer({"progress": f"Searching for event '{query}' to delete..."})
+        # Use service method to find the event for action (delete)
+        try:
+            target_event = await find_event_for_action(
+                access_token=access_token,
+                user_id=user_id,
+                event_lookup_data=event_lookup_data,
+            )
+        except Exception as e:
+            logger.error(f"Error finding event for deletion: {str(e)}")
+            return f"Error finding event for deletion: {str(e)}"
 
-        # Search for events matching the query
-        search_results = await search_calendar_events_native(
-            query=query,
-            user_id=user_id,
-            access_token=access_token,
-        )
-
-        matching_events = search_results.get("matching_events", [])
-
-        if not matching_events:
-            logger.info(f"No events found matching query: {query}")
-            return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
-
-        # For simplicity, take the first (most relevant) match
-        # In production, you might want to implement more sophisticated matching
-        target_event = matching_events[0]
-
-        logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
+        if not target_event:
+            return "No matching event found to delete."
 
         # Prepare deletion confirmation data
         delete_option = {
@@ -487,7 +487,7 @@ async def delete_calendar_event(
             "description": target_event.get("description", ""),
             "start": target_event.get("start", {}),
             "end": target_event.get("end", {}),
-            "original_query": query,
+            "original_query": event_lookup_data.query,
         }
 
         # Send deletion options to frontend via writer
@@ -506,13 +506,12 @@ async def delete_calendar_event(
         return error_msg
 
 
-@tool(parse_docstring=True)
+@tool()
 @with_rate_limiting("calendar_management")
 @with_doc(docstring=EDIT_CALENDAR_EVENT)
 async def edit_calendar_event(
-    query: str,
-    user_id: str,
     config: RunnableConfig,
+    event_lookup_data: EventLookupRequest,
     summary: Optional[str] = None,
     description: Optional[str] = None,
     start: Optional[str] = None,
@@ -520,42 +519,41 @@ async def edit_calendar_event(
     is_all_day: Optional[bool] = None,
     timezone: Optional[str] = None,
     recurrence: Optional[dict] = None,
+    location: Optional[str] = None,
+    attendees: Optional[list] = None,
+    reminders: Optional[dict] = None,
+    visibility: Optional[str] = None,
+    color_id: Optional[str] = None,
 ) -> str:
     try:
-        logger.info("===== EDIT CALENDAR EVENT TOOL CALLED =====")
-        logger.info(f"Searching for event to edit with query: {query}")
-
         if not config:
             logger.error("Missing configuration data")
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
+        user_id = config.get("configurable", {}).get("user_id")
 
+        # Ensure access_token and user_id are available
+        if not user_id:
+            logger.error("Missing user_id in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
         if not access_token:
             logger.error("Missing access token in config")
             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
-        # Send progress update
         writer = get_stream_writer()
-        writer({"progress": f"Searching for event '{query}' to edit..."})
-
-        # Search for events matching the query
-        search_results = await search_calendar_events_native(
-            query=query,
-            user_id=user_id,
-            access_token=access_token,
-        )
-
-        matching_events = search_results.get("matching_events", [])
-
-        if not matching_events:
-            logger.info(f"No events found matching query: {query}")
-            return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
-
-        # For simplicity, take the first (most relevant) match
-        target_event = matching_events[0]
-
-        logger.info(f"Found event to edit: {target_event.get('summary', 'Unknown')}")
+        # Use service method to find the event for action (edit)
+        try:
+            target_event = await find_event_for_action(
+                access_token=access_token,
+                user_id=user_id,
+                event_lookup_data=event_lookup_data,
+            )
+        except Exception as e:
+            logger.error(f"Error finding event for edit: {str(e)}")
+            return f"Error finding event for edit: {str(e)}"
+        if not target_event:
+            return "No matching event found to edit."
 
         # Prepare the updated event data
         edit_option = {
@@ -566,10 +564,10 @@ async def edit_calendar_event(
             "original_description": target_event.get("description", ""),
             "original_start": target_event.get("start", {}),
             "original_end": target_event.get("end", {}),
-            "original_query": query,
+            "original_query": event_lookup_data.query,
         }
 
-        # Add updated fields only if they are provided
+        # Add updated fields only if they are provided (compatible with create event parameters)
         if summary is not None:
             edit_option["summary"] = summary
         if description is not None:
@@ -585,6 +583,16 @@ async def edit_calendar_event(
         if recurrence is not None:
             # Pass recurrence data as is - it will be validated and converted by the service layer
             edit_option["recurrence"] = recurrence
+        if location is not None:
+            edit_option["location"] = location
+        if attendees is not None:
+            edit_option["attendees"] = attendees
+        if reminders is not None:
+            edit_option["reminders"] = reminders
+        if visibility is not None:
+            edit_option["visibility"] = visibility
+        if color_id is not None:
+            edit_option["color_id"] = color_id
 
         # Send edit options to frontend via writer
         writer(
@@ -594,6 +602,8 @@ async def edit_calendar_event(
         )
 
         logger.info("Calendar event edit options sent to frontend")
+
+        # Build changes summary
         changes_summary = []
         if summary is not None:
             changes_summary.append(f"title to '{summary}'")
@@ -601,10 +611,20 @@ async def edit_calendar_event(
             changes_summary.append(f"description to '{description}'")
         if start is not None or end is not None:
             changes_summary.append("time/date")
+        if location is not None:
+            changes_summary.append(f"location to '{location}'")
+        if attendees is not None:
+            changes_summary.append("attendees")
         if recurrence is not None:
             changes_summary.append("recurrence pattern")
         if is_all_day is not None:
             changes_summary.append(f"all-day status to {is_all_day}")
+        if reminders is not None:
+            changes_summary.append("reminders")
+        if visibility is not None:
+            changes_summary.append(f"visibility to '{visibility}'")
+        if color_id is not None:
+            changes_summary.append("color")
 
         changes_text = (
             ", ".join(changes_summary) if changes_summary else "the specified fields"
@@ -620,7 +640,7 @@ async def edit_calendar_event(
 tools = [
     fetch_calendar_list,
     create_calendar_event,
-    delete_calendar_event,
+    # delete_calendar_event,
     edit_calendar_event,
     fetch_calendar_events,
     search_calendar_events,

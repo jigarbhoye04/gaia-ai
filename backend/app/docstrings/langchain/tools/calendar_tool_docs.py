@@ -211,7 +211,6 @@ CALENDAR SELECTION (selected_calendars):
 - DON'T USE: For general calendar viewing - let the system use user preferences
 
 Args:
-    user_id (str): The user's unique identifier (always required)
     time_min (str, optional): Start time filter in ISO 8601 format - only use when user specifies a start date
     time_max (str, optional): End time filter in ISO 8601 format - only use when user specifies an end date
     selected_calendars (List[str], optional): List of calendar IDs - only use when user specifies particular calendars
@@ -238,7 +237,6 @@ parameters to search through the entire calendar history.
 
 Args:
     query (str): Search query text to match against event titles, descriptions, and calendar names
-    user_id (str): The user's unique identifier
     time_min (str, optional): Start time filter in ISO 8601 format - ONLY use when user specifies a date range
     time_max (str, optional): End time filter in ISO 8601 format - ONLY use when user specifies a date range
 
@@ -285,79 +283,79 @@ Returns:
 """
 
 DELETE_CALENDAR_EVENT = """
-Delete a calendar event after searching and finding it by name or description.
+Delete a calendar event using either search or known identifiers — never assume anything.
 
-This tool allows users to delete calendar events using non-exact event names. It performs the
-following steps:
-1. Search for events matching the provided query
-2. Find the best matching event
-3. Send the event details to the frontend for user confirmation
-4. Delete the event only after user confirmation
+Purpose:
+Use this tool **only when the user wants to cancel or delete an existing calendar event**.
 
-IMPORTANT: This tool does NOT directly delete events. Instead, it finds the event and sends
-deletion confirmation options to the frontend. The user must click a confirmation button
-to actually delete the event.
+Do not use this tool for updating event details like time, title, or description — that is handled by EDIT_CALENDAR_EVENT.
 
-Use this tool when a user wants to:
-- Delete an event by mentioning its name (even if not exact)
-- Remove a meeting or appointment
-- Cancel an event they reference by description
-- Delete events like "delete my meeting with John" or "cancel the dentist appointment"
+Use this tool when:
+- The user clearly expresses intent to remove, cancel, or delete an event
+- You already have both `event_id` and `calendar_id` from earlier system context
+- Or, you can generate a search `query` from the user's request
 
-The tool supports fuzzy matching, so users can say:
-- "Delete my meeting with Sarah" (will find "Team Meeting with Sarah and Mike")
-- "Cancel the dentist appointment" (will find "Dentist - Annual Checkup")
-- "Remove the 3pm call" (will find events around that time)
+This tool deletes calendar events using one of two mutually exclusive methods:
+1. Direct lookup with `event_id` and `calendar_id` — only if both are already known from system context
+2. Search-based lookup using a `query` string — when identifiers are not available
 
-Args:
-    query (str): Search query to find the event to delete (e.g., "meeting with John", "dentist appointment")
-    user_id (str): The user's unique identifier
+Never assume or guess `event_id` or `calendar_id`. These should only be used if obtained earlier (e.g., from listing or search). If not, fall back to a `query` string from the user’s input.
+
+Important:
+This tool does not directly delete the event. It finds a match and sends it to the frontend for confirmation. Deletion occurs **only after** the user confirms.
+
+Examples:
+- "Delete my meeting with Sarah" → Use `query="meeting with Sarah"`
+- You have `event_id="abc123"` and `calendar_id="def456"` from a previous step → Use direct lookup
+
+Arguments:
+    request (EventLookupRequest): Must include one of:
+        - `event_id` and `calendar_id` (if both are already known)
+        - OR `query` (parsed from user's request)
 
 Returns:
-    str: Confirmation message or JSON string containing event deletion options for user confirmation.
+    str: A confirmation message or JSON payload with event details for user confirmation before deletion.
 """
 
 EDIT_CALENDAR_EVENT = """
-Edit/update a calendar event after searching and finding it by name or description.
+Edit a calendar event using either search or known identifiers — never assume anything.
 
-This tool allows users to edit calendar events using non-exact event names, including
-updating recurrence patterns for recurring events. It performs the following steps:
-1. Search for events matching the provided query
-2. Find the best matching event
-3. Apply the requested changes
-4. Send the updated event details to the frontend for user confirmation
-5. Update the event only after user confirmation
+Purpose:
+Use this tool **only when the user wants to update, change, or modify details of an existing calendar event**.
 
-IMPORTANT: This tool does NOT directly update events. Instead, it finds the event, applies
-changes, and sends update confirmation options to the frontend. The user must click a
-confirmation button to actually update the event.
+Use this tool when:
+- The user wants to:
+    - Change the event's title, description, time, duration, or recurrence
+    - Modify a meeting's details
+- You already have both `event_id` and `calendar_id` from prior system context
+- Or, you can derive a search `query` from the user's request
 
-Use this tool when a user wants to:
-- Update an event by mentioning its name (even if not exact)
-- Change the time, description, or title of a meeting
-- Modify event details they reference by description
-- Edit events like "move my meeting with John to 3pm" or "change the dentist appointment to tomorrow"
-- Update recurring event patterns like "make my team meeting repeat weekly for 10 weeks"
-- Modify recurrence like "change my monthly meeting to occur on the first Monday instead"
+This tool edits calendar events using two mutually exclusive methods:
+1. Direct lookup with `event_id` and `calendar_id` — only if both are already known
+2. Search-based lookup using a `query` string — when identifiers are not available
 
-The tool supports fuzzy matching and partial updates:
-- "Move my meeting with Sarah to 3pm" (will find and update the time)
-- "Change the dentist appointment to tomorrow" (will find and update the date)
-- "Update the project meeting description" (will find and update description)
-- "Make my team meeting repeat weekly on Monday and Wednesday" (will add recurrence)
+Do not assume or guess `event_id` or `calendar_id`. Use only if previously retrieved. Otherwise, use a `query`.
 
-Args:
-    query (str): Search query to find the event to edit (e.g., "meeting with John", "dentist appointment")
-    user_id (str): The user's unique identifier
-    summary (str, optional): New event title/summary
+Important:
+This tool does not immediately apply updates. It sends the updated event to the frontend for user confirmation. Changes are finalized only after user approval.
+
+Examples:
+- "Move my meeting with Sarah to 3pm" → Use `query="meeting with Sarah"` and update `start`
+- "Make my team meeting recur weekly on Monday and Wednesday" → Use `query` and update `recurrence`
+- You have `event_id="abc123"` and `calendar_id="def456"` → Use direct lookup
+
+Arguments:
+    request (EventLookupRequest): Must include one of:
+        - `event_id` and `calendar_id` (if already known)
+        - OR `query` (from user's event description)
+    summary (str, optional): New event title
     description (str, optional): New event description
-    start (str, optional): New start time in ISO 8601 format
-    end (str, optional): New end time in ISO 8601 format
-    is_all_day (bool, optional): Whether to make it an all-day event
-    timezone (str, optional): New timezone for the event
-    recurrence (RecurrenceData, optional): New recurrence pattern for the event. See create_calendar_event
-                                         documentation for details on recurrence structure.
+    start (str, optional): New start time (ISO 8601)
+    end (str, optional): New end time (ISO 8601)
+    is_all_day (bool, optional): Whether it's an all-day event
+    timezone (str, optional): Timezone for the updated event
+    recurrence (RecurrenceData, optional): New recurrence pattern
 
 Returns:
-    str: Confirmation message or JSON string containing event update options for user confirmation.
+    str: A confirmation message or JSON payload with updated event details for user review and confirmation.
 """

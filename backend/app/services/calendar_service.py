@@ -10,6 +10,7 @@ from app.db.mongodb.collections import calendars_collection
 from app.models.calendar_models import (
     EventCreateRequest,
     EventDeleteRequest,
+    EventLookupRequest,
     EventUpdateRequest,
 )
 from app.utils.calendar_utils import resolve_timezone
@@ -268,7 +269,6 @@ async def get_calendar_events(
 async def get_calendar_events_by_id(
     calendar_id: str,
     access_token: str,
-    user_id: Optional[str] = None,
     page_token: Optional[str] = None,
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
@@ -299,6 +299,38 @@ async def get_calendar_events_by_id(
         "events": events,
         "nextPageToken": events_data.get("nextPageToken"),
     }
+
+
+async def find_event_for_action(
+    access_token: str,
+    event_lookup_data: EventLookupRequest,
+    user_id: str,
+) -> Optional[dict]:
+    """
+    Find a specific event given either:
+    - query (searches for the first matching event)
+    - both calendar_id and event_id (fetches by ID)
+    Returns the event dict or None if not found.
+    Raises HTTPException for invalid input.
+    """
+    if event_lookup_data.query:
+        search_results = await search_calendar_events_native(
+            query=event_lookup_data.query,
+            user_id=user_id,
+            access_token=access_token,
+        )
+        matching_events = search_results.get("matching_events", [])
+        if not matching_events:
+            return None
+        return matching_events[0]
+    else:
+        url = f"https://www.googleapis.com/calendar/v3/calendars/{event_lookup_data.calendar_id}/events/{event_lookup_data.event_id}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        return None
 
 
 async def get_all_calendar_events(
@@ -333,7 +365,6 @@ async def get_all_calendar_events(
         return await get_calendar_events_by_id(
             calendar_id=cal_id,
             access_token=str(valid_token),
-            user_id=user_id,
             time_min=time_min,
             time_max=time_max,
         )

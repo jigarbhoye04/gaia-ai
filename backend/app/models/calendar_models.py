@@ -15,6 +15,38 @@ class EventDeleteRequest(BaseModel):
     summary: Optional[str] = Field(None, title="Event summary for confirmation")
 
 
+class EventLookupRequest(BaseModel):
+    event_id: Optional[str] = Field(None, title="Event ID to lookup")
+    calendar_id: Optional[str] = Field(None, title="Calendar ID containing the event")
+    query: Optional[str] = Field(
+        None,
+        title="Query string to search for event if event_id/calendar_id not provided",
+    )
+
+    @model_validator(mode="after")
+    def validate_lookup(self):
+        event_id = self.event_id
+        calendar_id = self.calendar_id
+        query = self.query
+
+        # If both event_id and calendar_id are provided, ignore query
+        if event_id and calendar_id:
+            self.query = None
+            return self
+
+        # If only one of event_id or calendar_id is provided, error
+        if (event_id and not calendar_id) or (calendar_id and not event_id):
+            raise ValueError("Both event_id and calendar_id must be provided together.")
+
+        # If neither event_id/calendar_id nor query is provided, error
+        if not query:
+            raise ValueError(
+                "Either both event_id and calendar_id, or query, must be provided."
+            )
+
+        return self
+
+
 class RecurrenceRule(BaseModel):
     """
     Model representing a recurrence rule (RRULE) for a recurring event following RFC 5545.
