@@ -3,7 +3,7 @@ import { Chip } from "@heroui/chip";
 import { Selection } from "@heroui/react";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import DOMPurify from "dompurify";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Gmail } from "@/components";
 import { EmailThreadData } from "@/types/features/mailTypes";
@@ -34,49 +34,56 @@ function formatTime(time: string | null): string {
   }
 }
 
-interface EmailThreadCardProps {
-  emailThreadData: EmailThreadData;
-}
+function EmailBodyRenderer({ body }: { body: string }) {
+  const [loading, setLoading] = useState(true);
+  const shadowHostRef = useRef<HTMLDivElement | null>(null);
 
-function renderEmailBody(rawBody: string) {
-  if (!rawBody) {
-    return <div className="text-gray-500">No content available.</div>;
+  const sanitizedHtml = DOMPurify.sanitize(body, {
+    ADD_ATTR: ["target"],
+    ADD_TAGS: ["iframe"],
+  });
+
+  useEffect(() => {
+    if (!sanitizedHtml) {
+      setLoading(false);
+      return;
+    }
+
+    if (shadowHostRef.current) {
+      const shadowRoot =
+        shadowHostRef.current.shadowRoot ||
+        shadowHostRef.current.attachShadow({ mode: "open" });
+      shadowRoot.innerHTML = "";
+      const contentWrapper = document.createElement("div");
+      contentWrapper.innerHTML = sanitizedHtml;
+      shadowRoot.appendChild(contentWrapper);
+      setLoading(false);
+    }
+  }, [sanitizedHtml]);
+
+  if (!body) {
+    return (
+      <div className="p-4 text-sm text-gray-500">No content available.</div>
+    );
   }
 
-  // Sanitize the HTML to prevent XSS
-  const cleanHtml = DOMPurify.sanitize(rawBody);
-
   return (
-    <div
-      className="email-content-isolator"
-      style={{
-        // Complete style isolation - like an iframe
-        contain: "layout style",
-        isolation: "isolate",
-        all: "initial",
-        display: "block",
-
-        // Set base styles for email content
-        fontFamily:
-          '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        fontSize: "14px",
-        lineHeight: "1.5",
-        color: "#374151",
-        backgroundColor: "#ffffff",
-        padding: "16px",
-        borderRadius: "18px",
-        border: "1px solid #e5e7eb",
-        overflow: "auto",
-
-        // Ensure content doesn't inherit any external styles
-        boxSizing: "border-box",
-        margin: "0",
-        position: "relative",
-        zIndex: "1",
-      }}
-      dangerouslySetInnerHTML={{ __html: cleanHtml }}
-    />
+    <div className="relative w-full overflow-auto shadow-md">
+      {loading && (
+        <div className="absolute inset-0 z-10 flex h-full w-full items-start justify-center bg-black/90 p-10 backdrop-blur-3xl">
+          <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-white"></div>
+        </div>
+      )}
+      <div
+        ref={shadowHostRef}
+        className="w-full rounded-lg bg-white p-4 text-black"
+      />
+    </div>
   );
+}
+
+interface EmailThreadCardProps {
+  emailThreadData: EmailThreadData;
 }
 
 export default function EmailThreadCard({
@@ -92,7 +99,7 @@ export default function EmailThreadCard({
 
   return (
     <div
-      className={`mx-auto mb-3 max-w-4xl bg-zinc-800 p-3 py-0 text-white transition-all duration-300 ${
+      className={`mx-auto mb-3 max-w-3xl bg-zinc-800 p-3 py-0 text-white transition-all duration-300 ${
         isExpanded ? "w-screen rounded-3xl" : "w-full rounded-2xl"
       }`}
     >
@@ -156,7 +163,7 @@ export default function EmailThreadCard({
                     </div>
                     {message.body && (
                       <div className="mt-3">
-                        {renderEmailBody(message.body)}
+                        <EmailBodyRenderer body={message.body} />
                       </div>
                     )}
                   </div>

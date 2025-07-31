@@ -51,7 +51,7 @@ def detailed_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         A dictionary with the essential email fields plus body content
     """
-    minimal_data = minimal_message_template(email_data)
+    minimal_data = minimal_message_template(email_data, short_body=False)
     return {
         **minimal_data,
         "body": email_data.get("body", ""),
@@ -91,7 +91,8 @@ def thread_template(thread_data: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": thread_data.get("id", ""),
         "messages": [
-            minimal_message_template(msg) for msg in thread_data.get("messages", [])
+            minimal_message_template(msg, short_body=False)
+            for msg in thread_data.get("messages", [])
         ],
         "messageCount": len(thread_data.get("messages", [])),
         "instructions": """

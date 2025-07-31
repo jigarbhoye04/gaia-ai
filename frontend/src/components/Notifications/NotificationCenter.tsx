@@ -238,11 +238,11 @@ export function NotificationCenter({
       ? notifications.filter((n) => n.status === NotificationStatus.DELIVERED)
       : notifications;
 
-  useEffect(() => {
-    if (isOpen) {
-      refetch();
-    }
-  }, [isOpen]);
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     refetch();
+  //   }
+  // }, [isOpen]);
 
   return (
     <div className={`relative ${className}`}>
