@@ -62,7 +62,7 @@ export default function SettingsMenu() {
       console.error("Error during logout:", error);
     } finally {
       setModalAction(null);
-      router.push("/login");
+      router.push("/");
     }
   };
 

@@ -6,7 +6,7 @@ import { useCallback, useEffect } from "react";
 import { authApi } from "@/features/auth/api/authApi";
 import { useUserActions } from "@/features/auth/hooks/useUser";
 
-export const authPages = ["/login", "/signup", "/signup"];
+export const authPages = ["/login", "/signup"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];
 
 const useFetchUser = () => {

@@ -38,7 +38,7 @@ export default function LogoutModal({
       console.error("Error during logout:", error);
     } finally {
       setModalAction(null);
-      router.push("/login");
+      router.push("/");
     }
   };
 
