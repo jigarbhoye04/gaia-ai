@@ -44,20 +44,6 @@ export default function RedirectPage() {
         return;
       }
 
-      // Check for success indicators
-      const accessToken = searchParams.get("access_token");
-      const refreshToken = searchParams.get("refresh_token");
-
-      if (accessToken || refreshToken) {
-        toast.success(
-          "Successfully connected! You can now access your integrations.",
-        );
-
-        // Redirect to main app
-        router.replace("/c");
-        return;
-      }
-
       // Default redirect to main app if no specific parameters
       router.replace("/c");
     };

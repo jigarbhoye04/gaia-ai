@@ -6,19 +6,20 @@ to users based on the conversation context and tool usage patterns.
 """
 
 import asyncio
-from typing import Dict, Any, List
-from pydantic import BaseModel, Field
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
+from typing import Any, Dict, List
 
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.follow_up_actions_tool_docs import (
     SUGGEST_FOLLOW_UP_ACTIONS,
 )
-from langgraph.config import get_stream_writer
 from app.langchain.llm.client import init_llm
 from app.langchain.prompts.agent_prompts import AGENT_SYSTEM_PROMPT
 from app.langchain.tools.core.registry import tool_names
+from langchain_core.messages import AIMessage
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.prompts import PromptTemplate
+from langgraph.config import get_stream_writer
+from pydantic import BaseModel, Field
 
 
 class FollowUpActions(BaseModel):
@@ -62,6 +63,10 @@ async def follow_up_actions_node(state: Dict[str, Any]):
 
         # Skip if insufficient conversation history for meaningful suggestions
         if not messages or len(messages) < 2:
+            return {}
+
+        last_message = messages[-1]
+        if isinstance(last_message, AIMessage) and last_message.tool_calls:
             return {}
 
         # Set up structured output parsing

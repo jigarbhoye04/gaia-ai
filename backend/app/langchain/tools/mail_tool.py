@@ -1,9 +1,5 @@
 from typing import Annotated, Any, Dict, List, Optional
 
-from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
-from langgraph.config import get_stream_writer
-
 from app.config.loggers import chat_logger as logger
 from app.docstrings.langchain.tools.mail_tool_docs import (
     APPLY_LABELS_TO_EMAILS,
@@ -46,6 +42,9 @@ from app.services.mail_service import (
     update_label,
 )
 from app.utils.general_utils import transform_gmail_message
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 
 def get_auth_from_config(config: RunnableConfig) -> Dict[str, str]:
@@ -74,6 +73,9 @@ async def list_gmail_labels(config: RunnableConfig) -> Dict[str, Any]:
         service = get_gmail_service(
             access_token=auth["access_token"], refresh_token=auth["refresh_token"]
         )
+
+        if not service:
+            return {"error": "Failed to initialize Gmail service"}
 
         results = service.users().labels().list(userId="me").execute()
 
@@ -114,6 +116,11 @@ async def fetch_gmail_messages(
         service = get_gmail_service(
             access_token=auth["access_token"], refresh_token=auth["refresh_token"]
         )
+
+        if not service:
+            return {
+                "error": "Failed to initialize Gmail service",
+            }
 
         # Prepare params for message list
         params = {"userId": "me", "labelIds": ["INBOX"], "maxResults": max_results}
@@ -284,43 +291,26 @@ async def compose_email(
 ) -> Dict[str, Any] | str:
     try:
         writer = get_stream_writer()
-        composed_emails = []
-
         # Process each email in the array
         for email_index, email in enumerate(emails):
-            subject = email.subject
-            body = email.body
-            recipient_emails = email.to
-
             writer(
                 {
                     "progress": f"Processing email {email_index + 1}/{len(emails)}: Preparing email..."
                 }
             )
 
-            # Prepare email data for this email
-            email_data = {
-                "to": recipient_emails,
-                "subject": subject,
-                "body": body,
-            }
-
-            composed_emails.append(email_data)
-
         # Progress update for drafting
-        writer({"progress": f"Drafting {len(composed_emails)} email(s)..."})
-        writer({"email_compose_data": composed_emails})
+        writer({"progress": f"Drafting {len(emails)} email(s)..."})
+        writer({"email_compose_data": emails})
 
         # Generate summary of the composed emails
-        if len(composed_emails) == 1:
-            email = composed_emails[0]
-            return COMPOSE_EMAIL_TEMPLATE.format(
-                subject=email["subject"], body=email["body"]
-            )
+        if len(emails) == 1:
+            email = emails[0]
+            return COMPOSE_EMAIL_TEMPLATE.format(subject=email.subject, body=email.body)
         else:
-            summary = f"Composed {len(composed_emails)} emails:\n"
-            for i, email in enumerate(composed_emails, 1):
-                summary += f"{i}. Subject: {email['subject']}\n"
+            summary = f"Composed {len(emails)} emails:\n"
+            for i, email in enumerate(emails, 1):
+                summary += f"{i}. Subject: {email.subject}\n"
             return summary
 
     except Exception as e:

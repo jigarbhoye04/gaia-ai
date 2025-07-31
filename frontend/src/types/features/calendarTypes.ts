@@ -1,3 +1,21 @@
+// Recurrence types for calendar events
+export type RecurrenceFrequency = "DAILY" | "WEEKLY" | "MONTHLY" | "YEARLY";
+
+export interface RecurrenceRule {
+  frequency: RecurrenceFrequency;
+  interval?: number; // default: 1
+  count?: number;
+  until?: string; // ISO date string (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS±HH:MM)
+  by_day?: string[]; // e.g., ["MO", "WE"]
+  by_month_day?: number[];
+  by_month?: number[];
+  exclude_dates?: string[]; // YYYY-MM-DD
+  include_dates?: string[]; // YYYY-MM-DD
+}
+
+export interface RecurrenceData {
+  rrule: RecurrenceRule;
+}
 import { CalendarItem } from "@/types/api/calendarApiTypes";
 
 export interface CalendarCardProps {
@@ -98,6 +116,7 @@ export interface BaseEvent {
     email?: string;
   };
   is_all_day?: boolean;
+  recurrence?: RecurrenceData;
 }
 
 export interface TimedEvent extends BaseEvent {
@@ -132,6 +151,7 @@ export interface EventCreatePayload {
   end?: string;
   fixedTime?: boolean;
   timezone?: string;
+  recurrence?: RecurrenceData;
 }
 
 // Calendar types for conversation messages
@@ -141,6 +161,7 @@ export type CalendarOptions = {
   start?: string;
   end?: string;
   is_all_day?: boolean;
+  recurrence?: RecurrenceData;
 };
 
 // Calendar event date/time structure from Google Calendar API

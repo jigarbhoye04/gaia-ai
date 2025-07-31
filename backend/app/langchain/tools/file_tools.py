@@ -1,14 +1,13 @@
 from typing import Annotated, Optional
 
-from langchain_core.documents import Document
-from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
-
 from app.config.loggers import chat_logger as logger
 from app.db.chromadb import ChromaClient
 from app.db.mongodb.collections import files_collection
-from app.docstrings.langchain.tools.file_tool_docs import QUERY_FILE
 from app.decorators import with_doc, with_rate_limiting
+from app.docstrings.langchain.tools.file_tool_docs import QUERY_FILE
+from langchain_core.documents import Document
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import tool
 
 
 @tool
@@ -106,7 +105,7 @@ async def _get_similar_documents(
     filters = {
         "$and": [
             {"user_id": user_id},
-            {"conversation_id": conversation_id},
+            # {"conversation_id": conversation_id},
         ]
     }
 
