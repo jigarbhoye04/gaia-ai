@@ -1,3 +1,12 @@
+import { Button } from "@heroui/button";
+import { Input, Textarea } from "@heroui/input";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@heroui/modal";
 import {
   Bell,
   Calendar as CalendarIcon,
@@ -36,15 +45,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../../components/ui/shadcn/dialog";
-import {
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from "@heroui/modal";
-import { Input, Textarea } from "@heroui/input";
-import { Button } from "@heroui/button";
 
 export default function CalendarEventDialog({
   event,

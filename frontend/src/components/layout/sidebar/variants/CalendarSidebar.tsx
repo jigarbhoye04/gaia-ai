@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@heroui/button";
+import { useState } from "react";
 
-import Spinner from "@/components/ui/shadcn/spinner";
 import { PlusSignIcon } from "@/components/shared/icons";
-import CalendarSelector from "@/features/calendar/components/CalendarSelector";
+import Spinner from "@/components/ui/shadcn/spinner";
 import CalendarEventDialog from "@/features/calendar/components/CalendarEventDialog";
+import CalendarSelector from "@/features/calendar/components/CalendarSelector";
 import { useSharedCalendar } from "@/features/calendar/hooks/useSharedCalendar";
 
 export default function CalendarSidebar() {
