@@ -3,6 +3,7 @@
 import { Badge, Tab, Tabs } from "@heroui/react";
 import { Bell, BellRing } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { EmailPreviewModal } from "@/components/Modals/EmailPreviewModal";
 import { NotificationsList } from "@/components/Notifications/NotificationsList";
@@ -14,7 +15,6 @@ import {
   ModalConfig,
   NotificationStatus,
 } from "@/types/features/notificationTypes";
-import { toast } from "sonner";
 
 export default function NotificationsPage() {
   const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);

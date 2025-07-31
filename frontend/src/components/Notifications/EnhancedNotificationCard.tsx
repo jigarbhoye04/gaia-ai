@@ -1,5 +1,7 @@
 "use client";
 
+import { Button as HeroButton } from "@heroui/button";
+import { Tooltip } from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
@@ -19,9 +21,8 @@ import {
   NotificationStatus,
 } from "@/types/features/notificationTypes";
 import { getNotificationIcon } from "@/utils/notifications";
-import { Button as HeroButton } from "@heroui/button";
+
 import { Button } from "../ui";
-import { Tooltip } from "@heroui/react";
 
 interface EnhancedNotificationCardProps {
   notification: NotificationRecord;
