@@ -75,11 +75,11 @@ export function CalendarEventCard({
           description: event.description,
           is_all_day: true, // Assume single time events are all-day
           timezone: userTimeZone,
+          recurrence: event.recurrence,
         });
       }
       setStatus("added");
     } catch (error) {
-      toast.error("Failed to add event!");
       console.error(error);
       setStatus("idle");
     }

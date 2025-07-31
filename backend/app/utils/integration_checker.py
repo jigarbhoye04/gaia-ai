@@ -6,11 +6,13 @@ permissions and stream connection prompts to the frontend when needed.
 """
 
 from typing import Optional
+
 import httpx
 from langgraph.config import get_stream_writer
 
-from app.config.oauth_config import get_integration_by_id
 from app.config.loggers import auth_logger as logger
+from app.config.oauth_config import get_integration_by_id
+from app.config.token_repository import token_repository
 
 http_async_client = httpx.AsyncClient(timeout=10.0)
 
@@ -56,17 +58,15 @@ async def check_user_has_integration(access_token: str, integration_id: str) -> 
             logger.warning(f"No scopes defined for integration: {integration_id}")
             return False
 
-        # Check Google token info to get authorized scopes
-        token_info_response = await http_async_client.get(
-            f"https://www.googleapis.com/oauth2/v1/tokeninfo?access_token={access_token}"
+        token = await token_repository.get_token_by_auth_token(
+            access_token, renew_if_expired=True
         )
 
-        if token_info_response.status_code != 200:
-            logger.warning("Invalid access token when checking integration permissions")
+        if not token:
+            logger.warning(f"No token found for access token: {access_token}")
             return False
 
-        token_data = token_info_response.json()
-        authorized_scopes = token_data.get("scope", "").split()
+        authorized_scopes = str(token.get("scope", "")).split()
 
         # Check if all required scopes are present
         missing_scopes = [
@@ -96,9 +96,6 @@ async def stream_integration_connection_prompt(
     """
     try:
         writer = get_stream_writer()
-        if not writer:
-            logger.warning("No stream writer available for integration prompt")
-            return
 
         # Get integration details
         integration = get_integration_by_id(integration_id)

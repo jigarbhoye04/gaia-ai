@@ -4,12 +4,11 @@ import { Button } from "@heroui/button";
 import { CircleArrowUp } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import {
   CalendarIcon,
   CheckmarkCircle02Icon,
-  Mail01Icon,
   MessageMultiple02Icon,
   NotificationIcon,
   PinIcon,
@@ -17,21 +16,29 @@ import {
 } from "@/components/shared/icons";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
+import { useNotificationContext } from "@/hooks/providers/NotificationContext";
 import { NotificationStatus } from "@/types/features/notificationTypes";
 
 export default function SidebarTopButtons() {
   const pathname = usePathname();
   const { data: subscriptionStatus } = useUserSubscriptionStatus();
-
-  // Get unread notifications count
-  const { notifications } = useNotifications({
+  const { refreshTrigger } = useNotificationContext();
+  const { notifications, refetch } = useNotifications({
     status: NotificationStatus.DELIVERED,
     limit: 50,
   });
 
-  const unreadCount = notifications.filter(
-    (n) => n.status === NotificationStatus.DELIVERED,
-  ).length;
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    refetch();
+  }, [refreshTrigger, refetch]);
+
+  useEffect(() => {
+    setUnreadCount(
+      notifications.filter((n) => n.status !== NotificationStatus.READ).length,
+    );
+  }, [notifications]);
 
   const buttonData = [
     {
@@ -54,11 +61,11 @@ export default function SidebarTopButtons() {
       icon: <CheckmarkCircle02Icon />,
       label: "Todos",
     },
-    {
-      route: "/mail",
-      icon: <Mail01Icon />,
-      label: "Mail",
-    },
+    // {
+    //   route: "/mail",
+    //   icon: <Mail01Icon />,
+    //   label: "Mail",
+    // },
     {
       route: "/pins",
       icon: <PinIcon />,

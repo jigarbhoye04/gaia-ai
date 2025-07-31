@@ -11,7 +11,9 @@ from langchain_core.prompts import PromptTemplate
 
 
 # Template for minimal message representation
-def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
+def minimal_message_template(
+    email_data: Dict[str, Any], short_body=True
+) -> Dict[str, Any]:
     """
     Convert a Gmail message to a minimal representation with only essential fields.
 
@@ -31,7 +33,9 @@ def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
         "time": email_data.get("time", ""),
         "isRead": "UNREAD" not in email_data.get("labelIds", []),
         "hasAttachment": "HAS_ATTACHMENT" in email_data.get("labelIds", []),
-        "body": email_data.get("body", ""),
+        "body": email_data.get("body", "")[:100]
+        if short_body
+        else email_data.get("body", ""),
         "labels": email_data.get("labelIds", []),
     }
 
@@ -91,38 +95,35 @@ def thread_template(thread_data: Dict[str, Any]) -> Dict[str, Any]:
         ],
         "messageCount": len(thread_data.get("messages", [])),
         "instructions": """
+        Understand the **actual email body content** and summarize it intelligently using the following framework.
 
-        Understand the mail and output your response based on the following analysis Framework:
-        When fetching and analyzing email threads, always include:
+        Your job is to extract meaning from the email — do not repeat sender, subject, or metadata that is already visible to the user.
+
+        🎯 Focus on summarizing the **actual email message**, not the headers.
+
+        Use this analysis framework to guide your summary:
 
         ✓ Urgent Action Required:
-        - Identify any time-sensitive items that need immediate attention
-        - Flag deadlines, urgent requests, or critical decisions needed
-        - Highlight any escalations or priority communications
+        - Highlight time-sensitive tasks, deadlines, or urgent requests
 
         ✓ Key Issues Identified:
-        - Extract main problems, concerns, or challenges discussed
-        - Identify blockers, conflicts, or unresolved matters
-        - Note any recurring issues or patterns in the conversation
+        - Summarize problems, blockers, concerns, or recurring issues
 
         ✓ Required Actions:
-        - List specific tasks, deliverables, or next steps mentioned
-        - Identify who is responsible for each action item
-        - Extract any commitments, agreements, or promises made
+        - Extract any tasks, decisions, or next steps
+        - Mention who's responsible if it's clear
 
         ✓ Timeline:
-        - Extract all dates, deadlines, and time-sensitive milestones
-        - Identify project phases, meeting schedules, or delivery dates
-        - Note any timeline changes or delays discussed
+        - Pull out any mentioned deadlines, meetings, or delays
 
         ✓ Current Status:
-        - Summarize the current state of projects or discussions
-        - Identify what has been completed vs. what remains pending
-        - Note any status updates, progress reports, or milestone achievements
+        - Describe progress, decisions made, or what's still pending
 
-        Do not include them if they're not specified in the email, it's fine. Summarise the body and the information instead of showing the details manually, ensure its concise and easy to understand.
-        don't just copy paste the details of the mail. Do not provide unnecessary information to the user about the mail that they cannot discertain certain information from
- """,
+        📌 Be concise. Avoid copy-pasting text or restating obvious content.
+        📌 If none of the framework categories apply, simply summarize the email’s **core message or intent**.
+        📌 Never repeat information the user already sees (like sender name or subject).
+        📌 The goal is to help the user quickly understand **what the email is actually saying or asking**, in plain, helpful language.
+        """,
     }
 
 

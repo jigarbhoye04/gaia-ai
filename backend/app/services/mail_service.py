@@ -6,18 +6,52 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Any, Dict, List, Optional
 
+from app.config.loggers import general_logger as logger
+from app.config.settings import settings
+from app.utils.general_utils import transform_gmail_message
 from fastapi import UploadFile
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import BatchHttpRequest
 
-from app.config.loggers import general_logger as logger
-from app.config.settings import settings
-from app.utils.general_utils import transform_gmail_message
 
+def get_gmail_service(
+    refresh_token: Optional[str] = None,
+    access_token: Optional[str] = None,
+    user_id: Optional[str] = None,
+):
+    """
+    Create a Gmail API service using OAuth credentials.
 
-def get_gmail_service(refresh_token: str, access_token: str):
+    Can be created either with tokens directly or by retrieving them from the token repository
+    using the user_id.
+
+    Args:
+        refresh_token: OAuth refresh token
+        access_token: OAuth access token
+        user_id: User ID to fetch tokens from repository
+
+    Returns:
+        Google API service object for Gmail
+    """
+    # If user_id is provided, get tokens from repository
+    if user_id and not (access_token and refresh_token):
+        import asyncio
+
+        from app.config.token_repository import token_repository
+
+        # Get token from repository
+        token = asyncio.run(token_repository.get_token(user_id, "google"))
+        if token:
+            # OAuth2Token behaves like a dict
+            access_token = str(token.get("access_token", ""))
+            refresh_token = str(token.get("refresh_token", ""))
+
+    if not access_token:
+        logger.error("No access token available to create Gmail service")
+        return None
+
     creds = Credentials(
         token=access_token,
         refresh_token=refresh_token,

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.calendar_models import EventCreateRequest
 from app.models.mail_models import EmailComposeRequest
@@ -17,9 +17,10 @@ class ImageData(BaseModel):
 
 
 class EmailFetchData(BaseModel):
-    from_: str
+    from_: str = Field(alias="from")
     subject: str
     time: str
+    thread_id: Optional[str] = None
 
 
 class CalendarFetchData(BaseModel):
@@ -33,6 +34,24 @@ class CalendarListFetchData(BaseModel):
     id: str
     description: str
     backgroundColor: Optional[str] = None
+
+
+class EmailThreadMessage(BaseModel):
+    id: str
+    from_: str = Field(alias="from")
+    sender_name: str
+    sender_email: str
+    sender_avatar_url: Optional[str] = None
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    time: str
+    snippet: Optional[str] = None
+
+
+class EmailThreadData(BaseModel):
+    thread_id: str
+    messages: List[EmailThreadMessage]
+    messages_count: int
 
 
 class IntegrationConnectionData(BaseModel):
@@ -69,6 +88,7 @@ class MessageModel(BaseModel):
     weather_data: Optional[WeatherData] = None
     email_compose_data: Optional[List[EmailComposeRequest]] = None
     email_fetch_data: Optional[List[EmailFetchData]] = None
+    email_thread_data: Optional[EmailThreadData] = None
     calendar_fetch_data: Optional[List[CalendarFetchData]] = None
     calendar_list_fetch_data: Optional[List[CalendarListFetchData]] = None
     memory_data: Optional[dict] = None

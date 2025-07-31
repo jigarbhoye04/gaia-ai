@@ -1,7 +1,8 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Chip } from "@heroui/chip";
+import { Selection } from "@heroui/react";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useIntegrations } from "../hooks/useIntegrations";
 import { Integration } from "../types";
@@ -34,7 +35,7 @@ const IntegrationItem: React.FC<{
     >
       {/* Icon */}
       <div className="flex-shrink-0">
-        <div className="w-57items-center flex h-7 justify-center rounded">
+        <div className="flex h-7 w-7 items-center justify-center rounded">
           <Image
             width={25}
             height={25}
@@ -84,6 +85,42 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
 }) => {
   const { integrations, connectIntegration, refreshStatus } = useIntegrations();
 
+  // Load saved accordion state from localStorage
+  // This preserves the expand/collapse state of the integrations accordion
+  // across multiple opens of the slash command dropdown
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(() => {
+    if (typeof window === "undefined") {
+      return new Set(["integrations"]);
+    }
+
+    const saved = localStorage.getItem("gaia-integrations-accordion-expanded");
+    if (saved !== null) {
+      try {
+        const isExpanded = JSON.parse(saved);
+        return isExpanded ? new Set(["integrations"]) : new Set([]);
+      } catch {
+        // If parsing fails, default to expanded
+        return new Set(["integrations"]);
+      }
+    }
+    // Default to expanded if no saved state
+    return new Set(["integrations"]);
+  });
+
+  // Save accordion state to localStorage whenever it changes
+  const handleSelectionChange = (keys: Selection) => {
+    setSelectedKeys(keys);
+
+    if (typeof window !== "undefined") {
+      const isExpanded =
+        keys === "all" || (keys instanceof Set && keys.has("integrations"));
+      localStorage.setItem(
+        "gaia-integrations-accordion-expanded",
+        JSON.stringify(isExpanded),
+      );
+    }
+  };
+
   // Force refresh integration status on mount
   useEffect(() => {
     refreshStatus();
@@ -107,12 +144,13 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
       <Accordion
         variant="light"
         isCompact
-        defaultExpandedKeys={["integrations"]}
+        selectedKeys={selectedKeys}
+        onSelectionChange={handleSelectionChange}
         itemClasses={{ base: "py-2 px-2" }}
         className="rounded-xl bg-zinc-900/50"
       >
         <AccordionItem
-          key={"integrations"}
+          key="integrations"
           title={
             <div className="flex items-center gap-3">
               <div className="min-w-0 flex-1">
