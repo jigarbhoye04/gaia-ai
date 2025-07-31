@@ -1,14 +1,10 @@
 import ShinyText from "@/components/ui/shadcn/shimmering-chip";
 import { MotionContainer } from "@/layouts/MotionContainer";
-import { SplitTextBlur } from "./SplitTextBlur";
 import GetStartedButton from "../shared/GetStartedButton";
-import StartedButton from "../shared/StartedButton";
-import { Spotlight } from "@/components/ui";
-import HeroImage from "./HeroImageSection";
-import Image from "next/image";
+import { SplitTextBlur } from "./SplitTextBlur";
 export default function HeroSection() {
   return (
-    <div className="sti h-[] mt-[24vh] w-screen flex-col gap-8 py-16 sm:pb-26">
+    <div className="sti h-[] mt-[20vh] w-screen flex-col gap-8 py-16 sm:pb-26">
       {/* <div className="top-0 left-0 w-screen">
         <Spotlight duration={15} />
       </div> */}

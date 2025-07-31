@@ -37,8 +37,8 @@ const ListItem = React.forwardRef<
       <Component
         ref={ref}
         className={cn(
-          "flex  w-full h-20 flex-col justify-start rounded-xl   p-4 leading-none no-underline transition-all duration-150 select-none  hover:text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100 bg-[#101112] hover:bg-[#191a1b]",
-          className
+          "flex h-full min-h-20 w-full flex-col justify-start rounded-xl bg-[#101112] p-4 leading-none no-underline transition-all duration-150 select-none hover:bg-[#191a1b] hover:text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100",
+          className,
         )}
         {...linkProps}
         {...props}
@@ -83,6 +83,7 @@ export function NavbarMenu({ activeMenu, onClose }: NavbarMenuProps) {
     GitHub: "Check out our open source projects",
     WhatsApp: "Join our WhatsApp Community",
     LinkedIn: "Follow our LinkedIn Company Page",
+    YouTube: "Subscribe to our YouTube Channel",
   } as const;
 
   const getDescription = (label: string): string => {
@@ -91,13 +92,13 @@ export function NavbarMenu({ activeMenu, onClose }: NavbarMenuProps) {
 
   const getMenuLinks = () => {
     switch (activeMenu) {
-      case 'product':
+      case "product":
         return productNavLinks;
-      case 'resources':
+      case "resources":
         return resourcesNavLinks;
-      case 'company':
+      case "company":
         return companyNavLinks;
-      case 'socials':
+      case "socials":
         return connectNavLinks;
       default:
         return [];
@@ -107,13 +108,13 @@ export function NavbarMenu({ activeMenu, onClose }: NavbarMenuProps) {
   const links = getMenuLinks();
 
   return (
-    <div className="absolute top-full left-0 w-full bg-[#08090A] backdrop-blur-xl border-[#ffffff26] border-t-0 rounded-b-2xl shadow-2xl z-40 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+    <div className="absolute top-full left-0 z-40 w-full rounded-b-2xl border-t-0 border-[#ffffff26] bg-[#08090A] shadow-2xl backdrop-blur-xl duration-200 animate-in fade-in-0 slide-in-from-top-1">
       <div className="p-6">
-        {activeMenu === 'product' && (
+        {activeMenu === "product" && (
           <div className="grid w-full grid-cols-2 grid-rows-2 gap-4">
             <div className="row-span-2 md:col-span-1">
               <Link
-                className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-2xl border border-zinc-800/50 bg-gradient-to-b from-zinc-900 to-zinc-950 p-3 no-underline outline-none select-none hover:from-zinc-800 hover:to-zinc-900 transition-all duration-200 "
+                className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-2xl border border-zinc-800/50 bg-gradient-to-b from-zinc-900 to-zinc-950 p-3 no-underline transition-all duration-200 outline-none select-none hover:from-zinc-800 hover:to-zinc-900"
                 href="/"
                 onClick={onClose}
               >
@@ -145,7 +146,7 @@ export function NavbarMenu({ activeMenu, onClose }: NavbarMenuProps) {
           </div>
         )}
 
-        {activeMenu === 'resources' && (
+        {activeMenu === "resources" && (
           <div className="grid w-full grid-cols-2 grid-rows-2 gap-4">
             {links.map((link) => (
               <ListItem
@@ -161,7 +162,7 @@ export function NavbarMenu({ activeMenu, onClose }: NavbarMenuProps) {
           </div>
         )}
 
-        {activeMenu === 'company' && (
+        {activeMenu === "company" && (
           <div className="grid w-full grid-cols-2 grid-rows-2 gap-4">
             {links.map((link) => (
               <ListItem
@@ -177,20 +178,14 @@ export function NavbarMenu({ activeMenu, onClose }: NavbarMenuProps) {
           </div>
         )}
 
-        {activeMenu === 'socials' && (
-          <div className="grid grid-cols-3  w-full gap-4 md:grid-cols-3">
-            <div className="row-span-2 md:col-span-1">
+        {activeMenu === "socials" && (
+          <div className="grid w-full grid-cols-3 gap-4 md:grid-cols-3">
+            <div className="col-span-1">
               <Link
                 className="relative flex h-full w-full flex-col justify-end overflow-hidden rounded-2xl border border-zinc-800/80 bg-gradient-to-b from-zinc-900 to-zinc-950 p-3 no-underline transition-all duration-500 select-none hover:from-zinc-800 hover:to-zinc-950"
                 href="/contact"
                 onClick={onClose}
               >
-                <Image
-                  fill={true}
-                  src="/branding/logo.webp"
-                  alt="website logo"
-                  className="relative z-0 scale-90 object-contain pb-10 opacity-5 grayscale-100"
-                />
                 <div className="relative z-[1] mt-4 text-lg font-medium text-zinc-100">
                   Need help?
                 </div>

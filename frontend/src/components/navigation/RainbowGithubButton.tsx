@@ -11,7 +11,7 @@ export function RainbowGithubButton() {
       href="https://github.com/heygaia/gaia"
       target="_blank"
       rel="noopener noreferrer"
-      className="group relative inline-flex h-9 max-h-9 min-h-9 cursor-pointer items-center justify-center rounded-xl border border-transparent bg-zinc-800 px-3 text-sm font-medium text-white transition-all duration-300 hover:scale-105 hover:bg-zinc-800"
+      className="group hover:outline- relative inline-flex h-9 max-h-9 min-h-9 cursor-pointer items-center justify-center rounded-xl bg-zinc-700 px-3 text-sm font-medium text-white outline-1 outline-zinc-700 transition duration-200 hover:scale-105 hover:outline-zinc-500"
     >
       <div className="animate-rainbow flex items-center">
         <Github width={18} />
