@@ -36,6 +36,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../../../components/ui/shadcn/dialog";
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@heroui/modal";
+import { Input, Textarea } from "@heroui/input";
+import { Button } from "@heroui/button";
 
 export default function CalendarEventDialog({
   event,
@@ -52,6 +61,12 @@ export default function CalendarEventDialog({
     summary?: string;
     date?: string;
   }>({});
+  const [recurrence, setRecurrence] = useState<string>("none");
+  const [showCustomRecurrence, setShowCustomRecurrence] = useState(false);
+  const [customRecurrence, setCustomRecurrence] = useState({
+    interval: 1,
+    unit: "day",
+  });
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -62,6 +77,9 @@ export default function CalendarEventDialog({
       setEnd("");
       setIsAllDay(false);
       setErrors({});
+      setRecurrence("none");
+      setShowCustomRecurrence(false);
+      setCustomRecurrence({ interval: 1, unit: "day" });
     }
   }, [open]);
 
@@ -88,29 +106,20 @@ export default function CalendarEventDialog({
   if (mode === "create") {
     const validateForm = () => {
       const newErrors: { summary?: string; date?: string } = {};
-
-      if (!summary.trim()) {
-        newErrors.summary = "Summary is required";
-      }
-
+      if (!summary.trim()) newErrors.summary = "Summary is required";
       if (!isAllDay) {
-        // For timed events, both start and end are required
         if (!start || !end) {
           newErrors.date = "Start and end times are required for timed events";
         } else {
           const startDate = new Date(start);
           const endDate = new Date(end);
-          if (isNaN(startDate.getTime())) {
-            newErrors.date = "Invalid start date";
-          } else if (isNaN(endDate.getTime())) {
+          if (isNaN(startDate.getTime())) newErrors.date = "Invalid start date";
+          else if (isNaN(endDate.getTime()))
             newErrors.date = "Invalid end date";
-          } else if (endDate <= startDate) {
+          else if (endDate <= startDate)
             newErrors.date = "End time must be after start time";
-          }
         }
       }
-      // For all-day events, dates are optional (backend will default to today)
-
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     };
@@ -118,31 +127,22 @@ export default function CalendarEventDialog({
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!validateForm()) return;
-
       try {
-        const eventPayload: EventCreatePayload = {
+        const eventPayload: EventCreatePayload & { recurrence?: string } = {
           summary,
           description,
           is_all_day: isAllDay,
         };
-
         if (isAllDay) {
-          // For all-day events, send date strings only if provided
-          if (start) {
-            eventPayload.start = start.split("T")[0]; // Extract date part
-          }
-          if (end) {
-            eventPayload.end = end.split("T")[0]; // Extract date part
-          }
+          if (start) eventPayload.start = start.split("T")[0];
+          if (end) eventPayload.end = end.split("T")[0];
         } else {
-          // For timed events, send full datetime with timezone
           eventPayload.start = new Date(start).toISOString();
           eventPayload.end = new Date(end).toISOString();
           eventPayload.fixedTime = true;
         }
-
+        if (recurrence) eventPayload.recurrence = recurrence;
         await calendarApi.createEventDefault(eventPayload);
-
         toast.success("Event created successfully!");
         onOpenChange(false);
       } catch (error) {
@@ -153,67 +153,64 @@ export default function CalendarEventDialog({
     };
 
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-h-[80vh] max-w-lg overflow-y-auto border-none bg-zinc-900!">
-          <DialogHeader className="border-b border-zinc-800 pb-4">
-            <DialogTitle className="flex items-center gap-3">
-              <CalendarIcon size={20} className="text-zinc-100" />
-              <span className="text-xl font-bold text-zinc-100">
-                Create Event
-              </span>
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-            <div>
-              <label className="mb-1 block font-medium text-zinc-300">
-                Summary*
-              </label>
+      <Modal isOpen={open} onClose={() => onOpenChange(false)}>
+        <ModalContent className="max-w-xl rounded-2xl border-none bg-zinc-900">
+          <ModalHeader className="flex items-center gap-3 pb-2">
+            <CalendarIcon size={20} className="text-zinc-100" />
+            <span className="text-xl font-bold text-zinc-100">
+              Create Event
+            </span>
+          </ModalHeader>
+          <ModalBody className="flex flex-col gap-6 pt-0">
+            <Input
+              placeholder="Event title"
+              classNames={{
+                input:
+                  "text-2xl font-semibold bg-transparent border-0 text-zinc-100 placeholder:text-zinc-500",
+                inputWrapper:
+                  "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
+              }}
+              value={summary}
+              variant="underlined"
+              onChange={(e) => {
+                setSummary(e.target.value);
+                if (errors.summary)
+                  setErrors({ ...errors, summary: undefined });
+              }}
+              required
+              autoFocus
+            />
+            <Textarea
+              placeholder="Add a description..."
+              value={description || ""}
+              onChange={(e) => setDescription(e.target.value)}
+              minRows={1}
+              maxRows={5}
+              variant="underlined"
+              classNames={{
+                input:
+                  "bg-transparent border-0 text-zinc-200 placeholder:text-zinc-500",
+                inputWrapper:
+                  "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
+              }}
+            />
+            <div className="flex items-center gap-3">
               <input
-                type="text"
-                value={summary}
+                type="checkbox"
+                id="isAllDay"
+                className="h-4 w-4 rounded border-zinc-700 bg-zinc-800"
+                checked={isAllDay}
                 onChange={(e) => {
-                  setSummary(e.target.value);
-                  if (errors.summary)
-                    setErrors({ ...errors, summary: undefined });
+                  setIsAllDay(e.target.checked);
+                  if (errors.date) setErrors({ ...errors, date: undefined });
                 }}
-                className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
-                  errors.summary ? "border border-red-500" : ""
-                }`}
-                required
               />
-              {errors.summary && (
-                <span className="mt-1 text-sm text-red-500">
-                  {errors.summary}
-                </span>
-              )}
-            </div>
-            <div>
-              <label className="mb-1 block font-medium text-zinc-300">
-                Description
+              <label
+                htmlFor="isAllDay"
+                className="text-sm text-zinc-300 select-none"
+              >
+                All-day event
               </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
-                rows={3}
-              />
-            </div>
-            <div className="mb-4">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isAllDay"
-                  className="h-4 w-4 rounded border-zinc-700 bg-zinc-800"
-                  checked={isAllDay}
-                  onChange={(e) => {
-                    setIsAllDay(e.target.checked);
-                    if (errors.date) setErrors({ ...errors, date: undefined });
-                  }}
-                />
-                <label htmlFor="isAllDay" className="text-sm text-zinc-300">
-                  All-day event
-                </label>
-              </div>
             </div>
             {!isAllDay && (
               <div className="flex gap-4">
@@ -221,7 +218,7 @@ export default function CalendarEventDialog({
                   <label className="mb-1 block font-medium text-zinc-300">
                     Start*
                   </label>
-                  <input
+                  <Input
                     type="datetime-local"
                     value={start}
                     onChange={(e) => {
@@ -229,9 +226,9 @@ export default function CalendarEventDialog({
                       if (errors.date)
                         setErrors({ ...errors, date: undefined });
                     }}
-                    className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
-                      errors.date ? "border border-red-500" : ""
-                    }`}
+                    classNames={{
+                      input: `bg-zinc-800 text-zinc-100 ${errors.date ? "border border-red-500" : ""}`,
+                    }}
                     required={!isAllDay}
                   />
                 </div>
@@ -239,7 +236,7 @@ export default function CalendarEventDialog({
                   <label className="mb-1 block font-medium text-zinc-300">
                     End*
                   </label>
-                  <input
+                  <Input
                     type="datetime-local"
                     value={end}
                     onChange={(e) => {
@@ -247,9 +244,9 @@ export default function CalendarEventDialog({
                       if (errors.date)
                         setErrors({ ...errors, date: undefined });
                     }}
-                    className={`w-full rounded bg-zinc-800 p-2 text-zinc-100 ${
-                      errors.date ? "border border-red-500" : ""
-                    }`}
+                    classNames={{
+                      input: `bg-zinc-800 text-zinc-100 ${errors.date ? "border border-red-500" : ""}`,
+                    }}
                     required={!isAllDay}
                   />
                 </div>
@@ -261,7 +258,7 @@ export default function CalendarEventDialog({
                   <label className="mb-1 block font-medium text-zinc-300">
                     Start Date (optional)
                   </label>
-                  <input
+                  <Input
                     type="date"
                     value={start ? start.split("T")[0] : ""}
                     onChange={(e) => {
@@ -269,14 +266,14 @@ export default function CalendarEventDialog({
                       if (errors.date)
                         setErrors({ ...errors, date: undefined });
                     }}
-                    className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                    classNames={{ input: "bg-zinc-800 text-zinc-100" }}
                   />
                 </div>
                 <div className="flex-1">
                   <label className="mb-1 block font-medium text-zinc-300">
                     End Date (optional)
                   </label>
-                  <input
+                  <Input
                     type="date"
                     value={end ? end.split("T")[0] : ""}
                     onChange={(e) => {
@@ -284,7 +281,7 @@ export default function CalendarEventDialog({
                       if (errors.date)
                         setErrors({ ...errors, date: undefined });
                     }}
-                    className="w-full rounded bg-zinc-800 p-2 text-zinc-100"
+                    classNames={{ input: "bg-zinc-800 text-zinc-100" }}
                   />
                 </div>
               </div>
@@ -294,24 +291,47 @@ export default function CalendarEventDialog({
                 {errors.date}
               </span>
             )}
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="rounded bg-zinc-700 px-4 py-2 text-white hover:bg-zinc-600"
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="recurrence"
+                className="text-sm text-zinc-300 select-none"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded bg-primary px-4 py-2 text-white hover:bg-primary/90"
+                Recurrence
+              </label>
+              <select
+                id="recurrence"
+                className="rounded-xl border border-zinc-700 bg-zinc-800 p-2 text-sm outline-none"
+                value={recurrence}
+                onChange={(e) => setRecurrence(e.target.value)}
               >
-                Create
-              </button>
+                <option value="">Does not repeat</option>
+                <option value="RRULE:FREQ=DAILY">Daily</option>
+                <option value="RRULE:FREQ=WEEKLY">Weekly</option>
+                <option value="RRULE:FREQ=MONTHLY">Monthly</option>
+                <option value="RRULE:FREQ=YEARLY">Annually</option>
+                <option value="RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR">
+                  Every weekday (Mon-Fri)
+                </option>
+              </select>
             </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </ModalBody>
+          <ModalFooter className="flex justify-end gap-2">
+            <Button
+              variant="light"
+              onPress={() => onOpenChange(false)}
+              className="border-0 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              onPress={handleSubmit}
+              className="border-0 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:bg-zinc-800 disabled:text-zinc-500"
+            >
+              Create
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     );
   }
 

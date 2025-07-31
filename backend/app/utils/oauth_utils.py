@@ -1,16 +1,14 @@
 import io
-import json
+from typing import cast
 
 import cloudinary
 import cloudinary.uploader
 import httpx
 from fastapi import HTTPException
 
-from app.api.v1.dependencies.oauth_dependencies import get_valid_access_token
 from app.config.loggers import auth_logger as logger
 from app.config.settings import settings
-from app.db.redis import get_cache
-from app.services.user_service import get_user_by_id
+from app.config.token_repository import token_repository
 
 http_async_client = httpx.AsyncClient()
 
@@ -86,6 +84,7 @@ async def get_tokens_from_code(code: str):
 async def get_tokens_by_user_id(user_id: str) -> tuple[str, str, bool]:
     """
     Get valid access and refresh tokens for the user by user ID.
+    Uses the token repository to fetch and refresh tokens.
 
     Args:
         user_id: The user's ID
@@ -93,50 +92,39 @@ async def get_tokens_by_user_id(user_id: str) -> tuple[str, str, bool]:
     Returns:
         tuple: (access_token, refresh_token, success_flag)
     """
+    try:
+        # Get token from repository
+        token = await token_repository.get_token(user_id, "google")
 
-    # Get user to find email for token operations
-    user = await get_user_by_id(user_id)
-    if not user:
-        logger.error(f"User not found for ID: {user_id}")
+        if not token:
+            logger.error(f"No token found in repository for user: {user_id}")
+            return "", "", False
+
+        # Check if token needs refresh
+        access_token = cast(str, token.get("access_token", ""))
+        refresh_token = cast(str, token.get("refresh_token", ""))
+
+        if not refresh_token:
+            logger.error(f"Missing refresh token for user: {user_id}")
+            return "", "", False
+
+        # Check if token needs to be refreshed
+        if not token.is_expired():
+            # Token is still valid, return it
+            return access_token, refresh_token, True
+
+        # Token is expired, try to refresh it
+        refreshed_token = await token_repository.refresh_token(user_id, "google")
+
+        if not refreshed_token:
+            logger.error(f"Failed to refresh token for user: {user_id}")
+            return "", refresh_token, False
+
+        new_access_token = cast(str, refreshed_token.get("access_token", ""))
+        new_refresh_token = cast(str, refreshed_token.get("refresh_token", ""))
+
+        return new_access_token, new_refresh_token, True
+
+    except Exception as e:
+        logger.error(f"Error getting tokens for user {user_id}: {str(e)}")
         return "", "", False
-
-    email = user.get("email")
-    if not email:
-        logger.error(f"No email found for user_id: {user_id}")
-        return "", "", False
-
-    # Get refresh token from cache (still using email as cache key for now)
-    cache_key = f"user_refresh:{email}"
-    cached_data = await get_cache(cache_key)
-
-    if not cached_data:
-        logger.error(f"Refresh token not found in cache for user: {user_id}")
-        return "", "", False
-
-    # Parse the cached token based on its type
-    if isinstance(cached_data, str):
-        try:
-            parsed_data = json.loads(cached_data)
-            refresh_token = parsed_data.get("refresh_token")
-        except json.JSONDecodeError:
-            refresh_token = None
-    elif isinstance(cached_data, dict):
-        refresh_token = cached_data.get("refresh_token")
-    else:
-        refresh_token = None
-
-    if not refresh_token:
-        logger.error(f"Invalid or missing refresh token for user: {user_id}")
-        return "", "", False
-
-    # Get access token using the refresh token
-    access_token, _ = await get_valid_access_token(
-        user_email=email,
-        refresh_token=refresh_token,
-    )
-
-    if not access_token:
-        logger.error(f"Failed to get access token for user: {user_id}")
-        return "", refresh_token, False
-
-    return access_token, refresh_token, True

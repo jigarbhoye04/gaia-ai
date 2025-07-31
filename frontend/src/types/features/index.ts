@@ -24,6 +24,7 @@ export type {
   DeepResearchResults,
   DocumentData,
   EmailComposeData,
+  EmailThreadData,
   GoalDataMessageType,
   GoogleDocsData,
   ImageData,

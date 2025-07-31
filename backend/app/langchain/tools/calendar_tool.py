@@ -3,21 +3,17 @@ import pprint
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
-from langchain_core.runnables.config import RunnableConfig
-from langchain_core.tools import tool
-from langgraph.config import get_stream_writer
-
 from app.config.loggers import chat_logger as logger
+from app.decorators import require_integration, with_doc, with_rate_limiting
 from app.docstrings.langchain.tools.calendar_tool_docs import (
     CALENDAR_EVENT,
-    # DELETE_CALENDAR_EVENT,
+    DELETE_CALENDAR_EVENT,
     EDIT_CALENDAR_EVENT,
     FETCH_CALENDAR_EVENTS,
     FETCH_CALENDAR_LIST,
     SEARCH_CALENDAR_EVENTS,
     VIEW_CALENDAR_EVENT,
 )
-from app.decorators import with_doc, with_rate_limiting, require_integration
 from app.langchain.templates.calendar_template import (
     CALENDAR_LIST_TEMPLATE,
     CALENDAR_PROMPT_TEMPLATE,
@@ -28,17 +24,19 @@ from app.services.calendar_service import (
     list_calendars,
     search_calendar_events_native,
 )
+from langchain_core.runnables.config import RunnableConfig
+from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 
-@tool(parse_docstring=True)
+@tool()
 @with_rate_limiting("calendar_management")
 @with_doc(CALENDAR_EVENT)
 @require_integration("calendar")
 async def create_calendar_event(
     event_data: Union[
-        List[Union[EventCreateRequest, Dict[str, Any]]],
+        List[EventCreateRequest],
         EventCreateRequest,
-        Dict[str, Any],
     ],
     config: RunnableConfig,
 ) -> str:
@@ -48,56 +46,9 @@ async def create_calendar_event(
         logger.info(pprint.pformat(event_data, indent=2, width=100))
 
         # Normalize input to always work with a list of EventCreateRequest objects
-        event_list: List[EventCreateRequest] = []
-
-        if isinstance(event_data, EventCreateRequest):
-            # Single event object - convert to list
-            event_list = [event_data]
-            logger.info("Received single event object, converting to list")
-        elif isinstance(event_data, list):
-            # Process list - ensure all items are EventCreateRequest objects
-            for item in event_data:
-                if isinstance(item, EventCreateRequest):
-                    event_list.append(item)
-                elif isinstance(item, dict):
-                    # Convert dict to EventCreateRequest
-                    try:
-                        event_obj = EventCreateRequest(**item)
-                        event_list.append(event_obj)
-                    except Exception as e:
-                        logger.error(
-                            f"Failed to convert dict to EventCreateRequest: {e}"
-                        )
-                        continue
-                else:
-                    logger.error(f"Invalid item type in list: {type(item)}")
-                    continue
-            logger.info(f"Processed list with {len(event_list)} valid events")
-        elif isinstance(event_data, dict):
-            # Single dict - convert to EventCreateRequest
-            try:
-                event_obj = EventCreateRequest(**event_data)
-                event_list = [event_obj]
-                logger.info("Converted single dict to EventCreateRequest")
-            except Exception as e:
-                logger.error(f"Failed to convert dict to EventCreateRequest: {e}")
-                return json.dumps(
-                    {
-                        "error": f"Invalid event data format: {e}",
-                        "calendar_options": [],
-                        "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
-                    }
-                )
-        else:
-            # Invalid type
-            logger.error(f"Invalid event data type: {type(event_data)}")
-            return json.dumps(
-                {
-                    "error": "Calendar event data must be an EventCreateRequest object, dict, or list of such objects",
-                    "calendar_options": [],
-                    "prompt": str(CALENDAR_PROMPT_TEMPLATE.invoke({})),
-                }
-            )
+        event_list: List[EventCreateRequest] = (
+            event_data if isinstance(event_data, list) else [event_data]
+        )
 
         # Validate non-empty
         if not event_list:
@@ -149,6 +100,8 @@ async def create_calendar_event(
                     event_dict["calendar_name"] = event.calendar_name
                 if event.calendar_color:
                     event_dict["calendar_color"] = event.calendar_color
+                if event.recurrence:
+                    event_dict["recurrence"] = event.recurrence.model_dump()
 
                 calendar_options.append(event_dict)
                 logger.info(f"Added calendar event: {event.summary}")
@@ -259,7 +212,7 @@ async def fetch_calendar_list(
         logger.info(f"Fetched {len(calendars)} calendars")
 
         # Build array of {name, id, description} for all calendars
-        calendar_list_fetch_data = []
+        calendar_list_fetch_data: List[Dict[str, Any]] = []
         if calendars and isinstance(calendars, list):
             for calendar in calendars:
                 if isinstance(calendar, dict):
@@ -303,7 +256,6 @@ async def fetch_calendar_events(
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
-        refresh_token = config.get("configurable", {}).get("refresh_token")
 
         if not access_token:
             logger.error("Missing access token in config")
@@ -314,7 +266,6 @@ async def fetch_calendar_events(
         events_data = await get_calendar_events(
             user_id=user_id,
             access_token=access_token,
-            refresh_token=refresh_token,
             selected_calendars=selected_calendars,
             time_min=time_min,
             time_max=time_max,
@@ -377,7 +328,6 @@ async def search_calendar_events(
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
-        refresh_token = config.get("configurable", {}).get("refresh_token")
 
         if not access_token:
             logger.error("Missing access token in config")
@@ -394,7 +344,6 @@ async def search_calendar_events(
             query=query,
             user_id=user_id,
             access_token=access_token,
-            refresh_token=refresh_token,
             time_min=time_min,
             time_max=time_max,
         )
@@ -489,82 +438,82 @@ async def view_calendar_event(
         return error_msg
 
 
-# @tool(parse_docstring=True)
-# @with_rate_limiting("calendar_management")
-# @with_doc(DELETE_CALENDAR_EVENT)
-# async def delete_calendar_event(
-#     query: str,
-#     user_id: str,
-#     config: RunnableConfig,
-# ) -> str:
-#     try:
-#         logger.info("===== DELETE CALENDAR EVENT TOOL CALLED =====")
-#         logger.info(f"Searching for event to delete with query: {query}")
+@tool(parse_docstring=True)
+@with_rate_limiting("calendar_management")
+@with_doc(DELETE_CALENDAR_EVENT)
+async def delete_calendar_event(
+    query: str,
+    user_id: str,
+    config: RunnableConfig,
+) -> str:
+    try:
+        logger.info("===== DELETE CALENDAR EVENT TOOL CALLED =====")
+        logger.info(f"Searching for event to delete with query: {query}")
 
-#         if not config:
-#             logger.error("Missing configuration data")
-#             return "Unable to access calendar configuration. Please try again."
+        if not config:
+            logger.error("Missing configuration data")
+            return "Unable to access calendar configuration. Please try again."
 
-#         access_token = config.get("configurable", {}).get("access_token")
-#         refresh_token = config.get("configurable", {}).get("refresh_token")
+        access_token = config.get("configurable", {}).get("access_token")
 
-#         if not access_token:
-#             logger.error("Missing access token in config")
-#             return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
+        if not access_token:
+            logger.error("Missing access token in config")
+            return "Unable to access your calendar. Please ensure you're logged in with calendar permissions."
 
-#         # Send progress update
-#         writer = get_stream_writer()
-#         writer({"progress": f"Searching for event '{query}' to delete..."})
+        # Send progress update
+        writer = get_stream_writer()
+        writer({"progress": f"Searching for event '{query}' to delete..."})
 
-#         # Search for events matching the query
-#         search_results = await search_calendar_events_native(
-#             query=query,
-#             user_id=user_id,
-#             access_token=access_token,
-#             refresh_token=refresh_token,
-#         )
+        # Search for events matching the query
+        search_results = await search_calendar_events_native(
+            query=query,
+            user_id=user_id,
+            access_token=access_token,
+        )
 
-#         matching_events = search_results.get("matching_events", [])
+        matching_events = search_results.get("matching_events", [])
 
-#         if not matching_events:
-#             logger.info(f"No events found matching query: {query}")
-#             return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
+        if not matching_events:
+            logger.info(f"No events found matching query: {query}")
+            return f"No calendar events found matching '{query}'. Please try a different search term or check your calendar."
 
-#         # For simplicity, take the first (most relevant) match
-#         # In production, you might want to implement more sophisticated matching
-#         target_event = matching_events[0]
+        # For simplicity, take the first (most relevant) match
+        # In production, you might want to implement more sophisticated matching
+        target_event = matching_events[0]
 
-#         logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
+        logger.info(f"Found event to delete: {target_event.get('summary', 'Unknown')}")
 
-#         # Prepare deletion confirmation data
-#         delete_option = {
-#             "action": "delete",
-#             "event_id": target_event.get("id"),
-#             "calendar_id": target_event.get("calendarId", "primary"),
-#             "summary": target_event.get("summary", ""),
-#             "description": target_event.get("description", ""),
-#             "start": target_event.get("start", {}),
-#             "end": target_event.get("end", {}),
-#             "original_query": query,
-#         }
+        # Prepare deletion confirmation data
+        delete_option = {
+            "action": "delete",
+            "event_id": target_event.get("id"),
+            "calendar_id": target_event.get("calendarId", "primary"),
+            "summary": target_event.get("summary", ""),
+            "description": target_event.get("description", ""),
+            "start": target_event.get("start", {}),
+            "end": target_event.get("end", {}),
+            "original_query": query,
+        }
 
-#         # Send deletion options to frontend via writer
-#         writer({
-#             "calendar_delete_options": [delete_option],
-#         })
+        # Send deletion options to frontend via writer
+        writer(
+            {
+                "calendar_delete_options": [delete_option],
+            }
+        )
 
-#         logger.info("Calendar event deletion options sent to frontend")
-#         return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Please confirm the deletion."
+        logger.info("Calendar event deletion options sent to frontend")
+        return f"Found event '{target_event.get('summary', 'Unknown')}' matching your search. Please confirm the deletion."
 
-#     except Exception as e:
-#         error_msg = f"Error searching for calendar event to delete: {str(e)}"
-#         logger.error(error_msg)
-#         return error_msg
+    except Exception as e:
+        error_msg = f"Error searching for calendar event to delete: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
 
 
 @tool(parse_docstring=True)
 @with_rate_limiting("calendar_management")
-@with_doc(EDIT_CALENDAR_EVENT)
+@with_doc(docstring=EDIT_CALENDAR_EVENT)
 async def edit_calendar_event(
     query: str,
     user_id: str,
@@ -575,6 +524,7 @@ async def edit_calendar_event(
     end: Optional[str] = None,
     is_all_day: Optional[bool] = None,
     timezone: Optional[str] = None,
+    recurrence: Optional[dict] = None,
 ) -> str:
     try:
         logger.info("===== EDIT CALENDAR EVENT TOOL CALLED =====")
@@ -585,7 +535,6 @@ async def edit_calendar_event(
             return "Unable to access calendar configuration. Please try again."
 
         access_token = config.get("configurable", {}).get("access_token")
-        refresh_token = config.get("configurable", {}).get("refresh_token")
 
         if not access_token:
             logger.error("Missing access token in config")
@@ -600,7 +549,6 @@ async def edit_calendar_event(
             query=query,
             user_id=user_id,
             access_token=access_token,
-            refresh_token=refresh_token,
         )
 
         matching_events = search_results.get("matching_events", [])
@@ -639,6 +587,9 @@ async def edit_calendar_event(
             edit_option["is_all_day"] = is_all_day
         if timezone is not None:
             edit_option["timezone"] = timezone
+        if recurrence is not None:
+            # Pass recurrence data as is - it will be validated and converted by the service layer
+            edit_option["recurrence"] = recurrence
 
         # Send edit options to frontend via writer
         writer(
@@ -655,6 +606,8 @@ async def edit_calendar_event(
             changes_summary.append(f"description to '{description}'")
         if start is not None or end is not None:
             changes_summary.append("time/date")
+        if recurrence is not None:
+            changes_summary.append("recurrence pattern")
         if is_all_day is not None:
             changes_summary.append(f"all-day status to {is_all_day}")
 
@@ -672,7 +625,7 @@ async def edit_calendar_event(
 tools = [
     fetch_calendar_list,
     create_calendar_event,
-    # delete_calendar_event,
+    delete_calendar_event,
     edit_calendar_event,
     fetch_calendar_events,
     search_calendar_events,

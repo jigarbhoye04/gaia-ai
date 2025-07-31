@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.models.chat_models import (
@@ -17,6 +18,7 @@ from app.services.conversation_service import (
     get_starred_messages,
     pin_message,
     star_conversation,
+    update_conversation_description,
     update_messages,
 )
 
@@ -134,4 +136,23 @@ async def get_starred_messages_endpoint(
     Retrieve all pinned messages across all conversations.
     """
     response = await get_starred_messages(user)
+    return JSONResponse(content=response)
+
+
+class UpdateDescriptionRequest(BaseModel):
+    description: str
+
+
+@router.put("/conversations/{conversation_id}/description")
+async def update_conversation_description_endpoint(
+    conversation_id: str,
+    body: UpdateDescriptionRequest,
+    user: dict = Depends(get_current_user),
+) -> JSONResponse:
+    """
+    Update the description of a specific conversation.
+    """
+    response = await update_conversation_description(
+        conversation_id, body.description, user
+    )
     return JSONResponse(content=response)

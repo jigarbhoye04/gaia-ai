@@ -5,7 +5,6 @@ import { ReactNode, Suspense } from "react";
 import SuspenseLoader from "@/components/shared/SuspenseLoader";
 import { Toaster } from "@/components/ui/shadcn/sonner";
 import LoginModal from "@/features/auth/components/LoginModal";
-import CalendarModal from "@/features/calendar/components/CalendarModal";
 import GlobalAuth from "@/hooks/providers/GlobalAuth";
 import GlobalInterceptor from "@/hooks/providers/GlobalInterceptor";
 import GlobalNotifications from "@/hooks/providers/GlobalNotifications";
@@ -23,7 +22,6 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
             <GlobalNotifications />
             <GlobalAuth />
             <LoginModal />
-            <CalendarModal />
 
             <Toaster closeButton richColors position="top-right" theme="dark" />
             {children}
