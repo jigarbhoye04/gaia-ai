@@ -128,7 +128,6 @@ async def call_agent(
                         complete_message += content
 
             elif stream_mode == "custom":
-                print(f"Custom stream event: {payload}")
                 yield f"data: {json.dumps(payload)}\n\n"
 
         # After streaming, yield complete message in order to store in db

@@ -6,14 +6,13 @@ This module contains routes related to search functionality and URL metadata fet
 
 import re
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.decorators import tiered_rate_limit
 from app.models.search_models import URLRequest, URLResponse
 from app.services.search_service import search_messages
 from app.utils.internet_utils import fetch_url_metadata
 from app.utils.search_utils import perform_search
+from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 
@@ -67,8 +66,6 @@ async def search_email_endpoint(query: str):
         videos=False,
         news=False,
     )
-
-    print(f"testing searchdata: {search_data=}")
 
     if not search_data or "web" not in search_data:
         raise HTTPException(

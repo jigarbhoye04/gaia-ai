@@ -322,5 +322,4 @@ async def update_event(
 
         return await update_calendar_event(event, access_token, user_id)
     except Exception as e:
-        print(e)
         raise HTTPException(status_code=500, detail=str(e))

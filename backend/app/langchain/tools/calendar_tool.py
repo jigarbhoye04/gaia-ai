@@ -1,5 +1,4 @@
 import json
-import pprint
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
@@ -41,10 +40,6 @@ async def create_calendar_event(
     config: RunnableConfig,
 ) -> str:
     try:
-        logger.info("===== CALENDAR EVENT TOOL CALLED =====")
-        logger.info("Processing calendar event with data:")
-        logger.info(pprint.pformat(event_data, indent=2, width=100))
-
         # Normalize input to always work with a list of EventCreateRequest objects
         event_list: List[EventCreateRequest] = (
             event_data if isinstance(event_data, list) else [event_data]

@@ -2,6 +2,15 @@ import operator
 from contextlib import asynccontextmanager
 from typing import Annotated, List, Tuple
 
+from app.config.loggers import chat_logger as logger
+from app.langchain.llm.client import init_llm
+from app.langchain.templates.mail_templates import (
+    EMAIL_PROCESSING_PLAN_TEMPLATE,
+    EMAIL_PROCESSING_REPLAN_TEMPLATE,
+)
+from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS, tools
+from app.langchain.tools.core.retrieval import retrieve_tools
+from app.models.mail_models import EmailProcessingPlan, EmailProcessingReplanResult
 from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import AIMessageChunk
 from langchain_core.output_parsers import PydanticOutputParser
@@ -15,16 +24,6 @@ from langgraph.store.memory import InMemoryStore
 from langgraph.types import RetryPolicy
 from langgraph_bigtool import create_agent
 from typing_extensions import TypedDict
-
-from app.config.loggers import chat_logger as logger
-from app.langchain.llm.client import init_llm
-from app.langchain.templates.mail_templates import (
-    EMAIL_PROCESSING_PLAN_TEMPLATE,
-    EMAIL_PROCESSING_REPLAN_TEMPLATE,
-)
-from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS, tools
-from app.langchain.tools.core.retrieval import retrieve_tools
-from app.models.mail_models import EmailProcessingPlan, EmailProcessingReplanResult
 
 llm = init_llm()
 
@@ -233,7 +232,6 @@ Original email content: {state["input"]}"""
     # Compile and yield the final graph
     graph = workflow.compile(checkpointer=checkpointer, store=store)
 
-    print("Email Processing Graph (Plan-and-Execute):")
     print(graph.get_graph().draw_mermaid())
 
     yield graph

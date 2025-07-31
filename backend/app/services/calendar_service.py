@@ -982,5 +982,4 @@ async def update_calendar_event(
                 error_detail = "Unknown error"
             raise HTTPException(status_code=response.status_code, detail=error_detail)
     except httpx.RequestError as e:
-        print(e)
         raise HTTPException(status_code=500, detail=f"Failed to update event: {str(e)}")

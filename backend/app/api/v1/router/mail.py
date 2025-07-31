@@ -3,8 +3,8 @@ from typing import Any, List, Optional
 
 from app.api.v1.dependencies.google_scope_dependencies import require_google_integration
 from app.config.token_repository import token_repository
-from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.decorators import tiered_rate_limit
+from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
 from app.models.mail_models import (
     ApplyLabelRequest,
     DraftRequest,
@@ -292,7 +292,6 @@ async def process_email(
         result = await do_prompt_no_stream(
             prompt=prompt,
         )
-        print(result)
         if isinstance(result, dict) and result.get("response"):
             try:
                 parsed_result = json.loads(result["response"])

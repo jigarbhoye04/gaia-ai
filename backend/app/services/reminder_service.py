@@ -5,11 +5,6 @@ Reminder scheduler for managing reminder tasks.
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from arq import create_pool
-from arq.connections import RedisSettings
-from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorDatabase
-
 from app.config.loggers import general_logger as logger
 from app.config.settings import settings
 from app.db.mongodb.collections import reminders_collection
@@ -19,6 +14,10 @@ from app.models.reminder_models import (
     ReminderStatus,
 )
 from app.utils.cron_utils import get_next_run_time
+from arq import create_pool
+from arq.connections import RedisSettings
+from bson import ObjectId
+from motor.motor_asyncio import AsyncIOMotorDatabase
 
 
 class ReminderScheduler:
@@ -404,7 +403,6 @@ class ReminderScheduler:
             # Ensure to remove _id if it was not set
             reminder_dict.pop("_id", None)
 
-        print(reminder_dict)
         return reminder_dict
 
 
