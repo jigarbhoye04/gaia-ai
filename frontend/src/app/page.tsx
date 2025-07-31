@@ -10,7 +10,7 @@ import Proactive from "@/features/landing/components/sections/new/Proactive";
 import Mail from "@/features/landing/components/sections/new/Mail";
 import Calendar from "@/features/calendar/components/Calendar";
 import Todo from "@/features/landing/components/sections/new/Todo";
-import InternetSection from "@/features/landing/components/sections/new/InternetSection";
+import InternetSection from "@/features/landing/components/sections/InternetSection";
 import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
@@ -63,19 +63,16 @@ export default function LandingPage() {
           />
           {/* <HeroImage /> */}
         </div>
-        <div
-        // className="mt-40 space-y-26"
-        // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
-        >
+        <div>
           <Description />
           {/* <Personalised /> */}
           <Integrations />
           <Proactive />
-          {/* <Mail /> */}
+          <Mail />
           {/* <Calendar /> */}
           <Todo />
           <Goals />
-          {/* <InternetSection /> */}
+          <InternetSection />
           <AdvancedConversation />
           {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}
 
