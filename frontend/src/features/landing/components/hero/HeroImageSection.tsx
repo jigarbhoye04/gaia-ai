@@ -91,7 +91,6 @@ export default function HeroImage() {
           <div className={`transition-opacity duration-300`}>
             <Safari
               className="h-fit w-full"
-              // imageSrc={selectedFeature.imageSrc}
               imageSrc={featureOptions[0].imageSrc}
               mode="simple"
               url="heygaia.io"

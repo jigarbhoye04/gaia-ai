@@ -14,6 +14,7 @@ import InternetSection from "@/features/landing/components/sections/new/Internet
 import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
+import HeroImage from "@/features/landing/components/hero/HeroImageSection";
 
 // const DeepSearchSection = lazy(
 //   () => import("@/features/landing/components/sections/DeepSearchSection"),
@@ -48,10 +49,9 @@ export default function LandingPage() {
     <LandingLayout>
       {/* <ReactLenis> */}
       <div className="relative overflow-hidden">
-        <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-linear-to-b" />
+        {/* <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-linear-to-b" /> */}
 
         <HeroSection />
-        {/* <HeroImage /> */}
 
         <div
         // className="mt-40 space-y-26"
