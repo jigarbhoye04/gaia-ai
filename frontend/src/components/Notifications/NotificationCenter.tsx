@@ -13,7 +13,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button as ShadcnButton } from "@/components/";
