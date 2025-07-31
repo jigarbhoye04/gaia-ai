@@ -12,9 +12,6 @@ import { ConversationMessage, MessageType } from "@/types/features/convoTypes";
  */
 export const shouldShowTextBubble = (
   text: string,
-  searchWeb?: boolean,
-  deepSearchWeb?: boolean,
-  pageFetchURLs?: string[],
   isConvoSystemGenerated?: boolean,
   systemPurpose?: SystemPurpose,
 ): boolean => {
@@ -26,27 +23,14 @@ export const shouldShowTextBubble = (
     return false;
   }
 
-  return (
-    !!searchWeb ||
-    !!deepSearchWeb ||
-    (!!pageFetchURLs && pageFetchURLs.length > 0) ||
-    !!text.trim()
-  );
+  return !!text.trim();
 };
 
 /**
  * Comprehensive check to determine if a bot message has any meaningful content
  */
 export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
-  const {
-    text,
-    loading,
-    searchWeb,
-    deepSearchWeb,
-    pageFetchURLs,
-    isConvoSystemGenerated,
-    systemPurpose,
-  } = props;
+  const { text, loading, isConvoSystemGenerated, systemPurpose } = props;
 
   if (loading) return false;
 
@@ -55,14 +39,7 @@ export const isBotMessageEmpty = (props: ChatBubbleBotProps): boolean => {
 
   return !(
     hasAnyContent ||
-    shouldShowTextBubble(
-      text,
-      searchWeb,
-      deepSearchWeb,
-      pageFetchURLs,
-      isConvoSystemGenerated,
-      systemPurpose,
-    )
+    shouldShowTextBubble(text, isConvoSystemGenerated, systemPurpose)
   );
 };
 

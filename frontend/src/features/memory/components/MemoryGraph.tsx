@@ -126,10 +126,9 @@ export default function MemoryGraph({
             // Increased distances
             const source = d.source as GraphNode;
             const target = d.target as GraphNode;
-            if (source.type === "user" || target.type === "user") {
-              return 150; // Increased from 80
-            }
-            return 200; // Increased from 120
+            if (source.type === "user" || target.type === "user") return 300;
+
+            return 400;
           })
           .strength((d) => {
             // Stronger links for user connections
@@ -141,11 +140,11 @@ export default function MemoryGraph({
             return 1;
           }),
       )
-      .force("charge", d3.forceManyBody().strength(-800)) // Increased repulsion from -400
+      .force("charge", d3.forceManyBody().strength(-2000))
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force(
         "collision",
-        d3.forceCollide().radius((d) => (d as GraphNode).size + 20), // Increased from 5
+        d3.forceCollide().radius((d) => (d as GraphNode).size + 20),
       );
 
     // Create zoom behavior
@@ -318,7 +317,7 @@ export default function MemoryGraph({
     return () => {
       simulation.stop();
     };
-  }, [memories, relations, onNodeClick]);
+  }, [memories, relations, onNodeClick, user?.profilePicture]);
 
   return (
     <div className={`relative h-full w-full ${className}`}>

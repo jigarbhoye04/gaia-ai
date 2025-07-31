@@ -1,5 +1,4 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
-import { setupCache } from "axios-cache-interceptor";
 
 /**
  * API Client Configuration
@@ -78,8 +77,7 @@ baseInstance.interceptors.request.use(updateTimezoneHeader);
 apiauth.interceptors.request.use(updateTimezoneHeader);
 
 /**
- * Cached API client for public endpoints
- * Wraps the base instance with axios-cache-interceptor
- * Automatically caches GET requests to improve performance
+ * API client for public endpoints - NO CACHING
+ * Direct access to the base instance without caching
  */
-export const api = setupCache(baseInstance);
+export const api = baseInstance;

@@ -21,7 +21,6 @@ import { NotificationsAPI } from "../../services/api/notifications";
 interface EmailPreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
-  email_id: string;
   subject: string;
   body: string;
   recipients: string[];
@@ -35,7 +34,6 @@ interface EmailPreviewModalProps {
 export function EmailPreviewModal({
   isOpen,
   onClose,
-  email_id,
   subject: initialSubject,
   body: initialBody,
   recipients: initialRecipients,

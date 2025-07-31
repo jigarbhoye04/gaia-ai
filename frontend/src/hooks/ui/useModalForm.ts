@@ -49,23 +49,15 @@ export function useModalForm<T extends Record<string, unknown>>({
   successMessage,
   errorMessage,
 }: UseModalFormOptions<T>): UseModalFormReturn<T> {
-  const [formData, setFormData] = useState<T>(
-    typeof initialData === "function"
-      ? (initialData as () => T)()
-      : initialData,
-  );
+  const [formData, setFormData] = useState<T>(initialData);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
   // Reset form data when initialData changes
   useEffect(() => {
-    const newData =
-      typeof initialData === "function"
-        ? (initialData as () => T)()
-        : initialData;
-    setFormData(newData);
+    setFormData(initialData);
     setErrors({});
-  }, []);
+  }, [initialData]);
 
   const validateField = useCallback(
     (field: keyof T): string | null => {
@@ -80,43 +72,37 @@ export function useModalForm<T extends Record<string, unknown>>({
         if (
           rule.required &&
           (!value || (typeof value === "string" && !value.trim()))
-        ) {
+        )
           return rule.message || `${String(field)} is required`;
-        }
 
         if (
           rule.minLength &&
           typeof value === "string" &&
           value.length < rule.minLength
-        ) {
+        )
           return (
             rule.message ||
             `${String(field)} must be at least ${rule.minLength} characters`
           );
-        }
 
         if (
           rule.maxLength &&
           typeof value === "string" &&
           value.length > rule.maxLength
-        ) {
+        )
           return (
             rule.message ||
             `${String(field)} must be no more than ${rule.maxLength} characters`
           );
-        }
 
         if (
           rule.pattern &&
           typeof value === "string" &&
           !rule.pattern.test(value)
-        ) {
+        )
           return rule.message || `${String(field)} format is invalid`;
-        }
 
-        if (rule.custom) {
-          return rule.custom(value, formData);
-        }
+        if (rule.custom) return rule.custom(value, formData);
       }
 
       return null;
@@ -132,6 +118,7 @@ export function useModalForm<T extends Record<string, unknown>>({
     if (Array.isArray(validate)) {
       for (const rule of validate) {
         const error = validateField(rule.field);
+        toast.error(error)
         if (error) {
           newErrors[rule.field] = error;
         }

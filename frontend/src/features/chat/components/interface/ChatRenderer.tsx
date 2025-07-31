@@ -7,7 +7,6 @@ import ChatBubbleBot from "@/features/chat/components/bubbles/bot/ChatBubbleBot"
 import SearchedImageDialog from "@/features/chat/components/bubbles/bot/SearchedImageDialog";
 import ChatBubbleUser from "@/features/chat/components/bubbles/user/ChatBubbleUser";
 import GeneratedImageSheet from "@/features/chat/components/image/GeneratedImageSheet";
-import StarterText from "@/features/chat/components/interface/StarterText";
 import MemoryModal from "@/features/chat/components/memory/MemoryModal";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useConversationList } from "@/features/chat/hooks/useConversationList";
@@ -95,20 +94,6 @@ export default function ChatRenderer() {
     }, 700);
   };
 
-  if (!!filteredMessages && filteredMessages?.length === 0) {
-    return (
-      <div className="relative flex flex-1 flex-col items-center justify-center gap-2">
-        <Image
-          alt="GAIA Logo"
-          src={"/branding/logo.webp"}
-          width={110}
-          height={110}
-        />
-        <StarterText />
-      </div>
-    );
-  }
-
   return (
     <>
       <title id="chat_title">
@@ -132,18 +117,18 @@ export default function ChatRenderer() {
       <SearchedImageDialog />
 
       {filteredMessages?.map((message: MessageType, index: number) =>
-        message.type === "bot" ? (
+        message.type === "bot" && message.response.trim().length > 0 ? (
           <div
             key={message.message_id || index}
             className="relative flex items-end gap-1 pt-1 pb-5 pl-1"
           >
-            <div className="min-w-[40px]">
+            <div className="sticky bottom-0 min-w-[40px]">
               <Image
                 alt="GAIA Logo"
                 src={"/branding/logo.webp"}
                 width={30}
                 height={30}
-                className={`${isLoading ? "opacity-0" : "opacity-100"} relative transition duration-150`}
+                className={`${isLoading && index == filteredMessages.length - 1 ? "animate-spin" : ""} relative transition duration-900`}
               />
             </div>
 

@@ -36,10 +36,13 @@ async function request<T = unknown>(
     }
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(`${method} ${url} failed:`, error);
 
-    if (!options.silent) {
+    const err = error as { response?: { status?: number } };
+    const isUnauthorized = err.response?.status === 401;
+
+    if (!options.silent && !isUnauthorized) {
       const defaultMessages = {
         GET: "Failed to fetch data",
         POST: "Failed to create data",

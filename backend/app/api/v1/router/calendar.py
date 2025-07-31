@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.middleware.tiered_rate_limiter import tiered_rate_limit
+from app.decorators import tiered_rate_limit
 from app.models.calendar_models import (
     EventCreateRequest,
     EventDeleteRequest,

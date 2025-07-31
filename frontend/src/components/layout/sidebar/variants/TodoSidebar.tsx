@@ -1,11 +1,9 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { Divider } from "@heroui/divider";
 import { Plus, Tag } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 
 import {
   Appointment01Icon,
@@ -19,7 +17,6 @@ import Spinner from "@/components/ui/shadcn/spinner";
 import AddProjectModal from "@/features/todo/components/AddProjectModal";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
-import { RootState } from "@/redux/store";
 import { Priority } from "@/types/features/todoTypes";
 
 type MenuItem = {
@@ -34,6 +31,11 @@ type SidebarSectionProps = {
   items: MenuItem[];
   activeItem: string;
   onItemClick: (href: string) => void;
+  action?: React.ReactNode;
+  emptyState?: {
+    loading: boolean;
+    message: string;
+  };
 };
 
 function SidebarSection({
@@ -41,39 +43,58 @@ function SidebarSection({
   items,
   activeItem,
   onItemClick,
+  action,
+  emptyState,
 }: SidebarSectionProps) {
   return (
-    <div className="mb-4">
+    <div className="pb-3">
       {title && (
-        <div className="px-2 pb-1 text-xs font-medium text-foreground-500">
-          {title}
+        <div className="mb-1 flex items-center justify-between px-1">
+          <span className="text-xs font-medium text-foreground-500">
+            {title}
+          </span>
+          {action}
         </div>
       )}
-      {items.map((item) => (
-        <Button
-          key={item.href}
-          fullWidth
-          startContent={<item.icon className="w-[20px] text-foreground-500" />}
-          endContent={
-            item.count !== undefined && (
-              <span className="ml-auto text-xs text-foreground-500">
-                {item.count}
-              </span>
-            )
-          }
-          className={`justify-start pl-2 text-start ${
-            activeItem === item.href
-              ? "bg-primary/10 text-primary"
-              : "text-foreground-600"
-          }`}
-          variant="light"
-          radius="sm"
-          size="sm"
-          onPress={() => onItemClick(item.href)}
-        >
-          {item.label}
-        </Button>
-      ))}
+      {items.length > 0 ? (
+        items.map((item) => (
+          <Button
+            key={item.href}
+            fullWidth
+            startContent={
+              <item.icon className="w-[20px] text-foreground-500" />
+            }
+            endContent={
+              item.count !== undefined && (
+                <span className="ml-auto text-xs text-foreground-500">
+                  {item.count}
+                </span>
+              )
+            }
+            className={`justify-start px-2 text-start text-sm ${
+              activeItem === item.href
+                ? "bg-primary/10 text-primary"
+                : "text-foreground-600"
+            }`}
+            variant="light"
+            radius="sm"
+            size="sm"
+            onPress={() => onItemClick(item.href)}
+          >
+            {item.label}
+          </Button>
+        ))
+      ) : emptyState ? (
+        emptyState.loading ? (
+          <div className="flex justify-center py-4">
+            <Spinner />
+          </div>
+        ) : (
+          <div className="py-4 text-center text-xs text-foreground-400 italic">
+            {emptyState.message}
+          </div>
+        )
+      ) : null}
     </div>
   );
 }
@@ -100,34 +121,17 @@ export default function TodoSidebar() {
     loadProjects,
     loadLabels,
     loadCounts,
-    refreshAllData,
+    // refreshAllData,
   } = useTodos();
-  const todoState = useSelector((state: RootState) => state.todos);
 
-  // Check if initial data has been loaded
-  const isInitialDataLoaded =
-    todoState.initialDataLoaded.projects &&
-    todoState.initialDataLoaded.labels &&
-    todoState.initialDataLoaded.counts;
-
-  // Load initial data
+  // Load initial data on mount
   useEffect(() => {
     const loadData = async () => {
-      // Load all data in parallel - fetchTodoCounts now handles dependencies internally
-      await Promise.all([loadProjects(), loadLabels(), loadCounts()]);
+      await Promise.all([loadProjects(), loadCounts(), loadLabels()]);
     };
 
-    if (!isInitialDataLoaded) {
-      loadData();
-    }
-  }, [loadProjects, loadLabels, loadCounts, isInitialDataLoaded]);
-
-  // Refresh counts when pathname changes (e.g., when navigating between views)
-  useEffect(() => {
-    if (isInitialDataLoaded) {
-      loadCounts();
-    }
-  }, [pathname, loadCounts, isInitialDataLoaded]);
+    loadData();
+  }, [loadProjects, loadCounts, loadLabels]);
 
   const handleNavigation = (href: string) => {
     router.push(href);
@@ -260,20 +264,18 @@ export default function TodoSidebar() {
           />
         </form> */}
 
-        {!isInitialDataLoaded ? (
+        {loading ? (
           <div className="flex h-[400px] w-full items-center justify-center">
             <Spinner />
           </div>
         ) : (
-          <>
+          <div className="space-y-4 divide-y-1 divide-solid divide-zinc-700">
             {/* Main Menu */}
             <SidebarSection
               items={mainMenuItems}
               activeItem={pathname}
               onItemClick={handleNavigation}
             />
-
-            <Divider className="my-2" />
 
             {/* Priorities */}
             <SidebarSection
@@ -283,60 +285,25 @@ export default function TodoSidebar() {
               onItemClick={handleNavigation}
             />
 
-            <Divider className="my-2" />
-
             {/* Labels */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between px-2 pb-1">
-                <span className="text-xs font-medium text-foreground-400">
-                  Labels
-                </span>
-              </div>
-              {labelMenuItems.length > 0 ? (
-                labelMenuItems.map((item) => (
-                  <Button
-                    key={item.href}
-                    fullWidth
-                    startContent={<item.icon className="w-[20px]" />}
-                    endContent={
-                      item.count !== undefined && (
-                        <span className="ml-auto text-xs text-foreground-400">
-                          {item.count}
-                        </span>
-                      )
-                    }
-                    className={`justify-start pl-2 text-start ${
-                      pathname === item.href
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground-600"
-                    }`}
-                    variant="light"
-                    radius="sm"
-                    size="sm"
-                    onPress={() => handleNavigation(item.href)}
-                  >
-                    {item.label}
-                  </Button>
-                ))
-              ) : loading ? (
-                <div className="flex justify-center py-4">
-                  <Spinner />
-                </div>
-              ) : (
-                <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
-                  No labels yet
-                </div>
-              )}
-            </div>
-
-            <Divider className="my-2" />
+            <SidebarSection
+              title="Labels"
+              items={labelMenuItems}
+              activeItem={pathname}
+              onItemClick={handleNavigation}
+              emptyState={{
+                loading,
+                message: "No labels yet",
+              }}
+            />
 
             {/* Projects */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between px-2 pb-1">
-                <span className="text-xs font-medium text-foreground-400">
-                  Projects
-                </span>
+            <SidebarSection
+              title="Projects"
+              items={projectMenuItems}
+              activeItem={pathname}
+              onItemClick={handleNavigation}
+              action={
                 <Button
                   isIconOnly
                   size="sm"
@@ -346,44 +313,13 @@ export default function TodoSidebar() {
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
-              </div>
-              {projectMenuItems.length > 0 ? (
-                projectMenuItems.map((item) => (
-                  <Button
-                    key={item.href}
-                    fullWidth
-                    startContent={<item.icon />}
-                    endContent={
-                      item.count !== undefined && (
-                        <span className="ml-auto text-xs text-foreground-500">
-                          {item.count}
-                        </span>
-                      )
-                    }
-                    className={`justify-start pl-2 text-start ${
-                      pathname === item.href
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground-600"
-                    }`}
-                    variant="light"
-                    radius="sm"
-                    size="sm"
-                    onPress={() => handleNavigation(item.href)}
-                  >
-                    {item.label}
-                  </Button>
-                ))
-              ) : loading ? (
-                <div className="flex justify-center py-4">
-                  <Spinner />
-                </div>
-              ) : (
-                <div className="px-2 py-4 text-center text-xs text-foreground-400 italic">
-                  No projects yet
-                </div>
-              )}
-            </div>
-          </>
+              }
+              emptyState={{
+                loading,
+                message: "No projects yet",
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -393,15 +329,18 @@ export default function TodoSidebar() {
         open={addTodoOpen}
         onOpenChange={setAddTodoOpen}
         onSuccess={() => {
-          // Refresh data after creating a todo
-          refreshAllData();
+          // Refresh counts and projects only
+          loadCounts();
+          loadProjects();
         }}
       />
       <AddProjectModal
         open={addProjectOpen}
         onOpenChange={setAddProjectOpen}
         onSuccess={() => {
-          refreshAllData();
+          // Refresh counts and projects only
+          loadCounts();
+          loadProjects();
         }}
       />
     </>

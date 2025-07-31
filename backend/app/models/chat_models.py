@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.calendar_models import EventCreateRequest
+from app.models.mail_models import EmailComposeRequest
 from app.models.message_models import FileData
 from app.models.search_models import DeepResearchResults, SearchResults
 from app.models.weather_models import WeatherData
@@ -16,9 +17,54 @@ class ImageData(BaseModel):
 
 
 class EmailFetchData(BaseModel):
-    from_: str
+    from_: str = Field(alias="from")
     subject: str
     time: str
+    thread_id: Optional[str] = None
+
+
+class CalendarFetchData(BaseModel):
+    summary: str
+    start_time: str
+    calendar_name: str
+
+
+class CalendarListFetchData(BaseModel):
+    name: str
+    id: str
+    description: str
+    backgroundColor: Optional[str] = None
+
+
+class EmailThreadMessage(BaseModel):
+    id: str
+    from_: str = Field(alias="from")
+    sender_name: str
+    sender_email: str
+    sender_avatar_url: Optional[str] = None
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    time: str
+    snippet: Optional[str] = None
+
+
+class EmailThreadData(BaseModel):
+    thread_id: str
+    messages: List[EmailThreadMessage]
+    messages_count: int
+
+
+class IntegrationConnectionData(BaseModel):
+    """Data structure for integration connection prompts."""
+
+    integration_id: str
+    integration_name: str
+    integration_icon: str
+    integration_description: str
+    integration_category: str
+    message: str
+    connect_url: str
+    settings_url: Optional[str] = None
 
 
 class MessageModel(BaseModel):
@@ -26,9 +72,6 @@ class MessageModel(BaseModel):
     response: str
     date: Optional[str] = None
     image_data: Optional[ImageData] = None
-    searchWeb: Optional[bool] = False
-    deepSearchWeb: Optional[bool] = False
-    pageFetchURLs: Optional[List] = []
     disclaimer: Optional[str] = None
     subtype: Optional[str] = None
     file: Optional[bytes] = None
@@ -43,13 +86,19 @@ class MessageModel(BaseModel):
     search_results: Optional[SearchResults] = None
     deep_research_results: Optional[DeepResearchResults] = None
     weather_data: Optional[WeatherData] = None
-    email_compose_data: Optional[dict] = None
+    email_compose_data: Optional[List[EmailComposeRequest]] = None
+    email_fetch_data: Optional[List[EmailFetchData]] = None
+    email_thread_data: Optional[EmailThreadData] = None
+    calendar_fetch_data: Optional[List[CalendarFetchData]] = None
+    calendar_list_fetch_data: Optional[List[CalendarListFetchData]] = None
     memory_data: Optional[dict] = None
     todo_data: Optional[dict] = None
     document_data: Optional[dict] = None
     goal_data: Optional[dict] = None
     code_data: Optional[dict] = None
     google_docs_data: Optional[dict] = None
+    follow_up_actions: Optional[List[str]] = []
+    integration_connection_required: Optional[IntegrationConnectionData] = None
 
 
 class SystemPurpose(str, Enum):

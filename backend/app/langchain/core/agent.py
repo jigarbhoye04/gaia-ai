@@ -29,7 +29,7 @@ from app.models.reminder_models import ReminderProcessingAgentResult
 from app.utils.memory_utils import store_user_message_memory
 
 
-@traceable
+@traceable(run_type="llm", name="Call Agent")
 async def call_agent(
     request: MessageRequestWithHistory,
     conversation_id,
@@ -73,12 +73,10 @@ async def call_agent(
         initial_state = {
             "query": request.message,
             "messages": history,
-            "force_web_search": request.search_web,
-            "force_deep_research": request.deep_research,
             "current_datetime": datetime.now(timezone.utc).isoformat(),
             "mem0_user_id": user_id,
             "conversation_id": conversation_id,
-            "selected_tool": request.selectedTool,  # Add selectedTool to agent state
+            "selected_tool": request.selectedTool,
         }
 
         # Begin streaming the AI output
@@ -94,11 +92,12 @@ async def call_agent(
                     "email": user.get("email"),
                     "user_time": user_time.isoformat(),
                 },
-                "recursion_limit": 15,
+                "recursion_limit": 25,
                 "metadata": {"user_id": user_id},
             },
         ):
             stream_mode, payload = event
+
             if stream_mode == "messages":
                 chunk, metadata = payload
                 if chunk is None:
@@ -226,7 +225,7 @@ async def call_mail_processing_agent(
                     "refresh_token": refresh_token,
                     "initiator": "backend",  # This will be used to identify either to send notification or stream to the user
                 },
-                "recursion_limit": 15,  # Lower limit for email processing
+                "recursion_limit": 25,  # Increased limit for complex email processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "email",
@@ -352,7 +351,7 @@ async def call_reminder_agent(
                     "reminder_id": reminder_id,
                     "initiator": "backend",
                 },
-                "recursion_limit": 9,  # Lower limit for reminder processing
+                "recursion_limit": 20,  # Increased limit for complex reminder processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "reminder",

@@ -12,16 +12,16 @@ import { CircleArrowUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { toast } from "sonner";
 
 import {
   Brain02Icon,
   BubbleChatQuestionIcon,
-  ConnectIcon,
   CustomerService01Icon,
+  DiscordIcon,
   Logout02Icon,
   Settings01Icon,
   ThreeDotsMenu,
+  WhatsappIcon,
 } from "@/components/shared/icons";
 import { authApi } from "@/features/auth/api/authApi";
 import { useUserActions } from "@/features/auth/hooks/useUser";
@@ -58,9 +58,7 @@ export default function SettingsMenu() {
     try {
       await authApi.logout();
       clearUser();
-      toast.success("Successfully logged out!");
     } catch (error) {
-      toast.error("Could not log out. Please try again.");
       console.error("Error during logout:", error);
     } finally {
       setModalAction(null);
@@ -113,7 +111,7 @@ export default function SettingsMenu() {
       label: (
         <div className="flex items-center gap-2">
           <CustomerService01Icon color={"#9b9b9b"} width={18} />
-          Support
+          Contact Support
         </div>
       ),
       action: () => setSupportModalOpen(true),
@@ -129,16 +127,6 @@ export default function SettingsMenu() {
       action: () => setSupportModalOpen(true),
     },
     {
-      key: "connect_integrations",
-      label: (
-        <div className="flex items-center gap-2">
-          <ConnectIcon color="#9b9b9b" width={18} height={18} />
-          Integrations
-        </div>
-      ),
-      action: () => router.push("/settings?section=integrations"),
-    },
-    {
       key: "manage_memories",
       label: (
         <div className="flex items-center gap-2">
@@ -147,6 +135,26 @@ export default function SettingsMenu() {
         </div>
       ),
       action: () => router.push("/settings?section=memory"),
+    },
+    {
+      key: "discord",
+      label: (
+        <div className="flex items-center gap-2 text-[#5865F2]">
+          <DiscordIcon color="#5865F2" width={18} />
+          Join our Discord
+        </div>
+      ),
+      action: () => window.open("https://discord.heygaia.io", "_blank"),
+    },
+    {
+      key: "whatsapp",
+      label: (
+        <div className="flex items-center gap-2 text-[#25d366]">
+          <WhatsappIcon color="#25d366" width={18} />
+          WhatsApp Community
+        </div>
+      ),
+      action: () => window.open("https://whatsapp.heygaia.io", "_blank"),
     },
     {
       key: "settings",

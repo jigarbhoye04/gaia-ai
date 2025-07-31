@@ -30,49 +30,44 @@ const ListItem = React.forwardRef<
     icon?: React.ReactNode;
     commented?: boolean;
   }
->(
-  (
-    { className, title, children, href, external, icon, commented, ...props },
-    ref,
-  ) => {
-    const Component = external ? "a" : Link;
-    const linkProps = external
-      ? { href, target: "_blank", rel: "noopener noreferrer" }
-      : { href };
+>(({ className, title, children, href, external, icon, ...props }, ref) => {
+  const Component = external ? "a" : Link;
+  const linkProps = external
+    ? { href, target: "_blank", rel: "noopener noreferrer" }
+    : { href };
 
-    return (
-      <li>
-        <NavigationMenuLink asChild>
-          <Component
-            ref={ref}
-            className={cn(
-              "flex w-full flex-col justify-start rounded-xl border-1 border-zinc-800 bg-zinc-800/50 p-4 leading-none no-underline transition-all duration-150 select-none hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100",
-              className,
+  return (
+    <li>
+      <NavigationMenuLink asChild>
+        <Component
+          ref={ref}
+          className={cn(
+            "flex w-full flex-col justify-start rounded-xl border-1 border-zinc-800 bg-zinc-800/50 p-4 leading-none no-underline transition-all duration-150 select-none hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 focus:bg-zinc-800 focus:text-zinc-100",
+            className,
+          )}
+          {...linkProps}
+          {...props}
+        >
+          <div className="flex items-center gap-2">
+            {icon && (
+              <span className="flex-shrink-0 text-primary group-hover:text-zinc-300">
+                {icon}
+              </span>
             )}
-            {...linkProps}
-            {...props}
-          >
-            <div className="flex items-center gap-2">
-              {icon && (
-                <span className="flex-shrink-0 text-primary group-hover:text-zinc-300">
-                  {icon}
-                </span>
-              )}
-              <div className="text-base leading-none font-medium text-zinc-100">
-                {title}
-              </div>
+            <div className="text-base leading-none font-medium text-zinc-100">
+              {title}
             </div>
-            {children && (
-              <p className="mt-1 line-clamp-2 text-sm leading-tight text-zinc-400">
-                {children}
-              </p>
-            )}
-          </Component>
-        </NavigationMenuLink>
-      </li>
-    );
-  },
-);
+          </div>
+          {children && (
+            <p className="mt-1 line-clamp-2 text-sm leading-tight text-zinc-400">
+              {children}
+            </p>
+          )}
+        </Component>
+      </NavigationMenuLink>
+    </li>
+  );
+});
 ListItem.displayName = "ListItem";
 
 export function MainNavigationMenu() {

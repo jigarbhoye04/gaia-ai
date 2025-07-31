@@ -101,10 +101,7 @@ export default function MemoryManagement({
       variant: "destructive",
     });
 
-    if (!confirmed) {
-      return;
-    }
-
+    if (!confirmed) return;
     try {
       const response = await memoryApi.deleteAllMemories();
 
@@ -121,7 +118,7 @@ export default function MemoryManagement({
       console.error("Error clearing memories:", error);
       toast.error("Failed to clear memories");
     }
-  }, []);
+  }, [confirm]);
 
   const MemoryCard = useCallback(
     ({ memory }: { memory: Memory }) => {
