@@ -1,13 +1,12 @@
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
-
 from app.config.loggers import llm_logger as logger
 from app.langchain.templates.agent_template import AGENT_PROMPT_TEMPLATE
-from app.services.memory_service import memory_service
 from app.models.message_models import FileData, MessageDict
+from app.services.memory_service import memory_service
 from app.services.onboarding_service import get_user_preferences_for_agent
+from langchain_core.messages import AnyMessage, HumanMessage, SystemMessage
 
 
 async def construct_langchain_messages(
@@ -21,6 +20,7 @@ async def construct_langchain_messages(
 ) -> List[AnyMessage]:
     """
     Convert raw dict messages to LangChain message objects with current datetime.
+    Only processes system prompt and current human message since LangChain checkpointer handles history.
 
     Args:
         messages: List of message dictionaries containing role and content
@@ -31,7 +31,7 @@ async def construct_langchain_messages(
         selected_tool: Optional tool selected via slash commands
 
     Returns:
-        List of LangChain message objects
+        List of LangChain message objects (SystemMessage + HumanMessage only)
     """
     # Format current time for the system prompt
     formatted_time = datetime.now(timezone.utc).strftime("%A, %B %d, %Y, %H:%M:%S UTC")
@@ -81,41 +81,35 @@ async def construct_langchain_messages(
         except Exception as e:
             logger.error(f"Error retrieving memories: {e}")
 
-    # Handle case where no conversation messages exist but a tool is selected
-    if not messages and selected_tool:
-        # Format tool name for better readability
+    # Determine human message content
+    human_message_content = ""
+
+    # Check if we have a current human message
+    if messages and messages[-1].get("role") == "user":
+        # User has provided a message
+        human_message_content = messages[-1].get("content", "").strip()
+
+    # Handle tool selection
+    if selected_tool:
         tool_display_name = selected_tool.replace("_", " ").title()
-        content = f"Use the {tool_display_name} tool."
 
-        # Add file information if files are uploaded
-        if currently_uploaded_file_ids:
-            content += f"\n\n{current_files_str}"
+        if human_message_content:
+            # User has content + tool selected
+            human_message_content += f"\n\n**TOOL SELECTION:** The user has specifically selected the '{tool_display_name}' tool and wants you to execute it to handle their request above. You must use the {selected_tool} tool to process their request. Do not suggest alternatives - the user has already chosen this specific tool for their task."
+        else:
+            # No user content, just tool selection
+            human_message_content = f"**TOOL EXECUTION REQUEST:** The user has selected the '{tool_display_name}' tool and wants you to execute it immediately. Use the {selected_tool} tool now. This is a direct tool execution request with no additional context needed. If you don't have tool context, use retrieve_tools to get tool information. Ignore older tools requests and focus on the current tool selection."
 
-        chain_msgs.append(HumanMessage(content=content))
-    else:
-        # Convert each message to the appropriate LangChain message type
-        for index, msg in enumerate(messages):
-            role = msg.get("role")
-            content = msg.get("content", "")
-            if role == "user":
-                # If the message is last and the role is "user", append additional context
-                if index == len(messages) - 1:
-                    # Add file information if files are uploaded
-                    if currently_uploaded_file_ids:
-                        content += f"\n\n{current_files_str}"
+    # If no human message then return error
+    if not human_message_content:
+        raise ValueError("No human message or selected tool")
 
-                    # Add tool selection information if a tool is selected
-                    if selected_tool:
-                        # Format tool name for better readability
-                        tool_display_name = selected_tool.replace("_", " ").title()
-                        if content.strip():  # If there's existing content
-                            content += f"\n\nPlease use the {tool_display_name} tool to handle this request."
-                        else:  # If the message is empty
-                            content = f"Use the {tool_display_name} tool."
+    # Add file information if files are uploaded
+    if currently_uploaded_file_ids:
+        human_message_content += f"\n\n{current_files_str}"
 
-                chain_msgs.append(HumanMessage(content=content))
-            elif role in ("assistant", "bot"):
-                chain_msgs.append(AIMessage(content=content))
+    # Add the human message
+    chain_msgs.append(HumanMessage(content=human_message_content))
 
     return chain_msgs
 

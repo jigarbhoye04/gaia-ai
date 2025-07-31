@@ -55,7 +55,7 @@ async def call_agent(
         # First gather: Setup operations that can run in parallel
         history, graph = await asyncio.gather(
             construct_langchain_messages(
-                messages,
+                messages=messages,
                 files_data=request.fileData,
                 currently_uploaded_file_ids=request.fileIds,
                 user_id=user_id,
