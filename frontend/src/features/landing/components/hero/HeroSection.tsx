@@ -5,7 +5,7 @@ import GetStartedButton from "../shared/GetStartedButton";
 import StartedButton from "../shared/StartedButton";
 import { Spotlight } from "@/components/ui";
 import HeroImage from "./HeroImageSection";
-
+import Image from "next/image";
 export default function HeroSection() {
   return (
     <div className="sti h-[] mt-[24vh] w-screen flex-col gap-8 py-16 sm:pb-26">
@@ -38,6 +38,7 @@ export default function HeroSection() {
         </div>
         <GetStartedButton />
       </MotionContainer>
+
       {/* <div className="mt-">
         <HeroImage />
       </div> */}

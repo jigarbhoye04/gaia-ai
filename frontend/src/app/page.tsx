@@ -15,6 +15,7 @@ import AdvancedConversation from "@/features/landing/components/sections/new/Adv
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
 import HeroImage from "@/features/landing/components/hero/HeroImageSection";
+import Image from "next/image";
 
 // const DeepSearchSection = lazy(
 //   () => import("@/features/landing/components/sections/DeepSearchSection"),
@@ -52,7 +53,16 @@ export default function LandingPage() {
         {/* <div className="fixed inset-0 top-0 z-[-1] h-screen bg-[#000000] bg-linear-to-b" /> */}
 
         <HeroSection />
-
+        <div className="relative z-10 flex h-screen w-screen items-center justify-center p-20">
+          <Image
+            width={1920}
+            height={1080}
+            alt="Hero Image"
+            src={"/landing/hero2.webp"}
+            className="rounded-3xl"
+          />
+          {/* <HeroImage /> */}
+        </div>
         <div
         // className="mt-40 space-y-26"
         // className="mt-[12rem] space-y-[5rem] sm:mt-[18rem] sm:space-y-[15rem]"
