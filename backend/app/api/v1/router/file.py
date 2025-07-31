@@ -2,8 +2,6 @@
 Router module for file upload functionality with RAG integration.
 """
 
-from fastapi import APIRouter, Body, Depends, File, Form, UploadFile, status
-
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.decorators import tiered_rate_limit
 from app.models.message_models import FileData
@@ -12,6 +10,7 @@ from app.services.file_service import (
     update_file_service,
     upload_file_service,
 )
+from fastapi import APIRouter, Body, Depends, File, Form, UploadFile, status
 
 router = APIRouter()
 

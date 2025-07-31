@@ -142,6 +142,11 @@ def _format_files_list(
     if not files_data:
         return "No files uploaded."
 
-    return "\n".join(
+    content = "\n".join(
         f"- Name: {file.filename} Id: {file.fileId}" for file in files_data
     )
+
+    content += "\n\nYou can use these files in your conversation. If you need to refer to them, use the file IDs provided."
+    content += "\nYou must use query_files to retrieve file content or metadata."
+
+    return content
