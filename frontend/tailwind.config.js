@@ -1,5 +1,6 @@
 import { heroui } from "@heroui/theme";
 import tailwindcssAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 /** @type {import('tailwindcss').Config} */
 const config = {
@@ -125,6 +126,7 @@ const config = {
   mode: "jit",
   plugins: [
     tailwindcssAnimate,
+    typography,
     heroui({
       defaultExtendTheme: "dark",
       defaultTheme: "dark",

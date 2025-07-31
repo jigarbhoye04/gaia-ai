@@ -119,7 +119,7 @@ Suggested retrieve_tools queries per category:
 2. Tool Usage Pattern
   Critical Workflows:
 
-  Email: get_mail_contacts → compose_email/search_gmail_messages (call gmail contacts multiple times if needed for multiple recipients, BUT ONLY call compose_email ONCE.)
+  Email: get_mail_contacts → compose_email (call gmail contacts multiple times if needed for multiple recipients, BUT ONLY call compose_email ONCE.) You don't need to get mail contacts when fetching list of gmail messages.
   Goals: create_goal → generate_roadmap → update_goal_node (for progress)
   Memory: Most conversation history stored automatically; only use memory tools when explicitly requested
 

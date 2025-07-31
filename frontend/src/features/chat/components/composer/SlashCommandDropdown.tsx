@@ -21,6 +21,7 @@ interface SlashCommandDropdownProps {
   position: { top: number; left: number; width?: number };
   isVisible: boolean;
   openedViaButton?: boolean;
+  hasMessages: boolean;
 }
 
 const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
@@ -31,6 +32,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
   position,
   isVisible,
   openedViaButton = false,
+  hasMessages,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -104,9 +106,9 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             stiffness: 300,
             duration: 0.15,
           }}
-          className="slash-command-dropdown fixed z-[100] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
+          className="slash-command-dropdown fixed z-[150] overflow-hidden rounded-2xl border-1 border-zinc-700 bg-zinc-900/60 shadow-2xl backdrop-blur-2xl"
           style={{
-            bottom: "117px",
+            bottom: hasMessages ? "117px" : "345px",
             left: position.left,
             width: position.width,
             boxShadow: "0px -18px 30px 5px rgba(0, 0, 0, 0.5)",
@@ -115,7 +117,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
         >
           {/* Header section - Only show when opened via button */}
           {openedViaButton && (
-            <div className="flex items-center gap-2 border-b border-zinc-700 p-3">
+            <div className="flex items-center gap-2 p-3">
               {/* Search Input */}
               <div className="flex-1">
                 <Input

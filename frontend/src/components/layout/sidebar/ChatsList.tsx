@@ -166,8 +166,9 @@ export default function ChatsList() {
           defaultValue={[
             ...(systemConversations.length > 0 ? ["system-conversations"] : []),
             ...(starredConversations.length > 0 ? ["starred-chats"] : []),
-            ...(sortedTimeFrames.length > 0 ? ["today"] : []),
-            ...(sortedTimeFrames.length > 0 ? ["previous-7-days"] : []),
+            ...(sortedTimeFrames.length > 0
+              ? ["today", "previous-7-days", "yesterday"]
+              : []),
           ]}
         >
           {/* System-generated conversations */}

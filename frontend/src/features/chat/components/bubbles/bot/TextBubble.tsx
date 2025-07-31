@@ -6,6 +6,7 @@ import { InternetIcon } from "@/components/shared/icons";
 import CalendarListCard from "@/features/calendar/components/CalendarListCard";
 import CalendarListFetchCard from "@/features/calendar/components/CalendarListFetchCard";
 import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
+import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import { shouldShowTextBubble } from "@/features/chat/utils/messageContentUtils";
 import EmailListCard from "@/features/mail/components/EmailListCard";
@@ -33,6 +34,7 @@ export default function TextBubble({
   calendar_edit_options,
   email_compose_data,
   email_fetch_data,
+  email_thread_data,
   calendar_fetch_data,
   calendar_list_fetch_data,
   weather_data,
@@ -61,6 +63,10 @@ export default function TextBubble({
       )}
 
       {!!weather_data && <WeatherCard weatherData={weather_data!} />}
+
+      {!!email_thread_data && (
+        <EmailThreadCard emailThreadData={email_thread_data} />
+      )}
 
       {shouldShowTextBubble(text, isConvoSystemGenerated, systemPurpose) && (
         <div className="chat_bubble bg-zinc-800">

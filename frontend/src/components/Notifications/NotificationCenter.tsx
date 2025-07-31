@@ -13,7 +13,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button as ShadcnButton } from "@/components/";
@@ -55,7 +55,7 @@ const NotificationItem = ({
   const isUnread = notification.status === NotificationStatus.DELIVERED;
 
   return (
-    <div className={`rounded-2xl bg-zinc-900 p-4`}>
+    <div className={`w-full rounded-2xl bg-zinc-900 p-4`}>
       <div className="flex items-start justify-between gap-1">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -238,6 +238,12 @@ export function NotificationCenter({
       ? notifications.filter((n) => n.status === NotificationStatus.DELIVERED)
       : notifications;
 
+  useEffect(() => {
+    if (isOpen) {
+      refetch();
+    }
+  }, [isOpen]);
+
   return (
     <div className={`relative ${className}`}>
       <Popover
@@ -294,7 +300,7 @@ export function NotificationCenter({
           </Tabs>
 
           {/* Notifications list */}
-          <ScrollArea className="h-96">
+          <ScrollArea className="h-96 w-full">
             {loading ? (
               <div className="flex items-center justify-center p-8">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-700 border-t-zinc-50" />
@@ -314,7 +320,7 @@ export function NotificationCenter({
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-zinc-800 p-3">
+              <div className="w-full space-y-2 divide-y divide-zinc-800 p-3">
                 {filteredNotifications.map((notification) => (
                   <NotificationItem
                     key={notification.id}
