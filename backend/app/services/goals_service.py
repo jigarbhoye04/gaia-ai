@@ -7,7 +7,7 @@ from langchain_core.messages import HumanMessage
 
 from app.config.loggers import goals_logger as logger
 from app.db.mongodb.collections import goals_collection
-from app.db.redis import ONE_YEAR_TTL, delete_cache, get_cache, set_cache
+from app.db.redis import ONE_YEAR_TTL, get_cache, set_cache
 from app.langchain.llm.client import init_llm
 from app.langchain.prompts.goal_prompts import (
     ROADMAP_GENERATOR,
@@ -18,6 +18,7 @@ from app.models.goals_models import GoalCreate, GoalResponse, UpdateNodeRequest
 from app.services.sync_service import (
     sync_goal_node_completion,
     create_goal_project_and_todo,
+    _invalidate_goal_caches,
 )
 from app.utils.goals_utils import goal_helper
 
@@ -130,10 +131,7 @@ async def create_goal_service(goal: GoalCreate, user: dict) -> GoalResponse:
         new_goal = await goals_collection.find_one({"_id": result.inserted_id})
 
         # Invalidate user's goals list cache and statistics
-        cache_key_goals = f"goals_cache:{user_id}"
-        cache_key_stats = f"goal_stats_cache:{user_id}"
-        await delete_cache(cache_key_goals)
-        await delete_cache(cache_key_stats)
+        await _invalidate_goal_caches(user_id)
 
         formatted_goal = goal_helper(new_goal)
         logger.info(f"Goal created successfully for user {user_id}. Cache invalidated.")
@@ -251,12 +249,7 @@ async def delete_goal_service(goal_id: str, user: dict) -> dict:
         logger.error(f"Failed to delete goal {goal_id}.")
         raise HTTPException(status_code=500, detail="Failed to delete the goal")
 
-    cache_key_goal = f"goal_cache:{goal_id}"
-    cache_key_goals = f"goals_cache:{user_id}"
-    cache_key_stats = f"goal_stats_cache:{user_id}"
-    await delete_cache(cache_key_goal)
-    await delete_cache(cache_key_goals)
-    await delete_cache(cache_key_stats)
+    await _invalidate_goal_caches(user_id, goal_id)
 
     logger.info(f"Goal {goal_id} deleted successfully by user {user_id}.")
     return goal_helper(goal)
@@ -305,12 +298,7 @@ async def update_node_status_service(
 
     updated_goal = await goals_collection.find_one({"_id": ObjectId(goal_id)})
 
-    cache_key_goal = f"goal_cache:{goal_id}"
-    cache_key_goals = f"goals_cache:{user_id}"
-    cache_key_stats = f"goal_stats_cache:{user_id}"
-    await delete_cache(cache_key_goal)
-    await delete_cache(cache_key_goals)
-    await delete_cache(cache_key_stats)
+    await _invalidate_goal_caches(user_id, goal_id)
 
     logger.info(f"Node status updated for node {node_id} in goal {goal_id}.")
     return goal_helper(updated_goal)
@@ -349,12 +337,7 @@ async def update_goal_with_roadmap_service(goal_id: str, roadmap_data: dict) -> 
         if updated_goal:
             # Invalidate relevant caches
             if user_id:
-                cache_key_goal = f"goal_cache:{goal_id}"
-                cache_key_goals = f"goals_cache:{user_id}"
-                cache_key_stats = f"goal_stats_cache:{user_id}"
-                await delete_cache(cache_key_goal)
-                await delete_cache(cache_key_goals)
-                await delete_cache(cache_key_stats)
+                await _invalidate_goal_caches(user_id, goal_id)
                 logger.info(
                     f"Goal caches invalidated for goal {goal_id} and user {user_id}"
                 )

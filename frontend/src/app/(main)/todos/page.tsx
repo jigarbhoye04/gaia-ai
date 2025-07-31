@@ -10,12 +10,19 @@ import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
-import { Priority, TodoFilters, TodoUpdate } from "@/types/features/todoTypes";
+import {
+  Priority,
+  Todo,
+  TodoFilters,
+  TodoUpdate,
+} from "@/types/features/todoTypes";
 
 export default function TodosPage() {
   const searchParams = useSearchParams();
   const [_page, setPage] = useState(0);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   const {
@@ -45,50 +52,48 @@ export default function TodosPage() {
   };
 
   useEffect(() => {
-    const filters: TodoFilters = {
-      project_id: projectId || undefined,
-      priority: getPriorityFilter(priority),
-    };
+    const filters: TodoFilters = {};
 
-    // Handle completed filter
-    if (completedParam !== null) {
-      filters.completed = completed;
-    } else if (!projectId && !priority) {
-      // Default to showing only non-completed todos in inbox
-      filters.completed = false;
+    // Only add filters if they are explicitly specified in URL
+    if (projectId) {
+      filters.project_id = projectId;
     }
 
-    // Default to inbox project if no project specified
-    if (!projectId && !priority) {
-      const inboxProject = projects.find((p) => p.is_default);
-      if (inboxProject) {
-        filters.project_id = inboxProject.id;
+    if (priority) {
+      const priorityValue = getPriorityFilter(priority);
+      if (priorityValue) {
+        filters.priority = priorityValue;
       }
     }
 
+    // Handle completed filter only if explicitly set
+    if (completedParam !== null) {
+      filters.completed = completed;
+    }
+
+    // Let the backend handle default inbox behavior when no filters are specified
     loadTodos(filters, false);
     setPage(0);
-  }, [projectId, priority, completed, completedParam, loadTodos, projects]);
+  }, [projectId, priority, completed, completedParam, loadTodos]);
 
   const handleLoadMore = () => {
-    const filters: TodoFilters = {
-      project_id: projectId || undefined,
-      priority: getPriorityFilter(priority),
-    };
+    const filters: TodoFilters = {};
 
-    // Handle completed filter
-    if (completedParam !== null) {
-      filters.completed = completed;
-    } else if (!projectId && !priority) {
-      filters.completed = false;
+    // Only add filters if they are explicitly specified in URL
+    if (projectId) {
+      filters.project_id = projectId;
     }
 
-    // Default to inbox project if needed
-    if (!projectId && !priority) {
-      const inboxProject = projects.find((p) => p.is_default);
-      if (inboxProject) {
-        filters.project_id = inboxProject.id;
+    if (priority) {
+      const priorityValue = getPriorityFilter(priority);
+      if (priorityValue) {
+        filters.priority = priorityValue;
       }
+    }
+
+    // Handle completed filter only if explicitly set
+    if (completedParam !== null) {
+      filters.completed = completed;
     }
 
     loadTodos(filters, true);
@@ -107,6 +112,11 @@ export default function TodosPage() {
     }
   };
 
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
+  };
+
   if (loading && todos.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -115,12 +125,14 @@ export default function TodosPage() {
     );
   }
 
+  const incompleteTodos = todos.filter((t) => !t.completed);
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title={getPageTitle()}
-          todoCount={todos.length}
+          todoCount={incompleteTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>
@@ -142,24 +154,26 @@ export default function TodosPage() {
           todos={todos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => {
-            const filters: TodoFilters = {
-              project_id: projectId || undefined,
-              priority: getPriorityFilter(priority),
-            };
+            const filters: TodoFilters = {};
 
-            if (completedParam !== null) {
-              filters.completed = completed;
-            } else if (!projectId && !priority) {
-              filters.completed = false;
+            // Only add filters if they are explicitly specified in URL
+            if (projectId) {
+              filters.project_id = projectId;
             }
 
-            if (!projectId && !priority) {
-              const inboxProject = projects.find((p) => p.is_default);
-              if (inboxProject) {
-                filters.project_id = inboxProject.id;
+            if (priority) {
+              const priorityValue = getPriorityFilter(priority);
+              if (priorityValue) {
+                filters.priority = priorityValue;
               }
+            }
+
+            // Handle completed filter only if explicitly set
+            if (completedParam !== null) {
+              filters.completed = completed;
             }
 
             loadTodos(filters, false);
@@ -175,9 +189,25 @@ export default function TodosPage() {
         initialProjectId={projectId || undefined}
       />
 
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+        }}
+      />
+
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todoId={selectedTodoId}
+        todo={
+          selectedTodoId
+            ? todos.find((t) => t.id === selectedTodoId) || null
+            : null
+        }
         isOpen={!!selectedTodoId}
         onClose={clearSelection}
         onUpdate={handleTodoUpdate}

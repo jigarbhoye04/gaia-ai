@@ -18,9 +18,9 @@ const FinalSection = lazy(
   () => import("@/features/landing/components/sections/FinalSection"),
 );
 
-const Goals = lazy(
-  () => import("@/features/landing/components/sections/new/Goals"),
-);
+// const Goals = lazy(
+//   () => import("@/features/landing/components/sections/new/Goals"),
+// );
 // const InternetSection = lazy(
 //   () => import("@/features/landing/components/sections/InternetSection"),
 // );

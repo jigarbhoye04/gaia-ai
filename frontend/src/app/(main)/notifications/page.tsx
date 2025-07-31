@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge,Tab, Tabs } from "@heroui/react";
+import { Badge, Tab, Tabs } from "@heroui/react";
 import { Bell, BellRing } from "lucide-react";
 import { useState } from "react";
 
@@ -145,7 +145,6 @@ export default function NotificationsPage() {
         <EmailPreviewModal
           isOpen={true}
           onClose={handleModalClose}
-          email_id={modalConfig.props.email_id || ""}
           subject={modalConfig.props.subject || ""}
           body={modalConfig.props.body || ""}
           recipients={modalConfig.props.recipients || []}

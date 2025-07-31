@@ -18,6 +18,15 @@ interface UrlMetadataError {
 
 const isEmail = (str: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
 
+const isValidHttpUrl = (str: string): boolean => {
+  try {
+    const url = new URL(str);
+    return /^(http|https):$/.test(url.protocol);
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Custom hook to fetch URL metadata with React Query optimization
  * Features:
@@ -28,7 +37,8 @@ const isEmail = (str: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
  * - Conditional fetching based on URL validity
  */
 export const useUrlMetadata = (url: string | undefined | null) => {
-  const isValidUrl = url && !isEmail(url) && !url.startsWith("mailto:");
+  const isValidUrl =
+    url && isValidHttpUrl(url) && !isEmail(url) && !url.startsWith("mailto:");
 
   const result = useQuery<UrlMetadata, UrlMetadataError>({
     queryKey: ["url-metadata", url],
@@ -76,7 +86,10 @@ export const usePrefetchUrlMetadata = () => {
   const queryClient = useQueryClient();
 
   return (url: string) => {
-    if (!url) return;
+    const isValidUrl =
+      url && isValidHttpUrl(url) && !isEmail(url) && !url.startsWith("mailto:");
+
+    if (!isValidUrl) return;
 
     queryClient.prefetchQuery({
       queryKey: ["url-metadata", url],

@@ -317,7 +317,7 @@ export default function MemoryGraph({
     return () => {
       simulation.stop();
     };
-  }, [memories, relations, onNodeClick]);
+  }, [memories, relations, onNodeClick, user?.profilePicture]);
 
   return (
     <div className={`relative h-full w-full ${className}`}>

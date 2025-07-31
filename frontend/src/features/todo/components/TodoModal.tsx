@@ -1,22 +1,19 @@
 "use client";
 
+import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
-import { useEffect } from "react";
-
-import { Button } from "@/components/ui/shadcn/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from "@/components/ui/shadcn/dialog";
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+} from "@heroui/modal";
+import { useEffect, useMemo } from "react";
+
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useModalForm } from "@/hooks/ui/useModalForm";
-import {
-  Priority,
-  Todo,
-  TodoCreate,
-  TodoUpdate,
-} from "@/types/features/todoTypes";
+import { Priority, Todo, TodoCreate } from "@/types/features/todoTypes";
 
 import SubtaskManager from "./shared/SubtaskManager";
 import TodoFieldsRow from "./shared/TodoFieldsRow";
@@ -28,6 +25,29 @@ interface TodoModalProps {
   mode: "add" | "edit";
   todo?: Todo; // Required when mode is "edit"
   initialProjectId?: string; // Used when mode is "add"
+}
+
+function getChangedFields<T extends object>(
+  original: T,
+  updated: T,
+): Partial<T> {
+  const changes: Partial<T> = {};
+
+  for (const key in updated) {
+    const originalValue = original[key];
+    const updatedValue = updated[key];
+
+    const isEqual =
+      typeof originalValue === "object"
+        ? JSON.stringify(originalValue) === JSON.stringify(updatedValue)
+        : originalValue === updatedValue;
+
+    if (!isEqual) {
+      changes[key] = updatedValue;
+    }
+  }
+
+  return changes;
 }
 
 export default function TodoModal({
@@ -64,35 +84,25 @@ export default function TodoModal({
     };
   };
 
+  const initialData = useMemo(
+    () => getInitialData(),
+    [mode, todo?.id, initialProjectId, getInitialData],
+  );
+
   const { formData, setFormData, loading, handleSubmit, updateField } =
     useModalForm<TodoCreate>({
-      initialData: getInitialData,
+      initialData,
       onSubmit: async (data: TodoCreate) => {
         if (mode === "edit" && todo) {
-          // Only send changed fields for edit
-          const updates: TodoUpdate = {};
-          if (data.title !== todo.title) updates.title = data.title;
-          if (data.description !== todo.description)
-            updates.description = data.description;
-          if (JSON.stringify(data.labels) !== JSON.stringify(todo.labels))
-            updates.labels = data.labels;
-          if (data.priority !== todo.priority) updates.priority = data.priority;
-          if (data.project_id !== todo.project_id)
-            updates.project_id = data.project_id;
-          if (data.due_date !== todo.due_date) {
-            updates.due_date = data.due_date;
-            updates.due_date_timezone = data.due_date_timezone;
-          }
-          if (JSON.stringify(data.subtasks) !== JSON.stringify(todo.subtasks)) {
-            updates.subtasks = data.subtasks;
-          }
+          const updates = getChangedFields(todo, data);
 
           if (Object.keys(updates).length > 0) {
             await modifyTodo(todo.id, updates);
           }
-        } else {
-          await addTodo(data);
+          return;
         }
+
+        await addTodo(data);
       },
       validate: [
         {
@@ -150,89 +160,85 @@ export default function TodoModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl rounded-2xl border-none bg-zinc-900">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col">
-            {/* Title */}
-            <Input
-              placeholder="Task title"
-              classNames={{
-                input:
-                  "text-2xl font-semibold bg-transparent border-0 text-zinc-100 placeholder:text-zinc-500",
-                inputWrapper:
-                  "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
-              }}
-              value={formData.title}
-              variant="underlined"
-              onChange={(e) => updateField("title", e.target.value)}
-              required
-              autoFocus
+    <Modal isOpen={open} onOpenChange={onOpenChange} size="lg">
+      <ModalContent>
+        <>
+          <ModalHeader className="flex flex-col gap-1">
+            {mode === "edit" ? "Edit Task" : "Add Task"}
+          </ModalHeader>
+          <ModalBody className="gap-6">
+            <div className="flex flex-col">
+              {/* Title */}
+              <Input
+                placeholder="Task title"
+                classNames={{
+                  input:
+                    "text-2xl font-semibold bg-transparent border-0 text-zinc-100 placeholder:text-zinc-500",
+                  inputWrapper:
+                    "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
+                }}
+                value={formData.title}
+                variant="underlined"
+                onChange={(e) => updateField("title", e.target.value)}
+                required
+                autoFocus
+              />
+
+              {/* Description */}
+              <Textarea
+                placeholder="Add a description..."
+                value={formData.description || ""}
+                onChange={(e) => updateField("description", e.target.value)}
+                minRows={1}
+                maxRows={5}
+                variant="underlined"
+                classNames={{
+                  input:
+                    "bg-transparent border-0 text-zinc-200 placeholder:text-zinc-500",
+                  inputWrapper:
+                    "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
+                }}
+              />
+            </div>
+
+            {/* Fields Row with Chips */}
+            <TodoFieldsRow
+              priority={formData.priority}
+              projectId={formData.project_id}
+              projects={projects}
+              dueDate={formData.due_date}
+              dueDateTimezone={formData.due_date_timezone}
+              labels={formData.labels}
+              onPriorityChange={(priority) => updateField("priority", priority)}
+              onProjectChange={(projectId) =>
+                updateField("project_id", projectId)
+              }
+              onDateChange={handleDateChange}
+              onLabelsChange={(labels) => updateField("labels", labels)}
             />
 
-            {/* Description */}
-            <Textarea
-              placeholder="Add a description..."
-              value={formData.description || ""}
-              onChange={(e) => updateField("description", e.target.value)}
-              minRows={1}
-              maxRows={5}
-              variant="underlined"
-              classNames={{
-                input:
-                  "bg-transparent border-0 text-zinc-200 placeholder:text-zinc-500",
-                inputWrapper:
-                  "border-0 bg-transparent shadow-none hover:bg-transparent focus:bg-transparent data-[focus=true]:bg-transparent",
-              }}
+            {/* Subtasks Manager */}
+            <SubtaskManager
+              subtasks={formData.subtasks || []}
+              onSubtasksChange={(subtasks) => updateField("subtasks", subtasks)}
             />
-          </div>
+          </ModalBody>
 
-          {/* Fields Row with Chips */}
-          <TodoFieldsRow
-            priority={formData.priority}
-            projectId={formData.project_id}
-            projects={projects}
-            dueDate={formData.due_date}
-            dueDateTimezone={formData.due_date_timezone}
-            labels={formData.labels}
-            onPriorityChange={(priority) => updateField("priority", priority)}
-            onProjectChange={(projectId) =>
-              updateField("project_id", projectId)
-            }
-            onDateChange={handleDateChange}
-            onLabelsChange={(labels) => updateField("labels", labels)}
-          />
-
-          {/* Subtasks Manager */}
-          <SubtaskManager
-            subtasks={formData.subtasks || []}
-            onSubtasksChange={(subtasks) => updateField("subtasks", subtasks)}
-          />
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-0 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-zinc-200"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="border-0 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:bg-zinc-800 disabled:text-zinc-500"
-          >
-            {loading
-              ? mode === "edit"
-                ? "Saving..."
-                : "Adding..."
-              : mode === "edit"
-                ? "Save Changes"
-                : "Add Task"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <ModalFooter>
+            <Button variant="light" onPress={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onPress={handleSubmit}
+              isDisabled={loading}
+              isLoading={loading}
+            >
+              {mode === "edit" ? "Save Changes" : "Add Task"}
+            </Button>
+          </ModalFooter>
+        </>
+      </ModalContent>
+    </Modal>
   );
 }

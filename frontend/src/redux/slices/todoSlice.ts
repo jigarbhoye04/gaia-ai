@@ -31,19 +31,6 @@ interface TodoState {
   pendingDeletes: string[];
   // Pagination metadata
   totalCount: number;
-  // Initial data loading states
-  initialDataLoaded: {
-    projects: boolean;
-    labels: boolean;
-    counts: boolean;
-  };
-  // Cache timestamps for smart invalidation
-  lastFetch: {
-    todos: number;
-    projects: number;
-    labels: number;
-    counts: number;
-  };
 }
 
 const initialState: TodoState = {
@@ -65,17 +52,6 @@ const initialState: TodoState = {
   pendingUpdates: {},
   pendingDeletes: [],
   totalCount: 0,
-  initialDataLoaded: {
-    projects: false,
-    labels: false,
-    counts: false,
-  },
-  lastFetch: {
-    todos: 0,
-    projects: 0,
-    labels: 0,
-    counts: 0,
-  },
 };
 
 // Async thunks
@@ -110,33 +86,8 @@ export const fetchLabels = createAsyncThunk("todos/fetchLabels", async () => {
 export const fetchTodoCounts = createAsyncThunk(
   "todos/fetchCounts",
   async () => {
-    // Fetch all necessary data in parallel
-    const [stats, todayTodos, upcomingTodos, projects] = await Promise.all([
-      todoApi.getTodoStats(),
-      todoApi.getTodayTodos(),
-      todoApi.getUpcomingTodos(7),
-      todoApi.getAllProjects(),
-    ]);
-
-    // Get inbox project and calculate its pending count
-    const inboxProject = projects.find((p) => p.is_default);
-    let inboxCount = 0;
-
-    if (inboxProject) {
-      // Fetch only pending todos for inbox
-      const inboxTodos = await todoApi.getAllTodos({
-        project_id: inboxProject.id,
-        completed: false,
-      });
-      inboxCount = inboxTodos.length;
-    }
-
-    return {
-      inbox: inboxCount,
-      today: todayTodos.filter((todo) => !todo.completed).length,
-      upcoming: upcomingTodos.filter((todo) => !todo.completed).length,
-      completed: stats.completed,
-    };
+    // Use the new optimized counts endpoint
+    return await todoApi.getTodoCounts();
   },
 );
 
@@ -161,20 +112,6 @@ export const deleteTodo = createAsyncThunk(
   async (todoId: string) => {
     await todoApi.deleteTodo(todoId);
     return todoId;
-  },
-);
-
-export const fetchTodayTodos = createAsyncThunk(
-  "todos/fetchToday",
-  async () => {
-    return await todoApi.getTodayTodos();
-  },
-);
-
-export const fetchUpcomingTodos = createAsyncThunk(
-  "todos/fetchUpcoming",
-  async (days: number = 7) => {
-    return await todoApi.getUpcomingTodos(days);
   },
 );
 
@@ -237,6 +174,7 @@ export const fetchTodosByLabel = createAsyncThunk(
 export const fetchTodoById = createAsyncThunk(
   "todos/fetchTodoById",
   async (todoId: string) => {
+    // Always fetch from API - no caching
     return await todoApi.getTodo(todoId);
   },
 );
@@ -461,7 +399,6 @@ const todoSlice = createSlice({
         state.hasMore = todos.length >= 50;
         state.totalCount = loadMore ? state.totalCount : todos.length;
         state.loading = false;
-        state.lastFetch.todos = Date.now();
       })
       .addCase(fetchTodos.rejected, (state, action) => {
         state.loading = false;
@@ -475,8 +412,6 @@ const todoSlice = createSlice({
       })
       .addCase(fetchProjects.fulfilled, (state, action) => {
         state.projects = action.payload;
-        state.initialDataLoaded.projects = true;
-        state.lastFetch.projects = Date.now();
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.error = action.error.message || "Failed to fetch projects";
@@ -489,8 +424,6 @@ const todoSlice = createSlice({
       })
       .addCase(fetchLabels.fulfilled, (state, action) => {
         state.labels = action.payload;
-        state.initialDataLoaded.labels = true;
-        state.lastFetch.labels = Date.now();
       })
       .addCase(fetchLabels.rejected, (state, action) => {
         state.error = action.error.message || "Failed to fetch labels";
@@ -500,8 +433,6 @@ const todoSlice = createSlice({
     builder
       .addCase(fetchTodoCounts.fulfilled, (state, action) => {
         state.counts = action.payload;
-        state.initialDataLoaded.counts = true;
-        state.lastFetch.counts = Date.now();
       })
       .addCase(fetchTodoCounts.rejected, (_state, action) => {
         console.error("Failed to fetch counts:", action.error.message);
@@ -626,28 +557,6 @@ const todoSlice = createSlice({
       })
       .addCase(deleteTodo.rejected, (state, action) => {
         state.error = action.error.message || "Failed to delete todo";
-      });
-
-    // Handle today todos
-    builder
-      .addCase(fetchTodayTodos.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchTodayTodos.fulfilled, (state, action) => {
-        state.todos = action.payload;
-        state.loading = false;
-        state.hasMore = false;
-      });
-
-    // Handle upcoming todos
-    builder
-      .addCase(fetchUpcomingTodos.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchUpcomingTodos.fulfilled, (state, action) => {
-        state.todos = action.payload;
-        state.loading = false;
-        state.hasMore = false;
       });
 
     // Handle completed todos

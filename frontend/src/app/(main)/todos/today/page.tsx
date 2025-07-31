@@ -16,8 +16,10 @@ export default function TodayTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const { refreshAllData } = useTodos();
+  const { loadCounts } = useTodos();
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
@@ -28,7 +30,8 @@ export default function TodayTodosPage() {
   const loadTodayTodos = async () => {
     setLoading(true);
     try {
-      const todoList = await todoApi.getTodayTodos();
+      // Use the unified todos endpoint with today filter
+      const todoList = await todoApi.getAllTodos({ due_today: true });
       setTodos(todoList);
     } catch (error) {
       console.error("Failed to load today's todos:", error);
@@ -66,6 +69,11 @@ export default function TodayTodosPage() {
     }
   };
 
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -74,21 +82,26 @@ export default function TodayTodosPage() {
     );
   }
 
+  const incompleteTodos = todos.filter(
+    (t) => t.due_date && new Date(t.due_date) < new Date() && !t.completed,
+  );
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title="Today"
-          todoCount={todos.length}
+          todoCount={incompleteTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>
 
       <div className="w-full flex-1 overflow-y-auto px-4">
         <TodoList
-          todos={todos}
+          todos={incompleteTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={loadTodayTodos}
         />
@@ -101,13 +114,31 @@ export default function TodayTodosPage() {
         onOpenChange={setAddModalOpen}
         onSuccess={() => {
           loadTodayTodos();
-          refreshAllData();
+          // Only refresh counts, not all data
+          loadCounts();
+        }}
+      />
+
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+          loadTodayTodos();
         }}
       />
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todoId={selectedTodoId}
+        todo={
+          selectedTodoId
+            ? todos.find((t) => t.id === selectedTodoId) || null
+            : null
+        }
         isOpen={!!selectedTodoId}
         onClose={clearSelection}
         onUpdate={handleTodoUpdate}

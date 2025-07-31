@@ -37,7 +37,7 @@ export interface SubTask {
   created_at: string;
 }
 
-export interface Todo {
+export interface Todo extends Record<string, unknown> {
   id: string;
   user_id: string;
   title: string;
@@ -52,7 +52,7 @@ export interface Todo {
   created_at: string;
   updated_at: string;
   workflow?: Workflow; // Add workflow field
-  workflow_status: WorkflowStatus; // Add workflow status field
+  workflow_status?: WorkflowStatus; // Add workflow status field
 }
 
 export interface TodoCreate extends Record<string, unknown> {

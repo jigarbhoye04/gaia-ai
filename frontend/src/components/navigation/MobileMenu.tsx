@@ -28,7 +28,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 export default function MobileMenu() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const user = useUser();
-  const isAuthenticated = user && user.email; // Check if user has email to determine auth status
+  const isAuthenticated = user?.email; // Check if user has email to determine auth status
   const router = useRouter();
 
   return (

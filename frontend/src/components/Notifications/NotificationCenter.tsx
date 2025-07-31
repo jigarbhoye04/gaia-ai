@@ -193,7 +193,6 @@ const NotificationItem = ({
 export function NotificationCenter({
   className = "",
 }: NotificationCenterProps) {
-  const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"unread" | "all">("unread");
   const router = useRouter();
 
@@ -205,7 +204,7 @@ export function NotificationCenter({
     [activeTab],
   );
 
-  const { notifications, loading, markAsRead, bulkMarkAsRead, refetch } =
+  const { notifications, loading, markAsRead, bulkMarkAsRead } =
     useNotifications(notificationOptions);
 
   const unreadCount = notifications.filter(
@@ -340,7 +339,6 @@ export function NotificationCenter({
               size="sm"
               variant={unreadCount > 0 ? "bordered" : "solid"}
               onPress={() => {
-                setIsOpen(false);
                 router.push("/notifications");
               }}
             >
