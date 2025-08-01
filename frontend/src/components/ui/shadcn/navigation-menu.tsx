@@ -1,3 +1,5 @@
+"use client";
+
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
 import { motion } from "framer-motion";
@@ -30,7 +32,7 @@ function NavigationMenu({
         data-slot="navigation-menu"
         data-viewport={viewport}
         className={cn(
-          "group/navigation-menu border px-[3px] border-[#ffffff26] gap-4 relative flex max-w-max flex-1 items-center justify-center rounded-full",
+          "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center gap-4 rounded-full border border-[#ffffff26] px-[3px]",
           className,
         )}
         onMouseLeave={() => setHovered(null)}
@@ -99,7 +101,7 @@ function NavigationMenuTrigger({
           transition={{
             type: "spring",
             stiffness: 300,
-            damping: 30
+            damping: 30,
           }}
         />
       )}
@@ -138,7 +140,7 @@ function NavigationMenuViewport({
       <NavigationMenuPrimitive.Viewport
         data-slot="navigation-menu-viewport"
         className={cn(
-          "navigation-menu-main-container  origin-top-center text-popover-foreground relative mt-1 h-[var(--radix-navigation-menu-viewport-height)] w-full max-w-[var(--breakpoint-lg)] overflow-hidden rounded-b-[8px] bg-zinc-900 shadow-2xl backdrop-blur-xl data-[state=closed]:duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 md:w-full",
+          "navigation-menu-main-container origin-top-center text-popover-foreground relative mt-1 h-[var(--radix-navigation-menu-viewport-height)] w-full max-w-[var(--breakpoint-lg)] overflow-hidden rounded-b-[8px] bg-zinc-900 shadow-2xl backdrop-blur-xl data-[state=closed]:duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 md:w-full",
           className,
         )}
         {...props}

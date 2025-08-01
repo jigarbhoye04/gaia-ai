@@ -84,7 +84,7 @@ function EmailBodyRenderer({ body }: { body: string }) {
 
 interface EmailThreadCardProps {
   emailThreadData: EmailThreadData;
-  isExpandedDefault: boolean;
+  isExpandedDefault?: boolean;
 }
 
 export default function EmailThreadCard({
