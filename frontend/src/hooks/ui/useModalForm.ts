@@ -49,13 +49,17 @@ export function useModalForm<T extends Record<string, unknown>>({
   successMessage,
   errorMessage,
 }: UseModalFormOptions<T>): UseModalFormReturn<T> {
-  const [formData, setFormData] = useState<T>(initialData);
+  const [formData, setFormData] = useState<T>(() =>
+    typeof initialData === "function" ? initialData() : initialData,
+  );
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
 
   // Reset form data when initialData changes
   useEffect(() => {
-    setFormData(initialData);
+    const newData =
+      typeof initialData === "function" ? initialData() : initialData;
+    setFormData(newData);
     setErrors({});
   }, [initialData]);
 
@@ -118,7 +122,7 @@ export function useModalForm<T extends Record<string, unknown>>({
     if (Array.isArray(validate)) {
       for (const rule of validate) {
         const error = validateField(rule.field);
-        toast.error(error)
+        toast.error(error);
         if (error) {
           newErrors[rule.field] = error;
         }
