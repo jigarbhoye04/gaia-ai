@@ -1,44 +1,37 @@
+import { AnimatePresence,motion } from "framer-motion";
+import {
+  Archive,
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Clock,
+  Image as ImageIcon,
+  MousePointer2,
+  Paintbrush2,
+  PenLine,
+  PlusSquare,
+  Presentation,
+  Printer,
+  Redo2,
+  Reply,
+  Shapes,
+  Star,
+  Target,
+  Type,
+  Undo2,
+  Zap,
+  ZoomIn,
+} from "lucide-react";
 import React, {
-  useState,
+  ElementType,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
-  useCallback,
-  ElementType,
+  useState,
 } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useInView } from "react-intersection-observer";
-import {
-  Check,
-  Clock,
-  GitBranch,
-  Search,
-  BookOpen,
-  Users,
-  Target,
-  Zap,
-  Star,
-  Archive,
-  Reply,
-  Presentation,
-  ArrowRight,
-  Undo2,
-  Redo2,
-  Printer,
-  Paintbrush2,
-  ZoomIn,
-  MousePointer2,
-  Type,
-  Image as ImageIcon,
-  Shapes,
-  PenLine,
-  MessageSquarePlus,
-  LayoutPanelLeft,
-  Palette,
-  Film,
-  PlusSquare,
-  ChevronDown,
-} from "lucide-react";
+
 import { demoContents, DemoData } from "./demo-data"; // Adjust the import path if needed
 
 // --- Helper & Header Components ---

@@ -1,22 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
 import {
-  Upload,
-  Image,
-  GitBranch,
-  Star,
-  Pin,
-  Search,
-  FileText,
-  MessageSquare,
+  CheckCheck,
   CheckCircle,
-  Sparkles,
   Clock,
   Database,
+  FileText,
+  GitBranch,
+  Image,
+  MessageSquare,
+  Pin,
+  Search,
   Shield,
-  CheckCheck,
+  Sparkles,
+  Star,
+  Upload,
 } from "lucide-react";
-
 import NextImage from "next/image";
+import React, { useEffect, useRef,useState } from "react";
 const FeatureCard: React.FC<{
   children: React.ReactNode;
   className?: string;

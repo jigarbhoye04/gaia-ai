@@ -1,22 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { lazy, useEffect } from "react";
 
 import HeroSection from "@/features/landing/components/hero/HeroSection";
 import Integrations from "@/features/landing/components/sections/IntegrationsSection";
-import Description from "@/features/landing/components/sections/new/Description";
-import Personalised from "@/features/landing/components/sections/new/Personalised";
-import Proactive from "@/features/landing/components/sections/new/Proactive";
-import Mail from "@/features/landing/components/sections/new/Mail";
-import Calendar from "@/features/calendar/components/Calendar";
-import Todo from "@/features/landing/components/sections/new/Todo";
 import InternetSection from "@/features/landing/components/sections/InternetSection";
 import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
+import Description from "@/features/landing/components/sections/new/Description";
+import Mail from "@/features/landing/components/sections/new/Mail";
+import Proactive from "@/features/landing/components/sections/new/Proactive";
+import Todo from "@/features/landing/components/sections/new/Todo";
+
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
-import HeroImage from "@/features/landing/components/hero/HeroImageSection";
-import Image from "next/image";
-import Goals from "@/features/chat/components/bubbles/bot/goals";
 
 // const DeepSearchSection = lazy(
 //   () => import("@/features/landing/components/sections/DeepSearchSection"),

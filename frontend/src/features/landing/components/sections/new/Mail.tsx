@@ -1,11 +1,12 @@
 import { useState } from "react";
+
+import EmailComposeSection from "@/features/chat/components/bubbles/bot/EmailComposeSection";
 import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
-import LargeHeader from "../../shared/LargeHeader";
+
 import {
   SimpleChatBubbleBot,
-  SimpleChatBubbleUser,
 } from "../../demo/SimpleChatBubbles";
-import EmailComposeSection from "@/features/chat/components/bubbles/bot/EmailComposeSection";
+import LargeHeader from "../../shared/LargeHeader";
 
 export default function Mail() {
   const [activeMode, setActiveMode] = useState<"compose" | "view">("compose");

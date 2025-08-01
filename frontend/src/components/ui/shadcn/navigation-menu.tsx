@@ -1,7 +1,7 @@
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
-import * as React from "react";
 import { motion } from "framer-motion";
+import * as React from "react";
 
 import { cn } from "@/lib/utils";
 

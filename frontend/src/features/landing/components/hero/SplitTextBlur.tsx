@@ -109,4 +109,4 @@ const HeroText = () => {
   );
 };
 
-export { SplitTextBlur, HeroText };
+export { HeroText,SplitTextBlur };

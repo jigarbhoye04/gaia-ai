@@ -1,6 +1,6 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Search, GitBranch, BookOpen, Users, Target, Presentation, FlaskConical, Landmark, Briefcase, Plane, ShoppingCart, BedDouble } from 'lucide-react';
+import { BedDouble,BookOpen, Briefcase, Clock, FlaskConical, GitBranch, Landmark, Plane, Presentation, Search, ShoppingCart, Target, Users } from 'lucide-react';
+import React from 'react';
 
 // --- TYPE DEFINITIONS ---
 

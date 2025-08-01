@@ -1,5 +1,6 @@
 import ShinyText from "@/components/ui/shadcn/shimmering-chip";
 import { MotionContainer } from "@/layouts/MotionContainer";
+
 import GetStartedButton from "../shared/GetStartedButton";
 import { SplitTextBlur } from "./SplitTextBlur";
 export default function HeroSection() {

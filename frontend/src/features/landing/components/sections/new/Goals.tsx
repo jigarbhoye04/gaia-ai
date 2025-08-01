@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Target,
-  GitBranch,
   CheckCircle,
-  Send,
-  Clock,
   CheckCircle2,
+  Clock,
+  GitBranch,
+  Send,
+  Target,
 } from "lucide-react";
+import React, { useCallback,useEffect, useRef, useState } from "react";
+
 import { Target02Icon } from "@/components";
 
 // Helper to wait for a specific duration

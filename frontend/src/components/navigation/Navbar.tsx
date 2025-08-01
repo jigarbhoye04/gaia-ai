@@ -1,11 +1,12 @@
 "use client";
 
 import { Button } from "@heroui/button";
+import { motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useEffect,useState } from "react";
 
 import MobileMenu from "@/components/navigation/MobileMenu";
 import { LinkButton } from "@/components/shared/LinkButton";
@@ -14,7 +15,6 @@ import useMediaQuery from "@/hooks/ui/useMediaQuery";
 
 import { NavbarMenu } from "./NavbarMenu";
 import { RainbowGithubButton } from "./RainbowGithubButton";
-import { ChevronDown } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();

@@ -7,7 +7,7 @@ import Script from "next/script";
 
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 
-import { defaultFont, getAllFontVariables, inter } from "./fonts";
+import { defaultFont, getAllFontVariables } from "./fonts";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
