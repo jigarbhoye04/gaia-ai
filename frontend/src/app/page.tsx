@@ -16,6 +16,7 @@ import AdvancedConversation from "@/features/landing/components/sections/new/Adv
 import LandingLayout from "./(landing)/layout";
 import HeroImage from "@/features/landing/components/hero/HeroImageSection";
 import Image from "next/image";
+import Goals from "@/features/chat/components/bubbles/bot/goals";
 
 // const DeepSearchSection = lazy(
 //   () => import("@/features/landing/components/sections/DeepSearchSection"),
@@ -71,7 +72,7 @@ export default function LandingPage() {
           <Mail />
           {/* <Calendar /> */}
           <Todo />
-          <Goals />
+          {/* <Goals /> */}
           <InternetSection />
           <AdvancedConversation />
           {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}

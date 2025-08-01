@@ -47,7 +47,7 @@
   margin: 0 3px;
 }
 .chat_bubble.user {
-  background-color: #0bf;
+  background-color: #00bbff;
   border-bottom-left-radius: 25px;
   border-bottom-right-radius: 0;
   color: #000;
