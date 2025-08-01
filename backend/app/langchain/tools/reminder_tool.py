@@ -1,14 +1,11 @@
 """Reminder LangChain tools."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any, Optional, Union
 
-from langchain_core.runnables.config import RunnableConfig
-from langchain_core.tools import tool
-
 from app.config.loggers import reminders_logger as logger
-from app.decorators import with_rate_limiting, with_doc
+from app.decorators import with_doc, with_rate_limiting
 from app.docstrings.langchain.tools.reminder_tool_docs import (
     CREATE_REMINDER,
     DELETE_REMINDER,
@@ -20,7 +17,7 @@ from app.docstrings.langchain.tools.reminder_tool_docs import (
 from app.models.reminder_models import (
     AgentType,
     AIAgentReminderPayload,
-    CreateReminderRequest,
+    CreateReminderToolRequest,
     ReminderStatus,
     StaticReminderPayload,
 )
@@ -39,7 +36,18 @@ from app.services.reminder_service import (
 from app.services.reminder_service import (
     update_reminder as svc_update_reminder,
 )
-from app.utils.timezone import replace_timezone_info
+from langchain_core.runnables.config import RunnableConfig
+from langchain_core.tools import tool
+
+
+def _apply_timezone_offset(dt: datetime, offset_str: str) -> datetime:
+    """Apply timezone offset to datetime object."""
+    # Parse offset string (+|-)HH:MM
+    sign = 1 if offset_str.startswith("+") else -1
+    hours, minutes = map(int, offset_str[1:].split(":"))
+    offset_seconds = sign * (hours * 3600 + minutes * 60)
+    tz = timezone(timedelta(seconds=offset_seconds))
+    return dt.replace(tzinfo=tz)
 
 
 @tool()
@@ -57,7 +65,11 @@ async def create_reminder_tool(
     repeat: Annotated[Optional[str], "Cron expression for recurring reminders"] = None,
     scheduled_at: Annotated[
         Optional[str],
-        "ISO 8601 formatted date/time for when the reminder should run",
+        "Date/time for when the reminder should run (YYYY-MM-DD HH:MM:SS format)",
+    ] = None,
+    timezone_offset: Annotated[
+        Optional[str],
+        "Timezone offset in (+|-)HH:MM format. Only use if user explicitly mentions a timezone.",
     ] = None,
     max_occurrences: Annotated[
         Optional[int],
@@ -65,7 +77,11 @@ async def create_reminder_tool(
     ] = None,
     stop_after: Annotated[
         Optional[str],
-        "ISO 8601 formatted date/time after which no more runs. Use this when user explicitly sets a date/time after which the reminder should not run anymore.",
+        "Date/time after which no more runs (YYYY-MM-DD HH:MM:SS format)",
+    ] = None,
+    stop_after_timezone_offset: Annotated[
+        Optional[str],
+        "Timezone offset for stop_after in (+|-)HH:MM format. Only use if user explicitly mentions a timezone.",
     ] = None,
 ) -> Any:
     """Create a new reminder tool function."""
@@ -78,43 +94,30 @@ async def create_reminder_tool(
         if not user_time_str:
             return {"error": "User time is required to create a reminder"}
 
-        if scheduled_at:
-            try:
-                scheduled_at = replace_timezone_info(
-                    scheduled_at,
-                    timezone_source=user_time_str,
-                ).isoformat()
-            except ValueError:
-                logger.error(f"Invalid scheduled_at format: {scheduled_at}")
-                return {"error": "Invalid scheduled_at format. Use ISO 8601 format."}
+        # Create the tool request model which handles all validation and conversion
+        tool_request = CreateReminderToolRequest(
+            agent=agent,
+            payload=payload,
+            repeat=repeat,
+            scheduled_at=scheduled_at,
+            timezone_offset=timezone_offset,
+            max_occurrences=max_occurrences,
+            stop_after=stop_after,
+            stop_after_timezone_offset=stop_after_timezone_offset,
+            user_time=user_time_str,
+        )
 
-        if stop_after:
-            try:
-                stop_after = replace_timezone_info(
-                    stop_after,
-                    timezone_source=user_time_str,
-                ).isoformat()
-            except ValueError:
-                logger.error(f"Invalid stop_after format {stop_after}")
-                return {"error": "Invalid stop_after format. Use ISO 8601 format."}
+        # Convert to the service request model
+        request_model = tool_request.to_create_reminder_request()
 
-        data: dict[str, Any] = {
-            "agent": agent,
-            "payload": payload,
-            "repeat": repeat,
-            "max_occurrences": max_occurrences,
-            "stop_after": datetime.fromisoformat(stop_after) if stop_after else None,
-            "scheduled_at": (
-                datetime.fromisoformat(scheduled_at) if scheduled_at else None
-            ),
-            "base_time": datetime.fromisoformat(user_time_str),
-        }
-
-        request_model = CreateReminderRequest(**data)
+        # Create the reminder
         await svc_create_reminder(request_model, user_id=user_id)
 
         return "Reminder created successfully"
 
+    except ValueError as e:
+        logger.error(f"Validation error: {e}")
+        return {"error": str(e)}
     except Exception as e:
         logger.exception("Exception occurred while creating reminder")
         return {"error": str(e)}
@@ -209,7 +212,11 @@ async def update_reminder_tool(
     ] = None,
     stop_after: Annotated[
         Optional[str],
-        "ISO 8601 formatted date/time after which no more runs (optional)",
+        "Date/time after which no more runs (YYYY-MM-DD HH:MM:SS format, optional)",
+    ] = None,
+    stop_after_timezone_offset: Annotated[
+        Optional[str],
+        "Timezone offset for stop_after in (+|-)HH:MM format. Only use if user explicitly mentions a timezone.",
     ] = None,
     payload: Annotated[
         Optional[dict], "Additional data for the reminder task (optional)"
@@ -227,7 +234,26 @@ async def update_reminder_tool(
         if max_occurrences is not None:
             update_data["max_occurrences"] = max_occurrences
         if stop_after:
-            update_data["stop_after"] = datetime.fromisoformat(stop_after)
+            try:
+                # Parse the datetime string
+                dt = datetime.fromisoformat(stop_after.replace(" ", "T"))
+
+                # Handle timezone based on the rules
+                if stop_after_timezone_offset:
+                    # User explicitly provided timezone - create timezone from offset
+                    processed_stop_after = _apply_timezone_offset(
+                        dt, stop_after_timezone_offset
+                    )
+                else:
+                    # Absolute time with no timezone - no timezone info
+                    processed_stop_after = dt
+
+                update_data["stop_after"] = processed_stop_after
+            except ValueError as e:
+                logger.error(f"Invalid stop_after format: {stop_after}, error: {e}")
+                return {
+                    "error": f"Invalid stop_after format: {stop_after}. Use YYYY-MM-DD HH:MM:SS format."
+                }
         if payload is not None:
             update_data["payload"] = payload
 

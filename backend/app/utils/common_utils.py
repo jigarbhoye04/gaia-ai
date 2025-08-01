@@ -3,6 +3,7 @@ from typing import Any, ClassVar, Dict, Set, TypeVar, cast
 from fastapi import WebSocket
 
 from app.config.loggers import common_logger as logger
+from app.utils.worker_detection import is_main_app
 
 T = TypeVar("T", bound="WebSocketManager")
 
@@ -43,6 +44,12 @@ class WebSocketManager:
 
     async def broadcast_to_user(self, user_id: str, message: Dict[str, Any]) -> None:
         """Broadcast message to all connections for a user"""
+
+        # If we don't have websocket pool (not main app), publish to RabbitMQ
+        if not is_main_app():
+            await self._publish_to_rabbitmq(user_id, message)
+            return
+
         if user_id not in self.connections:
             return
 
@@ -57,6 +64,32 @@ class WebSocketManager:
         # Remove disconnected websockets
         for ws in disconnected:
             self.connections[user_id].discard(ws)
+
+    async def _publish_to_rabbitmq(self, user_id: str, message: Dict[str, Any]) -> None:
+        """Publish WebSocket message to RabbitMQ for main app to broadcast"""
+        try:
+            import json
+
+            from app.db.rabbitmq import publisher
+
+            # Ensure publisher is connected
+            if not publisher.channel:
+                await publisher.connect()
+
+            # Create message for WebSocket broadcasting
+            rabbitmq_message = {
+                "type": "websocket_broadcast",
+                "user_id": user_id,
+                "message": message,
+            }
+
+            message_body = json.dumps(rabbitmq_message).encode("utf-8")
+            await publisher.publish("websocket-events", message_body)
+
+            logger.info(f"Published WebSocket message for user {user_id} to RabbitMQ")
+
+        except Exception as e:
+            logger.error(f"Failed to publish WebSocket message to RabbitMQ: {e}")
 
 
 # Create a singleton instance of WebSocketManager

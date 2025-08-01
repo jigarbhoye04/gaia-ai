@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Any, Dict, Optional, Union
 
+from app.utils.cron_utils import validate_cron_expression
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
 
@@ -169,6 +170,133 @@ class CreateReminderRequest(BaseModel):
         if value is not None:
             return value.isoformat()
         return None
+
+
+class CreateReminderToolRequest(BaseModel):
+    """Request model for create_reminder_tool with timezone handling and validation."""
+
+    agent: AgentType = Field(
+        default=AgentType.STATIC,
+        description="Agent handling the reminder task (static or ai_agent)",
+    )
+    payload: Union[StaticReminderPayload, AIAgentReminderPayload] = Field(
+        ..., description="Task-specific data based on agent type"
+    )
+    repeat: Optional[str] = Field(
+        None, description="Cron expression for recurring tasks (optional)"
+    )
+    scheduled_at: Optional[str] = Field(
+        None,
+        description="Date/time for when the reminder should run (YYYY-MM-DD HH:MM:SS format)",
+    )
+    timezone_offset: Optional[str] = Field(
+        None,
+        description="Timezone offset in (+|-)HH:MM format. Only use if user explicitly mentions a timezone.",
+    )
+    max_occurrences: Optional[int] = Field(
+        None, description="Maximum number of executions (optional)"
+    )
+    stop_after: Optional[str] = Field(
+        None,
+        description="Date/time after which no more runs (YYYY-MM-DD HH:MM:SS format)",
+    )
+    stop_after_timezone_offset: Optional[str] = Field(
+        None,
+        description="Timezone offset for stop_after in (+|-)HH:MM format. Only use if user explicitly mentions a timezone.",
+    )
+    user_time: str = Field(..., description="User's current time for timezone handling")
+
+    @field_validator("repeat")
+    @classmethod
+    def check_repeat_cron(cls, v):
+        if v is not None and not validate_cron_expression(v):
+            raise ValueError(f"Invalid cron expression: {v}")
+        return v
+
+    @field_validator("max_occurrences")
+    @classmethod
+    def check_max_occurrences(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("max_occurrences must be greater than 0")
+        return v
+
+    @field_validator("timezone_offset", "stop_after_timezone_offset")
+    @classmethod
+    def validate_timezone_offset(cls, v):
+        """Validate timezone offset format (+|-)HH:MM"""
+        if v is not None:
+            import re
+
+            if not re.match(r"^[+-]\d{2}:\d{2}$", v):
+                raise ValueError("Timezone offset must be in (+|-)HH:MM format")
+        return v
+
+    def to_create_reminder_request(self) -> "CreateReminderRequest":
+        """Convert to CreateReminderRequest with proper datetime handling."""
+        # Extract user's timezone from user_time
+        user_datetime = datetime.fromisoformat(self.user_time)
+        user_timezone = user_datetime.tzinfo if user_datetime.tzinfo else timezone.utc
+
+        processed_scheduled_at = None
+        if self.scheduled_at:
+            try:
+                # Parse the datetime string
+                dt = datetime.fromisoformat(self.scheduled_at.replace(" ", "T"))
+
+                # Handle timezone based on the rules
+                if self.timezone_offset:
+                    # User explicitly provided timezone - create timezone from offset
+                    processed_scheduled_at = self._apply_timezone_offset(
+                        dt, self.timezone_offset
+                    )
+                else:
+                    processed_scheduled_at = dt.replace(tzinfo=user_timezone)
+
+            except ValueError as e:
+                raise ValueError(
+                    f"Invalid scheduled_at format: {self.scheduled_at}. Use YYYY-MM-DD HH:MM:SS format. Error: {e}"
+                )
+
+        processed_stop_after = None
+        if self.stop_after:
+            try:
+                # Parse the datetime string
+                dt = datetime.fromisoformat(self.stop_after.replace(" ", "T"))
+
+                # Handle timezone based on the rules
+                if self.stop_after_timezone_offset:
+                    # User explicitly provided timezone - create timezone from offset
+                    processed_stop_after = self._apply_timezone_offset(
+                        dt, self.stop_after_timezone_offset
+                    )
+                else:
+                    # Absolute time with no explicit timezone - use user's timezone
+                    processed_stop_after = dt.replace(tzinfo=user_timezone)
+
+            except ValueError as e:
+                raise ValueError(
+                    f"Invalid stop_after format: {self.stop_after}. Use YYYY-MM-DD HH:MM:SS format. Error: {e}"
+                )
+
+        return CreateReminderRequest(
+            agent=self.agent,
+            payload=self.payload,
+            repeat=self.repeat,
+            scheduled_at=processed_scheduled_at,
+            max_occurrences=self.max_occurrences,
+            stop_after=processed_stop_after,
+            base_time=user_datetime,
+            conversation_id=None,  # Will be auto-generated if needed
+        )
+
+    def _apply_timezone_offset(self, dt: datetime, offset_str: str) -> datetime:
+        """Apply timezone offset to datetime object."""
+        # Parse offset string (+|-)HH:MM
+        sign = 1 if offset_str.startswith("+") else -1
+        hours, minutes = map(int, offset_str[1:].split(":"))
+        offset_seconds = sign * (hours * 3600 + minutes * 60)
+        tz = timezone(timedelta(seconds=offset_seconds))
+        return dt.replace(tzinfo=tz)
 
 
 class UpdateReminderRequest(BaseModel):

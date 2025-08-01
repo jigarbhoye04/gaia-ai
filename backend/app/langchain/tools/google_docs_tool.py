@@ -1,39 +1,37 @@
 from typing import Annotated, Dict, Optional, Union
 
-from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
-from langgraph.config import get_stream_writer
-
 from app.config.loggers import chat_logger as logger
-from app.decorators import with_rate_limiting, require_integration, with_doc
+from app.decorators import require_integration, with_doc, with_rate_limiting
 from app.docstrings.langchain.tools.google_docs_tool_docs import (
     CREATE_GOOGLE_DOC,
-    LIST_GOOGLE_DOCS,
-    GET_GOOGLE_DOC,
-    UPDATE_GOOGLE_DOC,
     FORMAT_GOOGLE_DOC,
-    SHARE_GOOGLE_DOC,
+    GET_GOOGLE_DOC,
+    LIST_GOOGLE_DOCS,
     SEARCH_GOOGLE_DOCS,
+    SHARE_GOOGLE_DOC,
+    UPDATE_GOOGLE_DOC,
 )
-
 from app.langchain.templates.google_docs_templates import (
     GOOGLE_DOCS_CREATE_TEMPLATE,
-    GOOGLE_DOCS_LIST_TEMPLATE,
-    GOOGLE_DOCS_GET_TEMPLATE,
-    GOOGLE_DOCS_UPDATE_TEMPLATE,
     GOOGLE_DOCS_FORMAT_TEMPLATE,
-    GOOGLE_DOCS_SHARE_TEMPLATE,
+    GOOGLE_DOCS_GET_TEMPLATE,
+    GOOGLE_DOCS_LIST_TEMPLATE,
     GOOGLE_DOCS_SEARCH_TEMPLATE,
+    GOOGLE_DOCS_SHARE_TEMPLATE,
+    GOOGLE_DOCS_UPDATE_TEMPLATE,
 )
 from app.services.google_docs_service import (
     create_google_doc,
-    list_google_docs,
-    get_google_doc,
-    update_google_doc_content,
     format_google_doc,
-    share_google_doc,
+    get_google_doc,
+    list_google_docs,
     search_google_docs,
+    share_google_doc,
+    update_google_doc_content,
 )
+from langchain_core.runnables import RunnableConfig
+from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 
 def get_auth_from_config(config: RunnableConfig) -> Dict[str, str]:
