@@ -9,7 +9,7 @@ import TodoList from "@/features/todo/components/TodoList";
 import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
-import { TodoUpdate } from "@/types/features/todoTypes";
+import { Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 export default function CompletedTodosPage() {
   const {
@@ -21,6 +21,8 @@ export default function CompletedTodosPage() {
     removeTodo,
   } = useTodos();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   useEffect(() => {
@@ -44,6 +46,11 @@ export default function CompletedTodosPage() {
     }
   };
 
+  const handleTodoEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -52,21 +59,24 @@ export default function CompletedTodosPage() {
     );
   }
 
+  const completeTodos = todos.filter((t) => t.completed);
+
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
         <TodoHeader
           title="Completed"
-          todoCount={todos.length}
+          todoCount={completeTodos.length}
           onAddTodo={() => setAddModalOpen(true)}
         />
       </div>
 
       <div className="w-full flex-1 overflow-y-auto px-4">
         <TodoList
-          todos={todos}
+          todos={completeTodos}
           onTodoUpdate={handleTodoUpdate}
           onTodoDelete={handleTodoDelete}
+          onTodoEdit={handleTodoEdit}
           onTodoClick={(todo) => selectTodo(todo.id)}
           onRefresh={() => loadCompletedTodos()}
         />
@@ -82,9 +92,26 @@ export default function CompletedTodosPage() {
         }}
       />
 
+      {/* Edit Todo Modal */}
+      <TodoModal
+        mode="edit"
+        todo={editingTodo || undefined}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          setEditingTodo(null);
+          loadCompletedTodos();
+        }}
+      />
+
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
-        todoId={selectedTodoId}
+        todo={
+          selectedTodoId
+            ? todos.find((t) => t.id === selectedTodoId) || null
+            : null
+        }
         isOpen={!!selectedTodoId}
         onClose={clearSelection}
         onUpdate={handleTodoUpdate}

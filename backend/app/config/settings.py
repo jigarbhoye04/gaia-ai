@@ -81,6 +81,11 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
+    # WorkOS Authentication
+    WORKOS_API_KEY: str = ""
+    WORKOS_CLIENT_ID: str = ""
+    WORKOS_COOKIE_PASSWORD: str = ""
+
     # External API Keys
     BING_API_KEY: str
     ASSEMBLYAI_API_KEY: str
@@ -104,6 +109,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "https://heygaia.io"
     DUMMY_IP: str = "8.8.8.8"
     DISABLE_PROFILING: bool = False
+    WORKER_TYPE: str = "unknown"
 
     # Hugging Face Configuration
     USE_HUGGINGFACE_API: bool = False
@@ -132,15 +138,23 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_ID: str
     RAZORPAY_KEY_SECRET: str
 
-    @computed_field
+    @computed_field  # type: ignore
+    @property
     def ENABLE_PROFILING(self) -> bool:
         """Enable profiling only if explicitly enabled in production."""
         return self.ENV == "production" and not self.DISABLE_PROFILING
 
-    @computed_field
+    @computed_field  # type: ignore
+    @property
     def GOOGLE_CALLBACK_URL(self) -> str:
         """Google OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/google/callback"
+
+    @computed_field  # type: ignore
+    @property
+    def WORKOS_REDIRECT_URI(self) -> str:
+        """WorkOS OAuth callback URL."""
+        return f"{self.HOST}/api/v1/oauth/workos/callback"
 
     model_config = SettingsConfigDict(
         env_file_encoding="utf-8",

@@ -71,19 +71,32 @@ def decode_message_body(msg):
     payload = msg.get("payload", {})
     parts = payload.get("parts", [])
 
-    # Try to get plain text body
-    for part in parts:
-        if part.get("mimeType") == "text/plain":
-            body = part.get("body", {}).get("data", "")
+    # Handle single-part messages
+    if not parts:
+        body_data = payload.get("body", {}).get("data", "")
+        if body_data:
             return base64.urlsafe_b64decode(
-                body.replace("-", "+").replace("_", "/")
+                body_data.replace("-", "+").replace("_", "/")
+            ).decode("utf-8", errors="ignore")
+        return None
+
+    # For multipart messages, prioritize HTML over plain text
+    html_body = None
+    plain_body = None
+
+    for part in parts:
+        part_mime_type = part.get("mimeType", "")
+        body_data = part.get("body", {}).get("data", "")
+
+        if body_data:
+            decoded_content = base64.urlsafe_b64decode(
+                body_data.replace("-", "+").replace("_", "/")
             ).decode("utf-8", errors="ignore")
 
-    # Fallback to main body if no plain text part
-    if payload.get("body", {}).get("data"):
-        body = payload["body"]["data"]
-        return base64.urlsafe_b64decode(
-            body.replace("-", "+").replace("_", "/")
-        ).decode("utf-8", errors="ignore")
+            if part_mime_type == "text/html":
+                html_body = decoded_content
+            elif part_mime_type == "text/plain":
+                plain_body = decoded_content
 
-    return None
+    # Return HTML if available (frontend expects HTML), otherwise plain text
+    return html_body or plain_body

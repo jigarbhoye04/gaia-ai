@@ -2,15 +2,15 @@ import json
 from datetime import datetime, timezone
 from typing import Any, AsyncGenerator, Dict, Optional
 
-from fastapi import BackgroundTasks
-
 from app.config.loggers import chat_logger as logger
+from app.config.token_repository import token_repository
 from app.langchain.core.agent import call_agent
 from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import MessageRequestWithHistory
 from app.services.conversation_service import update_messages
 from app.services.file_service import get_files
 from app.utils.chat_utils import create_conversation
+from fastapi import BackgroundTasks
 
 
 async def chat_stream(
@@ -38,22 +38,28 @@ async def chat_stream(
         f"User {user.get('user_id')} started a conversation with ID {conversation_id}"
     )
 
-    # Log the user's message if messages exist
-    if body.messages:
-        message_content = body.messages[-1].get("content", "") if body.messages else ""
-        logger.info(f"User {user.get('user_id')} sent a message: {message_content}")
-    else:
-        logger.info(
-            f"User {user.get('user_id')} sent a request with selected tool: {body.selectedTool}"
-        )
+    # Get token from repository if available
+    access_token = None
+    refresh_token = None
+    user_id = user.get("user_id")
+    if user_id:
+        try:
+            token = await token_repository.get_token(
+                str(user_id), "google", renew_if_expired=True
+            )
+            if token:
+                access_token = token.get("access_token")
+                refresh_token = token.get("refresh_token")
+        except Exception as e:
+            logger.warning(f"Could not get token from repository: {e}")
 
     # Stream response from the agent
     async for chunk in call_agent(
         request=body,
         user=user,
         conversation_id=conversation_id,
-        access_token=user.get("access_token"),
-        refresh_token=user.get("refresh_token"),
+        access_token=access_token,
+        refresh_token=refresh_token,
         user_time=user_time,
     ):
         # Process complete message marker
@@ -85,70 +91,47 @@ def extract_tool_data(json_str: str) -> Dict[str, Any]:
     """
     Parse and extract structured tool output from an agent's JSON response chunk.
 
-     This function is responsible for detecting and extracting specific tool-related data (e.g., calendar options, search results, weather data,
-     image generation outputs) from a JSON string sent during streaming.
+    This function is responsible for detecting and extracting specific tool-related data (e.g., calendar options, search results, weather data,
+    image generation outputs) from a JSON string sent during streaming.
 
-     Returns:
-         Dict[str, Any]: A dictionary containing extracted structured data.
+    Returns:
+        Dict[str, Any]: A dictionary containing extracted structured data.
 
-     Notes:
-         - This is meant to handle tool response metadata during streaming.
-         - If the JSON is malformed or does not match known tool structures, an empty dict is returned.
-         - This function is tolerant to missing keys and safe for runtime use in an async stream.
+    Notes:
+        - This is meant to handle tool response metadata during streaming.
+        - If the JSON is malformed or does not match known tool structures, an empty dict is returned.
+        - This function is tolerant to missing keys and safe for runtime use in an async stream.
     """
     try:
         data = json.loads(json_str)
-        tool_data: Dict[str, Any] = {}
 
-        # Extract calendar data
-        if "calendar_options" in data:
-            tool_data["calendar_options"] = data["calendar_options"]
+        # Extract all tool keys dynamically from MessageModel
+        # Exclude basic message fields and only include tool-related fields
+        excluded_fields = {
+            "type",
+            "response",
+            "date",
+            "disclaimer",
+            "subtype",
+            "file",
+            "filename",
+            "filetype",
+            "message_id",
+            "fileIds",
+            "fileData",
+            "selectedTool",
+            "toolCategory",
+        }
 
-        # Extract search results
-        elif "search_results" in data:
-            tool_data["search_results"] = data["search_results"]
+        tool_keys = {
+            field_name
+            for field_name in MessageModel.model_fields.keys()
+            if field_name not in excluded_fields
+        }
 
-        # Extract deep research results
-        elif "deep_research_results" in data:
-            tool_data["deep_research_results"] = data["deep_research_results"]
+        # Extract any matching tool data
+        return {key: data[key] for key in tool_keys if key in data}
 
-        # Extract weather data
-        elif "weather_data" in data:
-            tool_data["weather_data"] = data["weather_data"]
-
-        # Extract image generation data
-        elif "image_data" in data:
-            tool_data["image_data"] = data["image_data"]
-
-        # Extract email compose data
-        elif "email_compose_data" in data:
-            tool_data["email_compose_data"] = data["email_compose_data"]
-
-        # Extract memory data
-        elif "memory_data" in data:
-            tool_data["memory_data"] = data["memory_data"]
-
-        # Extract todo data
-        elif "todo_data" in data:
-            tool_data["todo_data"] = data["todo_data"]
-
-        # Extract code execution data
-        elif "code_data" in data:
-            tool_data["code_data"] = data["code_data"]
-
-        # Extract document tool data
-        elif "document_data" in data:
-            tool_data["document_data"] = data["document_data"]
-
-        # Extract goal data
-        elif "goal_data" in data:
-            tool_data["goal_data"] = data["goal_data"]
-
-        # Extract Google Docs data
-        elif "google_docs_data" in data:
-            tool_data["google_docs_data"] = data["google_docs_data"]
-
-        return tool_data
     except json.JSONDecodeError:
         return {}
 
@@ -224,10 +207,8 @@ def update_conversation_messages(
         type="user",
         response=user_content,
         date=datetime.now(timezone.utc).isoformat(),
-        searchWeb=body.search_web,
-        deepSearchWeb=body.deep_research,
-        pageFetchURLs=body.pageFetchURLs,
         fileIds=body.fileIds,
+        fileData=body.fileData,
         selectedTool=body.selectedTool,
         toolCategory=body.toolCategory,
     )
@@ -237,9 +218,6 @@ def update_conversation_messages(
         type="bot",
         response=complete_message,
         date=datetime.now(timezone.utc).isoformat(),
-        searchWeb=body.search_web,
-        deepSearchWeb=body.deep_research,
-        pageFetchURLs=body.pageFetchURLs,
         fileIds=body.fileIds,
     )
 

@@ -40,12 +40,9 @@ export const useFetchEmailById = (messageId: string | null) => {
   };
 
   useEffect(() => {
-    if (messageId) {
-      fetchEmailById();
-    } else {
-      setMail(null); // Clear email if no messageId
-    }
-  }, [messageId, emails]);
+    if (messageId) fetchEmailById();
+    else setMail(null); // Clear email if no messageId
+  }, [messageId, emails, fetchEmailById]);
 
   return {
     mail,

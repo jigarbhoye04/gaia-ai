@@ -2,14 +2,6 @@ import { createSelector } from "@reduxjs/toolkit";
 
 import { RootState } from "@/redux/store";
 
-// Staleness thresholds in milliseconds
-const STALENESS_THRESHOLDS = {
-  todos: 60000, // 1 minute
-  projects: 300000, // 5 minutes
-  labels: 300000, // 5 minutes
-  counts: 120000, // 2 minutes
-};
-
 // Base selectors
 export const selectTodoState = (state: RootState) => state.todos;
 
@@ -50,7 +42,6 @@ export const selectTodosError = createSelector(
   (todoState) => todoState.error,
 );
 
-// Pagination selectors
 export const selectHasMore = createSelector(
   selectTodoState,
   (todoState) => todoState.hasMore,
@@ -67,21 +58,6 @@ export const selectFilters = createSelector(
   (todoState) => todoState.filters,
 );
 
-// Staleness selectors
-export const selectIsDataStale = createSelector(
-  selectTodoState,
-  (todoState) => {
-    const now = Date.now();
-    return {
-      todos: now - todoState.lastFetch.todos > STALENESS_THRESHOLDS.todos,
-      projects:
-        now - todoState.lastFetch.projects > STALENESS_THRESHOLDS.projects,
-      labels: now - todoState.lastFetch.labels > STALENESS_THRESHOLDS.labels,
-      counts: now - todoState.lastFetch.counts > STALENESS_THRESHOLDS.counts,
-    };
-  },
-);
-
 // Optimistic update selectors
 export const selectPendingUpdates = createSelector(
   selectTodoState,
@@ -91,17 +67,6 @@ export const selectPendingUpdates = createSelector(
 export const selectPendingDeletes = createSelector(
   selectTodoState,
   (todoState) => todoState.pendingDeletes,
-);
-
-// Initial load selectors
-export const selectInitialDataLoaded = createSelector(
-  selectTodoState,
-  (todoState) => todoState.initialDataLoaded,
-);
-
-export const selectAllInitialDataLoaded = createSelector(
-  selectInitialDataLoaded,
-  (loaded) => loaded.projects && loaded.labels && loaded.counts,
 );
 
 // Complex selectors

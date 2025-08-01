@@ -31,6 +31,7 @@ export default function CalendarEventSection({
           start: option.start,
           end: option.end,
           is_all_day: option.is_all_day || false,
+          recurrence: option.recurrence,
         };
         return timedEvent;
       }
@@ -42,6 +43,7 @@ export default function CalendarEventSection({
           description: option.description || "",
           time: option.start,
           is_all_day: option.is_all_day || true, // Default to all-day for single time events
+          recurrence: option.recurrence,
         };
         return singleTimeEvent;
       }
@@ -52,6 +54,7 @@ export default function CalendarEventSection({
         description: option.description || "",
         time: "Time TBD",
         is_all_day: true,
+        recurrence: option.recurrence,
       };
       return fallbackEvent;
     },

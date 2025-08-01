@@ -9,10 +9,14 @@ import {
   Flag,
   FolderOpen,
   Hash,
+  Play,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { Button } from "@/components/ui/shadcn/button";
+import { useComposer } from "@/features/chat/contexts/ComposerContext";
+import { formatToolName } from "@/features/chat/utils/chatUtils";
 import {
   TodoAction,
   TodoItem,
@@ -66,6 +70,9 @@ export default function TodoSection({
   const router = useRouter();
   const [expandedTodos, setExpandedTodos] = useState<Set<string>>(new Set());
 
+  // Use the composer context to append text to input
+  const { appendToInput } = useComposer();
+
   const toggleTodoExpansion = (todoId: string) => {
     const newExpanded = new Set(expandedTodos);
     if (newExpanded.has(todoId)) {
@@ -74,6 +81,24 @@ export default function TodoSection({
       newExpanded.add(todoId);
     }
     setExpandedTodos(newExpanded);
+  };
+  const handleRunWorkflow = (todo: TodoItem) => {
+    if (!todo.workflow) return;
+
+    const workflowMessage = `I want to execute a workflow for my todo: "${todo.title}".
+
+Here's the workflow plan:
+${todo.workflow.steps
+  .map(
+    (step, index) =>
+      `${index + 1}. ${step.title} (${formatToolName(step.tool_name)}): ${step.description}`,
+  )
+  .join("\n")}
+
+Please execute these steps in order and use the appropriate tools for each step.`;
+
+    appendToInput(workflowMessage);
+    router.push("/c");
   };
 
   const formatDueDate = (date: string) => {
@@ -157,7 +182,7 @@ export default function TodoSection({
           {projects.map((project) => (
             <div
               key={project.id}
-              className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/80"
+              className="flex cursor-pointer items-center justify-between rounded-xl bg-zinc-900 p-3 hover:bg-zinc-900/70"
               onClick={() => router.push(`/todos/project/${project.id}`)}
             >
               <div className="flex items-center gap-3">
@@ -208,10 +233,16 @@ export default function TodoSection({
           {todos.map((todo) => {
             const isExpanded = expandedTodos.has(todo.id);
             const hasDetails =
-              todo.description || (todo.subtasks && todo.subtasks.length > 0);
+              todo.description ||
+              (todo.subtasks && todo.subtasks.length > 0) ||
+              todo.workflow;
 
             return (
-              <div key={todo.id} className="rounded-xl bg-zinc-900 p-3">
+              <div
+                key={todo.id}
+                className="cursor-pointer rounded-xl bg-zinc-900 p-3 transition-colors hover:bg-zinc-900/70"
+                onClick={() => router.push(`/todos?todoId=${todo.id}`)}
+              >
                 {/* todo Header */}
                 <div className="flex items-start gap-3">
                   <button
@@ -220,6 +251,7 @@ export default function TodoSection({
                         ? "border-success bg-success"
                         : "border-zinc-600 hover:border-zinc-500"
                     }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {todo.completed && (
                       <Check className="h-2.5 w-2.5 text-white" />
@@ -239,8 +271,11 @@ export default function TodoSection({
                       </h4>
                       {hasDetails && (
                         <button
-                          onClick={() => toggleTodoExpansion(todo.id)}
-                          className="rounded p-1 hover:bg-zinc-700"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleTodoExpansion(todo.id);
+                          }}
+                          className="rounded p-1 hover:bg-zinc-900/70"
                         >
                           <ChevronRight
                             className={`h-4 w-4 text-zinc-500 transition-transform ${
@@ -327,6 +362,7 @@ export default function TodoSection({
                               <div
                                 key={subtask.id}
                                 className="flex items-center gap-2 pl-2"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <div
                                   className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
@@ -350,6 +386,27 @@ export default function TodoSection({
                                 </span>
                               </div>
                             ))}
+                          </div>
+                        )}
+
+                        {/* Workflow Section */}
+                        {todo.workflow && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-medium text-zinc-500">
+                              Workflow ({todo.workflow.steps.length} steps)
+                            </p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 border-green-500/30 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRunWorkflow(todo);
+                              }}
+                            >
+                              <Play className="mr-1 h-3 w-3" />
+                              Run Workflow
+                            </Button>
                           </div>
                         )}
                       </div>

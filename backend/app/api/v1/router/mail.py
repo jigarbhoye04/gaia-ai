@@ -1,11 +1,10 @@
 import json
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-
-from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.api.v1.dependencies.google_scope_dependencies import require_google_integration
+from app.config.token_repository import token_repository
+from app.decorators import tiered_rate_limit
 from app.langchain.prompts.mail_prompts import EMAIL_COMPOSER, EMAIL_SUMMARIZER
-from app.middleware.tiered_rate_limiter import tiered_rate_limit
 from app.models.mail_models import (
     ApplyLabelRequest,
     DraftRequest,
@@ -54,16 +53,30 @@ from app.services.mail_service import (
 from app.utils.chat_utils import do_prompt_no_stream
 from app.utils.embedding_utils import search_notes_by_similarity
 from app.utils.general_utils import transform_gmail_message
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 router = APIRouter()
 
 
 @router.get("/gmail/labels", summary="List Gmail Labels")
-def list_labels(current_user: dict = Depends(get_current_user)):
+async def list_labels(
+    current_user: dict = Depends(require_google_integration("gmail")),
+):
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from z
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         results = service.users().labels().list(userId="me").execute()
@@ -73,15 +86,26 @@ def list_labels(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/gmail/messages")
-def list_messages(
+async def list_messages(
     max_results: int = 20,
     pageToken: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Prepare params for message list
@@ -107,7 +131,7 @@ def list_messages(
 @router.get("/gmail/message/{message_id}", summary="Get Gmail Message by ID")
 async def get_email_by_id(
     message_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Get a Gmail message by its ID.
@@ -115,9 +139,20 @@ async def get_email_by_id(
     - **message_id**: The ID of the Gmail message to retrieve
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Fetch the message by ID
@@ -150,7 +185,7 @@ async def search_emails(
     is_read: Optional[bool] = None,
     max_results: int = 20,
     page_token: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Search Gmail messages with advanced query parameters.
@@ -171,9 +206,20 @@ async def search_emails(
     Returns a list of messages matching the search criteria and a next page token if more results are available.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Build Gmail query string from parameters
@@ -221,7 +267,7 @@ async def search_emails(
 @tiered_rate_limit("mail_actions")
 async def process_email(
     request: EmailRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ) -> Any:
     try:
         user_id = current_user.get("user_id")
@@ -246,7 +292,6 @@ async def process_email(
         result = await do_prompt_no_stream(
             prompt=prompt,
         )
-        print(result)
         if isinstance(result, dict) and result.get("response"):
             try:
                 parsed_result = json.loads(result["response"])
@@ -274,7 +319,7 @@ async def send_email_route(
     cc: Optional[str] = Form(None),
     bcc: Optional[str] = Form(None),
     attachments: Optional[List[UploadFile]] = File(None),
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Send an email using the Gmail API.
@@ -287,9 +332,20 @@ async def send_email_route(
     - **attachments**: Optional files to attach to the email
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Get the user's email address
@@ -329,7 +385,8 @@ async def send_email_route(
 @router.post("/gmail/send-json", summary="Send an email using JSON payload")
 @tiered_rate_limit("mail_actions")
 async def send_email_json(
-    request: SendEmailRequest, current_user: dict = Depends(get_current_user)
+    request: SendEmailRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Send an email using the Gmail API with JSON payload (no attachments).
@@ -341,9 +398,20 @@ async def send_email_json(
     - **bcc**: Optional list of BCC recipients
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Get the user's email address
@@ -374,7 +442,7 @@ async def send_email_json(
 @router.post("/gmail/summarize", summary="Summarize an email using LLM")
 async def summarize_email(
     request: EmailSummaryRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ) -> Any:
     """
     Summarize an email using the LLM service.
@@ -387,9 +455,20 @@ async def summarize_email(
     Returns a summary of the email with optional key points and action items.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Fetch the email by ID
@@ -437,7 +516,8 @@ async def summarize_email(
 @router.post("/gmail/mark-as-read", summary="Mark emails as read")
 @tiered_rate_limit("mail_actions")
 async def mark_as_read(
-    request: EmailReadStatusRequest, current_user: dict = Depends(get_current_user)
+    request: EmailReadStatusRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Mark Gmail messages as read by removing the UNREAD label.
@@ -447,9 +527,20 @@ async def mark_as_read(
     Returns a list of IDs that were successfully marked as read.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = mark_messages_as_read(service, request.message_ids)
 
@@ -468,7 +559,8 @@ async def mark_as_read(
 @router.post("/gmail/mark-as-unread", summary="Mark emails as unread")
 @tiered_rate_limit("mail_actions")
 async def mark_as_unread(
-    request: EmailReadStatusRequest, current_user: dict = Depends(get_current_user)
+    request: EmailReadStatusRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Mark Gmail messages as unread by adding the UNREAD label.
@@ -478,9 +570,20 @@ async def mark_as_unread(
     Returns a list of IDs that were successfully marked as unread.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = mark_messages_as_unread(service, request.message_ids)
 
@@ -499,7 +602,8 @@ async def mark_as_unread(
 @router.post("/gmail/star", summary="Star emails")
 @tiered_rate_limit("mail_actions")
 async def star_emails(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Star Gmail messages by adding the STARRED label.
@@ -509,9 +613,20 @@ async def star_emails(
     Returns a list of IDs that were successfully starred.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = star_messages(service, request.message_ids)
 
@@ -530,7 +645,8 @@ async def star_emails(
 @router.post("/gmail/unstar", summary="Unstar emails")
 @tiered_rate_limit("mail_actions")
 async def unstar_emails(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Unstar Gmail messages by removing the STARRED label.
@@ -540,9 +656,20 @@ async def unstar_emails(
     Returns a list of IDs that were successfully unstarred.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = unstar_messages(service, request.message_ids)
 
@@ -561,7 +688,8 @@ async def unstar_emails(
 @router.post("/gmail/trash", summary="Move emails to trash")
 @tiered_rate_limit("mail_actions")
 async def trash_emails(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Move Gmail messages to trash.
@@ -571,9 +699,20 @@ async def trash_emails(
     Returns a list of IDs that were successfully moved to trash.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = trash_messages(service, request.message_ids)
 
@@ -592,7 +731,8 @@ async def trash_emails(
 @router.post("/gmail/untrash", summary="Restore emails from trash")
 @tiered_rate_limit("mail_actions")
 async def untrash_emails(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Restore Gmail messages from trash.
@@ -602,9 +742,20 @@ async def untrash_emails(
     Returns a list of IDs that were successfully restored from trash.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = untrash_messages(service, request.message_ids)
 
@@ -623,7 +774,8 @@ async def untrash_emails(
 @router.post("/gmail/archive", summary="Archive emails")
 @tiered_rate_limit("mail_actions")
 async def archive_emails(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Archive Gmail messages by removing the INBOX label.
@@ -633,9 +785,20 @@ async def archive_emails(
     Returns a list of IDs that were successfully archived.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = archive_messages(service, request.message_ids)
 
@@ -654,7 +817,8 @@ async def archive_emails(
 @router.post("/gmail/move-to-inbox", summary="Move emails to inbox")
 @tiered_rate_limit("mail_actions")
 async def move_emails_to_inbox(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Move Gmail messages to inbox by adding the INBOX label.
@@ -664,9 +828,20 @@ async def move_emails_to_inbox(
     Returns a list of IDs that were successfully moved to inbox.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = move_to_inbox(service, request.message_ids)
 
@@ -683,7 +858,9 @@ async def move_emails_to_inbox(
 
 
 @router.get("/gmail/thread/{thread_id}", summary="Get complete email thread")
-async def get_thread(thread_id: str, current_user: dict = Depends(get_current_user)):
+async def get_thread(
+    thread_id: str, current_user: dict = Depends(require_google_integration("gmail"))
+):
     """
     Fetch a complete email thread with all messages.
 
@@ -692,9 +869,20 @@ async def get_thread(thread_id: str, current_user: dict = Depends(get_current_us
     Returns the thread with all its messages in chronological order.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         thread = fetch_thread(service, thread_id)
 
@@ -712,7 +900,8 @@ async def get_thread(thread_id: str, current_user: dict = Depends(get_current_us
 @router.post("/gmail/labels", summary="Create a new Gmail label")
 @tiered_rate_limit("mail_actions")
 async def create_label_route(
-    request: LabelRequest, current_user: dict = Depends(get_current_user)
+    request: LabelRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Create a new Gmail label.
@@ -726,9 +915,20 @@ async def create_label_route(
     Returns the created label data.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         new_label = create_label(
             service=service,
@@ -748,7 +948,7 @@ async def create_label_route(
 async def update_label_route(
     label_id: str,
     request: LabelRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Update an existing Gmail label.
@@ -763,9 +963,20 @@ async def update_label_route(
     Returns the updated label data.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         updated_label = update_label(
             service=service,
@@ -784,7 +995,7 @@ async def update_label_route(
 @router.delete("/gmail/labels/{label_id}", summary="Delete a Gmail label")
 @tiered_rate_limit("mail_actions")
 async def delete_label_route(
-    label_id: str, current_user: dict = Depends(get_current_user)
+    label_id: str, current_user: dict = Depends(require_google_integration("gmail"))
 ):
     """
     Delete a Gmail label.
@@ -794,9 +1005,20 @@ async def delete_label_route(
     Returns a success message.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         success = delete_label(service=service, label_id=label_id)
         if success:
@@ -810,7 +1032,8 @@ async def delete_label_route(
 @router.post("/gmail/messages/apply-label", summary="Apply labels to messages")
 @tiered_rate_limit("mail_actions")
 async def apply_labels_route(
-    request: ApplyLabelRequest, current_user: dict = Depends(get_current_user)
+    request: ApplyLabelRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Apply one or more labels to specified messages.
@@ -821,9 +1044,20 @@ async def apply_labels_route(
     Returns a list of modified messages.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = apply_labels(
             service=service,
@@ -844,7 +1078,8 @@ async def apply_labels_route(
 @router.post("/gmail/messages/remove-label", summary="Remove labels from messages")
 @tiered_rate_limit("mail_actions")
 async def remove_labels_route(
-    request: ApplyLabelRequest, current_user: dict = Depends(get_current_user)
+    request: ApplyLabelRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Remove one or more labels from specified messages.
@@ -855,9 +1090,20 @@ async def remove_labels_route(
     Returns a list of modified messages.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         modified_messages = remove_labels(
             service=service,
@@ -878,7 +1124,8 @@ async def remove_labels_route(
 @router.post("/gmail/drafts", summary="Create a new draft email")
 @tiered_rate_limit("mail_actions")
 async def create_draft_route(
-    request: DraftRequest, current_user: dict = Depends(get_current_user)
+    request: DraftRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Create a new Gmail draft email.
@@ -893,9 +1140,20 @@ async def create_draft_route(
     Returns the created draft data.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Get the user's email address
@@ -926,7 +1184,7 @@ async def create_draft_route(
 async def list_drafts_route(
     max_results: int = 20,
     page_token: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     List all Gmail draft emails.
@@ -937,9 +1195,20 @@ async def list_drafts_route(
     Returns a list of drafts and a next page token if more results are available.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         drafts = list_drafts(
             service=service,
@@ -954,7 +1223,7 @@ async def list_drafts_route(
 
 @router.get("/gmail/drafts/{draft_id}", summary="Get a specific draft email")
 async def get_draft_route(
-    draft_id: str, current_user: dict = Depends(get_current_user)
+    draft_id: str, current_user: dict = Depends(require_google_integration("gmail"))
 ):
     """
     Get a specific Gmail draft email.
@@ -964,9 +1233,20 @@ async def get_draft_route(
     Returns the draft data with message details.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         draft = get_draft(service=service, draft_id=draft_id)
 
@@ -980,7 +1260,7 @@ async def get_draft_route(
 async def update_draft_route(
     draft_id: str,
     request: DraftRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ):
     """
     Update an existing Gmail draft email.
@@ -996,9 +1276,20 @@ async def update_draft_route(
     Returns the updated draft data.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
 
         # Get the user's email address
@@ -1029,7 +1320,7 @@ async def update_draft_route(
 @router.delete("/gmail/drafts/{draft_id}", summary="Delete a draft email")
 @tiered_rate_limit("mail_actions")
 async def delete_draft_route(
-    draft_id: str, current_user: dict = Depends(get_current_user)
+    draft_id: str, current_user: dict = Depends(require_google_integration("gmail"))
 ):
     """
     Delete a Gmail draft email.
@@ -1039,9 +1330,20 @@ async def delete_draft_route(
     Returns a success message.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         success = delete_draft(service=service, draft_id=draft_id)
 
@@ -1056,7 +1358,7 @@ async def delete_draft_route(
 @router.post("/gmail/drafts/{draft_id}/send", summary="Send a draft email")
 @tiered_rate_limit("mail_actions")
 async def send_draft_route(
-    draft_id: str, current_user: dict = Depends(get_current_user)
+    draft_id: str, current_user: dict = Depends(require_google_integration("gmail"))
 ):
     """
     Send an existing Gmail draft email.
@@ -1066,9 +1368,20 @@ async def send_draft_route(
     Returns the sent message data.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", "")) if token else ""
+        refresh_token = str(token.get("refresh_token", "")) if token else ""
+
         service = get_gmail_service(
-            access_token=current_user.get("access_token", ""),
-            refresh_token=current_user.get("refresh_token", ""),
+            access_token=access_token,
+            refresh_token=refresh_token,
         )
         sent_message = send_draft(service=service, draft_id=draft_id)
 
@@ -1085,7 +1398,7 @@ async def send_draft_route(
 async def get_email_importance_summaries(
     limit: int = 50,
     important_only: bool = False,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("gmail")),
 ) -> dict:
     """
     Get email importance summaries for the current user.
@@ -1113,7 +1426,7 @@ async def get_email_importance_summaries(
     summary="Get single email importance summary",
 )
 async def get_single_email_importance_summary(
-    message_id: str, current_user: dict = Depends(get_current_user)
+    message_id: str, current_user: dict = Depends(require_google_integration("gmail"))
 ) -> dict:
     """
     Get importance summary for a specific email.
@@ -1146,7 +1459,8 @@ async def get_single_email_importance_summary(
     "/gmail/importance-summaries/bulk", summary="Get bulk email importance summaries"
 )
 async def get_bulk_email_importance_summaries(
-    request: EmailActionRequest, current_user: dict = Depends(get_current_user)
+    request: EmailActionRequest,
+    current_user: dict = Depends(require_google_integration("gmail")),
 ) -> dict:
     """
     Get importance summaries for multiple emails in bulk.

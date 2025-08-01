@@ -20,6 +20,7 @@ interface SearchbarInputProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   handleKeyDown: React.KeyboardEventHandler<HTMLInputElement>;
   currentHeight: number;
+  hasMessages: boolean;
   onHeightChange: (height: number) => void;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
   onSlashCommandSelect?: (toolName: string, toolCategory: string) => void;
@@ -40,6 +41,7 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
       currentHeight,
       onHeightChange,
       inputRef,
+      hasMessages,
       onSlashCommandSelect,
     },
     ref,
@@ -312,6 +314,10 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
 
     return (
       <>
+        {slashCommandState.isActive && (
+          <div className="bg-black/05 pointer-events-none fixed top-0 left-0 z-[-1] h-screen w-screen backdrop-blur-xs" />
+        )}
+
         <form onSubmit={handleFormSubmit}>
           <Textarea
             ref={inputRef}
@@ -353,6 +359,7 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
               openedViaButton: false,
             }))
           }
+          hasMessages={hasMessages}
           position={slashCommandState.dropdownPosition}
           isVisible={slashCommandState.isActive}
           openedViaButton={slashCommandState.openedViaButton}

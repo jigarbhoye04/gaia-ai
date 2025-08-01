@@ -1,11 +1,13 @@
 "use client";
 
-import { Tab, Tabs } from "@heroui/react";
+import { Badge, Tab, Tabs } from "@heroui/react";
 import { Bell, BellRing } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { EmailPreviewModal } from "@/components/Modals/EmailPreviewModal";
 import { NotificationsList } from "@/components/Notifications/NotificationsList";
+import { Button } from "@/components/ui";
 import { useAllNotifications } from "@/features/notification/hooks/useAllNotifications";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { NotificationsAPI } from "@/services/api/notifications";
@@ -50,6 +52,19 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleBulkMarkAsRead = async (notificationIds: string[]) => {
+    try {
+      if (notificationIds.length == 0)
+        return toast.error("No events to mark as read");
+      await NotificationsAPI.bulkMarkAsRead(notificationIds);
+      // Refresh both lists after marking as read
+      await refetchUnread();
+      await refetchAll();
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
   // Simple refresh function
   const refreshNotifications = async () => {
     await refetchAll();
@@ -73,7 +88,17 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="flex w-full flex-col items-center justify-center overflow-y-auto p-5">
+    <div className="flex w-full flex-col items-center justify-center overflow-y-auto p-5 py-2">
+      <div className="mb-4 flex w-full justify-end">
+        <Button
+          size="sm"
+          onClick={async () => {
+            await handleBulkMarkAsRead(unreadNotifications.map((n) => n.id));
+          }}
+        >
+          Mark All as Read
+        </Button>
+      </div>
       <Tabs
         aria-label="Notifications"
         color="primary"
@@ -92,10 +117,18 @@ export default function NotificationsPage() {
             <div className="flex items-center space-x-2">
               <BellRing className="h-4 w-4" />
               <span>Unread</span>
-              {unreadNotifications.length != 0 && (
-                <span className="my-2 flex aspect-square items-center rounded-full bg-zinc-600 px-2 text-xs text-foreground">
-                  {unreadNotifications.length}
-                </span>
+              {unreadNotifications.length > 0 && (
+                <Badge
+                  color="primary"
+                  content={
+                    unreadNotifications.length > 99
+                      ? "99+"
+                      : unreadNotifications.length.toString()
+                  }
+                  size="sm"
+                >
+                  <span />
+                </Badge>
               )}
             </div>
           }
@@ -137,7 +170,6 @@ export default function NotificationsPage() {
         <EmailPreviewModal
           isOpen={true}
           onClose={handleModalClose}
-          email_id={modalConfig.props.email_id || ""}
           subject={modalConfig.props.subject || ""}
           body={modalConfig.props.body || ""}
           recipients={modalConfig.props.recipients || []}

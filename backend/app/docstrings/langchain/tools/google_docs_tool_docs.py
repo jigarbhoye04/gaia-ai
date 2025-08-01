@@ -1,6 +1,10 @@
 """Docstrings for Google Docs LangChain tools."""
 
 CREATE_GOOGLE_DOC = """
+Creates online Google Docs that can be shared and edited collaboratively in the browser.
+
+TOOL SELECTION: Use this when user says "doc". Use generate_document when user says "file".
+
 Create a new Google Doc with the specified title and optional initial content.
 
 Use this tool when the user wants to:

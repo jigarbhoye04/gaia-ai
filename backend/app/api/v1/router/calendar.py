@@ -1,28 +1,28 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-
-from app.middleware.tiered_rate_limiter import tiered_rate_limit
+from app.api.v1.dependencies.google_scope_dependencies import require_google_integration
+from app.config.token_repository import token_repository
+from app.decorators import tiered_rate_limit
 from app.models.calendar_models import (
+    CalendarPreferencesUpdateRequest,
     EventCreateRequest,
     EventDeleteRequest,
     EventUpdateRequest,
-    CalendarPreferencesUpdateRequest,
 )
+from app.services import calendar_service
 from app.services.calendar_service import (
     delete_calendar_event,
     update_calendar_event,
 )
-from app.api.v1.dependencies.oauth_dependencies import (
-    get_current_user,
-)
-from app.services import calendar_service
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
 
 
 @router.get("/calendar/list", summary="Get Calendar List")
-async def get_calendar_list(current_user: dict = Depends(get_current_user)):
+async def get_calendar_list(
+    current_user: dict = Depends(require_google_integration("calendar")),
+):
     """
     Retrieve the list of calendars for the authenticated user.
 
@@ -33,8 +33,18 @@ async def get_calendar_list(current_user: dict = Depends(get_current_user)):
         HTTPException: If an error occurs during calendar retrieval.
     """
     try:
-        # Using the valid access token from the dependency. The refresh token is handled in the dependency.
-        return await calendar_service.list_calendars(current_user["access_token"], None)
+        # Get user_id from the authenticated user object
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository instead of using it directly from current_user
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
+        return await calendar_service.list_calendars(access_token)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -45,7 +55,7 @@ async def get_events(
     selected_calendars: Optional[List[str]] = Query(None),
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Retrieve events from the user's selected calendars. If no calendars are provided,
@@ -59,10 +69,19 @@ async def get_events(
         HTTPException: If event retrieval fails.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
         return await calendar_service.get_calendar_events(
-            user_id=current_user["user_id"],
-            access_token=current_user["access_token"],
-            refresh_token=None,  # Already handled by the dependency
+            user_id=user_id,
+            access_token=access_token,
             page_token=page_token,
             selected_calendars=selected_calendars,
             time_min=time_min,
@@ -78,7 +97,7 @@ async def get_events_by_calendar(
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
     page_token: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Fetch events for a specific calendar identified by its ID.
@@ -96,10 +115,19 @@ async def get_events_by_calendar(
         HTTPException: If the event retrieval process encounters an error.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
         return await calendar_service.get_calendar_events_by_id(
             calendar_id=calendar_id,
-            access_token=current_user["access_token"],
-            refresh_token=None,  # Already handled
+            access_token=access_token,
             page_token=page_token,
             time_min=time_min,
             time_max=time_max,
@@ -112,7 +140,7 @@ async def get_events_by_calendar(
 @tiered_rate_limit("calendar_management")
 async def create_event(
     event: EventCreateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Create a new calendar event. This endpoint accepts non-canonical timezone names
@@ -128,8 +156,18 @@ async def create_event(
         HTTPException: If event creation fails.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
         return await calendar_service.create_calendar_event(
-            event, current_user["access_token"], None
+            event, access_token, user_id
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -139,7 +177,7 @@ async def create_event(
 async def get_all_events(
     time_min: Optional[str] = None,
     time_max: Optional[str] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Retrieve events from every calendar associated with the user concurrently.
@@ -151,15 +189,27 @@ async def get_all_events(
         HTTPException: If event retrieval fails.
     """
     try:
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
         return await calendar_service.get_all_calendar_events(
-            current_user["access_token"], None, time_min, time_max
+            access_token, user_id, time_min, time_max
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/calendar/preferences", summary="Get User Calendar Preferences")
-async def get_calendar_preferences(current_user: dict = Depends(get_current_user)):
+async def get_calendar_preferences(
+    current_user: dict = Depends(require_google_integration("calendar")),
+):
     """
     Retrieve the user's selected calendar preferences from the database.
 
@@ -171,7 +221,7 @@ async def get_calendar_preferences(current_user: dict = Depends(get_current_user
     """
     try:
         return await calendar_service.get_user_calendar_preferences(
-            current_user["user_id"]
+            str(current_user.get("user_id", ""))
         )
     except HTTPException as e:
         raise e
@@ -183,7 +233,7 @@ async def get_calendar_preferences(current_user: dict = Depends(get_current_user
 @tiered_rate_limit("calendar_management")
 async def update_calendar_preferences(
     preferences: CalendarPreferencesUpdateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Update the user's selected calendar preferences in the database.
@@ -209,7 +259,7 @@ async def update_calendar_preferences(
 @tiered_rate_limit("calendar_management")
 async def delete_event(
     event: EventDeleteRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Delete a calendar event. This endpoint requires the event ID and optionally the calendar ID.
@@ -224,7 +274,17 @@ async def delete_event(
         HTTPException: If event deletion fails.
     """
     try:
-        return await delete_calendar_event(event, current_user["access_token"], None)
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
+        return await delete_calendar_event(event, access_token, user_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -233,7 +293,7 @@ async def delete_event(
 @tiered_rate_limit("calendar_management")
 async def update_event(
     event: EventUpdateRequest,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_google_integration("calendar")),
 ):
     """
     Update a calendar event. This endpoint allows partial updates of event fields.
@@ -249,6 +309,16 @@ async def update_event(
         HTTPException: If event update fails.
     """
     try:
-        return await update_calendar_event(event, current_user["access_token"], None)
+        user_id = current_user.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found")
+
+        # Get token from repository
+        token = await token_repository.get_token(
+            str(user_id), "google", renew_if_expired=True
+        )
+        access_token = str(token.get("access_token", ""))
+
+        return await update_calendar_event(event, access_token, user_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

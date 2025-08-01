@@ -79,7 +79,6 @@ export function CalendarEventCard({
       }
       setStatus("added");
     } catch (error) {
-      toast.error("Failed to add event!");
       console.error(error);
       setStatus("idle");
     }

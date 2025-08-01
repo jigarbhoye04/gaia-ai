@@ -3,6 +3,20 @@ import json
 from datetime import datetime, timezone
 from typing import List
 
+from app.config.loggers import llm_logger as logger
+from app.langchain.core.graph_manager import GraphManager
+from app.langchain.core.messages import construct_langchain_messages
+from app.langchain.prompts.proactive_agent_prompt import (
+    PROACTIVE_MAIL_AGENT_MESSAGE_PROMPT,
+    PROACTIVE_MAIL_AGENT_SYSTEM_PROMPT,
+    PROACTIVE_REMINDER_AGENT_MESSAGE_PROMPT,
+    PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
+)
+from app.langchain.templates.mail_templates import MAIL_RECEIVED_USER_MESSAGE_TEMPLATE
+from app.langchain.tools.core.categories import get_tool_category
+from app.models.message_models import MessageRequestWithHistory
+from app.models.reminder_models import ReminderProcessingAgentResult
+from app.utils.memory_utils import store_user_message_memory
 from langchain_core.messages import (
     AIMessage,
     AIMessageChunk,
@@ -13,23 +27,8 @@ from langchain_core.messages import (
 from langchain_core.output_parsers import PydanticOutputParser
 from langsmith import traceable
 
-from app.config.loggers import llm_logger as logger
-from app.langchain.core.graph_manager import GraphManager
-from app.langchain.core.messages import construct_langchain_messages
-from app.langchain.tools.core.categories import get_tool_category
-from app.langchain.prompts.proactive_agent_prompt import (
-    PROACTIVE_MAIL_AGENT_MESSAGE_PROMPT,
-    PROACTIVE_MAIL_AGENT_SYSTEM_PROMPT,
-    PROACTIVE_REMINDER_AGENT_MESSAGE_PROMPT,
-    PROACTIVE_REMINDER_AGENT_SYSTEM_PROMPT,
-)
-from app.langchain.templates.mail_templates import MAIL_RECEIVED_USER_MESSAGE_TEMPLATE
-from app.models.message_models import MessageRequestWithHistory
-from app.models.reminder_models import ReminderProcessingAgentResult
-from app.utils.memory_utils import store_user_message_memory
 
-
-@traceable
+@traceable(run_type="llm", name="Call Agent")
 async def call_agent(
     request: MessageRequestWithHistory,
     conversation_id,
@@ -56,7 +55,7 @@ async def call_agent(
         # First gather: Setup operations that can run in parallel
         history, graph = await asyncio.gather(
             construct_langchain_messages(
-                messages,
+                messages=messages,
                 files_data=request.fileData,
                 currently_uploaded_file_ids=request.fileIds,
                 user_id=user_id,
@@ -73,12 +72,10 @@ async def call_agent(
         initial_state = {
             "query": request.message,
             "messages": history,
-            "force_web_search": request.search_web,
-            "force_deep_research": request.deep_research,
             "current_datetime": datetime.now(timezone.utc).isoformat(),
             "mem0_user_id": user_id,
             "conversation_id": conversation_id,
-            "selected_tool": request.selectedTool,  # Add selectedTool to agent state
+            "selected_tool": request.selectedTool,
         }
 
         # Begin streaming the AI output
@@ -94,11 +91,12 @@ async def call_agent(
                     "email": user.get("email"),
                     "user_time": user_time.isoformat(),
                 },
-                "recursion_limit": 15,
+                "recursion_limit": 25,
                 "metadata": {"user_id": user_id},
             },
         ):
             stream_mode, payload = event
+
             if stream_mode == "messages":
                 chunk, metadata = payload
                 if chunk is None:
@@ -226,7 +224,7 @@ async def call_mail_processing_agent(
                     "refresh_token": refresh_token,
                     "initiator": "backend",  # This will be used to identify either to send notification or stream to the user
                 },
-                "recursion_limit": 15,  # Lower limit for email processing
+                "recursion_limit": 25,  # Increased limit for complex email processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "email",
@@ -352,7 +350,7 @@ async def call_reminder_agent(
                     "reminder_id": reminder_id,
                     "initiator": "backend",
                 },
-                "recursion_limit": 9,  # Lower limit for reminder processing
+                "recursion_limit": 20,  # Increased limit for complex reminder processing
                 "metadata": {
                     "user_id": user_id,
                     "processing_type": "reminder",

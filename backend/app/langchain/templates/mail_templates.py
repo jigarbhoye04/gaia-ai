@@ -11,7 +11,9 @@ from langchain_core.prompts import PromptTemplate
 
 
 # Template for minimal message representation
-def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
+def minimal_message_template(
+    email_data: Dict[str, Any], short_body=True
+) -> Dict[str, Any]:
     """
     Convert a Gmail message to a minimal representation with only essential fields.
 
@@ -31,6 +33,9 @@ def minimal_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
         "time": email_data.get("time", ""),
         "isRead": "UNREAD" not in email_data.get("labelIds", []),
         "hasAttachment": "HAS_ATTACHMENT" in email_data.get("labelIds", []),
+        "body": email_data.get("body", "")[:100]
+        if short_body
+        else email_data.get("body", ""),
         "labels": email_data.get("labelIds", []),
     }
 
@@ -46,7 +51,7 @@ def detailed_message_template(email_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         A dictionary with the essential email fields plus body content
     """
-    minimal_data = minimal_message_template(email_data)
+    minimal_data = minimal_message_template(email_data, short_body=False)
     return {
         **minimal_data,
         "body": email_data.get("body", ""),
@@ -86,9 +91,40 @@ def thread_template(thread_data: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "id": thread_data.get("id", ""),
         "messages": [
-            minimal_message_template(msg) for msg in thread_data.get("messages", [])
+            minimal_message_template(msg, short_body=False)
+            for msg in thread_data.get("messages", [])
         ],
         "messageCount": len(thread_data.get("messages", [])),
+        "instructions": """
+        Understand the **actual email body content** and summarize it intelligently using the following framework.
+
+        Your job is to extract meaning from the email — do not repeat sender, subject, or metadata that is already visible to the user.
+
+        🎯 Focus on summarizing the **actual email message**, not the headers.
+
+        Use this analysis framework to guide your summary:
+
+        ✓ Urgent Action Required:
+        - Highlight time-sensitive tasks, deadlines, or urgent requests
+
+        ✓ Key Issues Identified:
+        - Summarize problems, blockers, concerns, or recurring issues
+
+        ✓ Required Actions:
+        - Extract any tasks, decisions, or next steps
+        - Mention who's responsible if it's clear
+
+        ✓ Timeline:
+        - Pull out any mentioned deadlines, meetings, or delays
+
+        ✓ Current Status:
+        - Describe progress, decisions made, or what's still pending
+
+        📌 Be concise. Avoid copy-pasting text or restating obvious content.
+        📌 If none of the framework categories apply, simply summarize the email’s **core message or intent**.
+        📌 Never repeat information the user already sees (like sender name or subject).
+        📌 The goal is to help the user quickly understand **what the email is actually saying or asking**, in plain, helpful language.
+        """,
     }
 
 

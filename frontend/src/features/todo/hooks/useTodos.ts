@@ -7,14 +7,12 @@ import {
   fetchCompletedTodos,
   fetchLabels,
   fetchProjects,
-  fetchTodayTodos,
   fetchTodoById,
   fetchTodoCounts,
   fetchTodos,
   fetchTodosByLabel,
   fetchTodosByPriority,
   fetchTodosByProject,
-  fetchUpcomingTodos,
   optimisticDeleteTodo,
   optimisticUpdateTodo,
   resetTodos,
@@ -58,15 +56,18 @@ export const useTodos = () => {
   }, [dispatch]);
 
   const loadTodayTodos = useCallback(async () => {
-    return dispatch(fetchTodayTodos());
+    // Use the main todos endpoint with today filter
+    return dispatch(
+      fetchTodos({ filters: { due_today: true }, loadMore: false }),
+    );
   }, [dispatch]);
 
-  const loadUpcomingTodos = useCallback(
-    async (days = 7) => {
-      return dispatch(fetchUpcomingTodos(days));
-    },
-    [dispatch],
-  );
+  const loadUpcomingTodos = useCallback(async () => {
+    // Use the main todos endpoint with upcoming filter
+    return dispatch(
+      fetchTodos({ filters: { due_this_week: true }, loadMore: false }),
+    );
+  }, [dispatch]);
 
   const loadCompletedTodos = useCallback(
     async (skip = 0, limit = 50) => {
@@ -214,7 +215,8 @@ export const useTodos = () => {
           refreshDebounceRef.current = setTimeout(async () => {
             await Promise.all([
               dispatch(fetchTodoCounts()),
-              dispatch(fetchProjects()),
+              // Only refresh projects if needed (no need to always refresh)
+              ...(originalTodo?.project_id ? [dispatch(fetchProjects())] : []),
               // Only refresh labels if the deleted todo had labels
               ...(originalTodo?.labels && originalTodo.labels.length > 0
                 ? [dispatch(fetchLabels())]
@@ -263,7 +265,7 @@ export const useTodos = () => {
       clearTimeout(refreshDebounceRef.current);
     }
 
-    // Fetch all data including counts
+    // Always refresh all data - no caching
     await Promise.all([
       dispatch(fetchProjects()),
       dispatch(fetchLabels()),
@@ -273,6 +275,7 @@ export const useTodos = () => {
 
   const loadTodoById = useCallback(
     async (todoId: string) => {
+      // Always fetch fresh data - no caching
       return dispatch(fetchTodoById(todoId));
     },
     [dispatch],

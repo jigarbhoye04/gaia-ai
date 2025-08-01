@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
+from typing import Dict, Optional
 
 from app.config.loggers import app_logger as logger
 from app.config.settings import settings
@@ -7,28 +8,37 @@ from app.db.mongodb.collections import users_collection
 from app.db.redis import set_cache
 from app.services.mail_service import get_gmail_service
 from app.services.user_service import update_user_profile
-from app.utils.oauth_utils import get_tokens_by_user_id
 
 
 async def watch_mail(
     email: str,
-    access_token: str,
-    refresh_token: str,
-    user_id: str,
+    access_token: Optional[str] = None,
+    refresh_token: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> None:
     """
     Set up Gmail push notifications for the user's inbox.
-    Requires user's OAuth access token and Pub/Sub topic name.
+    Can use either direct tokens or fetch from token repository using user_id.
+
+    Args:
+        email: User's email address
+        access_token: Optional OAuth access token
+        refresh_token: Optional OAuth refresh token
+        user_id: Optional user ID to fetch tokens from repository
     """
     try:
         logger.info(f"Starting to watch emails for user ({email})")
 
-        # Build Credentials object from access token
-        # Build Gmail API client
+        # Build Gmail API client using tokens or user_id
         service = get_gmail_service(
             access_token=access_token,
             refresh_token=refresh_token,
+            user_id=user_id,
         )
+
+        if not service:
+            logger.error(f"Failed to get Gmail service for user {email}")
+            return
 
         # Gmail Watch Request body
         request_body = {
@@ -51,13 +61,15 @@ async def watch_mail(
             f"History ID: {response.get('historyId')}"
         )
 
-        await update_user_profile(
-            user_id=user_id,
-            data={
-                "gmail_history_id": response["historyId"],
-                "gmail_watch_enabled": True,
-            },
-        )
+        # Update user profile if user_id is available
+        if user_id:
+            await update_user_profile(
+                user_id=user_id,
+                data={
+                    "gmail_history_id": response["historyId"],
+                    "gmail_watch_enabled": True,
+                },
+            )
 
         # Optionally, store the history ID in Redis for quick access
         await set_cache(
@@ -75,9 +87,10 @@ async def watch_mail(
         )
 
 
-async def renew_gmail_watch_for_user(user: dict) -> dict:
+async def renew_gmail_watch_for_user(user: dict) -> Dict[str, str]:
     """
     Renew Gmail watch for a single user.
+    Uses token repository to get tokens for the user.
 
     Args:
         user: User document from MongoDB
@@ -89,39 +102,14 @@ async def renew_gmail_watch_for_user(user: dict) -> dict:
     user_email = user["email"]
 
     try:
-        access_token, refresh_token, tokens_valid = await get_tokens_by_user_id(user_id)
-        if not tokens_valid:
-            logger.warning(f"Invalid tokens for user {user_email}")
-            return {
-                "status": "failed",
-                "user_email": user_email,
-                "error": "Invalid tokens",
-            }
-
-        service = get_gmail_service(
-            access_token=access_token,
-            refresh_token=refresh_token,
-        )
-
-        if not service:
-            logger.error(f"Failed to get Gmail service for {user_email}")
-            return {
-                "status": "failed",
-                "user_email": user_email,
-                "error": "Failed to get Gmail service",
-            }
-
-        # Renew the Gmail watch
+        # Renew the Gmail watch using the user_id to fetch tokens from repository
         await watch_mail(
             email=user_email,
-            access_token=access_token,
-            refresh_token=refresh_token,
             user_id=user_id,
         )
 
         logger.info(f"Renewed Gmail watch for {user_email}")
         return {"status": "success", "user_email": user_email}
-
     except Exception as e:
         logger.error(f"Failed to renew Gmail watch for {user_email}: {str(e)}")
         return {"status": "failed", "user_email": user_email, "error": str(e)}

@@ -1,47 +1,52 @@
-from typing import Any, Dict
-
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
-
-from app.api.v1.dependencies.oauth_dependencies import get_current_user
+from app.api.v1.dependencies.oauth_dependencies import get_current_user_ws
+from app.config.loggers import auth_logger as logger
 from app.utils.common_utils import (
     websocket_manager as connection_manager,
 )
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
 router = APIRouter(prefix="/ws", tags=["WebSocket"])
 
 
 @router.websocket("/connect")
-async def websocket_endpoint(
-    websocket: WebSocket, user: Dict[str, Any] = Depends(get_current_user)
-):
+async def websocket_endpoint(websocket: WebSocket):
     """
     Endpoint to establish WebSocket connection for authenticated users.
     Each user can have multiple connections (e.g., from different devices).
     """
-    if not user:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
+    # Authenticate the WebSocket connection using cookies
+    user = await get_current_user_ws(websocket)
 
+    # Check if we have a valid user with a user_id
     user_id = user.get("user_id")
 
     if not user_id or not isinstance(user_id, str):
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        logger.warning("WebSocket connection attempted with invalid user_id")
         return
 
+    # Accept the connection now that we've verified the user
+    await websocket.accept()
+
+    # Add the connection to our manager
     connection_manager.add_connection(user_id=user_id, websocket=websocket)
+    logger.info(f"WebSocket connection established for user: {user_id}")
 
     # Remove the connection when the WebSocket is closed
     try:
-        await websocket.accept()
         while True:
             # Keep the connection open
             await websocket.receive_text()
     except WebSocketDisconnect:
-        # Handle disconnection
+        # Handle disconnection - WebSocket is already closed, so just clean up
+        logger.info(f"WebSocket disconnected for user: {user_id}")
         connection_manager.remove_connection(user_id=user_id, websocket=websocket)
-        await websocket.close(code=status.WS_1000_NORMAL_CLOSURE)
     except Exception as e:
         # Handle any other exceptions
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+        logger.error(f"WebSocket error for user {user_id}: {str(e)}")
         connection_manager.remove_connection(user_id=user_id, websocket=websocket)
+        try:
+            await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+        except Exception:
+            # Ignore if WebSocket is already closed
+            pass  # nosec B110
         raise e

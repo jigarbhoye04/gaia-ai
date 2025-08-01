@@ -1,19 +1,18 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 
 import { authApi } from "@/features/auth/api/authApi";
 import { useUserActions } from "@/features/auth/hooks/useUser";
 
-export const authPages = ["/login", "/signup", "/signup"];
+export const authPages = ["/login", "/signup"];
 export const publicPages = [...authPages, "/terms", "/privacy", "/contact"];
 
 const useFetchUser = () => {
   const { setUser, clearUser } = useUserActions();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchUserInfo = useCallback(async () => {
     try {

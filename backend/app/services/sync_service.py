@@ -3,6 +3,7 @@ Sync service for handling synchronization between different entities.
 This module prevents circular imports by centralizing sync logic.
 """
 
+from typing import Optional
 import uuid
 from datetime import datetime
 
@@ -10,7 +11,7 @@ from bson import ObjectId
 
 from app.config.loggers import goals_logger as logger
 from app.db.mongodb.collections import goals_collection, todos_collection
-from app.db.redis import delete_cache
+from app.db.redis import delete_cache, delete_cache_by_pattern
 from app.models.todo_models import Priority, TodoCreate, UpdateTodoRequest, SubTask
 
 
@@ -81,6 +82,12 @@ async def sync_goal_node_completion(
             {"$set": {"subtasks": subtasks, "updated_at": datetime.now()}},
         )
 
+        # Invalidate todo-related caches since we updated subtasks
+        await _invalidate_todo_caches(user_id, todo.get("project_id"), todo_id)
+
+        # Also invalidate goal caches since goal progress might have changed
+        await _invalidate_goal_caches(user_id, goal_id)
+
         logger.info(
             f"Synced completion status for node {node_id} <-> subtask {subtask_id}: {is_complete}"
         )
@@ -132,14 +139,13 @@ async def sync_subtask_to_goal_completion(
             {"_id": goal["_id"]}, {"$set": {"roadmap.nodes": nodes}}
         )
 
-        # Invalidate caches
+        # Invalidate goal caches
         goal_id = str(goal["_id"])
-        cache_key_goal = f"goal_cache:{goal_id}"
-        cache_key_goals = f"goals_cache:{user_id}"
-        cache_key_stats = f"goal_stats_cache:{user_id}"
-        await delete_cache(cache_key_goal)
-        await delete_cache(cache_key_goals)
-        await delete_cache(cache_key_stats)
+        await _invalidate_goal_caches(user_id, goal_id)
+
+        # Also invalidate todo caches since this sync was triggered by a todo change
+        todo_project_id = goal.get("todo_project_id")
+        await _invalidate_todo_caches(user_id, todo_project_id, todo_id)
 
         logger.info(
             f"Synced subtask {subtask_id} completion back to goal {goal_id}: {is_complete}"
@@ -240,6 +246,11 @@ async def create_goal_project_and_todo(
             },
         )
 
+        # Invalidate caches since we created new todos, projects, and updated goals
+        await _invalidate_goal_caches(user_id, goal_id)
+        await _invalidate_todo_caches(user_id, project_id, created_todo.id)
+        await _invalidate_project_caches(user_id, project_id)
+
         logger.info(
             f"Added goal todo {created_todo.id} with {len(subtasks)} subtasks to Goals project {project_id} for goal {goal_id}"
         )
@@ -271,7 +282,88 @@ async def _get_or_create_goals_project(user_id: str) -> str:
         "updated_at": datetime.now(),
     }
 
-    from app.db.mongodb.collections import projects_collection
-
     result = await projects_collection.insert_one(goals_project)
-    return str(result.inserted_id)
+    project_id = str(result.inserted_id)
+
+    # Invalidate project caches since we created a new project
+    await _invalidate_project_caches(user_id, project_id)
+
+    return project_id
+
+
+async def _invalidate_todo_caches(
+    user_id: str, project_id: Optional[str] = None, todo_id: Optional[str] = None
+):
+    """
+    Invalidate todo-related caches.
+    This function uses the same logic as TodoService._invalidate_cache to ensure consistency.
+    """
+    try:
+        # Always invalidate stats since they might change
+        await delete_cache(f"stats:{user_id}")
+
+        # Invalidate specific todo cache
+        if todo_id:
+            await delete_cache(f"todo:{user_id}:{todo_id}")
+
+        # Invalidate project-specific caches
+        if project_id:
+            await delete_cache_by_pattern(f"todos:{user_id}:project:{project_id}:*")
+            await delete_cache(f"projects:{user_id}")
+            await delete_cache_by_pattern(f"*:project:{project_id}*")
+
+        # Invalidate main list cache
+        await delete_cache_by_pattern(f"todos:{user_id}:page:*")
+        await delete_cache_by_pattern(f"todos:{user_id}*")
+        await delete_cache_by_pattern(f"todo:{user_id}:*")
+
+        logger.info(
+            f"Todo caches invalidated for user {user_id}, project {project_id}, todo {todo_id}"
+        )
+
+    except Exception as e:
+        logger.error(f"Error invalidating todo caches: {str(e)}")
+
+
+async def _invalidate_goal_caches(user_id: str, goal_id: Optional[str] = None):
+    """
+    Invalidate goal-related caches.
+    """
+    try:
+        # Always invalidate user's goals list cache
+        cache_key_goals = f"goals_cache:{user_id}"
+        await delete_cache(cache_key_goals)
+
+        # Invalidate goal statistics cache
+        cache_key_stats = f"goal_stats_cache:{user_id}"
+        await delete_cache(cache_key_stats)
+
+        # Invalidate specific goal cache if provided
+        if goal_id:
+            cache_key_goal = f"goal_cache:{goal_id}"
+            await delete_cache(cache_key_goal)
+
+        logger.info(f"Goal caches invalidated for user {user_id}, goal {goal_id}")
+
+    except Exception as e:
+        logger.error(f"Error invalidating goal caches: {str(e)}")
+
+
+async def _invalidate_project_caches(user_id: str, project_id: Optional[str] = None):
+    """
+    Invalidate project-related caches.
+    """
+    try:
+        # Invalidate user's projects list
+        await delete_cache(f"projects:{user_id}")
+
+        # Invalidate specific project cache if provided
+        if project_id:
+            await delete_cache_by_pattern(f"*:project:{project_id}*")
+
+        logger.info(
+            f"Project caches invalidated for user {user_id}, project {project_id}"
+        )
+
+    except Exception as e:
+        logger.error(f"Error invalidating project caches: {str(e)}")
