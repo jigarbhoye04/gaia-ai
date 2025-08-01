@@ -25,6 +25,7 @@ services:
       DEBUG: 1
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
+      WORKER_TYPE: main_app
     env_file:
       - ./backend/.env
     volumes:
@@ -174,6 +175,8 @@ services:
     working_dir: /app
     env_file:
       - ./backend/.env
+    environment:
+      - WORKER_TYPE=mail_worker
     command: ["python", "-m", "app.worker"]
     restart: always
     volumes:
@@ -196,6 +199,8 @@ services:
     working_dir: /app
     env_file:
       - ./backend/.env
+    environment:
+      - WORKER_TYPE=arq_worker
     command: ["python", "-m", "arq", "app.arq_worker.WorkerSettings"]
     restart: always
     volumes:
