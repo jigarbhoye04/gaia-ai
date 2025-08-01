@@ -3,7 +3,6 @@
  */
 
 export * from "./providers";
-export * from "./store";
 export * from "./selectors/todoSelectors";
 export * from "./slices/calendarSlice";
 export * from "./slices/conversationSlice";
@@ -16,3 +15,4 @@ export * from "./slices/loginModalSlice";
 export * from "./slices/sidebarSlice";
 export * from "./slices/todoSlice";
 export * from "./slices/userSlice";
+export * from "./store";

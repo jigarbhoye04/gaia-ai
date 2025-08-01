@@ -9,11 +9,11 @@ import {
 } from "@/components";
 import CalendarCard from "@/features/calendar/components/CalendarCard";
 import { CalendarItem } from "@/types";
+import { CalendarEvent } from "@/types/features/calendarTypes";
 
 import CalendarMessages from "../../demo/CalendarMessages";
 import { FeatureCard } from "../../shared/FeatureCard";
 import LargeHeader from "../../shared/LargeHeader";
-import { CalendarEvent } from "@/types/features/calendarTypes";
 
 const calendarTools: string[] = [
   "Create calendar events using natural language",
