@@ -141,7 +141,6 @@ export default function CalendarEventDialog({
           eventPayload.end = new Date(end).toISOString();
           eventPayload.fixedTime = true;
         }
-        if (recurrence) eventPayload.recurrence = recurrence;
         await calendarApi.createEventDefault(eventPayload);
         toast.success("Event created successfully!");
         onOpenChange(false);

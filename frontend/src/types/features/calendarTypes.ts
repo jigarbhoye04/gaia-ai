@@ -151,7 +151,7 @@ export interface EventCreatePayload {
   end?: string;
   fixedTime?: boolean;
   timezone?: string;
-  recurrence?: string;
+  recurrence?: RecurrenceData;
 }
 
 // Calendar types for conversation messages
