@@ -8,7 +8,7 @@ from app.config.settings import settings
 def get_worker_type() -> str:
     """
     Get the current worker type from settings.
-    
+
     Returns:
         'main_app', 'arq_worker', 'mail_worker', or 'unknown'
     """
@@ -49,7 +49,7 @@ def has_websocket_pool() -> bool:
     """
     Check if the current process has access to WebSocket connections.
     Only the main app has WebSocket connections.
-    
+
     Returns:
         True if has WebSocket pool, False otherwise
     """
