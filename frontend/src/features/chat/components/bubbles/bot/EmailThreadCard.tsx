@@ -84,12 +84,14 @@ function EmailBodyRenderer({ body }: { body: string }) {
 
 interface EmailThreadCardProps {
   emailThreadData: EmailThreadData;
+  isExpandedDefault?: boolean;
 }
 
 export default function EmailThreadCard({
   emailThreadData,
+  isExpandedDefault = true,
 }: EmailThreadCardProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(isExpandedDefault);
 
   const handleSelectionChange = (keys: Selection) => {
     const expanded =
@@ -99,9 +101,7 @@ export default function EmailThreadCard({
 
   return (
     <div
-      className={`mx-auto mb-3 max-w-3xl bg-zinc-800 p-3 py-0 text-white transition-all duration-300 ${
-        isExpanded ? "w-screen rounded-3xl" : "w-full rounded-2xl"
-      }`}
+      className={`mx-auto mb-3 w-full rounded-2xl bg-zinc-800 p-3 py-0 text-white transition-all duration-300`}
     >
       <Accordion
         variant="light"

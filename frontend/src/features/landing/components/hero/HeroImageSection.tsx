@@ -13,7 +13,7 @@ import { MotionContainer } from "../../../../layouts/MotionContainer";
 const featureOptions: { name: string; imageSrc: string; icon: ReactNode }[] = [
   {
     name: "Chat",
-    imageSrc: "/landing/screenshot.webp",
+    imageSrc: "/landing/hero2.webp",
     icon: (
       <BubbleConversationChatIcon
         className="h-5 w-5 focus:outline-hidden"
@@ -91,7 +91,6 @@ export default function HeroImage() {
           <div className={`transition-opacity duration-300`}>
             <Safari
               className="h-fit w-full"
-              // imageSrc={selectedFeature.imageSrc}
               imageSrc={featureOptions[0].imageSrc}
               mode="simple"
               url="heygaia.io"

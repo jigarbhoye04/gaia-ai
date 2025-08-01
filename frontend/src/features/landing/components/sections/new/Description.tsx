@@ -11,36 +11,32 @@ export default function Description() {
   const textRefs = useRef<(HTMLDivElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const [lastParagraphVisible, setLastParagraphVisible] = useState(false);
+  const buttonRef = useRef<HTMLDivElement>(null);
   const [isSectionVisible, setIsSectionVisible] = useState(false);
+  const splitTextsRef = useRef<(SplitText | null)[]>([]);
 
   const paragraphs = useMemo(
     () => [
-      "We believe that everyone deserves a personal assistant. Not just a chatbot, but something smarter.",
-      "One that is truly personalised and gets real work done.",
-      "Frustrated with Siri, Alexa, ChatGPT or Google Assistant doing the bare minimum?",
-      "What if everything in your digital life was seamlessly managed by an assistant that works like a real human, and grows smarter the more you use it?",
-      "Meet GAIA, your very own personal AI assistant.",
-      "Something closer to Jarvis than any chatbot you've used.",
-      "An AI that thinks, plans, and acts like a real human assistant would",
-      "Because staying productive shouldn't require effort. It should feel effortless.",
+      "Everyone deserves a real personal assistant — not just a chatbot.",
+      "Frustrated with Siri, Alexa, or ChatGPT doing the bare minimum?",
+      "Imagine an assistant that manages your digital life like a human would.",
+      "Meet GAIA. Smarter. Proactive. Human-like.",
+      "Because productivity should feel effortless.",
     ],
     [],
   );
 
   useEffect(() => {
-    // Register ScrollTrigger plugin
     gsap.registerPlugin(ScrollTrigger, SplitText);
 
-    // Make sure we have the DOM elements before animating
     if (
       textRefs.current.filter(Boolean).length === 0 ||
       !containerRef.current ||
-      !sectionRef.current
+      !sectionRef.current ||
+      !buttonRef.current
     )
       return;
 
-    // Setup intersection observer to track when the section is visible
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -54,25 +50,21 @@ export default function Description() {
       observer.observe(sectionRef.current);
     }
 
-    // Clear any existing ScrollTriggers to prevent duplicates on re-renders
     ScrollTrigger.getAll().forEach((st) => st.kill());
+    splitTextsRef.current.forEach((st) => st?.revert());
+    splitTextsRef.current = [];
 
-    // Create text splits for word animation
     const newSplitTexts = textRefs.current.map((textRef) => {
       if (!textRef) return null;
-      // Split text into words for staggered animation
       return new SplitText(textRef, { type: "words" });
     });
+    splitTextsRef.current = newSplitTexts;
 
-    // Set up the overall scrolling effect
     const totalHeight = sectionRef.current.offsetHeight;
     const sectionHeight = totalHeight / paragraphs.length;
 
-    // Create a timeline for each text element
-    textRefs.current.forEach((textRef, index) => {
+    textRefs.current.forEach((textRef) => {
       if (!textRef) return;
-
-      // Initial state - fully transparent and blurred
       gsap.set(textRef, {
         opacity: 0,
         filter: "blur(8px)",
@@ -80,96 +72,177 @@ export default function Description() {
         top: "47%",
         left: "50%",
         transform: "translate(-50%, -50%)",
-        // width: "80%",
-        // maxWidth: "80rem",
         zIndex: 10,
+        visibility: "hidden",
       });
+    });
 
-      // Create animation timeline
+    gsap.set(buttonRef.current, {
+      opacity: 0,
+      y: 30,
+      scale: 0.9,
+      visibility: "hidden",
+      pointerEvents: "none",
+    });
+
+    textRefs.current.forEach((textRef, index) => {
+      if (!textRef) return;
+
+      const isLastParagraph = index === paragraphs.length - 1;
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: `top+=${index * sectionHeight} center`,
-          end: `top+=${(index + 1) * sectionHeight} top+=100`,
-          scrub: 1, // Smoother transitions
+          end: `top+=${(index + 1) * sectionHeight} center`,
+          scrub: 1,
           markers: false,
-          toggleActions: "play none none reverse",
           onEnter: () => {
-            // Ensure all other texts are hidden
             textRefs.current.forEach((ref, i) => {
-              if (i !== index && ref) {
-                gsap.to(ref, {
-                  opacity: 0,
-                  filter: "blur(20px)",
-                  duration: 0.5, // Smoother transitions
-                });
+              if (ref) {
+                if (i === index) {
+                  gsap.set(ref, { visibility: "visible" });
+                } else {
+                  gsap.set(ref, { 
+                    visibility: "hidden",
+                    opacity: 0,
+                    filter: "blur(20px)"
+                  });
+                }
               }
             });
-
-            // For paragraphs other than the last one, hide the button
-            if (index !== paragraphs.length - 1) {
-              setLastParagraphVisible(false);
+          },
+          onEnterBack: () => {
+            textRefs.current.forEach((ref, i) => {
+              if (ref) {
+                if (i === index) {
+                  gsap.set(ref, { visibility: "visible" });
+                } else {
+                  gsap.set(ref, {
+                    visibility: "hidden",
+                    opacity: 0,
+                    filter: "blur(20px)",
+                  });
+                }
+              }
+            });
+          },
+          onLeave: () => {
+            if (textRef) {
+              gsap.set(textRef, { visibility: "hidden" });
+            }
+          },
+          onLeaveBack: () => {
+            if (textRef) {
+              gsap.set(textRef, { visibility: "hidden" });
             }
           },
         },
       });
 
-      // Fade in and remove blur as the text enters the viewport
       tl.to(
         textRef,
         {
           opacity: 1,
           filter: "blur(0px)",
-          duration: 10, // Longer visibility
+          duration: 1,
           ease: "power2.out",
           immediateRender: false,
         },
         0,
       );
 
-      // Staggered animation for each word if split text is available
-      if (newSplitTexts[index] && newSplitTexts[index].words) {
+      if (newSplitTexts[index] && newSplitTexts[index]?.words) {
         tl.fromTo(
-          newSplitTexts[index].words,
+          newSplitTexts[index]!.words,
           {
             opacity: 0,
-            y: 40,
-            filter: "blur(10px)",
+            y: 20,
+            filter: "blur(5px)",
           },
           {
             opacity: 1,
             y: 0,
             filter: "blur(0px)",
-            duration: 5,
-            stagger: 0.7, // Stagger each word
-            ease: "back.out(1.2)",
-            onComplete: () => {
-              // Only set the last paragraph as visible after all words have appeared
-              if (index === paragraphs.length - 1) {
-                setLastParagraphVisible(true);
-              }
-            },
+            duration: 0.8,
+            stagger: 0.05,
+            ease: "power2.out",
           },
-          0.5, // Slight delay after parent text starts to appear
+          0.2,
         );
       }
-
-      // Fade out and add blur as the text leaves the viewport - but only after
-      // the text has been fully visible for a while
-      tl.to(
-        textRef,
-        {
-          opacity: 0,
-          filter: "blur(8px)",
-          duration: 0.8,
-        },
-        50.0, // Significantly increased delay - text stays visible much longer
-      );
     });
 
-    // Cleanup function
+    // Separate ScrollTrigger for button with proper boundaries
+    ScrollTrigger.create({
+      trigger: sectionRef.current,
+      start: `top+=${(paragraphs.length - 1) * sectionHeight + sectionHeight * 0.5} center`,
+      end: `bottom-=${sectionHeight * 0.2} center`,
+      scrub: 1,
+      onEnter: () => {
+        if (buttonRef.current) {
+          gsap.killTweensOf(buttonRef.current);
+          gsap.set(buttonRef.current, {
+            visibility: "visible",
+            pointerEvents: "auto",
+          });
+          gsap.to(buttonRef.current, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            ease: "back.out(1.7)",
+            overwrite: true,
+          });
+        }
+      },
+      onLeave: () => {
+        if (buttonRef.current) {
+          gsap.killTweensOf(buttonRef.current);
+          gsap.set(buttonRef.current, {
+            visibility: "hidden",
+            pointerEvents: "none",
+            opacity: 0,
+            y: 30,
+            scale: 0.9,
+          });
+        }
+      },
+      onEnterBack: () => {
+        if (buttonRef.current) {
+          gsap.killTweensOf(buttonRef.current);
+          gsap.set(buttonRef.current, {
+            visibility: "visible",
+            pointerEvents: "auto",
+          });
+          gsap.to(buttonRef.current, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.6,
+            ease: "back.out(1.7)",
+            overwrite: true,
+          });
+        }
+      },
+      onLeaveBack: () => {
+        if (buttonRef.current) {
+          gsap.killTweensOf(buttonRef.current);
+          gsap.set(buttonRef.current, {
+            visibility: "hidden",
+            pointerEvents: "none",
+            opacity: 0,
+            y: 30,
+            scale: 0.9,
+          });
+        }
+      },
+    });
+
     return () => {
       ScrollTrigger.getAll().forEach((st) => st.kill());
+      splitTextsRef.current.forEach((st) => st?.revert());
+      splitTextsRef.current = [];
       observer.disconnect();
     };
   }, [paragraphs]);
@@ -206,19 +279,18 @@ export default function Description() {
             style={{ width: "100%" }}
           >
             {text}
-            {index === paragraphs.length - 1 && (
-              <div
-                className={`pointer-events-auto mt-12 transition-opacity duration-500 ${
-                  lastParagraphVisible
-                    ? "opacity-100"
-                    : "pointer-events-none opacity-0"
-                }`}
-              >
-                <GetStartedButton text="Sign Up" />
-              </div>
-            )}
           </div>
         ))}
+        
+        <div
+          ref={buttonRef}
+          className="pointer-events-auto fixed left-1/2 z-20 -translate-x-1/2 transform"
+          style={{ 
+            top: "calc(50% + 3rem)",
+          }}
+        >
+          <GetStartedButton text="Sign Up" />
+        </div>
       </div>
     </div>
   );

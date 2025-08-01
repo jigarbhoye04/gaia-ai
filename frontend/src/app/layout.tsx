@@ -68,7 +68,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${getAllFontVariables()}! dark`}>
+    <html lang="en" className={`${getAllFontVariables()} dark`}>
       <body className={`dark ${defaultFont.className}`}>
         <main>
           <ProvidersLayout>{children}</ProvidersLayout>
