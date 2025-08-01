@@ -97,6 +97,7 @@ export function MainNavigationMenu() {
     GitHub: "Check out our open source projects",
     WhatsApp: "Join our WhatsApp Community ",
     LinkedIn: "Follow our LinkedIn Company Page",
+    YouTube: "Subscribe to our YouTube Channel",
   } as const;
 
   const getDescription = (label: string): string => {

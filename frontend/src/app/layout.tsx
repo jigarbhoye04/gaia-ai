@@ -7,7 +7,7 @@ import Script from "next/script";
 
 import ProvidersLayout from "@/layouts/ProvidersLayout";
 
-import { defaultFont, getAllFontVariables } from "./fonts";
+import { defaultFont, getAllFontVariables, inter } from "./fonts";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://heygaia.io"),
@@ -68,7 +68,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${getAllFontVariables()}! dark`}>
+    <html lang="en" className={`${getAllFontVariables()} dark`}>
       <body className={`dark ${defaultFont.className}`}>
         <main>
           <ProvidersLayout>{children}</ProvidersLayout>

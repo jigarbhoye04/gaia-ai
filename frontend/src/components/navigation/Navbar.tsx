@@ -4,75 +4,173 @@ import { Button } from "@heroui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 
-import DesktopMenu from "@/components/navigation/DesktopMenu";
 import MobileMenu from "@/components/navigation/MobileMenu";
 import { LinkButton } from "@/components/shared/LinkButton";
 import { appConfig } from "@/config/appConfig";
 import useMediaQuery from "@/hooks/ui/useMediaQuery";
 
-import { MainNavigationMenu } from "./NavigationMenu";
+import { NavbarMenu } from "./NavbarMenu";
+import { RainbowGithubButton } from "./RainbowGithubButton";
+import { ChevronDown } from "lucide-react";
 
 export default function Navbar() {
-  const pathname = usePathname(); // Get the current route
-  const isMobileScreen = useMediaQuery("(max-width: 600px)");
-  const [scrolled, setScrolled] = useState(true);
+  const pathname = usePathname();
+  const isMobileScreen = useMediaQuery("(max-width: 990px)");
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  // Function to control backdrop blur
+  const toggleBackdrop = (show: boolean) => {
+    const backdrop = document.getElementById("navbar-backdrop");
+    if (backdrop) {
+      if (show) {
+        backdrop.style.opacity = "1";
+        backdrop.style.pointerEvents = "none";
+      } else {
+        backdrop.style.opacity = "0";
+        backdrop.style.pointerEvents = "none";
+      }
+    }
+  };
+
+  // Handle mouse leave for navbar container
+  const handleNavbarMouseLeave = () => {
+    if (!isMobileScreen) {
+      setActiveDropdown(null);
+      setHoveredItem(null);
+      toggleBackdrop(false);
+    }
+  };
+
+  const handleMouseEnter = (menu: string) => {
+    if (!isMobileScreen) {
+      setActiveDropdown(menu);
+      setHoveredItem(menu);
+      toggleBackdrop(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isMobileScreen) {
+      setActiveDropdown(null);
+      setHoveredItem(null);
+      toggleBackdrop(false);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      toggleBackdrop(false);
+    };
+  }, []);
 
   return (
-    <div className="navbar">
+    <div className="fixed top-0 left-0 z-50 w-full px-4 pt-4">
       <div
-        className={`navbar_content mt-3 flex h-full w-full min-w-fit justify-between rounded-xl bg-zinc-900 px-1.5 py-1 !transition-all duration-1000 ${
-          (!isMobileScreen && scrolled) || pathname !== "/"
-            ? "sm:max-w-(--breakpoint-lg)"
-            : "sm:max-w-[50px]"
-        }`}
+        className="relative mx-auto max-w-5xl"
+        onMouseLeave={handleNavbarMouseLeave}
       >
-        <Button
-          as={Link}
-          radius="full"
-          href={"/"}
-          variant="light"
-          onPress={() => setScrolled(true)}
-          isIconOnly
+        <div
+          className={`navbar_content flex h-14 w-full items-center justify-between bg-[#ffffff10] px-3 backdrop-blur-xl transition-all duration-300 ${
+            activeDropdown ? "rounded-t-2xl bg-[#08090A]" : "rounded-2xl"
+          }`}
+          style={activeDropdown ? { backgroundColor: "#08090A" } : {}}
         >
-          <Image
-            src="/branding/logo.webp"
-            alt="GAIA Logo"
-            width={30}
-            height={30}
-          />
-        </Button>
+          <Button
+            as={Link}
+            radius="full"
+            href={"/"}
+            variant="light"
+            isIconOnly
+            className="h-10 w-10"
+          >
+            <Image
+              src="/branding/logo.webp"
+              alt="GAIA Logo"
+              width={30}
+              height={30}
+            />
+          </Button>
 
-        <div className="hidden items-center gap-1 sm:flex">
-          {appConfig.links.main
-            .filter((link) => link.href !== "/") // Filter out Home link for desktop nav
-            .map(({ href, label, icon, external }) => (
+          <div className="hidden items-center gap-1 sm:flex">
+            {appConfig.links.main
+              .filter((link) => link.href !== "/") // Filter out Home link for desktop nav
+              .map(({ href, label, icon, external }) => (
+                <LinkButton
+                  key={href}
+                  size="sm"
+                  className={`text-sm font-medium ${
+                    pathname === href
+                      ? "text-primary"
+                      : "text-zinc-400 hover:text-zinc-300"
+                  }`}
+                  as={Link}
+                  href={href}
+                  startContent={icon}
+                  external={external}
+                >
+                  {label}
+                </LinkButton>
+              ))}
+          </div>
+
+          {isMobileScreen ? (
+            <MobileMenu />
+          ) : (
+            <div className="flex items-center gap-1 rounded-lg px-1 py-1">
+              {["product", "resources", "company", "socials"].map((menu) => (
+                <button
+                  key={menu}
+                  className="relative flex h-9 cursor-pointer items-center rounded-xl! px-4 py-2 text-sm text-zinc-400 capitalize transition-colors hover:text-zinc-100"
+                  onMouseEnter={() => handleMouseEnter(menu)}
+                >
+                  {hoveredItem === menu && (
+                    <motion.div
+                      layoutId="navbar-pill"
+                      className="absolute inset-0 h-full w-full rounded-lg bg-zinc-800 font-medium!"
+                      initial={false}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center gap-2">
+                    <span>{menu.charAt(0).toUpperCase() + menu.slice(1)}</span>
+                    <ChevronDown height={17} width={17} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {isMobileScreen ? (
+            <div className="hidden" />
+          ) : (
+            <div className="hidden items-center gap-3 sm:flex">
+              <RainbowGithubButton />
               <LinkButton
-                key={href}
                 size="sm"
-                className={`text-sm font-medium ${
-                  pathname === href
-                    ? "text-primary"
-                    : "text-zinc-400 hover:text-zinc-300"
-                }`}
+                className="h-9 max-h-9 min-h-9 rounded-xl bg-primary px-4! text-sm font-medium text-black transition-all! hover:scale-105 hover:bg-primary!"
                 as={Link}
-                href={href}
-                startContent={icon}
-                external={external}
+                href="/signup"
               >
-                {label}
+                Get Started
               </LinkButton>
-            ))}
+            </div>
+          )}
         </div>
 
-        {isMobileScreen ? (
-          <MobileMenu />
-        ) : (
-          <>
-            <MainNavigationMenu />
-            <DesktopMenu scrolled={scrolled} />
-          </>
+        {activeDropdown && (
+          <NavbarMenu
+            activeMenu={activeDropdown}
+            onClose={() => setActiveDropdown(null)}
+          />
         )}
       </div>
     </div>
