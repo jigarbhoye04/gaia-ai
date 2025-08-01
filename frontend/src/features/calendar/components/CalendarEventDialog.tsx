@@ -128,7 +128,7 @@ export default function CalendarEventDialog({
       e.preventDefault();
       if (!validateForm()) return;
       try {
-        const eventPayload: EventCreatePayload & { recurrence?: string } = {
+        const eventPayload: EventCreatePayload = {
           summary,
           description,
           is_all_day: isAllDay,
@@ -324,7 +324,9 @@ export default function CalendarEventDialog({
               Cancel
             </Button>
             <Button
-              onPress={handleSubmit}
+              onPress={() =>
+                handleSubmit(new Event("submit") as unknown as React.FormEvent)
+              }
               className="border-0 bg-zinc-800 text-zinc-200 hover:bg-zinc-700 disabled:bg-zinc-800 disabled:text-zinc-500"
             >
               Create
