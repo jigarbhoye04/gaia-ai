@@ -7,7 +7,6 @@ import { todoApi } from "@/features/todo/api/todoApi";
 import TodoDetailSheet from "@/features/todo/components/TodoDetailSheet";
 import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
-import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import { Project, Todo, TodoUpdate } from "@/types/features/todoTypes";
@@ -15,9 +14,6 @@ import { Project, Todo, TodoUpdate } from "@/types/features/todoTypes";
 export default function UpcomingTodosPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const { loadCounts } = useTodos();
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
@@ -70,8 +66,7 @@ export default function UpcomingTodosPage() {
   };
 
   const handleTodoEdit = (todo: Todo) => {
-    setEditingTodo(todo);
-    setEditModalOpen(true);
+    selectTodo(todo.id);
   };
 
   if (loading) {
@@ -90,11 +85,7 @@ export default function UpcomingTodosPage() {
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
-        <TodoHeader
-          title="Upcoming"
-          todoCount={upcomingTodos.length}
-          onAddTodo={() => setAddModalOpen(true)}
-        />
+        <TodoHeader title="Upcoming" todoCount={upcomingTodos.length} />
       </div>
 
       <div className="w-full flex-1 overflow-y-auto px-4">
@@ -107,31 +98,6 @@ export default function UpcomingTodosPage() {
           onRefresh={loadUpcomingTodos}
         />
       </div>
-
-      {/* Add Todo Modal */}
-      <TodoModal
-        mode="add"
-        open={addModalOpen}
-        onOpenChange={setAddModalOpen}
-        onSuccess={() => {
-          loadUpcomingTodos();
-          // Only refresh counts, not all data
-          loadCounts();
-        }}
-      />
-
-      {/* Edit Todo Modal */}
-      <TodoModal
-        mode="edit"
-        todo={editingTodo || undefined}
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        onSuccess={() => {
-          setEditModalOpen(false);
-          setEditingTodo(null);
-          loadUpcomingTodos();
-        }}
-      />
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet

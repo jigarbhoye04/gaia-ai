@@ -128,7 +128,6 @@ async def get_events_by_calendar(
         return await calendar_service.get_calendar_events_by_id(
             calendar_id=calendar_id,
             access_token=access_token,
-            user_id=user_id,
             page_token=page_token,
             time_min=time_min,
             time_max=time_max,

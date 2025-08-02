@@ -1,13 +1,9 @@
 import React from "react";
 
-import {
-  Goal as ApiGoal,
-  GoalRoadmap as ApiGoalRoadmap,
-} from "@/types/api/goalsApiTypes";
+import { Goal as ApiGoal } from "@/types/api/goalsApiTypes";
 
 // Re-export API types for consistency
 export type Goal = ApiGoal;
-export type GoalRoadmap = ApiGoalRoadmap;
 
 // Extend the API Goal type for chat-specific use cases
 export interface GoalNode {

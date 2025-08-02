@@ -8,7 +8,8 @@ import {
   GoogleCalendarIcon,
 } from "@/components";
 import CalendarCard from "@/features/calendar/components/CalendarCard";
-import { CalendarEvent, CalendarItem } from "@/types";
+import { CalendarItem } from "@/types";
+import { CalendarEvent } from "@/types/features/calendarTypes";
 
 import CalendarMessages from "../../demo/CalendarMessages";
 import { FeatureCard } from "../../shared/FeatureCard";

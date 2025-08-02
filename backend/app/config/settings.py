@@ -109,6 +109,7 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "https://heygaia.io"
     DUMMY_IP: str = "8.8.8.8"
     DISABLE_PROFILING: bool = False
+    WORKER_TYPE: str = "unknown"
 
     # Hugging Face Configuration
     USE_HUGGINGFACE_API: bool = False

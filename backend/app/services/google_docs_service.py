@@ -1,11 +1,12 @@
 from typing import Any, Dict, List, Optional
 
+from app.config.loggers import general_logger as logger
+from app.config.settings import settings
+from app.utils.document_utils import create_temp_docx_file
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-
-from app.config.loggers import general_logger as logger
-from app.config.settings import settings
+from googleapiclient.http import MediaFileUpload
 
 
 def get_docs_service(refresh_token: str, access_token: str):
@@ -51,63 +52,112 @@ async def create_google_doc(
     content: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Create a new Google Doc.
+    Create a new Google Doc from markdown content or create an empty document.
 
     Args:
         refresh_token: OAuth refresh token
         access_token: OAuth access token
         title: Title of the document
-        content: Initial content to add to the document
+        content: Markdown content to convert and upload (optional)
 
     Returns:
         Dict containing document information
     """
     try:
-        docs_service = get_docs_service(refresh_token, access_token)
+        if content:
+            # Create Google Doc from markdown content via DOCX conversion
+            logger.info("Creating Google Doc from markdown content via DOCX conversion")
 
-        # Create the document
-        doc = {"title": title}
-        result = docs_service.documents().create(body=doc).execute()
+            async with create_temp_docx_file(title.replace(" ", "_"), title) as (
+                temp_path,
+                convert_markdown,
+            ):
+                # Convert markdown to DOCX
+                await convert_markdown(content)
 
-        doc_id = result.get("documentId")
-        logger.info(f"Created Google Doc with ID: {doc_id}")
+                # Upload DOCX to Google Drive
+                drive_service = get_drive_service(refresh_token, access_token)
 
-        # Set default margins (1 inch = 72 points)
-        if doc_id:
-            margin_requests = [
-                {
-                    "updateDocumentStyle": {
-                        "documentStyle": {
-                            "marginTop": {"magnitude": 72, "unit": "PT"},
-                            "marginBottom": {"magnitude": 72, "unit": "PT"},
-                            "marginLeft": {"magnitude": 72, "unit": "PT"},
-                            "marginRight": {"magnitude": 72, "unit": "PT"},
-                        },
-                        "fields": "marginTop,marginBottom,marginLeft,marginRight",
-                    }
+                # Set up the file metadata
+                file_metadata = {
+                    "name": title,
+                    "mimeType": "application/vnd.google-apps.document",  # Convert to Google Doc
                 }
-            ]
 
-            docs_service.documents().batchUpdate(
-                documentId=doc_id, body={"requests": margin_requests}
-            ).execute()
+                # Create media upload object
+                media = MediaFileUpload(
+                    temp_path,
+                    mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    resumable=True,
+                )
 
-            logger.info(f"Applied default margins to Google Doc {doc_id}")
+                # Upload the file
+                result = (
+                    drive_service.files()
+                    .create(
+                        body=file_metadata,
+                        media_body=media,
+                        fields="id,name,webViewLink",
+                    )
+                    .execute()
+                )
 
-        # Add initial content if provided
-        if content and doc_id:
-            await update_google_doc_content(
-                refresh_token, access_token, doc_id, content
-            )
+                doc_id = result.get("id")
+                logger.info(f"Created Google Doc from markdown with ID: {doc_id}")
 
-        return {
-            "document_id": doc_id,
-            "title": title,
-            "url": f"https://docs.google.com/document/d/{doc_id}/edit",
-            "content": content or "",
-        }
+                return {
+                    "document_id": doc_id,
+                    "title": result.get("name", title),
+                    "url": result.get(
+                        "webViewLink",
+                        f"https://docs.google.com/document/d/{doc_id}/edit",
+                    ),
+                    "content": content,
+                    "source": "markdown_conversion",
+                }
+        else:
+            # Create empty Google Doc using native API
+            logger.info("Creating empty Google Doc using native API")
+            docs_service = get_docs_service(refresh_token, access_token)
 
-    except HttpError as e:
+            # Create the document
+            doc = {"title": title}
+            result = docs_service.documents().create(body=doc).execute()
+
+            doc_id = result.get("documentId")
+            logger.info(f"Created empty Google Doc with ID: {doc_id}")
+
+            # Set default margins (1 inch = 72 points)
+            if doc_id:
+                margin_requests = [
+                    {
+                        "updateDocumentStyle": {
+                            "documentStyle": {
+                                "marginTop": {"magnitude": 72, "unit": "PT"},
+                                "marginBottom": {"magnitude": 72, "unit": "PT"},
+                                "marginLeft": {"magnitude": 72, "unit": "PT"},
+                                "marginRight": {"magnitude": 72, "unit": "PT"},
+                            },
+                            "fields": "marginTop,marginBottom,marginLeft,marginRight",
+                        }
+                    }
+                ]
+
+                docs_service.documents().batchUpdate(
+                    documentId=doc_id, body={"requests": margin_requests}
+                ).execute()
+
+                logger.info(f"Applied default margins to Google Doc {doc_id}")
+
+            return {
+                "document_id": doc_id,
+                "title": title,
+                "url": f"https://docs.google.com/document/d/{doc_id}/edit",
+                "content": "",
+                "source": "empty_document",
+            }
+
+    except Exception as e:
         logger.error(f"Error creating Google Doc: {e}")
         raise e
 

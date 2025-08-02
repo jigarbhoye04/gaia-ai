@@ -1,6 +1,10 @@
 """Docstrings for document-related tools."""
 
 GENERATE_DOCUMENT = r"""
+Generates downloadable files in various formats (PDF, DOCX, TXT, etc.) that are saved locally.
+
+TOOL SELECTION: Use this when user says "file". Use create_google_doc_tool when user says "doc".
+
 Creates any file format. NO RESTRICTIONS on content for plain text files.
 
 CRITICAL RULES:
@@ -19,7 +23,7 @@ FORMATTED DOCUMENTS (is_plain_text=False):
 - Input must be valid **Markdown**
 - You can use **LaTeX commands inside Markdown**, but ONLY for output formats that support it
 
-🚫 DO NOT USE LaTeX when output format is `docx` — it won’t render properly. Use pure Markdown only.
+🚫 DO NOT USE LaTeX when output format is `docx` — it won't render properly. Use pure Markdown only.
 
 ✅ Use LaTeX (inside Markdown) when output format is `pdf` and you need:
 
@@ -64,7 +68,7 @@ header-includes:
   ```
 
 🧠 IMPORTANT:
-If you’re using LaTeX features like custom headers/footers or page numbers, you MUST embed the header-includes as YAML metadata inside the Markdown content — NOT in a separate metadata argument.
+If you're using LaTeX features like custom headers/footers or page numbers, you MUST embed the header-includes as YAML metadata inside the Markdown content — NOT in a separate metadata argument.
 
-⚠️ Use LaTeX ONLY when needed. Don’t use it for things Markdown already handles (bold, lists, headings, etc.)
+⚠️ Use LaTeX ONLY when needed. Don't use it for things Markdown already handles (bold, lists, headings, etc.)
 """

@@ -77,28 +77,13 @@ export function useNotificationWebSocket(
                       description:
                         message.notification.content.body ||
                         "New notification received",
-                      action: {
-                        label: "View",
-                        onClick: () => {
-                          // Could trigger opening notification center or navigating to notification
-                          window.dispatchEvent(
-                            new CustomEvent("open-notification-center"),
-                          );
-                        },
-                      },
+                      dismissible: true,
+                      duration: 10000, // Show for 5 seconds
                     });
                   } else {
                     // Fallback if content is missing
                     toast.info("New notification", {
                       description: "You have received a new notification",
-                      action: {
-                        label: "View",
-                        onClick: () => {
-                          window.dispatchEvent(
-                            new CustomEvent("open-notification-center"),
-                          );
-                        },
-                      },
                     });
                   }
                 }

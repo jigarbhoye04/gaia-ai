@@ -323,22 +323,11 @@ export default function TodoSidebar() {
         )}
       </div>
 
-      {/* Modals */}
-      <TodoModal
-        mode="add"
-        open={addTodoOpen}
-        onOpenChange={setAddTodoOpen}
-        onSuccess={() => {
-          // Refresh counts and projects only
-          loadCounts();
-          loadProjects();
-        }}
-      />
+      <TodoModal mode="add" open={addTodoOpen} onOpenChange={setAddTodoOpen} />
       <AddProjectModal
         open={addProjectOpen}
         onOpenChange={setAddProjectOpen}
         onSuccess={() => {
-          // Refresh counts and projects only
           loadCounts();
           loadProjects();
         }}

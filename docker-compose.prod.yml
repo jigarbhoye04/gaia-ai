@@ -18,16 +18,23 @@ services:
         "0.0.0.0",
         "--port",
         "80",
-        "--reload",
         "--no-access-log",
+        "--workers",
+        "1",
+        "--timeout-keep-alive",
+        "65",
+        "--h11-max-incomplete-event-size",
+        "16777216",
       ]
     environment:
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
+      WORKER_TYPE: main_app
+      PYTHONDONTWRITEBYTECODE: 1
+      # Disable output buffering for streaming
+      PYTHONIOENCODING: utf-8
     env_file:
       - ./backend/.env
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:80"
     restart: on-failure
@@ -118,10 +125,10 @@ services:
     working_dir: /app
     env_file:
       - ./backend/.env
+    environment:
+      - WORKER_TYPE=mail_worker
     command: ["python", "-m", "app.worker"]
     restart: always
-    volumes:
-      - ./backend:/app
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -138,10 +145,10 @@ services:
     working_dir: /app
     env_file:
       - ./backend/.env
+    environment:
+      - WORKER_TYPE=arq_worker
     command: ["python", "-m", "arq", "app.arq_worker.WorkerSettings"]
     restart: always
-    volumes:
-      - ./backend:/app
     networks:
       - gaia_network
 
