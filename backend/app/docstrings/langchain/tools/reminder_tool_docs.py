@@ -5,8 +5,8 @@
 CREATE_REMINDER = """
 Create reminder (static or agent-based) for the user.
 
-This tool creates scheduled reminders that can either show simple notifications (static) 
-or execute AI-powered tasks using available tools (agent-based). Handles timezone 
+This tool creates scheduled reminders that can either show simple notifications (static)
+or execute AI-powered tasks using available tools (agent-based). Handles timezone
 conversion, recurring schedules, and validation automatically.
 
 TIMEZONE HANDLING:

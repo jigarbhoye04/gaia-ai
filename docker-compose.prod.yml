@@ -35,8 +35,6 @@ services:
       PYTHONIOENCODING: utf-8
     env_file:
       - ./backend/.env
-    volumes:
-      - ./backend:/app
     ports:
       - "8000:80"
     restart: on-failure
