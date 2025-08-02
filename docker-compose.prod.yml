@@ -19,11 +19,20 @@ services:
         "--port",
         "80",
         "--no-access-log",
+        "--workers",
+        "1",
+        "--timeout-keep-alive",
+        "65",
+        "--h11-max-incomplete-event-size",
+        "16777216",
       ]
     environment:
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
       WORKER_TYPE: main_app
+      PYTHONDONTWRITEBYTECODE: 1
+      # Disable output buffering for streaming
+      PYTHONIOENCODING: utf-8
     env_file:
       - ./backend/.env
     ports:
