@@ -75,8 +75,6 @@ export const demoContents: DemoData[] = [
       { title: "Neural Networks & Deep Learning", subtitle: "A Presentation for CS401", bgColor: "bg-white", textColor: "text-gray-800", highlightColor: "text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500" },
       { title: "What is a Neural Network?", points: ["Computing systems inspired by biological neural networks.", "Composed of interconnected nodes or 'neurons' in layered structures.", "Learns from data to perform tasks without explicit programming."], bgColor: "bg-gray-800", textColor: "text-white", highlightColor: "text-cyan-400", image: "https://source.unsplash.com/_11bKldqb1U/800x600" },
       { title: "Core Architecture", points: ["Input Layer: Receives the initial data.", "Hidden Layers: Perform computations and feature extraction.", "Output Layer: Produces the final result (e.g., classification)."], bgColor: "bg-white", textColor: "text-gray-700", highlightColor: "text-blue-600", image: "https://source.unsplash.com/-I0I1MifV_g/800x600" },
-      { title: "Real-World Applications", points: ["Image Recognition: Tagging photos, medical diagnostics.", "Natural Language Processing: Translation, chatbots.", "Autonomous Vehicles: Object detection for self-driving cars."], bgColor: "bg-blue-600", textColor: "text-white", highlightColor: "text-yellow-300" },
-      { title: "Summary & Future", points: ["NNs are powerful tools for complex pattern recognition.", "Future: More efficient architectures, explainable AI (XAI).", "Continuous learning will drive the next generation of AI."], bgColor: "bg-gray-900", textColor: "text-gray-200", highlightColor: "text-cyan-400" }
     ],
     roadmap: [
         { icon: Search, label: 'Research', time: 'Aug 1-3' }, { icon: GitBranch, label: 'Outline', time: 'Aug 4' }, { icon: BookOpen, label: 'Draft Content', time: 'Aug 5-8' },
@@ -118,7 +116,6 @@ export const demoContents: DemoData[] = [
       { title: "Project Nova", subtitle: "Go-to-Market Strategy", bgColor: "bg-gray-900", textColor: "text-white", highlightColor: "text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500", fontClass: "font-sans" },
       { title: "Market Analysis", points: ["Target Audience: Tech enthusiasts & early adopters (ages 22-40).", "Key Competitors: Legacy Solutions Inc., NextGen Corp.", "Unique Selling Proposition: 50% faster processing, seamless integration."], bgColor: "bg-white", textColor: "text-gray-800", highlightColor: "text-purple-600", fontClass: "font-sans" },
       { title: "Campaign Strategy", points: ["Phase 1 (Awareness): Influencer unboxings, targeted digital ads.", "Phase 2 (Consideration): In-depth reviews, webinars.", "Phase 3 (Conversion): Limited-time launch offer, remarketing."], bgColor: "bg-white", textColor: "text-gray-800", highlightColor: "text-purple-600", fontClass: "font-sans" },
-      { title: "Budget & KPIs", points: ["Allocated Budget: $250,000.", "Key Performance Indicators (KPIs): 1M impressions, 5% Click-Through Rate, 500 pre-orders."], bgColor: "bg-gray-900", textColor: "text-white", highlightColor: "text-pink-500", fontClass: "font-sans" },
     ],
     roadmap: [
         { icon: Search, label: 'Market Research', time: 'Jul 14-15' }, { icon: GitBranch, label: 'Strategy Outline', time: 'Jul 16' }, { icon: BookOpen, label: 'Develop Creatives', time: 'Jul 17-21' },
@@ -159,7 +156,7 @@ export const demoContents: DemoData[] = [
         { title: "Lab Report: Cellular Mitosis", subtitle: "BIO201 - Section B", bgColor: "bg-white", textColor: "text-gray-700", highlightColor: "text-green-600", fontClass: "font-sans" },
         { title: "Prophase", points: ["Chromatin condenses into visible chromosomes.", "The nuclear envelope breaks down.", "Spindle fibers begin to form."], bgColor: "bg-emerald-50", textColor: "text-gray-700", highlightColor: "text-green-600", fontClass: "font-sans", image: "https://source.unsplash.com/tGBc430E96U/800x600" },
         { title: "Metaphase", points: ["Chromosomes align at the metaphase plate.", "Each sister chromatid is attached to a spindle fiber."], bgColor: "bg-emerald-50", textColor: "text-gray-700", highlightColor: "text-green-600", fontClass: "font-sans", image: "https://source.unsplash.com/q-3L-Sj4f6I/800x600" },
-        { title: "Anaphase & Telophase", points: ["Anaphase: Sister chromatids separate and move to opposite poles.", "Telophase: Chromosomes decondense and nuclear envelopes re-form.", "Cytokinesis begins."], bgColor: "bg-emerald-50", textColor: "text-gray-700", highlightColor: "text-green-600", fontClass: "font-sans", image: "https://source.unsplash.com/f-pA_wD4_pA/800x600" },
+        
     ],
     roadmap: [
         { icon: FlaskConical, label: 'Lab Experiment', time: 'Oct 13' }, { icon: Search, label: 'Analyze Data', time: 'Oct 14-16' }, { icon: BookOpen, label: 'Draft Report', time: 'Oct 17-20' },
@@ -199,7 +196,6 @@ export const demoContents: DemoData[] = [
       { title: "The Roman Empire", subtitle: "From Republic to Ruin", bgColor: "bg-[#FDF6E3]", textColor: "text-stone-800", highlightColor: "text-red-900", fontClass: "font-serif" },
       { title: "The Roman Republic", points: ["Founded in 509 BC.", "Characterized by a republican government.", "Period of significant territorial expansion."], bgColor: "bg-[#FDF6E3]", textColor: "text-stone-800", highlightColor: "text-red-900", fontClass: "font-serif" },
       { title: "Pax Romana", points: ["'Roman Peace' - a 200-year period of stability.", "Key Emperors: Augustus, Trajan, Marcus Aurelius.", "Vast engineering projects: aqueducts, roads."], bgColor: "bg-[#FDF6E3]", textColor: "text-stone-800", highlightColor: "text-red-900", fontClass: "font-serif" },
-      { title: "The Fall", points: ["Contributing Factors: Economic instability, overexpansion, political corruption, and barbarian invasions.", "Official fall of the Western Roman Empire in 476 AD."], bgColor: "bg-[#FDF6E3]", textColor: "text-stone-800", highlightColor: "text-red-900", fontClass: "font-serif" },
     ],
     roadmap: [
         { icon: Landmark, label: 'Primary Source Research', time: 'Sep 1-5' }, { icon: GitBranch, label: 'Structure Narrative', time: 'Sep 6-8' }, { icon: BookOpen, label: 'Write Script', time: 'Sep 9-12' },
@@ -238,7 +234,6 @@ export const demoContents: DemoData[] = [
       { title: "Kyoto, Japan", subtitle: "Autumn Itinerary", bgColor: "bg-rose-50", textColor: "text-gray-800", highlightColor: "text-red-500", image: "https://source.unsplash.com/O6v3a2Y/1600x900" },
       { title: "Day 1-2: Arrival & Arashiyama", points: ["Arrive at KIX, transfer to Kyoto.", "Check into hotel in Gion.", "Explore Arashiyama Bamboo Grove & Tenryū-ji Temple."], bgColor: "bg-white", textColor: "text-gray-700", highlightColor: "text-red-500" },
       { title: "Day 3-4: Temples & Culture", points: ["Visit Kinkaku-ji (Golden Pavilion) & Fushimi Inari Shrine.", "Walk through the historic Gion district.", "Attend a traditional tea ceremony."], bgColor: "bg-white", textColor: "text-gray-700", highlightColor: "text-red-500" },
-      { title: "Day 5: Departure", points: ["Morning visit to Nishiki Market for souvenirs.", "Enjoy a final matcha ice cream.", "Depart from KIX."], bgColor: "bg-white", textColor: "text-gray-700", highlightColor: "text-red-500" },
     ],
     roadmap: [
         { icon: BedDouble, label: 'Book Hotels', time: 'By Aug 30' }, { icon: Landmark, label: 'Plan Daily Activities', time: 'By Sep 15' }, { icon: ShoppingCart, label: 'Buy Rail Pass', time: 'By Oct 1' },

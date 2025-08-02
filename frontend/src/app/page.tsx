@@ -11,9 +11,12 @@ import Description from "@/features/landing/components/sections/new/Description"
 import Mail from "@/features/landing/components/sections/new/Mail";
 import Proactive from "@/features/landing/components/sections/new/Proactive";
 import Todo from "@/features/landing/components/sections/new/Todo";
+import Goals from "@/features/landing/components/sections/new/Goals";
+import Calendar from "@/features/calendar/components/Calendar";
 
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
+import WorkflowAutomation from "@/features/landing/components/sections/new/WorkflowAutomation";
 
 // const DeepSearchSection = lazy(
 //   () => import("@/features/landing/components/sections/DeepSearchSection"),
@@ -67,9 +70,10 @@ export default function LandingPage() {
           <Integrations />
           <Proactive />
           <Mail />
-          {/* <Calendar /> */}
+          {/* <WorkflowAutomation /> */}
+          <Calendar />
           <Todo />
-          {/* <Goals /> */}
+          <Goals />
           <InternetSection />
           <AdvancedConversation />
           {/* TODO: Section for crazy automations, MCP, n8n, and reminders feature */}
@@ -94,6 +98,24 @@ export default function LandingPage() {
           {/* <MobileSection /> */}
           <FinalSection />
         </div>
+      </div>
+
+      {/* Product Hunt Badge - Fixed Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <a 
+          href="https://www.producthunt.com/products/gaia-8010ee43-bc6e-40ef-989c-02c950a5b778?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-gaia-6" 
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block transition-transform"
+        >
+          <Image
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1000528&theme=light&t=1754093183881"
+            alt="GAIA - Proactive, Personal AI Assistant to boost your productivity | Product Hunt"
+            width={250}
+            height={54}
+            className="drop-shadow-lg"
+          />
+        </a>
       </div>
       {/* </ReactLenis> */}
     </LandingLayout>

@@ -5,10 +5,27 @@ import {
   GitBranch,
   Send,
   Target,
+  TargetIcon,
+  Zap,
 } from "lucide-react";
 import React, { useCallback,useEffect, useRef, useState } from "react";
 
+import ReactFlow, { 
+  Node, 
+  Edge, 
+  useNodesState, 
+  useEdgesState, 
+  Position, 
+  MarkerType,
+  Background,
+  Handle
+} from 'reactflow';
+import 'reactflow/dist/style.css';
+
 import { Target02Icon } from "@/components";
+
+import SectionChip from "../../shared/SectionChip";
+
 
 // Helper to wait for a specific duration
 const wait = (ms: number): Promise<void> =>
@@ -202,42 +219,155 @@ interface RoadmapStep {
   duration: string;
 }
 
+const CustomNode = ({ data }: any) => {
+  return (
+    <div className={`px-4 py-3 rounded-xl border-2 text-center text-sm font-medium transition-all duration-300 min-w-[120px] ${
+      data.isActive
+        ? "border-[#01BBFF] bg-[#01BBFF]/10 text-[#01BBFF] shadow-lg shadow-[#01BBFF]/10"
+        : "border-gray-600/0 bg-slate-800/0 text-gray-400/0"
+    }`}>
+      {/* Target Handle (for incoming edges) */}
+      <Handle 
+        type="target" 
+        position={Position.Left} 
+        className="!bg-transparent !border-0"
+      />
+
+      <div className="font-semibold">{data.label}</div>
+      
+      {/* Source Handle (for outgoing edges) */}
+      <Handle 
+        type="source" 
+        position={Position.Right} 
+        className="!bg-transparent !border-0"
+      />
+    </div>
+  );
+};
+
+const nodeTypes = {
+  custom: CustomNode,
+};
+
+// --- Roadmap Demo Component ---
+// --- Roadmap Demo Component ---
 const RoadmapDemo: React.FC<{ isActive: boolean }> = ({ isActive }) => {
-  const [currentStep, setCurrentStep] = useState(-1); // Start at -1 for initial state
-  const [animationComplete, setAnimationComplete] = useState(false);
   const isMounted = useRef(true);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const roadmapSteps: RoadmapStep[] = [
-    { title: "Learn JavaScript Basics", duration: "2 weeks" },
-    { title: "Understand React Fundamentals", duration: "3 weeks" },
-    { title: "Build First React App", duration: "2 weeks" },
-    { title: "Learn State Management", duration: "2 weeks" },
-    { title: "Create Portfolio Project", duration: "3 weeks" },
+  // --- Initial State Definitions ---
+  const initialNodes: Node[] = [
+    {
+      id: '1',
+      type: 'custom',
+      position: { x: 0, y: 100 },
+      data: { label: 'Learn Fundamentals', isActive: false },
+    },
+    {
+      id: '2',
+      type: 'custom',
+      position: { x: 280, y: 30 },
+      data: { label: 'Build Projects', isActive: false },
+    },
+    {
+      id: '3',
+      type: 'custom',
+      position: { x: 280, y: 170 },
+      data: { label: 'Master Advanced', isActive: false },
+    },
   ];
 
+  const initialEdges: Edge[] = [
+    {
+      id: 'e1-2',
+      source: '1',
+      target: '2',
+      type: 'bezier',
+      animated: false,
+      style: { stroke: '#6B728000', strokeWidth: 1, strokeOpacity: 0.6 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#6B728000', width: 15, height: 15 },
+    },
+    {
+      id: 'e1-3',
+      source: '1',
+      target: '3',
+      type: 'bezier',
+      animated: false,
+      style: { stroke: '#6B728000', strokeWidth: 1, strokeOpacity: 0.6 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#6B728000', width: 15, height: 15 },
+    },
+  ];
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  // --- Staggered Animation Logic ---
   const runAnimation = useCallback(async () => {
     if (!isMounted.current || !isActive) return;
-    setCurrentStep(-1);
-    setAnimationComplete(false);
-    await wait(1000); // Initial delay before animation starts
-    for (let i = 0; i < roadmapSteps.length; i++) {
-      if (!isMounted.current || !isActive) return;
-      setCurrentStep(i);
-      await wait(1200); // Wait for each step
-    }
-    if (!isMounted.current || !isActive) return;
-    setAnimationComplete(true);
-    // Optionally reset or hold the final state
-  }, [isActive, roadmapSteps.length]);
 
+    // 1. Reset to initial state
+    setNodes(initialNodes.map(n => ({ ...n, data: { ...n.data, isActive: false } })));
+    setEdges(initialEdges);
+    
+    await wait(50);
+    if (!isMounted.current || !isActive) return;
+
+    // 2. Activate first node
+    setNodes(currentNodes => currentNodes.map(n => 
+      n.id === '1' ? { ...n, data: { ...n.data, isActive: true } } : n
+    ));
+    
+    await wait(50);
+    if (!isMounted.current || !isActive) return;
+
+    // 3. Animate first edge, then activate the connected node
+    setEdges(currentEdges => currentEdges.map(e => e.id === 'e1-2' ? { 
+      ...e, 
+      animated: true,
+      style: { stroke: '#01BBFF', strokeWidth: 1.5 },
+      // ✅ FIX: Construct a new object instead of spreading a potentially non-object type
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#01BBFF', width: 18, height: 18 }
+    } : e));
+
+    await wait(50);
+    if (!isMounted.current || !isActive) return;
+    setNodes(currentNodes => currentNodes.map(n => 
+      n.id === '2' ? { ...n, data: { ...n.data, isActive: true } } : n
+    ));
+
+    await wait(50);
+    if (!isMounted.current || !isActive) return;
+
+    // 4. Animate second edge, then activate its connected node
+    setEdges(currentEdges => currentEdges.map(e => e.id === 'e1-3' ? { 
+      ...e, 
+      animated: true,
+      style: { stroke: '#01BBFF', strokeWidth: 2.5 },
+      // ✅ FIX: Construct a new object instead of spreading a potentially non-object type
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#01BBFF', width: 18, height: 18 }
+    } : e));
+
+    await wait(50);
+    if (!isMounted.current || !isActive) return;
+    setNodes(currentNodes => currentNodes.map(n => 
+      n.id === '3' ? { ...n, data: { ...n.data, isActive: true } } : n
+    ));
+
+    // 5. Wait and loop
+    await wait(3500);
+    if (isMounted.current && isActive) {
+      runAnimation();
+    }
+  }, [isActive, setNodes, setEdges]);
+
+  // --- Component Lifecycle ---
   useEffect(() => {
     isMounted.current = true;
     if (isActive) {
-      timeoutRef.current = setTimeout(runAnimation, 500);
+      timeoutRef.current = setTimeout(runAnimation, 300);
     } else {
-      setCurrentStep(-1);
-      setAnimationComplete(false);
+      setNodes(initialNodes);
+      setEdges(initialEdges);
     }
     return () => {
       isMounted.current = false;
@@ -249,105 +379,42 @@ const RoadmapDemo: React.FC<{ isActive: boolean }> = ({ isActive }) => {
 
   return (
     <div className="flex h-full w-full flex-col rounded-2xl border border-white/5 bg-gradient-to-br from-white/[0.02] to-transparent p-6 backdrop-blur-sm">
-      <div className="mb-8 flex flex-shrink-0 items-center gap-2">
+      <div className="mb-6 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#01BBFF]">
           <Target className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">
-            Learn React in 3 Months
-          </h3>
-          <p className="text-xs text-gray-400">Your personalized roadmap</p>
+          <h3 className="text-sm font-semibold text-white">Learn React Roadmap</h3>
+          <p className="text-xs text-gray-400">Your personalized learning path</p>
         </div>
       </div>
 
-      <div className="flex w-full flex-1 flex-col justify-center overflow-hidden">
-        <div className="mx-auto w-full max-w-sm">
-          {roadmapSteps.map((step, index) => {
-            const isCompleted = animationComplete || index < currentStep;
-            const isCurrent = index === currentStep;
-            const isRightSide = index % 2 === 0;
-
-            // Class definitions for styling based on state
-            const nodeClasses = isCompleted
-              ? "bg-green-400 border-green-400"
-              : isCurrent
-                ? "bg-[#01BBFF] border-[#01BBFF] animate-pulse"
-                : "border-gray-600";
-
-            const textClasses = isCompleted
-              ? "text-green-400 line-through decoration-green-400/50"
-              : isCurrent
-                ? "text-[#01BBFF]"
-                : "text-white";
-
-            const connectorClasses = isCompleted
-              ? "bg-green-400"
-              : isCurrent
-                ? "bg-[#01BBFF]"
-                : "bg-gray-600";
-
-            const verticalLineClasses =
-              isCompleted || (isCurrent && index > 0 && index < currentStep + 1)
-                ? "bg-green-400"
-                : "bg-gray-600";
-
-            return (
-              <div
-                key={index}
-                className="grid h-24 grid-cols-[1fr_auto_1fr] items-center gap-x-4"
-              >
-                {/* Left Branch */}
-                <div className={`text-right ${isRightSide ? "invisible" : ""}`}>
-                  <div className="relative inline-block rounded-md border border-white/10 bg-black/20 px-3 py-2 shadow-lg">
-                    <h4
-                      className={`text-sm font-medium transition-colors duration-500 ${textClasses}`}
-                    >
-                      {step.title}
-                    </h4>
-                    <p className="text-xs text-gray-400">{step.duration}</p>
-                    <div
-                      className={`absolute top-1/2 left-full h-0.5 w-4 -translate-y-1/2 transition-colors duration-500 ${connectorClasses}`}
-                    />
-                  </div>
-                </div>
-
-                {/* Center Spine & Node */}
-                <div className="relative flex h-full items-center">
-                  <div
-                    className={`absolute left-1/2 h-full w-0.5 -translate-x-1/2 transition-colors duration-500 ${index <= currentStep ? "bg-green-400" : "bg-gray-600"} ${index === 0 ? "top-1/2 h-1/2" : ""} ${index === roadmapSteps.length - 1 ? "bottom-1/2 h-1/2" : ""} `}
-                  />
-
-                  <div
-                    className={`z-10 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-all duration-500 ${nodeClasses}`}
-                  >
-                    {isCompleted && (
-                      <CheckCircle2 className="h-3 w-3 text-white" />
-                    )}
-                    {isCurrent && (
-                      <div className="h-2 w-2 rounded-full bg-white" />
-                    )}
-                  </div>
-                </div>
-
-                {/* Right Branch */}
-                <div className={`text-left ${!isRightSide ? "invisible" : ""}`}>
-                  <div className="relative inline-block rounded-md border border-white/10 bg-black/20 px-3 py-2 shadow-lg">
-                    <h4
-                      className={`text-sm font-medium transition-colors duration-500 ${textClasses}`}
-                    >
-                      {step.title}
-                    </h4>
-                    <p className="text-xs text-gray-400">{step.duration}</p>
-                    <div
-                      className={`absolute top-1/2 right-full h-0.5 w-4 -translate-y-1/2 transition-colors duration-500 ${connectorClasses}`}
-                    />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="flex-1 bg-transparent relative">
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          proOptions={{ hideAttribution: true }}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          elementsSelectable={false}
+          panOnDrag={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
+          className="bg-transparent"
+        >
+          <Background 
+            gap={20} 
+            size={1} 
+            color="#374151" 
+            className="opacity-20"
+          />
+        </ReactFlow>
       </div>
     </div>
   );
@@ -584,12 +651,7 @@ const Goals: React.FC = () => {
       <div className="relative z-10 container mx-auto max-w-7xl py-12 sm:py-16">
         {/* Header */}
         <header className="mb-12 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#01BBFF]/30 bg-gradient-to-r from-[#01BBFF]/20 to-[#01BBFF]/10 px-4 py-2 backdrop-blur-sm">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-[#01BBFF]" />
-            <span className="text-sm font-medium text-[#01BBFF]">
-              Goal Tracking
-            </span>
-          </div>
+          <SectionChip icon={TargetIcon} text="Goal Tracking" />
 
           {/* <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent mb-6 leading-tight">
             Ever Felt Stuck Setting&nbsp;
@@ -600,15 +662,9 @@ const Goals: React.FC = () => {
           </h1> */}
 
           <div className="relative mb-6">
-            <h1 className="relative z-10 bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-4xl leading-tight font-bold text-transparent md:text-5xl lg:text-6xl">
-              Ever Felt Stuck Setting&nbsp;
-              <span className="bg-gradient-to-r from-[#9ddcff] to-[#5ac8fa] bg-clip-text text-transparent">
-                Goals ?
-              </span>
-            </h1>
-            <h1 className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#9ddcff] to-[#5ac8fa] bg-clip-text text-4xl font-bold text-transparent opacity-20 blur-lg select-none md:text-5xl lg:text-6xl">
-              Ever Felt Stuck Setting&nbsp; Goals ?
-            </h1>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent leading-tight relative z-10">
+                Ever Felt Stuck Setting Goals ?
+              </h1>
           </div>
 
           <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-400 md:text-xl">

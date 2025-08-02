@@ -2,6 +2,7 @@ import {
   BarChart3,
   Bot,
   Calendar,
+  CheckCheck,
   CheckCircle,
   FolderOpen,
   ListTodo,
@@ -13,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import React, { useEffect,useState } from "react";
+import SectionChip from "../../shared/SectionChip";
 
 interface TodoTool {
   title: string;
@@ -242,12 +244,10 @@ export default function Todo() {
       <div className="bg relative z-10 container mx-auto max-w-7xl py-20">
         {/* Header Section */}
         <div className="mb-16 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#01BBFF]/30 bg-gradient-to-r from-[#01BBFF]/20 to-[#01BBFF]/10 px-4 py-2 backdrop-blur-sm">
-            <div className="h-2 w-2 animate-pulse rounded-full bg-[#01BBFF]" />
-            <span className="text-sm font-medium text-[#01BBFF]">
-              To-do lists
-            </span>
-          </div>
+          
+          
+            <SectionChip icon={CheckCircle} text="To-do lists" />
+          
           <div className="relative mb-3">
             <h1 className="relative z-10 bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-4xl leading-tight font-bold text-transparent md:text-5xl lg:text-6xl">
               Save Hours on&nbsp;

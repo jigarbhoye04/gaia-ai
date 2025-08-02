@@ -1,5 +1,6 @@
 import { Chip } from "@heroui/chip";
 import React, { useEffect, useRef,useState } from "react";
+import SectionChip from "../shared/SectionChip";
 
 const LargeHeader = ({
   chipText,
@@ -11,9 +12,8 @@ const LargeHeader = ({
   subHeadingText: string;
 }) => (
   <div className="mb-16 text-center">
-    <Chip variant="flat" color="primary" className="mb-3 text-primary">
-      {chipText}
-    </Chip>
+
+    <SectionChip text={chipText} />
 
     <h2 className="mb-6 bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-4xl leading-tight font-medium text-transparent md:text-5xl lg:text-6xl">
       {headingText}
