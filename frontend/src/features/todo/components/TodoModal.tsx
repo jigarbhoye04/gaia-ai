@@ -60,7 +60,7 @@ export default function TodoModal({
 }: TodoModalProps) {
   const { projects, addTodo, modifyTodo } = useTodos();
 
-  const getInitialData = (): TodoCreate => {
+  const initialData = useMemo(() => {
     if (mode === "edit" && todo) {
       return {
         title: todo.title,
@@ -82,12 +82,7 @@ export default function TodoModal({
       project_id: initialProjectId,
       subtasks: [],
     };
-  };
-
-  const initialData = useMemo(
-    () => getInitialData(),
-    [mode, todo?.id, initialProjectId, getInitialData],
-  );
+  }, [mode, todo?.id, initialProjectId]);
 
   const { formData, setFormData, loading, handleSubmit, updateField } =
     useModalForm<TodoCreate>({
@@ -125,15 +120,15 @@ export default function TodoModal({
     }
   }, [mode, initialProjectId, updateField]);
 
-  // Set default project when projects are loaded (add mode)
+  // Set default project when modal opens in add mode
   useEffect(() => {
-    if (mode === "add" && !formData.project_id && projects.length > 0) {
+    if (open && mode === "add" && projects.length > 0 && !formData.project_id) {
       const inboxProject = projects.find((p) => p.is_default);
       if (inboxProject) {
         updateField("project_id", inboxProject.id);
       }
     }
-  }, [mode, projects, formData.project_id, updateField]);
+  }, [open, mode, projects.length, updateField]); // Only run when modal opens
 
   // Reset form data when modal opens with todo (edit mode)
   useEffect(() => {

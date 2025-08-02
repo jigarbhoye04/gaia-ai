@@ -7,7 +7,6 @@ import Spinner from "@/components/ui/shadcn/spinner";
 import TodoDetailSheet from "@/features/todo/components/TodoDetailSheet";
 import TodoHeader from "@/features/todo/components/TodoHeader";
 import TodoList from "@/features/todo/components/TodoList";
-import TodoModal from "@/features/todo/components/TodoModal";
 import { useTodos } from "@/features/todo/hooks/useTodos";
 import { useUrlTodoSelection } from "@/features/todo/hooks/useUrlTodoSelection";
 import {
@@ -20,9 +19,6 @@ import {
 export default function TodosPage() {
   const searchParams = useSearchParams();
   const [_page, setPage] = useState(0);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
   const { selectedTodoId, selectTodo, clearSelection } = useUrlTodoSelection();
 
   const {
@@ -113,8 +109,7 @@ export default function TodosPage() {
   };
 
   const handleTodoEdit = (todo: Todo) => {
-    setEditingTodo(todo);
-    setEditModalOpen(true);
+    selectTodo(todo.id);
   };
 
   if (loading && todos.length === 0) {
@@ -130,11 +125,7 @@ export default function TodosPage() {
   return (
     <div className="flex h-full w-full flex-col">
       <div className="w-full px-4">
-        <TodoHeader
-          title={getPageTitle()}
-          todoCount={incompleteTodos.length}
-          onAddTodo={() => setAddModalOpen(true)}
-        />
+        <TodoHeader title={getPageTitle()} todoCount={incompleteTodos.length} />
       </div>
 
       <div
@@ -180,26 +171,6 @@ export default function TodosPage() {
           }}
         />
       </div>
-
-      {/* Add Todo Modal */}
-      <TodoModal
-        mode="add"
-        open={addModalOpen}
-        onOpenChange={setAddModalOpen}
-        initialProjectId={projectId || undefined}
-      />
-
-      {/* Edit Todo Modal */}
-      <TodoModal
-        mode="edit"
-        todo={editingTodo || undefined}
-        open={editModalOpen}
-        onOpenChange={setEditModalOpen}
-        onSuccess={() => {
-          setEditModalOpen(false);
-          setEditingTodo(null);
-        }}
-      />
 
       {/* Todo Detail Sheet */}
       <TodoDetailSheet
