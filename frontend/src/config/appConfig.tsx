@@ -140,7 +140,7 @@ export const appConfig = {
       {
         href: "https://github.com/heygaia",
         label: "GitHub",
-        icon: <Github width={19} />,
+        icon: <Github width={19} height={19} />,
         external: true,
       },
       {

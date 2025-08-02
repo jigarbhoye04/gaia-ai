@@ -2,6 +2,13 @@
 """
 Complete Razorpay setup script for GAIA.
 This script sets up subscription plans in the database using existing Razorpay plan IDs.
+
+Usage:
+    # Development environment (default)
+    python razorpay_setup.py
+
+    # Production environment
+    python razorpay_setup.py --prod
 """
 
 import sys
@@ -17,10 +24,11 @@ from app.models.payment_models import PlanDB, CreatePlanRequest, Currency, PlanD
 from app.config.settings import settings
 
 
-async def setup_razorpay_plans():
+async def setup_razorpay_plans(is_prod: bool = False):
     """Set up GAIA subscription plans in the database using existing Razorpay plan IDs."""
 
-    print("🚀 GAIA Razorpay Setup")
+    env_type = "PRODUCTION" if is_prod else "DEVELOPMENT"
+    print(f"🚀 GAIA Razorpay Setup ({env_type})")
     print("=" * 40)
 
     if not settings.RAZORPAY_KEY_ID or not settings.RAZORPAY_KEY_SECRET:
@@ -29,6 +37,17 @@ async def setup_razorpay_plans():
         return
 
     print(f"🔗 Using Razorpay Key: {settings.RAZORPAY_KEY_ID}")
+    print(f"🌍 Environment: {env_type}")
+
+    # Define plan IDs based on environment
+    if is_prod:
+        # Production Razorpay plan IDs
+        monthly_plan_id = "plan_QzntOT0NuTyA4t"
+        yearly_plan_id = "plan_Qznu3PaP1ZmY1X"
+    else:
+        # Development/Testing Razorpay plan IDs
+        monthly_plan_id = "plan_QmJ1F2fJOIzSea"
+        yearly_plan_id = "plan_QmJ1bew3wsABYv"
 
     # Define plans with their corresponding Razorpay plan IDs
     plans_to_create = [
@@ -95,11 +114,11 @@ async def setup_razorpay_plans():
             ),
         },
         {
-            "razorpay_plan_id": "plan_QmJ1F2fJOIzSea",  # Monthly plan
+            "razorpay_plan_id": monthly_plan_id,  # Monthly plan
             "plan": CreatePlanRequest(
                 name="GAIA Pro",
                 description="For productivity nerds - billed monthly",
-                amount=2000,  # $20.00 in cents
+                amount=1000,  # $10.00 in cents
                 currency=Currency.USD,
                 duration=PlanDuration.MONTHLY,
                 max_users=1,
@@ -127,11 +146,11 @@ async def setup_razorpay_plans():
             ),
         },
         {
-            "razorpay_plan_id": "plan_QmJ1bew3wsABYv",  # Yearly plan
+            "razorpay_plan_id": yearly_plan_id,  # Yearly plan
             "plan": CreatePlanRequest(
                 name="GAIA Pro",
                 description="For productivity nerds - billed annually (save $60/year)",
-                amount=18000,  # $180.00 in cents (save $60)
+                amount=10000,  # $100.00 in cents (save $20)
                 currency=Currency.USD,
                 duration=PlanDuration.YEARLY,
                 max_users=1,
@@ -208,7 +227,9 @@ async def setup_razorpay_plans():
                 updated_at=current_time,
             )
 
-            result = await plans_collection.insert_one(plan_doc.dict(exclude={"id"}))
+            result = await plans_collection.insert_one(
+                plan_doc.model_dump(exclude={"id"})
+            )
             plan_doc.id = str(result.inserted_id)
             created_plans.append(plan_doc)
 
@@ -250,9 +271,20 @@ async def setup_razorpay_plans():
 
 async def main():
     """Main function."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Setup Razorpay plans for GAIA")
+    parser.add_argument(
+        "--prod",
+        action="store_true",
+        help="Use production Razorpay plan IDs (default: development IDs)",
+    )
+    args = parser.parse_args()
+
     try:
-        await setup_razorpay_plans()
-        print("\n🎉 Razorpay setup completed successfully!")
+        await setup_razorpay_plans(is_prod=args.prod)
+        env_type = "PRODUCTION" if args.prod else "DEVELOPMENT"
+        print(f"\n🎉 Razorpay setup completed successfully for {env_type}!")
 
     except Exception as e:
         print(f"❌ Error during setup: {e}")
