@@ -12,8 +12,8 @@ export default function GetStartedButton({
     <div className="flex flex-col items-center gap-4">
       <Button
         as={Link}
-        // size="lg"
-        className="group relative overflow-hidden border-none font-medium transition-all! duration-300 hover:scale-105"
+        // className="group relative overflow-hidden border-none font-medium shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)] transition-all! duration-300"
+        className="h-10 max-h-10 min-h-10 rounded-xl bg-primary px-5! text-sm font-medium text-black transition-all! hover:scale-110 hover:bg-primary!"
         color="primary"
         href={"/signup"}
       >
