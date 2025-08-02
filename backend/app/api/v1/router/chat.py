@@ -31,4 +31,10 @@ async def chat_stream_endpoint(
             body=body, user=user, background_tasks=background_tasks, user_time=user_time
         ),
         media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable Nginx buffering
+            "Access-Control-Allow-Origin": "*",
+        },
     )
