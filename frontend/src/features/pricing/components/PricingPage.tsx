@@ -1,16 +1,63 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Chip } from "@heroui/chip";
 import { Tab, Tabs } from "@heroui/tabs";
 
 import type { Plan } from "@/features/pricing/api/pricingApi";
+import { pricingApi } from "@/features/pricing/api/pricingApi";
 import { PricingCards } from "@/features/pricing/components/PricingCards";
 
-interface PricingPageProps {
-  initialPlans?: Plan[];
-}
+export default function PricingPage() {
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export default function PricingPage({ initialPlans }: PricingPageProps) {
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        setLoading(true);
+        const plansData = await pricingApi.getPlans(true);
+        setPlans(plansData);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to fetch plans:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch plans");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen w-screen flex-col items-center justify-center py-28">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <span className="text-foreground-500">Loading pricing plans...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen w-screen flex-col items-center justify-center py-28">
+        <div className="flex flex-col items-center gap-4">
+          <span className="text-danger">Error loading pricing plans</span>
+          <span className="text-sm text-foreground-500">{error}</span>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded bg-primary px-4 py-2 text-white hover:bg-primary-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       <div className="flex min-h-screen w-screen flex-col items-center justify-center py-28">
@@ -31,7 +78,7 @@ export default function PricingPage({ initialPlans }: PricingPageProps) {
           <div className="mt-5 flex w-full flex-col items-center font-medium">
             <Tabs aria-label="Options" radius="full">
               <Tab key="monthly" title="Monthly">
-                <PricingCards durationIsMonth initialPlans={initialPlans} />
+                <PricingCards durationIsMonth initialPlans={plans} />
               </Tab>
               <Tab
                 key="yearly"
@@ -44,7 +91,7 @@ export default function PricingPage({ initialPlans }: PricingPageProps) {
                   </div>
                 }
               >
-                <PricingCards initialPlans={initialPlans} />
+                <PricingCards initialPlans={plans} />
               </Tab>
             </Tabs>
           </div>
