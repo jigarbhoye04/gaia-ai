@@ -1,31 +1,28 @@
+import "reactflow/dist/style.css";
+
 import {
   CheckCircle,
-  CheckCircle2,
   Clock,
   GitBranch,
   Send,
   Target,
   TargetIcon,
-  Zap,
 } from "lucide-react";
-import React, { useCallback,useEffect, useRef, useState } from "react";
-
-import ReactFlow, { 
-  Node, 
-  Edge, 
-  useNodesState, 
-  useEdgesState, 
-  Position, 
-  MarkerType,
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import ReactFlow, {
   Background,
-  Handle
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+  Edge,
+  Handle,
+  MarkerType,
+  Node,
+  Position,
+  useEdgesState,
+  useNodesState,
+} from "reactflow";
 
 import { Target02Icon } from "@/components";
 
 import SectionChip from "../../shared/SectionChip";
-
 
 // Helper to wait for a specific duration
 const wait = (ms: number): Promise<void> =>
@@ -219,27 +216,38 @@ interface RoadmapStep {
   duration: string;
 }
 
-const CustomNode = ({ data }: any) => {
+interface CustomNodeData {
+  label: string;
+  isActive: boolean;
+}
+
+interface CustomNodeProps {
+  data: CustomNodeData;
+}
+
+const CustomNode = ({ data }: CustomNodeProps) => {
   return (
-    <div className={`px-4 py-3 rounded-xl border-2 text-center text-sm font-medium transition-all duration-300 min-w-[120px] ${
-      data.isActive
-        ? "border-[#01BBFF] bg-[#01BBFF]/10 text-[#01BBFF] shadow-lg shadow-[#01BBFF]/10"
-        : "border-gray-600/0 bg-slate-800/0 text-gray-400/0"
-    }`}>
+    <div
+      className={`min-w-[120px] rounded-xl border-2 px-4 py-3 text-center text-sm font-medium transition-all duration-300 ${
+        data.isActive
+          ? "border-[#01BBFF] bg-[#01BBFF]/10 text-[#01BBFF] shadow-lg shadow-[#01BBFF]/10"
+          : "border-gray-600/0 bg-slate-800/0 text-gray-400/0"
+      }`}
+    >
       {/* Target Handle (for incoming edges) */}
-      <Handle 
-        type="target" 
-        position={Position.Left} 
-        className="!bg-transparent !border-0"
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!border-0 !bg-transparent"
       />
 
       <div className="font-semibold">{data.label}</div>
-      
+
       {/* Source Handle (for outgoing edges) */}
-      <Handle 
-        type="source" 
-        position={Position.Right} 
-        className="!bg-transparent !border-0"
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!border-0 !bg-transparent"
       />
     </div>
   );
@@ -258,43 +266,53 @@ const RoadmapDemo: React.FC<{ isActive: boolean }> = ({ isActive }) => {
   // --- Initial State Definitions ---
   const initialNodes: Node[] = [
     {
-      id: '1',
-      type: 'custom',
+      id: "1",
+      type: "custom",
       position: { x: 0, y: 100 },
-      data: { label: 'Learn Fundamentals', isActive: false },
+      data: { label: "Learn Fundamentals", isActive: false },
     },
     {
-      id: '2',
-      type: 'custom',
+      id: "2",
+      type: "custom",
       position: { x: 280, y: 30 },
-      data: { label: 'Build Projects', isActive: false },
+      data: { label: "Build Projects", isActive: false },
     },
     {
-      id: '3',
-      type: 'custom',
+      id: "3",
+      type: "custom",
       position: { x: 280, y: 170 },
-      data: { label: 'Master Advanced', isActive: false },
+      data: { label: "Master Advanced", isActive: false },
     },
   ];
 
   const initialEdges: Edge[] = [
     {
-      id: 'e1-2',
-      source: '1',
-      target: '2',
-      type: 'bezier',
+      id: "e1-2",
+      source: "1",
+      target: "2",
+      type: "bezier",
       animated: false,
-      style: { stroke: '#6B728000', strokeWidth: 1, strokeOpacity: 0.6 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#6B728000', width: 15, height: 15 },
+      style: { stroke: "#6B728000", strokeWidth: 1, strokeOpacity: 0.6 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: "#6B728000",
+        width: 15,
+        height: 15,
+      },
     },
     {
-      id: 'e1-3',
-      source: '1',
-      target: '3',
-      type: 'bezier',
+      id: "e1-3",
+      source: "1",
+      target: "3",
+      type: "bezier",
       animated: false,
-      style: { stroke: '#6B728000', strokeWidth: 1, strokeOpacity: 0.6 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#6B728000', width: 15, height: 15 },
+      style: { stroke: "#6B728000", strokeWidth: 1, strokeOpacity: 0.6 },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        color: "#6B728000",
+        width: 15,
+        height: 15,
+      },
     },
   ];
 
@@ -306,52 +324,82 @@ const RoadmapDemo: React.FC<{ isActive: boolean }> = ({ isActive }) => {
     if (!isMounted.current || !isActive) return;
 
     // 1. Reset to initial state
-    setNodes(initialNodes.map(n => ({ ...n, data: { ...n.data, isActive: false } })));
+    setNodes(
+      initialNodes.map((n) => ({ ...n, data: { ...n.data, isActive: false } })),
+    );
     setEdges(initialEdges);
-    
+
     await wait(50);
     if (!isMounted.current || !isActive) return;
 
     // 2. Activate first node
-    setNodes(currentNodes => currentNodes.map(n => 
-      n.id === '1' ? { ...n, data: { ...n.data, isActive: true } } : n
-    ));
-    
+    setNodes((currentNodes) =>
+      currentNodes.map((n) =>
+        n.id === "1" ? { ...n, data: { ...n.data, isActive: true } } : n,
+      ),
+    );
+
     await wait(50);
     if (!isMounted.current || !isActive) return;
 
     // 3. Animate first edge, then activate the connected node
-    setEdges(currentEdges => currentEdges.map(e => e.id === 'e1-2' ? { 
-      ...e, 
-      animated: true,
-      style: { stroke: '#01BBFF', strokeWidth: 1.5 },
-      // ✅ FIX: Construct a new object instead of spreading a potentially non-object type
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#01BBFF', width: 18, height: 18 }
-    } : e));
+    setEdges((currentEdges) =>
+      currentEdges.map((e) =>
+        e.id === "e1-2"
+          ? {
+              ...e,
+              animated: true,
+              style: { stroke: "#01BBFF", strokeWidth: 1.5 },
+              // ✅ FIX: Construct a new object instead of spreading a potentially non-object type
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: "#01BBFF",
+                width: 18,
+                height: 18,
+              },
+            }
+          : e,
+      ),
+    );
 
     await wait(50);
     if (!isMounted.current || !isActive) return;
-    setNodes(currentNodes => currentNodes.map(n => 
-      n.id === '2' ? { ...n, data: { ...n.data, isActive: true } } : n
-    ));
+    setNodes((currentNodes) =>
+      currentNodes.map((n) =>
+        n.id === "2" ? { ...n, data: { ...n.data, isActive: true } } : n,
+      ),
+    );
 
     await wait(50);
     if (!isMounted.current || !isActive) return;
 
     // 4. Animate second edge, then activate its connected node
-    setEdges(currentEdges => currentEdges.map(e => e.id === 'e1-3' ? { 
-      ...e, 
-      animated: true,
-      style: { stroke: '#01BBFF', strokeWidth: 2.5 },
-      // ✅ FIX: Construct a new object instead of spreading a potentially non-object type
-      markerEnd: { type: MarkerType.ArrowClosed, color: '#01BBFF', width: 18, height: 18 }
-    } : e));
+    setEdges((currentEdges) =>
+      currentEdges.map((e) =>
+        e.id === "e1-3"
+          ? {
+              ...e,
+              animated: true,
+              style: { stroke: "#01BBFF", strokeWidth: 2.5 },
+              // ✅ FIX: Construct a new object instead of spreading a potentially non-object type
+              markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: "#01BBFF",
+                width: 18,
+                height: 18,
+              },
+            }
+          : e,
+      ),
+    );
 
     await wait(50);
     if (!isMounted.current || !isActive) return;
-    setNodes(currentNodes => currentNodes.map(n => 
-      n.id === '3' ? { ...n, data: { ...n.data, isActive: true } } : n
-    ));
+    setNodes((currentNodes) =>
+      currentNodes.map((n) =>
+        n.id === "3" ? { ...n, data: { ...n.data, isActive: true } } : n,
+      ),
+    );
 
     // 5. Wait and loop
     await wait(3500);
@@ -384,12 +432,16 @@ const RoadmapDemo: React.FC<{ isActive: boolean }> = ({ isActive }) => {
           <Target className="h-4 w-4 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Learn React Roadmap</h3>
-          <p className="text-xs text-gray-400">Your personalized learning path</p>
+          <h3 className="text-sm font-semibold text-white">
+            Learn React Roadmap
+          </h3>
+          <p className="text-xs text-gray-400">
+            Your personalized learning path
+          </p>
         </div>
       </div>
 
-      <div className="flex-1 bg-transparent relative">
+      <div className="relative flex-1 bg-transparent">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -408,10 +460,10 @@ const RoadmapDemo: React.FC<{ isActive: boolean }> = ({ isActive }) => {
           zoomOnDoubleClick={false}
           className="bg-transparent"
         >
-          <Background 
-            gap={20} 
-            size={1} 
-            color="#374151" 
+          <Background
+            gap={20}
+            size={1}
+            color="#374151"
             className="opacity-20"
           />
         </ReactFlow>
@@ -662,9 +714,9 @@ const Goals: React.FC = () => {
           </h1> */}
 
           <div className="relative mb-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent leading-tight relative z-10">
-                Ever Felt Stuck Setting Goals ?
-              </h1>
+            <h1 className="relative z-10 bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-4xl leading-tight font-bold text-transparent md:text-5xl lg:text-6xl">
+              Ever Felt Stuck Setting Goals ?
+            </h1>
           </div>
 
           <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-400 md:text-xl">

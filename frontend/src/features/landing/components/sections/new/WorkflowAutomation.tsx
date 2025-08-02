@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
+import { AnimatePresence,motion } from 'framer-motion';
 import {
-  Play,
+  Bell,
+  Calendar,
   CheckCircle,
   Clock,
-  List,
-  Plus,
-  Bell,
-  Zap,
   GitBranch,
-  Calendar,
-  User,
-  Target,
+  List,
   Mail,
+  Play,
+  Plus,
+  Target,
+  User,
+  Zap,
 } from 'lucide-react';
+import React, { useCallback,useEffect, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 interface WorkflowStep {
   id: number;

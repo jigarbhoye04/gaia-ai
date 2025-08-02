@@ -1,5 +1,5 @@
-import { Chip } from "@heroui/chip";
 import React, { useEffect, useRef,useState } from "react";
+
 import SectionChip from "../shared/SectionChip";
 
 const LargeHeader = ({

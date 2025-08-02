@@ -2,7 +2,6 @@ import {
   BarChart3,
   Bot,
   Calendar,
-  CheckCheck,
   CheckCircle,
   FolderOpen,
   ListTodo,
@@ -14,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import React, { useEffect,useState } from "react";
+
 import SectionChip from "../../shared/SectionChip";
 
 interface TodoTool {

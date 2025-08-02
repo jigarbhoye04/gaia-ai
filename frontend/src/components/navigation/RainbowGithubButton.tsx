@@ -1,6 +1,8 @@
-import { useGitHubStars } from "@/hooks/useGitHubStars";
-import { Github } from "../shared";
 import { StarFilledIcon } from "@radix-ui/react-icons";
+
+import { useGitHubStars } from "@/hooks/useGitHubStars";
+
+import { Github } from "../shared";
 
 export function RainbowGithubButton() {
   const { data: repoData, isLoading: isLoadingStars } = useGitHubStars("heygaia/gaia");

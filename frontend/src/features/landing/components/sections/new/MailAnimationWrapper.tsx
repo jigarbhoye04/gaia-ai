@@ -1,8 +1,9 @@
 // src/features/mail/components/MailAnimationWrapper.tsx
 
+import { AnimatePresence, motion } from "framer-motion";
 import { Bot, User } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+
 import { animationSteps } from "./mail-animation.data";
 
 /**

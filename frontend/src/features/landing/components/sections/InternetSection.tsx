@@ -1,16 +1,12 @@
+import { AnimatePresence,motion } from "framer-motion";
 import {
+  CheckCircle2,
+  ExternalLink,
   Globe,
   Search,
-  ExternalLink,
-  CheckCircle2,
-  Zap,
-  Clock,
-  Filter,
-  Target,
 } from "lucide-react";
 import Image from "next/image";
-import React, { useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState } from "react";
 
 // --- REUSABLE & CONSISTENT COMPONENTS (ANIMATED) ---
 

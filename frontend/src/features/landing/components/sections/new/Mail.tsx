@@ -2,8 +2,8 @@
 import { Mail as MailIcon } from "lucide-react";
 import React from "react";
 
-import MailAnimationWrapper from "./MailAnimationWrapper";
 import SectionChip from "../../shared/SectionChip";
+import MailAnimationWrapper from "./MailAnimationWrapper";
 
 export default function Mail() {
   return (
