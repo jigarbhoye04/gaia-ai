@@ -1,8 +1,20 @@
+"use client";
+
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu";
 import { cva } from "class-variance-authority";
+import { motion } from "framer-motion";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
+
+// Context for hover state
+const HoverContext = React.createContext<{
+  hovered: string | null;
+  setHovered: (id: string | null) => void;
+}>({
+  hovered: null,
+  setHovered: () => {},
+});
 
 function NavigationMenu({
   className,
@@ -12,19 +24,24 @@ function NavigationMenu({
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Root> & {
   viewport?: boolean;
 }) {
+  const [hovered, setHovered] = React.useState<string | null>(null);
+
   return (
-    <NavigationMenuPrimitive.Root
-      data-slot="navigation-menu"
-      data-viewport={viewport}
-      className={cn(
-        "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center shadow-2xl outline-red-500",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      {viewport && <NavigationMenuViewport />}
-    </NavigationMenuPrimitive.Root>
+    <HoverContext.Provider value={{ hovered, setHovered }}>
+      <NavigationMenuPrimitive.Root
+        data-slot="navigation-menu"
+        data-viewport={viewport}
+        className={cn(
+          "group/navigation-menu relative flex max-w-max flex-1 items-center justify-center gap-4 rounded-full border border-[#ffffff26] px-[3px]",
+          className,
+        )}
+        onMouseLeave={() => setHovered(null)}
+        {...props}
+      >
+        {children}
+        {viewport && <NavigationMenuViewport />}
+      </NavigationMenuPrimitive.Root>
+    </HoverContext.Provider>
   );
 }
 
@@ -36,7 +53,7 @@ function NavigationMenuList({
     <NavigationMenuPrimitive.List
       data-slot="navigation-menu-list"
       className={cn(
-        "group flex flex-1 list-none items-center justify-center gap-1",
+        "group flex flex-1 list-none items-center justify-center gap-2",
         className,
       )}
       {...props}
@@ -58,7 +75,7 @@ function NavigationMenuItem({
 }
 
 const navigationMenuTriggerStyle = cva(
-  "group inline-flex h-8 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:text-accent-foreground data-[state=open]:focus:bg-accent data-[state=open]:bg-accent/50 focus-visible:ring-ring/50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline rounded-lg bg-transparent px-4 py-0! text-sm! font-medium text-zinc-100 hover:bg-zinc-800 hover:text-zinc-50",
+  "group inline-flex w-max items-center justify-center rounded-md bg-background px-4 text-sm font-medium hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=open]:hover:bg-accent data-[state=open]:text-accent-foreground data-[state=open]:focus:bg-accent data-[state=open]:bg-accent/50 focus-visible:ring-ring/50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline rounded-full bg-transparent px-4 py-0! text-sm! font-medium text-zinc-100 hover:text-zinc-50",
 );
 
 function NavigationMenuTrigger({
@@ -66,17 +83,29 @@ function NavigationMenuTrigger({
   children,
   ...props
 }: React.ComponentProps<typeof NavigationMenuPrimitive.Trigger>) {
+  const { hovered, setHovered } = React.useContext(HoverContext);
+  const id = React.useId();
+
   return (
     <NavigationMenuPrimitive.Trigger
       data-slot="navigation-menu-trigger"
-      className={cn(navigationMenuTriggerStyle(), "group", className)}
+      className={cn(navigationMenuTriggerStyle(), "group relative", className)}
+      onMouseEnter={() => setHovered(id)}
       {...props}
     >
-      {children}{" "}
-      {/* <ChevronDownIcon
-        className="relative top-[1px] ml-1 size-3 transition-transform duration-150 group-data-[state=open]:rotate-180"
-        aria-hidden="true"
-      /> */}
+      {hovered === id && (
+        <motion.div
+          layoutId="hovered"
+          className="absolute inset-0 h-full w-full rounded-full bg-zinc-800"
+          initial={false}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+          }}
+        />
+      )}
+      <span className="relative z-10">{children}</span>
     </NavigationMenuPrimitive.Trigger>
   );
 }
@@ -105,13 +134,13 @@ function NavigationMenuViewport({
   return (
     <div
       className={cn(
-        "fixed top-[65px] left-1/2 isolate z-50 flex w-screen -translate-x-1/2 justify-center px-2",
+        "fixed top-[68px] left-1/2 isolate z-50 flex w-screen -translate-x-1/2 justify-center px-2",
       )}
     >
       <NavigationMenuPrimitive.Viewport
         data-slot="navigation-menu-viewport"
         className={cn(
-          "origin-top-center text-popover-foreground relative mt-1 h-[var(--radix-navigation-menu-viewport-height)] w-full max-w-[var(--breakpoint-lg)] overflow-hidden rounded-xl bg-zinc-900 shadow-2xl backdrop-blur-xl data-[state=closed]:duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 md:w-full",
+          "navigation-menu-main-container origin-top-center text-popover-foreground relative mt-1 h-[var(--radix-navigation-menu-viewport-height)] w-full max-w-[var(--breakpoint-lg)] overflow-hidden rounded-b-[8px] bg-zinc-900 shadow-2xl backdrop-blur-xl data-[state=closed]:duration-150 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:duration-150 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 md:w-full",
           className,
         )}
         {...props}
@@ -128,7 +157,7 @@ function NavigationMenuLink({
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
       className={cn(
-        "data-[active=true]:focus:bg-accent data-[active=true]:hover:bg-accent data-[active=true]:bg-accent/50 data-[active=true]:text-accent-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-ring/50 [&_svg:not([class*='text-'])]:text-muted-foreground flex flex-col gap-1 rounded-sm p-2 text-sm transition-all outline-none focus-visible:ring-[3px] focus-visible:outline-1 [&_svg:not([class*='size-'])]:size-4",
+        "data-[active=true]:focus:bg-accent data-[active=true]:hover:bg-accent data-[active=true]:bg-accent/50 data-[active=true]:text-accent-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-ring/50 [&_svg:not([class*='text-'])]:text-muted-foreground flex flex-col gap-2 rounded-sm p-2 text-sm transition-all outline-none focus-visible:ring-[3px] focus-visible:outline-1 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}

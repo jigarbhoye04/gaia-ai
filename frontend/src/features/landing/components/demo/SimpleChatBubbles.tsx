@@ -6,16 +6,20 @@ export function SimpleChatBubbleUser({
   children,
   hideMobile = false,
   className = "",
+  className2 = "",
 }: {
   children: ReactNode;
   hideMobile?: boolean;
   className?: string;
+  className2?: string;
 }) {
   if (hideMobile) return <></>;
 
   return (
     <div className={`chat_bubble_container user ${className}`}>
-      <div className="chat_bubble user whitespace-pre-wrap select-none!">
+      <div
+        className={`chat_bubble user whitespace-pre-wrap select-none! ${className2}`}
+      >
         {/* <div className="flex select-text text-wrap max-w-[30vw]"> */}
         {children}
         {/* </div> */}
