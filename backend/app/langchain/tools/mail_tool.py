@@ -1,6 +1,7 @@
 from typing import Annotated, Any, Dict, List, Optional
 
 from app.config.loggers import chat_logger as logger
+from app.decorators import require_integration, with_doc, with_rate_limiting
 from app.docstrings.langchain.tools.mail_tool_docs import (
     APPLY_LABELS_TO_EMAILS,
     ARCHIVE_EMAILS,
@@ -17,7 +18,6 @@ from app.docstrings.langchain.tools.mail_tool_docs import (
     UNSTAR_EMAILS,
     UPDATE_GMAIL_LABEL,
 )
-from app.decorators import with_doc, with_rate_limiting, require_integration
 from app.langchain.templates.mail_templates import (
     COMPOSE_EMAIL_TEMPLATE,
     process_get_thread_response,
@@ -299,9 +299,19 @@ async def compose_email(
                 }
             )
 
+        emails_data = []
+        for email in emails:
+            emails_data.append(
+                {
+                    "to": email.to,
+                    "subject": email.subject,
+                    "body": email.body,
+                }
+            )
+
         # Progress update for drafting
         writer({"progress": f"Drafting {len(emails)} email(s)..."})
-        writer({"email_compose_data": emails})
+        writer({"email_compose_data": emails_data})
 
         # Generate summary of the composed emails
         if len(emails) == 1:
