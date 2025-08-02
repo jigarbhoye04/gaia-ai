@@ -3,20 +3,19 @@
 import Image from "next/image";
 import { lazy, useEffect } from "react";
 
+import Calendar from "@/features/calendar/components/Calendar";
 import HeroSection from "@/features/landing/components/hero/HeroSection";
 import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import InternetSection from "@/features/landing/components/sections/InternetSection";
 import AdvancedConversation from "@/features/landing/components/sections/new/AdvancedConversation";
 import Description from "@/features/landing/components/sections/new/Description";
+import Goals from "@/features/landing/components/sections/new/Goals";
 import Mail from "@/features/landing/components/sections/new/Mail";
 import Proactive from "@/features/landing/components/sections/new/Proactive";
 import Todo from "@/features/landing/components/sections/new/Todo";
-import Goals from "@/features/landing/components/sections/new/Goals";
-import Calendar from "@/features/calendar/components/Calendar";
 
 // import Integrations from "@/features/landing/components/sections/IntegrationsSection";
 import LandingLayout from "./(landing)/layout";
-import WorkflowAutomation from "@/features/landing/components/sections/new/WorkflowAutomation";
 
 // const DeepSearchSection = lazy(
 //   () => import("@/features/landing/components/sections/DeepSearchSection"),

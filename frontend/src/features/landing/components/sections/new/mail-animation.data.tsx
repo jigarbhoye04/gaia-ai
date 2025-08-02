@@ -146,13 +146,13 @@
 // src/features/mail/data/mail-animation.data.ts
 
 // mail-animation.data.tsx
-import React, { useState, useEffect, useRef } from "react";
-import { Inbox, Mail, Send } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Inbox, Mail, Send } from "lucide-react";
+import React, { useEffect, useRef,useState } from "react";
 
-import { ComposerProvider } from "@/features/chat/contexts/ComposerContext";
 import EmailComposeSection from "@/features/chat/components/bubbles/bot/EmailComposeSection";
 import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
+import { ComposerProvider } from "@/features/chat/contexts/ComposerContext";
 import EmailListCard from "@/features/mail/components/EmailListCard";
 import { EmailComposeData, EmailFetchData, EmailThreadData, } from "@/types/features/mailTypes";
 

@@ -1,29 +1,26 @@
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo, ElementType } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { Check, Clock, GitBranch, Search, BookOpen, Users, Target, Zap, Star, Archive, Reply, Presentation, ArrowRight, Undo2, Redo2, Printer, Paintbrush2, ZoomIn, MousePointer2, Type, Image as ImageIcon, Shapes, PenLine, MessageSquarePlus, LayoutPanelLeft, Palette, Film, PlusSquare, ChevronDown, Mail, Calendar, FileText, CheckCircle } from 'lucide-react';
-// Note: These imports point to dummy files in your original code.
-// Ensure your project has a 'demo-data.ts' file that exports these types and values.
-import { SlideContent } from './demo-data';
-import { DemoData } from './demo-data';
-import { demoContents } from './demo-data';
+import 'reactflow/dist/style.css';
 
+import { AnimatePresence,motion } from 'framer-motion';
+import { Archive, ArrowRight, Calendar, Check, CheckCircle,ChevronDown, Clock, FileText, Image as ImageIcon, Mail, MousePointer2, Reply, Star, Target, Type, Zap } from 'lucide-react';
+import React, { ElementType,useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 // 👇 React Flow imports are correct. Added Handle for the custom node.
 import ReactFlow, {
-  Node,
   Edge,
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  Position,
-  MarkerType,
-  NodeProps,
   Handle,
-  BackgroundVariant,
+  MarkerType,
+  Node,
+  NodeProps,
+  Position,
+  useEdgesState,
+  useNodesState,
 } from 'reactflow';
-import 'reactflow/dist/style.css';
+
 import SectionChip from '../../shared/SectionChip';
+// Note: These imports point to dummy files in your original code.
+// Ensure your project has a 'demo-data.ts' file that exports these types and values.
+import { DemoData } from './demo-data';
+import { demoContents } from './demo-data';
 
 
 const wait = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
