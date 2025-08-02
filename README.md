@@ -1,15 +1,12 @@
 <div align="center">
-  <img src="docs/logo/logo.png" alt="GAIA Logo" width="100" height="100" />
+<img alt="header" src="https://github.com/user-attachments/assets/8a4556e8-29e9-4b23-a7ee-39e7b3883207" />
+<!--   <img src="docs/logo/logo.png" alt="GAIA Logo" width="100" height="100" /> -->
 
   <br/>
   <br/>
   <p>
-    <a href="https://heygaia.io">
-      <img src="https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white" alt="Website" />
-    </a>
-    <a href="https://docs.heygaia.io">
-      <img src="https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white" alt="Docs" />
-    </a>
+    <a href="https://heygaia.io"><img src="https://img.shields.io/badge/Website-00bbff?style=flat-square&logo=globe&logoColor=white" alt="Website" /></a>  
+    <a href="https://docs.heygaia.io"><img src="https://img.shields.io/badge/Docs-00bbff?style=flat-square&logo=gitbook&logoColor=white" alt="Docs" /></a>
   </p>
 
 </div>
