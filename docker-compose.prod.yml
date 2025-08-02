@@ -36,7 +36,7 @@ services:
     env_file:
       - ./backend/.env
     ports:
-      - "80:80"
+      - "8000:80"
     restart: on-failure
     tty: true
     stdin_open: true
