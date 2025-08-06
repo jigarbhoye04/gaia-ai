@@ -41,6 +41,25 @@ from app.config.settings import settings
 from app.models.payment_models import PlanDB
 
 
+async def cleanup_old_indexes(collection):
+    """Remove old payment gateway indexes that might conflict."""
+    try:
+        # List all indexes
+        indexes = await collection.list_indexes().to_list(length=None)
+
+        # Find and drop old payment gateway indexes
+        old_indexes = ["razorpay_plan_id_1", "stripe_plan_id_1", "paypal_plan_id_1"]
+
+        for index in indexes:
+            index_name = index.get("name")
+            if index_name in old_indexes:
+                print(f"🗑️  Dropping old index: {index_name}")
+                await collection.drop_index(index_name)
+
+    except Exception as e:
+        print(f"⚠️  Warning: Could not clean up old indexes: {e}")
+
+
 async def setup_dodo_plans(monthly_product_id: str, yearly_product_id: str):
     """Set up GAIA subscription plans in the database using Dodo product IDs."""
     print("🚀 GAIA Dodo Payments Setup")
@@ -142,6 +161,9 @@ async def setup_dodo_plans(monthly_product_id: str, yearly_product_id: str):
         client = AsyncIOMotorClient(settings.MONGO_DB)
         db = client["GAIA"]
         collection = db["subscription_plans"]
+
+        # Clean up old payment gateway indexes first
+        await cleanup_old_indexes(collection)
 
         print("📊 Setting up subscription plans...")
         print()

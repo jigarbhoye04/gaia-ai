@@ -78,6 +78,7 @@ class PlanResponse(BaseModel):
     """Response model for subscription plan."""
 
     id: str = Field(..., description="Plan ID")
+    dodo_product_id: str = Field(..., description="Dodo product ID")
     name: str = Field(..., description="Plan name")
     description: Optional[str] = Field(None, description="Plan description")
     amount: int = Field(..., description="Plan amount")

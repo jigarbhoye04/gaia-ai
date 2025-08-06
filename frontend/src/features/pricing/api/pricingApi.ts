@@ -4,6 +4,7 @@ import { apiService } from "@/lib/api";
 
 export interface Plan {
   id: string;
+  dodo_product_id: string; // Add Dodo product ID field
   name: string;
   description?: string;
   amount: number;

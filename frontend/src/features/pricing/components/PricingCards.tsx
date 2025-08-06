@@ -89,7 +89,7 @@ export function PricingCards({
         return (
           <PricingCard
             key={plan.id}
-            planId={plan.id}
+            planId={plan.dodo_product_id} // Use dodo_product_id instead of id
             durationIsMonth={durationIsMonth}
             features={plan.features}
             featurestitle={

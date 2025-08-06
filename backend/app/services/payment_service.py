@@ -48,7 +48,18 @@ class DodoPaymentService:
         # Try cache first
         cached = await redis_cache.get(cache_key)
         if cached:
-            return [PlanResponse(**plan) for plan in cached]
+            try:
+                # Try to create PlanResponse objects from cached data
+                plan_responses = []
+                for plan_data in cached:
+                    # Ensure dodo_product_id exists in cached data
+                    if "dodo_product_id" not in plan_data:
+                        plan_data["dodo_product_id"] = ""
+                    plan_responses.append(PlanResponse(**plan_data))
+                return plan_responses
+            except Exception:
+                # If cached data is incompatible, clear cache and fetch fresh
+                await redis_cache.delete(cache_key)
 
         # Fetch from database
         query = {"is_active": True} if active_only else {}
@@ -57,6 +68,7 @@ class DodoPaymentService:
         plan_responses = [
             PlanResponse(
                 id=str(plan["_id"]),
+                dodo_product_id=plan.get("dodo_product_id", ""),
                 name=plan["name"],
                 description=plan.get("description"),
                 amount=plan["amount"],
@@ -101,7 +113,11 @@ class DodoPaymentService:
                     "street": "N/A",
                     "zipcode": "000000",
                 },
-                customer={"customer_id": user_id},
+                customer={
+                    "email": user.get("email"),
+                    "name": user.get("first_name") or user.get("name", "User"),
+                    "create_new_customer": True,
+                },
                 product_id=product_id,
                 quantity=quantity,
                 payment_link=True,
@@ -233,7 +249,5 @@ class DodoPaymentService:
             "subscription_id": subscription_id,
         }
 
-
-print(f"{settings.DODO_PAYMENTS_API_KEY=}")
 
 payment_service = DodoPaymentService()
