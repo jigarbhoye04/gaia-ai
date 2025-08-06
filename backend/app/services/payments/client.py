@@ -38,7 +38,7 @@ class RazorpayService:
             key_secret = settings.RAZORPAY_KEY_SECRET
 
             # Initialize client
-            self.client = razorpay.Client(auth=(key_id, key_secret))
+            self.client: razorpay.Client = razorpay.Client(auth=(key_id, key_secret))
 
             # Auto-detect test mode based on key prefix
             self.is_test_mode = key_id.startswith("rzp_test_")

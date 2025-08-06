@@ -132,30 +132,40 @@ async def verify_payment(
             logger.error(f"Failed to store payment in database: {e}")
             raise HTTPException(status_code=500, detail="Failed to save payment")
 
-        # If this payment is for a subscription, activate the subscription
+        # If this payment is for a subscription, activate it atomically
         if callback_data.razorpay_subscription_id:
             try:
-                result = await subscriptions_collection.update_one(
-                    {
-                        "razorpay_subscription_id": callback_data.razorpay_subscription_id
-                    },
-                    {
-                        "$set": {
-                            "status": "active",
-                            "paid_count": 1,
-                            "updated_at": datetime.now(timezone.utc),
-                        }
-                    },
-                )
-                subscription_activated = result.modified_count > 0
-                if subscription_activated:
-                    logger.info(
-                        f"Activated subscription: {callback_data.razorpay_subscription_id}"
+                # Ensure only successful, captured payments activate subscriptions
+                if razorpay_payment.get(
+                    "status"
+                ) == "captured" and razorpay_payment.get("captured"):
+                    result = await subscriptions_collection.update_one(
+                        {
+                            "razorpay_subscription_id": callback_data.razorpay_subscription_id,
+                            "status": "created",  # Only activate if still in created status
+                        },
+                        {
+                            "$set": {
+                                "status": "active",
+                                "paid_count": 1,
+                                "updated_at": datetime.now(timezone.utc),
+                            }
+                        },
                     )
+                    subscription_activated = result.modified_count > 0
+                    if subscription_activated:
+                        logger.info(
+                            f"Activated subscription: {callback_data.razorpay_subscription_id}"
+                        )
+                    else:
+                        logger.warning(
+                            f"Subscription not found or already activated: {callback_data.razorpay_subscription_id}"
+                        )
                 else:
                     logger.warning(
-                        f"No subscription found to activate: {callback_data.razorpay_subscription_id}"
+                        f"Payment not captured, not activating subscription: {callback_data.razorpay_payment_id}"
                     )
+                    subscription_activated = False
             except Exception as e:
                 logger.error(
                     f"Failed to activate subscription {callback_data.razorpay_subscription_id}: {e}"

@@ -219,8 +219,8 @@ export const usePaymentFlow = () => {
       isProcessing: false,
     });
 
-    toast.info("Payment cancelled", {
-      duration: 3000,
+    toast.info("Payment was cancelled. Your subscription was not activated.", {
+      duration: 4000,
     });
   }, []);
 

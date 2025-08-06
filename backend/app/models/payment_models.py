@@ -36,16 +36,16 @@ class PaymentStatus(str, Enum):
 
 
 class SubscriptionStatus(str, Enum):
-    """Subscription status."""
+    """Subscription status with clear definitions."""
 
-    CREATED = "created"
-    AUTHENTICATED = "authenticated"
-    ACTIVE = "active"
-    PAUSED = "paused"
-    HALTED = "halted"
-    CANCELLED = "cancelled"
-    COMPLETED = "completed"
-    EXPIRED = "expired"
+    CREATED = "created"  # Just created, no payment yet
+    AUTHENTICATED = "authenticated"  # Authenticated but not paid
+    ACTIVE = "active"  # Active with successful payment
+    PAUSED = "paused"  # Temporarily paused
+    HALTED = "halted"  # Halted due to payment failure
+    CANCELLED = "cancelled"  # Cancelled by user or system
+    COMPLETED = "completed"  # Completed all billing cycles
+    EXPIRED = "expired"  # Expired subscription
 
 
 class PaymentMethod(str, Enum):

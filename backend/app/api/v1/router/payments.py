@@ -130,7 +130,7 @@ async def sync_subscription_endpoint(
     from app.db.mongodb.collections import subscriptions_collection
 
     subscription = await subscriptions_collection.find_one(
-        {"user_id": user_id, "status": {"$in": ["active", "created", "paused"]}}
+        {"user_id": user_id, "status": "active", "paid_count": {"$gt": 0}}
     )
 
     if not subscription:

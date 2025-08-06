@@ -28,6 +28,7 @@ support_collection = mongodb_instance.get_collection("support_requests")
 plans_collection = mongodb_instance.get_collection("subscription_plans")
 subscriptions_collection = mongodb_instance.get_collection("subscriptions")
 payments_collection = mongodb_instance.get_collection("payments")
+webhook_events_collection = mongodb_instance.get_collection("webhook_events")
 
 # Usage
 usage_snapshots_collection = mongodb_instance.get_collection("usage_snapshots")

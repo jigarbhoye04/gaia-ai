@@ -2,37 +2,95 @@
 Webhook event processing for Razorpay.
 """
 
+import hashlib
 from datetime import datetime, timezone
 from typing import Any, Dict
 
 from fastapi import HTTPException
 
 from app.config.loggers import general_logger as logger
-from app.db.mongodb.collections import payments_collection, subscriptions_collection
+from app.db.mongodb.collections import (
+    payments_collection,
+    subscriptions_collection,
+    webhook_events_collection,
+)
 from app.models.payment_models import WebhookEvent
+from app.models.webhook_models import WebhookEventDB
 from app.utils.payments_utils import timestamp_to_datetime
 
 from .client import razorpay_service
 
 
 async def process_webhook(event: WebhookEvent) -> Dict[str, str]:
-    """Process Razorpay webhook events with proper error handling."""
+    """Process Razorpay webhook events with idempotency."""
+    event_type = event.event
+    entity = event.payload.get("payment", event.payload.get("subscription", {}))
+    entity_id = entity.get("id")
+
     try:
-        event_type = event.event
-        entity = event.payload.get("payment", event.payload.get("subscription", {}))
-        entity_id = entity.get("id")
+        # Generate payload hash for idempotency
+        payload_str = f"{event_type}:{entity_id}:{entity.get('status', '')}"
+        payload_hash = hashlib.sha256(payload_str.encode()).hexdigest()
 
         logger.info(f"Processing webhook event: {event_type} for entity: {entity_id}")
 
+        # Check if we've already processed this exact event
+        existing_event = await webhook_events_collection.find_one(
+            {
+                "$or": [
+                    {"event_id": f"{event_type}_{entity_id}"},
+                    {"payload_hash": payload_hash},
+                ]
+            }
+        )
+
+        if existing_event and existing_event.get("status") == "processed":
+            logger.info(f"Event already processed: {event_type}_{entity_id}")
+            return {"status": "already_processed", "event": event_type}
+
+        # Record the webhook event
+        webhook_event_doc = WebhookEventDB(
+            _id=None,
+            event_id=f"{event_type}_{entity_id}",
+            event_type=event_type,
+            razorpay_entity_id=entity_id,
+            processed_at=datetime.now(timezone.utc),
+            payload_hash=payload_hash,
+            status="processing",
+        )
+
+        await webhook_events_collection.insert_one(
+            webhook_event_doc.dict(by_alias=True, exclude={"id"})
+        )
+
+        # Process the webhook
         if event_type.startswith("payment."):
-            return await _process_payment_webhook(event_type, entity)
+            result = await _process_payment_webhook(event_type, entity)
         elif event_type.startswith("subscription."):
-            return await _process_subscription_webhook(event_type, entity)
+            result = await _process_subscription_webhook(event_type, entity)
         else:
             logger.warning(f"Unhandled webhook event type: {event_type}")
-            return {"status": "ignored", "message": "Event type not handled"}
+            result = {"status": "ignored", "message": "Event type not handled"}
+
+        # Mark as processed
+        await webhook_events_collection.update_one(
+            {"event_id": f"{event_type}_{entity_id}"}, {"$set": {"status": "processed"}}
+        )
+
+        logger.info(f"Webhook processed successfully: {event_type}")
+        return result
 
     except Exception as e:
+        # Mark as failed
+        event_id = f"{event_type}_{entity_id}" if entity_id else f"{event_type}_unknown"
+        await webhook_events_collection.update_one(
+            {"event_id": event_id},
+            {
+                "$set": {"status": "failed", "error_message": str(e)},
+                "$inc": {"retry_count": 1},
+            },
+        )
+
         logger.error(f"Error processing webhook event {event.event}: {e}")
         raise HTTPException(status_code=500, detail="Webhook processing failed")
 

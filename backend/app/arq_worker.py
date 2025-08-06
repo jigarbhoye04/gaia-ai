@@ -12,6 +12,10 @@ from app.config.loggers import arq_worker_logger as logger
 from app.config.settings import settings
 from app.langchain.llm.client import init_llm
 from app.services.reminder_service import process_reminder_task
+from app.tasks.subscription_cleanup import (
+    cleanup_abandoned_subscriptions,
+    reconcile_subscription_payments,
+)
 
 
 async def startup(ctx: dict):
@@ -46,7 +50,30 @@ async def startup(ctx: dict):
         GraphManager.set_graph(built_graph, graph_name="reminder_processing")
 
 
-async def shutdown(ctx: dict):
+async def cleanup_abandoned_subscriptions_task(ctx: dict) -> str:
+    """ARQ task wrapper for cleaning up abandoned subscriptions."""
+    try:
+        result = await cleanup_abandoned_subscriptions()
+        message = f"Subscription cleanup completed. Status: {result['status']}, Cleaned: {result.get('cleaned_up_count', 0)}"
+        logger.info(message)
+        return message
+    except Exception as e:
+        error_msg = f"Failed to cleanup abandoned subscriptions: {str(e)}"
+        logger.error(error_msg)
+        raise
+
+
+async def reconcile_subscription_payments_task(ctx: dict) -> str:
+    """ARQ task wrapper for reconciling subscription payments."""
+    try:
+        result = await reconcile_subscription_payments()
+        message = f"Payment reconciliation completed. Status: {result['status']}, Reconciled: {result.get('reconciled_count', 0)}, Deactivated: {result.get('deactivated_count', 0)}"
+        logger.info(message)
+        return message
+    except Exception as e:
+        error_msg = f"Failed to reconcile subscription payments: {str(e)}"
+        logger.error(error_msg)
+        raise
     """ARQ worker shutdown function."""
     logger.info("ARQ worker shutting down...")
 
@@ -195,6 +222,12 @@ async def renew_gmail_watch_subscriptions(ctx: dict) -> str:
     return await renew_function(ctx, max_concurrent=15)
 
 
+async def shutdown(ctx: dict):
+    """ARQ worker shutdown function."""
+    logger.info("ARQ worker shutting down...")
+    # Clean up any resources if needed
+
+
 class WorkerSettings:
     """
     ARQ worker settings configuration.
@@ -208,6 +241,8 @@ class WorkerSettings:
         cleanup_expired_reminders,
         check_inactive_users,
         renew_gmail_watch_subscriptions,
+        cleanup_abandoned_subscriptions_task,
+        reconcile_subscription_payments_task,
     ]
     cron_jobs = [
         cron(
@@ -227,6 +262,17 @@ class WorkerSettings:
             hour=2,  # At 2 AM (different from other jobs to spread load)
             minute=0,  # At the start of the hour
             second=0,  # At the start of the minute
+        ),
+        cron(
+            cleanup_abandoned_subscriptions_task,
+            minute={0, 30},  # Every 30 minutes
+            second=0,
+        ),
+        cron(
+            reconcile_subscription_payments_task,
+            hour=1,  # At 1 AM daily
+            minute=0,
+            second=0,
         ),
     ]
     on_startup = startup

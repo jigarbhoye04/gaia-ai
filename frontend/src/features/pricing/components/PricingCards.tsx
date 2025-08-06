@@ -82,6 +82,7 @@ export function PricingCards({
         }
 
         const isCurrentPlan = subscriptionStatus?.current_plan?.id === plan.id;
+        // Only consider truly active subscriptions (not just created ones)
         const hasActiveSubscription =
           subscriptionStatus?.is_subscribed &&
           subscriptionStatus?.subscription?.status === "active";

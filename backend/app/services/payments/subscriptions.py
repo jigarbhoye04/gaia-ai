@@ -131,9 +131,9 @@ async def create_subscription(
 async def get_user_subscription_status(user_id: str) -> UserSubscriptionStatus:
     """Get user's current subscription status."""
     try:
-        # Get user's active subscription
+        # Get user's active subscription (only truly active ones with payment)
         subscription = await subscriptions_collection.find_one(
-            {"user_id": user_id, "status": {"$in": ["active", "paused", "created"]}}
+            {"user_id": user_id, "status": "active", "paid_count": {"$gt": 0}}
         )
 
         if not subscription:
@@ -344,9 +344,9 @@ async def cancel_subscription(
 ) -> Dict[str, str]:
     """Cancel user's subscription with proper cleanup."""
     try:
-        # Get current subscription
+        # Get current active subscription (only paid ones)
         subscription = await subscriptions_collection.find_one(
-            {"user_id": user_id, "status": {"$in": ["active", "created"]}}
+            {"user_id": user_id, "status": "active", "paid_count": {"$gt": 0}}
         )
 
         if not subscription:
