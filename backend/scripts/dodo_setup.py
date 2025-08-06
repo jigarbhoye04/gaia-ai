@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""
+Complete Dodo Payments setup script for GAIA.
+This script sets up subscription plans in the database using Dodo product IDs.
+
+IMPORTANT: Run this script from the correct directory!
+
+1. If running locally:
+   cd /path/to/your/gaia/backend
+   python scripts/dodo_setup.py --monthly-product-id <id> --yearly-product-id <id>
+
+2. If running inside Docker container:
+   cd /app
+   python scripts/dodo_setup.py --monthly-product-id <id> --yearly-product-id <id>
+
+3. Alternative Docker approach (set PYTHONPATH):
+   PYTHONPATH=/app python scripts/dodo_setup.py --monthly-product-id <id> --yearly-product-id <id>
+
+4. Run as module (from app directory):
+   python -m scripts.dodo_setup --monthly-product-id <id> --yearly-product-id <id>
+
+Prerequisites:
+- DODO_PAYMENTS_API_KEY environment variable must be set
+- MongoDB connection string (MONGO_DB) must be configured
+- Have your Dodo product IDs ready from your Dodo Payments dashboard
+
+Usage:
+    python dodo_setup.py --monthly-product-id <product_id> --yearly-product-id <product_id>
+
+Example:
+    python dodo_setup.py --monthly-product-id "xyz" --yearly-product-id "xyz"
+"""
+
+import argparse
+import asyncio
+from datetime import datetime, timezone
+
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from app.config.settings import settings
+from app.models.payment_models import PlanDB
+
+
+async def setup_dodo_plans(monthly_product_id: str, yearly_product_id: str):
+    """Set up GAIA subscription plans in the database using Dodo product IDs."""
+    print("🚀 GAIA Dodo Payments Setup")
+    print("=" * 50)
+
+    if not settings.DODO_PAYMENTS_API_KEY:
+        print("❌ DODO_PAYMENTS_API_KEY not found in environment variables")
+        return False
+
+    print(f"🔗 Using Dodo Payments API Key: {settings.DODO_PAYMENTS_API_KEY[:10]}...")
+    print(f"📦 Monthly Product ID: {monthly_product_id}")
+    print(f"📦 Yearly Product ID: {yearly_product_id}")
+    print()
+
+    # Define plans with their corresponding Dodo product IDs
+    plans_data = [
+        {
+            "dodo_product_id": "",  # Free plan doesn't need Dodo product ID
+            "name": "Free",
+            "description": "Free tier with basic features",
+            "amount": 0,
+            "currency": "USD",
+            "duration": "monthly",
+            "max_users": 1,
+            "features": [
+                "Basic AI assistant",
+                "Limited conversations per day",
+                "Standard response time",
+                "Email support",
+                "Mobile app access",
+            ],
+            "is_active": True,
+        },
+        {
+            "dodo_product_id": "",  # Free yearly plan
+            "name": "Free",
+            "description": "Free tier with basic features (yearly billing)",
+            "amount": 0,
+            "currency": "USD",
+            "duration": "yearly",
+            "max_users": 1,
+            "features": [
+                "Basic AI assistant",
+                "Limited conversations per day",
+                "Standard response time",
+                "Email support",
+                "Mobile app access",
+            ],
+            "is_active": True,
+        },
+        {
+            "dodo_product_id": monthly_product_id,  # Monthly plan
+            "name": "Pro",
+            "description": "Professional tier with advanced features",
+            "amount": 2000,  # $20.00 in cents
+            "currency": "USD",
+            "duration": "monthly",
+            "max_users": 5,
+            "features": [
+                "Advanced AI assistant with GPT-4",
+                "Unlimited conversations",
+                "Priority response time",
+                "24/7 priority support",
+                "Mobile & desktop apps",
+                "Advanced integrations",
+                "Team collaboration features",
+                "API access",
+                "Custom workflows",
+            ],
+            "is_active": True,
+        },
+        {
+            "dodo_product_id": yearly_product_id,  # Yearly plan
+            "name": "Pro",
+            "description": "Professional tier with advanced features (yearly - 2 months free!)",
+            "amount": 20000,  # $200.00 in cents (2 months free)
+            "currency": "USD",
+            "duration": "yearly",
+            "max_users": 5,
+            "features": [
+                "Advanced AI assistant with GPT-4",
+                "Unlimited conversations",
+                "Priority response time",
+                "24/7 priority support",
+                "Mobile & desktop apps",
+                "Advanced integrations",
+                "Team collaboration features",
+                "API access",
+                "Custom workflows",
+                "🎉 2 months FREE (yearly discount)",
+            ],
+            "is_active": True,
+        },
+    ]
+
+    # Connect to database
+    client = None
+    try:
+        client = AsyncIOMotorClient(settings.MONGO_DB)
+        db = client["GAIA"]
+        collection = db["subscription_plans"]
+
+        print("📊 Setting up subscription plans...")
+        print()
+
+        created_count = 0
+        updated_count = 0
+
+        for plan_item in plans_data:
+            try:
+                plan_name = plan_item["name"]
+                plan_duration = plan_item["duration"]
+                dodo_product_id = plan_item["dodo_product_id"]
+
+                print(f"⚙️  Processing: {plan_name} ({plan_duration.capitalize()})")
+
+                # Check if plan already exists
+                existing_plan = await collection.find_one(
+                    {
+                        "name": plan_name,
+                        "duration": plan_duration,
+                    }
+                )
+
+                plan_doc = PlanDB.parse_obj(
+                    {
+                        "dodo_product_id": dodo_product_id,
+                        "name": plan_item["name"],
+                        "description": plan_item["description"],
+                        "amount": plan_item["amount"],
+                        "currency": plan_item["currency"],
+                        "duration": plan_item["duration"],
+                        "max_users": plan_item["max_users"],
+                        "features": plan_item["features"],
+                        "is_active": plan_item["is_active"],
+                        "created_at": datetime.now(timezone.utc),
+                        "updated_at": datetime.now(timezone.utc),
+                    }
+                )
+
+                if existing_plan:
+                    # Update existing plan
+                    await collection.update_one(
+                        {"_id": existing_plan["_id"]},
+                        {
+                            "$set": plan_doc.dict(
+                                by_alias=True, exclude={"id", "created_at"}
+                            )
+                        },
+                    )
+                    updated_count += 1
+                    print("   ✅ Updated existing plan")
+                else:
+                    # Insert new plan
+                    await collection.insert_one(
+                        plan_doc.dict(by_alias=True, exclude={"id"})
+                    )
+                    created_count += 1
+                    print("   ✅ Created new plan")
+
+                print(
+                    f"   💰 Amount: ${plan_item['amount'] / 100:.2f} {plan_item['currency']}"
+                )
+                print(f"   📅 Duration: {plan_duration.capitalize()}")
+                print(f"   👥 Max Users: {plan_item['max_users']}")
+                print(
+                    f"   🏷️  Dodo Product ID: {dodo_product_id or 'Free Plan (No Product ID)'}"
+                )
+                print(f"   🎯 Features: {len(plan_item['features'])} features")
+                print()
+
+            except Exception as e:
+                print(f"   ❌ Error processing {plan_item['name']}: {e}")
+
+        print("=" * 50)
+        print("📈 Setup Summary:")
+        print(f"   • Created: {created_count} plans")
+        print(f"   • Updated: {updated_count} plans")
+        print(f"   • Total: {created_count + updated_count} plans processed")
+        print()
+
+        # Display final plan list
+        plans_cursor = collection.find({"is_active": True}).sort("amount", 1)
+        plans = await plans_cursor.to_list(length=None)
+
+        print("📋 Active Plans:")
+        for plan in plans:
+            print(
+                f"   • {plan['name']} ({plan['duration']}) - ${plan['amount'] / 100:.2f}"
+            )
+            print(f"     Dodo Product ID: {plan.get('dodo_product_id') or 'N/A'}")
+
+        print()
+        print("✅ Payment system setup complete!")
+        print("🔗 Frontend can now fetch plans via GET /api/v1/payments/plans")
+        print(
+            "🎯 Users can create subscriptions via POST /api/v1/payments/subscriptions"
+        )
+
+        return True
+
+    except Exception as e:
+        print(f"❌ Setup failed: {e}")
+        return False
+    finally:
+        if client:
+            client.close()
+            print("🔌 Database connection closed")
+
+
+async def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(description="Setup Dodo Payments plans for GAIA")
+    parser.add_argument(
+        "--monthly-product-id",
+        required=True,
+        help="Dodo product ID for monthly Pro plan",
+    )
+    parser.add_argument(
+        "--yearly-product-id",
+        required=True,
+        help="Dodo product ID for yearly Pro plan",
+    )
+
+    args = parser.parse_args()
+
+    try:
+        await setup_dodo_plans(args.monthly_product_id, args.yearly_product_id)
+        print("\n🎉 Dodo Payments setup completed successfully!")
+    except Exception as e:
+        print(f"\n💥 Setup failed with error: {e}")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

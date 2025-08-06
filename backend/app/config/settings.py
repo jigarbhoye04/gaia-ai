@@ -134,9 +134,8 @@ class Settings(BaseSettings):
     # Code Execution
     E2B_API_KEY: str
 
-    # Razorpay Configuration
-    RAZORPAY_KEY_ID: str
-    RAZORPAY_KEY_SECRET: str
+    # Dodo Payments Configuration
+    DODO_PAYMENTS_API_KEY: str
 
     @computed_field  # type: ignore
     @property

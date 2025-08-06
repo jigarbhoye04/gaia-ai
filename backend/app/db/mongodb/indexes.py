@@ -31,6 +31,7 @@ from app.db.mongodb.collections import (
     todos_collection,
     usage_snapshots_collection,
     users_collection,
+    webhook_events_collection,
 )
 
 
@@ -425,25 +426,23 @@ async def create_payment_indexes():
         await asyncio.gather(
             # Payment indexes
             payments_collection.create_index("user_id"),
-            payments_collection.create_index("razorpay_payment_id", unique=True),
-            payments_collection.create_index("subscription_id", sparse=True),
-            payments_collection.create_index("order_id", sparse=True),
+            payments_collection.create_index("dodo_subscription_id", sparse=True),
             payments_collection.create_index("status"),
             payments_collection.create_index([("user_id", 1), ("created_at", -1)]),
-            # Subscription indexes
+            payments_collection.create_index("webhook_verified"),
+            # Subscription indexes - updated for Dodo schema
             subscriptions_collection.create_index("user_id"),
-            subscriptions_collection.create_index(
-                "razorpay_subscription_id", unique=True
-            ),
-            subscriptions_collection.create_index("plan_id"),
+            subscriptions_collection.create_index("dodo_subscription_id", unique=True),
+            subscriptions_collection.create_index("product_id"),
             subscriptions_collection.create_index("status"),
             subscriptions_collection.create_index([("user_id", 1), ("status", 1)]),
-            subscriptions_collection.create_index("current_end", sparse=True),
-            subscriptions_collection.create_index("charge_at", sparse=True),
-            # Plan indexes
-            plans_collection.create_index("razorpay_plan_id", unique=True),
+            subscriptions_collection.create_index([("user_id", 1), ("created_at", -1)]),
+            subscriptions_collection.create_index("webhook_verified"),
+            # Plans indexes - updated for subscription_plans collection
             plans_collection.create_index("is_active"),
+            plans_collection.create_index("dodo_product_id", sparse=True),
             plans_collection.create_index([("is_active", 1), ("amount", 1)]),
+            plans_collection.create_index([("name", 1), ("duration", 1)]),
         )
 
         logger.info("Created payment indexes")
