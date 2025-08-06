@@ -112,15 +112,8 @@ class OnboardingRequest(BaseModel):
     name: str = Field(
         ..., min_length=1, max_length=100, description="User's preferred name"
     )
-    country: str = Field(
-        ..., min_length=2, max_length=2, description="ISO 3166-1 alpha-2 country code"
-    )
     profession: str = Field(
         ..., min_length=1, max_length=50, description="User's profession"
-    )
-    response_style: str = Field(..., description="Preferred response style")
-    instructions: Optional[str] = Field(
-        None, max_length=500, description="Custom instructions"
     )
 
     @field_validator("name")
@@ -135,41 +128,16 @@ class OnboardingRequest(BaseModel):
             )
         return v
 
-    @field_validator("country")
-    @classmethod
-    def validate_country(cls, v):
-        # Ensure country code is uppercase and valid format
-        v = v.upper().strip()
-        if not re.match(r"^[A-Z]{2}$", v):
-            raise ValueError(
-                "Country must be a valid ISO 3166-1 alpha-2 code (e.g., US, GB, DE)"
-            )
-        return v
-
     @field_validator("profession")
     @classmethod
     def validate_profession(cls, v):
         v = v.strip()
         if not v:
             raise ValueError("Profession cannot be empty")
-        return v
-
-    @field_validator("response_style")
-    @classmethod
-    def validate_response_style(cls, v):
-        valid_styles = {"brief", "detailed", "casual", "professional"}
-        # Allow custom response styles (anything that's not in the predefined list)
-        if v not in valid_styles and len(v.strip()) == 0:
-            raise ValueError("Response style cannot be empty")
-        return v
-
-    @field_validator("instructions")
-    @classmethod
-    def validate_instructions(cls, v):
-        if v is not None:
-            v = v.strip()
-            if len(v) > 500:
-                raise ValueError("Custom instructions must be 500 characters or less")
+        if not re.match(r"^[a-zA-Z\s\-\.]+$", v):
+            raise ValueError(
+                "Profession can only contain letters, spaces, hyphens, and periods"
+            )
         return v
 
 
