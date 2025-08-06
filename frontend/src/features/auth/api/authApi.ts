@@ -64,10 +64,7 @@ export const authApi = {
   // Complete onboarding
   completeOnboarding: async (onboardingData: {
     name: string;
-    country: string;
     profession: string;
-    response_style: string;
-    instructions?: string | null;
   }): Promise<{ success: boolean; message: string; user?: UserInfo }> => {
     return apiService.post("/oauth/onboarding", onboardingData, {
       successMessage: "Welcome! Your preferences have been saved.",
