@@ -2,7 +2,7 @@ import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Kbd } from "@heroui/react";
-import { useRef, useEffect } from "react";
+import { useEffect,useRef } from "react";
 
 import { SentIcon } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
