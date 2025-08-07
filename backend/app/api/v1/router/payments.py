@@ -3,9 +3,10 @@ Clean payment router for Dodo Payments integration.
 Single service approach - simple and maintainable.
 """
 
+import json
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Header
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import general_logger as logger
@@ -76,36 +77,16 @@ async def get_subscription_status_endpoint(
     return await payment_service.get_user_subscription_status(user_id)
 
 
-@router.post("/webhooks/dodo", response_model=dict)
-async def handle_dodo_webhook(
-    request: Request,
-    webhook_data: dict,
-    x_signature: str = Header(None, alias="X-Signature"),
-):
-    """
-    Handle incoming webhooks from Dodo Payments.
-
-    Security: Verifies webhook signature to ensure authenticity.
-    Events: Processes payment.succeeded, subscription.active, etc.
-    """
+@router.post("/webhooks/dodo")
+async def handle_dodo_webhook(request: Request):
+    """Handle incoming webhooks from Dodo Payments."""
     try:
-        # Get raw body for signature verification
         body = await request.body()
+        webhook_data = json.loads(body.decode("utf-8"))
 
-        # Verify webhook signature for security
-        if x_signature and not payment_webhook_service.verify_webhook_signature(
-            body, x_signature
-        ):
-            logger.warning("Invalid webhook signature")
-            raise HTTPException(status_code=401, detail="Invalid webhook signature")
-
-        # Process the webhook
         result = await payment_webhook_service.process_webhook(webhook_data)
 
-        logger.info(
-            f"Webhook processed successfully: {result.event_type} - {result.status}"
-        )
-
+        logger.info(f"Webhook processed: {result.event_type} - {result.status}")
         return {
             "status": "success",
             "event_type": result.event_type,
@@ -113,8 +94,9 @@ async def handle_dodo_webhook(
             "message": result.message,
         }
 
-    except HTTPException:
-        raise
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in webhook payload")
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
     except Exception as e:
-        logger.error(f"Unexpected error processing webhook: {e}")
+        logger.error(f"Error processing webhook: {e}")
         raise HTTPException(status_code=500, detail="Webhook processing failed")

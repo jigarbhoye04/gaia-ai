@@ -3,7 +3,6 @@ Streamlined Dodo Payments integration service.
 Clean, simple, and maintainable.
 """
 
-from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from bson import ObjectId
@@ -90,20 +89,20 @@ class DodoPaymentService:
     async def create_subscription(
         self, user_id: str, product_id: str, quantity: int = 1
     ) -> Dict[str, Any]:
-        """Create subscription - backend handles all security."""
+        """Create subscription - only get payment link, store data after webhook."""
         # Get user
         user = await users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(404, "User not found")
 
-        # Check for existing subscription
+        # Check for existing active subscription
         existing = await subscriptions_collection.find_one(
-            {"user_id": user_id, "status": {"$in": ["pending", "active"]}}
+            {"user_id": user_id, "status": "active"}
         )
         if existing:
             raise HTTPException(409, "Active subscription exists")
 
-        # Create with Dodo
+        # Create with Dodo - get payment link only
         try:
             subscription = self.client.subscriptions.create(
                 billing={
@@ -122,62 +121,45 @@ class DodoPaymentService:
                 quantity=quantity,
                 payment_link=True,
                 return_url=f"{settings.FRONTEND_URL}/payment/success",
+                metadata={"user_id": user_id, "product_id": product_id},
             )
         except Exception as e:
             raise HTTPException(502, f"Payment service error: {str(e)}")
 
-        # Store in database - create dict directly for insertion
-        subscription_doc = {
-            "dodo_subscription_id": subscription.subscription_id,
-            "user_id": user_id,
-            "product_id": product_id,
-            "status": "pending",
-            "quantity": quantity,
-            "payment_link": getattr(subscription, "payment_link", None),
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
-            "metadata": {"user_email": user.get("email")},
-        }
-
-        await subscriptions_collection.insert_one(subscription_doc)
-
+        # Return payment link without storing in database
         return {
             "subscription_id": subscription.subscription_id,
             "payment_link": getattr(subscription, "payment_link", None),
-            "status": "pending",
+            "status": "payment_link_created",
         }
 
     async def verify_payment_completion(self, user_id: str) -> Dict[str, Any]:
-        """Check payment completion status."""
+        """Check payment completion status from webhook data."""
         subscription = await subscriptions_collection.find_one(
-            {"user_id": user_id}, sort=[("created_at", -1)]
+            {"user_id": user_id, "status": "active"}, sort=[("created_at", -1)]
         )
 
         if not subscription:
-            return {"payment_completed": False, "message": "No subscription found"}
-
-        if subscription["status"] == "active":
-            # Send welcome email (don't fail if email fails)
-            try:
-                user = await users_collection.find_one({"_id": ObjectId(user_id)})
-                if user and user.get("email"):
-                    await send_pro_subscription_email(
-                        user_name=user.get("first_name", "User"),
-                        user_email=user["email"],
-                    )
-            except Exception:
-                pass  # Email failure shouldn't break payment verification
-
             return {
-                "payment_completed": True,
-                "subscription_id": subscription["dodo_subscription_id"],
-                "message": "Payment completed",
+                "payment_completed": False,
+                "message": "No active subscription found",
             }
 
+        # Send welcome email (don't fail if email fails)
+        try:
+            user = await users_collection.find_one({"_id": ObjectId(user_id)})
+            if user and user.get("email"):
+                await send_pro_subscription_email(
+                    user_name=user.get("first_name", "User"),
+                    user_email=user["email"],
+                )
+        except Exception:
+            pass  # Email failure shouldn't break payment verification
+
         return {
-            "payment_completed": False,
-            "subscription_id": subscription.get("dodo_subscription_id"),
-            "message": "Payment pending",
+            "payment_completed": True,
+            "subscription_id": subscription["dodo_subscription_id"],
+            "message": "Payment completed",
         }
 
     async def get_user_subscription_status(

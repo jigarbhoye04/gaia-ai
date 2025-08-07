@@ -31,7 +31,6 @@ from app.db.mongodb.collections import (
     todos_collection,
     usage_snapshots_collection,
     users_collection,
-    webhook_events_collection,
 )
 
 
@@ -424,21 +423,24 @@ async def create_payment_indexes():
     try:
         # Create payment collection indexes
         await asyncio.gather(
-            # Payment indexes
-            payments_collection.create_index("user_id"),
+            # Payment indexes - for successful payments only
+            payments_collection.create_index("dodo_payment_id", unique=True),
             payments_collection.create_index("dodo_subscription_id", sparse=True),
+            payments_collection.create_index("customer_email"),
             payments_collection.create_index("status"),
-            payments_collection.create_index([("user_id", 1), ("created_at", -1)]),
-            payments_collection.create_index("webhook_verified"),
-            # Subscription indexes - updated for Dodo schema
+            payments_collection.create_index(
+                [("customer_email", 1), ("created_at", -1)]
+            ),
+            payments_collection.create_index("webhook_processed_at", sparse=True),
+            # Subscription indexes - for active subscriptions only
             subscriptions_collection.create_index("user_id"),
             subscriptions_collection.create_index("dodo_subscription_id", unique=True),
             subscriptions_collection.create_index("product_id"),
             subscriptions_collection.create_index("status"),
             subscriptions_collection.create_index([("user_id", 1), ("status", 1)]),
             subscriptions_collection.create_index([("user_id", 1), ("created_at", -1)]),
-            subscriptions_collection.create_index("webhook_verified"),
-            # Plans indexes - updated for subscription_plans collection
+            subscriptions_collection.create_index("webhook_processed_at", sparse=True),
+            # Plans indexes
             plans_collection.create_index("is_active"),
             plans_collection.create_index("dodo_product_id", sparse=True),
             plans_collection.create_index([("is_active", 1), ("amount", 1)]),

@@ -1,17 +1,15 @@
 """
-Payment webhook models for Dodo Payments integration.
-Clean models based on actual Dodo webhook format.
+Clean webhook models for Dodo Payments based on actual webhook format.
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
 
-class PaymentWebhookType(str, Enum):
-    """Payment webhook event types from Dodo Payments."""
+class WebhookEventType(str, Enum):
+    """Dodo Payments webhook event types."""
 
     # Payment events
     PAYMENT_SUCCEEDED = "payment.succeeded"
@@ -29,16 +27,16 @@ class PaymentWebhookType(str, Enum):
     SUBSCRIPTION_PLAN_CHANGED = "subscription.plan_changed"
 
 
-class DodoCustomer(BaseModel):
-    """Customer data from Dodo webhook."""
+class CustomerData(BaseModel):
+    """Customer info from webhook."""
 
     customer_id: str
     email: str
     name: str
 
 
-class DodoBilling(BaseModel):
-    """Billing address from Dodo webhook."""
+class BillingData(BaseModel):
+    """Billing address from webhook."""
 
     city: str
     country: str
@@ -47,15 +45,15 @@ class DodoBilling(BaseModel):
     zipcode: str
 
 
-class DodoPaymentData(BaseModel):
-    """Payment data from Dodo payment webhook."""
+class PaymentData(BaseModel):
+    """Payment data from payment webhook."""
 
     payment_id: str
     subscription_id: Optional[str] = None
     business_id: str
     brand_id: str
-    customer: DodoCustomer
-    billing: DodoBilling
+    customer: CustomerData
+    billing: BillingData
     currency: str
     total_amount: int
     settlement_amount: int
@@ -75,13 +73,13 @@ class DodoPaymentData(BaseModel):
     error_message: Optional[str] = None
 
 
-class DodoSubscriptionData(BaseModel):
-    """Subscription data from Dodo subscription webhook."""
+class SubscriptionData(BaseModel):
+    """Subscription data from subscription webhook."""
 
     subscription_id: str
     product_id: str
-    customer: DodoCustomer
-    billing: DodoBilling
+    customer: CustomerData
+    billing: BillingData
     status: str
     currency: str
     quantity: int
@@ -99,43 +97,42 @@ class DodoSubscriptionData(BaseModel):
     trial_period_days: int = 0
     on_demand: bool = False
     metadata: Dict[str, Any] = Field(default_factory=dict)
-    addons: list = Field(default_factory=list)
+    addons: List[Any] = Field(default_factory=list)
     discount_id: Optional[str] = None
 
 
-class PaymentWebhookEvent(BaseModel):
-    """Complete payment webhook event from Dodo Payments."""
+class DodoWebhookEvent(BaseModel):
+    """Dodo webhook event structure."""
 
     business_id: str
-    type: PaymentWebhookType
+    type: WebhookEventType
     timestamp: str
     data: Dict[str, Any]
 
-    def get_payment_data(self) -> Optional[DodoPaymentData]:
-        """Extract payment data if this is a payment event."""
+    def get_payment_data(self) -> Optional[PaymentData]:
+        """Extract payment data if payment event."""
         if self.type.value.startswith("payment."):
             try:
-                return DodoPaymentData(**self.data)
+                return PaymentData(**self.data)
             except Exception:
                 return None
         return None
 
-    def get_subscription_data(self) -> Optional[DodoSubscriptionData]:
-        """Extract subscription data if this is a subscription event."""
+    def get_subscription_data(self) -> Optional[SubscriptionData]:
+        """Extract subscription data if subscription event."""
         if self.type.value.startswith("subscription."):
             try:
-                return DodoSubscriptionData(**self.data)
+                return SubscriptionData(**self.data)
             except Exception:
                 return None
         return None
 
 
-class PaymentWebhookResult(BaseModel):
-    """Result of payment webhook processing."""
+class WebhookProcessingResult(BaseModel):
+    """Result of webhook processing."""
 
     event_type: str
     status: str  # "processed", "ignored", "failed"
     message: str
     payment_id: Optional[str] = None
     subscription_id: Optional[str] = None
-    processed_at: datetime = Field(default_factory=lambda: datetime.now())
