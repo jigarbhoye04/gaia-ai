@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Tab, Tabs } from "@heroui/tabs";
 import { useEffect, useState } from "react";
@@ -7,7 +8,6 @@ import { useEffect, useState } from "react";
 import type { Plan } from "@/features/pricing/api/pricingApi";
 import { pricingApi } from "@/features/pricing/api/pricingApi";
 import { PricingCards } from "@/features/pricing/components/PricingCards";
-import { Button } from "@heroui/button";
 
 export default function PricingPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
