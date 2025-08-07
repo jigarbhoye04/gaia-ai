@@ -141,8 +141,14 @@ export const useChatStream = () => {
     resetLoadingText();
 
     if (refs.current.newConversation.id) {
-      // && !refs.current.convoMessages[0]?.conversation_id
-      router.push(`/c/${refs.current.newConversation.id}`);
+      // If a new conversation was created, update the URL and fetch conversations
+      // Using replaceState to avoid reloading the page that would happen with pushState
+      // Reloading results in fetching conversations again hence the flickering
+      window.history.replaceState(
+        {},
+        "",
+        `/c/${refs.current.newConversation.id}`,
+      );
       fetchConversations();
     }
 

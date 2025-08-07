@@ -78,6 +78,7 @@ class Settings(BaseSettings):
     # OAuth & Authentication
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
+    ENABLE_PUBSUB_JWT_VERIFICATION: bool = True
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
