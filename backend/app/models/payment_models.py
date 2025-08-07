@@ -227,7 +227,9 @@ class SubscriptionDB(BaseModel):
     status: str = Field(..., description="Subscription status")
     quantity: int = Field(1, description="Quantity")
     payment_link: Optional[str] = Field(None, description="Payment link URL")
-    webhook_verified: bool = Field(False, description="Webhook verification status")
+    webhook_processed_at: Optional[datetime] = Field(
+        None, description="Webhook processing timestamp"
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Creation timestamp"
     )
@@ -254,7 +256,9 @@ class PaymentDB(BaseModel):
     currency: str = Field(..., description="Currency")
     status: str = Field(..., description="Payment status")
     description: Optional[str] = Field(None, description="Payment description")
-    webhook_verified: bool = Field(False, description="Webhook verification status")
+    webhook_processed_at: Optional[datetime] = Field(
+        None, description="Webhook processing timestamp"
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="Creation timestamp"
     )

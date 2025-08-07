@@ -134,7 +134,6 @@ class DodoPaymentService:
             "status": "pending",
             "quantity": quantity,
             "payment_link": getattr(subscription, "payment_link", None),
-            "webhook_verified": False,
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
             "metadata": {"user_email": user.get("email")},
@@ -157,7 +156,7 @@ class DodoPaymentService:
         if not subscription:
             return {"payment_completed": False, "message": "No subscription found"}
 
-        if subscription["status"] == "active" and subscription.get("webhook_verified"):
+        if subscription["status"] == "active":
             # Send welcome email (don't fail if email fails)
             try:
                 user = await users_collection.find_one({"_id": ObjectId(user_id)})
@@ -224,30 +223,6 @@ class DodoPaymentService:
             plan_type=PlanType.PRO,
             status=SubscriptionStatus(subscription["status"]),
         )
-
-    async def handle_webhook(self, webhook_data: Dict[str, Any]) -> Dict[str, str]:
-        """Handle Dodo webhook."""
-        subscription_id = webhook_data.get("subscription_id")
-        status = webhook_data.get("status")
-
-        if not subscription_id or not status:
-            raise HTTPException(400, "Invalid webhook data")
-
-        result = await subscriptions_collection.update_one(
-            {"dodo_subscription_id": subscription_id},
-            {
-                "$set": {
-                    "status": status,
-                    "webhook_verified": True,
-                    "updated_at": datetime.now(timezone.utc),
-                }
-            },
-        )
-
-        return {
-            "status": "processed" if result.modified_count > 0 else "not_found",
-            "subscription_id": subscription_id,
-        }
 
 
 payment_service = DodoPaymentService()
