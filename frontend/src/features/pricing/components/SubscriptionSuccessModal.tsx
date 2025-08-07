@@ -20,7 +20,7 @@ export function SubscriptionSuccessModal({
   onClose,
   onNavigateToChat,
   planName = "Pro",
-  autoRedirectSeconds = 5,
+  autoRedirectSeconds = 3,
 }: SubscriptionSuccessModalProps) {
   const [countdown, setCountdown] = useState(autoRedirectSeconds);
 

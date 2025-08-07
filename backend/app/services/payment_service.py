@@ -188,7 +188,12 @@ class DodoPaymentService:
         try:
             plans = await self.get_plans(active_only=False)
             plan = next(
-                (p for p in plans if p.id == subscription.get("product_id")), None
+                (
+                    p
+                    for p in plans
+                    if p.dodo_product_id == subscription.get("product_id")
+                ),
+                None,
             )
         except Exception:
             plan = None
