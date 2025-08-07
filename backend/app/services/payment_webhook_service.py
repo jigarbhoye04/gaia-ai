@@ -3,12 +3,16 @@ Clean payment webhook service for Dodo Payments integration.
 Handles webhook events and updates database state accordingly.
 """
 
+import base64
+import hashlib
+import hmac
 from datetime import datetime, timezone
 from typing import Any, Dict
 
 from bson import ObjectId
 
 from app.config.loggers import general_logger as logger
+from app.config.settings import settings
 from app.db.mongodb.collections import (
     subscriptions_collection,
     users_collection,
@@ -25,6 +29,7 @@ class PaymentWebhookService:
     """Clean service for handling Dodo payment webhooks."""
 
     def __init__(self):
+        self.webhook_secret = settings.DODO_WEBHOOK_PAYMENTS_SECRET
         self.handlers = {
             WebhookEventType.PAYMENT_SUCCEEDED: self._handle_payment_succeeded,
             WebhookEventType.PAYMENT_FAILED: self._handle_payment_failed,
@@ -38,6 +43,58 @@ class PaymentWebhookService:
             WebhookEventType.SUBSCRIPTION_ON_HOLD: self._handle_subscription_on_hold,
             WebhookEventType.SUBSCRIPTION_PLAN_CHANGED: self._handle_subscription_plan_changed,
         }
+
+    def verify_webhook_signature(
+        self, webhook_id: str, webhook_timestamp: str, payload: str, signature: str
+    ) -> bool:
+        """
+        Verify webhook signature following Standard Webhooks specification.
+
+        Args:
+            webhook_id: The webhook ID from headers
+            webhook_timestamp: The timestamp from headers
+            payload: The raw JSON payload as string
+            signature: The signature from headers (format: v1,signature)
+        """
+        if not self.webhook_secret:
+            logger.warning(
+                "No webhook secret configured - skipping signature verification"
+            )
+            return True
+
+        try:
+            # Extract the signature (remove v1, prefix)
+            if signature.startswith("v1,"):
+                signature = signature[3:]
+
+            # Create the signed payload: webhook_id.webhook_timestamp.payload
+            signed_payload = f"{webhook_id}.{webhook_timestamp}.{payload}"
+
+            # Compute HMAC SHA256
+            expected_signature = hmac.new(
+                self.webhook_secret.encode("utf-8"),
+                signed_payload.encode("utf-8"),
+                hashlib.sha256,
+            ).digest()
+
+            # Convert to base64 (like the received signature)
+            expected_signature_b64 = base64.b64encode(expected_signature).decode(
+                "utf-8"
+            )
+
+            # Compare signatures
+            is_valid = hmac.compare_digest(expected_signature_b64, signature)
+
+            if not is_valid:
+                logger.warning(
+                    f"Webhook signature verification failed. Expected: {expected_signature_b64}, Received: {signature}"
+                )
+
+            return is_valid
+
+        except Exception as e:
+            logger.error(f"Error verifying webhook signature: {e}")
+            return False
 
     async def process_webhook(
         self, webhook_data: Dict[str, Any]

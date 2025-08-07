@@ -136,7 +136,7 @@ class Settings(BaseSettings):
 
     # Dodo Payments Configuration
     DODO_PAYMENTS_API_KEY: str
-    DODO_WEBHOOK_SECRET: str = ""
+    DODO_WEBHOOK_PAYMENTS_SECRET: str = ""
 
     @computed_field  # type: ignore
     @property

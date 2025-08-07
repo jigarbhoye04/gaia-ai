@@ -6,7 +6,7 @@ Single service approach - simple and maintainable.
 import json
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Header
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user
 from app.config.loggers import general_logger as logger
@@ -78,12 +78,29 @@ async def get_subscription_status_endpoint(
 
 
 @router.post("/webhooks/dodo")
-async def handle_dodo_webhook(request: Request):
-    """Handle incoming webhooks from Dodo Payments."""
+async def handle_dodo_webhook(
+    request: Request,
+    webhook_id: str = Header(..., alias="webhook-id"),
+    webhook_timestamp: str = Header(..., alias="webhook-timestamp"),
+    webhook_signature: str = Header(..., alias="webhook-signature"),
+):
+    """Handle incoming webhooks from Dodo Payments with signature verification."""
     try:
+        # Get raw body for signature verification
         body = await request.body()
-        webhook_data = json.loads(body.decode("utf-8"))
+        payload = body.decode("utf-8")
 
+        # Verify webhook signature
+        if not payment_webhook_service.verify_webhook_signature(
+            webhook_id, webhook_timestamp, payload, webhook_signature
+        ):
+            logger.warning("Invalid webhook signature")
+            raise HTTPException(status_code=401, detail="Invalid webhook signature")
+
+        # Parse webhook data
+        webhook_data = json.loads(payload)
+
+        # Process the webhook
         result = await payment_webhook_service.process_webhook(webhook_data)
 
         logger.info(f"Webhook processed: {result.event_type} - {result.status}")
@@ -94,6 +111,8 @@ async def handle_dodo_webhook(request: Request):
             "message": result.message,
         }
 
+    except HTTPException:
+        raise
     except json.JSONDecodeError:
         logger.error("Invalid JSON in webhook payload")
         raise HTTPException(status_code=400, detail="Invalid JSON payload")
