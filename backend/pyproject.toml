@@ -98,6 +98,7 @@ dependencies = [
   "asyncpg>=0.30.0",
   "authlib>=1.6.1",
   "dodopayments>=1.44.0",
+  "standardwebhooks>=1.0.0",
 ]
 
 [dependency-groups]

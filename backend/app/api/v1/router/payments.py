@@ -90,10 +90,15 @@ async def handle_dodo_webhook(
         body = await request.body()
         payload = body.decode("utf-8")
 
-        # Verify webhook signature
-        if not payment_webhook_service.verify_webhook_signature(
-            webhook_id, webhook_timestamp, payload, webhook_signature
-        ):
+        # Prepare headers for verification
+        headers = {
+            "webhook-id": webhook_id,
+            "webhook-timestamp": webhook_timestamp,
+            "webhook-signature": webhook_signature,
+        }
+
+        # Verify webhook signature using Standard Webhooks library
+        if not payment_webhook_service.verify_webhook_signature(payload, headers):
             logger.warning("Invalid webhook signature")
             raise HTTPException(status_code=401, detail="Invalid webhook signature")
 
