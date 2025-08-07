@@ -6,6 +6,7 @@ import { blogApi, type BlogPost } from "@/features/blog/api/blogApi";
 import { BlogCard } from "@/features/blog/components/BlogCard";
 import { BlogHeader } from "@/features/blog/components/BlogHeader";
 import { BlogListItem } from "@/features/blog/components/BlogListItem";
+import { Button } from "@heroui/button";
 
 interface Blog {
   slug: string;
@@ -96,12 +97,7 @@ export default function BlogList() {
           <div className="flex flex-col items-center justify-center py-20">
             <span className="text-danger">Error loading blog posts</span>
             <span className="mt-2 text-sm text-foreground-500">{error}</span>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 rounded bg-primary px-4 py-2 text-white hover:bg-primary-600"
-            >
-              Retry
-            </button>
+            <Button onPress={() => window.location.reload()}>Retry</Button>
           </div>
         </div>
       </div>
