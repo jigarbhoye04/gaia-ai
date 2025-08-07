@@ -177,8 +177,9 @@ export const chatApi = {
     fileData: FileData[] = [],
     selectedTool: string | null = null,
     toolCategory: string | null = null,
+    externalController?: AbortController,
   ) => {
-    const controller = new AbortController();
+    const controller = externalController || new AbortController();
 
     // Extract fileIds from fileData for backward compatibility
     const fileIds = fileData.map((file) => file.fileId);
@@ -214,13 +215,11 @@ export const chatApi = {
 
           if (event.data === "[DONE]") {
             onClose();
-            controller.abort();
             return;
           }
         },
         onclose() {
           onClose();
-          controller.abort();
         },
         onerror: onError,
       },

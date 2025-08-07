@@ -8,6 +8,7 @@ import { chatApi } from "@/features/chat/api/chatApi";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useFetchConversations } from "@/features/chat/hooks/useConversationList";
 import { useLoading } from "@/features/chat/hooks/useLoading";
+import { streamController } from "@/features/chat/utils/streamController";
 import { MessageType } from "@/types/features/convoTypes";
 import { FileData } from "@/types/shared";
 import fetchDate from "@/utils/date/dateUtils";
@@ -16,7 +17,7 @@ import { useLoadingText } from "./useLoadingText";
 import { parseStreamData } from "./useStreamDataParser";
 
 export const useChatStream = () => {
-  const { setIsLoading } = useLoading();
+  const { setIsLoading, setAbortController } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
   const router = useRouter();
   const fetchConversations = useFetchConversations();
@@ -139,6 +140,7 @@ export const useChatStream = () => {
 
     setIsLoading(false);
     resetLoadingText();
+    streamController.clear();
 
     if (refs.current.newConversation.id) {
       // && !refs.current.convoMessages[0]?.conversation_id
@@ -182,6 +184,10 @@ export const useChatStream = () => {
       fileData,
     };
 
+    // Create abort controller for this stream
+    const controller = new AbortController();
+    setAbortController(controller);
+
     await chatApi.fetchChatStream(
       inputText,
       [...refs.current.convoMessages, ...currentMessages],
@@ -191,15 +197,28 @@ export const useChatStream = () => {
       (err) => {
         setIsLoading(false);
         resetLoadingText();
-        toast.error("Error in chat stream.");
-        console.error("Stream error:", err);
+        streamController.clear();
 
-        // Save the user's input text for restoration on error
+        // Check if it was an abort signal (user cancelled)
+        if (err.name === "AbortError") {
+          // Still save incomplete response if any
+          if (refs.current.botMessage && refs.current.accumulatedResponse)
+            updateBotMessage({
+              response: refs.current.accumulatedResponse,
+              loading: false,
+            });
+
+          // Toast is handled in streamController.abort()
+        } else {
+          toast.error(`Error while streaming: ${err}`);
+          console.error("Stream error:", err);
+        } // Save the user's input text for restoration on error
         localStorage.setItem("gaia-searchbar-text", inputText);
       },
       fileData,
       selectedTool,
       toolCategory,
+      controller,
     );
   };
 };
