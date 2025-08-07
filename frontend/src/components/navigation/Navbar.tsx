@@ -11,12 +11,12 @@ import { useEffect,useState } from "react";
 import MobileMenu from "@/components/navigation/MobileMenu";
 import { LinkButton } from "@/components/shared/LinkButton";
 import { appConfig } from "@/config/appConfig";
+import { useUser } from "@/features/auth/hooks/useUser";
 import useMediaQuery from "@/hooks/ui/useMediaQuery";
 
+import { BubbleConversationChatIcon } from "../shared";
 import { NavbarMenu } from "./NavbarMenu";
 import { RainbowGithubButton } from "./RainbowGithubButton";
-import { useUser } from "@/features/auth/hooks/useUser";
-import { BubbleConversationChatIcon } from "../shared";
 
 export default function Navbar() {
   const pathname = usePathname();
