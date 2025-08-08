@@ -166,6 +166,31 @@ export const chatApi = {
     );
   },
 
+  // Save incomplete conversation when stream is cancelled
+  saveIncompleteConversation: async (
+    inputText: string,
+    conversationId: string | null,
+    incompleteResponse: string,
+    fileData: FileData[] = [],
+    selectedTool: string | null = null,
+    toolCategory: string | null = null,
+  ): Promise<{ success: boolean; conversation_id: string }> => {
+    const fileIds = fileData.map((file) => file.fileId);
+
+    return apiService.post<{ success: boolean; conversation_id: string }>(
+      "/save-incomplete-conversation",
+      {
+        conversation_id: conversationId,
+        message: inputText,
+        fileIds,
+        fileData,
+        selectedTool,
+        toolCategory,
+        incomplete_response: incompleteResponse,
+      },
+    );
+  },
+
   // Fetch chat stream
   fetchChatStream: async (
     inputText: string,

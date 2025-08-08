@@ -40,6 +40,31 @@ export const useChatStream = () => {
     refs.current.convoMessages = convoMessages;
   }, [convoMessages]);
 
+  const saveIncompleteConversation = async () => {
+    if (!refs.current.botMessage || !refs.current.accumulatedResponse) {
+      return;
+    }
+
+    try {
+      const response = await chatApi.saveIncompleteConversation(
+        refs.current.userPrompt,
+        refs.current.newConversation.id || null,
+        refs.current.accumulatedResponse,
+        refs.current.botMessage.fileData || [],
+        refs.current.botMessage.selectedTool || null,
+        refs.current.botMessage.toolCategory || null,
+      );
+
+      // Handle navigation for incomplete conversations
+      if (response.conversation_id && !refs.current.newConversation.id) {
+        router.push(`/c/${response.conversation_id}`);
+        fetchConversations();
+      }
+    } catch (saveError) {
+      console.error("Failed to save incomplete conversation:", saveError);
+    }
+  };
+
   const updateBotMessage = (overrides: Partial<MessageType>) => {
     const baseMessage: MessageType = {
       type: "bot",
@@ -142,8 +167,8 @@ export const useChatStream = () => {
     resetLoadingText();
     streamController.clear();
 
+    // Only navigate for successful completions (manual aborts are handled in the save callback)
     if (refs.current.newConversation.id) {
-      // && !refs.current.convoMessages[0]?.conversation_id
       router.push(`/c/${refs.current.newConversation.id}`);
       fetchConversations();
     }
@@ -188,6 +213,20 @@ export const useChatStream = () => {
     const controller = new AbortController();
     setAbortController(controller);
 
+    // Register the save callback for when user clicks stop
+    streamController.setSaveCallback(() => {
+      // Update the UI immediately when stop is clicked
+      if (refs.current.botMessage) {
+        updateBotMessage({
+          response: refs.current.accumulatedResponse,
+          loading: false,
+        });
+      }
+
+      // Save the incomplete conversation
+      saveIncompleteConversation();
+    });
+
     await chatApi.fetchChatStream(
       inputText,
       [...refs.current.convoMessages, ...currentMessages],
@@ -199,21 +238,14 @@ export const useChatStream = () => {
         resetLoadingText();
         streamController.clear();
 
-        // Check if it was an abort signal (user cancelled)
-        if (err.name === "AbortError") {
-          // Still save incomplete response if any
-          if (refs.current.botMessage && refs.current.accumulatedResponse)
-            updateBotMessage({
-              response: refs.current.accumulatedResponse,
-              loading: false,
-            });
-
-          // Toast is handled in streamController.abort()
-        } else {
+        // Handle non-abort errors
+        if (err.name !== "AbortError") {
           toast.error(`Error while streaming: ${err}`);
           console.error("Stream error:", err);
-        } // Save the user's input text for restoration on error
-        localStorage.setItem("gaia-searchbar-text", inputText);
+          // Save the user's input text for restoration on error
+          localStorage.setItem("gaia-searchbar-text", inputText);
+        }
+        // Abort errors are now handled in handleStreamClose
       },
       fileData,
       selectedTool,

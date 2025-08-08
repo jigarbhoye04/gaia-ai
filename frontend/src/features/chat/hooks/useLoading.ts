@@ -18,6 +18,9 @@ export const useLoading = () => {
   };
 
   const stopStream = () => {
+    // Trigger the save before aborting the stream
+    streamController.triggerSave();
+
     const aborted = streamController.abort();
     if (aborted) {
       setLoadingState(false);
