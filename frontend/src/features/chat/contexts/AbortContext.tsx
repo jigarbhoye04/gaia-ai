@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useRef } from "react";
-import { toast } from "sonner";
 
 interface AbortContextType {
   abortControllerRef: React.MutableRefObject<AbortController | null>;

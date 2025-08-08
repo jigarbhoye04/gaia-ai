@@ -1,12 +1,12 @@
 "use client";
 
+import { Button } from "@heroui/button";
 import { useEffect, useState } from "react";
 
 import { blogApi, type BlogPost } from "@/features/blog/api/blogApi";
 import { BlogCard } from "@/features/blog/components/BlogCard";
 import { BlogHeader } from "@/features/blog/components/BlogHeader";
 import { BlogListItem } from "@/features/blog/components/BlogListItem";
-import { Button } from "@heroui/button";
 
 interface Blog {
   slug: string;

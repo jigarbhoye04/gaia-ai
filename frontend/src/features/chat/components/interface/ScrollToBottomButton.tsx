@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { ArrowDown, ChevronDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 interface ScrollToBottomButtonProps {

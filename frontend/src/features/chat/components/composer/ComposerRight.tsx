@@ -2,7 +2,6 @@ import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 import { ArrowUp, Square } from "lucide-react";
 
-import { Cancel01Icon } from "@/components/shared/icons";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 
 interface RightSideProps {
