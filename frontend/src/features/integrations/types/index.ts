@@ -35,7 +35,7 @@ export interface IntegrationCategory {
   id: string;
   name: string;
   description: string;
-  icon: string;
+  icons: string[]; // List of icon URLs
   integrations: Integration[];
 }
 

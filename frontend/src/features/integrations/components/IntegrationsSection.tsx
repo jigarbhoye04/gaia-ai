@@ -33,7 +33,7 @@ const IntegrationCard: React.FC<{
         <div className="flex-shrink-0">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/50">
             <Image
-              src={integration.icon}
+              src={integration.icons[0]}
               alt={integration.name}
               width={20}
               height={20}
@@ -186,7 +186,6 @@ export const IntegrationsSection: React.FC<IntegrationsSectionProps> = ({
                     connectedCount={connectedCount}
                     totalCount={totalCount}
                     onConnect={handleConnect}
-                    onDisconnect={handleDisconnect}
                   />
                 );
               })}

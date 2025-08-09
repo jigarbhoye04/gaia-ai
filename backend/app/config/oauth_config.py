@@ -206,54 +206,54 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
         short_name="drive",
     ),
     # Coming soon integrations
-    OAuthIntegration(
-        id="github",
-        name="GitHub",
-        description="Manage repositories, issues, and pull requests",
-        icons=[
-            "https://cdn.brandfetch.io/idZAyF9rlg/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
-        ],
-        category="development",
-        provider="github",
-        scopes=[],
-        available=False,
-    ),
-    OAuthIntegration(
-        id="figma",
-        name="Figma",
-        description="Create and collaborate on design projects",
-        icons=[
-            "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg"
-        ],
-        category="creative",
-        provider="figma",
-        scopes=[],
-        available=False,
-    ),
-    OAuthIntegration(
-        id="notion",
-        name="Notion",
-        description="Manage pages, databases, and workspace content with AI",
-        icons=[
-            "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
-        ],
-        category="productivity",
-        provider="notion",
-        scopes=[],
-        available=False,
-    ),
-    OAuthIntegration(
-        id="whatsapp",
-        name="WhatsApp",
-        description="Send and receive messages",
-        icons=[
-            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png?20220228223904"
-        ],
-        category="communication",
-        provider="facebook",
-        scopes=[],
-        available=False,
-    ),
+    # OAuthIntegration(
+    #     id="github",
+    #     name="GitHub",
+    #     description="Manage repositories, issues, and pull requests",
+    #     icons=[
+    #         "https://cdn.brandfetch.io/idZAyF9rlg/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+    #     ],
+    #     category="development",
+    #     provider="github",
+    #     scopes=[],
+    #     available=False,
+    # ),
+    # OAuthIntegration(
+    #     id="figma",
+    #     name="Figma",
+    #     description="Create and collaborate on design projects",
+    #     icons=[
+    #         "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg"
+    #     ],
+    #     category="creative",
+    #     provider="figma",
+    #     scopes=[],
+    #     available=False,
+    # ),
+    # OAuthIntegration(
+    #     id="notion",
+    #     name="Notion",
+    #     description="Manage pages, databases, and workspace content with AI",
+    #     icons=[
+    #         "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+    #     ],
+    #     category="productivity",
+    #     provider="notion",
+    #     scopes=[],
+    #     available=False,
+    # ),
+    # OAuthIntegration(
+    #     id="whatsapp",
+    #     name="WhatsApp",
+    #     description="Send and receive messages",
+    #     icons=[
+    #         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png?20220228223904"
+    #     ],
+    #     category="communication",
+    #     provider="facebook",
+    #     scopes=[],
+    #     available=False,
+    # ),
 ]
 
 
