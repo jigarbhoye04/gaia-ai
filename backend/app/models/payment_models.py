@@ -269,5 +269,5 @@ class PaymentDB(BaseModel):
 
 class PaymentVerificationResponse(BaseModel):
     payment_completed: bool
-    subscription_id: str | None = None
+    subscription_id: Optional[str] = None
     message: str
