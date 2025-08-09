@@ -231,7 +231,7 @@ async def setup_dodo_plans(monthly_product_id: str, yearly_product_id: str):
                 else:
                     # Insert new plan
                     await collection.insert_one(
-                        plan_doc.dict(by_alias=True, exclude={"id"})
+                        plan_doc.model_dump(by_alias=True, exclude={"id"})
                     )
                     created_count += 1
                     print("   ✅ Created new plan")
