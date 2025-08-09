@@ -1,8 +1,40 @@
 """
 OAuth Integration Configuration
 
-This module defines all OAuth integrations dynamically.
-Add new integrations by simply adding to the OAUTH_INTEGRATIONS list.
+Single source of truth for all OAuth integration configurations in GAIA.
+Defines integrations, scopes, display properties, and relationships.
+
+OAuthScope: Defines OAuth permission scopes with URL and description.
+Used for: Backend permission validation, frontend permission displays.
+
+OAuthIntegration: Core integration definition with fields:
+- id: Unique identifier for API endpoints, database records, frontend routing
+- name: Human-readable name for frontend UI and user messages
+- description: Detailed explanation for integration cards and settings pages
+- icons: List of icon URLs for frontend UI components and different display sizes
+- category: Groups integrations for frontend filtering, slash commands, settings organization
+- provider: OAuth provider for flow routing, token management, API client selection
+- scopes: Required permissions for OAuth authorization and validation
+- available: Feature flag for frontend display logic and API availability
+- oauth_endpoints: Custom OAuth URLs for non-standard providers
+- is_special: Marks unified integrations for special frontend handling
+- display_priority: Numeric sort order for frontend lists and dropdowns
+- included_integrations: Child integration IDs for unified integrations
+- short_name: Quick access identifier for slash commands and convenience functions
+
+IntegrationConfigResponse: API model that converts backend fields to frontend camelCase.
+
+Used by:
+- google_scope_dependencies.py: Permission validation
+- integration_checker.py: User permission checking
+- oauth.py router: OAuth flows and status endpoints
+- Frontend components: Integration cards, settings, slash commands
+- Services: API client setup and token management
+
+Integration types:
+- Individual: Single service with own scopes (gmail, google_calendar)
+- Unified: Multiple services with combined scopes (google_workspace)
+- Coming soon: Placeholder with available=False (github, figma)
 """
 
 from typing import Dict, List, Optional
@@ -22,16 +54,18 @@ class OAuthIntegration(BaseModel):
     id: str
     name: str
     description: str
-    icons: List[str]  # List of icon URLs
+    icons: List[str]  # List of icon URLs for different contexts/sizes
     category: str
     provider: str  # 'google', 'github', 'figma', 'notion', etc.
     scopes: List[OAuthScope]
     available: bool = True
     oauth_endpoints: Optional[Dict[str, str]] = None
-    # Special display properties
+    # Display and organization properties
     is_special: bool = False  # For unified integrations like Google Workspace
     display_priority: int = 0  # Higher priority shows first
     included_integrations: List[str] = []  # Child integrations for unified ones
+    # Short name for slash command dropdowns and quick access
+    short_name: Optional[str] = None  # e.g., "gmail", "calendar", "drive", "docs"
 
 
 class IntegrationConfigResponse(BaseModel):
@@ -118,6 +152,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
                 description="View calendar events",
             ),
         ],
+        short_name="calendar",
     ),
     OAuthIntegration(
         id="google_docs",
@@ -134,6 +169,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
                 description="Create and edit documents",
             ),
         ],
+        short_name="docs",
     ),
     OAuthIntegration(
         id="gmail",
@@ -150,6 +186,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
                 description="Read, compose, and send emails",
             ),
         ],
+        short_name="gmail",
     ),
     OAuthIntegration(
         id="google_drive",
@@ -166,13 +203,16 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
                 description="Create and manage files",
             ),
         ],
+        short_name="drive",
     ),
     # Coming soon integrations
     OAuthIntegration(
         id="github",
         name="GitHub",
         description="Manage repositories, issues, and pull requests",
-        icon="https://cdn.brandfetch.io/idZAyF9rlg/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B",
+        icons=[
+            "https://cdn.brandfetch.io/idZAyF9rlg/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
+        ],
         category="development",
         provider="github",
         scopes=[],
@@ -182,7 +222,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
         id="figma",
         name="Figma",
         description="Create and collaborate on design projects",
-        icon="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",
+        icons=[
+            "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg"
+        ],
         category="creative",
         provider="figma",
         scopes=[],
@@ -192,7 +234,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
         id="notion",
         name="Notion",
         description="Manage pages, databases, and workspace content with AI",
-        icon="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+        icons=[
+            "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+        ],
         category="productivity",
         provider="notion",
         scopes=[],
@@ -202,7 +246,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
         id="whatsapp",
         name="WhatsApp",
         description="Send and receive messages",
-        icon="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png?20220228223904",
+        icons=[
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png?20220228223904"
+        ],
         category="communication",
         provider="facebook",
         scopes=[],
@@ -263,3 +309,13 @@ def get_included_integration_ids(unified_id: str) -> List[str]:
     if not unified or not unified.is_special:
         return []
     return unified.included_integrations
+
+
+def get_integration_by_short_name(short_name: str) -> Optional[OAuthIntegration]:
+    """Get an integration by its short name (used in slash commands)."""
+    return next((i for i in OAUTH_INTEGRATIONS if i.short_name == short_name), None)
+
+
+def get_short_name_mapping() -> Dict[str, str]:
+    """Get mapping of short names to integration IDs for convenience functions."""
+    return {i.short_name: i.id for i in OAUTH_INTEGRATIONS if i.short_name}
