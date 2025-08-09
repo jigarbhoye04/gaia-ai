@@ -1,9 +1,9 @@
 import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
 import { CheckCircle } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 
-import { Chip } from "@heroui/chip";
 import { Integration } from "../types";
 
 interface SpecialIntegrationCardProps {
