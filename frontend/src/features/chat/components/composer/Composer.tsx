@@ -155,10 +155,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (
     event,
   ) => {
-    if (event.key === "Enter" && event.shiftKey) {
-      event.preventDefault();
-      setSearchbarText((text) => `${text}\n`);
-    } else if (event.key === "Enter" && !isLoading) {
+    if (event.key === "Enter" && !event.shiftKey && !isLoading) {
       event.preventDefault();
       handleFormSubmit();
     }
