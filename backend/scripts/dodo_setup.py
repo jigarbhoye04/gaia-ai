@@ -200,7 +200,7 @@ async def setup_dodo_plans(monthly_product_id: str, yearly_product_id: str):
                     }
                 )
 
-                plan_doc = PlanDB.parse_obj(
+                plan_doc = PlanDB.model_validate(
                     {
                         "dodo_product_id": dodo_product_id,
                         "name": plan_item["name"],
