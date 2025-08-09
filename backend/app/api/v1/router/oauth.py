@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import lru_cache
 from typing import Optional
 from urllib.parse import urlencode
 
@@ -49,6 +50,44 @@ http_async_client = httpx.AsyncClient()
 workos = WorkOSClient(
     api_key=settings.WORKOS_API_KEY, client_id=settings.WORKOS_CLIENT_ID
 )
+
+
+@lru_cache(maxsize=1)
+def _build_integrations_config():
+    """
+    Build and cache the integrations configuration response.
+    This function is cached using lru_cache for performance.
+    """
+    integration_configs = []
+    for integration in OAUTH_INTEGRATIONS:
+        config = IntegrationConfigResponse(
+            id=integration.id,
+            name=integration.name,
+            description=integration.description,
+            icons=integration.icons,
+            category=integration.category,
+            provider=integration.provider,
+            available=integration.available,
+            loginEndpoint=(
+                f"oauth/login/integration/{integration.id}"
+                if integration.available
+                else None
+            ),
+            isSpecial=integration.is_special,
+            displayPriority=integration.display_priority,
+            includedIntegrations=integration.included_integrations,
+        )
+        integration_configs.append(config.model_dump())
+
+    return {"integrations": integration_configs}
+
+
+def clear_integrations_cache():
+    """
+    Clear the integrations configuration cache.
+    Call this function when the integration configuration changes.
+    """
+    _build_integrations_config.cache_clear()
 
 
 # @router.get("/login/google")
@@ -319,29 +358,10 @@ async def get_integrations_config():
     """
     Get the configuration for all integrations.
     This endpoint is public and returns integration metadata.
+    Uses lru_cache for improved performance.
     """
-    integration_configs = []
-    for integration in OAUTH_INTEGRATIONS:
-        config = IntegrationConfigResponse(
-            id=integration.id,
-            name=integration.name,
-            description=integration.description,
-            icons=integration.icons,
-            category=integration.category,
-            provider=integration.provider,
-            available=integration.available,
-            loginEndpoint=(
-                f"oauth/login/integration/{integration.id}"
-                if integration.available
-                else None
-            ),
-            isSpecial=integration.is_special,
-            displayPriority=integration.display_priority,
-            includedIntegrations=integration.included_integrations,
-        )
-        integration_configs.append(config.model_dump())
-
-    return JSONResponse(content={"integrations": integration_configs})
+    cached_config = _build_integrations_config()
+    return JSONResponse(content=cached_config)
 
 
 @router.get("/integrations/status")
