@@ -1,6 +1,6 @@
 import { Button, Card, CardBody, Tooltip } from "@heroui/react";
 import * as d3 from "d3";
-import { Download, FileImage, FileText } from "lucide-react";
+import { FileImage, FileText } from "lucide-react";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { useUser } from "@/features/auth/hooks/useUser";
