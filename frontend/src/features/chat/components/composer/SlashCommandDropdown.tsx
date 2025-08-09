@@ -21,7 +21,6 @@ interface SlashCommandDropdownProps {
   position: { top?: number; bottom?: number; left: number; width?: number };
   isVisible: boolean;
   openedViaButton?: boolean;
-  hasMessages: boolean;
 }
 
 const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
@@ -32,7 +31,6 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
   position,
   isVisible,
   openedViaButton = false,
-  hasMessages,
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");

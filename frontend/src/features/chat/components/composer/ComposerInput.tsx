@@ -362,7 +362,6 @@ const ComposerInput = React.forwardRef<ComposerInputRef, SearchbarInputProps>(
               openedViaButton: false,
             }))
           }
-          hasMessages={hasMessages}
           position={slashCommandState.dropdownPosition}
           isVisible={slashCommandState.isActive}
           openedViaButton={slashCommandState.openedViaButton}

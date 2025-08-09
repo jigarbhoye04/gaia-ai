@@ -98,7 +98,7 @@ export default function PreferencesSettings({
 
             return acc;
           },
-          {} as Record<string, any>,
+          {} as Record<string, string | null>,
         );
 
         const response = await authApi.updatePreferences(sanitizedPreferences);
