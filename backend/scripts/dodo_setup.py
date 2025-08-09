@@ -221,7 +221,7 @@ async def setup_dodo_plans(monthly_product_id: str, yearly_product_id: str):
                     await collection.update_one(
                         {"_id": existing_plan["_id"]},
                         {
-                            "$set": plan_doc.dict(
+                            "$set": plan_doc.model_dump(
                                 by_alias=True, exclude={"id", "created_at"}
                             )
                         },
