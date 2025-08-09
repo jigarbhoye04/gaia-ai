@@ -6,7 +6,7 @@ export interface Integration {
   id: string;
   name: string;
   description: string;
-  icon: string;
+  icons: string[]; // List of icon URLs
   category:
     | "productivity"
     | "communication"
@@ -17,6 +17,10 @@ export interface Integration {
   loginEndpoint?: string;
   disconnectEndpoint?: string;
   settingsPath?: string;
+  // New properties for unified integrations
+  isSpecial?: boolean;
+  displayPriority?: number;
+  includedIntegrations?: string[];
 }
 
 export interface IntegrationStatus {

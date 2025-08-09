@@ -34,6 +34,14 @@ INTEGRATION_SCOPE_MAPPING = {
     ],
     "google_docs": ["https://www.googleapis.com/auth/documents"],
     "google_drive": ["https://www.googleapis.com/auth/drive.file"],
+    # Google Workspace includes all Google service scopes
+    "google_workspace": [
+        "https://www.googleapis.com/auth/gmail.modify",
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/calendar.readonly",
+        "https://www.googleapis.com/auth/documents",
+        "https://www.googleapis.com/auth/drive.file",
+    ],
 }
 
 
