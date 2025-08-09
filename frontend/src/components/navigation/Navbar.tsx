@@ -11,8 +11,10 @@ import { useEffect,useState } from "react";
 import MobileMenu from "@/components/navigation/MobileMenu";
 import { LinkButton } from "@/components/shared/LinkButton";
 import { appConfig } from "@/config/appConfig";
+import { useUser } from "@/features/auth/hooks/useUser";
 import useMediaQuery from "@/hooks/ui/useMediaQuery";
 
+import { BubbleConversationChatIcon } from "../shared";
 import { NavbarMenu } from "./NavbarMenu";
 import { RainbowGithubButton } from "./RainbowGithubButton";
 
@@ -21,6 +23,8 @@ export default function Navbar() {
   const isMobileScreen = useMediaQuery("(max-width: 990px)");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+
+  const user = useUser();
 
   // Function to control backdrop blur
   const toggleBackdrop = (show: boolean) => {
@@ -158,9 +162,16 @@ export default function Navbar() {
                 size="sm"
                 className="h-9 max-h-9 min-h-9 rounded-xl bg-primary px-4! text-sm font-medium text-black transition-all! hover:scale-105 hover:bg-primary!"
                 as={Link}
-                href="/signup"
+                href={user.email ? "/c" : "/signup"}
               >
-                Get Started
+                {user.email && (
+                  <BubbleConversationChatIcon
+                    className="w-[15px] min-w-[15px]"
+                    color="#000000"
+                    width="19"
+                  />
+                )}
+                {user.email ? "Chat" : "Get Started"}
               </LinkButton>
             </div>
           )}
