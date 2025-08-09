@@ -146,9 +146,6 @@ export const useChatStream = () => {
       fetchConversations();
     }
 
-    // Clear the saved input text since the message was sent successfully
-    localStorage.removeItem("gaia-searchbar-text");
-
     refs.current.botMessage = null;
     refs.current.currentStreamingMessages = []; // Reset streaming messages
     refs.current.newConversation = { id: null, description: null };
@@ -193,9 +190,6 @@ export const useChatStream = () => {
         resetLoadingText();
         toast.error("Error in chat stream.");
         console.error("Stream error:", err);
-
-        // Save the user's input text for restoration on error
-        localStorage.setItem("gaia-searchbar-text", inputText);
       },
       fileData,
       selectedTool,
