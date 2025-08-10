@@ -37,6 +37,7 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Request,
     UploadFile,
 )
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -80,7 +81,8 @@ async def login_workos():
     """
     # Add any needed parameters for your SSO implementation
     authorization_url = workos.user_management.get_authorization_url(
-        provider="authkit", redirect_uri=settings.WORKOS_REDIRECT_URI
+        provider="authkit",
+        redirect_uri=settings.WORKOS_REDIRECT_URI,
     )
 
     return RedirectResponse(url=authorization_url)
@@ -533,24 +535,42 @@ async def update_user_name(
 
 
 @router.post("/logout")
-async def logout():
+async def logout(
+    request: Request,
+):
     """
-    Log out the user by revoking tokens for both Google and WorkOS.
-
-    Args:
-        access_token: JWT access token or Google token
-
-    Returns:
-        JSONResponse with logout status
+    Logout user and return logout URL for frontend redirection.
     """
-    response = JSONResponse(content={"detail": "Logged out successfully"})
+    wos_session = request.cookies.get("wos_session")
 
-    response.delete_cookie(
-        "wos_session",
-        httponly=True,
-        path="/",
-        secure=settings.ENV == "production",
-        samesite="lax",
-    )
+    if not wos_session:
+        raise HTTPException(status_code=401, detail="No active session")
 
-    return response
+    try:
+        session = workos.user_management.load_sealed_session(
+            sealed_session=wos_session,
+            cookie_password=settings.WORKOS_COOKIE_PASSWORD,
+        )
+
+        if not session:
+            raise HTTPException(status_code=401, detail="Invalid session")
+
+        logout_url = session.get_logout_url()
+
+        # Create response with logout URL
+        response = JSONResponse(content={"logout_url": logout_url})
+
+        # Clear the session cookie
+        response.delete_cookie(
+            "wos_session",
+            httponly=True,
+            path="/",
+            secure=settings.ENV == "production",
+            samesite="lax",
+        )
+
+        return response
+
+    except Exception as e:
+        logger.error(f"Logout error: {e}")
+        raise HTTPException(status_code=500, detail="Logout failed")

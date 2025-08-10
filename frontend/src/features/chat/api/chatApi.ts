@@ -186,6 +186,7 @@ export const chatApi = {
     await fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,
       {
+        openWhenHidden: true,
         method: "POST",
         headers: {
           "Content-Type": "application/json",

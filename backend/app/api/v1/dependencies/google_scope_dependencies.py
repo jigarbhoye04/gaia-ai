@@ -40,10 +40,13 @@ def require_google_scope(scope: Union[str, List[str]]):
             )
 
         try:
-            token = await token_repository.get_token(
-                user_id, "google", renew_if_expired=True
-            )
-            authorized_scopes = str(token.get("scope", "")).split()
+            try:
+                token = await token_repository.get_token(
+                    user_id, "google", renew_if_expired=True
+                )
+                authorized_scopes = str(token.get("scope", "")).split()
+            except HTTPException:
+                authorized_scopes = []
 
             # Handle both single scope and list of scopes
             required_scopes = [scope] if isinstance(scope, str) else scope
