@@ -121,7 +121,9 @@ async def workos_callback(
 
         # Extract user information
         email = auth_response.user.email
-        name = f"{auth_response.user.first_name} {auth_response.user.last_name}"
+        first = auth_response.user.first_name or ""
+        last = auth_response.user.last_name or ""
+        name = f"{first} {last}".strip()
         picture_url = auth_response.user.profile_picture_url
 
         # Store user info in our database

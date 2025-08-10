@@ -10,7 +10,6 @@ export * from "./navigation/DesktopMenu";
 export * from "./navigation/Footer";
 export * from "./navigation/MobileMenu";
 export * from "./navigation/Navbar";
-export * from "./navigation/NavigationMenu";
 export * from "./Notifications/EnhancedNotificationCard";
 export * from "./Notifications/NotificationActions";
 export * from "./Notifications/NotificationCard";
