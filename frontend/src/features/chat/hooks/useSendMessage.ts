@@ -40,7 +40,6 @@ export const useSendMessage = (convoIdParam: string | null) => {
     await fetchChatStream(
       inputText,
       [userMessage],
-      convoIdParam,
       botMessageId,
       fileData,
       selectedTool,

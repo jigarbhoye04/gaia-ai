@@ -5,9 +5,32 @@ Create structured calendar events from LLM-generated data.
 
 This tool processes event details and returns a structured JSON response. The frontend will use this response to render event options that the user must manually confirm.
 
+TIMEZONE HANDLING:
+• SIMPLIFIED APPROACH: Use only two fields for handling time
+  - `time_str`: For relative times, use offset format like "+02:30" (2 hours and 30 minutes from now)
+  - `time_str`: For absolute times, use ISO format like "2025-08-08T16:30:00"
+  - `duration_minutes`: Specify event duration in minutes (defaults to 30 if not provided)
+
+• **MANDATORY TIMEZONE RULE**:  
+  - If the user explicitly mentions a timezone (e.g., "EST", "PST", "IST", "GMT+5:30"), you MUST always include the corresponding `timezone_offset` in the output.  
+  - This is **not optional** — never omit `timezone_offset` if a timezone is stated.  
+  - If no timezone is mentioned, do not provide `timezone_offset`.
+  
+EXAMPLES (Current time: 2025-08-08T14:30:00Z):
+• User: "Create event in 2 hours" → time_str: "+02:00", duration_minutes: 30
+• User: "Schedule meeting at 4:30 PM today for 1 hour" → time_str: "2025-08-08T16:30:00", duration_minutes: 60
+• User: "Book appointment tomorrow at 9 AM EST for 45 minutes" → time_str: "2025-08-09T09:00:00", timezone_offset: "-05:00", duration_minutes: 45
+• User: "Create event for classes tomorrow at 10 AM PST for 1 hour" → time_str: "2025-08-09T10:00:00", timezone_offset: "-08:00", duration_minutes: 60
+
+The backend will handle all timezone calculations automatically. Your only responsibility is to include `timezone_offset` whenever the user states a timezone.
+
 Important:
 - This tool does NOT directly create calendar events.
 - The user must review and confirm the events before they are added to their calendar.
+- For relative times (like "in 2 hours"), provide time_str as an offset string (e.g., "+02:00")
+- For absolute times (like "at 3 PM"), provide time_str in ISO format (e.g., "2025-08-08T16:30:00")
+- Specify duration_minutes for how long the event should last (defaults to 30 minutes if not specified)
+- Only provide timezone_offset when a specific timezone is explicitly mentioned.
 
 ---
 
@@ -24,18 +47,19 @@ You may return:
 
 ---
 
-EVENT FORMAT: `EventCreateRequest`
+EVENT FORMAT: `CalendarEventToolRequest`
 
 Each event must include the following fields:
 
 - `summary` (str): Required. Title or name of the event.
 - `description` (str): Optional. Extra information about the event.
 - `is_all_day` (bool): Required. Set to `true` if the event is an all-day event.
-- `start` (str): Required if `is_all_day` is `false`. Must follow ISO 8601 format: `YYYY-MM-DDTHH:MM:SS±HH:MM`.
-- `end` (str): Required if `is_all_day` is `false`. Same format as `start`.
+- `time_str` (str): Required if `is_all_day` is `false`. Either:
+  - Relative time offset in format "+HH:MM" (e.g., "+02:30" for 2 hours and 30 minutes from now)
+  - Absolute time in ISO 8601 format: `YYYY-MM-DDTHH:MM:SS`.
+- `duration_minutes` (int): Optional. Duration of the event in minutes. Defaults to 30 if not specified.
+- `timezone_offset` (str): Optional. Only provide when user explicitly mentions a timezone (e.g., "-05:00" for EST).
 - `calendar_id` (str): Optional. ID of the calendar to add the event to.
-- `calendar_name` (str): Optional. Display name of the calendar.
-- `calendar_color` (str): Optional. Hex color for visual distinction (e.g., `#00bbff`).
 - `recurrence` (RecurrenceData): Optional. Used for recurring events.
 
 ---
@@ -117,8 +141,8 @@ User says: *“Set up a team sync every Monday at 10 AM for the next 4 weeks.”
   "summary": "Team Sync",
   "description": "Weekly standup with dev team",
   "is_all_day": false,
-  "start": "2025-08-04T10:00:00+05:30",
-  "end": "2025-08-04T10:30:00+05:30",
+  "time_str": "2025-08-04T10:00:00",
+  "duration_minutes": 30,
   "recurrence": {
     "rrule": {
       "frequency": "WEEKLY",
@@ -132,15 +156,16 @@ User says: *“Set up a team sync every Monday at 10 AM for the next 4 weeks.”
 
 2. **Monthly event with skipped and added dates:**
 
-User says: *“Can you please create recurring calendar event for everyday at 10PM about standup meeting on every Mon, Tue, Friday in Aug, Sep, Oct, excluding 8 Aug”*
+User says: *“Can you please create recurring calendar event for everyday at 10PM PST about standup meeting on every Mon, Tue, Friday in Aug, Sep, Oct, excluding 8 Aug”*
 
 ```json
 {
   "summary": "Standup Meeting",
   "description": "Recurring team standup",
   "is_all_day": false,
-  "start": "2025-08-04T22:00:00+05:30",
-  "end": "2025-08-04T22:30:00+05:30",
+  "time_str": "2025-08-04T22:00:00",
+  "duration_minutes": 30,
+  "timezone_offset": "-08:00",
   "recurrence": {
     "rrule": {
       "frequency": "WEEKLY",
@@ -156,7 +181,7 @@ User says: *“Can you please create recurring calendar event for everyday at 10
 ---
 
 Args:
-    event_data: Single EventCreateRequest object or array of EventCreateRequest objects
+    event_data: Single CalendarEventToolRequest object or array of CalendarEventToolRequest objects
 
 Returns:
     str: Confirmation message or JSON string containing formatted calendar event options for user confirmation.
@@ -336,6 +361,18 @@ This tool edits calendar events using two mutually exclusive methods:
 
 Do not assume or guess `event_id` or `calendar_id`. Use only if previously retrieved. Otherwise, use a `query`.
 
+TIMEZONE HANDLING FOR UPDATES:
+• RELATIVE TIME (e.g., "move it 2 hours later", "shift by 30 minutes"): For any time described relative to the event's current time, you MUST calculate the new time and ALWAYS set `timezone_offset` to `"+00:00"`. This is a strict requirement. Do not use any other offset.
+• ABSOLUTE TIME (e.g., "change to 4:30 PM", "move to tomorrow at 9 AM") → Provide the new time as-is, timezone_offset will be processed internally based on user's timezone
+• EXPLICIT TIMEZONE: Use timezone_offset parameter if user explicitly mentions a timezone (e.g., "change to 3 PM EST", "move to 9 AM +05:30")
+
+EXAMPLES FOR TIME UPDATES:
+• User: "Move my meeting 2 hours later" → Calculate new time: original_start + 2 hours → start: "calculated_time", timezone_offset: "+00:00"
+• User: "Change meeting to 4:30 PM today" → start: "2025-08-08T16:30:00" (timezone_offset: null - processed internally)
+• User: "Reschedule to tomorrow at 9 AM PST" → start: "2025-08-09T09:00:00", timezone_offset: "-08:00"
+
+The calendar tool will process all updated times internally and send final calculated times to the frontend.
+
 Important:
 This tool does not immediately apply updates. It sends the updated event to the frontend for user confirmation. Changes are finalized only after user approval.
 
@@ -350,10 +387,10 @@ Arguments:
         - OR `query` (from user's event description)
     summary (str, optional): New event title
     description (str, optional): New event description
-    start (str, optional): New start time (ISO 8601)
-    end (str, optional): New end time (ISO 8601)
+    start (str, optional): New start time (ISO 8601 format: YYYY-MM-DDTHH:MM:SS)
+    end (str, optional): New end time (ISO 8601 format: YYYY-MM-DDTHH:MM:SS)
     is_all_day (bool, optional): Whether it's an all-day event
-    timezone (str, optional): Timezone for the updated event
+    timezone_offset (str, optional): Timezone offset in (+|-)HH:MM format. Only use if user explicitly mentions a timezone
     recurrence (RecurrenceData, optional): New recurrence pattern
 
 Returns:

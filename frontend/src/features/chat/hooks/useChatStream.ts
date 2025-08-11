@@ -163,7 +163,6 @@ export const useChatStream = () => {
   return async (
     inputText: string,
     currentMessages: MessageType[],
-    conversationId: string | null,
     botMessageId: string,
     fileData: FileData[] = [],
     selectedTool: string | null = null,
@@ -191,7 +190,7 @@ export const useChatStream = () => {
     await chatApi.fetchChatStream(
       inputText,
       [...refs.current.convoMessages, ...currentMessages],
-      conversationId,
+      undefined, // conversationId is will be fetched from the URL
       handleStreamEvent,
       handleStreamClose,
       (err) => {

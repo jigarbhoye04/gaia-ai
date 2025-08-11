@@ -170,7 +170,7 @@ export const chatApi = {
   fetchChatStream: async (
     inputText: string,
     convoMessages: MessageType[],
-    conversationId: string | null,
+    conversationId: string | null | undefined,
     onMessage: (event: EventSourceMessage) => void,
     onClose: () => void,
     onError: (err: Error) => void,
@@ -182,6 +182,16 @@ export const chatApi = {
 
     // Extract fileIds from fileData for backward compatibility
     const fileIds = fileData.map((file) => file.fileId);
+
+    // If conversationId is not provided, try to extract it from the URL
+    if (conversationId === undefined) {
+      const path = window.location.pathname;
+      const match = path.match(/\/c\/([^/]+)(?:\/|$)/);
+      console.log(match);
+      if (match) {
+        conversationId = match[1];
+      }
+    }
 
     await fetchEventSource(
       `${process.env.NEXT_PUBLIC_API_BASE_URL}chat-stream`,
@@ -196,7 +206,7 @@ export const chatApi = {
         credentials: "include",
         signal: controller.signal,
         body: JSON.stringify({
-          conversation_id: conversationId,
+          conversation_id: conversationId || null,
           message: inputText,
           fileIds, // For backward compatibility
           fileData, // Send complete file data
