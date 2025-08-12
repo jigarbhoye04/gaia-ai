@@ -40,10 +40,14 @@ Use this tool when the user wants to:
 - Schedule a single or recurring event
 - Set up meetings, calls, appointments, or reminders
 - Define repeating events like "every Monday", "1st of every month", or "every January and June"
+- Create multiple events at once (use array input)
 
-You may return:
-- A single event object
-- An array of event objects
+This tool handles both single events and multiple events in one call:
+- Single event: Pass one EventCreateRequest object
+- Multiple events: Pass an array of EventCreateRequest objects
+
+IMPORTANT: When creating multiple events, always use a single tool call with an array.
+Never make separate tool calls for each event in the same message.
 
 ---
 
@@ -137,7 +141,7 @@ EXAMPLES:
 User says: *“Set up a team sync every Monday at 10 AM for the next 4 weeks.”*
 
 ```json
-{
+[{
   "summary": "Team Sync",
   "description": "Weekly standup with dev team",
   "is_all_day": false,
@@ -151,7 +155,7 @@ User says: *“Set up a team sync every Monday at 10 AM for the next 4 weeks.”
       "by_day": ["MO"]
     }
   }
-}
+}]
 ````
 
 2. **Monthly event with skipped and added dates:**
@@ -159,7 +163,7 @@ User says: *“Set up a team sync every Monday at 10 AM for the next 4 weeks.”
 User says: *“Can you please create recurring calendar event for everyday at 10PM PST about standup meeting on every Mon, Tue, Friday in Aug, Sep, Oct, excluding 8 Aug”*
 
 ```json
-{
+[{
   "summary": "Standup Meeting",
   "description": "Recurring team standup",
   "is_all_day": false,
@@ -175,13 +179,26 @@ User says: *“Can you please create recurring calendar event for everyday at 10
       "exclude_dates": ["2025-08-08"]
     }
   }
-}
+}]
 ```
 
 ---
 
+CRITICAL USAGE RULE:
+
+This tool takes an ARRAY input and is designed to handle multiple events in a single call.
+NEVER call this tool multiple times in the same message, even if creating multiple events.
+
+✓ CORRECT: Pass all events in one array: [event1, event2, event3]
+✗ INCORRECT: Call the tool separately for each event (causes system issues)
+
+Always batch multiple event creations into a single tool call using the array parameter.
+This prevents conflicts and ensures proper event processing.
+
+---
+
 Args:
-    event_data: Single CalendarEventToolRequest object or array of CalendarEventToolRequest objects
+    events_data: array of CalendarEventToolRequest objects
 
 Returns:
     str: Confirmation message or JSON string containing formatted calendar event options for user confirmation.

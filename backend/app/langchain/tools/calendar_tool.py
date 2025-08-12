@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import httpx
 from app.config.loggers import chat_logger as logger
@@ -38,20 +38,12 @@ from langgraph.config import get_stream_writer
 @with_doc(CALENDAR_EVENT)
 @require_integration("calendar")
 async def create_calendar_event(
-    event_data: Union[
-        List[CalendarEventToolRequest],
-        CalendarEventToolRequest,
-    ],
+    events_data: List[CalendarEventToolRequest],
     config: RunnableConfig,
 ) -> str:
     try:
-        # Normalize input to always work with a list of CalendarEventToolRequest objects
-        event_list: List[CalendarEventToolRequest] = (
-            event_data if isinstance(event_data, list) else [event_data]
-        )
-
         # Validate non-empty
-        if not event_list:
+        if not events_data:
             logger.error("Empty event list provided")
             return json.dumps(
                 {
@@ -77,10 +69,10 @@ async def create_calendar_event(
         calendar_options = []
         validation_errors = []
 
-        logger.info(f"Processing {len(event_list)} calendar events")
+        logger.info(f"Processing {len(events_data)} calendar events")
 
-        # Process each event with timezone handling
-        for event in event_list:
+        # Process each event with validation
+        for event in events_data:
             try:
                 # Process the event times with timezone handling to convert to service format
                 processed_event = event.process_times(user_time_str)
@@ -547,15 +539,20 @@ async def edit_calendar_event(
         # Process timezone for start/end times if provided
         processed_start = start
         processed_end = end
-        
+
         if start is not None or end is not None:
             try:
                 # Convert recurrence dict to RecurrenceData if provided
                 recurrence_data = None
                 if recurrence is not None:
                     from app.models.calendar_models import RecurrenceData
-                    recurrence_data = RecurrenceData(**recurrence) if isinstance(recurrence, dict) else recurrence
-                
+
+                    recurrence_data = (
+                        RecurrenceData(**recurrence)
+                        if isinstance(recurrence, dict)
+                        else recurrence
+                    )
+
                 tool_request = CalendarEventUpdateToolRequest(
                     event_lookup=event_lookup_data,
                     user_time=user_time_str,
@@ -565,13 +562,13 @@ async def edit_calendar_event(
                     summary=summary,
                     description=description,
                     is_all_day=is_all_day,
-                    recurrence=recurrence_data
+                    recurrence=recurrence_data,
                 )
-                
+
                 update_request = tool_request.to_update_request()
                 processed_start = update_request.start
                 processed_end = update_request.end
-                
+
             except Exception as e:
                 logger.error(f"Error processing timezone for calendar update: {e}")
                 return f"Error processing timezone: {e}"
