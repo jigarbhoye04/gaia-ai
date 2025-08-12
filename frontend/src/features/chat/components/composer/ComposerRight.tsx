@@ -36,7 +36,6 @@ export default function RightSide({
 
   const handleButtonPress = () => {
     if (isLoading) {
-      console.log("Stop button pressed, calling stopStream");
       stopStream();
     } else {
       handleFormSubmit();
