@@ -210,13 +210,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
     #     id="github",
     #     name="GitHub",
     #     description="Manage repositories, issues, and pull requests",
-<<<<<<< HEAD
     #     icons=[
     #         "https://cdn.brandfetch.io/idZAyF9rlg/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B"
     #     ],
-=======
-    #     icon="https://cdn.brandfetch.io/idZAyF9rlg/theme/light/symbol.svg?c=1dxbfHSJFAPEGdCLU4o5B",
->>>>>>> 4eeba863b16a8c145f71f06d9174123dd4845eea
     #     category="development",
     #     provider="github",
     #     scopes=[],
@@ -226,13 +222,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
     #     id="figma",
     #     name="Figma",
     #     description="Create and collaborate on design projects",
-<<<<<<< HEAD
     #     icons=[
     #         "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg"
     #     ],
-=======
-    #     icon="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg",
->>>>>>> 4eeba863b16a8c145f71f06d9174123dd4845eea
     #     category="creative",
     #     provider="figma",
     #     scopes=[],
@@ -242,13 +234,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
     #     id="notion",
     #     name="Notion",
     #     description="Manage pages, databases, and workspace content with AI",
-<<<<<<< HEAD
     #     icons=[
     #         "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
     #     ],
-=======
-    #     icon="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
->>>>>>> 4eeba863b16a8c145f71f06d9174123dd4845eea
     #     category="productivity",
     #     provider="notion",
     #     scopes=[],
@@ -258,13 +246,9 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
     #     id="whatsapp",
     #     name="WhatsApp",
     #     description="Send and receive messages",
-<<<<<<< HEAD
     #     icons=[
     #         "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png?20220228223904"
     #     ],
-=======
-    #     icon="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1024px-WhatsApp.svg.png?20220228223904",
->>>>>>> 4eeba863b16a8c145f71f06d9174123dd4845eea
     #     category="communication",
     #     provider="facebook",
     #     scopes=[],
