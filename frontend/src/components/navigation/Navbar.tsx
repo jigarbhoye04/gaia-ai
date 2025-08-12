@@ -57,14 +57,6 @@ export default function Navbar() {
     }
   };
 
-  const handleMouseLeave = () => {
-    if (!isMobileScreen) {
-      setActiveDropdown(null);
-      setHoveredItem(null);
-      toggleBackdrop(false);
-    }
-  };
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {

@@ -132,6 +132,10 @@ const Composer: React.FC<MainSearchbarProps> = ({
       selectedToolCategory, // Pass the selected tool category
     );
 
+    // Clear input immediately when message is sent
+    setSearchbarText("");
+    localStorage.removeItem("gaia-searchbar-text");
+
     // Clear uploaded files after sending
     setUploadedFiles([]);
     setUploadedFileData([]);
@@ -139,14 +143,6 @@ const Composer: React.FC<MainSearchbarProps> = ({
     // Clear selected tool after sending
     setSelectedTool(null);
     setSelectedToolCategory(null);
-
-    // Optional: Clear the input field (can be controlled via a setting)
-    const shouldClearInput =
-      localStorage.getItem("gaia-clear-input-on-send") !== "false";
-    if (shouldClearInput) {
-      setSearchbarText("");
-      localStorage.removeItem("gaia-searchbar-text"); // Clear saved text when intentionally clearing
-    }
 
     if (inputRef) inputRef.current?.focus();
     scrollToBottom();
@@ -326,7 +322,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
                   <Image
                     width={14}
                     height={14}
-                    src={integration.icon}
+                    src={integration.icons[0]}
                     alt={integration.name}
                     className="h-[14px] w-[14px] object-contain"
                   />

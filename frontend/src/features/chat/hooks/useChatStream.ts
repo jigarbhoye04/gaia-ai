@@ -180,9 +180,6 @@ export const useChatStream = () => {
       fetchConversations();
     }
 
-    // Clear the saved input text since the message was sent successfully
-    localStorage.removeItem("gaia-searchbar-text");
-
     refs.current.botMessage = null;
     refs.current.currentStreamingMessages = []; // Reset streaming messages
     refs.current.newConversation = { id: null, description: null };

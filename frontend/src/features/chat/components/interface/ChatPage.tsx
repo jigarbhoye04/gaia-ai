@@ -190,7 +190,7 @@ const ChatPage = React.memo(function MainChat() {
         ) : (
           // Layout without messages: Centered composer
           <div
-            className={`${dragContainerClass} h-[calc(100%-80px)] items-center justify-center`}
+            className={`${dragContainerClass} h-[calc(100%-50px)] items-center justify-center`}
             {...dragHandlers}
           >
             <FileDropModal isDragging={isDragging} />
