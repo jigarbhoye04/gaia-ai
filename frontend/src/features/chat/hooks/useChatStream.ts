@@ -1,6 +1,5 @@
 // useChatStream.ts
 import { EventSourceMessage } from "@microsoft/fetch-event-source";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +17,6 @@ import { parseStreamData } from "./useStreamDataParser";
 export const useChatStream = () => {
   const { setIsLoading } = useLoading();
   const { updateConvoMessages, convoMessages } = useConversation();
-  const router = useRouter();
   const fetchConversations = useFetchConversations();
   const { setLoadingText, resetLoadingText } = useLoadingText();
 
