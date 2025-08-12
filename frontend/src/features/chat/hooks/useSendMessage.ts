@@ -10,7 +10,7 @@ import { MessageType } from "@/types/features/convoTypes";
 import { FileData } from "@/types/shared";
 import fetchDate from "@/utils/date/dateUtils";
 
-export const useSendMessage = (convoIdParam: string | null) => {
+export const useSendMessage = () => {
   const dispatch = useDispatch();
   const fetchChatStream = useChatStream();
 

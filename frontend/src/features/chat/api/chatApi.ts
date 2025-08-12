@@ -171,7 +171,7 @@ export const chatApi = {
     inputText: string,
     convoMessages: MessageType[],
     conversationId: string | null | undefined,
-    onMessage: (event: EventSourceMessage) => void,
+    onMessage: (event: EventSourceMessage) => void | string,
     onClose: () => void,
     onError: (err: Error) => void,
     fileData: FileData[] = [],
@@ -187,7 +187,6 @@ export const chatApi = {
     if (conversationId === undefined) {
       const path = window.location.pathname;
       const match = path.match(/\/c\/([^/]+)(?:\/|$)/);
-      console.log(match);
       if (match) {
         conversationId = match[1];
       }
@@ -221,10 +220,16 @@ export const chatApi = {
             })),
         }),
         onmessage(event) {
-          onMessage(event);
+          const error = onMessage(event);
 
           if (event.data === "[DONE]") {
             onClose();
+            controller.abort();
+            return;
+          }
+
+          if (error) {
+            onError(new Error(error));
             controller.abort();
             return;
           }
@@ -233,7 +238,10 @@ export const chatApi = {
           onClose();
           controller.abort();
         },
-        onerror: onError,
+        onerror: (err) => {
+          onError(err);
+          controller.abort();
+        },
       },
     );
   },
