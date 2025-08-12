@@ -325,7 +325,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
                   <Image
                     width={14}
                     height={14}
-                    src={integration.icon}
+                    src={integration.icons[0]}
                     alt={integration.name}
                     className="h-[14px] w-[14px] object-contain"
                   />
