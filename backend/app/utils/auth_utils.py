@@ -8,6 +8,7 @@ from app.db.mongodb.collections import users_collection
 
 # T is the return type of the wrapped function
 
+
 async def authenticate_workos_session(
     session_token: str, workos_client: Optional[AsyncWorkOSClient] = None
 ) -> Tuple[Dict[str, Any], Optional[str]]:

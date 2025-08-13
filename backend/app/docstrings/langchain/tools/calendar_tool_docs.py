@@ -11,11 +11,11 @@ TIMEZONE HANDLING:
   - `time_str`: For absolute times, use ISO format like "2025-08-08T16:30:00"
   - `duration_minutes`: Specify event duration in minutes (defaults to 30 if not provided)
 
-• **MANDATORY TIMEZONE RULE**:  
-  - If the user explicitly mentions a timezone (e.g., "EST", "PST", "IST", "GMT+5:30"), you MUST always include the corresponding `timezone_offset` in the output.  
-  - This is **not optional** — never omit `timezone_offset` if a timezone is stated.  
+• **MANDATORY TIMEZONE RULE**:
+  - If the user explicitly mentions a timezone (e.g., "EST", "PST", "IST", "GMT+5:30"), you MUST always include the corresponding `timezone_offset` in the output.
+  - This is **not optional** — never omit `timezone_offset` if a timezone is stated.
   - If no timezone is mentioned, do not provide `timezone_offset`.
-  
+
 EXAMPLES (Current time: 2025-08-08T14:30:00Z):
 • User: "Create event in 2 hours" → time_str: "+02:00", duration_minutes: 30
 • User: "Schedule meeting at 4:30 PM today for 1 hour" → time_str: "2025-08-08T16:30:00", duration_minutes: 60

@@ -11,12 +11,12 @@ SUPPORT REQUEST TYPES:
 • FEATURE - Feature requests, enhancement suggestions, new functionality
 
 USAGE:
-When users express need for help, have issues, want to report bugs, request features, 
+When users express need for help, have issues, want to report bugs, request features,
 or need to contact support, use this tool to prepare a support ticket draft.
 
 EXAMPLES:
 • "I'm having trouble with my account" → type: "support"
-• "Can you add a dark mode feature?" → type: "feature"  
+• "Can you add a dark mode feature?" → type: "feature"
 • "The app keeps crashing" → type: "support"
 • "I'd like to request a new integration" → type: "feature"
 
@@ -33,7 +33,7 @@ USAGE RULES:
 • Draft your message and title comprehensively to include all necessary information
 • One tool call should contain complete details for the entire support request
 
-The user will see a review card where they can edit the ticket details before 
+The user will see a review card where they can edit the ticket details before
 submitting to the support team.
 
 Args:

@@ -279,6 +279,7 @@ class EventUpdateRequest(BaseModel):
 
 class BaseCalendarEvent(BaseModel):
     """Base model for calendar events with common fields shared across models."""
+
     summary: str = Field(..., title="Event Summary")
     description: str = Field("", title="Event Description")
     is_all_day: bool = Field(False, title="Is All Day Event")
@@ -288,6 +289,7 @@ class BaseCalendarEvent(BaseModel):
     )
 
     model_config = {"extra": "ignore"}
+
 
 class CalendarEventToolRequest(BaseCalendarEvent):
     """Model for LLM tool input with time string and duration approach."""
