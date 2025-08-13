@@ -100,6 +100,7 @@ class RedisCache:
 
         return self.redis
 
+
 # Initialize the Redis cache
 redis_cache = RedisCache()
 
