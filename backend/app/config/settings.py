@@ -142,6 +142,9 @@ class Settings(BaseSettings):
     # Analytics Configuration
     SENTRY_DSN: str = ""
 
+    # Cerebras AI Configuration
+    CEREBRAS_API_KEY: str
+
     @computed_field  # type: ignore
     @property
     def ENABLE_PROFILING(self) -> bool:
