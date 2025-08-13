@@ -276,7 +276,7 @@ export default function SupportTicketCard({
           )}
 
           {/* Description */}
-          <ScrollShadow className="relative z-[1] max-h-46 overflow-y-auto pb-5 text-sm leading-relaxed whitespace-pre-line text-zinc-200">
+          <ScrollShadow className="relative z-[1] overflow-y-auto pb-5 text-sm leading-relaxed whitespace-pre-line text-zinc-200">
             {editData.description}
           </ScrollShadow>
         </div>
