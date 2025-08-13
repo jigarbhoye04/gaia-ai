@@ -21,10 +21,10 @@ import CodeExecutionSection from "./CodeExecutionSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import FollowUpActions from "./FollowUpActions";
-import SupportTicketSection from "./SupportTicketSection";
 import GoalSection from "./goals/GoalSection";
 import { GoalAction } from "./goals/types";
 import GoogleDocsSection from "./GoogleDocsSection";
+import SupportTicketSection from "./SupportTicketSection";
 import TodoSection from "./TodoSection";
 
 export default function TextBubble({
