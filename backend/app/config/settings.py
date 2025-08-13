@@ -139,6 +139,9 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_ID: str
     RAZORPAY_KEY_SECRET: str
 
+    # Cerebras AI Configuration
+    CEREBRAS_API_KEY: str
+
     @computed_field  # type: ignore
     @property
     def ENABLE_PROFILING(self) -> bool:
