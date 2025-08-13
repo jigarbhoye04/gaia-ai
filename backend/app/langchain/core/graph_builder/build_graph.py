@@ -13,7 +13,7 @@ from app.langchain.llm.client import init_llm
 from app.langchain.tools.core.registry import ALWAYS_AVAILABLE_TOOLS, tools
 from app.langchain.tools.core.retrieval import retrieve_tools
 from langchain_core.language_models import LanguageModelLike
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.constants import END
@@ -39,13 +39,13 @@ async def build_graph(
 
     tool_registry = {tool.name: tool for tool in all_tools}
 
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
 
     # Create store for tool discovery
     store = InMemoryStore(
         index={
             "embed": embeddings,
-            "dims": 384,
+            "dims": 768,
             "fields": ["description"],
         }
     )

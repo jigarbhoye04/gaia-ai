@@ -82,6 +82,9 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
 
+    # Google
+    GOOGLE_API_KEY: str
+
     # WorkOS Authentication
     WORKOS_API_KEY: str = ""
     WORKOS_CLIENT_ID: str = ""
@@ -111,13 +114,6 @@ class Settings(BaseSettings):
     DUMMY_IP: str = "8.8.8.8"
     DISABLE_PROFILING: bool = False
     WORKER_TYPE: str = "unknown"
-
-    # Hugging Face Configuration
-    USE_HUGGINGFACE_API: bool = False
-    HUGGINGFACE_API_KEY: str
-    HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
-    HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
-    HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
 
     # Miscellaneous
     LLAMA_INDEX_KEY: str

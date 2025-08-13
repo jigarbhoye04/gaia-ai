@@ -1,7 +1,7 @@
 """Docstrings for calendar-related tools."""
 
 CALENDAR_EVENT = """
-Create structured calendar events from LLM-generated data.
+CALENDAR — CREATE: This tool is used to create calendar events.
 
 This tool processes event details and returns a structured JSON response. The frontend will use this response to render event options that the user must manually confirm.
 
@@ -206,7 +206,7 @@ Returns:
 
 
 FETCH_CALENDAR_LIST = """
-Retrieves the user's available calendars using their access token.
+CALENDAR — LIST: This tool is used to fetch the user's calendar list.
 
 This tool securely accesses the user's access token from the config metadata
 and calls the calendar service to fetch all available calendars.
@@ -227,7 +227,7 @@ Returns:
 """
 
 FETCH_CALENDAR_EVENTS = """
-Fetch calendar events from the user's selected calendars.
+CALENDAR — FETCH EVENTS: This tool is used to fetch calendar events.
 
 This tool retrieves events from the user's calendar based on optional filters like time range
 and specific calendar selection. It uses the user's access token to securely fetch events.
@@ -262,7 +262,7 @@ Returns:
 """
 
 SEARCH_CALENDAR_EVENTS = """
-Search for specific calendar events based on a text query.
+CALENDAR — SEARCH EVENTS: This tool is used to search calendar events.
 
 This tool searches through the user's calendar events to find matches based on event titles,
 descriptions, or calendar names. It performs case-insensitive text matching.
@@ -287,7 +287,7 @@ Returns:
 """
 
 VIEW_CALENDAR_EVENT = """
-Retrieve detailed information about a specific calendar event.
+CALENDAR — VIEW EVENT: This tool is used to view a calendar event by ID.
 
 This tool fetches complete details for a single calendar event using its event ID and calendar ID.
 It provides comprehensive information about the event including all metadata.
@@ -325,7 +325,7 @@ Returns:
 """
 
 DELETE_CALENDAR_EVENT = """
-Delete a calendar event using either search or known identifiers — never assume anything.
+CALENDAR — DELETE: This tool is used to delete or cancel calendar events (confirmation required).
 
 Purpose:
 Use this tool **only when the user wants to cancel or delete an existing calendar event**.
@@ -360,7 +360,7 @@ Returns:
 """
 
 EDIT_CALENDAR_EVENT = """
-Edit a calendar event using either search or known identifiers — never assume anything.
+CALENDAR — EDIT: This tool is used to modify or update existing calendar events.
 
 Purpose:
 Use this tool **only when the user wants to update, change, or modify details of an existing calendar event**.
