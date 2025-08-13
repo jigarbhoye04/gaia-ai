@@ -29,6 +29,9 @@ PROCESS:
 
 USAGE RULES:
 • Make sure to use plain text only, no markdown formatting
+• NEVER call this tool multiple times in one request
+• Draft your message and title comprehensively to include all necessary information
+• One tool call should contain complete details for the entire support request
 
 The user will see a review card where they can edit the ticket details before 
 submitting to the support team.
