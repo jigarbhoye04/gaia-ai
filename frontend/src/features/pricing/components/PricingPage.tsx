@@ -2,6 +2,7 @@
 
 import { Chip } from "@heroui/chip";
 import { Tab, Tabs } from "@heroui/tabs";
+import { useEffect, useState } from "react";
 
 import { PricingCards } from "@/features/pricing/components/PricingCards";
 
