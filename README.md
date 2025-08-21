@@ -1,10 +1,8 @@
 <div align="center">
 
-<img alt="header" src="https://github.com/user-attachments/assets/8a4556e8-29e9-4b23-a7ee-39e7b3883207" /> <br/>
+<img alt="logo" src="docs/logo/logo.png" width=150 height=150 /> <br/>
 
-<!--TODO: replace workflows-insane with master branch -->
-
-[![GAIA](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/heygaia/gaia/refs/heads/feat/workflows-insane/frontend/public/badge.json)](https://heygaia.io)
+[![GAIA](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/heygaia/gaia/refs/heads/feat/master/frontend/public/badge.json)](https://heygaia.io)
 
 [![Documentation](https://img.shields.io/badge/Documentation-00bbff?style=flat&logo=gitbook&logoColor=white)](https://docs.heygaia.io) [![Latest Release](https://img.shields.io/github/v/release/heygaia/gaia?color=00bbff)](https://github.com/heygaia/gaia/releases)[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/heygaia/gaia)
 
