@@ -1,8 +1,11 @@
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import { ArrowUp } from "lucide-react";
+import { SendHorizontal, AudioLines } from "lucide-react";
 
 import { useLoading } from "@/features/chat/hooks/useLoading";
+import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
+import { APP_CONFIG_DEFAULTS } from "@/features/chat/components/livekit/lib/app-config";
+import { useState } from "react";
 
 interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
@@ -16,13 +19,14 @@ export default function RightSide({
   selectedTool,
 }: RightSideProps) {
   const { isLoading } = useLoading();
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
+
   const hasText = searchbarText.trim().length > 0;
   const hasSelectedTool = selectedTool !== null && selectedTool !== undefined;
   const isDisabled = isLoading || (!hasText && !hasSelectedTool);
 
   const getTooltipContent = () => {
     if (hasSelectedTool && !hasText) {
-      // Format tool name to be more readable
       const formattedToolName = selectedTool
         ?.split("_")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -33,13 +37,24 @@ export default function RightSide({
   };
 
   return (
-    <div className="ml-2 flex items-center gap-1">
-      <Tooltip
-        content={getTooltipContent()}
-        placement="right"
-        color="primary"
-        showArrow
-      >
+    <div className="ml-2 flex items-center gap-2">
+      <Tooltip content="Voice Mode" placement="left" color="primary" showArrow>
+        <Button
+          isIconOnly
+          aria-label="Voice Mode"
+          className="h-9 min-h-9 w-9 max-w-9 min-w-9"
+          color="default"
+          radius="full"
+          type="button"
+          onPress={() => setVoiceModeActive(true)}
+        >
+          <AudioLines />
+        </Button>
+      </Tooltip>
+
+      {voiceModeActive && <VoiceApp appConfig={APP_CONFIG_DEFAULTS} onEndCall={()=> setVoiceModeActive(false)}/>}
+
+      <Tooltip content={getTooltipContent()} placement="right" color="primary" showArrow>
         <Button
           isIconOnly
           aria-label="Send message"
@@ -51,7 +66,7 @@ export default function RightSide({
           type="submit"
           onPress={() => handleFormSubmit()}
         >
-          <ArrowUp color={hasText || hasSelectedTool ? "black" : "gray"} />
+          <SendHorizontal  color={hasText || hasSelectedTool ? "black" : "gray"} />
         </Button>
       </Tooltip>
     </div>

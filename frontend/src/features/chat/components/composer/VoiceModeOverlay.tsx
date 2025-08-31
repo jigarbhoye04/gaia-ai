@@ -1,0 +1,87 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Room } from "livekit-client";
+import { motion } from "motion/react";
+import {
+  RoomAudioRenderer,
+  RoomContext,
+  StartAudio,
+} from "@livekit/components-react";
+import { SessionView } from "@/features/chat/components/livekit/session-view";
+import { toast } from "sonner";
+import useConnectionDetails from "@/features/chat/components/livekit/hooks/useConnectionDetails";
+import type { AppConfig } from "@/features/chat/components/livekit/lib/types";
+import { usePathname } from "next/navigation";
+const MotionSessionView = motion.create(SessionView);
+
+interface AppProps {
+  appConfig: AppConfig;
+  onEndCall: () => void;
+}
+
+export function VoiceApp({ appConfig, onEndCall }: AppProps) {
+  const room = useMemo(() => new Room(), []);
+  const [sessionStarted, setSessionStarted] = useState(false);
+  const pathname = usePathname();
+  let conversationId: string | undefined = undefined;
+  const match = pathname.match(/^\/c(?:\/([^/?#]+))?/);
+  if (match && match[1]) {
+    conversationId = match[1];
+  }
+  const { refreshConnectionDetails, existingOrRefreshConnectionDetails } =
+    useConnectionDetails(conversationId);
+
+  useEffect(() => {
+    setSessionStarted(true);
+  }, []);
+
+  useEffect(() => {
+    let aborted = false;
+    if (sessionStarted && room.state === "disconnected") {
+      Promise.all([
+        room.localParticipant.setMicrophoneEnabled(true, undefined, {
+          preConnectBuffer: appConfig.isPreConnectBufferEnabled,
+        }),
+        existingOrRefreshConnectionDetails().then((connectionDetails) => {
+          room.connect(
+            connectionDetails.serverUrl,
+            connectionDetails.participantToken,
+          );
+        }),
+      ]).catch((error) => {
+        if (aborted) return;
+        toast.error(
+          `There was an error connecting to the agent ${error.name}: ${error.message}`,
+        );
+      });
+    }
+    return () => {
+      aborted = true;
+      room.disconnect();
+    };
+  }, [room, sessionStarted, appConfig.isPreConnectBufferEnabled]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex h-full w-full flex-col bg-neutral-900">
+      <RoomContext.Provider value={room}>
+        <RoomAudioRenderer />
+        <StartAudio label="Start Audio" />
+        <MotionSessionView
+          key="session-view"
+          appConfig={appConfig}
+          disabled={!sessionStarted}
+          sessionStarted={sessionStarted}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: sessionStarted ? 1 : 0 }}
+          transition={{
+            duration: 0.5,
+            ease: "linear",
+            delay: sessionStarted ? 0.5 : 0,
+          }}
+          onEndCall={onEndCall}
+        />
+      </RoomContext.Provider>
+    </div>
+  );
+}
