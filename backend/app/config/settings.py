@@ -138,6 +138,16 @@ class Settings(BaseSettings):
     RAZORPAY_KEY_ID: str
     RAZORPAY_KEY_SECRET: str
 
+    # LIVEKIT Configuration
+    LIVEKIT_URL: str 
+    LIVEKIT_API_KEY: str 
+    LIVEKIT_API_SECRET: str 
+    DEEPGRAM_API_KEY: str 
+    ELEVEN_API_KEY: str
+    ELEVENLABS_TTS_MODEL: str 
+    ELEVENLABS_VOICE_ID: str 
+    AGENT_SECRET: str
+    
     @computed_field  # type: ignore
     @property
     def ENABLE_PROFILING(self) -> bool:

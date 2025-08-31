@@ -229,12 +229,36 @@ services:
     networks:
       - gaia_network
 
+  # # Voice Agent Worker
+  # voice-agent-worker:
+  #   container_name: voice-agent-worker
+  #   profiles: ["", "backend-only"]
+  #   image: gaia
+  #   working_dir: /app
+  #   user: "appuser"
+  #   command: >
+  #     sh -c "uv run app/voice_agent.py download-files &&
+  #     python -m app.voice_agent dev"
+  #   environment:
+  #     PYTHONUNBUFFERED: 1
+  #     FORCE_COLOR: 1
+  #     WORKER_TYPE: voice_agent_worker
+  #   env_file:
+  #     - ./backend/.env
+  #   volumes:
+  #     - ./backend:/app
+  #     - livekit_models:/home/appuser/.cache/huggingface  # Ensure this path is correct
+  #   restart: on-failure
+  #   networks:
+  #     - gaia_network
+
 volumes:
   chroma_data:
   pgdata:
   redis_data:
   mongo_data:
   rabbitmq_data:
+  # livekit_models:
 
 networks:
   gaia_network:

@@ -1,7 +1,7 @@
   # ---- Base Stage: Contains system dependencies ----
   FROM python:3.12-slim AS base
   WORKDIR /app
-
+  ENV UV_HTTP_TIMEOUT=600
   # Copy uv installer
   COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -50,7 +50,7 @@
     rm -rf /root/.cache/pip
 
   # Setup Playwright and NLTK
-  RUN python -m playwright install --with-deps chromium
+  RUN python -m playwright install chromium
   RUN python -m nltk.downloader punkt stopwords punkt_tab && \
     rm -rf /root/.cache/nltk
 
