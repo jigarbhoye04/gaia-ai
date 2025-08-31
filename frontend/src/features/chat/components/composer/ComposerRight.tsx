@@ -1,6 +1,6 @@
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import { SendHorizontal, AudioLines } from "lucide-react";
+import { SendHorizontal, AudioLines, Square } from "lucide-react";
 
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
@@ -18,7 +18,7 @@ export default function RightSide({
   searchbarText,
   selectedTool,
 }: RightSideProps) {
-  const { isLoading } = useLoading();
+  const { isLoading, stopStream } = useLoading();
   const [voiceModeActive, setVoiceModeActive] = useState(false);
 
   const hasText = searchbarText.trim().length > 0;
@@ -26,6 +26,8 @@ export default function RightSide({
   const isDisabled = isLoading || (!hasText && !hasSelectedTool);
 
   const getTooltipContent = () => {
+    if (isLoading) return "Stop generation";
+
     if (hasSelectedTool && !hasText) {
       const formattedToolName = selectedTool
         ?.split("_")
@@ -34,6 +36,14 @@ export default function RightSide({
       return `Send with ${formattedToolName}`;
     }
     return "Send message";
+  };
+
+  const handleButtonPress = () => {
+    if (isLoading) {
+      stopStream();
+    } else {
+      handleFormSubmit();
+    }
   };
 
   return (
@@ -54,19 +64,28 @@ export default function RightSide({
 
       {voiceModeActive && <VoiceApp appConfig={APP_CONFIG_DEFAULTS} onEndCall={()=> setVoiceModeActive(false)}/>}
 
-      <Tooltip content={getTooltipContent()} placement="right" color="primary" showArrow>
+      <Tooltip content={getTooltipContent()} placement="right"  color={isLoading ? "danger" : "primary"} showArrow>
         <Button
           isIconOnly
-          aria-label="Send message"
-          className={`${isLoading && "cursor-wait"} h-9 min-h-9 w-9 max-w-9 min-w-9`}
-          color={hasText || hasSelectedTool ? "primary" : "default"}
-          disabled={isDisabled}
-          isLoading={isLoading}
+          aria-label={isLoading ? "Stop generation" : "Send message"}
+          className={`h-9 min-h-9 w-9 max-w-9 min-w-9 ${isLoading ? "cursor-pointer" : ""}`}
+          color={
+            isLoading
+              ? "primary"
+              : hasText || hasSelectedTool
+                ? "primary"
+                : "default"
+          }
+          disabled={!isLoading && isDisabled}
           radius="full"
           type="submit"
-          onPress={() => handleFormSubmit()}
+          onPress={handleButtonPress}
         >
-          <SendHorizontal  color={hasText || hasSelectedTool ? "black" : "gray"} />
+          {isLoading ? (
+            <Square color="black" width={17} height={17} fill="black" />
+          ) : (
+            <SendHorizontal  color={hasText || hasSelectedTool ? "black" : "gray"} />
+          )}
         </Button>
       </Tooltip>
     </div>
