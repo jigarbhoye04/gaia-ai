@@ -18,6 +18,7 @@ interface UserState {
   email: string;
   timezone?: string;
   onboarding?: OnboardingData;
+  selected_model?: string;
 }
 
 interface UserActions {

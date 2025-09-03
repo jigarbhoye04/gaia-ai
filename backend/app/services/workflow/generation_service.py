@@ -29,20 +29,20 @@ class WorkflowGenerationService:
 
             # Import here to avoid circular dependency at module level
             from app.langchain.tools.core.registry import (
-                ALWAYS_AVAILABLE_TOOLS,
-                TOOLS_BY_CATEGORY,
+                tool_registry,
             )
 
             # Create structured tool information with categories
             tools_with_categories = []
-            for category, category_tools in TOOLS_BY_CATEGORY.items():
+            for category in tool_registry.get_all_categories():
+                category_tools = tool_registry.get_tools_by_category(category)
                 tool_names = [
                     tool.name if hasattr(tool, "name") else str(tool)
                     for tool in category_tools
                 ]
                 tools_with_categories.append(f"{category}: {', '.join(tool_names)}")
 
-            for tool in ALWAYS_AVAILABLE_TOOLS:
+            for tool in tool_registry.get_core_tools():
                 tool_name = tool.name if hasattr(tool, "name") else str(tool)
                 tools_with_categories.append(f"Always Available: {tool_name}")
 
@@ -58,7 +58,7 @@ class WorkflowGenerationService:
                     "description": description,
                     "title": title,
                     "tools": "\n".join(tools_with_categories),
-                    "categories": ", ".join(TOOLS_BY_CATEGORY.keys()),
+                    "categories": ", ".join(tool_registry.get_all_categories()),
                     "format_instructions": parser.get_format_instructions(),
                 }
             )
