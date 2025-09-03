@@ -5,7 +5,8 @@
     {
       "type": "linked-versions",
       "groupName": "gaia",
-      "components": ["backend", "frontend"]
+      "components": ["backend", "frontend"],
+      "merge": true
     }
   ],
   "packages": {
