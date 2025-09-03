@@ -7,12 +7,15 @@ import {
   showRateLimitToast,
   showTokenLimitToast,
 } from "@/components/shared/RateLimitToast";
+import { useLoginModalStore } from "@/stores/loginModalStore";
 
 // Types
 interface ErrorHandlerDependencies {
-  setLoginModalOpen: (open: boolean) => void;
   router: AppRouterInstance;
 }
+
+// Track active integration toasts to prevent duplicates
+const activeIntegrationToasts = new Set<string>();
 
 // Constants
 const LANDING_ROUTES = [
@@ -36,7 +39,7 @@ export const isOnLandingRoute = (pathname: string): boolean => {
 export const processAxiosError = (
   error: AxiosError,
   pathname: string,
-  { setLoginModalOpen, router }: ErrorHandlerDependencies,
+  { router }: ErrorHandlerDependencies,
 ): void => {
   console.error("Axios Error:", error, "Pathname:", pathname);
 
@@ -57,7 +60,7 @@ export const processAxiosError = (
 
     switch (status) {
       case 401:
-        setLoginModalOpen(true);
+        useLoginModalStore.getState().openModal();
         break;
 
       case 403:
@@ -97,6 +100,16 @@ const handleForbiddenError = (
     detail.type === "integration"
   ) {
     const integrationDetail = detail as { type: string; message?: string };
+    const toastKey = `integration-${integrationDetail.type || "default"}`;
+
+    // Check if toast for this integration is already active
+    if (activeIntegrationToasts.has(toastKey)) {
+      return;
+    }
+
+    // Add to active toasts set
+    activeIntegrationToasts.add(toastKey);
+
     toast.error(integrationDetail.message || "Integration required.", {
       duration: Infinity,
       classNames: {
@@ -104,7 +117,15 @@ const handleForbiddenError = (
       },
       action: {
         label: "Connect",
-        onClick: () => router.push("/settings?section=integrations"),
+        onClick: () => {
+          // Clear from active toasts when action is clicked
+          activeIntegrationToasts.delete(toastKey);
+          router.push("/settings?section=integrations");
+        },
+      },
+      onDismiss: () => {
+        // Clear from active toasts when dismissed
+        activeIntegrationToasts.delete(toastKey);
       },
     });
   } else {

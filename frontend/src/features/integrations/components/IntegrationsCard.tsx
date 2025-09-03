@@ -2,10 +2,13 @@ import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Chip } from "@heroui/chip";
 import { Selection } from "@heroui/react";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
-import { useIntegrations } from "../hooks/useIntegrations";
+import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
+import { useIntegrationsAccordion } from "@/stores/uiStore";
+
 import { Integration } from "../types";
+import { SpecialIntegrationCard } from "./SpecialIntegrationCard";
 
 interface IntegrationsCardProps {
   onClose?: () => void;
@@ -35,11 +38,11 @@ const IntegrationItem: React.FC<{
     >
       {/* Icon */}
       <div className="flex-shrink-0">
-        <div className="flex h-7 w-7 items-center justify-center rounded">
+        <div className="flex items-center justify-center rounded-lg">
           <Image
             width={25}
             height={25}
-            src={integration.icon}
+            src={integration.icons[0]}
             alt={integration.name}
             className="aspect-square max-w-[25px] min-w-[25px] object-contain"
             onError={(e) => {
@@ -83,42 +86,26 @@ const IntegrationItem: React.FC<{
 export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
   onClose,
 }) => {
-  const { integrations, connectIntegration, refreshStatus } = useIntegrations();
+  const {
+    integrations: _integrations,
+    connectIntegration,
+    refreshStatus,
+    getSpecialIntegrations,
+    getRegularIntegrations,
+    isUnifiedIntegrationConnected,
+    getIntegrationStatus,
+  } = useIntegrations();
 
-  // Load saved accordion state from localStorage
-  // This preserves the expand/collapse state of the integrations accordion
-  // across multiple opens of the slash command dropdown
-  const [selectedKeys, setSelectedKeys] = useState<Selection>(() => {
-    if (typeof window === "undefined") {
-      return new Set(["integrations"]);
-    }
+  const { isExpanded, setExpanded } = useIntegrationsAccordion();
 
-    const saved = localStorage.getItem("gaia-integrations-accordion-expanded");
-    if (saved !== null) {
-      try {
-        const isExpanded = JSON.parse(saved);
-        return isExpanded ? new Set(["integrations"]) : new Set([]);
-      } catch {
-        // If parsing fails, default to expanded
-        return new Set(["integrations"]);
-      }
-    }
-    // Default to expanded if no saved state
-    return new Set(["integrations"]);
-  });
+  // Convert boolean to Selection for NextUI Accordion
+  const selectedKeys = isExpanded ? new Set(["integrations"]) : new Set([]);
 
-  // Save accordion state to localStorage whenever it changes
+  // Handle accordion state changes
   const handleSelectionChange = (keys: Selection) => {
-    setSelectedKeys(keys);
-
-    if (typeof window !== "undefined") {
-      const isExpanded =
-        keys === "all" || (keys instanceof Set && keys.has("integrations"));
-      localStorage.setItem(
-        "gaia-integrations-accordion-expanded",
-        JSON.stringify(isExpanded),
-      );
-    }
+    const expanded =
+      keys === "all" || (keys instanceof Set && keys.has("integrations"));
+    setExpanded(expanded);
   };
 
   // Force refresh integration status on mount
@@ -135,31 +122,34 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
     }
   };
 
-  const connectedCount = integrations.filter(
+  // Get special and regular integrations
+  const specialIntegrations = getSpecialIntegrations();
+  const regularIntegrations = getRegularIntegrations();
+
+  const connectedCount = regularIntegrations.filter(
     (i) => i.status === "connected",
   ).length;
 
   return (
-    <div className="p-2">
+    <div className="mx-2 mb-4 cursor-pointer! rounded-xl bg-zinc-800">
       <Accordion
         variant="light"
         isCompact
         selectedKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
-        itemClasses={{ base: "py-2 px-2" }}
-        className="rounded-xl bg-zinc-900/50"
+        itemClasses={{ base: "pb-1" }}
       >
         <AccordionItem
           key="integrations"
           title={
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 px-1 pt-1">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-foreground-600">
+                  <span className="text-xs font-medium text-foreground-600">
                     Integrations
                   </span>
                   <span className="text-xs text-zinc-400">
-                    {connectedCount}/{integrations.length}
+                    {connectedCount}/{regularIntegrations.length}
                   </span>
                 </div>
               </div>
@@ -168,8 +158,39 @@ export const IntegrationsCard: React.FC<IntegrationsCardProps> = ({
         >
           <div onClick={(e) => e.stopPropagation()}>
             <div>
+              {/* Special Integrations (full width) */}
+              {specialIntegrations.length > 0 && (
+                <div className="mb-3">
+                  {specialIntegrations.map((integration) => {
+                    const connectedCount =
+                      integration.includedIntegrations?.filter(
+                        (includedId) =>
+                          getIntegrationStatus(includedId)?.connected,
+                      ).length || 0;
+                    const totalCount =
+                      integration.includedIntegrations?.length || 0;
+                    const isConnected = isUnifiedIntegrationConnected(
+                      integration.id,
+                    );
+
+                    return (
+                      <div key={integration.id} className="mb-2">
+                        <SpecialIntegrationCard
+                          integration={integration}
+                          isConnected={isConnected}
+                          connectedCount={connectedCount}
+                          totalCount={totalCount}
+                          onConnect={handleConnect}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Regular Integrations (2-column grid) */}
               <div className="grid grid-cols-2 gap-2">
-                {integrations.map((integration) => (
+                {regularIntegrations.map((integration) => (
                   <IntegrationItem
                     key={integration.id}
                     integration={integration}

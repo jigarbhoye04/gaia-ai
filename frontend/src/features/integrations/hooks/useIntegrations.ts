@@ -16,6 +16,10 @@ export interface UseIntegrationsReturn {
     integrationId: string,
   ) => IntegrationStatus | undefined;
   getIntegrationsWithStatus: () => Integration[];
+  // New helper functions for unified integrations
+  getSpecialIntegrations: () => Integration[];
+  getRegularIntegrations: () => Integration[];
+  isUnifiedIntegrationConnected: (unifiedId: string) => boolean;
 }
 
 /**
@@ -28,8 +32,10 @@ export const useIntegrations = (): UseIntegrationsReturn => {
   const { data: configData, isLoading: configLoading } = useQuery({
     queryKey: ["integrations", "config"],
     queryFn: integrationsApi.getIntegrationConfig,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 3 * 60 * 60 * 1000, // 3 hours - same as tools cache
+    gcTime: 6 * 60 * 60 * 1000, // 6 hours - keep in cache longer
     retry: 2,
+    refetchOnWindowFocus: false, // Don't refetch when user focuses window
   });
 
   // Query for integration status
@@ -40,9 +46,10 @@ export const useIntegrations = (): UseIntegrationsReturn => {
   } = useQuery({
     queryKey: ["integrations", "status"],
     queryFn: integrationsApi.getIntegrationStatus,
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 0, // Don't cache the data
+    staleTime: 30 * 60 * 1000, // 30 minutes - cache status for reasonable time
+    gcTime: 60 * 60 * 1000, // 1 hour - keep in cache longer than staleTime
     retry: 2,
+    refetchOnWindowFocus: false, // Don't refetch when user focuses window
   });
 
   const integrationConfigs = useMemo(
@@ -66,13 +73,23 @@ export const useIntegrations = (): UseIntegrationsReturn => {
 
   // Get integrations with their current status
   const getIntegrationsWithStatus = useCallback((): Integration[] => {
-    return integrationConfigs.map((integration) => {
-      const status = getIntegrationStatus(integration.id);
-      return {
-        ...integration,
-        status: status?.connected ? "connected" : "not_connected",
-      };
-    });
+    return integrationConfigs
+      .map((integration) => {
+        const status = getIntegrationStatus(integration.id);
+        return {
+          ...integration,
+          status: (status?.connected
+            ? "connected"
+            : "not_connected") as Integration["status"],
+        };
+      })
+      .sort((a, b) => {
+        // Sort by display priority (higher first), then by name
+        const priorityDiff =
+          (b.displayPriority || 0) - (a.displayPriority || 0);
+        if (priorityDiff !== 0) return priorityDiff;
+        return a.name.localeCompare(b.name);
+      });
   }, [integrationConfigs, getIntegrationStatus]);
 
   // Connect an integration
@@ -116,6 +133,40 @@ export const useIntegrations = (): UseIntegrationsReturn => {
     [getIntegrationsWithStatus],
   );
 
+  // Get special/unified integrations
+  const getSpecialIntegrations = useCallback((): Integration[] => {
+    return integrationsWithStatus.filter(
+      (integration) => integration.isSpecial,
+    );
+  }, [integrationsWithStatus]);
+
+  // Get regular integrations (non-special)
+  const getRegularIntegrations = useCallback((): Integration[] => {
+    return integrationsWithStatus.filter(
+      (integration) => !integration.isSpecial,
+    );
+  }, [integrationsWithStatus]);
+
+  // Check if a unified integration is connected (all its included integrations are connected)
+  const isUnifiedIntegrationConnected = useCallback(
+    (unifiedId: string): boolean => {
+      const unifiedIntegration = integrationsWithStatus.find(
+        (integration) => integration.id === unifiedId && integration.isSpecial,
+      );
+
+      if (!unifiedIntegration || !unifiedIntegration.includedIntegrations) {
+        return false;
+      }
+
+      // Check if all included integrations are connected
+      return unifiedIntegration.includedIntegrations.every((includedId) => {
+        const status = getIntegrationStatus(includedId);
+        return status?.connected === true;
+      });
+    },
+    [integrationsWithStatus, getIntegrationStatus],
+  );
+
   return {
     integrations: integrationsWithStatus,
     integrationStatuses,
@@ -126,5 +177,8 @@ export const useIntegrations = (): UseIntegrationsReturn => {
     refreshStatus,
     getIntegrationStatus,
     getIntegrationsWithStatus,
+    getSpecialIntegrations,
+    getRegularIntegrations,
+    isUnifiedIntegrationConnected,
   };
 };

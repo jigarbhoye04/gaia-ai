@@ -16,12 +16,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/shadcn/sheet";
 import {
-  authNavLinks,
-  companyNavLinks,
-  connectNavLinks,
-  mainNavLinks,
-  productNavLinks,
-  resourcesNavLinks,
+  auth,
+  company,
+  connect,
+  main,
+  product,
+  resources,
 } from "@/config/appConfig";
 import { useUser } from "@/features/auth/hooks/useUser";
 
@@ -38,19 +38,20 @@ export default function MobileMenu() {
           <Menu01Icon color="foreground" />
         </div>
       </SheetTrigger>
-      <SheetContent className="max-w-[250px] border-none bg-zinc-900 text-foreground dark">
+      <SheetContent className="max-w-[250px] overflow-y-auto! border-none bg-zinc-900 text-foreground dark">
         <SheetHeader>
           <SheetTitle>
             <VisuallyHidden.Root>Menu</VisuallyHidden.Root>
           </SheetTitle>
-          <SheetDescription className="flex flex-col gap-3 pt-12">
+          <SheetDescription className="flex flex-col gap-2 pt-12">
             {/* Main navigation links */}
-            {mainNavLinks.map((link) => (
+            {main.map((link) => (
               <Button
                 key={link.href}
                 className="flex w-full justify-between"
                 endContent={link.icon}
                 color="default"
+                variant="flat"
                 as={link.external ? Link : undefined}
                 href={link.external ? link.href : undefined}
                 onPress={() => {
@@ -65,11 +66,11 @@ export default function MobileMenu() {
             ))}
 
             {/* Product Section */}
-            <div className="mt-4 border-t border-zinc-700 pt-4">
-              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+            <div className="mt-6 flex flex-col gap-2">
+              <p className="mb-2 text-xs tracking-wide text-zinc-400 uppercase">
                 Product
               </p>
-              {productNavLinks.map((link) => {
+              {product.map((link) => {
                 const isCommented = link.commented;
                 return (
                   <Button
@@ -77,7 +78,7 @@ export default function MobileMenu() {
                     className={`flex w-full justify-between ${isCommented ? "cursor-not-allowed opacity-50" : ""}`}
                     endContent={link.icon}
                     color="default"
-                    variant="ghost"
+                    variant="flat"
                     disabled={isCommented}
                     as={!isCommented && link.external ? Link : undefined}
                     href={!isCommented && link.external ? link.href : undefined}
@@ -95,11 +96,11 @@ export default function MobileMenu() {
             </div>
 
             {/* Resources Section */}
-            <div className="mt-4 border-t border-zinc-700 pt-4">
-              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+            <div className="mt-6 flex flex-col gap-2">
+              <p className="mb-2 text-xs tracking-wide text-zinc-400 uppercase">
                 Resources
               </p>
-              {resourcesNavLinks.map((link) => {
+              {resources.map((link) => {
                 const isCommented = link.commented;
                 return (
                   <Button
@@ -107,7 +108,7 @@ export default function MobileMenu() {
                     className={`flex w-full justify-between ${isCommented ? "cursor-not-allowed opacity-50" : ""}`}
                     endContent={link.icon}
                     color="default"
-                    variant="ghost"
+                    variant="flat"
                     disabled={isCommented}
                     as={!isCommented && link.external ? Link : undefined}
                     href={!isCommented && link.external ? link.href : undefined}
@@ -125,17 +126,17 @@ export default function MobileMenu() {
             </div>
 
             {/* Company Section */}
-            <div className="mt-4 border-t border-zinc-700 pt-4">
-              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+            <div className="mt-6 flex flex-col gap-2">
+              <p className="mb-2 text-xs tracking-wide text-zinc-400 uppercase">
                 Company
               </p>
-              {companyNavLinks.map((link) => (
+              {company.map((link) => (
                 <Button
                   key={link.href}
                   className="flex w-full justify-between"
                   endContent={link.icon}
                   color="default"
-                  variant="ghost"
+                  variant="flat"
                   as={link.external ? Link : undefined}
                   href={link.external ? link.href : undefined}
                   onPress={() => {
@@ -151,17 +152,17 @@ export default function MobileMenu() {
             </div>
 
             {/* Connect Section */}
-            <div className="mt-4 border-t border-zinc-700 pt-4">
-              <p className="mb-2 text-xs font-semibold tracking-wide text-zinc-400 uppercase">
+            <div className="mt-6 flex flex-col gap-2">
+              <p className="mb-2 text-xs tracking-wide text-zinc-400 uppercase">
                 Connect
               </p>
-              {connectNavLinks.map((link) => (
+              {connect.map((link) => (
                 <Button
                   key={link.href}
                   className="flex w-full justify-between"
                   endContent={link.icon}
                   color="default"
-                  variant="ghost"
+                  variant="flat"
                   as={Link}
                   href={link.href}
                   target={link.external ? "_blank" : undefined}
@@ -175,7 +176,7 @@ export default function MobileMenu() {
             {/* Authentication related links */}
             {isAuthenticated ? (
               // Show auth links that require login
-              authNavLinks
+              auth
                 .filter((link) => link.requiresAuth)
                 .map((link) => (
                   <Button
@@ -184,7 +185,6 @@ export default function MobileMenu() {
                     color="primary"
                     endContent={link.icon}
                     size="md"
-                    variant="shadow"
                     onPress={() => {
                       router.push(link.href);
                       setSheetOpen(false);
@@ -196,7 +196,7 @@ export default function MobileMenu() {
             ) : (
               // Show auth links for guests only
               <>
-                {authNavLinks
+                {auth
                   .filter((link) => link.guestOnly)
                   .map((link) => (
                     <Button
@@ -205,7 +205,6 @@ export default function MobileMenu() {
                       className="p-0 px-4 font-semibold"
                       color="primary"
                       size="md"
-                      variant="shadow"
                       href={link.href}
                     >
                       {link.label}

@@ -56,7 +56,7 @@ export const integrationsApi = {
       return { integrations };
     } catch (error) {
       console.error("Failed to get integration status:", error);
-      // Return all disconnected if we can't determine status
+      // Return empty array if we can't determine status
       return {
         integrations: [
           { integrationId: "google_calendar", connected: false },
@@ -66,6 +66,9 @@ export const integrationsApi = {
           { integrationId: "github", connected: false },
           { integrationId: "figma", connected: false },
           { integrationId: "notion", connected: false },
+          { integrationId: "twitter", connected: false },
+          { integrationId: "linkedin", connected: false },
+          { integrationId: "google sheet", connected: false },
         ],
       };
     }
@@ -87,9 +90,11 @@ export const integrationsApi = {
       );
     }
 
+    const frontendPath = window.location.pathname + window.location.search;
+
     // Use the backend API base URL for proper OAuth flow
     const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    const fullUrl = `${backendUrl}${integration.loginEndpoint}`;
+    const fullUrl = `${backendUrl}${integration.loginEndpoint}?redirect_path=${encodeURIComponent(frontendPath)}`;
 
     // Navigate to OAuth endpoint
     window.location.href = fullUrl;

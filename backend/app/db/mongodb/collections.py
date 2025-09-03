@@ -22,12 +22,16 @@ notifications_collection = mongodb_instance.get_collection("notifications")
 todos_collection = mongodb_instance.get_collection("todos")
 projects_collection = mongodb_instance.get_collection("projects")
 reminders_collection = mongodb_instance.get_collection("reminders")
+workflows_collection = mongodb_instance.get_collection("workflows")
 support_collection = mongodb_instance.get_collection("support_requests")
 
-# Payment collections
-plans_collection = mongodb_instance.get_collection("subscription_plans")
-subscriptions_collection = mongodb_instance.get_collection("subscriptions")
+# Payment-related collections
 payments_collection = mongodb_instance.get_collection("payments")
+subscriptions_collection = mongodb_instance.get_collection("subscriptions")
+plans_collection = mongodb_instance.get_collection("subscription_plans")
 
 # Usage
 usage_snapshots_collection = mongodb_instance.get_collection("usage_snapshots")
+
+# AI Models
+ai_models_collection = mongodb_instance.get_collection("ai_models")

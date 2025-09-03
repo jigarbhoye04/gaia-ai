@@ -1,9 +1,12 @@
 import datetime
 import os
 
+from dotenv import load_dotenv
 from infisical_sdk import InfisicalSDKClient
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+load_dotenv()
 
 
 class InfisicalConfigError(Exception):
@@ -57,7 +60,10 @@ def inject_infisical_secrets():
             include_imports=True,  # Includes secrets imported from other projects/paths
         )
         for secret in secrets.secrets:
-            os.environ[secret.secretKey] = secret.secretValue
+            if (
+                os.environ.get(secret.secretKey) is None
+            ):  # Avoid overwriting existing environment variables
+                os.environ[secret.secretKey] = secret.secretValue
 
     except Exception as e:
         raise InfisicalConfigError(
@@ -74,12 +80,17 @@ class Settings(BaseSettings):
     CHROMADB_HOST: str
     CHROMADB_PORT: int
     POSTGRES_URL: str
+    RABBITMQ_URL: str
 
     # OAuth & Authentication
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
+    ENABLE_PUBSUB_JWT_VERIFICATION: bool = True
     GOOGLE_USERINFO_URL: str = "https://www.googleapis.com/oauth2/v2/userinfo"
     GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
+
+    # Google
+    GOOGLE_API_KEY: str
 
     # WorkOS Authentication
     WORKOS_API_KEY: str = ""
@@ -92,9 +103,14 @@ class Settings(BaseSettings):
     DEEPGRAM_API_KEY: str
     OPENWEATHER_API_KEY: str
     RESEND_API_KEY: str
+    RESEND_AUDIENCE_ID: str
     CLOUDINARY_CLOUD_NAME: str
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
+    COMPOSIO_KEY: str
+
+    # Webhook Secrets
+    COMPOSIO_WEBHOOK_SECRET: str
 
     # Blog Management
     BLOG_BEARER_TOKEN: str  # Bearer token for blog management operations
@@ -111,13 +127,6 @@ class Settings(BaseSettings):
     DISABLE_PROFILING: bool = False
     WORKER_TYPE: str = "unknown"
 
-    # Hugging Face Configuration
-    USE_HUGGINGFACE_API: bool = False
-    HUGGINGFACE_API_KEY: str
-    HUGGINGFACE_IMAGE_MODEL: str = "Salesforce/blip-image-captioning-large"
-    HUGGINGFACE_ZSC_MODEL: str = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
-    HUGGINGFACE_ROUTER_URL: str = "https://router.huggingface.co/hf-inference/models/"
-
     # Miscellaneous
     LLAMA_INDEX_KEY: str
     OPENAI_API_KEY: str
@@ -128,15 +137,18 @@ class Settings(BaseSettings):
     MEM0_ORG_ID: str
     MEM0_PROJECT_ID: str
 
-    # Celery Configuration
-    RABBITMQ_URL: str
-
     # Code Execution
     E2B_API_KEY: str
 
-    # Razorpay Configuration
-    RAZORPAY_KEY_ID: str
-    RAZORPAY_KEY_SECRET: str
+    # Dodo Payments Configuration
+    DODO_PAYMENTS_API_KEY: str
+    DODO_WEBHOOK_PAYMENTS_SECRET: str = ""
+
+    # Analytics Configuration
+    SENTRY_DSN: str = ""
+
+    # Cerebras AI Configuration
+    CEREBRAS_API_KEY: str
 
     @computed_field  # type: ignore
     @property
@@ -155,6 +167,12 @@ class Settings(BaseSettings):
     def WORKOS_REDIRECT_URI(self) -> str:
         """WorkOS OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/workos/callback"
+
+    @computed_field  # type: ignore
+    @property
+    def COMPOSIO_REDIRECT_URI(self) -> str:
+        """Composio OAuth callback URL."""
+        return f"{self.HOST}/api/v1/oauth/composio/callback"
 
     model_config = SettingsConfigDict(
         env_file_encoding="utf-8",

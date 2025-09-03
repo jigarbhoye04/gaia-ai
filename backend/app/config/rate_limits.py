@@ -20,9 +20,9 @@ Usage:
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict
-from pydantic import BaseModel
 
 from app.models.payment_models import PlanType
+from pydantic import BaseModel
 
 
 class RateLimitPeriod(str, Enum):
@@ -95,6 +95,14 @@ FEATURE_LIMITS: Dict[str, TieredRateLimits] = {
         pro=RateLimitConfig(day=1000, month=25000),
         info=FeatureInfo(
             title="Todo Operations", description="Create, update, and manage todo items"
+        ),
+    ),
+    "workflow_operations": TieredRateLimits(
+        free=RateLimitConfig(day=1, month=30),
+        pro=RateLimitConfig(day=200, month=2000),
+        info=FeatureInfo(
+            title="Workflow Operations",
+            description="Create, execute, and manage AI workflows",
         ),
     ),
     "web_search": TieredRateLimits(

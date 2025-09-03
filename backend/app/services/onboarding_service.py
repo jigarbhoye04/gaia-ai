@@ -39,20 +39,12 @@ async def complete_onboarding(
         # Convert string ID to ObjectId
         user_object_id = ObjectId(user_id)
 
-        # Prepare onboarding preferences
-        custom_instructions = (
-            onboarding_data.instructions.strip()
-            if onboarding_data.instructions
-            else None
-        )
-        if custom_instructions == "":
-            custom_instructions = None
-
+        # Prepare onboarding preferences with default values for settings page
         preferences = OnboardingPreferences(
-            country=onboarding_data.country,
             profession=onboarding_data.profession,
-            response_style=onboarding_data.response_style,
-            custom_instructions=custom_instructions,
+            response_style="casual",  # Default response style
+            custom_instructions=None,
+            # Timezone removed from preferences - now only stored at root level
         )
 
         # Prepare onboarding data
@@ -69,11 +61,17 @@ async def complete_onboarding(
             "updated_at": datetime.now(timezone.utc),
         }
 
-        # Extract and add timezone if available
+        # Always set timezone at root level from onboarding data
+        if onboarding_data.timezone:
+            update_fields["timezone"] = onboarding_data.timezone.strip()
+
+        # Extract and add timezone if available from detected timezone
         if user_timezone:
             try:
                 timezone_name = get_timezone_from_datetime(user_timezone)
-                update_fields["timezone"] = timezone_name
+                update_fields["timezone"] = (
+                    timezone_name  # This will override the frontend timezone if detected
+                )
             except Exception as e:
                 logger.warning(
                     f"Could not determine timezone name for user {user_id}: {e}"
@@ -178,7 +176,10 @@ async def update_onboarding_preferences(
         user_object_id = ObjectId(user_id)
 
         # Sanitize and prepare preferences
-        sanitized_preferences = preferences.model_dump(exclude_none=True)
+        # First, validate using the Pydantic model which will handle empty string normalization
+        validated_preferences = OnboardingPreferences(**preferences.model_dump())
+        sanitized_preferences = validated_preferences.model_dump(exclude_none=True)
+
         if "custom_instructions" in sanitized_preferences:
             # Basic sanitization - remove potentially harmful content
             sanitized_preferences["custom_instructions"] = sanitized_preferences[
