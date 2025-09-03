@@ -11,6 +11,11 @@
     }
   ],
   "packages": {
+    ".": {
+      "release-type": "simple",
+      "changelog-path": "CHANGELOG.md",
+      "pull-request-title-pattern": "release: ${version}"
+    },
     "backend": {
       "path": "backend",
       "release-type": "python",
