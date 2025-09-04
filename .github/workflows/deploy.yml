@@ -1,8 +1,6 @@
 name: Deploy to GCP
 
 on:
-  push:
-    branches: [develop, master]
   repository_dispatch:
     types: [deploy]
   workflow_dispatch:
