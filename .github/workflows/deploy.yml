@@ -14,7 +14,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.client_payload.environment }}
+    environment: production
 
     # Needed for OIDC → WIF
     permissions:
@@ -109,8 +109,7 @@ jobs:
         with:
           script: |
             const status = '${{ job.status }}' === 'success' ? '✅ Success' : '❌ Failed';
-            const environment = '${{ github.event.client_payload.environment }}';
-            const sha = '${{ github.event.client_payload.sha }}';
+            const sha = '${{ github.sha }}';
 
             github.rest.repos.createCommitStatus({
               owner: context.repo.owner,
@@ -118,6 +117,6 @@ jobs:
               sha: sha,
               state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
               target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
-              description: `Deployment to ${environment} ${status.toLowerCase()}`,
-              context: `deploy/${environment}`
+              description: `Deployment to production ${status.toLowerCase()}`,
+              context: 'production'
             });

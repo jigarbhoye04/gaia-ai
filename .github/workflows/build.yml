@@ -74,10 +74,3 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           event-type: deploy
-          client-payload: |
-            {
-              "ref": "${{ github.ref }}",
-              "sha": "${{ github.sha }}",
-              "environment": "${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }}",
-              "backend_image": "${{ needs.build-backend.outputs.backend-image-tag }}"
-            }
