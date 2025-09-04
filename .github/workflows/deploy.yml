@@ -5,6 +5,9 @@ on:
     types: [deploy]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  statuses: write
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
