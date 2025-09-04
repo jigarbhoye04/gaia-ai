@@ -63,21 +63,21 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
 
-  # trigger-deploy:
-  #   needs: [build-backend]
-  #   runs-on: ubuntu-latest
-  #   if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'
+  trigger-deploy:
+    needs: [build-backend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'
 
-  #   steps:
-  #     - name: Trigger deployment workflow
-  #       uses: peter-evans/repository-dispatch@v3
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         event-type: deploy
-  #         client-payload: |
-  #           {
-  #             "ref": "${{ github.ref }}",
-  #             "sha": "${{ github.sha }}",
-  #             "environment": "${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }}",
-  #             "backend_image": "${{ needs.build-backend.outputs.backend-image-tag }}"
-  #           }
+    steps:
+      - name: Trigger deployment workflow
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: deploy
+          client-payload: |
+            {
+              "ref": "${{ github.ref }}",
+              "sha": "${{ github.sha }}",
+              "environment": "${{ github.ref == 'refs/heads/master' && 'production' || 'staging' }}",
+              "backend_image": "${{ needs.build-backend.outputs.backend-image-tag }}"
+            }

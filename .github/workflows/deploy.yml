@@ -1,0 +1,123 @@
+name: Deploy to GCP
+
+on:
+  repository_dispatch:
+    types: [deploy]
+  workflow_dispatch:
+
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: gaia
+  REGION: ${{ secrets.GCP_REGION }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.client_payload.environment }}
+
+    # Needed for OIDC → WIF
+    permissions:
+      contents: "read"
+      id-token: "write"
+
+    steps:
+      - name: Authenticate to Google Cloud via Workload Identity Federation
+        uses: google-github-actions/auth@v2
+        with:
+          token_format: access_token
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure Docker to use gcloud as credential helper
+        run: gcloud auth configure-docker
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy application on GCP VM
+        run: |
+          gcloud compute ssh gaia-backend \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --command="
+              set -e
+              echo '=== Environment Information ==='
+              echo 'Current user:' \$(whoami)
+              echo 'Home directory (~):' \$HOME
+              echo 'Current working directory:' \$(pwd)
+              echo 'Available disk space:'
+              df -h \$HOME
+              echo ''
+              echo '=== Directory Listing ==='
+              echo 'Contents of home directory:'
+              ls -la \$HOME
+              echo ''
+              echo '=== Docker Information ==='
+              echo 'Docker version:'
+              docker --version
+              echo 'Docker compose version:'
+              docker compose version
+              echo 'Running containers:'
+              docker ps
+              echo ''
+              echo '=== System Information ==='
+              echo 'OS Information:'
+              cat /etc/os-release | head -5
+              echo 'Memory usage:'
+              free -h
+              echo 'CPU info:'
+              lscpu | grep 'Model name'
+            "
+
+      - name: Verify deployment
+        run: |
+          sleep 30
+          gcloud compute ssh gaia-prod \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --command="
+              cd ~/gaia-deploy
+              docker compose -f docker-compose.prod.yml ps
+            "
+
+      - name: Health check
+        run: |
+          EXTERNAL_IP=$(gcloud compute instances describe gaia-prod \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+
+          timeout 300 bash -c "
+            until curl -sf http://\$EXTERNAL_IP:8000/health > /dev/null; do
+              echo 'Waiting for backend to be ready...'
+              sleep 10
+            done
+          "
+
+          echo "Deployment successful! Backend is accessible at http://\$EXTERNAL_IP:8000"
+
+      - name: Notify deployment status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ job.status }}' === 'success' ? '✅ Success' : '❌ Failed';
+            const environment = '${{ github.event.client_payload.environment }}';
+            const sha = '${{ github.event.client_payload.sha }}';
+
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: sha,
+              state: '${{ job.status }}' === 'success' ? 'success' : 'failure',
+              target_url: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: `Deployment to ${environment} ${status.toLowerCase()}`,
+              context: `deploy/${environment}`
+            });
