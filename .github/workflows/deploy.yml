@@ -100,8 +100,8 @@ jobs:
             
             **Repository:** ${{ github.repository }}
             **Branch:** ${{ github.ref_name }}
-            **Commit:** [${{ github.sha }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+            **Commit:** ${{ github.sha }}
             **Status:** ${{ job.status }}
             **Deployed by:** ${{ github.actor }}
-            **Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            **Timestamp:** ${{ github.run_id }}
           
