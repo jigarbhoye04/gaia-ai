@@ -64,8 +64,15 @@ def inject_infisical_secrets():
         logger.info(f"Infisical secrets fetched in {time.time() - secrets_start:.3f}s")
 
         injection_start = time.time()
+
+        # Inject secrets from Infisical into environment variables
+        # !IMPORTANT: Local environment variables take precedence over Infisical secrets.
+        # This allows overriding Infisical values with local .env files or manually set variables.
+        # Only sets the secret if it's not already present in the environment.
         for secret in secrets.secrets:
-            os.environ[secret.secretKey] = secret.secretValue
+            if os.environ.get(secret.secretKey) is None:
+                os.environ[secret.secretKey] = secret.secretValue
+
         logger.info(
             f"Secrets injected into environment in {time.time() - injection_start:.3f}s"
         )
