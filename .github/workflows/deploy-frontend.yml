@@ -9,34 +9,29 @@ permissions:
   contents: read
 
 jobs:
-  sync-to-private-fork:
+  sync_and_deploy:
     runs-on: ubuntu-latest
     environment: production
+    if: github.ref_name == 'master'   # ✅ Run only on master
 
     steps:
-      - name: Checkout main repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Git
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+      - name: Sync master to private fork
+        uses: TobKed/github-forks-sync-action@latest
+        with:
+          github_token: ${{ secrets.PRIVATE_FORK_TOKEN }}
+          upstream_repository: ${{ github.repository }}
+          target_repository: ${{ secrets.PRIVATE_FORK_REPO }}
+          upstream_branch: master
+          target_branch: master
+          force: true
 
-      - name: Sync to private fork for Vercel deployment
-        run: |
-          # Add the private fork as a remote
-          git remote add private-fork https://${{ secrets.PRIVATE_FORK_TOKEN }}@github.com/${{ secrets.PRIVATE_FORK_REPO }}.git
-
-          # Push the current branch to private fork
-          git push private-fork ${{ github.ref_name }}:master --force
-
-          echo "✅ Successfully synced to private fork"
-          echo "This will trigger Vercel deployment automatically"
-
-      - name: Notify deployment status
+      - name: Notify Discord of deployment
         if: always()
         uses: appleboy/discord-action@v1.2.0
         with:
@@ -45,10 +40,9 @@ jobs:
           color: ${{ job.status == 'success' && '#00d4aa' || '#ff6b6b' }}
           message: |
             🌐 **Frontend Deployment ${{ job.status == 'success' && 'Triggered' || 'Failed' }}**
-
-            **Repository:** ${{ github.repository }}
-            **Branch:** ${{ github.ref_name }}
+            **Repo:** ${{ github.repository }}
+            **Branch:** master
             **Commit:** ${{ github.sha }}
-            **Status:** ${{ job.status == 'success' && 'Repository synced to private fork' || 'Sync failed' }}
-            **Next Step:** ${{ job.status == 'success' && 'Vercel will auto-deploy from private fork' || 'Check logs for error details' }}
+            **Status:** ${{ job.status == 'success' && 'Synced to private fork' || 'Sync failed' }}
+            **Next Step:** ${{ job.status == 'success' && 'Vercel will auto-deploy' || 'Check logs' }}
             **Triggered by:** ${{ github.actor }}
