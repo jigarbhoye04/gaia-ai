@@ -67,7 +67,6 @@ jobs:
 
       - name: Verify deployment
         run: |
-          sleep 30
           gcloud compute ssh ubuntu@gaia-backend \
             --zone=${{ secrets.GCP_ZONE }} \
             --command="
