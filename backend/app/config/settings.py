@@ -7,6 +7,9 @@ from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.config.secrets import inject_infisical_secrets
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
