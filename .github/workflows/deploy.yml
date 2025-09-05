@@ -91,7 +91,7 @@ jobs:
               # Remove unused networks
               docker network prune -f
 
-              echo "✅ Docker cleanup completed."
+              echo '✅ Docker cleanup completed.'
             "
 
       - name: Trigger Frontend Deployment
