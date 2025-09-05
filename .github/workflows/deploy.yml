@@ -109,6 +109,13 @@ jobs:
               echo "✅ Docker cleanup completed."
             "
 
+      - name: Trigger Frontend Deployment
+        if: success()
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: deploy-frontend
+
       - name: Notify to Discord
         if: always()
         uses: appleboy/discord-action@v1.2.0
