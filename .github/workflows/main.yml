@@ -10,8 +10,28 @@ on:
   workflow_dispatch:
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.changes.outputs.frontend }}
+      backend: ${{ steps.changes.outputs.backend }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Check for changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+
   frontend-build:
-    # if: ${{ contains(github.event.pull_request.changed_files, 'frontend/') }}
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -60,6 +80,8 @@ jobs:
         run: pnpm build
 
   backend-checks:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -130,9 +152,9 @@ jobs:
           fi
 
   trigger-build:
-    needs: [frontend-build, backend-checks]
+    needs: [changes, frontend-build, backend-checks]
     runs-on: ubuntu-latest
-    if: success()
+    if: always() && !cancelled() && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.backend-checks.result == 'success' || needs.backend-checks.result == 'skipped') && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
 
     steps:
       - name: Trigger build workflow
