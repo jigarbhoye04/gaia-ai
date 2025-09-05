@@ -1,12 +1,13 @@
 name: Deploy to GCP
 
 on:
-  push:
-    branches: [develop, master]
   repository_dispatch:
     types: [deploy]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  statuses: write
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -48,7 +49,7 @@ jobs:
 
       - name: Deploy application on GCP VM
         run: |
-          gcloud compute ssh gaia-backend \
+          gcloud compute ssh ubuntu@gaia-backend \
             --zone=${{ secrets.GCP_ZONE }} \
             --command="
               set -e
@@ -69,7 +70,7 @@ jobs:
               echo 'Docker compose version:'
               docker compose version
               echo 'Running containers:'
-              docker ps
+              sudo docker ps
               echo ''
               echo '=== System Information ==='
               echo 'OS Information:'
