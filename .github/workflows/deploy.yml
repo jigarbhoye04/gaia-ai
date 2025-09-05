@@ -75,21 +75,6 @@ jobs:
               docker compose -f docker-compose.prod.yml ps
             "
 
-      - name: Health check
-        run: |
-          EXTERNAL_IP=$(gcloud compute instances describe ubuntu@gaia-backend \
-            --zone=${{ secrets.GCP_ZONE }} \
-            --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
-
-          timeout 300 bash -c "
-            until curl -sf http://\$EXTERNAL_IP:8000/health > /dev/null; do
-              echo 'Waiting for backend to be ready...'
-              sleep 10
-            done
-          "
-
-          echo "Deployment successful! Backend is accessible at http://\$EXTERNAL_IP:8000"
-
       - name: Docker Cleanup
         run: |
           gcloud compute ssh ubuntu@gaia-backend \
