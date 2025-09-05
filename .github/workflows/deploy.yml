@@ -59,7 +59,9 @@ jobs:
               git pull origin master
 
               docker compose -f docker-compose.prod.yml pull
-              docker compose -f docker-compose.prod.yml up -d
+              
+              # Recreate only services with updated images
+              docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps
               docker image prune -f
             "
 
@@ -88,6 +90,25 @@ jobs:
 
           echo "Deployment successful! Backend is accessible at http://\$EXTERNAL_IP:8000"
 
+      - name: Docker Cleanup
+        run: |
+          gcloud compute ssh ubuntu@gaia-backend \
+            --zone=${{ secrets.GCP_ZONE }} \
+            --command="
+              echo 'Starting Docker cleanup...'
+              
+              # Remove dangling images
+              docker image prune -f
+
+              # Remove stopped containers
+              docker container prune -f
+              
+              # Remove unused networks
+              docker network prune -f
+
+              echo "✅ Docker cleanup completed."
+            "
+
       - name: Notify to Discord
         if: always()
         uses: appleboy/discord-action@v1.2.0
@@ -97,11 +118,10 @@ jobs:
           color: "#48f442"
           message: |
             🚀 **Deployment to GCP**
-            
+
             **Repository:** ${{ github.repository }}
             **Branch:** ${{ github.ref_name }}
             **Commit:** ${{ github.sha }}
             **Status:** ${{ job.status }}
             **Deployed by:** ${{ github.actor }}
             **Timestamp:** ${{ github.run_id }}
-          
