@@ -70,7 +70,7 @@ jobs:
               echo 'Docker compose version:'
               docker compose version
               echo 'Running containers:'
-              docker ps
+              sudo docker ps
               echo ''
               echo '=== System Information ==='
               echo 'OS Information:'
