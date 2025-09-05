@@ -1,13 +1,8 @@
 name: Docker Build & Push
 
 on:
-  workflow_run:
-    workflows: ["Quality Checks"]
-    types:
-      - completed
-    branches:
-      - develop
-      - master
+  repository_dispatch:
+    types: [build]
   workflow_dispatch:
 
 env:
@@ -17,7 +12,6 @@ env:
 jobs:
   build-backend:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: read
       packages: write
@@ -70,7 +64,7 @@ jobs:
   trigger-deploy:
     needs: [build-backend]
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.head_branch == 'master'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: Trigger deployment workflow
