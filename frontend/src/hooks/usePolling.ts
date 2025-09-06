@@ -122,7 +122,11 @@ export const usePolling = <T = Record<string, unknown>>(
         | "max-attempts"
         | "manual" = "manual",
     ) => {
-      setState((prev) => ({ ...prev, isPolling: false }));
+      // Only update state if actually polling
+      setState((prev) => {
+        if (!prev.isPolling) return prev;
+        return { ...prev, isPolling: false };
+      });
 
       if (intervalRef.current) {
         clearTimeout(intervalRef.current);
@@ -280,10 +284,10 @@ export const usePolling = <T = Record<string, unknown>>(
     startTime: state.startTime,
 
     // Actions
-    startPolling,
-    stopPolling,
-    resetPolling,
-    clearError,
-    updateData,
+    startPolling: useCallback(startPolling, [startPolling]),
+    stopPolling: useCallback(stopPolling, [stopPolling]),
+    resetPolling: useCallback(resetPolling, [resetPolling]),
+    clearError: useCallback(clearError, [clearError]),
+    updateData: useCallback(updateData, [updateData]),
   };
 };

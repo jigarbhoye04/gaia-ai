@@ -1,12 +1,14 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 
 import { chatApi } from "@/features/chat/api/chatApi";
 import { FileDropModal } from "@/features/chat/components/files/FileDropModal";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
+import { useOnlinePolling } from "@/hooks/useOnlinePolling";
+import { db } from "@/lib/db";
 import {
   useComposerTextActions,
   usePendingPrompt,
@@ -56,24 +58,35 @@ const ChatPage = React.memo(function MainChat() {
     multiple: true,
   });
 
-  // Message fetching effect
-  useEffect(() => {
-    const loadMessages = async () => {
-      if (convoIdParam) {
-        try {
-          const messages = await chatApi.fetchMessages(convoIdParam);
-          updateConvoMessages(messages);
-        } catch (error) {
-          console.error("Failed to fetch messages:", error);
+  const fetchMessages = useCallback(async () => {
+    if (convoIdParam) {
+      try {
+        // First, try to load from IndexedDB
+        const cachedMessages = await db.messages
+          .where("conversation_id")
+          .equals(convoIdParam)
+          .toArray();
+        if (cachedMessages.length > 0) {
+          updateConvoMessages(cachedMessages);
         }
-      } else {
-        clearMessages();
-      }
-    };
 
-    loadMessages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [convoIdParam]);
+        // Then, fetch from the API
+        const messages = await chatApi.fetchMessages(convoIdParam);
+        updateConvoMessages(messages);
+
+        // Save to IndexedDB
+        await db.messages.bulkPut(messages);
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+      }
+    } else {
+      clearMessages();
+    }
+  }, [convoIdParam, updateConvoMessages, clearMessages]);
+
+  useOnlinePolling(fetchMessages, {
+    initialInterval: 60000, //polling every - 60s
+  });
 
   // Handle pending prompt from global composer
   useEffect(() => {
@@ -81,7 +94,7 @@ const ChatPage = React.memo(function MainChat() {
       appendToInputRef.current(pendingPrompt);
       clearPendingPrompt();
     }
-  }, [pendingPrompt, clearPendingPrompt]);
+  }, [pendingPrompt, clearPendingPrompt, appendToInputRef]);
 
   // Common composer props
   const composerProps = {
