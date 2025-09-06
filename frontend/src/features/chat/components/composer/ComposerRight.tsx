@@ -4,7 +4,6 @@ import { SendHorizontal, AudioLines, Square } from "lucide-react";
 
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
-import { APP_CONFIG_DEFAULTS } from "@/features/chat/components/livekit/lib/app-config";
 import { useState } from "react";
 
 interface RightSideProps {
@@ -62,7 +61,7 @@ export default function RightSide({
         </Button>
       </Tooltip>
 
-      {voiceModeActive && <VoiceApp appConfig={APP_CONFIG_DEFAULTS} onEndCall={()=> setVoiceModeActive(false)}/>}
+      {voiceModeActive && <VoiceApp onEndCall={()=> setVoiceModeActive(false)}/>}
 
       <Tooltip content={getTooltipContent()} placement="right"  color={isLoading ? "danger" : "primary"} showArrow>
         <Button

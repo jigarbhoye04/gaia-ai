@@ -11,16 +11,14 @@ import {
 import { SessionView } from "@/features/chat/components/livekit/session-view";
 import { toast } from "sonner";
 import useConnectionDetails from "@/features/chat/components/livekit/hooks/useConnectionDetails";
-import type { AppConfig } from "@/features/chat/components/livekit/lib/types";
 import { usePathname } from "next/navigation";
 const MotionSessionView = motion.create(SessionView);
 
 interface AppProps {
-  appConfig: AppConfig;
   onEndCall: () => void;
 }
 
-export function VoiceApp({ appConfig, onEndCall }: AppProps) {
+export function VoiceApp({ onEndCall }: AppProps) {
   const room = useMemo(() => new Room(), []);
   const [sessionStarted, setSessionStarted] = useState(false);
   const pathname = usePathname();
@@ -41,7 +39,7 @@ export function VoiceApp({ appConfig, onEndCall }: AppProps) {
     if (sessionStarted && room.state === "disconnected") {
       Promise.all([
         room.localParticipant.setMicrophoneEnabled(true, undefined, {
-          preConnectBuffer: appConfig.isPreConnectBufferEnabled,
+          preConnectBuffer: true,
         }),
         existingOrRefreshConnectionDetails().then((connectionDetails) => {
           room.connect(
@@ -60,7 +58,7 @@ export function VoiceApp({ appConfig, onEndCall }: AppProps) {
       aborted = true;
       room.disconnect();
     };
-  }, [room, sessionStarted, appConfig.isPreConnectBufferEnabled]);
+  }, [room, sessionStarted]);
 
   return (
     <div className="fixed inset-0 z-50 flex h-full w-full flex-col bg-neutral-900">
@@ -69,7 +67,6 @@ export function VoiceApp({ appConfig, onEndCall }: AppProps) {
         <StartAudio label="Start Audio" />
         <MotionSessionView
           key="session-view"
-          appConfig={appConfig}
           disabled={!sessionStarted}
           sessionStarted={sessionStarted}
           initial={{ opacity: 0 }}

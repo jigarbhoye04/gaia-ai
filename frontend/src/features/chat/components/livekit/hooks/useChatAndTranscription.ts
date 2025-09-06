@@ -21,5 +21,5 @@ export default function useChatAndTranscription() {
     return merged.sort((a, b) => a.timestamp - b.timestamp);
   }, [transcriptions, chat.chatMessages, room]);
 
-  return { messages: mergedTranscriptions, send: chat.send };
+  return { messages: mergedTranscriptions};
 }

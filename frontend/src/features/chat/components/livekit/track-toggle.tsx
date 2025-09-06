@@ -1,25 +1,23 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Track } from 'livekit-client';
-import { useTrackToggle } from '@livekit/components-react';
-import {
-  Mic,
-  MicOff,
-  MonitorUp,
-  Loader2,
-  Video,
-  VideoOff,
-} from 'lucide-react';
-import { Toggle } from '@/components/ui/shadcn/toggle';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { Track } from "livekit-client";
+import { useTrackToggle } from "@livekit/components-react";
+import { Mic, MicOff, Loader2 } from "lucide-react";
+import { Button } from "@heroui/button";
+import { cn } from "@/lib/utils";
 
-export type TrackToggleProps = React.ComponentProps<typeof Toggle> & {
-  source: Parameters<typeof useTrackToggle>[0]['source'];
+export type TrackToggleProps = React.ComponentProps<typeof Button> & {
+  source: Parameters<typeof useTrackToggle>[0]["source"];
   pending?: boolean;
+  enabled?: boolean;
 };
 
-function getSourceIcon(source: Track.Source, enabled: boolean, pending = false) {
+function getSourceIcon(
+  source: Track.Source,
+  enabled: boolean,
+  pending = false,
+) {
   if (pending) {
     return Loader2;
   }
@@ -27,22 +25,30 @@ function getSourceIcon(source: Track.Source, enabled: boolean, pending = false) 
   switch (source) {
     case Track.Source.Microphone:
       return enabled ? Mic : MicOff;
-    case Track.Source.Camera:
-      return enabled ? Video : VideoOff;
-    case Track.Source.ScreenShare:
-      return MonitorUp;
     default:
       return React.Fragment;
   }
 }
 
-export function TrackToggle({ source, pressed, pending, className, ...props }: TrackToggleProps) {
-  const IconComponent = getSourceIcon(source, pressed ?? false, pending);
+export function TrackToggle({
+  source,
+  enabled,
+  pending,
+  className,
+  onPress,
+  ...props
+}: TrackToggleProps) {
+  const IconComponent = getSourceIcon(source, enabled ?? false, pending);
 
   return (
-    <Toggle pressed={pressed} aria-label={`Toggle ${source}`} className={cn(className)} {...props}>
-      <IconComponent className={cn(pending && 'animate-spin')} />
-      {props.children}
-    </Toggle>
+    <Button
+      aria-label={`Toggle ${source}`}
+      onPress={onPress}
+      disabled={pending}
+      className={cn(className)}
+      {...props}
+    >
+      <IconComponent className={cn(pending && "animate-spin")} />
+    </Button>
   );
 }

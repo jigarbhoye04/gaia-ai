@@ -14,7 +14,6 @@ import { ChatEntry } from "@/features/chat/components/livekit/chat-entry";
 import { ChatMessageView } from "@/features/chat/components/livekit/chat-message-view";
 import { MediaTiles } from "@/features/chat/components/livekit/media-tiles";
 import useChatAndTranscription from "@/features/chat/components/livekit/hooks/useChatAndTranscription";
-import type { AppConfig } from "@/features/chat/components/livekit/lib/types";
 import { cn } from "@/lib/utils";
 
 function isAgentAvailable(agentState: AgentState) {
@@ -26,14 +25,12 @@ function isAgentAvailable(agentState: AgentState) {
 }
 
 interface SessionViewProps {
-  appConfig: AppConfig;
   disabled: boolean;
   sessionStarted: boolean;
   onEndCall: () => void;
 }
 
 export const SessionView = ({
-  appConfig,
   disabled,
   sessionStarted,
   onEndCall,
@@ -41,12 +38,8 @@ export const SessionView = ({
 }: React.ComponentProps<"div"> & SessionViewProps) => {
   const { state: agentState } = useVoiceAssistant();
   const [chatOpen, setChatOpen] = useState(false);
-  const { messages, send } = useChatAndTranscription();
+  const { messages } = useChatAndTranscription();
   const room = useRoomContext();
-
-  async function handleSendMessage(message: string) {
-    await send(message);
-  }
 
   useEffect(() => {
     if (sessionStarted) {
@@ -57,22 +50,14 @@ export const SessionView = ({
               ? "Agent did not join the room. "
               : "Agent connected but did not complete initializing. ";
 
-          toast(`Session ended: ${reason}`);
+          toast.error(`Session ended: ${reason}`);
           room.disconnect();
         }
-      }, 20_000);
+      }, 10_000);
 
       return () => clearTimeout(timeout);
     }
   }, [agentState, sessionStarted, room]);
-
-  const { supportsChatInput, supportsVideoInput, supportsScreenShare } =
-    appConfig;
-  const capabilities = {
-    supportsChatInput,
-    supportsVideoInput,
-    supportsScreenShare,
-  };
 
   return (
     <main
@@ -125,36 +110,9 @@ export const SessionView = ({
             ease: "easeOut",
           }}
         >
-          <div className="relative z-10 mx-auto w-full max-w-2xl">
-            {appConfig.isPreConnectBufferEnabled && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{
-                  opacity: sessionStarted && messages.length === 0 ? 1 : 0,
-                  transition: {
-                    ease: "easeIn",
-                    delay: messages.length > 0 ? 0 : 0.8,
-                    duration: messages.length > 0 ? 0.2 : 0.5,
-                  },
-                }}
-                aria-hidden={messages.length > 0}
-                className={cn(
-                  "absolute inset-x-0 -top-12 text-center",
-                  sessionStarted &&
-                    messages.length === 0 &&
-                    "pointer-events-none",
-                )}
-              >
-                <p className="animate-text-shimmer inline-block !bg-clip-text text-sm font-semibold text-transparent">
-                  Agent is listening, ask it a question
-                </p>
-              </motion.div>
-            )}
-
+          <div className="relative z-10 mx-auto w-full max-w-xl">
             <AgentControlBar
-              capabilities={capabilities}
               onChatOpenChange={setChatOpen}
-              onSendMessage={handleSendMessage}
               onDisconnect={onEndCall}
             />
           </div>
