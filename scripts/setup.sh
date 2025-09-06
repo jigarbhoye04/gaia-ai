@@ -23,24 +23,43 @@ echo "⚙️ Setting up backend..."
 cd backend
 if [ ! -d ".venv" ]; then
     echo "Creating Python virtual environment..."
-    $PYTHON -m venv .venv
+    $PYTHON -m venv .venv --upgrade-deps
 fi
 
 # Activate venv
 if [ -f ".venv/bin/activate" ]; then
-    source .venv/bin/activate
+    . .venv/bin/activate
 elif [ -f ".venv/Scripts/activate" ]; then
-    source .venv/Scripts/activate
+    . .venv/Scripts/activate
 else
     echo "Could not find virtual environment activation script."
     exit 1
 fi
 
+# Verify Python and pip are working in venv
+if ! python -c "import sys; print('Python:', sys.version)" 2>/dev/null; then
+    echo "Virtual environment seems corrupted, recreating..."
+    cd ..
+    rm -rf backend/.venv
+    cd backend
+    $PYTHON -m venv .venv --upgrade-deps
+    if [ -f ".venv/bin/activate" ]; then
+        . .venv/bin/activate
+    elif [ -f ".venv/Scripts/activate" ]; then
+        . .venv/Scripts/activate
+    fi
+fi
+
 # Ensure uv is installed
 if ! command -v uv &> /dev/null; then
     echo "Installing uv..."
-    $PYTHON -m pip install --upgrade pip
-    $PYTHON -m pip install uv
+    # First ensure we have pip
+    python -m ensurepip --upgrade 2>/dev/null || echo "ensurepip not available, trying alternative..."
+    python -m pip install --upgrade pip || {
+        echo "pip installation failed, downloading get-pip.py..."
+        curl -sS https://bootstrap.pypa.io/get-pip.py | python
+    }
+    python -m pip install uv
 fi
 
 echo "Installing backend dependencies..."
