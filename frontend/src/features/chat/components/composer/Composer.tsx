@@ -34,6 +34,7 @@ interface MainSearchbarProps {
   droppedFiles?: File[];
   onDroppedFilesProcessed?: () => void;
   hasMessages: boolean;
+  voiceModeActive: () => void;
 }
 
 const Composer: React.FC<MainSearchbarProps> = ({
@@ -44,6 +45,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   droppedFiles,
   onDroppedFilesProcessed,
   hasMessages,
+  voiceModeActive,
 }) => {
   const { id: convoIdParam } = useParams<{ id: string }>();
   const [currentHeight, setCurrentHeight] = useState<number>(24);
@@ -362,6 +364,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
           selectedTool={selectedTool}
           onToggleSlashCommandDropdown={handleToggleSlashCommandDropdown}
           isSlashCommandDropdownOpen={isSlashCommandDropdownOpen}
+          voiceModeActive={voiceModeActive}
         />
       </div>
       <FileUpload

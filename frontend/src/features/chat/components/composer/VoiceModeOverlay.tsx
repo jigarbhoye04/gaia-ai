@@ -27,7 +27,7 @@ export function VoiceApp({ onEndCall }: AppProps) {
   if (match && match[1]) {
     conversationId = match[1];
   }
-  const { refreshConnectionDetails, existingOrRefreshConnectionDetails } =
+  const { existingOrRefreshConnectionDetails } =
     useConnectionDetails(conversationId);
 
   useEffect(() => {

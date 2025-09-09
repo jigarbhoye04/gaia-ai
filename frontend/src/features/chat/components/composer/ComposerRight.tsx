@@ -3,22 +3,21 @@ import { Tooltip } from "@heroui/tooltip";
 import { SendHorizontal, AudioLines, Square } from "lucide-react";
 
 import { useLoading } from "@/features/chat/hooks/useLoading";
-import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
-import { useState } from "react";
 
 interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   searchbarText: string;
   selectedTool?: string | null;
+  setvoiceModeActive: () => void;
 }
 
 export default function RightSide({
   handleFormSubmit,
   searchbarText,
   selectedTool,
+  setvoiceModeActive,
 }: RightSideProps) {
   const { isLoading, stopStream } = useLoading();
-  const [voiceModeActive, setVoiceModeActive] = useState(false);
 
   const hasText = searchbarText.trim().length > 0;
   const hasSelectedTool = selectedTool !== null && selectedTool !== undefined;
@@ -55,13 +54,11 @@ export default function RightSide({
           color="default"
           radius="full"
           type="button"
-          onPress={() => setVoiceModeActive(true)}
+          onPress={() => setvoiceModeActive()}
         >
           <AudioLines />
         </Button>
       </Tooltip>
-
-      {voiceModeActive && <VoiceApp onEndCall={()=> setVoiceModeActive(false)}/>}
 
       <Tooltip content={getTooltipContent()} placement="right"  color={isLoading ? "danger" : "primary"} showArrow>
         <Button

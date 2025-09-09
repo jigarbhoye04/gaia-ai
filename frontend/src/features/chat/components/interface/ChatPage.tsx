@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
 import {
   useParams,
   usePathname,
@@ -36,6 +37,7 @@ const ChatPage = React.memo(function MainChat() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   // const [isAtBottom, setIsAtBottom] = useState(false);
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
   const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
   const fileUploadRef = useRef<{
     openFileUploadModal: () => void;
@@ -146,6 +148,7 @@ const ChatPage = React.memo(function MainChat() {
     droppedFiles,
     onDroppedFilesProcessed: () => setDroppedFiles([]),
     hasMessages,
+    voiceModeActive: ()=> setVoiceModeActive(true),
   };
 
   // Common drag container props
@@ -162,6 +165,11 @@ const ChatPage = React.memo(function MainChat() {
   return (
     <ComposerProvider value={{ appendToInput }}>
       <div className="flex h-full flex-col">
+        {voiceModeActive && (
+          <div className="fixed inset-0 z-50">
+            <VoiceApp onEndCall={() => setVoiceModeActive(false)} />
+          </div>
+        )}
         {hasMessages ? (
           // Layout with messages: Chat at top, composer at bottom
           <>
