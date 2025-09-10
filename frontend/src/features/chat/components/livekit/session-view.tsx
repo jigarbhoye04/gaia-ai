@@ -1,19 +1,17 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import {
   type AgentState,
-  type ReceivedChatMessage,
   useRoomContext,
   useVoiceAssistant,
 } from "@livekit/components-react";
 import { toast } from "sonner";
 import { AgentControlBar } from "@/features/chat/components/livekit/agent-control-bar";
-import { ChatEntry } from "@/features/chat/components/livekit/chat-entry";
-import { ChatMessageView } from "@/features/chat/components/livekit/chat-message-view";
 import { MediaTiles } from "@/features/chat/components/livekit/media-tiles";
 import useChatAndTranscription from "@/features/chat/components/livekit/hooks/useChatAndTranscription";
+import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
 import { cn } from "@/lib/utils";
 
 function isAgentAvailable(agentState: AgentState) {
@@ -63,36 +61,17 @@ export const SessionView = ({
     <main
       ref={ref}
       inert={disabled}
-      className={
-        // prevent page scrollbar
-        // when !chatOpen due to 'translate-y-20'
-        cn(!chatOpen && "max-h-svh overflow-hidden")
-      }
+      className={cn(!chatOpen && "max-h-svh overflow-hidden")}
     >
-      <ChatMessageView
+      {/* Container for chat messages, preserving scroll/spacing classes */}
+      <div
         className={cn(
           "mx-auto min-h-svh w-full max-w-2xl px-3 pt-32 pb-40 transition-[opacity,translate] duration-300 ease-out md:px-0 md:pt-36 md:pb-48",
-          chatOpen
-            ? "translate-y-0 opacity-100 delay-200"
-            : "translate-y-20 opacity-0",
+          chatOpen ? "translate-y-0 opacity-100 delay-200" : "translate-y-20 opacity-0"
         )}
       >
-        <div className="space-y-3 whitespace-pre-wrap">
-          <AnimatePresence>
-            {messages.map((message: ReceivedChatMessage) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 1, height: "auto", translateY: 0.001 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-              >
-                <ChatEntry hideName key={message.id} entry={message} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      </ChatMessageView>
+        <ChatRenderer convoMessages={messages} />
+      </div>
 
       <MediaTiles chatOpen={chatOpen} />
 

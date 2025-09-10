@@ -1,10 +1,12 @@
+import asyncio
 import json
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Optional
 import aiohttp
-from app.config.settings import settings
+from dotenv import load_dotenv
 from livekit import rtc
 from livekit.agents import (
     NOT_GIVEN,
@@ -25,14 +27,7 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 logger = logging.getLogger("agent")
 logging.basicConfig(level=logging.INFO)
-LIVEKIT_URL = settings.LIVEKIT_URL
-LIVEKIT_API_KEY = settings.LIVEKIT_API_KEY
-LIVEKIT_API_SECRET = settings.LIVEKIT_API_SECRET
-DEEPGRAM_API_KEY = settings.DEEPGRAM_API_KEY
-ELEVEN_API_KEY = settings.ELEVEN_API_KEY
-GAIA_BACKEND_URL = settings.HOST
-ELEVENLABS_VOICE_ID = settings.ELEVENLABS_VOICE_ID
-ELEVENLABS_TTS_MODEL = settings.ELEVENLABS_TTS_MODEL
+load_dotenv(".env.local")
 
 
 def _extract_meta_data(md: Optional[str]) -> tuple[Optional[str], Optional[str]]:
@@ -106,7 +101,7 @@ class CustomLLM(LLM):
             if self.conversation_id:
                 payload["conversation_id"] = self.conversation_id
 
-            async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with aiohttp.ClientSession(timeout=timeout) as session:  # noqa: SIM117
                 async with session.post(
                     f"{self.base_url}/api/v1/chat-stream",
                     headers=headers,
@@ -131,6 +126,7 @@ class CustomLLM(LLM):
                                     yield ChatChunk(
                                         id="custom", delta=ChoiceDelta(content=chunk)
                                     )
+                                    buf.clear()  # Clear buffer after yielding to avoid duplicate final flush
                             break
 
                         try:
@@ -170,8 +166,9 @@ class CustomLLM(LLM):
                                 yield ChatChunk(
                                     id="custom", delta=ChoiceDelta(content=out)
                                 )
+                                await asyncio.sleep(0.1)
 
-                    # Final flush
+                    # Final flush (only if buffer is not empty, and wasn't just flushed)
                     if buf:
                         tail = "".join(buf).strip()
                         if len(tail) >= 1:
@@ -190,15 +187,17 @@ def prewarm(proc: JobProcess):
 async def entrypoint(ctx: JobContext):
     ctx.log_context_fields = {"room": ctx.room.name}
 
-    custom_llm = CustomLLM(base_url=GAIA_BACKEND_URL)
+    custom_llm = CustomLLM(
+        base_url=os.getenv("GAIA_BACKEND_URL", "http://localhost:8000")
+    )
 
     session = AgentSession(
         llm=custom_llm,
-        stt=deepgram.STT(api_key=DEEPGRAM_API_KEY, model="nova-3", language="multi"),
+        stt=deepgram.STT(model="nova-3", language="multi"),
         tts=elevenlabs.TTS(
-            api_key=ELEVEN_API_KEY,
-            voice_id=ELEVENLABS_VOICE_ID,
-            model=ELEVENLABS_TTS_MODEL,
+            api_key="sk_0d1ffe9664112530bfe7f22d4e0284e0cabc2d94d403b3e5",
+            voice_id="21m00Tcm4TlvDq8ikWAM",
+            model=os.getenv("ELEVENLABS_TTS_MODEL", "eleven_turbo_v2_5"),
             voice_settings=elevenlabs.VoiceSettings(
                 stability=0.0,
                 similarity_boost=1.0,
@@ -234,6 +233,8 @@ async def entrypoint(ctx: JobContext):
     # --- Register event listeners BEFORE connecting ---
     def _maybe_set_from_md(md: Optional[str], origin: str, who: str):
         tok, conv_id = _extract_meta_data(md)
+        print(tok)
+        print("tokk")
         if tok:
             custom_llm.set_agent_token(tok)
         if conv_id:
@@ -241,6 +242,7 @@ async def entrypoint(ctx: JobContext):
 
     @ctx.room.on("participant_connected")
     def _on_participant_connected(p: rtc.RemoteParticipant):
+        logger.info("ddd")
         _maybe_set_from_md(
             getattr(p, "metadata", None), "participant_connected", p.identity
         )
@@ -251,6 +253,7 @@ async def entrypoint(ctx: JobContext):
 
     await ctx.connect()
     for p in ctx.room.remote_participants.values():
+        logger.info("participant already present, processing metadata")
         _maybe_set_from_md(
             getattr(p, "metadata", None), "existing_participant", p.identity
         )
@@ -265,12 +268,4 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
-    cli.run_app(
-        WorkerOptions(
-            ws_url=LIVEKIT_URL,
-            api_key=LIVEKIT_API_KEY,
-            api_secret=LIVEKIT_API_SECRET,
-            entrypoint_fnc=entrypoint,
-            prewarm_fnc=prewarm,
-        )
-    )
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
