@@ -148,7 +148,7 @@ const ChatPage = React.memo(function MainChat() {
     droppedFiles,
     onDroppedFilesProcessed: () => setDroppedFiles([]),
     hasMessages,
-    voiceModeActive: ()=> setVoiceModeActive(true),
+    voiceModeActive: () => setVoiceModeActive(true),
   };
 
   // Common drag container props
@@ -165,12 +165,9 @@ const ChatPage = React.memo(function MainChat() {
   return (
     <ComposerProvider value={{ appendToInput }}>
       <div className="flex h-full flex-col">
-        {voiceModeActive && (
-          <div className="fixed inset-0 z-50">
-            <VoiceApp onEndCall={() => setVoiceModeActive(false)} />
-          </div>
-        )}
-        {hasMessages ? (
+        {voiceModeActive ? (
+          <VoiceApp onEndCall={() => setVoiceModeActive(false)} />
+        ) : hasMessages ? (
           // Layout with messages: Chat at top, composer at bottom
           <>
             <div

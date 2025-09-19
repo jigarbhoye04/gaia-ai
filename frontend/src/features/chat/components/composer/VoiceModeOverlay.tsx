@@ -61,7 +61,7 @@ export function VoiceApp({ onEndCall }: AppProps) {
   }, [room, sessionStarted]);
 
   return (
-    <div className="fixed inset-0 z-50 flex h-full w-full flex-col bg-neutral-900">
+    <div className="flex h-full w-full flex-col">
       <RoomContext.Provider value={room}>
         <RoomAudioRenderer />
         <StartAudio label="Start Audio" />

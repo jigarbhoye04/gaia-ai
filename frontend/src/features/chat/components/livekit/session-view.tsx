@@ -12,6 +12,8 @@ import { AgentControlBar } from "@/features/chat/components/livekit/agent-contro
 import { MediaTiles } from "@/features/chat/components/livekit/media-tiles";
 import useChatAndTranscription from "@/features/chat/components/livekit/hooks/useChatAndTranscription";
 import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
+import { useConversation } from "@/features/chat/hooks/useConversation";
+import type { MessageType } from "@/types/features/convoTypes";
 import { cn } from "@/lib/utils";
 
 function isAgentAvailable(agentState: AgentState) {
@@ -38,6 +40,29 @@ export const SessionView = ({
   const [chatOpen, setChatOpen] = useState(false);
   const { messages } = useChatAndTranscription();
   const room = useRoomContext();
+  const { updateConvoMessages } = useConversation();
+  const [voiceBuffer, setVoiceBuffer] = useState<MessageType[]>([]);
+
+  // Buffer voice messages locally, do not update Redux on every message
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      setVoiceBuffer(messages);
+    }
+    console.log(messages);
+  }, [messages]);
+
+  // Handler to persist buffered messages to Redux when call ends
+  const handleEndCall = React.useCallback(() => {
+    updateConvoMessages((oldMessages) => {
+      const allMessages = [...oldMessages, ...voiceBuffer];
+      const uniqueMessagesMap = new Map();
+      for (const msg of allMessages) {
+        uniqueMessagesMap.set(msg.message_id, msg);
+      }
+      return Array.from(uniqueMessagesMap.values());
+    });
+    onEndCall();
+  }, [voiceBuffer, updateConvoMessages, onEndCall]);
 
   useEffect(() => {
     if (sessionStarted) {
@@ -61,41 +86,45 @@ export const SessionView = ({
     <main
       ref={ref}
       inert={disabled}
-      className={cn(!chatOpen && "max-h-svh overflow-hidden")}
+      className={cn("relative flex h-full w-full flex-col overflow-hidden")}
     >
-      {/* Container for chat messages, preserving scroll/spacing classes */}
-      <div
-        className={cn(
-          "mx-auto min-h-svh w-full max-w-2xl px-3 pt-32 pb-40 transition-[opacity,translate] duration-300 ease-out md:px-0 md:pt-36 md:pb-48",
-          chatOpen ? "translate-y-0 opacity-100 delay-200" : "translate-y-20 opacity-0"
+      <div className="flex min-h-0 flex-1 flex-col pb-20">
+        <div
+          className={cn(
+            "flex flex-shrink-0 items-center justify-center overflow-hidden px-4",
+            chatOpen ? "h-16" : "flex-1",
+          )}
+        >
+          <MediaTiles chatOpen={chatOpen} />
+        </div>
+
+        {chatOpen && (
+          <div className="mt-4 flex max-h-[65vh] min-h-0 flex-1 flex-col">
+            <div
+              className={cn(
+                "scrollbar-hide flex-1 overflow-y-auto px-4",
+                "scroll-smooth",
+              )}
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              <div className="mx-auto max-w-[62rem]">
+                <ChatRenderer convoMessages={messages} />
+              </div>
+            </div>
+          </div>
         )}
-      >
-        <ChatRenderer convoMessages={messages} />
       </div>
 
-      <MediaTiles chatOpen={chatOpen} />
-
-      <div className="fixed right-0 bottom-0 left-0 z-50 px-3 pt-2 pb-3 md:px-12 md:pb-12">
-        <motion.div
-          key="control-bar"
-          initial={{ opacity: 0, translateY: "100%" }}
-          animate={{
-            opacity: sessionStarted ? 1 : 0,
-            translateY: sessionStarted ? "0%" : "100%",
-          }}
-          transition={{
-            duration: 0.3,
-            delay: sessionStarted ? 0.5 : 0,
-            ease: "easeOut",
-          }}
-        >
-          <div className="relative z-10 mx-auto w-full max-w-xl">
-            <AgentControlBar
-              onChatOpenChange={setChatOpen}
-              onDisconnect={onEndCall}
-            />
-          </div>
-        </motion.div>
+      <div className="absolute right-0 bottom-0 left-0 z-10">
+        <div className="flex justify-center pb-6">
+          <AgentControlBar
+            onChatOpenChange={setChatOpen}
+            onDisconnect={handleEndCall}
+          />
+        </div>
       </div>
     </main>
   );

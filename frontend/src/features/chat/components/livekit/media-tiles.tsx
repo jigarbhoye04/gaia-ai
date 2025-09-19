@@ -1,13 +1,13 @@
-import React, { useMemo } from 'react';
-import { Track } from 'livekit-client';
-import { AnimatePresence, motion } from 'motion/react';
+import React, { useMemo } from "react";
+import { Track } from "livekit-client";
+import { AnimatePresence, motion } from "motion/react";
 import {
   type TrackReference,
   useLocalParticipant,
   useVoiceAssistant,
-} from '@livekit/components-react';
-import { cn } from '@/lib/utils';
-import { AgentTile } from './agent-tile';
+} from "@livekit/components-react";
+import { cn } from "@/lib/utils";
+import { AgentTile } from "./agent-tile";
 
 const MotionAgentTile = motion.create(AgentTile);
 
@@ -25,7 +25,7 @@ const animationProps = {
     scale: 0,
   },
   transition: {
-    type: 'spring',
+    type: "spring",
     stiffness: 675,
     damping: 75,
     mass: 1,
@@ -34,29 +34,40 @@ const animationProps = {
 
 const classNames = {
   grid: [
-    'h-full w-full',
-    'grid gap-x-2 place-content-center',
-    'grid-cols-[1fr_1fr] grid-rows-[90px_1fr_90px]',
+    "h-full w-full",
+    "grid gap-x-2 place-content-center",
+    "grid-cols-[1fr_1fr] grid-rows-[90px_1fr_90px]",
   ],
   // Agent
   // chatOpen: true,
   // hasSecondTile: false
   // layout: Column 1 / Row 1 / Column-Span 2
   // align: x-center y-center
-  agentChatOpen: ['col-start-1 row-start-1', 'col-span-2', 'place-content-center'],
+  agentChatOpen: [
+    "col-start-1 row-start-2",
+    "col-span-2",
+    "place-content-center",
+  ],
   // Agent
   // chatOpen: false
   // layout: Column 1 / Row 1 / Column-Span 2 / Row-Span 3
   // align: x-center y-center
-  agentChatClosed: ['col-start-1 row-start-1', 'col-span-2 row-span-3', 'place-content-center'],
+  agentChatClosed: [
+    "col-start-1 row-start-1",
+    "col-span-2 row-span-3",
+    "place-content-center",
+  ],
 };
 
 export function useLocalTrackRef(source: Track.Source) {
   const { localParticipant } = useLocalParticipant();
   const publication = localParticipant.getTrackPublication(source);
   const trackRef = useMemo<TrackReference | undefined>(
-    () => (publication ? { source, participant: localParticipant, publication } : undefined),
-    [source, publication, localParticipant]
+    () =>
+      publication
+        ? { source, participant: localParticipant, publication }
+        : undefined,
+    [source, publication, localParticipant],
   );
   return trackRef;
 }
@@ -66,11 +77,8 @@ interface MediaTilesProps {
 }
 
 export function MediaTiles({ chatOpen }: MediaTilesProps) {
-  const {
-    state: agentState,
-    audioTrack: agentAudioTrack,
-  } = useVoiceAssistant();
-
+  const { state: agentState, audioTrack: agentAudioTrack } =
+    useVoiceAssistant();
 
   const transition = {
     ...animationProps.transition,
@@ -85,8 +93,7 @@ export function MediaTiles({ chatOpen }: MediaTilesProps) {
   const agentLayoutTransition = transition;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-8 bottom-32 z-50 md:top-12 md:bottom-40">
-      <div className="relative mx-auto h-full max-w-2xl px-4 md:px-0">
+      <div className="pointer-events-none mx-auto h-full max-w-2xl px-4 md:px-0">
         <div className={cn(classNames.grid)}>
           <div
             className={cn([
@@ -111,6 +118,5 @@ export function MediaTiles({ chatOpen }: MediaTilesProps) {
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }
