@@ -274,11 +274,6 @@ export default function TextBubble({
           title="Your Notifications"
         />
       )}
-
-      {!!follow_up_actions && follow_up_actions?.length > 0 && (
-        <FollowUpActions actions={follow_up_actions} loading={!!loading} />
-      )}
-      
     </>
   );
 }
