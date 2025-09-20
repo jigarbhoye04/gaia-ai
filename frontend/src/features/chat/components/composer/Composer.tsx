@@ -11,6 +11,7 @@ import FilePreview, {
 } from "@/features/chat/components/files/FilePreview";
 import FileUpload from "@/features/chat/components/files/FileUpload";
 import { useLoading } from "@/features/chat/hooks/useLoading";
+import { useLoadingText } from "@/features/chat/hooks/useLoadingText";
 import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
 import { useWorkflowSelection } from "@/features/chat/hooks/useWorkflowSelection";
 import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
@@ -84,6 +85,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
 
   const sendMessage = useSendMessage();
   const { isLoading, setIsLoading } = useLoading();
+  const { setContextualLoading } = useLoadingText();
   const { integrations, isLoading: integrationsLoading } = useIntegrations();
   const currentMode = useMemo(
     () => Array.from(selectedMode)[0],
@@ -182,7 +184,8 @@ const Composer: React.FC<MainSearchbarProps> = ({
     ) {
       return;
     }
-    setIsLoading(true);
+    // Use contextual loading with user's message for similarity-based loading text
+    setContextualLoading(true, inputText);
 
     sendMessage(
       inputText,
