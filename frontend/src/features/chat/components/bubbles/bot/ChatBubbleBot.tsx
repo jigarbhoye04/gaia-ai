@@ -62,7 +62,7 @@ export default function ChatBubbleBot(props: ChatBubbleBotProps) {
     if (image_data) return <ImageBubble {...props} image_data={image_data} />;
 
     return <TextBubble {...props} />;
-  }, [image_data, props]);
+  }, [image_data, props, integration_connection_required]);
 
   return (
     (loading ||
