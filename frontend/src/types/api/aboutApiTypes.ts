@@ -8,7 +8,6 @@ export interface Author {
   role: string;
   linkedin?: string;
   twitter?: string;
-  github?: string;
 }
 
 export interface AboutData {

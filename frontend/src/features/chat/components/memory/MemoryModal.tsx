@@ -1,7 +1,12 @@
 "use client";
 
-import { Button } from "@heroui/button";
-import { Modal, ModalBody, ModalContent, ModalFooter } from "@heroui/modal";
+import {
+  Button,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+} from "@heroui/react";
 
 import MemoryManagement from "@/features/memory/components/MemoryManagement";
 

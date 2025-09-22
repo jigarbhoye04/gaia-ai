@@ -1,16 +1,24 @@
-// Main font configuration file using Inter as the only font
+// Main font configuration file
+import { creato } from "./creato";
 import { inter } from "./inter";
+import { sfProDisplay, sfProText } from "./sf-pro";
+import { switzer } from "./switzer";
 
-// Export Inter font
-export { inter };
+// Export all font configurations
+export { creato, inter, sfProDisplay, sfProText, switzer };
 
-// Set Inter as the default font
+// FONT CONFIGURATION:
+// Uncomment the font you want to use as the default
+// export const defaultFont = switzer;
+// export const defaultFont = sfProDisplay;
+// export const defaultFont = sfProText;
+// export const defaultFont = creato;
 export const defaultFont = inter;
 
 // The default text font (used for body text)
 export const defaultTextFont = inter;
 
-// Helper function to get font variables (only Inter now)
+// Helper function to get all font variables
 export function getAllFontVariables() {
-  return inter.variable;
+  return `${switzer.variable} ${sfProDisplay.variable} ${sfProText.variable} ${creato.variable} ${inter.variable}`;
 }

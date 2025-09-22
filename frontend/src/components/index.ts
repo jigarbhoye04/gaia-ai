@@ -16,5 +16,6 @@ export * from "./navigation/Footer";
 export * from "./navigation/MobileMenu";
 export * from "./navigation/Navbar";
 export * from "./navigation/NavbarMenu";
+export * from "./navigation/RainbowGithubButton";
 export * from "./shared/index";
 export * from "./ui/index";

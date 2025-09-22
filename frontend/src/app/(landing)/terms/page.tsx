@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     description:
       "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant api.",
     url: "https://heygaia.io/terms",
-    images: ["/images/screenshot.webp"],
+    images: ["/landing/screenshot.webp"],
     siteName: "GAIA - AI Personal Assistant",
     type: "website",
   },
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: "Terms of Service",
     description:
       "Review GAIA's Terms of Service to understand your rights, responsibilities, and limitations while using our AI assistant api.",
-    images: ["/images/screenshot.webp"],
+    images: ["/landing/screenshot.webp"],
   },
   keywords: [
     "GAIA",

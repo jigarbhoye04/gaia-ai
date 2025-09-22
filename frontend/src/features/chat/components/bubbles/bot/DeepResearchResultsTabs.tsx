@@ -1,5 +1,4 @@
-import { Accordion, AccordionItem } from "@heroui/accordion";
-import { Tab, Tabs } from "@heroui/tabs";
+import { Accordion, AccordionItem, Tab, Tabs } from "@heroui/react";
 import { ExternalLinkIcon, LinkIcon, SearchIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";

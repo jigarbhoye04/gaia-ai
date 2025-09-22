@@ -1,10 +1,15 @@
 "use client";
 
-import { Badge } from "@heroui/badge";
 import { Button } from "@heroui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@heroui/popover";
-import { Tab, Tabs } from "@heroui/tabs";
-import { Tooltip } from "@heroui/tooltip";
+import {
+  Badge,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tab,
+  Tabs,
+  Tooltip,
+} from "@heroui/react";
 import { formatDistanceToNow } from "date-fns";
 import { CheckCheck } from "lucide-react";
 import { useRouter } from "next/navigation";

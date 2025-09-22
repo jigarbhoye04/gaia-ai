@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { useDisclosure } from "@heroui/react";
-import { Tooltip } from "@heroui/tooltip";
+import { useDisclosure } from "@heroui/modal";
+import { Tooltip } from "@heroui/react";
 
 import { HelpCircleIcon } from "@/components/shared/icons";
 import { ContactSupportModal } from "@/features/support";

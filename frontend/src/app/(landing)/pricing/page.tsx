@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     description:
       "Compare GAIA's pricing plans and find the best AI assistant plan for your needs. Choose between monthly and yearly subscriptions.",
     url: "https://heygaia.io/pricing",
-    images: ["/images/screenshot.webp"],
+    images: ["/landing/screenshot.webp"],
     siteName: "GAIA - AI Personal Assistant",
     type: "website",
   },
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: "Pricing",
     description:
       "Compare GAIA's pricing plans and find the best AI assistant plan for your needs. Choose between monthly and yearly subscriptions.",
-    images: ["/images/screenshot.webp"],
+    images: ["/landing/screenshot.webp"],
   },
   keywords: [
     "GAIA",

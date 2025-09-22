@@ -1,4 +1,4 @@
-import { Accordion, AccordionItem } from "@heroui/accordion";
+import { Accordion, AccordionItem } from "@heroui/react";
 import React, { useState } from "react";
 
 import CodeBlock from "@/features/chat/components/code-block/CodeBlock";

@@ -1,4 +1,4 @@
-import { Chip } from "@heroui/chip";
+import { Chip } from "@heroui/react";
 import { Eye, EyeOffIcon } from "lucide-react";
 
 import { isTooDark } from "@/features/calendar/utils/calendarUtils";

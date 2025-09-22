@@ -120,10 +120,22 @@ export function Safari({
         ) : null}
         {imageSrc && (
           <>
+            {/*
+          <svg>
+            <foreignObject x="1" y="52" width="1200" height="800">
+              <img
+                src={imageSrc}
+                // width="1200"
+                // height="800"
+                className="h-full w-full object-cover"
+                onLoad={handleImageLoad}
+              />
+            </foreignObject>
+          </svg> */}
             <image
               clipPath="url(#roundedBottom)"
               height="700"
-              href={`/_next/image?url=${encodeURIComponent(imageSrc)}&w=1452&h=860&q=75`}
+              href={imageSrc}
               preserveAspectRatio="xMidYMid slice"
               width="1200"
               x="1"

@@ -1,8 +1,15 @@
 import { Avatar } from "@heroui/avatar";
 import { Tooltip } from "@heroui/tooltip";
 
-import { Github, LinkedinIcon, TwitterIcon } from "@/components/shared/icons";
-import { Author } from "@/types";
+import { LinkedinIcon, TwitterIcon } from "@/components/shared/icons";
+
+export interface Author {
+  name: string;
+  avatar: string;
+  role: string;
+  linkedin?: string;
+  twitter?: string;
+}
 
 interface AuthorTooltipProps {
   author: Author;
@@ -46,12 +53,6 @@ export function AuthorTooltip({
                 rel="noopener noreferrer"
               >
                 <TwitterIcon width={20} height={20} />
-              </a>
-            )}
-
-            {author.github && (
-              <a href={author.github} target="_blank" rel="noopener noreferrer">
-                <Github width={20} height={20} />
               </a>
             )}
           </div>

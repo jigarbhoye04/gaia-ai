@@ -1,5 +1,4 @@
-import { Accordion, AccordionItem } from "@heroui/accordion";
-import { Switch } from "@heroui/switch";
+import { Accordion, AccordionItem, Switch } from "@heroui/react";
 import {
   CloudFog,
   HazeIcon,

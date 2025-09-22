@@ -1,5 +1,5 @@
 import { Chip } from "@heroui/chip";
-import { Tooltip } from "@heroui/tooltip";
+import { Tooltip } from "@heroui/react";
 
 import { formatToolName } from "@/features/chat/utils/chatUtils";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";

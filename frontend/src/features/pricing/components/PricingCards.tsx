@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@heroui/skeleton";
+import { Skeleton } from "@heroui/react";
 
 import type { Plan } from "../api/pricingApi";
 import { usePricing } from "../hooks/usePricing";

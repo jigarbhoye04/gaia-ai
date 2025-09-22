@@ -1,8 +1,6 @@
 import Link from "next/link";
 
-import { type Author } from "@/types";
-
-import { AuthorTooltip } from "./AuthorTooltip";
+import { type Author, AuthorTooltip } from "./AuthorTooltip";
 
 export interface Blog {
   slug: string;

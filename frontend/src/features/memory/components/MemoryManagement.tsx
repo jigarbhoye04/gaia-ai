@@ -1,7 +1,4 @@
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
-import { Pagination } from "@heroui/pagination";
-import { Tab, Tabs } from "@heroui/tabs";
+import { Button, Card, CardBody, Pagination, Tab, Tabs } from "@heroui/react";
 import { List, Network, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
@@ -220,7 +217,7 @@ export default function MemoryManagement({
         <div className="flex h-40 items-center justify-center">
           <Image
             alt="GAIA Logo"
-            src={"/images/logos/logo.webp"}
+            src={"/branding/logo.webp"}
             width={30}
             height={30}
             className={`animate-spin`}

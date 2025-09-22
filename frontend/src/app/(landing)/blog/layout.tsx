@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description:
       "Explore the latest posts from GAIA, the creators of the AI personal assistant",
     url: "https://heygaia.io/blog",
-    images: ["/images/screenshot.webp"],
+    images: ["/landing/screenshot.webp"],
     siteName: "GAIA - Your Personal Assistant",
     type: "website",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: "Blog",
     description:
       "Explore the latest posts from GAIA, the creators of the AI personal assistant",
-    images: ["/images/screenshot.webp"],
+    images: ["/landing/screenshot.webp"],
   },
 };
 
