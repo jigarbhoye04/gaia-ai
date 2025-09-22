@@ -66,18 +66,26 @@ def _extract_latest_user_text(chat_ctx: ChatContext) -> str:
 
 
 class CustomLLM(LLM):
-    def __init__(self, base_url: str, request_timeout_s: float = 60.0):
+    def __init__(self, base_url: str, request_timeout_s: float = 60.0, room=None):
         super().__init__()
         self.base_url = base_url
         self.agent_token: Optional[str] = None
         self.conversation_id: Optional[str] = None
         self.request_timeout_s = request_timeout_s
+        self.room = room  # LiveKit room instance
 
     def set_agent_token(self, token: Optional[str]):
         self.agent_token = token
 
-    def set_conversation_id(self, conversation_id: Optional[str]):
+    async def set_conversation_id(self, conversation_id: Optional[str]):
         self.conversation_id = conversation_id
+        if self.room and self.room.local_participant:
+            try:
+                await self.room.local_participant.send_text(
+                    conversation_id, topic="conversation-id"
+                )
+            except Exception as e:
+                print(f"Failed to send conversation ID: {e}")
 
     @asynccontextmanager
     async def chat(self, chat_ctx: ChatContext, **kwargs):
@@ -136,7 +144,7 @@ class CustomLLM(LLM):
 
                         conv_id = payload.get("conversation_id")
                         if isinstance(conv_id, str) and conv_id:
-                            self.set_conversation_id(conv_id)
+                            await self.set_conversation_id(conv_id)
                             continue  # skip control frames
 
                         piece = payload.get("response", "")
@@ -188,14 +196,14 @@ async def entrypoint(ctx: JobContext):
     ctx.log_context_fields = {"room": ctx.room.name}
 
     custom_llm = CustomLLM(
-        base_url=os.getenv("GAIA_BACKEND_URL", "http://localhost:8000")
+        base_url=os.getenv("GAIA_BACKEND_URL", "http://gaia-backend:80"), room=ctx.room
     )
 
     session = AgentSession(
         llm=custom_llm,
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=elevenlabs.TTS(
-            api_key="sk_0d1ffe9664112530bfe7f22d4e0284e0cabc2d94d403b3e5",
+            api_key="sk_76145b837f9efb97a42281363da477c2d2d08c3c58435bb5",
             voice_id="21m00Tcm4TlvDq8ikWAM",
             model=os.getenv("ELEVENLABS_TTS_MODEL", "eleven_turbo_v2_5"),
             voice_settings=elevenlabs.VoiceSettings(
@@ -231,30 +239,38 @@ async def entrypoint(ctx: JobContext):
     ctx.add_shutdown_callback(log_usage)
 
     # --- Register event listeners BEFORE connecting ---
-    def _maybe_set_from_md(md: Optional[str], origin: str, who: str):
+    async def _maybe_set_from_md(md: Optional[str], origin: str, who: str):
         tok, conv_id = _extract_meta_data(md)
-        print(tok)
-        print("tokk")
         if tok:
             custom_llm.set_agent_token(tok)
         if conv_id:
-            custom_llm.set_conversation_id(conv_id)
+            await custom_llm.set_conversation_id(conv_id)
+
+    background_tasks = set()
 
     @ctx.room.on("participant_connected")
     def _on_participant_connected(p: rtc.RemoteParticipant):
         logger.info("ddd")
-        _maybe_set_from_md(
-            getattr(p, "metadata", None), "participant_connected", p.identity
+        task = asyncio.create_task(
+            _maybe_set_from_md(
+                getattr(p, "metadata", None), "participant_connected", p.identity
+            )
         )
+        background_tasks.add(task)
+        task.add_done_callback(background_tasks.discard)
 
     @ctx.room.on("participant_metadata_changed")
     def _on_participant_metadata_changed(p: rtc.Participant, old_md: str, new_md: str):
-        _maybe_set_from_md(new_md, "participant_metadata_changed", p.identity)
+        task = asyncio.create_task(
+            _maybe_set_from_md(new_md, "participant_metadata_changed", p.identity)
+        )
+        background_tasks.add(task)
+        task.add_done_callback(background_tasks.discard)
 
     await ctx.connect()
     for p in ctx.room.remote_participants.values():
         logger.info("participant already present, processing metadata")
-        _maybe_set_from_md(
+        await _maybe_set_from_md(
             getattr(p, "metadata", None), "existing_participant", p.identity
         )
 

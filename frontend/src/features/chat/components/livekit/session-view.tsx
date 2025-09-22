@@ -1,7 +1,4 @@
-"use client";
-
 import React, { useEffect, useState } from "react";
-import { motion } from "motion/react";
 import {
   type AgentState,
   useRoomContext,
@@ -13,8 +10,8 @@ import { MediaTiles } from "@/features/chat/components/livekit/media-tiles";
 import useChatAndTranscription from "@/features/chat/components/livekit/hooks/useChatAndTranscription";
 import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
 import { useConversation } from "@/features/chat/hooks/useConversation";
-import type { MessageType } from "@/types/features/convoTypes";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 function isAgentAvailable(agentState: AgentState) {
   return (
@@ -41,28 +38,61 @@ export const SessionView = ({
   const { messages } = useChatAndTranscription();
   const room = useRoomContext();
   const { updateConvoMessages } = useConversation();
-  const [voiceBuffer, setVoiceBuffer] = useState<MessageType[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const router = useRouter();
 
-  // Buffer voice messages locally, do not update Redux on every message
   useEffect(() => {
-    if (messages && messages.length > 0) {
-      setVoiceBuffer(messages);
+    if (!room) {
+      return;
     }
-    console.log(messages);
-  }, [messages]);
 
-  // Handler to persist buffered messages to Redux when call ends
+    const conversationIdHandler = (reader: any) => {
+      if (reader.info.topic === "conversation-id") {
+        const handleStream = async () => {
+          try {
+            const text = await reader.readAll();
+            setConversationId(text);
+            console.log(`Received conversation ID via text stream: ${text}`);
+          } catch (err) {
+            console.error("Failed to read text stream:", err);
+          }
+        };
+        handleStream();
+      }
+    };
+
+    const registerHandler = () => {
+      room.registerTextStreamHandler("conversation-id", conversationIdHandler);
+      console.log("Registered conversation-id text stream handler.");
+    };
+
+    room.on("connected", registerHandler);
+
+    if (room.state === "connected") {
+      registerHandler();
+    }
+
+    return () => {
+      room.off("connected", registerHandler);
+    };
+  }, [room]);
+
   const handleEndCall = React.useCallback(() => {
     updateConvoMessages((oldMessages) => {
-      const allMessages = [...oldMessages, ...voiceBuffer];
+      const allMessages = [...oldMessages, ...messages];
       const uniqueMessagesMap = new Map();
       for (const msg of allMessages) {
         uniqueMessagesMap.set(msg.message_id, msg);
       }
       return Array.from(uniqueMessagesMap.values());
     });
+    if (conversationId) {
+      router.push(`/c/${conversationId}`);
+    } else {
+      console.log("No conversationId found, staying on current page.");
+    }
     onEndCall();
-  }, [voiceBuffer, updateConvoMessages, onEndCall]);
+  }, [updateConvoMessages, onEndCall, conversationId, router, messages]);
 
   useEffect(() => {
     if (sessionStarted) {
@@ -74,7 +104,9 @@ export const SessionView = ({
               : "Agent connected but did not complete initializing. ";
 
           toast.error(`Session ended: ${reason}`);
-          room.disconnect();
+          if (room) {
+            room.disconnect();
+          }
         }
       }, 10_000);
 
