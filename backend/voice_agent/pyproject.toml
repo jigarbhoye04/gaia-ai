@@ -10,13 +10,12 @@ requires-python = ">=3.11"
 license = { text = "MIT" }
 
 dependencies = [
+    "livekit==1.0.12",
     "livekit-agents[turn-detector,silero,deepgram]~=1.2",
     "livekit-plugins-noise-cancellation~=0.2",
-    "livekit-plugins-elevenlabs~=0.1",
+    "livekit-plugins-elevenlabs~=1.2",
     "python-dotenv",
     "aiohttp",
-    "uvicorn",
-    "pydantic"
 ]
 
 [dependency-groups]
@@ -38,11 +37,11 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 88
-target-version = "py311"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "B", "A", "C4", "UP", "SIM", "RUF"]
-ignore = ["E501"]
+ignore = ["E501"]  # Line too long (handled by formatter)
 
 [tool.ruff.format]
 quote-style = "double"

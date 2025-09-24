@@ -1,57 +1,43 @@
-# ---- Base Stage: Contains system dependencies ----
-FROM python:3.12-slim AS base
-WORKDIR /app
-ENV UV_HTTP_TIMEOUT=600
+# syntax=docker/dockerfile:1
 
-# Copy uv installer
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+ARG PYTHON_VERSION=3.11
+# Fast Python builds using uv on Debian bookworm-slim
+FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS base
 
-# Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    build-essential \
-    libnss3 libatk1.0-0 libx11-xcb1 libxcb-dri3-0 \
-    libdrm2 libxcomposite1 libxdamage1 libxrandr2 \
-    libgbm1 libasound2 curl unzip libdbus-1-3 && \
-    rm -rf /var/lib/apt/lists/*
+ARG UID=10001
 
-# ---- Dependency Stage: Install dependencies ----
-FROM base AS dependencies
-WORKDIR /app
+# Ensures that logs are captured in realtime
+ENV PYTHONUNBUFFERED=1
 
-# Copy dependency files
-COPY pyproject.toml .
-COPY src ./
-# It's better to have a dedicated pyproject.toml for the voice agent
-# Or, if you use a single one, ensure it's configured for the agent's needs.
-RUN uv venv
-ENV VIRTUAL_ENV=/app/.venv
-ENV PATH="/app/.venv/bin:$PATH"
-# Install dependencies, including ElevenLabs
-RUN uv pip install --no-cache-dir \
-    livekit-agents[turn-detector,silero,deepgram,elevenlabs]~=1.2 \
-    livekit-plugins-noise-cancellation~=0.2 \
-    python-dotenv \
-    # Add any other missing dependencies here if needed
-    && rm -rf /root/.cache/pip
+# Create unprivileged user
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/app" \
+    --shell "/sbin/nologin" \
+    --uid "${UID}" \
+    appuser
 
-# ---- Final Stage: Setup application for production ----
-FROM dependencies AS final
+# System build deps for common Python wheels
+RUN apt-get update && apt-get install -y \
+    gcc \
+    python3-dev \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Setup non-root user and permissions
-RUN adduser --disabled-password --gecos '' appuser \
-    && mkdir -p /home/appuser/.cache \
-    && chown -R appuser:appuser /home/appuser
+# Dependency install first for better caching
+COPY pyproject.toml uv.lock ./
+RUN mkdir -p src
+RUN uv sync --locked
 
-# Copy application code with proper ownership
-COPY --chown=appuser:appuser . .
-
+# Copy application code
+COPY . .
+RUN chown -R appuser:appuser /app
 USER appuser
 
 # Pre-download models/assets at build time
-# Replace 'app.voice_agent' with the actual path to your main voice agent script
-RUN python -m src.voice_agent download-files
+RUN uv run src/voice_agent.py download-files
 
 # Start the agent
-CMD ["python", "-m", "src.voice_agent", "dev"]
+CMD ["uv", "run", "src/voice_agent.py", "dev"]

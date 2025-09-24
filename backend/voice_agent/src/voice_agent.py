@@ -27,7 +27,7 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 logger = logging.getLogger("agent")
 logging.basicConfig(level=logging.INFO)
-load_dotenv(".env.local")
+load_dotenv(".env")
 
 
 def _extract_meta_data(md: Optional[str]) -> tuple[Optional[str], Optional[str]]:
@@ -203,8 +203,8 @@ async def entrypoint(ctx: JobContext):
         llm=custom_llm,
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=elevenlabs.TTS(
-            api_key="sk_76145b837f9efb97a42281363da477c2d2d08c3c58435bb5",
-            voice_id="21m00Tcm4TlvDq8ikWAM",
+            api_key=os.getenv("ELEVENLABS_API_KEY"),
+            voice_id=os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM"),
             model=os.getenv("ELEVENLABS_TTS_MODEL", "eleven_turbo_v2_5"),
             voice_settings=elevenlabs.VoiceSettings(
                 stability=0.0,
