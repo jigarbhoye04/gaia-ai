@@ -5,16 +5,15 @@ This module provides functionality to trim messages from the conversation
 state based on token limits while preserving context and conversation flow.
 """
 
-from typing import Any, Dict
-
 from app.config.loggers import chat_logger as logger
 from app.langchain.llm.token_counter import get_token_counter
 from langchain_core.messages import trim_messages
 from langchain_core.runnables import RunnableConfig
 from langgraph.store.base import BaseStore
+from langgraph_bigtool.graph import State
 
 
-def trim_messages_node(state: Dict[str, Any], config: RunnableConfig, store: BaseStore):
+def trim_messages_node(state: State, config: RunnableConfig, store: BaseStore) -> State:
     """
     Trim messages from the conversation state based on token limits.
 
@@ -45,13 +44,12 @@ def trim_messages_node(state: Dict[str, Any], config: RunnableConfig, store: Bas
 
         # Skip if insufficient messages to process
         if not messages or len(messages) < 2:
-            return {}
+            return state
 
         # Extract model configuration from runnable config
         model_configurations = config.get("configurable", {}).get(
             "model_configurations", {}
         )
-        model_name = model_configurations.get("model_name", "gpt-4o-mini")
         provider = model_configurations.get("provider", None)
         max_tokens = model_configurations.get("max_tokens", None)
 
@@ -62,11 +60,11 @@ def trim_messages_node(state: Dict[str, Any], config: RunnableConfig, store: Bas
             include_system=False,  # Preserve system messages
             max_tokens=max_tokens,
             allow_partial=True,  # Allow partial message trimming
-            token_counter=get_token_counter(provider, model_name),
+            token_counter=get_token_counter(provider),
         )
 
-        return trimmed_messages
+        return {**state, "messages": trimmed_messages}
 
     except Exception as e:
         logger.error(f"Error in trim messages node: {e}")
-        return {}
+        return state

@@ -1,3 +1,14 @@
+"""
+Infisical secrets management for Gaia production environments.
+
+Infisical streamlines environment variable sharing within the Gaia team for
+production and staging deployments. Not required for self-hosting or
+contributor development - use local .env files and refer to the docs
+configuration section instead.
+
+Local environment variables take precedence over Infisical secrets.
+"""
+
 import os
 import time
 
@@ -5,6 +16,9 @@ from app.config.loggers import app_logger as logger
 from app.utils.exceptions import InfisicalConfigError
 
 from infisical_sdk import InfisicalSDKClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def inject_infisical_secrets():
@@ -14,30 +28,34 @@ def inject_infisical_secrets():
     CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
     CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
 
-    if not INFISICAL_TOKEN:
-        raise InfisicalConfigError(
-            "INFISICAL_TOKEN is missing. This is required for secrets management."
-        )
-    elif not INFISICAL_PROJECT_ID:
-        raise InfisicalConfigError(
-            "INFISICAL_PROJECT_ID is missing. This is required for secrets management."
-        )
+    is_production = ENV == "production"
 
-    elif not CLIENT_ID:
-        raise InfisicalConfigError(
-            "INFISICAL_MACHINE_INDENTITY_CLIENT_ID is missing. This is required for secrets management."
-        )
+    missing_configs = [
+        (INFISICAL_TOKEN, "INFISICAL_TOKEN"),
+        (INFISICAL_PROJECT_ID, "INFISICAL_PROJECT_ID"),
+        (CLIENT_ID, "INFISICAL_MACHINE_INDENTITY_CLIENT_ID"),
+        (CLIENT_SECRET, "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET"),
+    ]
 
-    elif not CLIENT_SECRET:
-        raise InfisicalConfigError(
-            "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET is missing. This is required for secrets management."
-        )
+    for config_value, config_name in missing_configs:
+        if not config_value:
+            message = (
+                f"{config_name} is missing. This is required for secrets management."
+            )
+            if is_production:
+                raise InfisicalConfigError(message)
+            else:
+                logger.warning(f"Development environment: {message}")
+                return
 
     try:
         start_time = time.time()
         logger.info("Connecting to Infisical...")
 
-        client = InfisicalSDKClient(host="https://app.infisical.com")
+        client = InfisicalSDKClient(
+            host="https://app.infisical.com",
+            cache_ttl=3600,
+        )
         client.auth.universal_auth.login(
             client_id=CLIENT_ID,
             client_secret=CLIENT_SECRET,

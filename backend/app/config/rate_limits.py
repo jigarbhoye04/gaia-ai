@@ -33,7 +33,6 @@ class RateLimitPeriod(str, Enum):
 class RateLimitConfig(BaseModel):
     day: int = 0
     month: int = 0
-    tokens_per_request: int = 0
 
 
 class FeatureInfo(BaseModel):
@@ -103,6 +102,14 @@ FEATURE_LIMITS: Dict[str, TieredRateLimits] = {
         info=FeatureInfo(
             title="Workflow Operations",
             description="Create, execute, and manage AI workflows",
+        ),
+    ),
+    "email_workflow_executions": TieredRateLimits(
+        free=RateLimitConfig(day=10, month=100),
+        pro=RateLimitConfig(day=500, month=5000),
+        info=FeatureInfo(
+            title="Email Workflow Executions",
+            description="Automated workflow executions triggered by incoming emails",
         ),
     ),
     "web_search": TieredRateLimits(
@@ -185,6 +192,13 @@ FEATURE_LIMITS: Dict[str, TieredRateLimits] = {
         pro=RateLimitConfig(day=5000, month=125000),
         info=FeatureInfo(
             title="Chat Messages", description="Send messages to AI assistants"
+        ),
+    ),
+    "notification_operations": TieredRateLimits(
+        free=RateLimitConfig(day=200, month=50000),
+        pro=RateLimitConfig(day=10000, month=1000000),
+        info=FeatureInfo(
+            title="Notification Operations", description="Manage user notifications"
         ),
     ),
 }
