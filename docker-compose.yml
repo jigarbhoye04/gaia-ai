@@ -226,7 +226,7 @@ services:
     working_dir: /app
     user: "appuser"
     command: >
-      python -m src.voice_agent dev
+      uv run -m src.voice_agent dev
     environment:
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
