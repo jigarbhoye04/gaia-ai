@@ -223,7 +223,7 @@ async def execute_graph_streaming(
             chunk, metadata = payload
             if chunk and isinstance(chunk, AIMessageChunk):
                 # Skip silent chunks (e.g. follow-up actions generation)
-                if metadata.get("silence"):
+                if metadata.get("silent"):
                     continue
 
                 content = str(chunk.content)
