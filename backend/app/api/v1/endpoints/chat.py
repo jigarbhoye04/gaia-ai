@@ -163,6 +163,5 @@ def get_token(
         "participantToken": at.to_jwt(),
         "participantIdentity": identity,
         "participantName": display_name,
-        "agentToken": agent_jwt,
         "conversation_id": conversationId
     }
