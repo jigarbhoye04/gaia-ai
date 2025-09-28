@@ -46,12 +46,12 @@ class CheckpointerManager:
         else:
             self.checkpointer = AsyncPostgresSaver(conn=self.pool)  # type: ignore
 
-        try:
-            await self.checkpointer.setup()
-        except Exception as e:
-            print(f"Error setting up checkpointer: {e}")
-            await self.close()
-            raise e
+        # try:
+        #     await self.checkpointer.setup()
+        # except Exception as e:
+        #     print(f"Error setting up checkpointer: {e}")
+        #     await self.close()
+        #     raise e
         return self
 
     async def close(self):

@@ -100,6 +100,16 @@ class CommonSettings(BaseAppSettings):
         """WorkOS OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/workos/callback"
 
+    # LIVEKIT Configuration
+    LIVEKIT_URL: str 
+    LIVEKIT_API_KEY: str 
+    LIVEKIT_API_SECRET: str 
+    DEEPGRAM_API_KEY: str 
+    ELEVEN_API_KEY: str
+    ELEVENLABS_TTS_MODEL: str 
+    ELEVENLABS_VOICE_ID: str 
+    AGENT_SECRET: str
+    
     @computed_field  # type: ignore
     @property
     def COMPOSIO_REDIRECT_URI(self) -> str:

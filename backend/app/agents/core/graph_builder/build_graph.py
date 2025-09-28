@@ -60,10 +60,14 @@ async def build_graph(
         ],
     )
 
-    checkpointer_manager = await get_checkpointer_manager()
+    # Force in-memory checkpointer for development to avoid PostgreSQL schema issues
+    from app.config.settings import settings
+    use_in_memory = settings.ENV == "development" or in_memory_checkpointer
+    
+    checkpointer_manager = None if use_in_memory else await get_checkpointer_manager()
 
     if (
-        in_memory_checkpointer or not checkpointer_manager
+        use_in_memory or not checkpointer_manager
     ):  # Use in-memory checkpointer for testing or simple use cases
         in_memory_checkpointer_instance = InMemorySaver()
         # Setup the checkpointer
