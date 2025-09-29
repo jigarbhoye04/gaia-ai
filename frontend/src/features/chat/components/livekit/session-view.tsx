@@ -1,18 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
 import {
   type AgentState,
   useRoomContext,
   useVoiceAssistant,
 } from "@livekit/components-react";
 import { type TextStreamReader } from "livekit-client";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
 import { AgentControlBar } from "@/features/chat/components/livekit/agent-control-bar";
 import useChatAndTranscription from "@/features/chat/components/livekit/hooks/useChatAndTranscription";
 import { MediaTiles } from "@/features/chat/components/livekit/media-tiles";
-import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { cn } from "@/lib/utils";
 

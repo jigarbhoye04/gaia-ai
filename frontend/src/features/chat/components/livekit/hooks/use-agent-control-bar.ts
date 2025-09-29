@@ -1,5 +1,3 @@
-import * as React from "react";
-
 import {
   type TrackReferenceOrPlaceholder,
   useLocalParticipant,
@@ -8,6 +6,7 @@ import {
   useTrackToggle,
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
+import * as React from "react";
 
 import { usePublishPermissions } from "./use-publish-permissions";
 

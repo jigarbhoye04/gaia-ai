@@ -1,5 +1,3 @@
-import { useMemo } from "react";
-
 import {
   type ReceivedChatMessage,
   type TextStreamData,
@@ -7,6 +5,7 @@ import {
   useRoomContext,
   useTranscriptions,
 } from "@livekit/components-react";
+import { useMemo } from "react";
 
 import { transcriptionToChatMessage } from "@/features/chat/components/livekit/lib/utils";
 import type { MessageType } from "@/types/features/convoTypes";

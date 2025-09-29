@@ -1,8 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
-
 import {
   RoomAudioRenderer,
   RoomContext,
@@ -10,6 +7,8 @@ import {
 } from "@livekit/components-react";
 import { Room } from "livekit-client";
 import { motion } from "motion/react";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import useConnectionDetails from "@/features/chat/components/livekit/hooks/useConnectionDetails";

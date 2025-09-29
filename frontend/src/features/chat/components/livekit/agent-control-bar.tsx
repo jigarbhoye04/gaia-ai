@@ -1,15 +1,14 @@
 "use client";
 
-import * as React from "react";
-
 import { useRemoteParticipants } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { MessageCircle, PhoneOff } from "lucide-react";
+import * as React from "react";
 
 import { Button } from "@/components/ui/shadcn/button";
 import {
-  UseAgentControlBarProps,
   useAgentControlBar,
+  UseAgentControlBarProps,
 } from "@/features/chat/components/livekit/hooks/use-agent-control-bar";
 import { TrackToggle } from "@/features/chat/components/livekit/track-toggle";
 import { cn } from "@/lib/utils";

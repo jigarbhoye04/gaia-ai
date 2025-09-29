@@ -1,5 +1,3 @@
-import React, { useMemo } from "react";
-
 import {
   type TrackReference,
   useLocalParticipant,
@@ -7,6 +5,7 @@ import {
 } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { AnimatePresence, motion } from "motion/react";
+import React, { useMemo } from "react";
 
 import { cn } from "@/lib/utils";
 
