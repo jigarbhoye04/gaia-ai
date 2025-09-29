@@ -266,7 +266,6 @@ class DevelopmentSettings(CommonSettings):
 
     # Media & Content Processing
     ASSEMBLYAI_API_KEY: Optional[str] = None
-    DEEPGRAM_API_KEY: Optional[str] = None
 
     # Weather Services
     OPENWEATHER_API_KEY: Optional[str] = None

@@ -1,23 +1,25 @@
 "use client";
 
 import * as React from "react";
-import { Track } from "livekit-client";
+
 import { useRemoteParticipants } from "@livekit/components-react";
+import { Track } from "livekit-client";
 import { MessageCircle, PhoneOff } from "lucide-react";
+
 import { Button } from "@/components/ui/shadcn/button";
-import { cn } from "@/lib/utils";
-import { TrackToggle } from "@/features/chat/components/livekit/track-toggle";
 import {
   UseAgentControlBarProps,
   useAgentControlBar,
 } from "@/features/chat/components/livekit/hooks/use-agent-control-bar";
+import { TrackToggle } from "@/features/chat/components/livekit/track-toggle";
+import { cn } from "@/lib/utils";
 
 export interface AgentControlBarProps
   extends React.HTMLAttributes<HTMLDivElement>,
     UseAgentControlBarProps {
   onChatOpenChange?: (open: boolean) => void;
   onDisconnect?: () => void;
-  onDeviceError?: (error: { source: Track.Source; error: Error }) => void;
+  _onDeviceError?: (error: { source: Track.Source; error: Error }) => void;
 }
 
 /**
@@ -29,7 +31,7 @@ export function AgentControlBar({
   className,
   onChatOpenChange,
   onDisconnect,
-  onDeviceError,
+  _onDeviceError,
   ...props
 }: AgentControlBarProps) {
   const participants = useRemoteParticipants();
@@ -78,7 +80,7 @@ export function AgentControlBar({
             disabled={!isAgentAvailable}
             className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-700/20 shadow-md transition-colors hover:bg-gray-700/30 active:bg-gray-700/30"
           >
-            <MessageCircle className="!w-6 !h-6 text-white" />
+            <MessageCircle className="!h-6 !w-6 text-white" />
           </Button>
         </div>
 
@@ -89,7 +91,7 @@ export function AgentControlBar({
               disabled={isDisconnecting}
               className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 shadow-md transition-colors hover:bg-red-500/15 active:bg-red-500/20"
             >
-              <PhoneOff className="!w-6 !h-6 text-red-400" />
+              <PhoneOff className="!h-6 !w-6 text-red-400" />
             </Button>
           </div>
         )}

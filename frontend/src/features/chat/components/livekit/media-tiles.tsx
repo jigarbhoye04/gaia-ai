@@ -1,12 +1,15 @@
 import React, { useMemo } from "react";
-import { Track } from "livekit-client";
-import { AnimatePresence, motion } from "motion/react";
+
 import {
   type TrackReference,
   useLocalParticipant,
   useVoiceAssistant,
 } from "@livekit/components-react";
+import { Track } from "livekit-client";
+import { AnimatePresence, motion } from "motion/react";
+
 import { cn } from "@/lib/utils";
+
 import { AgentTile } from "./agent-tile";
 
 const MotionAgentTile = motion.create(AgentTile);
@@ -25,7 +28,7 @@ const animationProps = {
     scale: 0,
   },
   transition: {
-    type: "spring",
+    type: "spring" as const,
     stiffness: 675,
     damping: 75,
     mass: 1,
@@ -87,7 +90,7 @@ export function MediaTiles({ chatOpen }: MediaTilesProps) {
   const agentAnimate = {
     ...animationProps.animate,
     scale: chatOpen ? 1 : 3,
-    transition,
+    transition: transition,
   };
 
   const agentLayoutTransition = transition;

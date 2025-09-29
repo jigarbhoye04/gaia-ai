@@ -1,13 +1,15 @@
-import * as React from 'react';
-import { Track } from 'livekit-client';
+import * as React from "react";
+
 import {
   type TrackReferenceOrPlaceholder,
   useLocalParticipant,
   usePersistentUserChoices,
   useRoomContext,
   useTrackToggle,
-} from '@livekit/components-react';
-import { usePublishPermissions } from './use-publish-permissions';
+} from "@livekit/components-react";
+import { Track } from "livekit-client";
+
+import { usePublishPermissions } from "./use-publish-permissions";
 
 export interface ControlBarControls {
   microphone?: boolean;
@@ -29,7 +31,9 @@ export interface UseAgentControlBarReturn {
   handleAudioDeviceChange: (deviceId: string) => void;
 }
 
-export function useAgentControlBar(props: UseAgentControlBarProps = {}): UseAgentControlBarReturn {
+export function useAgentControlBar(
+  props: UseAgentControlBarProps = {},
+): UseAgentControlBarReturn {
   const { controls, saveUserChoices = true } = props;
   const visibleControls = {
     leave: true,
@@ -41,7 +45,8 @@ export function useAgentControlBar(props: UseAgentControlBarProps = {}): UseAgen
 
   const microphoneToggle = useTrackToggle({
     source: Track.Source.Microphone,
-    onDeviceError: (error) => props.onDeviceError?.({ source: Track.Source.Microphone, error }),
+    onDeviceError: (error) =>
+      props.onDeviceError?.({ source: Track.Source.Microphone, error }),
   });
 
   const micTrackRef = React.useMemo(() => {
@@ -55,12 +60,10 @@ export function useAgentControlBar(props: UseAgentControlBarProps = {}): UseAgen
   visibleControls.microphone ??= publishPermissions.microphone;
   visibleControls.chat ??= publishPermissions.data;
 
-  const {
-    saveAudioInputEnabled,
-    saveAudioInputDeviceId,
-  } = usePersistentUserChoices({
-    preventSave: !saveUserChoices,
-  });
+  const { saveAudioInputEnabled, saveAudioInputDeviceId } =
+    usePersistentUserChoices({
+      preventSave: !saveUserChoices,
+    });
 
   const handleDisconnect = React.useCallback(async () => {
     if (room) {
@@ -70,9 +73,9 @@ export function useAgentControlBar(props: UseAgentControlBarProps = {}): UseAgen
 
   const handleAudioDeviceChange = React.useCallback(
     (deviceId: string) => {
-      saveAudioInputDeviceId(deviceId ?? 'default');
+      saveAudioInputDeviceId(deviceId ?? "default");
     },
-    [saveAudioInputDeviceId]
+    [saveAudioInputDeviceId],
   );
 
   const handleToggleMicrophone = React.useCallback(
@@ -81,7 +84,7 @@ export function useAgentControlBar(props: UseAgentControlBarProps = {}): UseAgen
       // persist audio input enabled preference
       saveAudioInputEnabled(!microphoneToggle.enabled);
     },
-    [microphoneToggle.enabled]
+    [microphoneToggle.toggle, microphoneToggle.enabled, saveAudioInputEnabled],
   );
 
   return {

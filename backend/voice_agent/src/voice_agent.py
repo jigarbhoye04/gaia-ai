@@ -117,7 +117,7 @@ class CustomLLM(LLM):
                 ) as resp:
                     resp.raise_for_status()
 
-                    buf = []
+                    buf: list[str] = []
 
                     async for raw in resp.content:
                         if not raw:

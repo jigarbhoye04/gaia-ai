@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+
 import { apiService } from "@/lib/api";
 
 function decodeJwtPayload(token: string) {
@@ -48,7 +49,7 @@ export default function useConnectionDetails(
       console.error("Error fetching connection details:", error);
       throw new Error("Error fetching connection details!");
     }
-  }, []);
+  }, [conversationId]);
 
   useEffect(() => {
     fetchConnectionDetails();

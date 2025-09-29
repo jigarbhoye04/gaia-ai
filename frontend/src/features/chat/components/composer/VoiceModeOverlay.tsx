@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Room } from "livekit-client";
-import { motion } from "motion/react";
+import { usePathname } from "next/navigation";
+
 import {
   RoomAudioRenderer,
   RoomContext,
   StartAudio,
 } from "@livekit/components-react";
-import { SessionView } from "@/features/chat/components/livekit/session-view";
+import { Room } from "livekit-client";
+import { motion } from "motion/react";
 import { toast } from "sonner";
+
 import useConnectionDetails from "@/features/chat/components/livekit/hooks/useConnectionDetails";
-import { usePathname } from "next/navigation";
+import { SessionView } from "@/features/chat/components/livekit/session-view";
 const MotionSessionView = motion.create(SessionView);
 
 interface AppProps {
