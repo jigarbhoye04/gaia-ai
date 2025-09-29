@@ -151,7 +151,13 @@ class CustomLLM(LLM):
                         if not piece:
                             continue
 
-                        buf.append(piece)
+                        # Ensure only strings are appended to buf
+                        if isinstance(piece, str):
+                            buf.append(piece)
+                        elif isinstance(piece, (list, tuple, set)):
+                            buf.append("".join(str(x) for x in piece))
+                        else:
+                            buf.append(str(piece))
                         joined = "".join(buf)
 
                         # --- Improved flush strategy ---
