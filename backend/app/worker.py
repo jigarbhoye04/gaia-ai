@@ -14,12 +14,14 @@ from app.workers.tasks import (
     process_gmail_emails_to_memory,
     process_reminder,
     process_workflow_generation_task,
+    process_email_task,
     store_memories_batch,
 )
 
 # Configure the worker settings with all task functions and lifecycle hooks
 WorkerSettings.functions = [
     process_reminder,
+    process_email_task,
     cleanup_expired_reminders,
     check_inactive_users,
     process_workflow_generation_task,
