@@ -110,7 +110,6 @@ dependencies = [
   "fastapi-cache2[redis]>=0.1.8",
   "ujson>=5.11.0",
   "livekit-api",
-  "uvloop>=0.21.0",
   "mem0ai>=0.1.118",
 ]
 

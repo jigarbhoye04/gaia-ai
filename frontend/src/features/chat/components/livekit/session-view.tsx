@@ -64,6 +64,11 @@ export const SessionView = ({
     };
 
     const registerHandler = () => {
+      try {
+        room.unregisterTextStreamHandler("conversation-id");
+      } catch (err) {
+      }
+
       room.registerTextStreamHandler("conversation-id", conversationIdHandler);
       console.log("Registered conversation-id text stream handler.");
     };
@@ -76,6 +81,11 @@ export const SessionView = ({
 
     return () => {
       room.off("connected", registerHandler);
+      try {
+        room.unregisterTextStreamHandler("conversation-id");
+      } catch (err) {
+        // Ignore error if no handler was registered
+      }
     };
   }, [room]);
 
@@ -126,7 +136,7 @@ export const SessionView = ({
         <div
           className={cn(
             "flex flex-shrink-0 items-center justify-center overflow-hidden px-4",
-            chatOpen ? "h-16" : "flex-1",
+            chatOpen ? "h-20" : "flex-1",
           )}
         >
           <MediaTiles chatOpen={chatOpen} />
@@ -138,11 +148,8 @@ export const SessionView = ({
               className={cn(
                 "scrollbar-hide flex-1 overflow-y-auto px-4",
                 "scroll-smooth",
+                "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
               )}
-              style={{
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
             >
               <div className="mx-auto max-w-[62rem]">
                 <ChatRenderer convoMessages={messages} />

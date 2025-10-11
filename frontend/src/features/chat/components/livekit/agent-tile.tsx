@@ -1,16 +1,32 @@
 import {
-  type AgentState,
-  BarVisualizer,
+  type AgentState as LivekitAgentState,
   type TrackReference,
 } from "@livekit/components-react";
-
+import {
+  Orb,
+  type AgentState as OrbAgentState,
+} from "@/components/ui/elevenlabs-ui/orb";
 import { cn } from "@/lib/utils";
+import { useAudioVolume } from "./hooks/useAudioVolume";
 
 interface AgentAudioTileProps {
-  state: AgentState;
+  state: LivekitAgentState;
   audioTrack: TrackReference;
   className?: string;
 }
+
+const mapAgentState = (livekitState: LivekitAgentState): OrbAgentState => {
+  switch (livekitState) {
+    case "listening":
+      return "listening";
+    case "thinking":
+      return "thinking";
+    case "speaking":
+      return "talking";
+    default:
+      return null;
+  }
+};
 
 export const AgentTile = ({
   state,
@@ -18,25 +34,23 @@ export const AgentTile = ({
   className,
   ref,
 }: React.ComponentProps<"div"> & AgentAudioTileProps) => {
+  const { getInputVolume, getOutputVolume } = useAudioVolume(audioTrack);
+  const orbState = mapAgentState(state);
+
   return (
-    <div ref={ref} className={cn(className)}>
-      <BarVisualizer
-        barCount={5}
-        state={state}
-        options={{ minHeight: 5 }}
-        trackRef={audioTrack}
-        className={cn(
-          "flex aspect-video w-40 items-center justify-center gap-1",
-        )}
-      >
-        <span
-          className={cn([
-            "bg-muted min-h-4 w-4 rounded-full",
-            "origin-center transition-colors duration-250 ease-linear",
-            "data-[lk-muted=true]:bg-muted data-[lk-highlighted=true]:bg-foreground",
-          ])}
+    <div
+      ref={ref}
+      className={cn("relative flex items-center justify-center", className)}
+    >
+      <div className="relative aspect-square w-full max-w-[200px]">
+        <Orb
+          colors={["#CADCFC", "#A0B9D1"]}
+          agentState={orbState}
+          getInputVolume={getInputVolume}
+          getOutputVolume={getOutputVolume}
+          volumeMode="manual"
         />
-      </BarVisualizer>
+      </div>
     </div>
   );
 };

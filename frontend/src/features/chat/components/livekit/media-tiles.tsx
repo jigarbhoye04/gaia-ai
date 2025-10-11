@@ -1,78 +1,11 @@
-import {
-  type TrackReference,
-  useLocalParticipant,
-  useVoiceAssistant,
-} from "@livekit/components-react";
-import { Track } from "livekit-client";
+import { useVoiceAssistant } from "@livekit/components-react";
 import { AnimatePresence, motion } from "motion/react";
-import React, { useMemo } from "react";
-
+import React from "react";
 import { cn } from "@/lib/utils";
-
 import { AgentTile } from "./agent-tile";
-
+import { BarVisualizer } from "@/components/ui/elevenlabs-ui/bar-visualizer";
+import { useAgentControlBar } from "./hooks/use-agent-control-bar";
 const MotionAgentTile = motion.create(AgentTile);
-
-const animationProps = {
-  initial: {
-    opacity: 0,
-    scale: 0,
-  },
-  animate: {
-    opacity: 1,
-    scale: 1,
-  },
-  exit: {
-    opacity: 0,
-    scale: 0,
-  },
-  transition: {
-    type: "spring" as const,
-    stiffness: 675,
-    damping: 75,
-    mass: 1,
-  },
-};
-
-const classNames = {
-  grid: [
-    "h-full w-full",
-    "grid gap-x-2 place-content-center",
-    "grid-cols-[1fr_1fr] grid-rows-[90px_1fr_90px]",
-  ],
-  // Agent
-  // chatOpen: true,
-  // hasSecondTile: false
-  // layout: Column 1 / Row 1 / Column-Span 2
-  // align: x-center y-center
-  agentChatOpen: [
-    "col-start-1 row-start-2",
-    "col-span-2",
-    "place-content-center",
-  ],
-  // Agent
-  // chatOpen: false
-  // layout: Column 1 / Row 1 / Column-Span 2 / Row-Span 3
-  // align: x-center y-center
-  agentChatClosed: [
-    "col-start-1 row-start-1",
-    "col-span-2 row-span-3",
-    "place-content-center",
-  ],
-};
-
-export function useLocalTrackRef(source: Track.Source) {
-  const { localParticipant } = useLocalParticipant();
-  const publication = localParticipant.getTrackPublication(source);
-  const trackRef = useMemo<TrackReference | undefined>(
-    () =>
-      publication
-        ? { source, participant: localParticipant, publication }
-        : undefined,
-    [source, publication, localParticipant],
-  );
-  return trackRef;
-}
 
 interface MediaTilesProps {
   chatOpen: boolean;
@@ -82,43 +15,69 @@ export function MediaTiles({ chatOpen }: MediaTilesProps) {
   const { state: agentState, audioTrack: agentAudioTrack } =
     useVoiceAssistant();
 
-  const transition = {
-    ...animationProps.transition,
-    delay: chatOpen ? 0 : 0.15, // delay on close
-  };
-  const agentAnimate = {
-    ...animationProps.animate,
-    scale: chatOpen ? 1 : 3,
-    transition: transition,
+  // Get access to user's microphone
+  const { micTrackRef } = useAgentControlBar();
+
+  // Create MediaStream from the appropriate audio source
+  const getMediaStream = () => {
+    // When agent is speaking, show visualization for agent's audio
+    if (agentState === "speaking" && agentAudioTrack?.publication?.track) {
+      return new MediaStream([
+        agentAudioTrack.publication.track.mediaStreamTrack,
+      ]);
+    }
+
+    // When agent is listening or thinking, show visualization for user's microphone
+    if (
+      (agentState === "listening" || agentState === "thinking") &&
+      micTrackRef.publication?.track
+    ) {
+      return new MediaStream([micTrackRef.publication.track.mediaStreamTrack]);
+    }
+
+    return undefined;
   };
 
-  const agentLayoutTransition = transition;
+  const mediaStream = getMediaStream();
 
   return (
-      <div className="pointer-events-none mx-auto h-full max-w-2xl px-4 md:px-0">
-        <div className={cn(classNames.grid)}>
-          <div
-            className={cn([
-              'grid',
-              // 'bg-[hotpink]', // for debugging
-              !chatOpen && classNames.agentChatClosed,
-              chatOpen && classNames.agentChatOpen,
-            ])}
+    <div className="pointer-events-none mx-auto flex h-full w-full max-w-2xl items-center justify-center px-4 md:px-0">
+      <AnimatePresence mode="popLayout">
+        {!chatOpen ? (
+          <MotionAgentTile
+            key="orb"
+            layout
+            state={agentState}
+            audioTrack={agentAudioTrack}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1.05 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className={cn(
+              "flex h-[300px] w-[300px] items-center justify-center transition-all duration-300",
+            )}
+          />
+        ) : (
+          <motion.div
+            key="bar-visualizer"
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="flex h-full w-full max-w-xl justify-center"
           >
-            <AnimatePresence mode="popLayout">
-                <MotionAgentTile
-                  key="agent"
-                  layoutId="agent"
-                  {...animationProps}
-                  animate={agentAnimate}
-                  transition={agentLayoutTransition}
-                  state={agentState}
-                  audioTrack={agentAudioTrack}
-                  className={cn(chatOpen ? 'h-[90px]' : 'h-auto w-full')}
-                />
-            </AnimatePresence>
-          </div>
-        </div>
-      </div>
-    );
+            <BarVisualizer
+              state={agentState as any}
+              barCount={24}
+              minHeight={5} // Much smaller minimum height for idle state
+              maxHeight={120} // Keep high max for good range
+              mediaStream={mediaStream}
+              demo={!mediaStream}
+              className="h-full w-full"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
