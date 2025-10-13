@@ -388,7 +388,7 @@ const DayViewCalendar: React.FC<{ addedEvent: Event | null }> = ({
 
 const StageIndicator: React.FC<{ stage: string }> = ({ stage }) => {
   const descriptions: {
-    [key: string]: { icon: React.ElementType; text: string };
+    [key: string]: { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; text: string };
   } = {
     initial: { icon: Zap, text: "Ready for a prompt" },
     showing_prompt: { icon: User, text: "Receiving prompt..." },
@@ -399,6 +399,8 @@ const StageIndicator: React.FC<{ stage: string }> = ({ stage }) => {
   };
   const current = descriptions[stage];
   if (!current) return null;
+
+  const Icon = current.icon;
 
   return (
     <div className="fixed top-8 left-1/2 z-50 flex -translate-x-1/2 transform">
@@ -416,7 +418,7 @@ const StageIndicator: React.FC<{ stage: string }> = ({ stage }) => {
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="flex items-center gap-3"
           >
-            <current.icon className="h-5 w-5 text-[#01BBFF]" />
+            <Icon className="h-5 w-5 text-[#01BBFF]" />
             <span className="text-sm font-medium">{current.text}</span>
           </motion.div>
         </AnimatePresence>

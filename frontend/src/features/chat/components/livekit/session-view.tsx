@@ -66,7 +66,8 @@ export const SessionView = ({
     const registerHandler = () => {
       try {
         room.unregisterTextStreamHandler("conversation-id");
-      } catch (err) {
+      } catch {
+        // Ignore error if no handler was registered
       }
 
       room.registerTextStreamHandler("conversation-id", conversationIdHandler);
@@ -83,7 +84,7 @@ export const SessionView = ({
       room.off("connected", registerHandler);
       try {
         room.unregisterTextStreamHandler("conversation-id");
-      } catch (err) {
+      } catch {
         // Ignore error if no handler was registered
       }
     };
@@ -136,7 +137,7 @@ export const SessionView = ({
         <div
           className={cn(
             "flex flex-shrink-0 items-center justify-center overflow-hidden px-4",
-            chatOpen ? "h-20" : "flex-1",
+            chatOpen ? "h-16" : "flex-1",
           )}
         >
           <MediaTiles chatOpen={chatOpen} />

@@ -2,11 +2,13 @@ import {
   type AgentState as LivekitAgentState,
   type TrackReference,
 } from "@livekit/components-react";
+
 import {
   Orb,
   type AgentState as OrbAgentState,
 } from "@/components/ui/elevenlabs-ui/orb";
 import { cn } from "@/lib/utils";
+
 import { useAudioVolume } from "./hooks/useAudioVolume";
 
 interface AgentAudioTileProps {
@@ -42,7 +44,7 @@ export const AgentTile = ({
       ref={ref}
       className={cn("relative flex items-center justify-center", className)}
     >
-      <div className="relative aspect-square w-full max-w-[200px]">
+      <div className="relative aspect-square w-full max-w-[300px]">
         <Orb
           colors={["#CADCFC", "#A0B9D1"]}
           agentState={orbState}

@@ -8,7 +8,7 @@ import GetStartedButton from "../shared/GetStartedButton";
 import { SplitTextBlur } from "./SplitTextBlur";
 
 export default function HeroSection() {
-  const { data: release, isLoading: isReleaseLoading } =
+  const { data: _release, isLoading: _isReleaseLoading } =
     useLatestRelease("heygaia/gaia");
 
   return (

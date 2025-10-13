@@ -399,7 +399,6 @@ const BarVisualizerComponent = React.forwardRef<
       demo = false,
       centerAlign = false,
       className,
-      style,
       ...props
     },
     ref,

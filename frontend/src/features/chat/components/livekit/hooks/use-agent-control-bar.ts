@@ -83,7 +83,7 @@ export function useAgentControlBar(
       // persist audio input enabled preference
       saveAudioInputEnabled(!microphoneToggle.enabled);
     },
-    [microphoneToggle.toggle, microphoneToggle.enabled, saveAudioInputEnabled],
+    [microphoneToggle, saveAudioInputEnabled],
   );
 
   return {

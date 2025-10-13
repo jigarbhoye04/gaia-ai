@@ -1,9 +1,15 @@
+import React from "react";
+
 import { useVoiceAssistant } from "@livekit/components-react";
 import { AnimatePresence, motion } from "motion/react";
-import React from "react";
+
+import {
+  BarVisualizer,
+  type AgentState,
+} from "@/components/ui/elevenlabs-ui/bar-visualizer";
 import { cn } from "@/lib/utils";
+
 import { AgentTile } from "./agent-tile";
-import { BarVisualizer } from "@/components/ui/elevenlabs-ui/bar-visualizer";
 import { useAgentControlBar } from "./hooks/use-agent-control-bar";
 const MotionAgentTile = motion.create(AgentTile);
 
@@ -67,7 +73,7 @@ export function MediaTiles({ chatOpen }: MediaTilesProps) {
             className="flex h-full w-full max-w-xl justify-center"
           >
             <BarVisualizer
-              state={agentState as any}
+              state={agentState as AgentState}
               barCount={24}
               minHeight={5} // Much smaller minimum height for idle state
               maxHeight={120} // Keep high max for good range
