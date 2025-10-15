@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState, Suspense } from "react";
 
 import { useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -39,30 +39,66 @@ export function Orb({
   getOutputVolume,
   className,
 }: OrbProps) {
+  const [showCanvas, setShowCanvas] = useState(false);
+
+  // Prefetch the perlin noise texture to warm the network/cache before Canvas mounts
+  useEffect(() => {
+    try {
+      const img = new Image();
+      img.src =
+        "https://storage.googleapis.com/eleven-public-cdn/images/perlin-noise.png";
+    } catch (e) {
+      // noop
+    }
+  }, []);
+
+  // Defer the heavy Canvas mount by a short timeout so the user click event can finish
+  // and the browser isn't blocked by WebGL initialization on the same event loop tick.
+  useEffect(() => {
+    const id = window.setTimeout(() => setShowCanvas(true), 50);
+    return () => window.clearTimeout(id);
+  }, []);
+
   return (
     <div className={className ?? "relative h-full w-full"}>
-      <Canvas
-        resize={{ debounce: resizeDebounce }}
-        gl={{
-          alpha: true,
-          antialias: true,
-          premultipliedAlpha: true,
-        }}
-      >
-        <Scene
-          colors={colors}
-          colorsRef={colorsRef}
-          seed={seed}
-          agentState={agentState}
-          volumeMode={volumeMode}
-          manualInput={manualInput}
-          manualOutput={manualOutput}
-          inputVolumeRef={inputVolumeRef}
-          outputVolumeRef={outputVolumeRef}
-          getInputVolume={getInputVolume}
-          getOutputVolume={getOutputVolume}
-        />
-      </Canvas>
+      {showCanvas ? (
+        <Suspense fallback={<div className="h-full w-full" />}>
+          <Canvas
+            resize={{ debounce: resizeDebounce }}
+            onCreated={({ gl }) => {
+              // Limit pixel ratio to reduce initial GPU work (helps on high-dpi displays)
+              try {
+                gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+              } catch (e) {
+                /* ignore */
+              }
+            }}
+            gl={{
+              alpha: true,
+              antialias: true,
+              premultipliedAlpha: true,
+              powerPreference: "high-performance",
+            }}
+          >
+            <Scene
+              colors={colors}
+              colorsRef={colorsRef}
+              seed={seed}
+              agentState={agentState}
+              volumeMode={volumeMode}
+              manualInput={manualInput}
+              manualOutput={manualOutput}
+              inputVolumeRef={inputVolumeRef}
+              outputVolumeRef={outputVolumeRef}
+              getInputVolume={getInputVolume}
+              getOutputVolume={getOutputVolume}
+            />
+          </Canvas>
+        </Suspense>
+      ) : (
+        // Lightweight placeholder while the Canvas is delaying mount. Keeps layout stable.
+        <div className="h-full w-full" aria-hidden />
+      )}
     </div>
   );
 }
