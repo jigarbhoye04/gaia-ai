@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Optional
 import aiohttp
+import re
 from dotenv import load_dotenv
 from livekit import rtc
 from livekit.agents import (
@@ -151,6 +152,24 @@ class CustomLLM(LLM):
                         if not piece:
                             continue
 
+                        if isinstance(piece, str):
+                            piece = re.sub(r"(_BREAK|_MESSAGE|NEW|<|>)", " ", piece)
+
+                            if piece.strip() == "":
+                                piece = " "
+
+                                last = buf[-1]
+                                if (
+                                    last
+                                    and not last.endswith(" ")
+                                    and piece
+                                    and not piece.startswith(" ")
+                                ):
+                                    piece = " " + piece
+
+                        if piece is None or piece == "":
+                            continue
+
                         # Ensure only strings are appended to buf
                         if isinstance(piece, str):
                             buf.append(piece)
@@ -202,7 +221,8 @@ async def entrypoint(ctx: JobContext):
     ctx.log_context_fields = {"room": ctx.room.name}
 
     custom_llm = CustomLLM(
-        base_url=os.getenv("GAIA_BACKEND_URL", "http://host.docker.internal:8000"), room=ctx.room
+        base_url=os.getenv("GAIA_BACKEND_URL", "http://host.docker.internal:8000"),
+        room=ctx.room,
     )
 
     session = AgentSession(
