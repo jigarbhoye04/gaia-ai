@@ -36,11 +36,11 @@ def _extract_meta_data(md: Optional[str]) -> tuple[Optional[str], Optional[str]]
         return None, None
     try:
         obj = json.loads(md)
-        tok = obj.get("agentToken")
+        token = obj.get("agentToken")
         conv_id = obj.get("conversationId")
-        tok = tok if isinstance(tok, str) and tok else None
+        token = token if isinstance(token, str) and token else None
         conv_id = conv_id if isinstance(conv_id, str) and conv_id else None
-        return tok, conv_id
+        return token, conv_id
     except Exception:
         return None, None
 
@@ -66,7 +66,10 @@ def _extract_latest_user_text(chat_ctx: ChatContext) -> str:
 
 
 class CustomLLM(LLM):
+    """Custom LLM adapter for streaming chat responses from backend."""
+
     def __init__(self, base_url: str, request_timeout_s: float = 60.0, room=None):
+        """Initialize CustomLLM with backend URL and optional LiveKit room."""
         super().__init__()
         self.base_url = base_url
         self.agent_token: Optional[str] = None
@@ -75,9 +78,11 @@ class CustomLLM(LLM):
         self.room = room  # LiveKit room instance
 
     def set_agent_token(self, token: Optional[str]):
+        """Set the authentication token for backend requests."""
         self.agent_token = token
 
     async def set_conversation_id(self, conversation_id: Optional[str]):
+        """Store and broadcast conversation ID to room participants."""
         self.conversation_id = conversation_id
         if self.room and self.room.local_participant:
             try:
@@ -85,7 +90,7 @@ class CustomLLM(LLM):
                     conversation_id, topic="conversation-id"
                 )
             except Exception as e:
-                print(f"Failed to send conversation ID: {e}")
+                logger.error(f"Failed to send conversation ID: {e}")
 
     @asynccontextmanager
     async def chat(self, chat_ctx: ChatContext, **kwargs):
@@ -117,7 +122,7 @@ class CustomLLM(LLM):
                 ) as resp:
                     resp.raise_for_status()
 
-                    buf: list[str] = []
+                    text_buffer: list[str] = []
 
                     async for raw in resp.content:
                         if not raw:
@@ -128,13 +133,13 @@ class CustomLLM(LLM):
 
                         data = line[5:].strip()
                         if data == "[DONE]":
-                            if buf:
-                                chunk = "".join(buf).strip()
+                            if text_buffer:
+                                chunk = "".join(text_buffer).strip()
                                 if chunk:
                                     yield ChatChunk(
                                         id="custom", delta=ChoiceDelta(content=chunk)
                                     )
-                                    buf.clear()  # Clear buffer after yielding to avoid duplicate final flush
+                                    text_buffer.clear()  # Clear buffer after yielding to avoid duplicate final flush
                             break
 
                         try:
@@ -157,7 +162,7 @@ class CustomLLM(LLM):
                             if piece.strip() == "":
                                 piece = " "
 
-                                last = buf[-1]
+                                last = text_buffer[-1]
                                 if (
                                     last
                                     and not last.endswith(" ")
@@ -169,16 +174,16 @@ class CustomLLM(LLM):
                         if piece is None or piece == "":
                             continue
 
-                        # Ensure only strings are appended to buf
+                        # Ensure only strings are appended to text_buffer
                         if isinstance(piece, str):
-                            buf.append(piece)
+                            text_buffer.append(piece)
                         elif isinstance(piece, (list, tuple, set)):
-                            buf.append("".join(str(x) for x in piece))
+                            text_buffer.append("".join(str(x) for x in piece))
                         else:
-                            buf.append(str(piece))
-                        joined = "".join(buf)
+                            text_buffer.append(str(piece))
+                        joined = "".join(text_buffer)
 
-                        # --- Improved flush strategy ---
+                        #  Control when to send buffered text chunks to the text-to-speech (TTS) system for streaming playback.
                         should_flush = False
 
                         # Natural sentence boundary
@@ -192,7 +197,7 @@ class CustomLLM(LLM):
 
                         if should_flush:
                             out = joined.strip()
-                            buf.clear()
+                            text_buffer.clear()
                             if len(out) >= 15:  # safety: never flush tiny fragments
                                 # small debounce to coalesce nearby tokens
                                 yield ChatChunk(
@@ -201,8 +206,8 @@ class CustomLLM(LLM):
                                 await asyncio.sleep(0.1)
 
                     # Final flush (only if buffer is not empty, and wasn't just flushed)
-                    if buf:
-                        tail = "".join(buf).strip()
+                    if text_buffer:
+                        tail = "".join(text_buffer).strip()
                         if len(tail) >= 1:
                             yield ChatChunk(
                                 id="custom", delta=ChoiceDelta(content=tail)
@@ -212,11 +217,12 @@ class CustomLLM(LLM):
 
 
 def prewarm(proc: JobProcess):
-    # Preload VAD to avoid first-turn latency
+    """Preload VAD model to reduce first-turn latency."""
     proc.userdata["vad"] = silero.VAD.load()
 
 
 async def entrypoint(ctx: JobContext):
+    """Initialize and run the voice agent with STT, TTS, and LLM."""
     ctx.log_context_fields = {"room": ctx.room.name}
 
     custom_llm = CustomLLM(
@@ -240,6 +246,7 @@ async def entrypoint(ctx: JobContext):
 
     @session.on("agent_false_interruption")
     def _on_agent_false_interruption(ev: AgentFalseInterruptionEvent):
+        """Resume agent when false interruption is detected."""
         logger.info("false positive interruption, resuming")
         session.generate_reply(instructions=ev.extra_instructions or NOT_GIVEN)
 
@@ -247,20 +254,25 @@ async def entrypoint(ctx: JobContext):
 
     @session.on("metrics_collected")
     def _on_metrics_collected(ev: MetricsCollectedEvent):
+        """Log and collect usage metrics from agent session."""
         metrics.log_metrics(ev.metrics)
         usage_collector.collect(ev.metrics)
 
     async def log_usage():
+        """Log final usage summary on shutdown."""
         summary = usage_collector.get_summary()
         logger.info(f"Usage: {summary}")
 
     ctx.add_shutdown_callback(log_usage)
 
     # --- Register event listeners BEFORE connecting ---
-    async def _maybe_set_from_md(md: Optional[str], origin: str, who: str):
-        tok, conv_id = _extract_meta_data(md)
-        if tok:
-            custom_llm.set_agent_token(tok)
+    async def _extract_and_set_participant_credentials(
+        md: Optional[str], origin: str, who: str
+    ):
+        """Extract and set agent token and conversation ID from participant metadata."""
+        token, conv_id = _extract_meta_data(md)
+        if token:
+            custom_llm.set_agent_token(token)
         if conv_id:
             await custom_llm.set_conversation_id(conv_id)
 
@@ -268,9 +280,10 @@ async def entrypoint(ctx: JobContext):
 
     @ctx.room.on("participant_connected")
     def _on_participant_connected(p: rtc.RemoteParticipant):
+        """Handle new participant connection and process their metadata."""
         logger.info("ddd")
         task = asyncio.create_task(
-            _maybe_set_from_md(
+            _extract_and_set_participant_credentials(
                 getattr(p, "metadata", None), "participant_connected", p.identity
             )
         )
@@ -280,7 +293,9 @@ async def entrypoint(ctx: JobContext):
     @ctx.room.on("participant_metadata_changed")
     def _on_participant_metadata_changed(p: rtc.Participant, old_md: str, new_md: str):
         task = asyncio.create_task(
-            _maybe_set_from_md(new_md, "participant_metadata_changed", p.identity)
+            _extract_and_set_participant_credentials(
+                new_md, "participant_metadata_changed", p.identity
+            )
         )
         background_tasks.add(task)
         task.add_done_callback(background_tasks.discard)
@@ -288,7 +303,7 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect()
     for p in ctx.room.remote_participants.values():
         logger.info("participant already present, processing metadata")
-        await _maybe_set_from_md(
+        await _extract_and_set_participant_credentials(
             getattr(p, "metadata", None), "existing_participant", p.identity
         )
 

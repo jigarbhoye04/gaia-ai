@@ -104,10 +104,6 @@ class CommonSettings(BaseAppSettings):
     LIVEKIT_URL: str 
     LIVEKIT_API_KEY: str 
     LIVEKIT_API_SECRET: str 
-    DEEPGRAM_API_KEY: str 
-    ELEVEN_API_KEY: str
-    ELEVENLABS_TTS_MODEL: str 
-    ELEVENLABS_VOICE_ID: str 
     AGENT_SECRET: str
     
     @computed_field  # type: ignore
