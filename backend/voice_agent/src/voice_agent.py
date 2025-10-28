@@ -1,13 +1,12 @@
 import asyncio
 import json
 import logging
-import os
+import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Optional
+
 import aiohttp
-import re
-from dotenv import load_dotenv
 from livekit import rtc
 from livekit.agents import (
     NOT_GIVEN,
@@ -25,10 +24,10 @@ from livekit.agents import (
 from livekit.agents.llm import LLM, ChatChunk, ChatContext, ChoiceDelta
 from livekit.plugins import deepgram, noise_cancellation, silero, elevenlabs
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
+from src.voice_settings import voice_settings
 
 logger = logging.getLogger("agent")
 logging.basicConfig(level=logging.INFO)
-load_dotenv(".env")
 
 
 def _extract_meta_data(md: Optional[str]) -> tuple[Optional[str], Optional[str]]:
@@ -221,7 +220,7 @@ async def entrypoint(ctx: JobContext):
     ctx.log_context_fields = {"room": ctx.room.name}
 
     custom_llm = CustomLLM(
-        base_url=os.getenv("GAIA_BACKEND_URL", "http://host.docker.internal:8000"),
+        base_url=voice_settings.GAIA_BACKEND_URL,
         room=ctx.room,
     )
 
@@ -229,21 +228,14 @@ async def entrypoint(ctx: JobContext):
         llm=custom_llm,
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=elevenlabs.TTS(
-            api_key=os.getenv("ELEVENLABS_API_KEY"),
-            voice_id=os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM"),
-            model=os.getenv("ELEVENLABS_TTS_MODEL", "eleven_turbo_v2_5"),
-            voice_settings=elevenlabs.VoiceSettings(
-                stability=0.0,
-                similarity_boost=1.0,
-                style=0.0,
-                use_speaker_boost=True,
-                speed=1.0,
-            ),
+            api_key=voice_settings.ELEVENLABS_API_KEY,
+            voice_id=voice_settings.ELEVENLABS_VOICE_ID,
+            model=voice_settings.ELEVENLABS_TTS_MODEL,
         ),
         turn_detection=MultilingualModel(),
         vad=ctx.proc.userdata["vad"],
-        preemptive_generation=True,  # lets TTS get going while ASR is finishing
-        use_tts_aligned_transcript=True,  # helps reduce barge-in artifacts
+        preemptive_generation=True,
+        use_tts_aligned_transcript=True,
     )
 
     @session.on("agent_false_interruption")
