@@ -1,13 +1,17 @@
 """
 Infisical secrets management for Gaia voice microservice.
 
-This version is standalone — does not depend on `app.config.loggers` or backend imports.
-Loads secrets from Infisical and injects them into `os.environ`.
-Local .env values always take precedence.
+Standalone: does not depend on app.* packages. Injects secrets into os.environ.
+Local .env values take precedence.
 """
 import os
 from dotenv import load_dotenv
-from infisical_sdk import InfisicalSDKClient
+
+# lightweight import of Infisical SDK (make sure this is in pyproject)
+try:
+    from infisical_sdk import InfisicalSDKClient
+except Exception as e:
+    InfisicalSDKClient = None  # we will fail gracefully if not installed
 
 def _log(msg: str, level: str = "INFO"):
     print(f"[{level}] {msg}")
@@ -15,13 +19,15 @@ def _log(msg: str, level: str = "INFO"):
 class InfisicalConfigError(Exception):
     pass
 
+# load any .env already present (voice_settings.py does this too but harmless to call)
 load_dotenv()
 
 def inject_infisical_secrets():
-    # prevent multiple calls across forked processes
+    # prevent multiple injections across imports/forks
     if os.environ.get("_INFISICAL_ALREADY_INJECTED") == "1":
         return
 
+    # required credentials (project-level machine identity)
     INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
     CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
     CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
@@ -29,6 +35,10 @@ def inject_infisical_secrets():
 
     if not all([INFISICAL_PROJECT_ID, CLIENT_ID, CLIENT_SECRET]):
         _log("Skipping Infisical — missing credentials.", "WARN")
+        return
+
+    if InfisicalSDKClient is None:
+        _log("Infisical SDK not installed; skipping Infisical injection", "WARN")
         return
 
     try:
@@ -53,11 +63,15 @@ def inject_infisical_secrets():
             include_imports=True,
         )
 
+        injected = 0
         for s in secrets.secrets:
-            os.environ.setdefault(s.secretKey, s.secretValue)
+            # do not override local env (.env or docker env) — set only if missing
+            if os.environ.get(s.secretKey) is None:
+                os.environ[s.secretKey] = s.secretValue
+                injected += 1
 
         os.environ["_INFISICAL_ALREADY_INJECTED"] = "1"
-        _log("Infisical secrets injection complete")
+        _log(f"Infisical secrets injection complete (injected={injected})")
 
     except Exception as e:
         raise InfisicalConfigError(f"Failed to fetch Infisical secrets: {e}") from e

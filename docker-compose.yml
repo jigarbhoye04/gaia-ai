@@ -184,20 +184,28 @@ services:
     container_name: voice-agent-worker
     profiles: ["", "backend-only"]
     build:
-      context: ./backend/voice_agent
-      dockerfile: Dockerfile
+      context: .                                  # project root (so backend/.env & backend/voice_agent files are available)
+      dockerfile: backend/voice_agent/Dockerfile
     working_dir: /app
     user: "appuser"
+    # default command: can be "dev" for local/hot-reload or "start" for production
     command: >
-      uv run -m src.voice_agent dev
+      uv run -m src.voice_agent start
     environment:
       PYTHONUNBUFFERED: 1
       FORCE_COLOR: 1
       WORKER_TYPE: voice_agent_worker
+      # HF hub flags to permit model downloads (if needed)
+      HF_HUB_OFFLINE: "0"
+      LOCAL_FILES_ONLY: "0"
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
     env_file:
       - ./backend/.env
+    # DEV: bind mount only if you want local code edits inside container (comment out for pure-image runs)
+    # volumes:
+    #   - ./backend/voice_agent:/app
     volumes:
-      - livekit_models:/home/appuser/.cache/huggingface # Persist Hugging Face models
+      - livekit_models:/home/appuser/.cache/huggingface # Persist Hugging Face models between runs
     restart: on-failure
     networks:
       - gaia_network

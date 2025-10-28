@@ -8,8 +8,10 @@ ARG UID=10001
 
 # Ensures that logs are captured in realtime
 ENV PYTHONUNBUFFERED=1
+WORKDIR /app
+ENV PYTHONPATH=/app
 
-# Create unprivileged user
+# create unprivileged user
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -18,26 +20,30 @@ RUN adduser \
     --uid "${UID}" \
     appuser
 
-# System build deps for common Python wheels
+# system deps for building wheels
 RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
-
-# Dependency install first for better caching
-COPY pyproject.toml uv.lock ./
+# 1) Install Python dependencies (copy lock/pyproject from repo root context)
+COPY backend/voice_agent/pyproject.toml backend/voice_agent/uv.lock ./
 RUN mkdir -p src
 RUN uv sync --locked
 
-# Copy application code
-COPY . .
+# 2) Copy service code into image
+COPY backend/voice_agent/. /app
+
+# 3) Ensure the top-level backend .env is available at build time so "download-files" can use it
+#    (compose uses project root as context; backend/.env exists there)
+COPY backend/.env /app/.env
+
+# Set proper ownership and switch to non-root user
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Pre-download models/assets at build time
-RUN uv run src/voice_agent.py download-files
+# 4) Pre-download heavy models/assets at build time.
+RUN uv run -m src.voice_agent download-files
 
-# Start the agent
-CMD ["uv", "run", "src/voice_agent.py", "dev"]
+# 5) Default command - run in dev mode by default (compose overrides command)
+CMD ["uv", "run", "-m", "src.voice_agent", "dev"]
