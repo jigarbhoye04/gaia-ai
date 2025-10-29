@@ -4,6 +4,7 @@ Delete System Messages Node for the conversational graph.
 This module provides functionality to remove system messages from the conversation
 state while preserving all other message types in their original order.
 """
+
 from typing import Callable, TypeVar
 
 from app.config.loggers import chat_logger as logger
@@ -14,11 +15,11 @@ from langgraph.store.base import BaseStore
 
 T = TypeVar("T", bound=MessagesState)
 
+
 def create_filter_messages_node(
     agent_name: str = "main_agent",
     allow_memory_system_messages: bool = False,
     remove_system_messages: bool = False,
-    version: str = "v1",
 ) -> Callable[[T, RunnableConfig, BaseStore], T]:
     """Create a node that filters out system messages from the conversation state.
     Args:
@@ -29,8 +30,6 @@ def create_filter_messages_node(
             Except those marked as memory messages if allow_memory_system_messages is True.
             When this is True, make sure to add SystemMessage after this hook is executed if SystemMessage
             is required for the agent to function properly.
-        version: Filtering version. "v1" uses name-based filtering (backward compatible),
-            "v2" uses visible_to in additional_kwargs for more flexible visibility control.
     Returns:
         A callable node that filters messages in the conversation state.
     """
@@ -48,18 +47,12 @@ def create_filter_messages_node(
         try:
             allowed_tool_messages_ids = set()
             filtered_messages = []
-            
+
             # Separate system messages for removal and keep others
             for msg in state["messages"]:
                 # Version-based filtering logic
-                if version == "v2":
-                    # v2: Use visible_to from additional_kwargs
-                    visible_to = msg.additional_kwargs.get("visible_to", set())
-                    is_from_target_agent = agent_name in visible_to
-                else:
-                    # v1: Use name-based filtering (backward compatible)
-                    msg_names = msg.name.split(",") if msg.name else []
-                    is_from_target_agent = agent_name in msg_names
+                visible_to = msg.additional_kwargs.get("visible_to", set())
+                is_from_target_agent = agent_name in visible_to
 
                 # Note: ToolMessage doesn't have 'name' attribute like other messages
                 # So we are allowing all tool messages that are invoked by AI messages
