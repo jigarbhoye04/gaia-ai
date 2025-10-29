@@ -235,12 +235,14 @@ function Scene({
         targetIn = clamp01(0.65 + Math.sin(t * 4.8) * 0.22);
         targetOut = clamp01(0.75 + Math.sin(t * 3.6) * 0.22);
       } else if (agentRef.current === "thinking") {
-        // Thinking state - distinct pulsing pattern different from idle
-        const thinkingBase = 0.4 + 0.15 * Math.sin(t * 1.5);
-        const thinkingPulse = 0.08 * Math.sin(t * 4.2) * Math.sin(t * 0.9);
-        targetIn = clamp01(thinkingBase + thinkingPulse);
+        // Thinking/Connecting state - rapid pulsing to indicate active processing
+        // Uses faster oscillation with more pronounced movement
+        const rapidPulse = Math.sin(t * 6.5);
+        const modulatedPulse =
+          0.15 * Math.sin(t * 2.2) * (0.5 + 0.5 * Math.sin(t * 1.1));
+        targetIn = clamp01(0.45 + rapidPulse * 0.25 + modulatedPulse);
         targetOut = clamp01(
-          0.5 + 0.18 * Math.sin(t * 1.8) + 0.04 * Math.sin(t * 5.1),
+          0.55 + 0.25 * Math.sin(t * 6.8) + 0.12 * Math.sin(t * 2.4),
         );
       } else {
         // Fallback for any other state
@@ -263,8 +265,8 @@ function Scene({
       // Listening - moderate speed
       baseSpeed = 0.14;
     } else if (agentRef.current === "thinking") {
-      // Thinking - varying speed to simulate processing
-      baseSpeed = 0.11 + 0.03 * Math.sin(u.uTime.value * 1.3);
+      // Thinking/Connecting - faster animation to indicate active processing
+      baseSpeed = 0.22 + 0.05 * Math.sin(u.uTime.value * 1.5);
     } else if (agentRef.current === "talking") {
       // Talking - faster animation for active communication
       baseSpeed = 0.18;

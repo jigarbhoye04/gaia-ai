@@ -4,13 +4,15 @@ Infisical secrets management for Gaia voice microservice.
 Standalone: does not depend on app.* packages. Injects secrets into os.environ.
 Local .env values take precedence.
 """
+
 import os
+
 from dotenv import load_dotenv
 
 # lightweight import of Infisical SDK (make sure this is in pyproject)
 try:
     from infisical_sdk import InfisicalSDKClient
-except Exception as e:
+except Exception:
     InfisicalSDKClient = None  # we will fail gracefully if not installed
 
 def _log(msg: str, level: str = "INFO"):
@@ -28,12 +30,12 @@ def inject_infisical_secrets():
         return
 
     # required credentials (project-level machine identity)
-    INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
-    CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
-    CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
-    ENV = os.getenv("ENV", "production")
+    infisical_project_id = os.getenv("INFISICAL_PROJECT_ID")
+    client_id = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
+    client_secret = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
+    env = os.getenv("ENV", "production")
 
-    if not all([INFISICAL_PROJECT_ID, CLIENT_ID, CLIENT_SECRET]):
+    if not all([infisical_project_id, client_id, client_secret]):
         _log("Skipping Infisical — missing credentials.", "WARN")
         return
 
@@ -49,14 +51,14 @@ def inject_infisical_secrets():
             cache_ttl=3600,
         )
         client.auth.universal_auth.login(
-            client_id=CLIENT_ID,
-            client_secret=CLIENT_SECRET,
+            client_id=client_id,
+            client_secret=client_secret,
         )
 
         secrets = client.secrets.list_secrets(
-            project_id=INFISICAL_PROJECT_ID,
-            environment_slug=ENV,
-            secret_path="/",
+            project_id=infisical_project_id,
+            environment_slug=env,
+            secret_path="/",  # nosec B106
             expand_secret_references=True,
             view_secret_value=True,
             recursive=False,
