@@ -98,18 +98,15 @@ class WorkOSAuthMiddleware(BaseHTTPMiddleware):
             except Exception as e:
                 logger.error(f"Authentication middleware error: {e}")
                 # Don't block request on auth failures - routes can handle this
-        print(request.url.path)
         if (
             not request.state.authenticated
             and request.url.path in self.agent_only_paths
         ):
             auth_header = request.headers.get("Authorization")
-            print(auth_header)
             agent_info = None
             if auth_header and auth_header.startswith("Bearer "):
                 token = auth_header.split(" ", 1)[1]
                 agent_info = verify_agent_token(token)
-            print("Agenttt",agent_info)
             if agent_info:
                 # fetch user from db
                 user_id = agent_info["user_id"]
@@ -124,7 +121,6 @@ class WorkOSAuthMiddleware(BaseHTTPMiddleware):
                         user_data = await users_collection.find_one({"_id": user_id})
                 else:
                     user_data = await users_collection.find_one({"_id": user_id})
-                print("User Info", user_data)
                 if user_data:
                     request.state.user = {
                         "user_id": str(user_data.get("_id")),

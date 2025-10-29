@@ -161,7 +161,7 @@ class ProductionSettings(CommonSettings):
     # ----------------------------------------------
     # External API Integration Keys
     # ----------------------------------------------
-    BING_API_KEY: str
+    TAVILY_API_KEY: str
     LLAMA_INDEX_KEY: str
 
     # AI & Machine Learning
@@ -187,6 +187,7 @@ class ProductionSettings(CommonSettings):
 
     # External Service Integration
     COMPOSIO_KEY: str
+    FIRECRAWL_API_KEY: str
 
     # ----------------------------------------------
     # Webhook Secrets & Security
@@ -251,7 +252,7 @@ class DevelopmentSettings(CommonSettings):
     # External API Integration Keys
     # ----------------------------------------------
     # Search & Data Services
-    BING_API_KEY: Optional[str] = None
+    TAVILY_API_KEY: Optional[str] = None
     LLAMA_INDEX_KEY: Optional[str] = None
 
     # AI & Machine Learning
@@ -277,6 +278,7 @@ class DevelopmentSettings(CommonSettings):
 
     # External Service Integration
     COMPOSIO_KEY: Optional[str] = None
+    FIRECRAWL_API_KEY: Optional[str] = None
 
     # ----------------------------------------------
     # Webhook Secrets & Security

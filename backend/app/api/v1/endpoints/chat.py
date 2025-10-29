@@ -6,16 +6,17 @@ from typing import Optional
 from fastapi.responses import StreamingResponse
 
 from app.api.v1.dependencies.oauth_dependencies import (
+    GET_USER_TZ_TYPE,
     get_current_user,
     get_user_timezone,
 )
 from app.decorators import tiered_rate_limit
+from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.models.message_models import (
+    MessageDict,
     MessageRequestWithHistory,
     SaveIncompleteConversationRequest,
-    MessageDict,
 )
-from app.models.chat_models import MessageModel, UpdateMessagesRequest
 from app.services.chat_service import (
     chat_stream,
 )
@@ -26,6 +27,8 @@ import json
 from livekit import api
 from app.config.settings import settings
 import uuid
+from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
@@ -36,7 +39,7 @@ async def chat_stream_endpoint(
     body: MessageRequestWithHistory,
     background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
-    user_time: datetime = Depends(get_user_timezone),
+    tz_info: GET_USER_TZ_TYPE = Depends(get_user_timezone),
 ) -> StreamingResponse:
     """
     Stream chat messages in real time.
@@ -44,7 +47,10 @@ async def chat_stream_endpoint(
 
     return StreamingResponse(
         chat_stream(
-            body=body, user=user, background_tasks=background_tasks, user_time=user_time
+            body=body,
+            user=user,
+            background_tasks=background_tasks,
+            user_time=tz_info[1],
         ),
         media_type="text/event-stream",
         headers={

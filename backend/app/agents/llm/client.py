@@ -1,17 +1,24 @@
 from typing import Any, Dict, List, Optional, TypedDict
 
 from app.config.settings import settings
+from app.constants.llm import (
+    DEFAULT_CEREBRAS_MODEL_NAME,
+    DEFAULT_GEMINI_MODEL_NAME,
+    DEFAULT_MODEL_NAME,
+)
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
 from langchain_cerebras import ChatCerebras
-from langchain_core.language_models import LanguageModelLike
+from langchain_core.language_models.chat_models import (
+    BaseChatModel,
+)
 from langchain_core.runnables.utils import ConfigurableField
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
 PROVIDER_MODELS = {
-    "openai": "gpt-4o-mini",
-    "gemini": "gemini-2.5-flash",
-    "cerebras": "gpt-oss-120b",
+    "openai": DEFAULT_MODEL_NAME,
+    "gemini": DEFAULT_GEMINI_MODEL_NAME,
+    "cerebras": DEFAULT_CEREBRAS_MODEL_NAME,
 }
 PROVIDER_PRIORITY = {
     1: "openai",
@@ -22,7 +29,7 @@ PROVIDER_PRIORITY = {
 
 class LLMProvider(TypedDict):
     name: str
-    instance: Any
+    instance: BaseChatModel
 
 
 @lazy_provider(
@@ -73,13 +80,12 @@ def init_gemini_llm():
         model=PROVIDER_MODELS["gemini"],
         temperature=0.1,
     ).configurable_fields(
+        # gemini uses model instead of model_name unlike others
         model=ConfigurableField(id="model_name", name="LLM Model Name")
     )
 
 
-def init_llm(
-    preferred_provider: Optional[str] = None, fallback_enabled: bool = True
-) -> LanguageModelLike:
+def init_llm(preferred_provider: Optional[str] = None, fallback_enabled: bool = True):
     """
     Initialize LLM with configurable alternatives based on provider priority.
 
@@ -196,9 +202,7 @@ def _get_ordered_providers(
     return ordered
 
 
-def _create_configurable_llm(
-    primary: LLMProvider, alternatives: List[LLMProvider]
-) -> Any:
+def _create_configurable_llm(primary: LLMProvider, alternatives: List[LLMProvider]):
     """
     Create a configurable LLM instance with alternatives.
 
@@ -216,9 +220,12 @@ def _create_configurable_llm(
     # Create configurable alternatives mapping
     alternatives_mapping = {alt["name"]: alt["instance"] for alt in alternatives}
 
-    return primary["instance"].configurable_alternatives(
+    primary_instance = primary["instance"]
+
+    return primary_instance.configurable_alternatives(
         ConfigurableField(id="provider"),
         default_key=primary["name"],
+        prefix_keys=False,
         **alternatives_mapping,
     )
 

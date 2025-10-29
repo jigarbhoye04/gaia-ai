@@ -5,10 +5,10 @@ from typing import Optional
 from app.config.loggers import langchain_logger as logger
 from app.config.oauth_config import get_composio_social_configs
 from app.config.settings import settings
-from app.decorators.caching import Cacheable, CacheInvalidator
+from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
 from app.models.oauth_models import TriggerConfig
 from app.services.composio.langchain_composio_service import LangchainProvider
-from app.utils.composio_hooks.composio_hooks import (
+from app.utils.composio_hooks.registry import (
     master_after_execute_hook,
     master_before_execute_hook,
 )
@@ -19,16 +19,11 @@ COMPOSIO_SOCIAL_CONFIGS = get_composio_social_configs()
 
 
 class ComposioService:
-    def __init__(self):
+    def __init__(self, api_key: str):
         self.composio = Composio(
-            provider=LangchainProvider(), api_key=settings.COMPOSIO_KEY
+            provider=LangchainProvider(), api_key=api_key, timeout=120
         )
 
-    @CacheInvalidator(
-        key_patterns=[
-            "composio:connection_status:{user_id}",
-        ]
-    )
     async def connect_account(
         self, provider: str, user_id: str, frontend_redirect_path: Optional[str] = None
     ) -> dict:
@@ -113,6 +108,50 @@ class ComposioService:
         )
         return result
 
+    async def get_tools_by_name(
+        self,
+        tool_names: list[str],
+        use_before_hook: bool = True,
+        use_after_hook: bool = True,
+    ):
+        """
+        Get specific tools by names with unified master hooks.
+
+        The master hooks handle ALL tools automatically including:
+        - User ID extraction from RunnableConfig metadata
+        - Frontend streaming setup
+        - All registered tool-specific hooks (Gmail, etc.)
+        """
+        logger.info(f"Loading tools: {tool_names}...")
+        start_time = time.time()
+
+        modifiers = []
+
+        # Add hooks based on flags
+        if use_before_hook:
+            master_before_modifier = before_execute(tools=tool_names)(
+                master_before_execute_hook
+            )
+            modifiers.append(master_before_modifier)
+
+        if use_after_hook:
+            master_after_modifier = after_execute(tools=tool_names)(
+                master_after_execute_hook
+            )
+            modifiers.append(master_after_modifier)
+
+        # Run the tools.get() call asynchronously
+        result = await asyncio.to_thread(
+            self.composio.tools.get,
+            tools=tool_names,
+            user_id="",
+            modifiers=modifiers,
+        )
+
+        tools_time = time.time() - start_time
+        logger.info(f"Tools loaded: {len(result)} tools in {tools_time:.3f}s")
+        return result
+
     def get_tool(
         self,
         tool_name: str,
@@ -158,12 +197,6 @@ class ComposioService:
             logger.error(f"Error getting tool {tool_name}: {e}")
             return None
 
-    @Cacheable(
-        key_pattern="composio:connection_status:{user_id}",
-        ttl=300,  # 5 minutes
-        serializer=lambda result: result,
-        deserializer=lambda result: result,
-    )
     async def check_connection_status(
         self, providers: list[str], user_id: str
     ) -> dict[str, bool]:
@@ -260,4 +293,23 @@ class ComposioService:
             logger.error(f"Error handling subscribe trigger for {user_id}: {e}")
 
 
-composio_service = ComposioService()
+@lazy_provider(
+    name="composio_service",
+    required_keys=[settings.COMPOSIO_KEY],
+    strategy=MissingKeyStrategy.WARN,
+    auto_initialize=False,
+)
+def init_composio_service():
+    # This condition is just for type checking purposes and will never be false at runtime
+    # because of the required_keys in the lazy_provider decorator
+    if settings.COMPOSIO_KEY is None:
+        raise RuntimeError("COMPOSIO_KEY is not set in settings")
+
+    return ComposioService(settings.COMPOSIO_KEY)
+
+
+def get_composio_service() -> ComposioService:
+    service = providers.get("composio_service")
+    if service is None:
+        raise RuntimeError("ComposioService is not available")
+    return service

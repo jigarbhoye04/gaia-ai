@@ -3,7 +3,9 @@ import time
 from typing import Any, Dict, List, Optional
 
 from app.config.loggers import general_logger as logger
-from app.services.composio.composio_service import composio_service
+from app.services.composio.composio_service import (
+    get_composio_service,
+)
 from app.utils.general_utils import transform_gmail_message
 from fastapi import UploadFile
 
@@ -18,6 +20,8 @@ def get_gmail_tool(tool_name: str, user_id: str):
     Returns:
         The specific Gmail tool or None if not found
     """
+    composio_service = get_composio_service()
+
     try:
         return composio_service.get_tool(
             tool_name, use_before_hook=False, use_after_hook=False, user_id=user_id
@@ -486,10 +490,11 @@ async def search_messages(
 
         if result.get("successful", True):
             # Transform messages if needed
-            messages = result.get("data", {}).get("messages", [])
+            data = result.get("data", {})
+            messages = data.get("messages", [])
             return {
                 "messages": [transform_gmail_message(msg) for msg in messages],
-                "nextPageToken": result.get("nextPageToken"),
+                "nextPageToken": data.get("nextPageToken"),
             }
         else:
             return {"messages": [], "nextPageToken": None}
