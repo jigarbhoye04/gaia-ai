@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
 import { useOnboardingGuard } from "@/features/auth/hooks/useOnboardingGuard";
 import CommandMenu from "@/features/search/components/CommandMenu";
 import { useIsMobile } from "@/hooks/ui/useMobile";
+import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import SidebarLayout, { CustomSidebarTrigger } from "@/layouts/SidebarLayout";
 import { useSidebar as useUIStoreSidebar } from "@/stores/uiStore";
 
@@ -32,6 +33,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   // Check if user needs onboarding
   useOnboardingGuard();
+  useBackgroundSync();
 
   // Auto-close sidebar on mobile when pathname changes
   useEffect(() => {
