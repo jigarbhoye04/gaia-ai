@@ -13,9 +13,9 @@ import FilePreview, {
 import FileUpload from "@/features/chat/components/files/FileUpload";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useLoadingText } from "@/features/chat/hooks/useLoadingText";
-import { useSendMessage } from "@/features/chat/hooks/useSendMessage";
 import { useWorkflowSelection } from "@/features/chat/hooks/useWorkflowSelection";
 import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
+import { useSendMessage } from "@/hooks/useSendMessage";
 import {
   useComposerFiles,
   useComposerModeSelection,
@@ -43,6 +43,7 @@ interface MainSearchbarProps {
   droppedFiles?: File[];
   onDroppedFilesProcessed?: () => void;
   hasMessages: boolean;
+  conversationId?: string;
   voiceModeActive: () => void;
 }
 
@@ -54,6 +55,7 @@ const Composer: React.FC<MainSearchbarProps> = ({
   droppedFiles,
   onDroppedFilesProcessed,
   hasMessages,
+  conversationId,
   voiceModeActive,
 }) => {
   const [currentHeight, setCurrentHeight] = useState<number>(24);
@@ -109,12 +111,22 @@ const Composer: React.FC<MainSearchbarProps> = ({
     }
     autoSendExecutedRef.current = true;
 
+    const workflowToRun = selectedWorkflow;
+    const toolToRun = selectedTool;
+    const toolCategoryToRun = selectedToolCategory;
+    const filesToSend = uploadedFileData;
+
     // Clear state immediately to prevent any race conditions
     // Note: clearSelectedWorkflow() already sets autoSend to false
     clearSelectedWorkflow();
 
     setIsLoading(true);
-    sendMessage("Run this workflow", [], null, null, selectedWorkflow);
+    sendMessage("Run this workflow", conversationId, {
+      files: filesToSend,
+      selectedWorkflow: workflowToRun,
+      selectedTool: toolToRun ?? null,
+      selectedToolCategory: toolCategoryToRun ?? null,
+    });
 
     if (inputRef.current) inputRef.current.focus();
 
@@ -130,6 +142,9 @@ const Composer: React.FC<MainSearchbarProps> = ({
   }, [
     inputRef,
     selectedWorkflow,
+    selectedTool,
+    selectedToolCategory,
+    uploadedFileData,
     autoSend,
     clearSelectedWorkflow,
     sendMessage,
@@ -194,13 +209,12 @@ const Composer: React.FC<MainSearchbarProps> = ({
     // Use contextual loading with user's message for similarity-based loading text
     setContextualLoading(true, inputText);
 
-    sendMessage(
-      inputText,
-      uploadedFileData,
-      selectedTool,
-      selectedToolCategory,
+    sendMessage(inputText, conversationId, {
+      files: uploadedFileData,
+      selectedTool: selectedTool ?? null,
+      selectedToolCategory: selectedToolCategory ?? null,
       selectedWorkflow,
-    );
+    });
 
     clearInputText();
     clearAllFiles();

@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 
-import { chatApi } from "@/features/chat/api/chatApi";
 import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
 import { FileDropModal } from "@/features/chat/components/files/FileDropModal";
 import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useFetchIntegrationStatus } from "@/features/integrations";
 import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
+import { useMessages } from "@/hooks/useMessages";
 import {
   useComposerTextActions,
   usePendingPrompt,
@@ -41,6 +41,8 @@ const ChatPage = React.memo(function MainChat() {
     convoIdParam,
   } = useChatLayout();
 
+  useMessages(convoIdParam);
+
   const {
     scrollContainerRef,
     scrollToBottom,
@@ -60,25 +62,6 @@ const ChatPage = React.memo(function MainChat() {
     multiple: true,
   });
 
-  // Message fetching effect
-  useEffect(() => {
-    const loadMessages = async () => {
-      if (convoIdParam) {
-        try {
-          const messages = await chatApi.fetchMessages(convoIdParam);
-          updateConvoMessages(messages);
-        } catch (error) {
-          console.error("Failed to fetch messages:", error);
-        }
-      } else {
-        clearMessages();
-      }
-    };
-
-    loadMessages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [convoIdParam]);
-
   // Handle pending prompt from global composer
   useEffect(() => {
     if (pendingPrompt && appendToInputRef.current) {
@@ -96,6 +79,7 @@ const ChatPage = React.memo(function MainChat() {
     droppedFiles,
     onDroppedFilesProcessed: () => setDroppedFiles([]),
     hasMessages,
+    conversationId: convoIdParam,
   };
 
   return (
