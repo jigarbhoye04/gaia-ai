@@ -5,6 +5,7 @@ from app.config.settings import settings
 AGENT_SECRET = settings.AGENT_SECRET
 ALGORITHM = "HS256"
 
+
 def verify_agent_token(token: str):
     try:
         payload = jwt.decode(token, AGENT_SECRET, algorithms=[ALGORITHM])

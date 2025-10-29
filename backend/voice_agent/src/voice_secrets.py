@@ -15,14 +15,18 @@ try:
 except Exception:
     InfisicalSDKClient = None  # we will fail gracefully if not installed
 
+
 def _log(msg: str, level: str = "INFO"):
     print(f"[{level}] {msg}")
+
 
 class InfisicalConfigError(Exception):
     pass
 
+
 # load any .env already present (voice_settings.py does this too but harmless to call)
 load_dotenv()
+
 
 def inject_infisical_secrets():
     # prevent multiple injections across imports/forks

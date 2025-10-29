@@ -101,11 +101,11 @@ class CommonSettings(BaseAppSettings):
         return f"{self.HOST}/api/v1/oauth/workos/callback"
 
     # LIVEKIT Configuration
-    LIVEKIT_URL: str 
-    LIVEKIT_API_KEY: str 
-    LIVEKIT_API_SECRET: str 
+    LIVEKIT_URL: str
+    LIVEKIT_API_KEY: str
+    LIVEKIT_API_SECRET: str
     AGENT_SECRET: str
-    
+
     @computed_field  # type: ignore
     @property
     def COMPOSIO_REDIRECT_URI(self) -> str:

@@ -22,8 +22,9 @@ from livekit.agents import (
     metrics,
 )
 from livekit.agents.llm import LLM, ChatChunk, ChatContext, ChoiceDelta
-from livekit.plugins import deepgram, noise_cancellation, silero, elevenlabs
+from livekit.plugins import deepgram, elevenlabs, noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
+
 from src.voice_settings import voice_settings
 
 logger = logging.getLogger("agent")

@@ -1,6 +1,7 @@
 import os
 from functools import lru_cache
 from pathlib import Path
+
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,10 +18,12 @@ else:
 try:
     # import path is `src.voice_secrets` because PYTHONPATH=/app and src/ is inside /app
     from src.voice_secrets import inject_infisical_secrets  # type: ignore
+
     inject_infisical_secrets()
     print("Infisical secrets injected (if credentials present)")
 except Exception as e:
     print(f"inject_infisical_secrets() not found or failed to import: {e}")
+
 
 class VoiceSettings(BaseSettings):
     LIVEKIT_URL: str
@@ -34,7 +37,7 @@ class VoiceSettings(BaseSettings):
     model_config = SettingsConfigDict(extra="allow", env_file_encoding="utf-8")
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> VoiceSettings:
     os.getenv("ENV", "development")
     return VoiceSettings()

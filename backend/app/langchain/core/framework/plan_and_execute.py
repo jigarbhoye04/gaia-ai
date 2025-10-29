@@ -135,7 +135,6 @@ class OrchestratorSubgraphConfig:
 class OrchestratorGraph:
     """LangGraph-backed orchestrator with dynamic node handoff."""
 
-
     def __init__(
         self,
         provider_name: str,
@@ -219,7 +218,10 @@ class OrchestratorGraph:
             if self._has_finalizer:
                 response_message.additional_kwargs["visible_to"] = {self.agent_name}
             else:
-                response_message.additional_kwargs["visible_to"] = {"main_agent", self.agent_name}
+                response_message.additional_kwargs["visible_to"] = {
+                    "main_agent",
+                    self.agent_name,
+                }
 
         state["messages"] = [*state["messages"], response_message]
 
@@ -384,7 +386,7 @@ class OrchestratorGraph:
     ) -> StateGraph[OrchestratorState, None, OrchestratorState, OrchestratorState]:
         workflow = StateGraph(OrchestratorState)
         workflow.add_node("orchestrator", self._orchestrator_step)
-        
+
         # Only add finalizer if prompt is provided
         if self._has_finalizer:
             workflow.add_node("finalizer", self._finalization_step)

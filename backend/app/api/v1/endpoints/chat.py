@@ -27,8 +27,6 @@ import json
 from livekit import api
 from app.config.settings import settings
 import uuid
-from fastapi import APIRouter, BackgroundTasks, Depends
-from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
@@ -132,7 +130,7 @@ def get_token(
     user_id = user.get("user_id")
     user_email: str = user.get("email", "")
     if not user_id or not isinstance(user_id, str):
-        return ("Invalid or missing user_id")
+        return "Invalid or missing user_id"
     room_name = f"voice_session_{user_id}_{uuid.uuid4().hex[:8]}"
 
     identity = f"user_{user_id}"
@@ -169,5 +167,5 @@ def get_token(
         "participantToken": at.to_jwt(),
         "participantIdentity": identity,
         "participantName": display_name,
-        "conversation_id": conversationId
+        "conversation_id": conversationId,
     }
