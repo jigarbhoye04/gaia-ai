@@ -165,7 +165,6 @@ class ProductionSettings(CommonSettings):
 
     # Media & Content Processing
     ASSEMBLYAI_API_KEY: str
-    DEEPGRAM_API_KEY: str
 
     # Weather Services
     OPENWEATHER_API_KEY: str

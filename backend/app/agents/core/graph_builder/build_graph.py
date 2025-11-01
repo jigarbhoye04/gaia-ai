@@ -59,14 +59,10 @@ async def build_graph(
         ],
     )
 
-    # checkpointer_manager = await get_checkpointer_manager()
+    checkpointer_manager = await get_checkpointer_manager()
 
-    from app.config.settings import settings
-
-    use_in_memory = settings.ENV == "development" or in_memory_checkpointer
-    check_pointer_manager = None if use_in_memory else await get_checkpointer_manager()
     if (
-        use_in_memory or not check_pointer_manager
+        in_memory_checkpointer or not checkpointer_manager
     ):  # Use in-memory checkpointer for testing or simple use cases
         in_memory_checkpointer_instance = InMemorySaver()
         # Setup the checkpointer
@@ -78,7 +74,7 @@ async def build_graph(
         logger.debug("Graph compiled with in-memory checkpointer")
         yield graph
     else:
-        postgres_checkpointer = check_pointer_manager.get_checkpointer()
+        postgres_checkpointer = checkpointer_manager.get_checkpointer()
         graph = builder.compile(checkpointer=postgres_checkpointer, store=store)
         logger.debug("Graph compiled with PostgreSQL checkpointer")
         yield graph

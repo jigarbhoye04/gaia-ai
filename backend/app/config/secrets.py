@@ -85,7 +85,7 @@ def inject_infisical_secrets():
         secrets = client.secrets.list_secrets(
             project_id=INFISICAL_PROJECT_ID,
             environment_slug=ENV,
-            secret_path="/",
+            secret_path="/",  # noqa: S105
             expand_secret_references=True,
             view_secret_value=True,
             recursive=False,

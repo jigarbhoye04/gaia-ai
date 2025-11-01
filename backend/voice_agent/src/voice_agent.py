@@ -15,9 +15,6 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 # Now we can import from app after path is set up
-from app.config.settings import settings  # noqa: E402
-from app.config.loggers import app_logger as logger  # noqa: E402
-
 import asyncio
 import json
 import re
@@ -26,6 +23,8 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import aiohttp
+from app.config.loggers import app_logger as logger  # noqa: E402
+from app.config.settings import settings  # noqa: E402
 from livekit import rtc
 from livekit.agents import (
     NOT_GIVEN,
