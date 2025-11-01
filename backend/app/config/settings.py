@@ -193,7 +193,7 @@ class ProductionSettings(CommonSettings):
     ELEVENLABS_TTS_MODEL: str
     GAIA_BACKEND_URL: str
     ELEVENLABS_VOICE_ID: str
-    
+
     # ----------------------------------------------
     # Webhook Secrets & Security
     # ----------------------------------------------
@@ -299,7 +299,7 @@ class DevelopmentSettings(CommonSettings):
     DEEPGRAM_API_KEY: Optional[str] = None
     ELEVENLABS_API_KEY: Optional[str] = None
     ELEVENLABS_TTS_MODEL: Optional[str] = None
-    GAIA_BACKEND_URL: Optional[str] = None
+    GAIA_BACKEND_URL: Optional[str] = "http://host.docker.internal:8000"
     ELEVENLABS_VOICE_ID: Optional[str] = None
 
     # ----------------------------------------------
@@ -345,6 +345,21 @@ class DevelopmentSettings(CommonSettings):
     )
 
 
+_infisical_secrets_loaded = False
+
+
+def _ensure_infisical_loaded():
+    """Ensure Infisical secrets are loaded exactly once."""
+    global _infisical_secrets_loaded
+    if not _infisical_secrets_loaded:
+        infisical_start = time.time()
+        inject_infisical_secrets()
+        logger.info(
+            f"Infisical secrets loaded in {(time.time() - infisical_start):.3f}s"
+        )
+        _infisical_secrets_loaded = True
+
+
 @lru_cache(maxsize=1)
 def get_settings():
     """
@@ -355,10 +370,7 @@ def get_settings():
     """
     logger.info("Starting settings initialization...")
 
-    # Load environment variables from Infisical
-    infisical_start = time.time()
-    inject_infisical_secrets()
-    logger.info(f"Infisical secrets loaded in {(time.time() - infisical_start):.3f}s")
+    _ensure_infisical_loaded()
 
     env = os.getenv("ENV", "production")
 
