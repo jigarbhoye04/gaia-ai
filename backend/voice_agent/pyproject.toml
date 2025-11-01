@@ -18,6 +18,9 @@ dependencies = [
     "aiohttp",
     "pydantic-settings>=2.11.0",
     "infisicalsdk>=1.0.7",
+    "stackprinter>=0.2.12",
+    "pydantic>=2.11.9",
+    "loguru>=0.7.3",
 ]
 
 [dependency-groups]

@@ -13,17 +13,17 @@ ENV PYTHONPATH=/app
 
 # create unprivileged user
 RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/app" \
-    --shell "/sbin/nologin" \
-    --uid "${UID}" \
-    appuser
+  --disabled-password \
+  --gecos "" \
+  --home "/app" \
+  --shell "/sbin/nologin" \
+  --uid "${UID}" \
+  appuser
 
 # system deps for building wheels
 RUN apt-get update && apt-get install -y \
-    gcc \
-    python3-dev \
+  gcc \
+  python3-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # 1) Install Python dependencies (copy lock/pyproject from repo root context)
@@ -34,7 +34,11 @@ RUN uv sync --locked
 # 2) Copy service code into image
 COPY backend/voice_agent/. /app
 
-# 3) Ensure the top-level backend .env is available at build time so "download-files" can use it
+# 3) Copy the parent backend app module so voice agent can import settings
+#    This allows: from app.config.settings import settings
+COPY backend/app /app/app
+
+# 4) Ensure the top-level backend .env is available at build time so "download-files" can use it
 #    (compose uses project root as context; backend/.env exists there)
 COPY backend/.env /app/.env
 
@@ -42,8 +46,8 @@ COPY backend/.env /app/.env
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# 4) Pre-download heavy models/assets at build time.
+# 5) Pre-download heavy models/assets at build time.
 RUN uv run -m src.voice_agent download-files
 
-# 5) Default command - run in dev mode by default (compose overrides command)
+# 6) Default command - run in dev mode by default (compose overrides command)
 CMD ["uv", "run", "-m", "src.voice_agent", "dev"]

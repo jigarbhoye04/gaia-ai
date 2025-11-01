@@ -1,6 +1,25 @@
+"""Voice agent module for GAIA.
+
+This module imports settings from the parent backend's single source of truth,
+which includes Infisical secret injection. The sys.path modification must
+happen before importing app modules.
+"""
+
+import sys
+from pathlib import Path
+
+# Add parent backend to Python path to import app module
+# This must be done before other app imports
+backend_dir = str(Path(__file__).parent.parent.parent)
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+# Now we can import from app after path is set up
+from app.config.settings import settings  # noqa: E402
+from app.config.loggers import app_logger as logger  # noqa: E402
+
 import asyncio
 import json
-import logging
 import re
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -24,11 +43,6 @@ from livekit.agents import (
 from livekit.agents.llm import LLM, ChatChunk, ChatContext, ChoiceDelta
 from livekit.plugins import deepgram, elevenlabs, noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
-
-from src.voice_settings import voice_settings
-
-logger = logging.getLogger("agent")
-logging.basicConfig(level=logging.INFO)
 
 
 def _extract_meta_data(md: Optional[str]) -> tuple[Optional[str], Optional[str]]:
@@ -227,7 +241,7 @@ async def entrypoint(ctx: JobContext):
     ctx.log_context_fields = {"room": ctx.room.name}
 
     custom_llm = CustomLLM(
-        base_url=voice_settings.GAIA_BACKEND_URL,
+        base_url=settings.GAIA_BACKEND_URL,
         room=ctx.room,
     )
 
@@ -235,9 +249,9 @@ async def entrypoint(ctx: JobContext):
         llm=custom_llm,
         stt=deepgram.STT(model="nova-3", language="multi"),
         tts=elevenlabs.TTS(
-            api_key=voice_settings.ELEVENLABS_API_KEY,
-            voice_id=voice_settings.ELEVENLABS_VOICE_ID,
-            model=voice_settings.ELEVENLABS_TTS_MODEL,
+            api_key=settings.ELEVENLABS_API_KEY,
+            voice_id=settings.ELEVENLABS_VOICE_ID,
+            model=settings.ELEVENLABS_TTS_MODEL,
         ),
         turn_detection=MultilingualModel(),
         vad=ctx.proc.userdata["vad"],

@@ -100,12 +100,6 @@ class CommonSettings(BaseAppSettings):
         """WorkOS OAuth callback URL."""
         return f"{self.HOST}/api/v1/oauth/workos/callback"
 
-    # LIVEKIT Configuration
-    LIVEKIT_URL: str
-    LIVEKIT_API_KEY: str
-    LIVEKIT_API_SECRET: str
-    AGENT_SECRET: str
-
     @computed_field  # type: ignore
     @property
     def COMPOSIO_REDIRECT_URI(self) -> str:
@@ -189,6 +183,17 @@ class ProductionSettings(CommonSettings):
     COMPOSIO_KEY: str
     FIRECRAWL_API_KEY: str
 
+    # LIVEKIT Configuration
+    LIVEKIT_URL: str
+    LIVEKIT_API_KEY: str
+    LIVEKIT_API_SECRET: str
+    AGENT_SECRET: str
+    DEEPGRAM_API_KEY: str
+    ELEVENLABS_API_KEY: str
+    ELEVENLABS_TTS_MODEL: str
+    GAIA_BACKEND_URL: str
+    ELEVENLABS_VOICE_ID: str
+    
     # ----------------------------------------------
     # Webhook Secrets & Security
     # ----------------------------------------------
@@ -285,6 +290,17 @@ class DevelopmentSettings(CommonSettings):
     # ----------------------------------------------
     COMPOSIO_WEBHOOK_SECRET: Optional[str] = None
     DODO_WEBHOOK_PAYMENTS_SECRET: Optional[str] = None
+
+    # LIVEKIT Configuration
+    LIVEKIT_URL: Optional[str] = None
+    LIVEKIT_API_KEY: Optional[str] = None
+    LIVEKIT_API_SECRET: Optional[str] = None
+    AGENT_SECRET: Optional[str] = None
+    DEEPGRAM_API_KEY: Optional[str] = None
+    ELEVENLABS_API_KEY: Optional[str] = None
+    ELEVENLABS_TTS_MODEL: Optional[str] = None
+    GAIA_BACKEND_URL: Optional[str] = None
+    ELEVENLABS_VOICE_ID: Optional[str] = None
 
     # ----------------------------------------------
     # Content Management
