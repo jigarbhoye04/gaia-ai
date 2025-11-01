@@ -143,14 +143,10 @@ export default function ChatRenderer({ convoMessages: propConvoMessages }: ChatR
           !isBotMessageEmpty(messageProps as ChatBubbleBotProps)
         )
           return (
-            <div
+            <ChatBubbleBot
               key={message.message_id || index}
-              className="relative flex items-end gap-1 pt-1 pl-1"
-            >
-              <ChatBubbleBot
-                {...getMessageProps(message, "bot", messagePropsOptions)}
-              />
-            </div>
+              {...getMessageProps(message, "bot", messagePropsOptions)}
+            />
           );
 
         return (
