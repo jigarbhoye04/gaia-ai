@@ -1,12 +1,12 @@
 // Workflow-related types for comprehensive workflow management
 
 import type {
-  CalendarTriggerConfig,
   EmailTriggerConfig,
   ManualTriggerConfig,
   ScheduleTriggerConfig,
   TriggerConfig,
 } from "@/config/registries/triggerRegistry";
+import type { ContentCreator } from "@/types/shared/contentTypes";
 
 // Legacy workflow step data (for message components)
 export interface WorkflowStepData {
@@ -40,7 +40,6 @@ export interface WorkflowStepType {
 
 // Re-export trigger types for convenience
 export type {
-  CalendarTriggerConfig,
   EmailTriggerConfig,
   ManualTriggerConfig,
   ScheduleTriggerConfig,
@@ -85,14 +84,8 @@ export interface CommunityWorkflow {
   title: string;
   description: string;
   steps: CommunityWorkflowStep[];
-  upvotes: number;
-  is_upvoted: boolean;
   created_at: string;
-  creator: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
+  creator: ContentCreator;
 }
 
 // Community workflows response
@@ -119,11 +112,14 @@ export interface Workflow {
   execution_logs: string[];
   error_message?: string;
 
+  // Execution statistics
+  total_executions: number;
+  successful_executions: number;
+
   // Community features
   is_public?: boolean;
   created_by?: string;
-  upvotes?: number;
-  upvoted_by?: string[];
+  creator?: ContentCreator; // Optional creator info from community workflows
 }
 
 // API request types

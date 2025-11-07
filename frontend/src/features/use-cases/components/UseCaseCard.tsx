@@ -1,7 +1,8 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { ArrowUpRight, Plus } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +17,7 @@ interface UseCaseCardProps {
   action_type: "prompt" | "workflow";
   integrations: string[];
   prompt?: string;
+  slug?: string;
 }
 
 export default function UseCaseCard({
@@ -24,16 +26,29 @@ export default function UseCaseCard({
   action_type,
   integrations,
   prompt,
+  slug,
 }: UseCaseCardProps) {
+  const router = useRouter();
   const [isCreatingWorkflow, setIsCreatingWorkflow] = useState(false);
   const appendToInput = useAppendToInput();
+  const router = useRouter();
   const { selectWorkflow } = useWorkflowSelection();
   const { createWorkflow } = useWorkflowCreation();
 
-  // Unified action handler for both card and button
+  // Handler for card click - navigate to detail page
+  const handleCardClick = () => {
+    if (slug) {
+      router.push(`/use-cases/${slug}`);
+    }
+  };
+
+  // Action handler for the action button
   const handleAction = async () => {
     if (action_type === "prompt") {
-      if (prompt) appendToInput(prompt);
+      if (prompt) {
+        appendToInput(prompt);
+        router.push("/c");
+      }
     } else {
       setIsCreatingWorkflow(true);
       const toastId = toast.loading("Creating workflow...");
@@ -63,30 +78,24 @@ export default function UseCaseCard({
 
   const isLoading = action_type === "workflow" && isCreatingWorkflow;
   const footerContent = (
-    <div className="flex w-full flex-col gap-3">
+    <div className="mt-1 flex w-full items-center justify-end gap-3">
       <Button
-        color="default"
+        color="primary"
         size="sm"
-        startContent={
-          !isLoading ? (
-            action_type === "prompt" ? (
-              <ArrowUpRight width={16} height={16} />
-            ) : (
-              <Plus width={16} height={16} />
-            )
-          ) : undefined
+        variant="flat"
+        className="w-fit text-primary"
+        endContent={
+          (isLoading ? undefined : action_type === "prompt") && (
+            <ArrowUpRight width={16} height={16} />
+          )
         }
-        className="w-full"
         isLoading={isLoading}
         onPress={handleAction}
       >
-        {action_type === "prompt" ? "Insert Prompt" : "Create Workflow"}
+        {action_type === "prompt" ? "Insert Prompt" : "Create"}
       </Button>
     </div>
   );
-
-  // Only make the card clickable if there is a single action and no modal
-  const isCardClickable = true;
 
   return (
     <BaseWorkflowCard
@@ -94,7 +103,7 @@ export default function UseCaseCard({
       description={description}
       integrations={integrations}
       footerContent={footerContent}
-      onClick={isCardClickable ? handleAction : undefined}
+      onClick={slug ? handleCardClick : undefined}
       showArrowIcon={false}
     />
   );

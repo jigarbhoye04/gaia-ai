@@ -7,6 +7,7 @@ import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useFetchConversations } from "@/features/chat/hooks/useConversationList";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { streamController } from "@/features/chat/utils/streamController";
+import { SelectedCalendarEventData } from "@/stores/calendarEventSelectionStore";
 import { useComposerStore } from "@/stores/composerStore";
 import { MessageType } from "@/types/features/convoTypes";
 import { WorkflowData } from "@/types/features/workflowTypes";
@@ -68,6 +69,7 @@ export const useChatStream = () => {
         refs.current.botMessage.selectedTool || null,
         refs.current.botMessage.toolCategory || null,
         refs.current.botMessage.selectedWorkflow || null,
+        refs.current.botMessage.selectedCalendarEvent || null,
       );
 
       // Handle navigation for incomplete conversations
@@ -129,6 +131,20 @@ export const useChatStream = () => {
         // Immediately terminate the stream on error
         console.error("Stream error received:", data.error);
         return data.error;
+      }
+
+      // Handle main response completion marker
+      if (data.main_response_complete) {
+        setIsLoading(false); // Stop loading animation immediately
+        resetLoadingText(); // Clear any loading text
+
+        // Update the bot message to stop its individual loading state
+        updateBotMessage({
+          loading: false,
+        });
+
+        // Continue processing the stream for follow-up actions
+        return;
       }
 
       if (data.progress) {
@@ -199,6 +215,8 @@ export const useChatStream = () => {
         loading: false,
       });
 
+      // Only update loading if it hasn't been set to false already
+      // (main_response_complete would have already set it to false)
       setIsLoading(false);
       resetLoadingText();
       streamController.clear();
@@ -248,6 +266,7 @@ export const useChatStream = () => {
     selectedTool: string | null = null,
     toolCategory: string | null = null,
     selectedWorkflow: WorkflowData | null = null,
+    selectedCalendarEvent: SelectedCalendarEventData | null = null,
   ) => {
     try {
       refs.current.accumulatedResponse = "";
@@ -270,6 +289,7 @@ export const useChatStream = () => {
         selectedTool,
         toolCategory,
         selectedWorkflow,
+        selectedCalendarEvent,
       };
 
       // Create abort controller for this stream
@@ -302,6 +322,7 @@ export const useChatStream = () => {
         toolCategory,
         controller,
         selectedWorkflow,
+        selectedCalendarEvent,
       );
     } catch (error) {
       console.error("Error initiating chat stream:", error);

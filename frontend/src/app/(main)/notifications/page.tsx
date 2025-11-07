@@ -1,16 +1,14 @@
 "use client";
 
-import { Badge } from "@heroui/badge";
-import { Tab, Tabs } from "@heroui/tabs";
-import { Bell, BellRing } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui";
+import NotificationsHeader from "@/components/layout/headers/NotificationsHeader";
 import { EmailPreviewModal } from "@/features/mail/components/EmailPreviewModal";
 import { NotificationsList } from "@/features/notification/components/NotificationsList";
 import { useAllNotifications } from "@/features/notification/hooks/useAllNotifications";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
+import { useHeader } from "@/hooks/layout/useHeader";
 import { NotificationsAPI } from "@/services/api/notifications";
 import {
   ModalConfig,
@@ -19,6 +17,8 @@ import {
 
 export default function NotificationsPage() {
   const [modalConfig, setModalConfig] = useState<ModalConfig | null>(null);
+  const [selectedTab, setSelectedTab] = useState<string>("unread");
+  const { setHeader } = useHeader();
 
   // Get unread notifications
   const {
@@ -53,24 +53,26 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleBulkMarkAsRead = async (notificationIds: string[]) => {
-    try {
-      if (notificationIds.length == 0)
-        return toast.error("No events to mark as read");
-      await NotificationsAPI.bulkMarkAsRead(notificationIds);
-      // Refresh both lists after marking as read
-      await refetchUnread();
-      await refetchAll();
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-    }
-  };
+  const handleBulkMarkAsRead = useCallback(
+    async (notificationIds: string[]) => {
+      try {
+        if (notificationIds.length == 0)
+          return toast.error("No events to mark as read");
+        await NotificationsAPI.bulkMarkAsRead(notificationIds);
+        await refetchUnread();
+        await refetchAll();
+      } catch (error) {
+        console.error("Error marking notification as read:", error);
+      }
+    },
+    [refetchUnread, refetchAll],
+  );
 
   // Simple refresh function
-  const refreshNotifications = async () => {
+  const refreshNotifications = useCallback(async () => {
     await refetchAll();
     await refetchUnread();
-  };
+  }, [refetchAll, refetchUnread]);
 
   // Handle modal opening from notification actions
   const handleModalOpen = (config: ModalConfig) => {
@@ -88,52 +90,31 @@ export default function NotificationsPage() {
     refreshNotifications();
   };
 
+  // Memoize the mark all as read handler to prevent recreating it on every render
+  const handleMarkAllAsRead = useCallback(async () => {
+    await handleBulkMarkAsRead(unreadNotifications.map((n) => n.id));
+  }, [unreadNotifications, handleBulkMarkAsRead]);
+
+  // Set the header with tab state
+  useEffect(() => {
+    setHeader(
+      <NotificationsHeader
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        unreadCount={unreadNotifications.length}
+        onMarkAllAsRead={handleMarkAllAsRead}
+      />,
+    );
+
+    return () => {
+      setHeader(null);
+    };
+  }, [selectedTab, unreadNotifications.length, handleMarkAllAsRead, setHeader]);
+
   return (
-    <div className="flex w-full flex-col items-center justify-center overflow-y-auto p-5 py-2">
-      <div className="mb-4 flex w-full justify-end">
-        <Button
-          size="sm"
-          onClick={async () => {
-            await handleBulkMarkAsRead(unreadNotifications.map((n) => n.id));
-          }}
-        >
-          Mark All as Read
-        </Button>
-      </div>
-      <Tabs
-        aria-label="Notifications"
-        color="primary"
-        variant="underlined"
-        className="flex w-full justify-center"
-        classNames={{
-          base: "w-full",
-          tabList: "w-full max-w-4xl px-0",
-          panel: "overflow-y-scroll",
-        }}
-      >
-        <Tab
-          key="unread"
-          className="w-full"
-          title={
-            <div className="flex items-center space-x-2">
-              <BellRing className="h-4 w-4" />
-              <span>Unread</span>
-              {unreadNotifications.length > 0 && (
-                <Badge
-                  color="primary"
-                  content={
-                    unreadNotifications.length > 99
-                      ? "99+"
-                      : unreadNotifications.length.toString()
-                  }
-                  size="sm"
-                >
-                  <span />
-                </Badge>
-              )}
-            </div>
-          }
-        >
+    <div className="flex h-full w-full flex-col overflow-hidden bg-[#1a1a1a]">
+      <div className="max-h-[calc(100vh-120px)] overflow-y-auto px-6 pt-6">
+        {selectedTab === "unread" ? (
           <NotificationsList
             notifications={unreadNotifications}
             loading={unreadLoading}
@@ -143,17 +124,7 @@ export default function NotificationsPage() {
             onMarkAsRead={handleMarkAsRead}
             onModalOpen={handleModalOpen}
           />
-        </Tab>
-        <Tab
-          className="w-full"
-          key="all"
-          title={
-            <div className="flex items-center space-x-2">
-              <Bell className="h-4 w-4" />
-              <span>All</span>
-            </div>
-          }
-        >
+        ) : (
           <NotificationsList
             notifications={allNotifications}
             loading={allLoading}
@@ -163,10 +134,9 @@ export default function NotificationsPage() {
             onMarkAsRead={handleMarkAsRead}
             onModalOpen={handleModalOpen}
           />
-        </Tab>
-      </Tabs>
+        )}
+      </div>
 
-      {/* Email Preview Modal */}
       {modalConfig?.component === "EmailPreviewModal" && modalConfig.props && (
         <EmailPreviewModal
           isOpen={true}

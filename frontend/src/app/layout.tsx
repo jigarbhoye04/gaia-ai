@@ -1,20 +1,44 @@
 import "./styles/tailwind.css";
+import "./styles/globals.css";
 
 import { Databuddy } from "@databuddy/sdk/react";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { Suspense } from "react";
 
 import AnalyticsLayout from "@/layouts/AnalyticsLayout";
 import ProvidersLayout from "@/layouts/ProvidersLayout";
+import {
+  generateOrganizationSchema,
+  generateWebSiteSchema,
+  siteConfig,
+} from "@/lib/seo";
 
 import { defaultFont, getAllFontVariables } from "./fonts";
 
+// Dynamically determine the base URL based on environment
+const getMetadataBase = () => {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return new URL(process.env.NEXT_PUBLIC_APP_URL);
+  }
+
+  if (process.env.VERCEL_URL) {
+    return new URL(`https://${process.env.VERCEL_URL}`);
+  }
+
+  // Fallback to production URL
+  return new URL(siteConfig.url);
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://heygaia.io"),
-  title: { default: "GAIA - Your Personal Assistant", template: "%s | GAIA" },
-  description:
-    "GAIA is your personal AI assistant designed to help increase your productivity.",
+  metadataBase: getMetadataBase(),
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.short_name}`,
+  },
+  description: siteConfig.description,
   icons: {
     icon: [
       { url: "/favicon.ico", type: "image/x-icon" },
@@ -25,7 +49,7 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   keywords: [
-    "GAIA",
+    siteConfig.short_name,
     "Personal AI Assistant",
     "AI",
     "ai assistant",
@@ -38,26 +62,68 @@ export const metadata: Metadata = {
     "smart assistant",
     "AI personal assistant",
     "task management",
+    "email automation",
+    "calendar management",
+    "goal tracking",
+    "workflow automation",
+    "proactive AI",
+    "productivity assistant",
   ],
   openGraph: {
-    title: "GAIA - Your Personal Assistant",
-    siteName: "GAIA - Personal Assistant",
-    url: "https://heygaia.io/",
+    title: siteConfig.name,
+    siteName: siteConfig.name,
+    url: siteConfig.url,
     type: "website",
-    description:
-      "GAIA is your personal AI assistant designed to help increase your productivity.",
-    images: ["/images/screenshot.webp"],
+    description: siteConfig.description,
+    images: [
+      {
+        url: `${siteConfig.url}${siteConfig.ogImage}`,
+        width: 1200,
+        height: 630,
+        alt: "GAIA - Personal AI Assistant",
+        type: "image/webp",
+      },
+    ],
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "GAIA - Your Personal Assistant",
-    description:
-      "GAIA is your personal AI assistant designed to help increase your productivity.",
-    images: ["/images/screenshot.webp"],
+    title: siteConfig.name,
+    description: siteConfig.description,
+    images: [
+      {
+        url: `${siteConfig.url}${siteConfig.ogImage}`,
+        width: 1200,
+        height: 630,
+        alt: "GAIA - Personal AI Assistant",
+      },
+    ],
+    creator: "@trygaia",
+    site: "@trygaia",
   },
   other: {
     "msapplication-TileColor": "#00bbff",
     "apple-mobile-web-app-capable": "yes",
+  },
+  authors: [
+    { name: "GAIA Team", url: siteConfig.url },
+    ...siteConfig.founders.map((founder) => ({
+      name: founder.name,
+      url: founder.linkedin,
+    })),
+  ],
+  creator: siteConfig.short_name,
+  publisher: siteConfig.short_name,
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
@@ -70,6 +136,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${getAllFontVariables()} dark`}>
+      <SpeedInsights />
       <head>
         <link
           rel="preconnect"
@@ -78,58 +145,37 @@ export default function RootLayout({
         />
         <link rel="dns-prefetch" href="https://uptime.betterstack.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
-        {/* Preconnect to Databuddy origins for 130ms savings */}
+
         <link
           rel="preconnect"
           href="https://databuddy.cc"
           crossOrigin="anonymous"
         />
         <link
-          rel="preconnect"
-          href="https://cdn.databuddy.cc"
-          crossOrigin="anonymous"
-        />
-        {/* Preload critical hero image to improve LCP - reduce 1,160ms load delay */}
-        <link
           rel="preload"
           as="image"
-          href="/images/hero.webp?q=80"
+          href="/images/wallpapers/switzerland_night.webp"
           fetchPriority="high"
         />
-
-        <link rel="preconnect" href="https://i.ytimg.com" />
+        {/* <link rel="preconnect" href="https://i.ytimg.com" /> */}
       </head>
       <body className={`dark ${defaultFont.className}`}>
         <main>
           <ProvidersLayout>{children}</ProvidersLayout>
         </main>
 
-        {/* JSON-LD Schema */}
-        <Script id="json-ld" type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            name: "GAIA",
-            alternateName: ["G.A.I.A", "General Purpose AI Assistant"],
-            url: "https://heygaia.io",
-          })}
+        {/* JSON-LD Schema - Organization */}
+        <Script id="json-ld-organization" type="application/ld+json">
+          {JSON.stringify(generateOrganizationSchema())}
         </Script>
-        {/* Defer all analytics to improve LCP and reduce unused JS */}
-        <Script
-          src="https://uptime.betterstack.com/widgets/announcement.js"
-          data-id="212836"
-          strategy="afterInteractive"
-        />
-        <Script
-          src="https://analytics.heygaia.io/api/script.js"
-          data-site-id="1"
-          strategy="afterInteractive"
-          data-session-replay="true"
-        />
 
-        <Suspense fallback={<></>}>
-          <AnalyticsLayout />
-        </Suspense>
+        {/* JSON-LD Schema - WebSite */}
+        <Script id="json-ld-website" type="application/ld+json">
+          {JSON.stringify(generateWebSiteSchema())}
+        </Script>
+
+        <VercelAnalytics />
+        <AnalyticsLayout />
 
         {process.env.NEXT_PUBLIC_DATABUDDY_CLIENT_ID && (
           <Suspense fallback={<></>}>

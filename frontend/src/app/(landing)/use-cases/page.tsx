@@ -1,80 +1,57 @@
-"use client";
+import type { Metadata } from "next";
+import Image from "next/image";
 
-import { useEffect, useRef, useState } from "react";
-
-import Spinner from "@/components/ui/shadcn/spinner";
-import UseCaseSection from "@/features/use-cases/components/UseCaseSection";
+import UseCasesPageClient from "@/app/(landing)/use-cases/client";
 import {
   CommunityWorkflow,
   workflowApi,
 } from "@/features/workflows/api/workflowApi";
-import CommunityWorkflowCard from "@/features/workflows/components/CommunityWorkflowCard";
+import { generatePageMetadata } from "@/lib/seo";
 
-export default function UseCasesPage() {
-  const [communityWorkflows, setCommunityWorkflows] = useState<
-    CommunityWorkflow[]
-  >([]);
-  const contentRef = useRef(null);
+export const metadata: Metadata = generatePageMetadata({
+  title: "Use Cases & Workflows",
+  description:
+    "Explore powerful workflows and use cases for GAIA. Discover how others are using AI to automate tasks, manage emails, schedule meetings, and boost productivity with community-built workflows.",
+  path: "/use-cases",
+  keywords: [
+    "GAIA workflows",
+    "AI automation workflows",
+    "productivity workflows",
+    "use cases",
+    "automation examples",
+    "community workflows",
+    "workflow templates",
+    "AI task automation",
+  ],
+});
 
-  const [isLoadingCommunity, setIsLoadingCommunity] = useState(false);
+export const revalidate = 3600; // Revalidate every hour
 
-  // Load community workflows
-  useEffect(() => {
-    const loadCommunityWorkflows = async () => {
-      setIsLoadingCommunity(true);
-      try {
-        const response = await workflowApi.getCommunityWorkflows(8, 0);
-        setCommunityWorkflows(response.workflows);
-      } catch (error) {
-        console.error("Error loading community workflows:", error);
-      } finally {
-        setIsLoadingCommunity(false);
-      }
-    };
+export default async function UseCasesPage() {
+  let communityWorkflows: CommunityWorkflow[] = [];
 
-    loadCommunityWorkflows();
-  }, []);
+  try {
+    const response = await workflowApi.getCommunityWorkflows(8, 0);
+    communityWorkflows = response.workflows;
+  } catch (error) {
+    console.error("Error loading community workflows:", error);
+  }
 
   return (
-    <div className="min-h-screen" ref={contentRef}>
-      <div className="container mx-auto px-6 pt-30 pb-8">
-        <div className="mb-8 text-center">
-          <h1 className="mb-4 text-5xl font-bold">Use Cases</h1>
-          <p className="mx-auto max-w-3xl text-xl text-foreground-500">
-            Discover powerful automation templates and AI prompts to streamline
-            your workflow
-          </p>
-        </div>
-
-        <UseCaseSection dummySectionRef={contentRef} />
-
-        <div id="community-section" className="mt-14 space-y-6">
-          <div className="text-center">
-            <h2 className="mb-2 text-4xl font-bold">By the Community</h2>
-            <p className="mx-auto max-w-2xl text-lg text-foreground-500">
-              Discover workflows created and shared by our community of users
-            </p>
-          </div>
-
-          {isLoadingCommunity ? (
-            <div className="flex h-48 items-center justify-center">
-              <Spinner />
-            </div>
-          ) : communityWorkflows.length === 0 ? (
-            <div className="flex h-48 items-center justify-center">
-              <div className="text-lg text-foreground-500">
-                No community workflows available yet
-              </div>
-            </div>
-          ) : (
-            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {communityWorkflows.map((workflow) => (
-                <CommunityWorkflowCard key={workflow.id} workflow={workflow} />
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="relative h-fit min-h-screen pt-110">
+      <div className="absolute inset-0 top-0 z-0 h-[70vh] w-[100%]">
+        <Image
+          src={"/images/wallpapers/meadow.webp"}
+          alt="GAIA Use-Cases Wallpaper"
+          sizes="100vw"
+          priority
+          fill
+          className="aspect-video object-cover object-center opacity-80"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40vh] bg-gradient-to-t from-background to-transparent" />
       </div>
+
+      <UseCasesPageClient communityWorkflows={communityWorkflows} />
     </div>
   );
 }

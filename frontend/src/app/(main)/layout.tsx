@@ -2,19 +2,23 @@
 
 import { useDrag } from "@use-gesture/react";
 import { usePathname } from "next/navigation";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
+
+export const dynamic = "force-dynamic";
 
 import HeaderManager from "@/components/layout/headers/HeaderManager";
 import Sidebar from "@/components/layout/sidebar/MainSidebar";
-import {
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/shadcn/sidebar";
+import RightSidebar from "@/components/layout/sidebar/RightSidebar";
+import SuspenseLoader from "@/components/shared/SuspenseLoader";
+import { SidebarInset, SidebarProvider } from "@/components/ui/shadcn/sidebar";
 import { TooltipProvider } from "@/components/ui/shadcn/tooltip";
 import { useOnboardingGuard } from "@/features/auth/hooks/useOnboardingGuard";
+import CommandMenu from "@/features/search/components/CommandMenu";
 import { useIsMobile } from "@/hooks/ui/useMobile";
+import { useBackgroundSync } from "@/hooks/useBackgroundSync";
 import SidebarLayout, { CustomSidebarTrigger } from "@/layouts/SidebarLayout";
-import { useSidebar as useUIStoreSidebar } from "@/stores/uiStore";
+import { useRightSidebar } from "@/stores/rightSidebarStore";
+import { useUIStoreSidebar } from "@/stores/uiStore";
 
 const HeaderSidebarTrigger = () => {
   return (
@@ -27,12 +31,19 @@ const HeaderSidebarTrigger = () => {
 export default function MainLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { isOpen, isMobileOpen, setOpen, setMobileOpen } = useUIStoreSidebar();
+  const {
+    content: rightSidebarContent,
+    isOpen: rightSidebarOpen,
+    variant: rightSidebarVariant,
+  } = useRightSidebar();
   const isMobile = useIsMobile();
   const [defaultOpen, setDefaultOpen] = useState(true);
   const dragRef = useRef<HTMLDivElement>(null);
+  const [commandMenuOpen, setCommandMenuOpen] = useState(false);
 
   // Check if user needs onboarding
   useOnboardingGuard();
+  useBackgroundSync();
 
   // Auto-close sidebar on mobile when pathname changes
   useEffect(() => {
@@ -94,7 +105,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
         defaultOpen={defaultOpen}
       >
         <div
-          className="flex min-h-screen w-full dark"
+          className="relative flex min-h-screen w-full dark"
           style={{ touchAction: "pan-y" }}
           ref={dragRef}
         >
@@ -111,10 +122,17 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               <HeaderManager />
             </header>
             <main className="flex flex-1 flex-col overflow-hidden">
-              {children}
+              <Suspense fallback={<SuspenseLoader />}>{children}</Suspense>
             </main>
           </SidebarInset>
+
+          <RightSidebar isOpen={rightSidebarOpen} variant={rightSidebarVariant}>
+            {rightSidebarContent}
+          </RightSidebar>
         </div>
+
+        {/* Global Command Menu */}
+        <CommandMenu open={commandMenuOpen} onOpenChange={setCommandMenuOpen} />
       </SidebarProvider>
     </TooltipProvider>
   );

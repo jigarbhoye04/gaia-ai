@@ -2,14 +2,15 @@ import { ScrollShadow } from "@heroui/scroll-shadow";
 import { Tooltip } from "@heroui/tooltip";
 
 import { Gmail } from "@/components";
+import CollapsibleListWrapper from "@/components/shared/CollapsibleListWrapper";
 import { useAppendToInput } from "@/stores/composerStore";
 import { EmailFetchData } from "@/types/features/mailTypes";
 
 interface EmailListProps {
   emails?: EmailFetchData[] | null;
   backgroundColor?: string;
-  showTitle?: boolean;
   maxHeight?: string;
+  isCollapsible?: boolean;
 }
 
 function extractSenderName(from: string): string {
@@ -60,8 +61,8 @@ function formatTime(time: string | null): string {
 export default function EmailListCard({
   emails,
   backgroundColor = "bg-zinc-800",
-  showTitle = true,
   maxHeight = "max-h-[300px]",
+  isCollapsible = true,
 }: EmailListProps) {
   const appendToInput = useAppendToInput();
 
@@ -74,23 +75,11 @@ export default function EmailListCard({
     }
   };
 
-  if (emails)
-    return (
+  if (emails) {
+    const content = (
       <div
-        className={`mt-3 w-full max-w-2xl rounded-3xl ${backgroundColor} p-3 text-white`}
+        className={`w-full max-w-2xl rounded-3xl ${backgroundColor} p-3 text-white`}
       >
-        {/* Header */}
-        {showTitle && (
-          <div className="flex items-center justify-between px-3 py-1">
-            <div className="flex items-center gap-2">
-              <Gmail width={20} height={20} />
-              <span className="text-sm font-medium">
-                Fetched {emails.length} Email{emails.length > 0 ? "s" : ""}
-              </span>
-            </div>
-          </div>
-        )}
-
         {/* Email List */}
         <ScrollShadow className={`${maxHeight} divide-y divide-gray-700`}>
           {!!emails &&
@@ -101,6 +90,9 @@ export default function EmailListCard({
                 content={`Ask about this email from ${extractSenderName(email.from || "Unknown Sender")}`}
                 showArrow
                 color="foreground"
+                delay={0}
+                closeDelay={0}
+                disableAnimation
               >
                 <div
                   className="group flex cursor-pointer items-center gap-4 p-3 transition-colors hover:bg-zinc-700"
@@ -130,4 +122,16 @@ export default function EmailListCard({
         </ScrollShadow>
       </div>
     );
+
+    return (
+      <CollapsibleListWrapper
+        icon={<Gmail width={20} height={20} />}
+        count={emails.length}
+        label="Email"
+        isCollapsible={isCollapsible}
+      >
+        {content}
+      </CollapsibleListWrapper>
+    );
+  }
 }

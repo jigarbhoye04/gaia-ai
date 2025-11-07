@@ -4,7 +4,7 @@ import { Button } from "@heroui/button";
 import { useDisclosure } from "@heroui/modal";
 import { Plus, Tag } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Appointment01Icon,
@@ -48,12 +48,10 @@ function SidebarSection({
   emptyState,
 }: SidebarSectionProps) {
   return (
-    <div className="pb-3">
+    <div className="pb-1">
       {title && (
         <div className="mb-1 flex items-center justify-between px-1">
-          <span className="text-xs font-medium text-foreground-500">
-            {title}
-          </span>
+          <span className="text-xs text-zinc-500">{title}</span>
           {action}
         </div>
       )}
@@ -75,7 +73,7 @@ function SidebarSection({
             className={`justify-start px-2 text-start text-sm ${
               activeItem === item.href
                 ? "bg-primary/10 text-primary"
-                : "text-foreground-600"
+                : "text-zinc-400"
             }`}
             variant="light"
             radius="sm"
@@ -117,6 +115,9 @@ export default function TodoSidebar() {
   } = useDisclosure();
   // const [searchQuery, setSearchQuery] = useState("");
 
+  // Track initial load to prevent showing spinner on navigation
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
   const {
     projects,
     labels,
@@ -132,6 +133,7 @@ export default function TodoSidebar() {
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([loadProjects(), loadCounts(), loadLabels()]);
+      setIsInitialLoad(false);
     };
 
     loadData();
@@ -256,12 +258,12 @@ export default function TodoSidebar() {
           />
         </form> */}
 
-        {loading ? (
+        {isInitialLoad && loading ? (
           <div className="flex h-[400px] w-full items-center justify-center">
             <Spinner />
           </div>
         ) : (
-          <div className="space-y-4 divide-y-1 divide-solid divide-zinc-700">
+          <div className="space-y-4">
             {/* Main Menu */}
             <SidebarSection
               items={mainMenuItems}
@@ -284,7 +286,7 @@ export default function TodoSidebar() {
               activeItem={pathname}
               onItemClick={handleNavigation}
               emptyState={{
-                loading,
+                loading: isInitialLoad && loading,
                 message: "No labels yet",
               }}
             />
@@ -307,7 +309,7 @@ export default function TodoSidebar() {
                 </Button>
               }
               emptyState={{
-                loading,
+                loading: isInitialLoad && loading,
                 message: "No projects yet",
               }}
             />

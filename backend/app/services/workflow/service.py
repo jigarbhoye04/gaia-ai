@@ -9,8 +9,10 @@ from typing import List, Optional
 
 from app.config.loggers import general_logger as logger
 from app.db.mongodb.collections import workflows_collection
+from app.decorators.caching import Cacheable
 from app.models.workflow_models import (
     CreateWorkflowRequest,
+    PublicWorkflowsResponse,
     UpdateWorkflowRequest,
     Workflow,
     WorkflowExecutionRequest,
@@ -19,7 +21,7 @@ from app.models.workflow_models import (
 )
 from .generation_service import WorkflowGenerationService
 from .queue_service import WorkflowQueueService
-from .scheduler_service import workflow_scheduler_service
+from .scheduler import workflow_scheduler
 from app.utils.workflow_utils import (
     ensure_trigger_config_object,
     handle_workflow_error,
@@ -64,7 +66,7 @@ class WorkflowService:
             )
 
             # Insert into database
-            workflow_dict = workflow.model_dump()
+            workflow_dict = workflow.model_dump(mode="json")
             workflow_dict["_id"] = workflow_dict["id"]
 
             result = await workflows_collection.insert_one(workflow_dict)
@@ -82,7 +84,7 @@ class WorkflowService:
                 and trigger_config.enabled
                 and trigger_config.next_run
             ):
-                await workflow_scheduler_service.schedule_workflow_execution(
+                await workflow_scheduler.schedule_workflow_execution(
                     workflow.id,
                     user_id,
                     trigger_config.next_run,
@@ -98,9 +100,13 @@ class WorkflowService:
                 )
                 return updated_workflow or workflow
             else:
-                await WorkflowQueueService.queue_workflow_generation(
+                success = await WorkflowQueueService.queue_workflow_generation(
                     workflow.id, user_id
                 )
+                if not success:
+                    logger.error(
+                        f"Failed to queue workflow generation for {workflow.id}"
+                    )
 
             return workflow
 
@@ -214,19 +220,21 @@ class WorkflowService:
                         and current_workflow.activated
                     ):
                         # Reschedule to new time with new cron expression
-                        await workflow_scheduler_service.reschedule_workflow(
+                        await workflow_scheduler.reschedule_workflow(
                             workflow_id,
                             new_trigger_config.next_run,
                             repeat=new_trigger_config.cron_expression,
                         )
                     else:
                         # Cancel if workflow is being disabled or conditions not met
-                        await workflow_scheduler_service.cancel_scheduled_workflow_execution(
+                        await workflow_scheduler.cancel_scheduled_workflow_execution(
                             workflow_id
                         )
 
                 # Convert TriggerConfig back to dict for MongoDB storage
-                update_fields["trigger_config"] = new_trigger_config.model_dump()
+                update_fields["trigger_config"] = new_trigger_config.model_dump(
+                    mode="json"
+                )
 
             update_data.update(update_fields)
 
@@ -249,15 +257,11 @@ class WorkflowService:
         """Delete a workflow."""
         try:
             # Cancel any scheduled executions before deleting
-            await workflow_scheduler_service.cancel_scheduled_workflow_execution(
-                workflow_id
-            )
+            await workflow_scheduler.cancel_scheduled_workflow_execution(workflow_id)
 
             # Additional cleanup
             try:
-                await workflow_scheduler_service.scheduler.cancel_task(
-                    workflow_id, user_id
-                )
+                await workflow_scheduler.cancel_task(workflow_id, user_id)
             except Exception as e:
                 logger.warning(
                     f"Additional cleanup failed for workflow {workflow_id}: {e}"
@@ -301,9 +305,13 @@ class WorkflowService:
 
             execution_id = f"exec_{workflow_id}_{uuid.uuid4().hex[:8]}"
 
-            await WorkflowQueueService.queue_workflow_execution(
+            success = await WorkflowQueueService.queue_workflow_execution(
                 workflow_id, user_id, request.context
             )
+            if not success:
+                raise ValueError(
+                    f"Failed to queue workflow execution for {workflow_id}"
+                )
 
             logger.info(f"Started execution {execution_id} for workflow {workflow_id}")
 
@@ -382,7 +390,7 @@ class WorkflowService:
                 and updated_workflow.trigger_config.enabled
                 and updated_workflow.trigger_config.next_run
             ):
-                await workflow_scheduler_service.schedule_workflow_execution(
+                await workflow_scheduler.schedule_workflow_execution(
                     workflow_id,
                     user_id,
                     updated_workflow.trigger_config.next_run,
@@ -409,9 +417,7 @@ class WorkflowService:
                 return None
 
             # Cancel any scheduled executions
-            await workflow_scheduler_service.cancel_scheduled_workflow_execution(
-                workflow_id
-            )
+            await workflow_scheduler.cancel_scheduled_workflow_execution(workflow_id)
 
             # Update trigger to disabled and status to inactive
             update_data = {
@@ -472,6 +478,148 @@ class WorkflowService:
 
         except Exception as e:
             logger.error(f"Error regenerating workflow steps {workflow_id}: {str(e)}")
+            raise
+
+    @staticmethod
+    async def increment_execution_count(
+        workflow_id: str, user_id: str, is_successful: bool = False
+    ) -> bool:
+        """Increment workflow execution statistics.
+
+        Args:
+            workflow_id: ID of the workflow
+            user_id: ID of the user who owns the workflow
+            is_successful: Whether the execution was successful
+
+        Returns:
+            True if update succeeded, False otherwise
+        """
+        try:
+            inc_data = {"total_executions": 1}
+            if is_successful:
+                inc_data["successful_executions"] = 1
+
+            update_data = {
+                "$inc": inc_data,
+                "$set": {"last_executed_at": datetime.now(timezone.utc)},
+            }
+
+            result = await workflows_collection.update_one(
+                {"_id": workflow_id, "user_id": user_id}, update_data
+            )
+
+            success = result.matched_count > 0
+            if success:
+                logger.debug(
+                    f"Updated execution count for workflow {workflow_id}: total +1, successful +{1 if is_successful else 0}"
+                )
+            else:
+                logger.warning(
+                    f"Failed to update execution count - workflow not found: {workflow_id}"
+                )
+
+            return success
+
+        except Exception as e:
+            logger.error(
+                f"Error updating execution count for workflow {workflow_id}: {str(e)}"
+            )
+            return False
+
+    @staticmethod
+    @Cacheable(smart_hash=True, ttl=300, model=PublicWorkflowsResponse)
+    async def get_community_workflows(
+        limit: int = 20,
+        offset: int = 0,
+        user_id: Optional[str] = None,
+    ) -> PublicWorkflowsResponse:
+        """Get public workflows from the community marketplace with caching."""
+        try:
+            pipeline = [
+                {"$match": {"is_public": True}},
+                {"$sort": {"created_at": -1}},
+                {"$skip": offset},
+                {"$limit": limit},
+                {
+                    "$lookup": {
+                        "from": "users",
+                        "let": {"creator_id": "$created_by"},
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": {
+                                        "$eq": ["$_id", {"$toObjectId": "$$creator_id"}]
+                                    }
+                                }
+                            },
+                            {
+                                "$project": {
+                                    "name": 1,
+                                    "email": 1,
+                                    "picture": 1,
+                                    "_id": 0,
+                                }
+                            },
+                        ],
+                        "as": "creator_info",
+                    }
+                },
+                {
+                    "$project": {
+                        "_id": 1,
+                        "title": 1,
+                        "description": 1,
+                        "steps": {
+                            "$map": {
+                                "input": "$steps",
+                                "as": "step",
+                                "in": {
+                                    "title": "$$step.title",
+                                    "tool_name": "$$step.tool_name",
+                                    "tool_category": "$$step.tool_category",
+                                    "description": "$$step.description",
+                                },
+                            }
+                        },
+                        "upvoted_by": 1,
+                        "created_at": 1,
+                        "created_by": 1,
+                        "creator_info": 1,
+                    }
+                },
+            ]
+
+            workflows = await workflows_collection.aggregate(pipeline).to_list(
+                length=limit
+            )
+            total = await workflows_collection.count_documents({"is_public": True})
+
+            formatted_workflows = []
+            for workflow in workflows:
+                creator_info = (
+                    workflow.get("creator_info", [{}])[0]
+                    if workflow.get("creator_info")
+                    else {}
+                )
+
+                formatted_workflow = {
+                    "id": workflow["_id"],
+                    "title": workflow["title"],
+                    "description": workflow["description"],
+                    "steps": workflow.get("steps", []),
+                    "created_at": workflow["created_at"],
+                    "creator": {
+                        "id": workflow.get("created_by"),
+                        "name": creator_info.get("name", "Unknown"),
+                        "avatar": creator_info.get("picture"),
+                    },
+                }
+                formatted_workflows.append(formatted_workflow)
+
+            return PublicWorkflowsResponse(workflows=formatted_workflows, total=total)
+
+        except Exception as e:
+            logger.error(f"Error fetching community workflows: {str(e)}")
             raise
 
     @staticmethod
