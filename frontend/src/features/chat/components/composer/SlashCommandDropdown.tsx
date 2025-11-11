@@ -1,6 +1,7 @@
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { ScrollShadow } from "@heroui/scroll-shadow";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "framer-motion";
 import { Hash, Search, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -10,6 +11,8 @@ import { SlashCommandMatch } from "@/features/chat/hooks/useSlashCommands";
 import { formatToolName } from "@/features/chat/utils/chatUtils";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { IntegrationsCard } from "@/features/integrations/components/IntegrationsCard";
+import { posthog } from "@/lib/posthog";
+import { useIntegrationsAccordion } from "@/stores/uiStore";
 
 import { CategoryIntegrationStatus } from "./CategoryIntegrationStatus";
 import { LockedCategorySection } from "./LockedCategorySection";
@@ -46,8 +49,11 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const pathname = usePathname();
+  const {
+    isExpanded: isIntegrationsExpanded,
+    setExpanded: setIntegrationsExpanded,
+  } = useIntegrationsAccordion();
 
   // Determine max height based on current route
   const maxHeight = useMemo(() => {
@@ -71,31 +77,19 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
     }
   }, [isVisible, openedViaButton]);
 
-  // Scroll to selected item when selectedIndex changes
+  // Close integrations accordion when user starts searching
   useEffect(() => {
-    if (selectedIndex >= 0 && scrollContainerRef.current) {
-      const selectedElement = itemRefs.current.get(selectedIndex);
-      if (selectedElement) {
-        const container = scrollContainerRef.current;
-        const containerRect = container.getBoundingClientRect();
-        const elementRect = selectedElement.getBoundingClientRect();
-
-        // Check if element is fully visible
-        const isElementAboveView = elementRect.top < containerRect.top;
-        const isElementBelowView = elementRect.bottom > containerRect.bottom;
-
-        if (isElementAboveView || isElementBelowView) {
-          selectedElement.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-            inline: "nearest",
-          });
-        }
-      }
+    if (searchQuery.trim() && isIntegrationsExpanded) {
+      setIntegrationsExpanded(false);
     }
-  }, [selectedIndex]);
+  }, [searchQuery, isIntegrationsExpanded, setIntegrationsExpanded]);
 
   const handleCategoryChange = (category: string) => {
+    posthog.capture("chat:slash_command_category_changed", {
+      category,
+      previous_category: selectedCategory,
+    });
+
     if (onCategoryChange) {
       onCategoryChange(category);
     } else {
@@ -156,11 +150,16 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
       case "Enter":
       case "Tab":
         e.preventDefault();
-        if (currentFilteredMatches.length === 1) {
-          onSelect(currentFilteredMatches[0]);
+        // Only select unlocked items
+        const unlockedFilteredMatches = currentFilteredMatches.filter(
+          (match) => !match.enhancedTool?.isLocked,
+        );
+        if (unlockedFilteredMatches.length === 1) {
+          onSelect(unlockedFilteredMatches[0]);
         } else {
           const selectedMatch = currentFilteredMatches[selectedIndex];
-          if (selectedMatch) {
+          // Only allow selection if the item is not locked
+          if (selectedMatch && !selectedMatch.enhancedTool?.isLocked) {
             onSelect(selectedMatch);
           }
         }
@@ -211,14 +210,29 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
     return filtered;
   }, [matches, selectedCategory, searchQuery]);
 
-  // Group tools by category and lock status
+  // Check if IntegrationsCard should be shown
+  const showIntegrationsCard = useMemo(() => {
+    return (
+      selectedCategory === "all" &&
+      (openedViaButton
+        ? !searchQuery.trim()
+        : matches.length === filteredMatches.length)
+    );
+  }, [
+    selectedCategory,
+    openedViaButton,
+    searchQuery,
+    matches.length,
+    filteredMatches.length,
+  ]);
+
+  // Separate unlocked and locked matches, grouping locked by category
   const { unlockedMatches, lockedCategories } = useMemo(() => {
     const unlocked: SlashCommandMatch[] = [];
     const lockedByCategory: Record<string, SlashCommandMatch[]> = {};
 
     filteredMatches.forEach((match) => {
       const isLocked = match.enhancedTool?.isLocked || false;
-
       if (isLocked) {
         if (!lockedByCategory[match.tool.category]) {
           lockedByCategory[match.tool.category] = [];
@@ -235,6 +249,54 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
     };
   }, [filteredMatches]);
 
+  // Create virtualizer - IntegrationsCard is index 0 if shown, tools start after
+  const totalCount = showIntegrationsCard
+    ? unlockedMatches.length + 1
+    : unlockedMatches.length;
+
+  const rowVirtualizer = useVirtualizer({
+    count: totalCount,
+    getScrollElement: () => scrollContainerRef.current,
+    estimateSize: (index) => {
+      // First item is IntegrationsCard with dynamic height
+      if (showIntegrationsCard && index === 0) {
+        return 200; // Estimated height for IntegrationsCard (will auto-adjust)
+      }
+      // Regular tool items
+      return 48;
+    },
+    overscan: 5,
+  });
+
+  // Scroll to selected item when selectedIndex changes
+  useEffect(() => {
+    if (selectedIndex >= 0 && selectedIndex < unlockedMatches.length) {
+      // Don't scroll if IntegrationsCard is shown and expanded
+      // This keeps the integrations visible while navigating tools
+      if (showIntegrationsCard && isIntegrationsExpanded) {
+        return;
+      }
+
+      // Offset by 1 if IntegrationsCard is shown (it's at index 0)
+      const virtualIndex = showIntegrationsCard
+        ? selectedIndex + 1
+        : selectedIndex;
+
+      requestAnimationFrame(() => {
+        rowVirtualizer.scrollToIndex(virtualIndex, {
+          align: "center",
+          behavior: "smooth",
+        });
+      });
+    }
+  }, [
+    selectedIndex,
+    rowVirtualizer,
+    unlockedMatches.length,
+    showIntegrationsCard,
+    isIntegrationsExpanded,
+  ]);
+
   return (
     <AnimatePresence>
       {isVisible && matches.length > 0 && (
@@ -247,7 +309,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             duration: 0.2,
             ease: [0.19, 1, 0.22, 1],
           }}
-          className="slash-command-dropdown fixed z-[200] overflow-hidden rounded-3xl border-1 border-zinc-800 bg-zinc-900/70 outline-0! backdrop-blur-xl active:border-zinc-700"
+          className="slash-command-dropdown fixed z-[200] overflow-hidden rounded-3xl border-1 border-zinc-800 bg-zinc-900/70 outline-0! backdrop-blur-xl"
           style={{
             ...(position.top !== undefined && { top: 0, height: position.top }),
             ...(position.bottom !== undefined && {
@@ -333,70 +395,98 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
             className={`relative z-[1] h-fit ${maxHeight} overflow-y-auto`}
           >
             <div className="py-2">
-              {/* Integrations Card - Only show in "all" category and when not filtering */}
-              {selectedCategory === "all" &&
-                (openedViaButton
-                  ? !searchQuery.trim()
-                  : matches.length === filteredMatches.length) && (
-                  <IntegrationsCard onClose={onClose} />
-                )}
-
-              {/* Render unlocked tools first */}
-              {unlockedMatches.map((match, index) => {
-                // Calculate if this item should be highlighted
-                // selectedIndex is based on filteredMatches (unlocked + locked), so we need to map correctly
-                const isSelected = index === selectedIndex;
-
-                return (
-                  <div
-                    key={match.tool.name}
-                    ref={(el) => {
-                      if (el) {
-                        itemRefs.current.set(index, el);
-                      } else {
-                        itemRefs.current.delete(index);
-                      }
-                    }}
-                    className={`relative mx-2 mb-1 cursor-pointer rounded-xl border-none transition-all duration-150 ${
-                      isSelected ? "bg-zinc-700/40" : "hover:bg-white/5"
-                    }`}
-                    onClick={() => onSelect(match)}
-                  >
-                    <div className="flex items-center gap-2 p-2">
-                      {/* Icon */}
-                      <div className="flex-shrink-0">
-                        {getToolCategoryIcon(match.tool.category)}
+              {/* Single virtualized container for everything */}
+              <div
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  // First item is IntegrationsCard if shown
+                  if (showIntegrationsCard && virtualRow.index === 0) {
+                    return (
+                      <div
+                        key={"integrations-card"}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        className="absolute top-0 left-0 w-full"
+                        style={{
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        <IntegrationsCard onClose={onClose} size="small" />
                       </div>
+                    );
+                  }
 
-                      {/* Content */}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm text-foreground-600">
-                            {formatToolName(match.tool.name)}
-                          </span>
-                          {selectedCategory === "all" && (
-                            <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400 outline-1 outline-zinc-700">
-                              {formatToolName(match.tool.category)}
-                            </span>
-                          )}
+                  // Adjust index for tool matches (offset by 1 if IntegrationsCard is shown)
+                  const toolIndex = showIntegrationsCard
+                    ? virtualRow.index - 1
+                    : virtualRow.index;
+                  const match = unlockedMatches[toolIndex];
+                  const isSelected = toolIndex === selectedIndex;
+
+                  return (
+                    <div
+                      key={virtualRow.key}
+                      data-index={virtualRow.index}
+                      ref={rowVirtualizer.measureElement}
+                      className="absolute top-0 left-0 w-full"
+                      style={{
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      <div
+                        className={`relative mx-2 mb-1 cursor-pointer rounded-xl border-none transition-all duration-150 ${
+                          isSelected ? "bg-zinc-700/40" : "hover:bg-white/5"
+                        }`}
+                        onClick={() => {
+                          posthog.capture("chat:slash_command_selected", {
+                            tool_name: match.tool.name,
+                            tool_category: match.tool.category,
+                            opened_via_button: openedViaButton,
+                            search_query: searchQuery || null,
+                          });
+                          onSelect(match);
+                        }}
+                      >
+                        <div className="flex items-center gap-2 p-2">
+                          {/* Icon */}
+                          <div className="flex-shrink-0">
+                            {getToolCategoryIcon(match.tool.category)}
+                          </div>
+
+                          {/* Content */}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="truncate text-sm text-foreground-600">
+                                {formatToolName(match.tool.name)}
+                              </span>
+                              {selectedCategory === "all" && (
+                                <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-400 outline-1 outline-zinc-700">
+                                  {formatToolName(match.tool.category)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
 
-              {/* Render locked categories as grouped sections */}
+              {/* Locked categories with sticky connect section */}
               {Object.entries(lockedCategories).map(
                 ([category, categoryMatches]) => {
-                  // Get integration info from the first tool in the category
                   const firstTool = categoryMatches[0];
                   const requiredIntegration =
                     firstTool.tool.required_integration;
 
                   if (!requiredIntegration) return null;
 
-                  // Find integration name
                   const integrationName =
                     firstTool.enhancedTool?.integration?.integrationName ||
                     requiredIntegration;

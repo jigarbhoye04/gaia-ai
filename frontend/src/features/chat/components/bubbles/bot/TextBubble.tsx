@@ -16,6 +16,7 @@ import { Chip } from "@heroui/chip";
 import { AlertTriangleIcon } from "lucide-react";
 import React from "react";
 
+// import { PostHogCaptureOnViewed } from "posthog-js/react";
 import { ToolDataMap, ToolName } from "@/config/registries/toolRegistry";
 import CalendarListCard from "@/features/calendar/components/CalendarListCard";
 import CalendarListFetchCard from "@/features/calendar/components/CalendarListFetchCard";
@@ -281,6 +282,9 @@ export default function TextBubble({
         return (
           <React.Fragment key={`tool-${toolName}-${index}`}>
             {renderTool(toolName, typedData, index)}
+            {/*
+            <PostHogCaptureOnViewed >
+            {/* </PostHogCaptureOnViewed> */}
           </React.Fragment>
         );
       })}
@@ -315,33 +319,26 @@ export default function TextBubble({
             </div>
           );
 
-          if (hasMultipleParts)
-            return (
-              <div className="flex flex-col">
-                {textParts.map((part, index) => {
-                  const isFirst = index === 0;
-                  const isLast = index === textParts.length - 1;
-                  const groupedClasses = isFirst
-                    ? "imessage-grouped-first mb-1.5"
-                    : isLast
-                      ? "imessage-grouped-last"
-                      : "imessage-grouped-middle mb-1.5";
-
-                  return (
-                    <div
-                      key={index}
-                      className={`imessage-bubble imessage-from-them ${groupedClasses}`}
-                    >
-                      {renderBubbleContent(part, isLast)}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-
           return (
-            <div className="imessage-bubble imessage-from-them">
-              {renderBubbleContent(text?.toString() || "", true)}
+            <div className="flex flex-col">
+              {textParts.map((part, index) => {
+                const isFirst = index === 0;
+                const isLast = index === textParts.length - 1;
+                const groupedClasses = isFirst
+                  ? "imessage-grouped-first mb-1.5"
+                  : isLast
+                    ? "imessage-grouped-last"
+                    : "imessage-grouped-middle mb-1.5";
+
+                return (
+                  <div
+                    key={index}
+                    className={`imessage-bubble imessage-from-them ${groupedClasses}`}
+                  >
+                    {renderBubbleContent(part, isLast)}
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
