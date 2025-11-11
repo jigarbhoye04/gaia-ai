@@ -14,6 +14,19 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: googleapis/release-please-action@v4
+      - uses: actions/checkout@v4
+
+      - name: Run Release Please with GitHub changelog
+        id: release
+        continue-on-error: true
+        uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config.json
+
+      - name: Run Release Please with default changelog (fallback)
+        if: steps.release.outcome == 'failure'
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          config-file: release-please-config-fallback.json
