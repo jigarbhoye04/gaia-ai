@@ -29,11 +29,11 @@ export default function UseCaseCard({
   prompt,
   slug,
 }: UseCaseCardProps) {
-  const router = useRouter();
   const [isCreatingWorkflow, setIsCreatingWorkflow] = useState(false);
   const appendToInput = useAppendToInput();
   const { selectWorkflow } = useWorkflowSelection();
   const { createWorkflow } = useWorkflowCreation();
+  const router = useRouter();
 
   // Handler for card click - navigate to detail page
   const handleCardClick = () => {
