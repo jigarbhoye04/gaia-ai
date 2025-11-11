@@ -75,11 +75,16 @@ export default function RightSide({
           type="button"
           onPress={() => setvoiceModeActive()}
         >
-          <AudioLines />
+          <AudioLines className="text-zinc-400" />
         </Button>
       </Tooltip>
 
-      <Tooltip content={getTooltipContent()} placement="right"  color={isLoading ? "danger" : "primary"} showArrow>
+      <Tooltip
+        content={getTooltipContent()}
+        placement="right"
+        color={isLoading ? "danger" : "primary"}
+        showArrow
+      >
         <Button
           isIconOnly
           aria-label={isLoading ? "Stop generation" : "Send message"}

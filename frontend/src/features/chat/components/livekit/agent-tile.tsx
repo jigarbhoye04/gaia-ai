@@ -46,7 +46,6 @@ export const AgentTile = ({
     >
       <div className="relative aspect-square w-full max-w-[300px]">
         <Orb
-          colors={["#CADCFC", "#A0B9D1"]}
           agentState={orbState}
           getInputVolume={getInputVolume}
           getOutputVolume={getOutputVolume}

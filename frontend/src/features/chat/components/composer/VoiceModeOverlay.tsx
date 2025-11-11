@@ -25,7 +25,7 @@ export function VoiceApp({ onEndCall }: AppProps) {
   const pathname = usePathname();
   let conversationId: string | undefined = undefined;
   const match = pathname.match(/^\/c(?:\/([^/?#]+))?/);
-  if (match && match[1]) {
+  if (match?.[1]) {
     conversationId = match[1];
   }
   const { existingOrRefreshConnectionDetails } =

@@ -1,20 +1,9 @@
 """Voice agent module for GAIA.
 
-This module imports settings from the parent backend's single source of truth,
-which includes Infisical secret injection. The sys.path modification must
-happen before importing app modules.
+This module provides LiveKit-based voice agent functionality with STT, TTS, and LLM integration.
+It streams chat responses from the backend and integrates with ElevenLabs for text-to-speech.
 """
 
-import sys
-from pathlib import Path
-
-# Add parent backend to Python path to import app module
-# This must be done before other app imports
-backend_dir = str(Path(__file__).parent.parent.parent)
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
-
-# Now we can import from app after path is set up
 import asyncio
 import json
 import re
@@ -23,8 +12,8 @@ from contextlib import asynccontextmanager
 from typing import Optional
 
 import aiohttp
-from app.config.loggers import app_logger as logger  # noqa: E402
-from app.config.settings import settings  # noqa: E402
+from app.config.loggers import app_logger as logger
+from app.config.settings import settings
 from livekit import rtc
 from livekit.agents import (
     NOT_GIVEN,
