@@ -57,7 +57,7 @@ run = "pnpm prepare"
 description = "Generate barrel exports"
 run = "pnpm generate-barrels"
 
-[tasks.install]
+[tasks.deps]
 description = "Install dependencies with pnpm"
 run = "pnpm install"
 

@@ -65,7 +65,7 @@ run = "uvx pip-audit"
 description = "Detect secrets in codebase"
 run = "uvx detect-secrets scan --all-files"
 
-[tasks.install]
+[tasks.deps]
 description = "Install all dependencies"
 run = "uv sync"
 

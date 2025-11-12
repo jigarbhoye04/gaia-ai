@@ -59,13 +59,13 @@ fi
 [tasks."setup:backend"]
 description = "Set up backend dependencies"
 dir = "backend"
-run = "mise install"
+run = "mise deps"
 depends = ["setup:env"]
 
 [tasks."setup:frontend"]
 description = "Set up frontend dependencies"
 dir = "frontend"
-run = "mise install"
+run = "mise deps"
 
 [tasks."setup:deps"]
 description = "Install all dependencies"
