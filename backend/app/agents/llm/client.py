@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Dict, List, Optional
 
 from app.config.settings import settings
 from app.constants.llm import (
@@ -12,6 +12,7 @@ from langchain_core.language_models.chat_models import (
 from langchain_core.runnables.utils import ConfigurableField
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from typing_extensions import TypedDict
 
 PROVIDER_MODELS = {
     "openai": DEFAULT_MODEL_NAME,
