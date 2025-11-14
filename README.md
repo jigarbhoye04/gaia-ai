@@ -2,13 +2,17 @@
 
 <img alt="logo" src="frontend/public/images/logos/macos.png" width=150 height=150 /> <br/>
 
-[![GAIA](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/theexperiencecompany/gaia/refs/heads/master/frontend/public/badge.json)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Documentation-00bbff?style=flat&logo=gitbook&logoColor=white)](https://docs.heygaia.io) [![Latest Release](https://img.shields.io/github/v/release/theexperiencecompany/gaia?color=00bbff)](https://github.com/theexperiencecompany/gaia/releases)[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/theexperiencecompany/gaia)
+[![GAIA](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/theexperiencecompany/gaia/refs/heads/master/frontend/public/badge.json)](https://heygaia.io) [![Documentation](https://img.shields.io/badge/Documentation-00bbff?style=flat&logo=gitbook&logoColor=white)](https://docs.heygaia.io) [![Latest Release](https://img.shields.io/github/v/release/theexperiencecompany/gaia?color=00bbff)](https://github.com/theexperiencecompany/gaia/releases)
 
 [![stars](https://img.shields.io/github/stars/theexperiencecompany/gaia)](https://github.com/theexperiencecompany/gaia/stargazers) [![stars](https://img.shields.io/github/forks/theexperiencecompany/gaia)](https://github.com/theexperiencecompany/gaia/forks) [![Better Stack Badge](https://uptime.betterstack.com/status-badges/v3/monitor/1zjmp.svg)](https://uptime.betterstack.com/?utm_source=status_badge)
 
-[![contributors](https://img.shields.io/github/contributors/theexperiencecompany/gaia)](https://github.com/theexperiencecompany/gaia/graphs/contributors) [![open issues](https://img.shields.io/github/issues/theexperiencecompany/gaia)](https://github.com/theexperiencecompany/gaia/issues/) ![last update](https://img.shields.io/github/commit-activity/m/theexperiencecompany/gaia) [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/theexperiencecompany/gaia) [![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Strict-red.svg)](https://polyformproject.org/licenses/noncommercial-1.0.0/)
+<!-- [![Quality Checks](https://github.com/theexperiencecompany/gaia/actions/workflows/main.yml/badge.svg)](https://github.com/theexperiencecompany/gaia/actions/workflows/main.yml) -->
 
-[![Discord](https://discord-live-members-count-badge.vercel.app/api/discord-members?guildId=585464664650022914&color=5c6af3&label=Discord)](https://discord.heygaia.io) [![Twitter Follow](https://img.shields.io/twitter/follow/trygaia?style=social)](https://x.com/intent/user?screen_name=trygaia) [![Whatsapp](https://img.shields.io/badge/WhatsApp-25D366?logo=whatsapp&logoColor=fff&style=flat)](https://whatsapp.heygaia.io)
+![GitHub branch check runs](https://img.shields.io/github/check-runs/theexperiencecompany/gaia/master?logo=github) ![GitHub deployments](https://img.shields.io/github/deployments/theexperiencecompany/gaia/production?logo=github&label=production)
+
+[![contributors](https://img.shields.io/github/contributors/theexperiencecompany/gaia)](https://github.com/theexperiencecompany/gaia/graphs/contributors) [![open issues](https://img.shields.io/github/issues/theexperiencecompany/gaia)](https://github.com/theexperiencecompany/gaia/issues/) ![last update](https://img.shields.io/github/commit-activity/m/theexperiencecompany/gaia) [![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Strict-red.svg)](https://polyformproject.org/licenses/noncommercial-1.0.0/)
+
+[![Discord](https://discord-live-members-count-badge.vercel.app/api/discord-members?guildId=585464664650022914&color=5c6af3&label=Discord)](https://discord.heygaia.io) [![Twitter Follow](https://img.shields.io/twitter/follow/trygaia?style=social)](https://x.com/intent/user?screen_name=trygaia) [![Whatsapp](https://img.shields.io/badge/WhatsApp-25D366?logo=whatsapp&logoColor=fff&style=flat)](https://whatsapp.heygaia.io)[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/theexperiencecompany/gaia)
 
 </div>
 
