@@ -50,7 +50,9 @@ async def create_google_doc_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
@@ -118,7 +120,9 @@ async def list_google_docs_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
@@ -204,7 +208,9 @@ async def get_google_doc_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
@@ -276,7 +282,9 @@ async def update_google_doc_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
@@ -296,9 +304,7 @@ async def update_google_doc_tool(
         )
 
         # Get document info for display
-        doc_info = await get_google_doc(
-            refresh_token, access_token, document_id
-        )
+        doc_info = await get_google_doc(refresh_token, access_token, document_id)
 
         # Send structured data to frontend
         writer = get_stream_writer()
@@ -356,7 +362,9 @@ async def format_google_doc_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
@@ -386,9 +394,7 @@ async def format_google_doc_tool(
         )
 
         # Get document info for display
-        doc_info = await get_google_doc(
-            refresh_token, access_token, document_id
-        )
+        doc_info = await get_google_doc(refresh_token, access_token, document_id)
 
         # Send structured data to frontend
         writer = get_stream_writer()
@@ -453,7 +459,9 @@ async def share_google_doc_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
@@ -471,9 +479,7 @@ async def share_google_doc_tool(
         )
 
         # Get document info for display
-        doc_info = await get_google_doc(
-            refresh_token, access_token, document_id
-        )
+        doc_info = await get_google_doc(refresh_token, access_token, document_id)
 
         # Send structured data to frontend
         writer = get_stream_writer()
@@ -523,7 +529,9 @@ async def search_google_docs_tool(
         if not user_id:
             return "User ID not found in config"
 
-        access_token, refresh_token, token_success = await get_tokens_by_user_id(user_id)
+        access_token, refresh_token, token_success = await get_tokens_by_user_id(
+            user_id
+        )
         if not token_success or not access_token or not refresh_token:
             return "Failed to get valid access token"
 
