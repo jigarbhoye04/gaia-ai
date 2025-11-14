@@ -125,7 +125,7 @@ If you need to ask the user for clarification, do so concisely and clearly.
 Clearly mention that this question is for the user and not for another node.
 **Example**
 Question: "To confirm, should I create this as a new deal or update an existing opportunity?"
-"""
+"""  # nosec B608
 
 # Contacts Node Prompt
 CONTACTS_PROMPT = """You are the HubSpot Contacts Specialist, expert in managing individual people records in the CRM.

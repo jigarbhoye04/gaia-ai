@@ -38,7 +38,7 @@ jobs:
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed for auto-commit
+      contents: write # Needed for auto-commit
     defaults:
       run:
         working-directory: frontend
@@ -123,6 +123,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --all-extras
 
+      - name: Upgrade pip
+        run: |
+          uv pip install --upgrade 'pip>=25.3'
+          uv run pip --version  # Log version for debugging
+
       - name: Install pre-commit and additional tools
         run: |
           uv add --dev pre-commit ruff mypy types-redis types-requests types-pytz types-croniter
@@ -171,4 +176,4 @@ jobs:
     # Runs if: on master branch + (checks succeeded or were skipped) + changes detected
     if: always() && !cancelled() && github.ref == 'refs/heads/master' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.backend-checks.result == 'success' || needs.backend-checks.result == 'skipped') && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
     uses: ./.github/workflows/build.yml
-    secrets: inherit
+    secrets: inherit # pragma: allowlist secret

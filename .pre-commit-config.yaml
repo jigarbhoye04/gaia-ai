@@ -15,12 +15,21 @@ repos:
         files: ^backend/ # Only run on backend/
       - id: check-yaml
         files: ^backend/
+      - id: check-json
+        files: ^backend/
+      - id: check-toml
+        files: ^backend/
       - id: check-merge-conflict
         files: ^backend/
       - id: check-added-large-files
         files: ^backend/
         exclude: ^mcp\.txt$
       - id: check-ast
+        files: ^backend/
+      - id: check-docstring-first
+        files: ^backend/
+      - id: check-case-conflict
+      - id: detect-private-key
         files: ^backend/
 
   - repo: https://github.com/PyCQA/bandit

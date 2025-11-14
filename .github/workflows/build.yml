@@ -72,10 +72,10 @@ jobs:
     needs: [build-backend]
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/deploy.yml
-    secrets: inherit
+    secrets: inherit # pragma: allowlist secret
 
   trigger-frontend:
     needs: [build-backend]
     if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/deploy-frontend.yml
-    secrets: inherit
+    secrets: inherit # pragma: allowlist secret

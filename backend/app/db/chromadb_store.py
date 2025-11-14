@@ -7,7 +7,7 @@ using ChromaDB for vector storage and retrieval.
 import asyncio
 import hashlib
 import inspect
-import pickle
+import pickle  # nosec B403 - Used for internal trusted data serialization only
 from collections.abc import Iterable
 from datetime import datetime, timezone
 from typing import Any
@@ -210,7 +210,7 @@ class ChromaStore(BaseStore):
             document = result["documents"][0] if result["documents"] else None
 
             # Deserialize value from document (stored as pickle base64)
-            value = pickle.loads(document.encode("latin1")) if document else {}
+            value = pickle.loads(document.encode("latin1")) if document else {}  # nosec B301 - Internal trusted data only
 
             created_at_str = metadata.get("created_at")
             updated_at_str = metadata.get("updated_at")
@@ -261,8 +261,9 @@ class ChromaStore(BaseStore):
                 if not document:
                     continue
                 try:
-                    value = pickle.loads(document.encode("latin1"))
-                except Exception:
+                    value = pickle.loads(document.encode("latin1"))  # nosec B301 - Internal trusted data only
+                except Exception as e:
+                    logger.debug(f"Failed to deserialize document at index {idx}: {e}")
                     continue
                 if not isinstance(value, dict):
                     continue
@@ -388,7 +389,7 @@ class ChromaStore(BaseStore):
                                 else None
                             )
                             value = (
-                                pickle.loads(document.encode("latin1"))
+                                pickle.loads(document.encode("latin1"))  # nosec B301 - Internal trusted data only
                                 if document
                                 else {}
                             )

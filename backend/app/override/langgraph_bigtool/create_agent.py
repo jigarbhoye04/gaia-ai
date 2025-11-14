@@ -229,9 +229,10 @@ def create_agent(
     def select_tools(
         tool_calls: list[dict], config: RunnableConfig, *, store: BaseStore
     ) -> State:
-        assert retrieve_tools is not None, (
-            "retrieve_tools is disabled and select_tools should not be called"
-        )
+        if retrieve_tools is None:
+            raise RuntimeError(
+                "retrieve_tools is disabled and select_tools should not be called"
+            )
         selected_tools = {}
         for tool_call in tool_calls:
             kwargs = {**tool_call["args"]}
@@ -246,9 +247,10 @@ def create_agent(
     async def aselect_tools(
         tool_calls: list[dict], config: RunnableConfig, *, store: BaseStore
     ) -> State:
-        assert retrieve_tools is not None, (
-            "retrieve_tools is disabled and aselect_tools should not be called"
-        )
+        if retrieve_tools is None:
+            raise RuntimeError(
+                "retrieve_tools is disabled and aselect_tools should not be called"
+            )
         selected_tools = {}
         for tool_call in tool_calls:
             kwargs = {**tool_call["args"]}

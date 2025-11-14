@@ -107,8 +107,10 @@ class SubAgentFactory:
             # Always include memory tools for subagents
             try:
                 initial_tool_ids.extend([get_all_memory.name, search_memory.name])
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(
+                    f"Failed to add memory tools to subagent: {e}. Continuing without memory tools."
+                )
 
             common_kwargs.update(
                 {
