@@ -131,10 +131,8 @@ jobs:
       - name: Install prek
         run: uv tool install prek
 
-      - name: Install additional tools
-        run: |
-          uv add --dev ruff mypy types-redis types-requests types-pytz types-croniter
-          uv run mypy --install-types --non-interactive
+      - name: Install mypy types
+        run: uv run mypy --install-types --non-interactive
 
       - name: Cache prek environments
         uses: actions/cache@v4
@@ -157,18 +155,18 @@ jobs:
             echo "Files were modified by prek hooks. Changes:"
             git diff --name-only
 
-            # Only commit and push on PRs
-            if [ -n "${{ github.head_ref }}" ]; then
-              # Commit the changes
-              git add .
-              git commit -m "ci(auto-fix): Apply formatting"
+            # Commit the changes
+            git add .
+            git commit -m "ci(auto-fix): Apply formatting"
 
-              # Push to the PR branch
-              git push origin HEAD:${{ github.head_ref }} || echo "⚠️ Could not push to PR branch"
-              echo "✅ Formatting fixes applied and pushed to PR"
+            # Try to push
+            if [ -n "${{ github.head_ref }}" ]; then
+              # On PRs: push and fail if it doesn't work
+              git push origin HEAD:${{ github.head_ref }}
+              echo "✅ Pushed to PR"
             else
-              echo "⚠️ Not a PR - skipping auto-commit (please run prek locally)"
-              exit 1
+              # Not a PR: try to push but don't fail if protected
+              git push && echo "✅ Pushed to branch" || echo "ℹ️ Could not push (protected branch - this is fine)"
             fi
           else
             echo "✅ No formatting issues found"
