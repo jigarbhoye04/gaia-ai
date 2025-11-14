@@ -153,12 +153,5 @@ jobs:
 
   trigger-build:
     needs: [changes, frontend-build, backend-checks]
-    runs-on: ubuntu-latest
     if: always() && !cancelled() && github.ref == 'refs/heads/master' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.backend-checks.result == 'success' || needs.backend-checks.result == 'skipped') && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
-
-    steps:
-      - name: Trigger build workflow
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: build
+    uses: ./.github/workflows/build.yml
