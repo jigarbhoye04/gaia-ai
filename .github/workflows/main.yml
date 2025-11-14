@@ -158,7 +158,9 @@ jobs:
             # Commit and push the changes
             git add .
             git commit -m "ci(auto-fix): Apply formatting"
-            git push
+
+            # Push the changes back to the PR branch
+            git push origin HEAD:${{ github.head_ref }}
 
             echo "✅ Auto-applied formatting fixes and pushed"
           else
