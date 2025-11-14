@@ -4,6 +4,7 @@ on:
   repository_dispatch:
     types: [build]
   workflow_dispatch:
+  workflow_call:
 
 env:
   REGISTRY: ghcr.io
@@ -63,33 +64,11 @@ jobs:
 
   trigger-deploy:
     needs: [build-backend]
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-
-    steps:
-      - name: Trigger deployment workflow
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: deploy
-          client-payload: |
-            {
-              "ref": "${{ github.ref }}",
-              "sha": "${{ github.sha }}"
-            }
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
 
   trigger-frontend:
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-    
-    steps:
-      - name: Trigger Frontend Deployment
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          event-type: deploy-frontend
-          client-payload: |
-            {
-              "ref": "${{ github.ref }}",
-              "sha": "${{ github.sha }}"
-            }
+    uses: ./.github/workflows/deploy-frontend.yml
+    secrets: inherit
