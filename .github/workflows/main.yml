@@ -56,6 +56,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.15.1"
+          cache: "pnpm"
+          cache-dependency-path: "frontend/pnpm-lock.yaml"
 
       - name: Cache Next.js build
         uses: actions/cache@v4
@@ -155,14 +157,19 @@ jobs:
             echo "Files were modified by prek hooks. Changes:"
             git diff --name-only
 
-            # Commit and push the changes
-            git add .
-            git commit -m "ci(auto-fix): Apply formatting"
+            # Only commit and push on PRs
+            if [ -n "${{ github.head_ref }}" ]; then
+              # Commit the changes
+              git add .
+              git commit -m "ci(auto-fix): Apply formatting"
 
-            # Push the changes back to the PR branch
-            git push origin HEAD:${{ github.head_ref }}
-
-            echo "✅ Auto-applied formatting fixes and pushed"
+              # Push to the PR branch
+              git push origin HEAD:${{ github.head_ref }} || echo "⚠️ Could not push to PR branch"
+              echo "✅ Formatting fixes applied and pushed to PR"
+            else
+              echo "⚠️ Not a PR - skipping auto-commit (please run prek locally)"
+              exit 1
+            fi
           else
             echo "✅ No formatting issues found"
           fi
