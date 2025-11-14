@@ -58,6 +58,11 @@ jobs:
             --command="
               set -e
               cd /home/aryan/gaia
+
+              # Discard any local changes (production should always match repo)
+              git reset --hard HEAD
+              git clean -fd
+
               git fetch origin
               git checkout master
               git pull origin master
