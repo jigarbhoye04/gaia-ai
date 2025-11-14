@@ -10,7 +10,6 @@ api/.env
 *.pyc
 .vercel
 .DS_Store
-uv.lock
 
 venv/
 .venv/
@@ -27,8 +26,6 @@ venv/
 
 .idea
 
-
-uv.lock
 
 .terraform/
 .terraform
