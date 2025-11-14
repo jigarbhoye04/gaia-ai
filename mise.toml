@@ -1,0 +1,96 @@
+# Root mise.toml for GAIA monorepo
+#
+# This file defines tasks and tools for the entire GAIA project.
+#
+# mise is a task runner and tool manager that handles both backend and frontend.
+#
+# Run 'mise tasks' to see all tasks in the current directory.
+# Run 'mise tasks --all' to see all tasks including subdirectories
+# Documentation: https://docs.heygaia.io/developers/commands
+
+
+[tools]
+mprocs = "0.7.3"
+python = "3.11"
+node = "22"
+"npm:mintlify" = "latest"
+
+[env]
+_.python.venv = { path = "backend/.venv", create = true }
+MISE_NODE_COREPACK = "1"
+
+[tasks."dev:frontend"]
+description = "Run ONLY frontend"
+dir = "frontend"
+run = "mise dev"
+
+[tasks."dev:backend"]
+description = "Run ONLY backend server (without docker dependencies)"
+dir = "backend"
+run = "mise dev"
+
+[tasks."dev:arq"]
+description = "Run ONLY ARQ worker (without docker dependencies)"
+dir = "backend"
+run = "mise worker"
+
+[tasks."dev:full"]
+description = "Run backend + frontend + arq + docker"
+run = 'mprocs "mise dev:backend" "mise dev:frontend" "mise dev:arq" "docker compose up"'
+
+[tasks.dev]
+description = "Run backend + frontend + docker logs"
+run = 'mprocs "mise dev:backend" "mise dev:frontend" "docker compose up"'
+
+# Setup and Installation (setup:*)
+[tasks."setup:env"]
+description = "Check if environment files exist"
+run = '''
+if [ ! -f "backend/.env" ] || [ ! -f "frontend/.env" ]; then
+    echo "❌ Environment files not found!"
+    echo ""
+    echo "Copy example files:"
+    echo "  cp backend/.env.example backend/.env"
+    echo "  cp frontend/.env.example frontend/.env"
+    exit 1
+fi
+'''
+
+[tasks."setup:backend"]
+description = "Set up backend dependencies"
+dir = "backend"
+run = "mise deps"
+depends = ["setup:env"]
+
+[tasks."setup:frontend"]
+description = "Set up frontend dependencies"
+dir = "frontend"
+run = "mise deps"
+
+[tasks."setup:deps"]
+description = "Install all dependencies"
+depends = ["setup:backend", "setup:frontend"]
+
+[tasks.setup]
+description = "Complete project setup"
+depends = ["setup:*"]
+dir = "backend"
+run = "docker compose up -d && mise seed:models"
+
+# Code Quality (lint:*, format:*, clean:*)
+[tasks.lint]
+description = "Lint both backend and frontend"
+run = ["mise -C backend lint", "mise -C frontend lint"]
+
+[tasks.format]
+description = "Format both backend and frontend"
+run = ["mise -C backend format", "mise -C frontend format"]
+
+[tasks.clean]
+description = "Clean both backend and frontend"
+run = ["mise -C backend clean", "mise -C frontend clean"]
+
+[tasks.docs]
+description = "Run the mintlify documentation server"
+dir = "docs"
+run = "mintlify dev"

@@ -6,7 +6,8 @@ import asyncio
 import os
 import tempfile
 from contextlib import asynccontextmanager
-from typing import Any, Dict, Literal, Optional, TypedDict
+from typing import Any, Dict, Literal, Optional
+from typing_extensions import TypedDict
 from uuid import uuid4
 
 import pypandoc

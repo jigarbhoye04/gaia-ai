@@ -22,6 +22,7 @@ import CalendarListCard from "@/features/calendar/components/CalendarListCard";
 import CalendarListFetchCard from "@/features/calendar/components/CalendarListFetchCard";
 import DeepResearchResultsTabs from "@/features/chat/components/bubbles/bot/DeepResearchResultsTabs";
 import EmailThreadCard from "@/features/chat/components/bubbles/bot/EmailThreadCard";
+import IntegrationConnectionPrompt from "@/features/chat/components/bubbles/bot/IntegrationConnectionPrompt";
 import SearchResultsTabs from "@/features/chat/components/bubbles/bot/SearchResultsTabs";
 import { splitMessageByBreaks } from "@/features/chat/utils/messageBreakUtils";
 import { shouldShowTextBubble } from "@/features/chat/utils/messageContentUtils";
@@ -248,6 +249,19 @@ const TOOL_RENDERERS: Partial<RendererMap> = {
       title="Your Notifications"
     />
   ),
+  integration_connection_required: (data, index) => {
+    return (
+      <IntegrationConnectionPrompt
+        key={`tool-integration-connection-${index}`}
+        integration_connection_required={
+          data as {
+            integration_id: string;
+            message: string;
+          }
+        }
+      />
+    );
+  },
 };
 
 function renderTool<K extends ToolName>(
