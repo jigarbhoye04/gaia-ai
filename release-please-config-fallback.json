@@ -1,7 +1,6 @@
 {
   "separate-pull-requests": false,
   "include-component-in-tag": false,
-  "group-pull-request-title-pattern": "chore: release",
   "plugins": [
     {
       "type": "linked-versions",
