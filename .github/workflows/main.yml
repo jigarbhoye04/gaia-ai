@@ -38,7 +38,7 @@ jobs:
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed for auto-commit
+      contents: write # Needed for auto-commit
     defaults:
       run:
         working-directory: frontend
@@ -123,27 +123,34 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --all-extras
 
-      - name: Install pre-commit and additional tools
+      - name: Upgrade pip
         run: |
-          uv add --dev pre-commit ruff mypy types-redis types-requests types-pytz types-croniter
-          uv run mypy --install-types --non-interactive
-          uv run pre-commit install
+          uv pip install --upgrade 'pip>=25.3'
+          uv run pip --version  # Log version for debugging
 
-      - name: Cache pre-commit environments
+      - name: Install prek
+        run: uv tool install prek
+
+      - name: Install additional tools
+        run: |
+          uv add --dev ruff mypy types-redis types-requests types-pytz types-croniter
+          uv run mypy --install-types --non-interactive
+
+      - name: Cache prek environments
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-py3.11-${{ hashFiles('.pre-commit-config.yaml') }}
+          path: ~/.cache/prek
+          key: prek-${{ runner.os }}-py3.11-${{ hashFiles('.pre-commit-config.yaml') }}
           restore-keys: |
-            pre-commit-${{ runner.os }}-py3.11-
+            prek-${{ runner.os }}-py3.11-
 
-      - name: Run pre-commit checks
+      - name: Run prek checks
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-          echo "Running pre-commit checks..."
-          uv run pre-commit run --all-files --show-diff-on-failure
+          echo "Running prek checks..."
+          uvx prek run --all-files --show-diff-on-failure
 
           # Auto-commit fixes on PRs, fail on master if changes detected
           if ! git diff --exit-code && [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -171,4 +178,4 @@ jobs:
     # Runs if: on master branch + (checks succeeded or were skipped) + changes detected
     if: always() && !cancelled() && github.ref == 'refs/heads/master' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.backend-checks.result == 'success' || needs.backend-checks.result == 'skipped') && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
     uses: ./.github/workflows/build.yml
-    secrets: inherit
+    secrets: inherit # pragma: allowlist secret

@@ -66,52 +66,52 @@ description = "Detect secrets in codebase"
 run = "uvx detect-secrets scan --all-files"
 
 [tasks.precommit]
-description = "Run all pre-commit checks (ruff, mypy, bandit, pip-audit, detect-secrets)"
-run = "pre-commit run --all-files"
+description = "Run all prek checks (ruff, mypy, bandit, pip-audit, detect-secrets)"
+run = "prek run --all-files"
 
 [tasks."precommit:ruff"]
-description = "Run ruff linter (pre-commit hook)"
-run = "pre-commit run ruff --all-files"
+description = "Run ruff linter (prek hook)"
+run = "prek run ruff"
 
 [tasks."precommit:ruff-format"]
-description = "Run ruff formatter (pre-commit hook)"
-run = "pre-commit run ruff-format --all-files"
+description = "Run ruff formatter (prek hook)"
+run = "prek run ruff-format"
 
 [tasks."precommit:trailing-whitespace"]
-description = "Check trailing whitespace (pre-commit hook)"
-run = "pre-commit run trailing-whitespace --all-files"
+description = "Check trailing whitespace (prek hook)"
+run = "prek run trailing-whitespace"
 
 [tasks."precommit:check-yaml"]
-description = "Check YAML files (pre-commit hook)"
-run = "pre-commit run check-yaml --all-files"
+description = "Check YAML files (prek hook)"
+run = "prek run check-yaml"
 
 [tasks."precommit:check-merge-conflict"]
-description = "Check for merge conflicts (pre-commit hook)"
-run = "pre-commit run check-merge-conflict --all-files"
+description = "Check for merge conflicts (prek hook)"
+run = "prek run check-merge-conflict"
 
 [tasks."precommit:check-large-files"]
-description = "Check for large files (pre-commit hook)"
-run = "pre-commit run check-added-large-files --all-files"
+description = "Check for large files (prek hook)"
+run = "prek run check-added-large-files"
 
 [tasks."precommit:check-ast"]
-description = "Check Python AST (pre-commit hook)"
-run = "pre-commit run check-ast --all-files"
+description = "Check Python AST (prek hook)"
+run = "prek run check-ast"
 
 [tasks."precommit:bandit"]
-description = "Run bandit security scanner (pre-commit hook)"
-run = "pre-commit run bandit --all-files"
+description = "Run bandit security scanner (prek hook)"
+run = "prek run bandit"
 
 [tasks."precommit:mypy"]
-description = "Run mypy type checker (pre-commit hook)"
-run = "pre-commit run mypy --all-files"
+description = "Run mypy type checker (prek hook)"
+run = "prek run mypy"
 
 [tasks."precommit:pip-audit"]
-description = "Audit pip packages (pre-commit hook)"
-run = "pre-commit run pip-audit --all-files"
+description = "Audit pip packages (prek hook)"
+run = "prek run pip-audit"
 
 [tasks."precommit:detect-secrets"]
-description = "Detect secrets in codebase (pre-commit hook)"
-run = "pre-commit run detect-secrets --all-files"
+description = "Detect secrets in codebase (prek hook)"
+run = "prek run detect-secrets"
 
 [tasks.deps]
 description = "Install all dependencies"

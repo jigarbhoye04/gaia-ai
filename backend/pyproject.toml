@@ -85,7 +85,6 @@ dependencies = [
   "resend>=2.10.0",
   "tomli>=2.2.1",
   "cfgv>=3.4.0",
-  "pre-commit>=4.2.0",
   "ruff>=0.12.2",
   "mypy>=1.16.1",
   "types-redis>=4.6.0.20241004",
@@ -124,7 +123,6 @@ dependencies = [
 dev = [
   "mypy>=1.16.1",
   "ruff>=0.4.4",
-  "pre-commit>=4.2.0",
   "types-pytz>=2025.2.0.20250516",
   "types-croniter>=6.0.0.20250626",
   "types-redis",
