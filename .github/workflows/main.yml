@@ -177,5 +177,8 @@ jobs:
     needs: [changes, frontend-build, backend-checks]
     # Runs if: on master branch + (checks succeeded or were skipped) + changes detected
     if: always() && !cancelled() && github.ref == 'refs/heads/master' && (needs.frontend-build.result == 'success' || needs.frontend-build.result == 'skipped') && (needs.backend-checks.result == 'success' || needs.backend-checks.result == 'skipped') && (needs.changes.outputs.frontend == 'true' || needs.changes.outputs.backend == 'true')
+    concurrency:
+      group: build-${{ github.ref }}
+      cancel-in-progress: false
     uses: ./.github/workflows/build.yml
     secrets: inherit # pragma: allowlist secret
