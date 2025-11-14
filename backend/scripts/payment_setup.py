@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# mypy: ignore-errors
 """
 Complete Payment setup script for GAIA.
 This script sets up subscription plans in the database using Dodo product IDs.

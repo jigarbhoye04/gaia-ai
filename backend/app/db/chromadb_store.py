@@ -299,7 +299,7 @@ class ChromaStore(BaseStore):
                     return False
         return True
 
-    def _apply_operator(self, value: dict, operator: str, op_value: Any) -> bool:
+    def _apply_operator(self, value: Any, operator: str, op_value: Any) -> bool:
         """Apply comparison operator."""
         if operator == "$eq":
             return value == op_value
