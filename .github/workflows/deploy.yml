@@ -4,21 +4,20 @@ on:
   repository_dispatch:
     types: [deploy]
   workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: deploy-gcp-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
   statuses: write
 
-env:
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  SERVICE_NAME: gaia
-  REGION: ${{ secrets.GCP_REGION }}
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: production
-    if: github.event.client_payload.ref == 'refs/heads/master'
 
     # Needed for OIDC → WIF
     permissions:
@@ -26,6 +25,7 @@ jobs:
       id-token: "write"
 
     steps:
+      # Keyless authentication using Workload Identity Federation (no service account keys needed)
       - name: Authenticate to Google Cloud via Workload Identity Federation
         uses: google-github-actions/auth@v2
         with:
@@ -36,22 +36,25 @@ jobs:
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v2
         with:
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Configure Docker to use gcloud as credential helper
         run: gcloud auth configure-docker
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # SSH into GCP VM and deploy: pull latest code + images, restart containers
       - name: Deploy application on GCP VM
+        env:
+          GCP_ZONE: ${{ secrets.GCP_ZONE }}
         run: |
           gcloud compute ssh ubuntu@gaia-backend \
-            --zone=${{ secrets.GCP_ZONE }} \
+            --zone=$GCP_ZONE \
             --command="
               set -e
               cd /home/aryan/gaia
@@ -60,34 +63,49 @@ jobs:
               git pull origin master
 
               docker compose -f docker-compose.prod.yml pull
-              
-              # Recreate only services with updated images
+
+              # Recreate only services with updated images (zero-downtime restart)
               docker compose -f docker-compose.prod.yml up -d --remove-orphans --no-deps
               docker image prune -f
             "
 
       - name: Verify deployment
+        env:
+          GCP_ZONE: ${{ secrets.GCP_ZONE }}
         run: |
-          gcloud compute ssh ubuntu@gaia-backend \
-            --zone=${{ secrets.GCP_ZONE }} \
+          # Check if containers are running properly
+          output=$(gcloud compute ssh ubuntu@gaia-backend \
+            --zone=$GCP_ZONE \
             --command="
               cd /home/aryan/gaia
               docker compose -f docker-compose.prod.yml ps
-            "
+            ")
+
+          echo "$output"
+
+          # Fail if any containers are not in 'running' state
+          if echo "$output" | grep -E '(Exit|Restarting|Dead)'; then
+            echo "❌ Some containers are not healthy"
+            exit 1
+          fi
+
+          echo "✅ All containers are running"
 
       - name: Docker Cleanup
+        env:
+          GCP_ZONE: ${{ secrets.GCP_ZONE }}
         run: |
           gcloud compute ssh ubuntu@gaia-backend \
-            --zone=${{ secrets.GCP_ZONE }} \
+            --zone=$GCP_ZONE \
             --command="
               echo 'Starting Docker cleanup...'
-              
+
               # Remove dangling images
               docker image prune -f
 
               # Remove stopped containers
               docker container prune -f
-              
+
               # Remove unused networks
               docker network prune -f
 
@@ -100,7 +118,7 @@ jobs:
         with:
           webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
           username: "Gaia Deploy Bot"
-          color: "#48f442"
+          color: ${{ job.status == 'success' && '#48f442' || '#ff6b6b' }}
           message: |
             🚀 **Deployment to GCP**
 
@@ -110,5 +128,3 @@ jobs:
             **Status:** ${{ job.status }}
             **Deployed by:** ${{ github.actor }}
             **Timestamp:** ${{ github.run_id }}
-
-
