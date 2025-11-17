@@ -21,6 +21,8 @@ export async function getPlansServer(activeOnly = true): Promise<Plan[]> {
       throw new Error("Invalid response format from backend");
     }
 
+    console.log(response.data);
+
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
