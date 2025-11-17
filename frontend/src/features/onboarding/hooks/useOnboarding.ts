@@ -1,28 +1,60 @@
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { authApi } from "@/features/auth/api/authApi";
 import { useUser } from "@/features/auth/hooks/useUser";
+import { useFetchIntegrationStatus } from "@/features/integrations";
 
 import { FIELD_NAMES, professionOptions, questions } from "../constants";
 import { Message, OnboardingState } from "../types";
 
+const ONBOARDING_STORAGE_KEY = "gaia-onboarding-state";
+
 export const useOnboarding = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const user = useUser();
-  const [onboardingState, setOnboardingState] = useState<OnboardingState>({
-    messages: [],
-    currentQuestionIndex: 0,
-    currentInputs: {
-      text: "",
-      selectedProfession: null,
-    },
-    userResponses: {},
-    isProcessing: false,
-    isOnboardingComplete: false,
-    hasAnsweredCurrentQuestion: false,
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Force integration status refresh on this page to show connected state immediately
+  const { refetch: refetchIntegrationStatus } = useFetchIntegrationStatus({
+    refetchOnMount: "always",
   });
+
+  const [onboardingState, setOnboardingState] = useState<OnboardingState>(
+    () => {
+      // Try to restore state from sessionStorage
+      if (typeof window !== "undefined") {
+        try {
+          const saved = sessionStorage.getItem(ONBOARDING_STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            // Validate that saved state has required structure
+            if (parsed.messages && Array.isArray(parsed.messages)) {
+              return parsed;
+            }
+          }
+        } catch (error) {
+          console.error("Failed to restore onboarding state:", error);
+        }
+      }
+
+      // Default initial state
+      return {
+        messages: [],
+        currentQuestionIndex: 0,
+        currentInputs: {
+          text: "",
+          selectedProfession: null,
+        },
+        userResponses: {},
+        isProcessing: false,
+        isOnboardingComplete: false,
+        hasAnsweredCurrentQuestion: false,
+      };
+    },
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -30,6 +62,52 @@ export const useOnboarding = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Persist state to sessionStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && onboardingState.messages.length > 0) {
+      try {
+        sessionStorage.setItem(
+          ONBOARDING_STORAGE_KEY,
+          JSON.stringify(onboardingState),
+        );
+      } catch (error) {
+        console.error("Failed to save onboarding state:", error);
+      }
+    }
+  }, [onboardingState]);
+
+  // Handle OAuth success/error from URL parameters
+  useEffect(() => {
+    const oauthSuccess = searchParams.get("oauth_success");
+    const oauthError = searchParams.get("oauth_error");
+
+    if (oauthSuccess === "true") {
+      toast.success("Integration connected successfully!");
+      // Refresh integration status to update button states
+      refetchIntegrationStatus();
+      // Clean up URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete("oauth_success");
+      window.history.replaceState({}, "", url.toString());
+    } else if (oauthError) {
+      // Handle OAuth errors
+      switch (oauthError) {
+        case "cancelled":
+          toast.error("Connection cancelled. You can try again anytime.");
+          break;
+        case "failed":
+          toast.error("Connection failed. Please try again.");
+          break;
+        default:
+          toast.error("Connection failed. Please try again.");
+      }
+      // Clean up URL parameter
+      const url = new URL(window.location.href);
+      url.searchParams.delete("oauth_error");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [searchParams, refetchIntegrationStatus]);
 
   useEffect(() => {
     scrollToBottom();
@@ -293,6 +371,10 @@ export const useOnboarding = () => {
       }
 
       if (response?.success) {
+        // Clear saved onboarding state since we're done
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+        }
         // Navigate to the main chat page
         router.push("/c");
       } else {
@@ -328,10 +410,12 @@ export const useOnboarding = () => {
     }
   };
 
+  // Initialize onboarding only once - don't reset on user.name changes
   useEffect(() => {
-    const firstQuestion = questions[0];
+    // Only initialize if we haven't already and there are no messages
+    if (isInitialized || onboardingState.messages.length > 0) return;
 
-    // Pre-populate the user's name from Gmail if available
+    const firstQuestion = questions[0];
     const userName = user.name || "";
 
     setOnboardingState((prev) => ({
@@ -348,7 +432,9 @@ export const useOnboarding = () => {
         text: firstQuestion.fieldName === FIELD_NAMES.NAME ? userName : "",
       },
     }));
-  }, [user.name]);
+
+    setIsInitialized(true);
+  }, [isInitialized, onboardingState.messages.length, user.name]);
 
   return {
     onboardingState,

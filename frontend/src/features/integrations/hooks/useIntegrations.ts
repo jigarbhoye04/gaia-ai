@@ -35,7 +35,7 @@ export const useFetchIntegrationStatus = ({
     staleTime: 30 * 60 * 1000, // 30 minutes - cache status for reasonable time
     gcTime: 60 * 60 * 1000, // 1 hour - keep in cache longer than staleTime
     retry: 2,
-    refetchOnMount: refetchOnMount,
+    refetchOnMount,
   });
 };
 

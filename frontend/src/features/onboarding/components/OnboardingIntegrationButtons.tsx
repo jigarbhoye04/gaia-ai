@@ -2,6 +2,7 @@ import { Button } from "@heroui/button";
 import React from "react";
 
 import { Gmail, GoogleCalendarIcon } from "@/components/shared/icons";
+import { useFetchIntegrationStatus } from "@/features/integrations";
 import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
 
 interface OnboardingIntegrationButtonsProps {
@@ -11,6 +12,9 @@ interface OnboardingIntegrationButtonsProps {
 export const OnboardingIntegrationButtons: React.FC<
   OnboardingIntegrationButtonsProps
 > = ({ className = "" }) => {
+  // Force refetch on mount to show updated status after OAuth
+  useFetchIntegrationStatus({ refetchOnMount: "always" });
+
   const { connectIntegration, getIntegrationStatus } = useIntegrations();
 
   // Check integration statuses
@@ -42,6 +46,7 @@ export const OnboardingIntegrationButtons: React.FC<
           onPress={handleGmailConnect}
           disabled={isGmailConnected}
           variant="flat"
+          color={isGmailConnected ? "success" : "default"}
           size="sm"
           startContent={<Gmail width={17} height={17} />}
         >
@@ -52,6 +57,7 @@ export const OnboardingIntegrationButtons: React.FC<
           onPress={handleCalendarConnect}
           disabled={isCalendarConnected}
           variant="flat"
+          color={isCalendarConnected ? "success" : "default"}
           size="sm"
           startContent={<GoogleCalendarIcon width={17} height={17} />}
         >
