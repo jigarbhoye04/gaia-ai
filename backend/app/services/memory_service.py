@@ -124,14 +124,18 @@ class MemoryService:
         )
         return parsed_memories
 
-    def _parse_add_result(self, result: Dict[str, Any]) -> Optional[MemoryEntry]:
+    def _parse_add_result(
+        self, result: Dict[str, Any], is_async: bool = False
+    ) -> Optional[MemoryEntry]:
         """
         Parse add operation result from Mem0 API v2.
 
         Args:
             result: Add result dictionary with format:
-                    {"id": "...", "memory": "...", "event": "ADD"|"UPDATE"|"NOOP",
-                     "structured_attributes": {...}}
+                    Sync: {"id": "...", "memory": "...", "event": "ADD"|"UPDATE"|"NOOP",
+                           "structured_attributes": {...}}
+                    Async: {"message": "...", "status": "PENDING", "event_id": "..."}
+            is_async: Whether the result is from async mode
 
         Returns:
             MemoryEntry or None if parsing fails
@@ -140,6 +144,31 @@ class MemoryService:
             self.logger.warning(f"Expected dict, got {type(result)}: {result}")
             return None
 
+        # Handle async mode response (PENDING status)
+        if result.get("status") == "PENDING" or is_async:
+            event_id = result.get("event_id")
+            message = result.get("message", "Memory processing queued")
+
+            if not event_id:
+                self.logger.warning(f"No event_id in async response: {result}")
+                return None
+
+            # Create a placeholder MemoryEntry for async processing
+            memory_entry = MemoryEntry(
+                id=event_id,  # Use event_id as temporary ID
+                content=message,
+                metadata={
+                    "status": "PENDING",
+                    "event_id": event_id,
+                    "async_mode": True,
+                },
+                created_at=datetime.now().isoformat(),
+            )
+
+            self.logger.debug(f"Memory queued for async processing: {event_id}")
+            return memory_entry
+
+        # Handle synchronous mode response
         # Extract memory content - v2 API uses "memory" field
         content = result.get("memory", "")
 
@@ -260,6 +289,7 @@ class MemoryService:
         user_id: Optional[str],
         conversation_id: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        async_mode: bool = False,
     ) -> Optional[MemoryEntry]:
         """
         Store a single memory using Mem0 v2 API.
@@ -269,9 +299,13 @@ class MemoryService:
             user_id: User identifier
             conversation_id: Optional conversation/run identifier
             metadata: Additional metadata
+            async_mode: If True, queue for background processing (faster but returns event_id).
+                       If False, process synchronously and return full memory (default).
 
         Returns:
-            MemoryEntry if successful, None otherwise
+            MemoryEntry if successful, None otherwise.
+            For async_mode=True, returns MemoryEntry with event_id and PENDING status.
+            For async_mode=False, returns MemoryEntry with full memory content.
         """
         user_id = self._validate_user_id(user_id)
         if not user_id:
@@ -293,9 +327,11 @@ class MemoryService:
                 user_id=user_id,
                 metadata=metadata,
                 run_id=conversation_id,
+                async_mode=async_mode,
             )
 
-            self.logger.info(f"Memory stored for user {user_id}")
+            mode_str = "async" if async_mode else "sync"
+            self.logger.info(f"Memory stored for user {user_id} (mode: {mode_str})")
 
             # v2 API response format: {"results": [...]}
             if isinstance(result, dict) and "results" in result:
@@ -315,7 +351,7 @@ class MemoryService:
 
             # Parse the first result (primary memory)
             first_result = results_list[0]
-            memory_entry = self._parse_add_result(first_result)
+            memory_entry = self._parse_add_result(first_result, is_async=async_mode)
 
             if memory_entry:
                 memory_entry.user_id = user_id
