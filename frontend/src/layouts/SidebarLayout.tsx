@@ -10,7 +10,6 @@ import {
   SidebarLeft01Icon,
   SidebarRight01Icon,
 } from "@/components/shared/icons";
-import { Button } from "@/components/ui/shadcn/button";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +19,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/shadcn/sidebar";
+import { Button } from "@heroui/button";
 
 interface SidebarLayoutProps {
   children: ReactNode;
@@ -60,12 +60,17 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       <SidebarHeader className="pb-0">
         <div className="flex items-center justify-between">
           <Link href={"/"}>
-            <Button className="group flex items-center gap-2 rounded-full bg-transparent px-2 hover:bg-foreground/10">
+            <Button
+              className="group ml-2 flex items-center gap-2 px-1"
+              size="sm"
+              variant="light"
+            >
               <Image
+                src="/images/logos/text_w_logo_white.webp"
                 alt="GAIA Logo"
-                src="/images/logos/logo.webp"
-                width={23}
-                height={23}
+                width={80}
+                height={80}
+                className="object-contain"
               />
             </Button>
           </Link>
