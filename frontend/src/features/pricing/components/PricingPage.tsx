@@ -5,7 +5,6 @@ import { Tab, Tabs } from "@heroui/tabs";
 import Image from "next/image";
 
 import FinalSection from "@/features/landing/components/sections/FinalSection";
-import LargeHeader from "@/features/landing/components/shared/LargeHeader";
 import { ComparisonTable } from "@/features/pricing/components/ComparisonTable";
 import { PricingCards } from "@/features/pricing/components/PricingCards";
 
@@ -15,6 +14,19 @@ import { FAQAccordion } from "./FAQAccordion";
 interface PricingPageProps {
   initialPlans?: Plan[];
 }
+
+const integrations = [
+  { id: "gmail", name: "Gmail" },
+  { id: "slack", name: "Slack" },
+  { id: "notion", name: "Notion" },
+  { id: "google_calendar", name: "Google Calendar" },
+  { id: "github", name: "GitHub" },
+  { id: "googlesheets", name: "Google Sheets" },
+  { id: "todoist", name: "Todoist" },
+  { id: "linear", name: "Linear" },
+  { id: "asana", name: "Asana" },
+  { id: "trello", name: "Trello" },
+];
 
 export default function PricingPage({ initialPlans = [] }: PricingPageProps) {
   return (
@@ -60,7 +72,11 @@ export default function PricingPage({ initialPlans = [] }: PricingPageProps) {
           </Tabs>
         </div>
 
-        <ComparisonTable />
+        <ComparisonTable
+          integrations={integrations}
+          isLoading={false}
+          hasMessages={false}
+        />
 
         <div className="relative mb-10 w-full max-w-7xl overflow-hidden rounded-4xl bg-zinc-900/50 px-8 backdrop-blur-sm">
           <FAQAccordion />
