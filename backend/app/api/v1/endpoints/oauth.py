@@ -356,12 +356,16 @@ async def composio_callback(
         except Exception as e:
             logger.warning(f"Failed to invalidate OAuth status cache: {e}")
 
-        # Successful connection - redirect to frontend
+        # Successful connection - redirect to frontend with success indicator
         logger.info(
             f"Composio connection successful: user={user_id}, "
             f"integration={integration_config.id}, account={connectedAccountId}"
         )
-        return RedirectResponse(url=f"{settings.FRONTEND_URL}/{frontend_redirect_path}")
+        # Add oauth_success parameter to inform frontend of successful connection
+        separator = "&" if "?" in frontend_redirect_path else "?"
+        return RedirectResponse(
+            url=f"{settings.FRONTEND_URL}/{frontend_redirect_path}{separator}oauth_success=true"
+        )
 
     except Exception as e:
         logger.error(
