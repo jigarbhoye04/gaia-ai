@@ -201,7 +201,19 @@ export const useOnboarding = () => {
 
           newState.currentQuestionIndex = nextQuestionIndex;
           newState.hasAnsweredCurrentQuestion = false;
+        } else if (prev.currentQuestionIndex === questions.length - 1) {
+          // After profession (last question), move to connections step
+          const connectionsMessage: Message = {
+            id: "connections",
+            type: "bot",
+            content: `Great! Now let's connect your accounts to help me assist you better. You can connect Gmail and Google Calendar below, or skip this step for now.`,
+          };
+          newState.messages = [...newState.messages, connectionsMessage];
+          newState.currentQuestionIndex = questions.length; // Step 3 (connections)
+          newState.hasAnsweredCurrentQuestion = false;
+          newState.isOnboardingComplete = true; // Show completion buttons
         } else {
+          // This shouldn't happen in normal flow
           const finalMessage: Message = {
             id: "final",
             type: "bot",
@@ -436,6 +448,38 @@ export const useOnboarding = () => {
     setIsInitialized(true);
   }, [isInitialized, onboardingState.messages.length, user.name]);
 
+  const handleRestart = useCallback(() => {
+    // Clear sessionStorage
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(ONBOARDING_STORAGE_KEY);
+    }
+
+    // Reset state
+    const firstQuestion = questions[0];
+    const userName = user.name || "";
+
+    setOnboardingState({
+      messages: [
+        {
+          id: firstQuestion.id,
+          type: "bot",
+          content: firstQuestion.question,
+        },
+      ],
+      currentQuestionIndex: 0,
+      currentInputs: {
+        text: firstQuestion.fieldName === FIELD_NAMES.NAME ? userName : "",
+        selectedProfession: null,
+      },
+      userResponses: {},
+      isProcessing: false,
+      isOnboardingComplete: false,
+      hasAnsweredCurrentQuestion: false,
+    });
+
+    setIsInitialized(true);
+  }, [user.name]);
+
   return {
     onboardingState,
     messagesEndRef,
@@ -446,5 +490,6 @@ export const useOnboarding = () => {
     handleInputChange,
     handleSubmit,
     handleLetsGo,
+    handleRestart,
   };
 };
