@@ -1,8 +1,7 @@
 """Memory service layer for handling all memory operations with latest Mem0 API."""
 
-import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 from app.agents.memory.client import memory_client_manager
 from app.config.loggers import llm_logger as logger
@@ -162,7 +161,7 @@ class MemoryService:
                     "event_id": event_id,
                     "async_mode": True,
                 },
-                created_at=datetime.now().isoformat(),
+                created_at=datetime.now(),
             )
 
             self.logger.debug(f"Memory queued for async processing: {event_id}")
@@ -334,11 +333,16 @@ class MemoryService:
             self.logger.info(f"Memory stored for user {user_id} (mode: {mode_str})")
 
             # v2 API response format: {"results": [...]}
+            results_list: List[Dict[str, Any]]
             if isinstance(result, dict) and "results" in result:
-                results_list = result["results"]
+                raw_results = result["results"]
+                results_list = cast(
+                    List[Dict[str, Any]],
+                    raw_results if isinstance(raw_results, list) else [],
+                )
             elif isinstance(result, list):
                 # Fallback for direct list response
-                results_list = result
+                results_list = cast(List[Dict[str, Any]], result)
             else:
                 self.logger.warning(
                     f"Unexpected response format from mem0 add: {type(result)}"
@@ -402,8 +406,8 @@ class MemoryService:
             )
 
             # v2 API response format: {"results": [...], "relations": [...]}
-            memories_list = []
-            relations_list = []
+            memories_list: List[Dict[str, Any]] = []
+            relations_list: List[Dict[str, Any]] = []
 
             if isinstance(response, dict):
                 # Extract memories
@@ -465,8 +469,8 @@ class MemoryService:
             logger.debug(f"{response=}")
 
             # v2 API response format: {"results": [...], "relations": [...]}
-            memories_list = []
-            relationships_list = []
+            memories_list: List[Dict[str, Any]] = []
+            relationships_list: List[Dict[str, Any]] = []
 
             if isinstance(response, dict):
                 # Extract memories from results

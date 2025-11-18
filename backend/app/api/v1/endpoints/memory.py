@@ -1,7 +1,5 @@
 """Memory management API routes."""
 
-import asyncio
-
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.v1.dependencies.oauth_dependencies import get_current_user

@@ -39,8 +39,22 @@ import { useNestedMenu } from "../hooks/useNestedMenu";
 import LogoutModal from "./LogoutModal";
 import { NestedMenuTooltip } from "./NestedMenuTooltip";
 
-// Only allow these values in our modal state.
 export type ModalAction = "clear_chats" | "logout";
+
+interface MenuItem {
+  key: string;
+  label: string;
+  icon?: React.ElementType;
+  href?: string;
+  action?: () => void;
+  color?: "danger" | "default";
+  external?: boolean;
+  hasSubmenu?: boolean;
+  iconColor?: string;
+  customClassNames?: {
+    title?: string;
+  };
+}
 
 export default function SettingsMenu({
   children = (
@@ -122,7 +136,7 @@ export default function SettingsMenu({
     whatsapp: "#25d366",
   };
 
-  const handleItemAction = (item: any) => {
+  const handleItemAction = (item: MenuItem) => {
     if (item.href) {
       router.push(item.href);
     } else if (item.action) {
@@ -219,7 +233,7 @@ export default function SettingsMenu({
               showDivider={section.showDivider}
               classNames={{ divider: "bg-zinc-800/60" }}
             >
-              {section.items.map((item: any) => {
+              {section.items.map((item: MenuItem) => {
                 const Icon = item.icon;
                 const iconColor =
                   item.iconColor || socialMediaColorMap[item.key];
