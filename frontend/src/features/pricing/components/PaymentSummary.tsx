@@ -50,17 +50,6 @@ export function PaymentSummary() {
     );
   }
 
-  // Handle no subscription or missing plan data
-  if (!subscriptionStatus?.is_subscribed || !subscriptionStatus.current_plan) {
-    // Debug logging for development
-    if (process.env.NODE_ENV === "development") {
-      console.log("PaymentSummary Debug - Subscription Status:", {
-        subscriptionStatus,
-        isSubscribed: subscriptionStatus?.is_subscribed,
-        currentPlan: subscriptionStatus?.current_plan,
-        subscription: subscriptionStatus?.subscription,
-      });
-    }
 
     return (
       <Card className="w-full max-w-md">
@@ -148,16 +137,6 @@ export function PaymentSummary() {
               </div>
             )}
         </div>
-
-        {/* Debug information in development */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="mt-4 rounded border border-gray-300 p-2 text-xs">
-            <div className="font-bold">Debug Info:</div>
-            <div>Plan ID: {plan.id}</div>
-            <div>Subscription ID: {subscriptionStatus.subscription?.id}</div>
-            <div>Status: {subscriptionStatus.subscription?.status}</div>
-          </div>
-        )}
       </CardBody>
     </Card>
   );
