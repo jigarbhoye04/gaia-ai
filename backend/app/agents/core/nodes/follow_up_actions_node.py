@@ -87,8 +87,7 @@ async def follow_up_actions_node(
         )
         try:
             actions = parser.parse(result if isinstance(result, str) else result.text())
-        except Exception as parse_exc:
-            logger.error(f"Error parsing follow-up actions: {parse_exc}")
+        except Exception:
             try:
                 writer({"follow_up_actions": []})
             except Exception as e:
