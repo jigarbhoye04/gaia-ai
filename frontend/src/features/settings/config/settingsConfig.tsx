@@ -1,18 +1,16 @@
-import { ReactNode } from "react";
+
+import { BarChart3 } from "lucide-react";
 
 import {
   AccountSetting02Icon,
   AiBrain01Icon,
   BookOpen01Icon,
-  Brain02Icon,
   CreditCardIcon,
   DiscordIcon,
   MessageMultiple02Icon,
-  Settings01Icon,
   TwitterIcon,
   WhatsappIcon,
 } from "@/components/shared/icons";
-import { BarChart3 } from "lucide-react";
 
 export interface SettingsMenuItem {
   key: string;

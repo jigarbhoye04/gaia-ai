@@ -2,7 +2,6 @@
 
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import { ReactNode } from "react";
 
 interface MenuItem {
   key: string;

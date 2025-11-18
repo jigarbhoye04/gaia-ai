@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { CircleArrowUp, ZapIcon } from "lucide-react";
+import { ZapIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -13,14 +13,12 @@ import {
   MessageMultiple02Icon,
   Target04Icon,
 } from "@/components/shared/icons";
+import { RaisedButton } from "@/components/ui";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
 import { posthog } from "@/lib";
 import { useRefreshTrigger } from "@/stores/notificationStore";
 import { NotificationStatus } from "@/types/features/notificationTypes";
-import Image from "next/image";
-import { RaisedButton } from "@/components/ui";
-import { LightningBoltIcon } from "@radix-ui/react-icons";
 
 export default function SidebarTopButtons() {
   const pathname = usePathname();

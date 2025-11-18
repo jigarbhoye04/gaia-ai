@@ -9,8 +9,6 @@ import {
 import { Tab, Tabs } from "@heroui/tabs";
 import {
   ChevronDown,
-  FileImage,
-  FileText,
   List,
   Network,
   Plus,
@@ -24,12 +22,11 @@ import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import {
   AiBrain01Icon,
   FileEmpty02Icon,
-  FileUploadIcon,
   Image02Icon,
 } from "@/components/shared/icons";
 import {
-  memoryApi,
   type Memory,
+  memoryApi,
   type MemoryRelation,
 } from "@/features/memory/api/memoryApi";
 import AddMemoryModal from "@/features/memory/components/AddMemoryModal";

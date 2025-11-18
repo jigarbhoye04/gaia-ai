@@ -1,3 +1,4 @@
+import { Button } from "@heroui/button";
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
@@ -19,7 +20,6 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/shadcn/sidebar";
-import { Button } from "@heroui/button";
 
 interface SidebarLayoutProps {
   children: ReactNode;

@@ -1,7 +1,6 @@
 import { Button } from "@heroui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@heroui/popover";
 import { ScrollShadow } from "@heroui/scroll-shadow";
-import { Plus } from "lucide-react";
 import React, { useState } from "react";
 
 import {

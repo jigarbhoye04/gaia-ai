@@ -7,7 +7,6 @@ import {
   OnboardingMessages,
   OnboardingProgress,
 } from "@/features/onboarding/components";
-import { questions } from "@/features/onboarding/constants";
 import { useOnboarding } from "@/features/onboarding/hooks/useOnboarding";
 
 export default function Onboarding() {

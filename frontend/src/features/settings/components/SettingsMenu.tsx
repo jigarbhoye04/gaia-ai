@@ -12,7 +12,6 @@ import {
   BookIcon,
   ChevronRight,
   CircleArrowUp,
-  File,
   LogOut,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,7 +19,6 @@ import { ReactNode, useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import {
-  BookIcon1,
   BookOpen01Icon,
   BubbleChatQuestionIcon,
   CustomerService01Icon,
