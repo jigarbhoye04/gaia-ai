@@ -68,8 +68,8 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
               <Image
                 src="/images/logos/text_w_logo_white.webp"
                 alt="GAIA Logo"
-                width={80}
-                height={80}
+                width={100}
+                height={30}
                 className="object-contain"
               />
             </Button>
