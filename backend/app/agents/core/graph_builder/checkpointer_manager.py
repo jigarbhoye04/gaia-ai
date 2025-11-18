@@ -35,15 +35,22 @@ class CheckpointerManager:
         """
         Initialize the connection pool and checkpointer.
         """
+        connection_kwargs = {
+            "autocommit": True,
+            "prepare_threshold": 0,
+        }
+
         self.pool = AsyncConnectionPool(
             conninfo=self.conninfo,
             max_size=self.max_pool_size,
+            kwargs=connection_kwargs,
             open=False,
             timeout=5,
         )
         await self.pool.open(wait=True, timeout=5)
 
         self.checkpointer = AsyncPostgresSaver(conn=self.pool)  # type: ignore[call-arg]
+        await self.checkpointer.setup()
 
         async with AsyncPostgresStore.from_conn_string(self.conninfo) as store:
             await store.setup()

@@ -215,7 +215,7 @@ export const SearchIcon: React.FC<IconProps> = (props) => (
 export const StarsIcon: React.FC<IconProps> = (props) => (
   <svg
     color="white"
-    fill="white"
+    fill="none"
     height={24}
     viewBox="0 0 24 24"
     width={24}
