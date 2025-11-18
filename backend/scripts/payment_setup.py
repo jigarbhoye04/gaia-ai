@@ -36,11 +36,10 @@ Example:
 
 import argparse
 import asyncio
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
-import os
 
 # Ensure Infisical secrets are injected before importing settings
 try:
@@ -158,7 +157,7 @@ async def setup_payment_plans(monthly_product_id: str, yearly_product_id: str):
             "duration": "yearly",
             "max_users": 1,
             "features": [
-                "Limited access to everything",
+                "Extended access to everything",
                 "Advanced memory features",
                 "Priority support",
                 "Private Discord access",
