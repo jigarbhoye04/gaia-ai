@@ -50,7 +50,8 @@ export function PaymentSummary() {
     );
   }
 
-
+  // Handle no subscription or no current plan
+  if (!subscriptionStatus || !subscriptionStatus.current_plan) {
     return (
       <Card className="w-full max-w-md">
         <CardHeader>
