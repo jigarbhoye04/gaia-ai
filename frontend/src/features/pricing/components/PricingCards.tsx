@@ -2,17 +2,18 @@
 
 import { Skeleton } from "@heroui/skeleton";
 
+import {
+  Brain02Icon,
+  CustomerService01Icon,
+  DiscordIcon,
+  StarsIcon,
+} from "@/components/shared/icons";
+import { useUser } from "@/features/auth/hooks/useUser";
+
 import type { Plan } from "../api/pricingApi";
 import { usePricing } from "../hooks/usePricing";
 import { convertToUSDCents } from "../utils/currencyConverter";
 import { PricingCard } from "./PricingCard";
-import { useUser } from "@/features/auth/hooks/useUser";
-import {
-  StarsIcon,
-  Brain02Icon,
-  CustomerService01Icon,
-  DiscordIcon,
-} from "@/components/shared/icons";
 
 interface PricingCardsProps {
   durationIsMonth?: boolean;

@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
-import { Plan, pricingApi } from "../api/pricingApi";
 import { useUser } from "@/features/auth/hooks/useUser";
+
+import { Plan, pricingApi } from "../api/pricingApi";
 
 export const usePricing = (initialPlans: Plan[] = []) => {
   const [error, setError] = useState<string | null>(null);
