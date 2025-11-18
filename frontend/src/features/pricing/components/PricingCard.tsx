@@ -4,14 +4,8 @@ import { Chip } from "@heroui/chip";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
-import Image from "next/image";
 
-import {
-  Tick02Icon,
-  StarsIcon,
-  GlobalIcon,
-  UserIcon,
-} from "@/components/shared/icons";
+import { Tick02Icon } from "@/components/shared/icons";
 import { RaisedButton } from "@/components/ui/shadcn/raised-button";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { posthog } from "@/lib";
@@ -150,29 +144,8 @@ export function PricingCard({
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-3xl bg-white/10 backdrop-blur-sm ${className} ${
-        isCurrentPlan && hasActiveSubscription
-          ? "ring-2 ring-green-500 ring-offset-2 ring-offset-zinc-950"
-          : ""
-      }`}
+      className={`relative w-full overflow-hidden rounded-3xl bg-white/10 backdrop-blur-sm ${className}`}
     >
-      {/* Background Image for Outer Card
-      <div className="absolute inset-0 z-[-1] opacity-100">
-        <Image
-          src="/images/wallpapers/clouds.jpg"
-          alt="Background"
-          fill
-          className="rounded-3xl object-cover"
-          priority={false}
-        />
-      </div> */}
-
-      {/* {!durationIsMonth && freeMonths > 0 && (
-        <div className="absolute top-0 z-10 w-full bg-primary/20 p-1 text-center text-sm font-medium text-primary">
-          Get {freeMonths} month{freeMonths > 1 ? "s" : ""} free!
-        </div>
-      )} */}
-
       {/* Outer Card - Title Section (z-index: 1) */}
       <div className="relative z-[1] flex flex-col gap-2 border-none! p-6 pb-4">
         <div className="flex flex-row items-center justify-between">
@@ -180,7 +153,7 @@ export function PricingCard({
             <span className="text-2xl font-semibold">{title}</span>
             {isCurrentPlan && hasActiveSubscription && (
               <Chip
-                className="flex items-center gap-[2px] border-none! text-xs"
+                className="flex items-center gap-[2px] text-xs"
                 color="success"
                 variant="flat"
               >
@@ -188,16 +161,6 @@ export function PricingCard({
               </Chip>
             )}
           </div>
-          {/* {!durationIsMonth && discountPercentage > 0 && !isCurrentPlan && (
-            <Chip
-              className="flex items-center gap-[2px] border-none! text-sm text-primary"
-              color="primary"
-              size="sm"
-              variant="flat"
-            >
-              <span>Save {discountPercentage}%</span>
-            </Chip>
-          )} */}
         </div>
       </div>
 
