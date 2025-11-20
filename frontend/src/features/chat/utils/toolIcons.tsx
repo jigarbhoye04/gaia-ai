@@ -51,7 +51,7 @@ const iconConfigs: Record<string, IconConfig> = {
   gmail: {
     icon: "/images/icons/gmail.svg",
     bgColor: "bg-zinc-700",
-    iconColor: "text-zinc-200",
+    iconColor: "text-zin`c-200",
     isImage: true,
   },
   productivity: {
