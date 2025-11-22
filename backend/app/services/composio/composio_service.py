@@ -5,9 +5,7 @@ from typing import Optional
 from app.config.loggers import langchain_logger as logger
 from app.config.oauth_config import get_composio_social_configs
 from app.config.settings import settings
-from app.constants.keys import OAUTH_STATUS_KEY
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
-from app.decorators.caching import Cacheable
 from app.models.oauth_models import TriggerConfig
 from app.services.composio.langchain_composio_service import LangchainProvider
 from app.utils.composio_hooks.registry import (
@@ -27,10 +25,15 @@ class ComposioService:
         )
 
     async def connect_account(
-        self, provider: str, user_id: str, frontend_redirect_path: Optional[str] = None
+        self, provider: str, user_id: str, state_token: Optional[str] = None
     ) -> dict:
         """
         Initiates connection flow for a given provider and user.
+
+        Args:
+            provider: The provider to connect (e.g., 'gmail', 'notion')
+            user_id: The user ID initiating the connection
+            state_token: Secure state token for OAuth flow (replaces frontend_redirect_path)
         """
         if provider not in COMPOSIO_SOCIAL_CONFIGS:
             raise ValueError(f"Provider '{provider}' not supported")
@@ -41,10 +44,10 @@ class ComposioService:
             callback_url = (
                 add_query_param(
                     settings.COMPOSIO_REDIRECT_URI,
-                    "frontend_redirect_path",
-                    frontend_redirect_path,
+                    "state",
+                    state_token,
                 )
-                if frontend_redirect_path
+                if state_token
                 else settings.COMPOSIO_REDIRECT_URI
             )
 
@@ -200,9 +203,6 @@ class ComposioService:
             logger.error(f"Error getting tool {tool_name}: {e}")
             return None
 
-    @Cacheable(
-        ttl=86400, key_pattern=f"{OAUTH_STATUS_KEY}:{{user_id}}"
-    )  # Cache for 1 day
     async def check_connection_status(
         self, providers: list[str], user_id: str
     ) -> dict[str, bool]:
