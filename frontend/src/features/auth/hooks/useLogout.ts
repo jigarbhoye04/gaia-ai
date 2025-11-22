@@ -66,13 +66,6 @@ export const useLogout = () => {
         console.warn("Failed to clear persisted cache on error:", persistError);
       }
 
-      // Try to clear IndexedDB even on error
-      try {
-        await db.clearAll();
-      } catch (dbError) {
-        console.warn("Failed to clear IndexedDB on error:", dbError);
-      }
-
       // Clear sessionStorage even on error
       try {
         sessionStorage.clear();
