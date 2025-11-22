@@ -6,6 +6,7 @@ import { ArrowUp, Square } from "lucide-react";
 import { useCalendarEventSelection } from "@/features/chat/hooks/useCalendarEventSelection";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useWorkflowSelection } from "@/features/chat/hooks/useWorkflowSelection";
+import { useComposerFiles } from "@/stores/composerStore";
 
 interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
@@ -21,29 +22,32 @@ export default function RightSide({
   const { isLoading, stopStream } = useLoading();
   const { selectedWorkflow } = useWorkflowSelection();
   const { selectedCalendarEvent } = useCalendarEventSelection();
+  const { uploadedFiles } = useComposerFiles();
   const hasText = (searchbarText || "").trim().length > 0;
   const hasSelectedTool = selectedTool != null;
   const hasSelectedWorkflow = selectedWorkflow != null;
   const hasSelectedCalendarEvent = selectedCalendarEvent != null;
+  const hasFiles = uploadedFiles.length > 0;
   const isDisabled =
     isLoading ||
     (!hasText &&
       !hasSelectedTool &&
       !hasSelectedWorkflow &&
-      !hasSelectedCalendarEvent);
+      !hasSelectedCalendarEvent &&
+      !hasFiles);
 
   const getTooltipContent = () => {
     if (isLoading) return "Stop generation";
 
-    if (hasSelectedCalendarEvent && !hasText && !hasSelectedTool) {
+    if (hasSelectedCalendarEvent && !hasText && !hasSelectedTool && !hasFiles) {
       return `Send with calendar event: ${selectedCalendarEvent?.summary}`;
     }
 
-    if (hasSelectedWorkflow && !hasText && !hasSelectedTool) {
+    if (hasSelectedWorkflow && !hasText && !hasSelectedTool && !hasFiles) {
       return `Send with ${selectedWorkflow?.title}`;
     }
 
-    if (hasSelectedTool && !hasText) {
+    if (hasSelectedTool && !hasText && !hasFiles) {
       // Format tool name to be more readable
       const formattedToolName = selectedTool
         ?.split("_")
@@ -52,8 +56,12 @@ export default function RightSide({
       return `Send with ${formattedToolName}`;
     }
 
-    if (!hasText && !hasSelectedTool && !hasSelectedWorkflow) {
-      return "Message requires text";
+    if (hasFiles && !hasText && !hasSelectedTool && !hasSelectedWorkflow && !hasSelectedCalendarEvent) {
+      return `Send with ${uploadedFiles.length} file${uploadedFiles.length > 1 ? "s" : ""}`;
+    }
+
+    if (!hasText && !hasSelectedTool && !hasSelectedWorkflow && !hasFiles && !hasSelectedCalendarEvent) {
+      return "Message requires content";
     }
 
     return (
@@ -82,7 +90,7 @@ export default function RightSide({
           color={
             isLoading
               ? "default"
-              : hasText || hasSelectedTool || hasSelectedWorkflow
+              : hasText || hasSelectedTool || hasSelectedWorkflow || hasFiles || hasSelectedCalendarEvent
                 ? "primary"
                 : "default"
           }
@@ -96,7 +104,7 @@ export default function RightSide({
           ) : (
             <ArrowUp
               color={
-                hasText || hasSelectedTool || hasSelectedWorkflow
+                hasText || hasSelectedTool || hasSelectedWorkflow || hasFiles || hasSelectedCalendarEvent
                   ? "black"
                   : "gray"
               }

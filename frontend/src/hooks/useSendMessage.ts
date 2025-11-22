@@ -25,11 +25,6 @@ export const useSendMessage = () => {
 
   return useCallback(
     async (content: string, overrides?: SendMessageOverrides) => {
-      const trimmedContent = content.trim();
-      if (!trimmedContent) {
-        return;
-      }
-
       const composerState = useComposerStore.getState();
       const workflowState = useWorkflowSelectionStore.getState();
       const calendarEventState = useCalendarEventSelectionStore.getState();
@@ -49,6 +44,19 @@ export const useSendMessage = () => {
         overrides?.selectedCalendarEvent ??
         calendarEventState.selectedCalendarEvent ??
         null;
+
+      const trimmedContent = content.trim();
+      // Allow sending if there's text OR tool OR workflow OR calendar event OR files
+      const hasValidContent =
+        trimmedContent ||
+        selectedTool ||
+        selectedWorkflow ||
+        selectedCalendarEvent ||
+        normalizedFiles.length > 0;
+
+      if (!hasValidContent) {
+        return;
+      }
 
       const isoTimestamp = fetchDate();
       const createdAt = new Date(isoTimestamp);
