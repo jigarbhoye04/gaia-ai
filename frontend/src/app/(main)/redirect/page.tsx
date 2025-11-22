@@ -16,7 +16,7 @@ export default function RedirectPage() {
       const oauthError = searchParams.get("oauth_error");
       const oauthSuccess = searchParams.get("oauth_success");
 
-      if (oauthSuccess) {
+      if (oauthSuccess === "true") {
         // Show success toast for successful OAuth connection
         toast.success("Integration connected successfully!");
         // Stay on current page or redirect to integrations page
