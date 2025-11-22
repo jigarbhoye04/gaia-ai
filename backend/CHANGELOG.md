@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.1 (2025-11-22)
+
+## What's Changed
+* fix: Allow sending messages with file uploads and improve tool hashing + batch processing by @aryanranderiya in https://github.com/theexperiencecompany/gaia/pull/346
+
+
+**Full Changelog**: https://github.com/theexperiencecompany/gaia/compare/v0.10.0...v0.10.1
+
 ## 0.10.0 (2025-11-22)
 
 ## What's Changed
