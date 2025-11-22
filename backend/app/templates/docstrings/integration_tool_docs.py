@@ -21,6 +21,9 @@ BEHAVIOR:
 - Returns structured data with id, name, description, category, and connection status
 - Triggers frontend UI to display the integration list
 
+This tool triggers the UI to show the list of integrations, so the RETURN VALUE is primarily for data purposes.
+So no need to list out the integrations in text form.
+
 RETURN VALUE:
 Returns a list of integration objects with the following structure:
 - id: Integration identifier (e.g., "gmail", "calendar", "notion")
