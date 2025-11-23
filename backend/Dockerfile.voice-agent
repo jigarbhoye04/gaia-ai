@@ -40,5 +40,5 @@ RUN adduser --disabled-password --gecos '' appuser \
 USER appuser
 
 # Command to run the voice agent
-# Uses 'dev' mode if ENVIRONMENT is 'development', otherwise 'start' for production
-CMD ["sh", "-c", "python -m app.workers.voice_agent $([ \"$ENVIRONMENT\" = \"development\" ] && echo 'dev' || echo 'start')"]
+# First downloads files, then starts the server
+CMD ["sh", "-c", "python -m app.workers.voice_agent download-files && python -m app.workers.voice_agent $([ \"$ENVIRONMENT\" = \"development\" ] && echo 'dev' || echo 'start')"]

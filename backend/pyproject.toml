@@ -190,6 +190,7 @@ voice_agent = [
   "livekit-agents[turn-detector,silero,deepgram]~=1.2",
   "livekit-plugins-noise-cancellation~=0.2",
   "livekit-plugins-elevenlabs~=1.2",
+  "hf_transfer",
 ]
 
 [[tool.uv.index]]
