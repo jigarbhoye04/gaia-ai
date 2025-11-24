@@ -3,7 +3,6 @@ import { Input } from "@heroui/input";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 import { useVirtualizer, VirtualItem } from "@tanstack/react-virtual";
 import { AnimatePresence, motion } from "framer-motion";
-import { Hash, Search, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,6 +10,7 @@ import { SlashCommandMatch } from "@/features/chat/hooks/useSlashCommands";
 import { formatToolName } from "@/features/chat/utils/chatUtils";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { IntegrationsCard } from "@/features/integrations/components/IntegrationsCard";
+import { Cancel01Icon, GridIcon, SearchIcon } from "@/icons";
 import { posthog } from "@/lib/posthog";
 import { useIntegrationsAccordion } from "@/stores/uiStore";
 
@@ -160,7 +160,6 @@ const VirtualizedItem: React.FC<VirtualizedItemProps> = ({
         <LockedToolItem
           tool={match.enhancedTool!}
           onConnect={onClose}
-          showDescription={false}
         />
       </div>
     );
@@ -541,14 +540,14 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
           {/* Header section - Only show when opened via button */}
           {openedViaButton && (
             <div className="flex items-center gap-2 p-3">
-              {/* Search Input */}
+              {/* SearchIcon Input */}
               <div className="flex-1">
                 <Input
                   type="text"
                   placeholder="Search tools..."
                   value={searchQuery}
                   radius="full"
-                  startContent={<Search size={16} />}
+                  startContent={<SearchIcon size={16} />}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
@@ -560,7 +559,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                 radius="full"
                 variant="flat"
               >
-                <X size={14} />
+                <Cancel01Icon size={14} />
               </Button>
             </div>
           )}
@@ -584,7 +583,7 @@ const SlashCommandDropdown: React.FC<SlashCommandDropdownProps> = ({
                     }`}
                   >
                     {category === "all" ? (
-                      <Hash
+                      <GridIcon
                         size={16}
                         strokeWidth={2}
                         className="text-gray-400"

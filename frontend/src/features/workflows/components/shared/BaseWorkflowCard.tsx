@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
 import { ReactNode } from "react";
 
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
+import { ArrowUpRight03Icon } from "@/icons";
 
 import { RunCountDisplay } from "./WorkflowCardComponents";
 
@@ -11,7 +11,6 @@ interface BaseWorkflowCardProps {
   title: string;
   description: string;
   steps?: Array<{ tool_category: string }>;
-  integrations?: string[];
   onClick?: () => void;
   showArrowIcon?: boolean;
   headerRight?: ReactNode;
@@ -26,15 +25,14 @@ export default function BaseWorkflowCard({
   title,
   description,
   steps = [],
-  integrations = [],
   onClick,
-  showArrowIcon = false,
   headerRight,
   footerContent,
+  showArrowIcon = false,
   triggerContent,
   totalExecutions = 0,
   hideExecutions = false,
-  useBlurEffect = false,
+  useBlurEffect = false
 }: BaseWorkflowCardProps) {
   const renderToolIcons = () => {
     const categories = [...new Set(steps.map((step) => step.tool_category))];
@@ -83,7 +81,7 @@ export default function BaseWorkflowCard({
       onClick={onClick}
     >
       {showArrowIcon && onClick && (
-        <ArrowUpRight
+        <ArrowUpRight03Icon
           className="absolute top-4 right-4 text-foreground-400 opacity-0 transition group-hover:opacity-100"
           width={25}
           height={25}

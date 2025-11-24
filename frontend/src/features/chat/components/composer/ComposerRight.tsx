@@ -1,11 +1,11 @@
 import { Button } from "@heroui/button";
 import { Kbd } from "@heroui/react";
 import { Tooltip } from "@heroui/tooltip";
-import { ArrowUp, Square } from "lucide-react";
 
 import { useCalendarEventSelection } from "@/features/chat/hooks/useCalendarEventSelection";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useWorkflowSelection } from "@/features/chat/hooks/useWorkflowSelection";
+import { ArrowUp02Icon, StopIcon } from "@/icons";
 import { useComposerFiles } from "@/stores/composerStore";
 
 interface RightSideProps {
@@ -56,11 +56,23 @@ export default function RightSide({
       return `Send with ${formattedToolName}`;
     }
 
-    if (hasFiles && !hasText && !hasSelectedTool && !hasSelectedWorkflow && !hasSelectedCalendarEvent) {
+    if (
+      hasFiles &&
+      !hasText &&
+      !hasSelectedTool &&
+      !hasSelectedWorkflow &&
+      !hasSelectedCalendarEvent
+    ) {
       return `Send with ${uploadedFiles.length} file${uploadedFiles.length > 1 ? "s" : ""}`;
     }
 
-    if (!hasText && !hasSelectedTool && !hasSelectedWorkflow && !hasFiles && !hasSelectedCalendarEvent) {
+    if (
+      !hasText &&
+      !hasSelectedTool &&
+      !hasSelectedWorkflow &&
+      !hasFiles &&
+      !hasSelectedCalendarEvent
+    ) {
       return "Message requires content";
     }
 
@@ -90,7 +102,11 @@ export default function RightSide({
           color={
             isLoading
               ? "default"
-              : hasText || hasSelectedTool || hasSelectedWorkflow || hasFiles || hasSelectedCalendarEvent
+              : hasText ||
+                  hasSelectedTool ||
+                  hasSelectedWorkflow ||
+                  hasFiles ||
+                  hasSelectedCalendarEvent
                 ? "primary"
                 : "default"
           }
@@ -100,11 +116,20 @@ export default function RightSide({
           onPress={handleButtonPress}
         >
           {isLoading ? (
-            <Square color="lightgray" width={17} height={17} fill="lightgray" />
+            <StopIcon
+              color="lightgray"
+              width={20}
+              height={20}
+              fill="lightgray"
+            />
           ) : (
-            <ArrowUp
+            <ArrowUp02Icon
               color={
-                hasText || hasSelectedTool || hasSelectedWorkflow || hasFiles || hasSelectedCalendarEvent
+                hasText ||
+                hasSelectedTool ||
+                hasSelectedWorkflow ||
+                hasFiles ||
+                hasSelectedCalendarEvent
                   ? "black"
                   : "gray"
               }
