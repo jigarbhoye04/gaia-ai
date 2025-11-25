@@ -1,5 +1,5 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
-import { ReactNode, useState } from "react";
+import { type ReactNode, useState } from "react";
 
 interface CollapsibleListWrapperProps {
   children: ReactNode;
@@ -42,6 +42,7 @@ export default function CollapsibleListWrapper({
         <AccordionItem
           key="1"
           aria-label={`${label} List`}
+          // biome-ignore lint/complexity/noUselessFragments: need an empty component
           indicator={<></>}
           title={
             <div className="flex items-center gap-2 text-sm font-normal text-zinc-400 transition hover:text-white">

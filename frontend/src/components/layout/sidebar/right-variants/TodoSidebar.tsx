@@ -3,7 +3,8 @@
 import { Checkbox } from "@heroui/checkbox";
 import { Input, Textarea } from "@heroui/input";
 import { formatDistanceToNow } from "date-fns";
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { SidebarContent, SidebarFooter } from "@/components/ui/sidebar";
@@ -13,7 +14,7 @@ import SubtaskManager from "@/features/todo/components/shared/SubtaskManager";
 import TodoFieldsRow from "@/features/todo/components/shared/TodoFieldsRow";
 import WorkflowSection from "@/features/todo/components/WorkflowSection";
 import { Delete02Icon } from "@/icons";
-import {
+import type {
   Priority,
   Project,
   SubTask,
@@ -121,7 +122,7 @@ export const TodoSidebar: React.FC<TodoSidebarProps> = ({
 
   return (
     <div className="flex h-full flex-col">
-      <SidebarContent className="flex-1 overflow-y-auto px-6">
+      <SidebarContent className="flex-1 overflow-y-auto px-6 outline-0">
         <div className="space-y-4 pt-4">
           {/* Title and Description Section */}
           <div className="flex items-start gap-1">
@@ -132,7 +133,8 @@ export const TodoSidebar: React.FC<TodoSidebarProps> = ({
               color="success"
               radius="full"
               classNames={{
-                wrapper: "mt-1",
+                wrapper: `mt-1 ${todo.completed ? "" : "border-zinc-500 border-dashed! border-1 before:border-0! bg-zinc-900 "}`,
+                label: "w-[30vw]",
               }}
             />
             <div className="flex-1 space-y-3">
@@ -263,6 +265,7 @@ export const TodoSidebar: React.FC<TodoSidebarProps> = ({
           </div>
 
           <button
+            type="button"
             onClick={handleDelete}
             className="rounded-lg bg-zinc-800/50 p-2.5 text-red-400 transition-all hover:bg-red-500/10 active:scale-95"
             aria-label="Delete todo"

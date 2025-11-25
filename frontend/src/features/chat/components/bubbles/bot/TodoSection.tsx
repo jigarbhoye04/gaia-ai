@@ -10,13 +10,13 @@ import {
   ArrowRight01Icon,
   CalendarIcon,
   CheckmarkCircle02Icon,
-  Flag01Icon,
+  Flag02Icon,
   Folder02Icon,
   GridIcon,
   PlayIcon,
   Tick02Icon,
 } from "@/icons";
-import {
+import type {
   TodoAction,
   TodoItem,
   TodoProject,
@@ -35,19 +35,19 @@ interface TodoSectionProps {
 const priorityConfig = {
   [Priority.HIGH]: {
     color: "danger" as const,
-    icon: <Flag01Icon className="h-3 w-3" />,
+    icon: <Flag02Icon className="h-3 w-3" />,
     bgColor: "bg-red-500/10",
     textColor: "text-red-500",
   },
   [Priority.MEDIUM]: {
     color: "warning" as const,
-    icon: <Flag01Icon className="h-3 w-3" />,
+    icon: <Flag02Icon className="h-3 w-3" />,
     bgColor: "bg-yellow-500/10",
     textColor: "text-yellow-500",
   },
   [Priority.LOW]: {
     color: "primary" as const,
-    icon: <Flag01Icon className="h-3 w-3" />,
+    icon: <Flag02Icon className="h-3 w-3" />,
     bgColor: "bg-blue-500/10",
     textColor: "text-blue-500",
   },
@@ -261,6 +261,7 @@ export default function TodoSection({
                 {/* todo Header */}
                 <div className="flex items-start gap-3">
                   <button
+                    type="button"
                     className={`mt-0.5 flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                       todo.completed
                         ? "border-success bg-success"
@@ -286,6 +287,7 @@ export default function TodoSection({
                       </h4>
                       {hasDetails && (
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleTodoExpansion(todo.id);

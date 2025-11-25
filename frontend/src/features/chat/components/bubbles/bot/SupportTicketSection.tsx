@@ -1,5 +1,5 @@
 import SupportTicketCard from "@/features/support/components/SupportTicketCard";
-import { SupportTicketData } from "@/types/features/supportTypes";
+import type { SupportTicketData } from "@/types/features/supportTypes";
 
 export default function SupportTicketSection({
   support_ticket_data,
@@ -13,11 +13,11 @@ export default function SupportTicketSection({
 
   return (
     <div className="mt-3 w-full space-y-3">
-      {support_ticket_data.map((ticket, index) => (
+      {support_ticket_data.map((ticket) => (
         <SupportTicketCard
           ticketData={ticket}
           onSubmitted={handleTicketSubmitted}
-          key={index}
+          key={ticket.title}
         />
       ))}
     </div>

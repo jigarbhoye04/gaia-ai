@@ -6,9 +6,7 @@ import { toast } from "sonner";
 
 import { RaisedButton } from "@/components";
 import { useUser } from "@/features/auth/hooks/useUser";
-import type {
-  PersonalizationData,
-} from "@/features/onboarding/types/websocket";
+import type { PersonalizationData } from "@/features/onboarding/types/websocket";
 import {
   isBioStatusUpdateMessage,
   isPersonalizationCompleteMessage,
@@ -48,7 +46,6 @@ const LOADING_MESSAGES = [
   "Preparing your workspace...",
 ] as const;
 
-
 const MAX_PROGRESS_TIME_SECONDS = 30;
 const MESSAGE_ROTATION_INTERVAL_SECONDS = 3;
 
@@ -73,21 +70,22 @@ export default function ContextGatheringLoader({
 
   // Initialize: Fetch data and check if should hide
   useEffect(() => {
-    const fetchPersonalization = async (): Promise<PersonalizationData | null> => {
-      try {
-        const data = await apiService.get<PersonalizationData>(
-          "/onboarding/personalization",
-          { silent: true },
-        );
+    const fetchPersonalization =
+      async (): Promise<PersonalizationData | null> => {
+        try {
+          const data = await apiService.get<PersonalizationData>(
+            "/onboarding/personalization",
+            { silent: true },
+          );
 
-        setPersonalizationData(data);
-        if (data?.phase) setPhase(data.phase as OnboardingPhase);
+          setPersonalizationData(data);
+          if (data?.phase) setPhase(data.phase as OnboardingPhase);
 
-        return data;
-      } catch {
-        return null;
-      }
-    };
+          return data;
+        } catch {
+          return null;
+        }
+      };
 
     const initialize = async () => {
       const data = await fetchPersonalization();
@@ -138,7 +136,6 @@ export default function ContextGatheringLoader({
 
     const handleBioStatusUpdate = (message: unknown) => {
       if (!isBioStatusUpdateMessage(message)) return;
-
 
       // If bio status changed to processing, reset the personalization state
       if (message.data.bio_status === "processing") {
@@ -257,12 +254,10 @@ export default function ContextGatheringLoader({
   }
 
   // Hide if personalization is complete or user dismissed
-  if (shouldHide)
-    return null;
+  if (shouldHide) return null;
 
   // If no phase data and not initializing, show nothing (error state)
-  if (!phase)
-    return null;
+  if (!phase) return null;
 
   return (
     <div className="relative flex flex-col justify-center gap-3 rounded-2xl bg-zinc-800/90 p-4 shadow-xl backdrop-blur-sm">

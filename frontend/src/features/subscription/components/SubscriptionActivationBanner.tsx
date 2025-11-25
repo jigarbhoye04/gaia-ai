@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { useUserSubscriptionStatus } from "@/features/pricing/hooks/usePricing";
-import { CheckmarkCircle02Icon, CreditCardIcon,Timer02Icon } from '@/icons';
+import { CheckmarkCircle02Icon, CreditCardIcon, Timer02Icon } from "@/icons";
 
 export function SubscriptionActivationBanner() {
   const { data: subscriptionStatus } = useUserSubscriptionStatus();
@@ -122,6 +122,7 @@ export function SubscriptionSuccessBanner() {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setShowSuccess(false)}
             className="text-xs text-green-400 hover:text-green-300"
           >

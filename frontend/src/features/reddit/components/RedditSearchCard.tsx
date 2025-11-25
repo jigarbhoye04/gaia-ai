@@ -5,8 +5,8 @@ import Link from "next/link";
 
 import { RedditIcon } from "@/components";
 import CollapsibleListWrapper from "@/components/shared/CollapsibleListWrapper";
-import { ArrowUp02Icon, BubbleChatIcon } from '@/icons';
-import { RedditSearchData } from "@/types/features/redditTypes";
+import { ArrowUp02Icon, BubbleChatIcon } from "@/icons";
+import type { RedditSearchData } from "@/types/features/redditTypes";
 
 interface RedditSearchCardProps {
   posts?: RedditSearchData[] | null;
@@ -50,10 +50,10 @@ export default function RedditSearchCard({
       className={`w-full max-w-2xl rounded-3xl ${backgroundColor} p-3 text-white`}
     >
       <ScrollShadow className={`${maxHeight} divide-y divide-gray-700`}>
-        {posts.map((post, index) => (
+        {posts.map((post) => (
           <div
             className="group w-full cursor-pointer p-3 transition-colors hover:bg-zinc-700"
-            key={index}
+            key={post.id}
           >
             <Link
               href={`https://reddit.com${post?.permalink}`}

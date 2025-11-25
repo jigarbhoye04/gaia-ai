@@ -1,10 +1,10 @@
 import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
-import React from "react";
+import type React from "react";
 import { toast } from "sonner";
 
 import { Cancel01Icon, DownloadSquare01Icon } from "@/icons";
-import { ImageData } from "@/types/features/toolDataTypes";
+import type { ImageData } from "@/types/features/toolDataTypes";
 
 interface ChatBubbleActionsImageProps {
   fullWidth?: boolean;
@@ -75,10 +75,11 @@ export default function ChatBubble_Actions_Image({
         size="md"
       >
         <Button
-          className={`w-fit ${fullWidth
+          className={`w-fit ${
+            fullWidth
               ? "px-3 py-2"
               : "bg-transparent p-0 text-zinc-500 data-[hover=true]:bg-transparent"
-            } h-fit rounded-lg`}
+          } h-fit rounded-lg`}
           color="primary"
           isIconOnly={!fullWidth}
           style={{ minWidth: "22px" }}

@@ -1,6 +1,7 @@
 import { Accordion, AccordionItem } from "@heroui/accordion";
 import { Switch } from "@heroui/switch";
-import React, { useMemo, useState } from "react";
+import type React from "react";
+import { useMemo, useState } from "react";
 
 import {
   DropdownMenu,
@@ -27,7 +28,7 @@ import {
   Tornado02Icon,
   VisionIcon,
 } from "@/icons";
-import { WeatherData } from "@/types/features/convoTypes";
+import type { WeatherData } from "@/types/features/convoTypes";
 
 import { WeatherDetailItem } from "./WeatherDetailItem";
 
@@ -354,6 +355,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
+                type="button"
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 p-1 text-white hover:bg-white/20"
                 aria-label="Temperature settings"
               >
@@ -434,7 +436,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
             }
           >
             <div className="space-y-2 pb-2">
-              {weatherData.forecast.map((day, idx) => {
+              {weatherData.forecast.map((day) => {
                 const dayTemp = useFahrenheit
                   ? Math.round(celsiusToFahrenheit(day.temp_max))
                   : Math.round(day.temp_max);
@@ -444,7 +446,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
 
                 return (
                   <div
-                    key={idx}
+                    key={dayTemp + nightTemp}
                     className="flex items-center justify-start rounded-2xl bg-black/10 px-2 py-1 text-white"
                   >
                     <div className="flex w-full flex-1 items-center justify-start gap-2">
@@ -576,9 +578,9 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({ weatherData }) => {
                 value: sunsetTime,
                 tooltipText: "Time when the sun disappears below the horizon",
               },
-            ].map((detail, index) => (
+            ].map((detail) => (
               <WeatherDetailItem
-                key={index}
+                key={detail.value}
                 icon={detail.icon}
                 label={detail.label}
                 value={detail.value}

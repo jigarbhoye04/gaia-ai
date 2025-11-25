@@ -2,8 +2,8 @@
 
 import { Chip } from "@heroui/chip";
 
-import { ArrowUp02Icon, BubbleChatIcon,LinkSquare02Icon } from '@/icons';
-import { RedditPostData } from "@/types/features/redditTypes";
+import { ArrowUp02Icon, BubbleChatIcon, LinkSquare02Icon } from "@/icons";
+import type { RedditPostData } from "@/types/features/redditTypes";
 
 interface RedditPostCardProps {
   post: RedditPostData;
@@ -128,6 +128,7 @@ export default function RedditPostCard({ post }: RedditPostCardProps) {
 
           {/* Open Link */}
           <button
+            type="button"
             onClick={handleOpenPost}
             className="ml-auto text-xs text-gray-400 transition-colors hover:text-[#FF4500]"
           >

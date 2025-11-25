@@ -6,8 +6,8 @@ import {
   TrailingActions,
 } from "react-swipeable-list";
 
-import { Delete02Icon } from '@/icons';
-import { Notification } from "@/types/notifications";
+import { Delete02Icon } from "@/icons";
+import type { Notification } from "@/types/notifications";
 import { getActionColor, getActionIcon } from "@/utils/notifications";
 
 interface NotificationActionsProps {

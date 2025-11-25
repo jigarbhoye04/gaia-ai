@@ -18,9 +18,9 @@ import {
   startOfMinute,
   subHours,
 } from "date-fns";
-import * as React from "react";
+import type * as React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DayPicker, Matcher } from "react-day-picker";
+import { DayPicker, type Matcher } from "react-day-picker";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -164,7 +164,6 @@ export function DateTimePicker({
               disabled && "cursor-not-allowed opacity-50",
               classNames?.trigger,
             )}
-            tabIndex={0}
           >
             <div className="flex flex-grow items-center text-zinc-400">
               <CalendarIcon className="mr-2 size-4" />

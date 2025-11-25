@@ -1,13 +1,8 @@
 "use client";
 
 import { useVirtualizer } from "@tanstack/react-virtual";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { CalendarGrid } from "@/features/calendar/components/CalendarGrid";
 import { DateStrip } from "@/features/calendar/components/DateStrip";
@@ -22,7 +17,7 @@ import {
   useDaysToShow,
   useSetVisibleMonthYear,
 } from "@/stores/calendarStore";
-import { GoogleCalendarEvent } from "@/types/features/calendarTypes";
+import type { GoogleCalendarEvent } from "@/types/features/calendarTypes";
 
 interface WeeklyCalendarViewProps {
   onEventClick?: (event: GoogleCalendarEvent) => void;
@@ -193,7 +188,6 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
         }, 100);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   // Effect 2: Initial fetch of events for 3-month range
@@ -210,7 +204,6 @@ const WeeklyCalendarView: React.FC<WeeklyCalendarViewProps> = ({
       loadEvents(selectedCalendars, true, start, end);
       hasInitialFetchedRef.current = true;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCalendars, isInitialized]);
 
   // Effect 3: Reset fetch flag when calendars change

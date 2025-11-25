@@ -54,34 +54,29 @@ export default function Navbar() {
 
   // Handle mouse leave for navbar container
   const handleNavbarMouseLeave = () => {
-    if (!isMobileScreen) {
-      setActiveDropdown(null);
-      setHoveredItem(null);
-      toggleBackdrop(false);
-    }
+    if (isMobileScreen) return;
+
+    setActiveDropdown(null);
+    setHoveredItem(null);
+    toggleBackdrop(false);
   };
 
   const handleMouseEnter = (menu: string) => {
-    if (!isMobileScreen) {
-      setActiveDropdown(menu);
-      setHoveredItem(menu);
-      toggleBackdrop(true);
-    }
+    if (isMobileScreen) return;
+
+    setActiveDropdown(menu);
+    setHoveredItem(menu);
+    toggleBackdrop(true);
   };
 
-  // Close menu on route change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we only need to trigger effect on pathname change
   useEffect(() => {
     setActiveDropdown(null);
     setHoveredItem(null);
     toggleBackdrop(false);
-  }, [pathname]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      toggleBackdrop(false);
-    };
-  }, []);
+    return () => toggleBackdrop(false);
+  }, [pathname]);
 
   return (
     <div className="fixed top-0 left-0 z-50 w-full px-4 pt-4">
@@ -95,7 +90,6 @@ export default function Navbar() {
               ? "rounded-t-2xl border-b-0 bg-zinc-950"
               : "rounded-2xl bg-zinc-900/30"
           }`}
-          // style={activeDropdown ? { backgroundColor: "#08090A" } : {}}
         >
           <Button
             as={Link}
@@ -171,6 +165,7 @@ export default function Navbar() {
                   </Link>
                 ) : (
                   <button
+                    type="button"
                     key={item.menu}
                     className="relative flex h-9 cursor-pointer items-center rounded-xl px-4 py-2 text-sm text-zinc-400 capitalize transition-colors hover:text-zinc-100"
                     onMouseEnter={() => {

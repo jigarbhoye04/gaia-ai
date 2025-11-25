@@ -3,12 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { authApi } from "@/features/auth/api/authApi";
-import { useUser } from "@/features/auth/hooks/useUser";
-import { useUserActions } from "@/features/auth/hooks/useUser";
+import { useUser, useUserActions } from "@/features/auth/hooks/useUser";
 import { useFetchIntegrationStatus } from "@/features/integrations";
 
 import { FIELD_NAMES, professionOptions, questions } from "../constants";
-import { Message, OnboardingState } from "../types";
+import type { Message, OnboardingResponse, OnboardingState } from "../types";
 
 const ONBOARDING_STORAGE_KEY = "gaia-onboarding-state";
 
@@ -376,7 +375,7 @@ export const useOnboarding = () => {
       // Send onboarding data to backend with retry logic
       let retryCount = 0;
       const maxRetries = 3;
-      let response;
+      let response: OnboardingResponse | undefined;
 
       while (retryCount < maxRetries) {
         try {
@@ -412,7 +411,7 @@ export const useOnboarding = () => {
             selected_model: response.user.selected_model,
           });
         }
-        
+
         // Navigate to the main chat page
         router.push("/c");
       } else {

@@ -1,7 +1,7 @@
 "use client";
 
-import { Virtualizer } from "@tanstack/react-virtual";
-import React from "react";
+import type { Virtualizer } from "@tanstack/react-virtual";
+import type React from "react";
 
 interface DateStripProps {
   dates: Date[];
@@ -50,6 +50,7 @@ export const DateStrip: React.FC<DateStripProps> = ({
 
             return (
               <button
+                type="button"
                 key={virtualColumn.key}
                 onClick={() => onDateSelect?.(date)}
                 className={`absolute top-0 left-0 flex min-h-9 flex-shrink-0 cursor-pointer flex-row items-center justify-center gap-1 border-r border-zinc-800 py-1 font-light transition-all duration-200 ${

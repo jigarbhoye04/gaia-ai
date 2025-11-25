@@ -13,14 +13,14 @@ function getTypedData<K extends ToolName>(
 }
 
 import { Chip } from "@heroui/chip";
-import React from "react";
+import React, { useId } from "react";
 
 // import { PostHogCaptureOnViewed } from "posthog-js/react";
 import {
   GROUPED_TOOLS,
-  ToolDataEntry,
-  ToolDataMap,
-  ToolName,
+  type ToolDataEntry,
+  type ToolDataMap,
+  type ToolName,
 } from "@/config/registries/toolRegistry";
 import CalendarListCard from "@/features/calendar/components/CalendarListCard";
 import CalendarListFetchCard from "@/features/calendar/components/CalendarListFetchCard";
@@ -35,8 +35,8 @@ import { parseThinkingFromText } from "@/features/chat/utils/thinkingParser";
 import { IntegrationListSection } from "@/features/integrations";
 import EmailListCard from "@/features/mail/components/EmailListCard";
 import { WeatherCard } from "@/features/weather/components/WeatherCard";
-import { Alert01Icon } from '@/icons';
-import {
+import { Alert01Icon } from "@/icons";
+import type {
   CalendarDeleteOptions,
   CalendarEditOptions,
   CalendarOptions,
@@ -52,19 +52,19 @@ import {
   TodoToolData,
   WeatherData,
 } from "@/types";
-import {
+import type {
   CalendarFetchData,
   CalendarListFetchData,
 } from "@/types/features/calendarTypes";
-import { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
-import { IntegrationConnectionData } from "@/types/features/integrationTypes";
-import {
+import type { ChatBubbleBotProps } from "@/types/features/chatBubbleTypes";
+import type { IntegrationConnectionData } from "@/types/features/integrationTypes";
+import type {
   ContactData,
   EmailFetchData,
   PeopleSearchData,
 } from "@/types/features/mailTypes";
-import { NotificationRecord } from "@/types/features/notificationTypes";
-import {
+import type { NotificationRecord } from "@/types/features/notificationTypes";
+import type {
   RedditCommentCreatedData,
   RedditCommentData,
   RedditData,
@@ -72,7 +72,7 @@ import {
   RedditPostData,
   RedditSearchData,
 } from "@/types/features/redditTypes";
-import { SupportTicketData } from "@/types/features/supportTypes";
+import type { SupportTicketData } from "@/types/features/supportTypes";
 
 import MarkdownRenderer from "../../interface/MarkdownRenderer";
 import { CalendarDeleteSection } from "./CalendarDeleteSection";
@@ -83,9 +83,9 @@ import ContactListSection from "./ContactListSection";
 import DocumentSection from "./DocumentSection";
 import EmailComposeSection from "./EmailComposeSection";
 import EmailSentSection from "./EmailSentSection";
-import GoalSection from "./goals/GoalSection";
-import { GoalAction } from "./goals/types";
 import GoogleDocsSection from "./GoogleDocsSection";
+import GoalSection from "./goals/GoalSection";
+import type { GoalAction } from "./goals/types";
 import NotificationListSection from "./NotificationListSection";
 import PeopleSearchSection from "./PeopleSearchSection";
 import RedditCommentSection from "./RedditCommentSection";
@@ -279,7 +279,7 @@ const TOOL_RENDERERS: Partial<RendererMap> = {
     );
   },
 
-  integration_list_data: (data, index) => {
+  integration_list_data: (_data, index) => {
     return <IntegrationListSection key={`tool-integration-list-${index}`} />;
   },
 
@@ -313,8 +313,8 @@ const TOOL_RENDERERS: Partial<RendererMap> = {
         {groups.search.length > 0 && (
           <RedditSearchSection reddit_search_data={groups.search} />
         )}
-        {groups.post.map((p, i) => (
-          <RedditPostSection key={i} reddit_post_data={p} />
+        {groups.post.map((post) => (
+          <RedditPostSection key={post.id} reddit_post_data={post} />
         ))}
         {groups.comments.length > 0 && (
           <RedditCommentSection reddit_comment_data={groups.comments} />
@@ -350,6 +350,8 @@ export default function TextBubble({
   systemPurpose,
   loading,
 }: ChatBubbleBotProps) {
+  const baseId = useId();
+
   // Parse thinking content from text
   const parsedContent = React.useMemo(() => {
     return parseThinkingFromText(text?.toString() || "");
@@ -396,7 +398,7 @@ export default function TextBubble({
         if (!typedData) return null;
 
         return (
-          <React.Fragment key={`tool-${toolName}-${index}`}>
+          <React.Fragment key={`${baseId}-tool-${toolName}}`}>
             {renderTool(toolName, typedData, index)}
           </React.Fragment>
         );
@@ -421,10 +423,7 @@ export default function TextBubble({
                   color="warning"
                   size="sm"
                   startContent={
-                    <Alert01Icon
-                      className="text-warning-500"
-                      height={17}
-                    />
+                    <Alert01Icon className="text-warning-500" height={17} />
                   }
                   variant="flat"
                 >
@@ -447,7 +446,8 @@ export default function TextBubble({
 
                 return (
                   <div
-                    key={index}
+                    // biome-ignore lint/suspicious/noArrayIndexKey: array is stable
+                    key={`${baseId}-text-part-${index}`}
                     className={`imessage-bubble imessage-from-them ${groupedClasses}`}
                   >
                     {renderBubbleContent(part, isLast)}

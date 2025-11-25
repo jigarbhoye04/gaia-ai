@@ -3,8 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import React from "react";
 
-import { SelectedCalendarEventData } from "@/features/chat/hooks/useCalendarEventSelection";
-import { Cancel01Icon } from '@/icons';
+import type { SelectedCalendarEventData } from "@/features/chat/hooks/useCalendarEventSelection";
+import { Cancel01Icon } from "@/icons";
 
 interface SelectedCalendarEventIndicatorProps {
   event: SelectedCalendarEventData | null;

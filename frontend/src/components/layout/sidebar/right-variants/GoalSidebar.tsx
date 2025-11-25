@@ -2,12 +2,11 @@
 
 import { Checkbox } from "@heroui/checkbox";
 import { Chip } from "@heroui/chip";
-import React from "react";
+import type React from "react";
 
 import { SidebarContent, SidebarFooter } from "@/components/ui/sidebar";
-import { Timer02Icon } from "@/icons";
-import { BookIcon1 } from "@/icons";
-import { NodeData } from "@/types/features/goalTypes";
+import { BookIcon1, Timer02Icon } from "@/icons";
+import type { NodeData } from "@/types/features/goalTypes";
 
 interface GoalSidebarProps {
   node: NodeData | null;
@@ -92,8 +91,8 @@ export const GoalSidebar: React.FC<GoalSidebarProps> = ({
                 Resources
               </div>
               <ul className="space-y-2 text-sm text-zinc-400">
-                {node.resources.map((resource, index) => (
-                  <li key={index}>
+                {node.resources.map((resource) => (
+                  <li key={resource}>
                     <a
                       className="underline decoration-zinc-600 underline-offset-4 transition-colors hover:text-primary hover:decoration-primary"
                       href={`https://www.google.com/search?q=${resource.replace(

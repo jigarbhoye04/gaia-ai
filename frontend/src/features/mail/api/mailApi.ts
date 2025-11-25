@@ -1,10 +1,10 @@
 import { apiService } from "@/lib/api";
-import { EmailActionResponse } from "@/types/api/mailApiTypes";
-import {
+import type { EmailActionResponse } from "@/types/api/mailApiTypes";
+import type {
   EmailData,
   EmailImportanceSummary,
-  EmailsResponse,
   EmailSummariesResponse,
+  EmailsResponse,
   EmailThreadResponse,
 } from "@/types/features/mailTypes";
 
@@ -255,16 +255,22 @@ export const mailApi = {
   },
 
   // Send draft email
-  sendDraft: async (draftId: string): Promise<{
+  sendDraft: async (
+    draftId: string,
+  ): Promise<{
     message_id: string;
     thread_id: string;
     status: string;
     successful: boolean;
   }> => {
-    return apiService.post(`/gmail/drafts/${draftId}/send`, {}, {
-      successMessage: "Draft sent successfully",
-      errorMessage: "Failed to send draft",
-    });
+    return apiService.post(
+      `/gmail/drafts/${draftId}/send`,
+      {},
+      {
+        successMessage: "Draft sent successfully",
+        errorMessage: "Failed to send draft",
+      },
+    );
   },
 
   // AI compose email

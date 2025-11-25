@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { ArrowUpRight03Icon } from "@/icons";
@@ -32,7 +32,7 @@ export default function BaseWorkflowCard({
   triggerContent,
   totalExecutions = 0,
   hideExecutions = false,
-  useBlurEffect = false
+  useBlurEffect = false,
 }: BaseWorkflowCardProps) {
   const renderToolIcons = () => {
     const categories = [...new Set(steps.map((step) => step.tool_category))];
@@ -48,7 +48,7 @@ export default function BaseWorkflowCard({
           });
           return IconComponent ? (
             <div
-              key={`${category}-${index}`}
+              key={category}
               className="relative flex min-w-8 items-center justify-center"
               style={{
                 rotate:

@@ -3,7 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { ChartIcon, ChartIncreaseIcon, CheckmarkCircle02Icon, Target02Icon, Timer02Icon, UserGroupIcon, ZapIcon,  } from '@/icons';
+import {
+  ChartIcon,
+  ChartIncreaseIcon,
+  CheckmarkCircle02Icon,
+  Target02Icon,
+  Timer02Icon,
+  UserGroupIcon,
+  ZapIcon,
+} from "@/icons";
 
 import { GoalCard } from "./GoalCard";
 import type { GoalSectionProps } from "./types";
@@ -134,7 +142,9 @@ export default function GoalSection({
       creating: <ZapIcon className="h-4 w-4 text-blue-500" />,
       fetching: <Timer02Icon className="h-4 w-4 text-blue-500" />,
       deleting: <Timer02Icon className="h-4 w-4 text-red-500" />,
-      updating_progress: <ChartIncreaseIcon className="h-4 w-4 text-green-500" />,
+      updating_progress: (
+        <ChartIncreaseIcon className="h-4 w-4 text-green-500" />
+      ),
       generating_roadmap: <UserGroupIcon className="h-4 w-4 text-primary" />,
     };
 
@@ -159,6 +169,7 @@ export default function GoalSection({
           <p className="text-sm text-zinc-300">{message}</p>
         </div>
         <button
+          type="button"
           onClick={() => router.push(`/goals/${goal_id}`)}
           className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >

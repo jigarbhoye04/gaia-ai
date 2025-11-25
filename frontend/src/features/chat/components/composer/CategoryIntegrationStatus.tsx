@@ -1,5 +1,5 @@
 import { Chip } from "@heroui/chip";
-import React from "react";
+import type React from "react";
 
 import { SquareLock01Icon } from "@/icons";
 
@@ -22,7 +22,7 @@ export const CategoryIntegrationStatus: React.FC<
 
   if (totalCount === 0) return null;
 
-  if (lockedCount != 0)
+  if (lockedCount !== 0)
     // All tools are locked (integration not connected)
     return (
       <Chip

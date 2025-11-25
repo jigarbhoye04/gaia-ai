@@ -22,7 +22,7 @@ import {
   Upload01Icon,
 } from "@/icons";
 
-import { UploadedFilePreview } from "./FilePreview";
+import type { UploadedFilePreview } from "./FilePreview";
 
 interface FileUploadProps {
   open: boolean;
@@ -408,7 +408,7 @@ export default function FileUpload({
                 <div className="max-h-[180px] space-y-2 overflow-x-hidden overflow-y-auto pt-3 pr-2">
                   {files.map((fileWithPreview, index) => (
                     <div
-                      key={index}
+                      key={fileWithPreview.previewUrl}
                       className={`relative flex items-center rounded-xl p-3 ${
                         fileWithPreview.error ? "bg-red-500/10" : "bg-zinc-800"
                       }`}

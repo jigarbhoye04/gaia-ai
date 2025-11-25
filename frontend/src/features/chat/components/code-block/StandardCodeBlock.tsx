@@ -1,9 +1,9 @@
 import { Button } from "@heroui/button";
-import React from "react";
+import type React from "react";
 import { PrismAsyncLight } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-import { Copy01Icon,Tick02Icon } from '@/icons';
+import { Copy01Icon, Tick02Icon } from "@/icons";
 
 import DownloadButton from "./DownloadButton";
 import { getLanguageIcon } from "./languageIcons";

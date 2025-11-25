@@ -16,7 +16,12 @@ import {
   ModalHeader,
 } from "@heroui/modal";
 import { useRouter } from "next/navigation";
-import { ReactNode, SetStateAction, useCallback, useState } from "react";
+import {
+  type ReactNode,
+  type SetStateAction,
+  useCallback,
+  useState,
+} from "react";
 
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { chatApi } from "@/features/chat/api/chatApi";
@@ -27,9 +32,9 @@ import {
   ArrowDown01Icon,
   Delete02Icon,
   MoreVerticalIcon,
+  PencilEdit02Icon,
   StarIcon,
 } from "@/icons";
-import { PencilEdit02Icon } from "@/icons";
 import { db } from "@/lib/db/chatDb";
 
 export default function ChatOptionsDropdown({
@@ -131,7 +136,7 @@ export default function ChatOptionsDropdown({
         <DropdownTrigger>
           <Button
             className={`ml-auto ${buttonHovered ? "backdrop-blur-lg" : ""}`}
-            isIconOnly={btnChildren ? false : true}
+            isIconOnly={!btnChildren}
             variant={btnChildren ? "flat" : "light"}
             radius={btnChildren ? "md" : "full"}
             // size={btnChildren ? "md" : "sm"}
@@ -211,7 +216,7 @@ export default function ChatOptionsDropdown({
                 setNewName(e.target.value)
               }
               onKeyDown={(e: { key: string }) => {
-                if (e.key == "Enter") handleEdit();
+                if (e.key === "Enter") handleEdit();
               }}
             />
           </ModalBody>

@@ -23,11 +23,15 @@ import {
   ArrowLeftDoubleIcon,
   ArrowTurnBackwardIcon,
   Cancel01Icon,
+  MagicWand05Icon,
   SentIcon,
+  StarsIcon,
 } from "@/icons";
-import { MagicWand05Icon, StarsIcon } from "@/icons";
 // import { MenuBar } from "@/features/notes/components/NotesMenuBar";
-import { EmailData, EmailImportanceSummary } from "@/types/features/mailTypes";
+import type {
+  EmailData,
+  EmailImportanceSummary,
+} from "@/types/features/mailTypes";
 
 import { useFetchEmailById } from "../hooks/useFetchEmailById";
 
@@ -140,9 +144,9 @@ function AISummary({
               className="px-0"
             >
               <div className="flex flex-wrap gap-1 pb-2">
-                {analysis.semantic_labels.map((label, index) => (
+                {analysis.semantic_labels.map((label) => (
                   <Chip
-                    key={index}
+                    key={label}
                     size="sm"
                     variant="bordered"
                     color="primary"

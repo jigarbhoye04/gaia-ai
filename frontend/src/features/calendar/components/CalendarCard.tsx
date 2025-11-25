@@ -6,8 +6,8 @@ import {
   getEventIcon,
   isTooDark,
 } from "@/features/calendar/utils/calendarUtils";
-import { Timer02Icon } from '@/icons';
-import {
+import { Timer02Icon } from "@/icons";
+import type {
   CalendarCardProps,
   GoogleCalendarEvent,
 } from "@/types/features/calendarTypes";

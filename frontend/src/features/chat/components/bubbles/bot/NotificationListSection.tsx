@@ -6,10 +6,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { NotificationItem } from "@/features/notification/components/NotificationItem";
-import { NotificationIcon } from '@/icons';
+import { NotificationIcon } from "@/icons";
 import { NotificationsAPI } from "@/services/api/notifications";
 import {
-  NotificationRecord,
+  type NotificationRecord,
   NotificationStatus,
 } from "@/types/features/notificationTypes";
 

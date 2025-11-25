@@ -7,7 +7,6 @@ import { ConnectIcon } from "@/components/shared/icons";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { useIntegrations } from "@/features/integrations";
 
-
 function IntegrationListSection() {
   const { integrations, connectIntegration } = useIntegrations();
 

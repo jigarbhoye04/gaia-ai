@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 
-import { File01Icon, FileUploadIcon, Upload01Icon } from '@/icons';
+import { File01Icon, FileUploadIcon, Upload01Icon } from "@/icons";
 
 interface FileDropModalProps {
   isDragging: boolean;

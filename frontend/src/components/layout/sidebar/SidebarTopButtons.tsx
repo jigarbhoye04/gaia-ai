@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
-import { RaisedButton } from "@/components/ui/raised-button";
 import { useNotifications } from "@/features/notification/hooks/useNotifications";
 import {
   usePricing,
@@ -16,29 +15,31 @@ import {
   CheckListIcon,
   ConnectIcon,
   MessageMultiple02Icon,
-  Target02Icon, ZapIcon
+  Target02Icon,
+  ZapIcon,
 } from "@/icons";
 import { posthog } from "@/lib";
 import { useRefreshTrigger } from "@/stores/notificationStore";
 import { NotificationStatus } from "@/types/features/notificationTypes";
+import { SidebarPromo } from "./SidebarPromo";
 
 export default function SidebarTopButtons() {
   const pathname = usePathname();
   const { data: subscriptionStatus } = useUserSubscriptionStatus();
   const { plans } = usePricing();
   const refreshTrigger = useRefreshTrigger();
+  const [unreadCount, setUnreadCount] = useState(0);
   const { notifications, refetch } = useNotifications({
     status: NotificationStatus.DELIVERED,
     limit: 50,
   });
-
-  const [unreadCount, setUnreadCount] = useState(0);
 
   const monthlyPlan = plans.find(
     (p) => p.name === "Pro" && p.duration === "monthly",
   );
   const price = monthlyPlan ? monthlyPlan.amount / 100 : 15;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: need to refresh on refresh trigger
   useEffect(() => {
     refetch();
   }, [refreshTrigger, refetch]);
@@ -103,52 +104,20 @@ export default function SidebarTopButtons() {
   return (
     <div className="flex flex-col">
       {/* Only show Upgrade to Pro button when user doesn't have an active subscription */}
-      {!subscriptionStatus?.is_subscribed && (
-        <Link href="/pricing">
-          <div className="m-1 mb-2 flex h-fit w-fit flex-col justify-center gap-1 rounded-2xl border border-zinc-700 bg-zinc-800 p-3 transition hover:bg-zinc-700 active:scale-95">
-            {/* <div className="flex items-center justify-center gap-2 py-2">
-              <CircleArrowUp width={20} height={20} />
-              <div className="flex items-center gap-4">
-                <div className="flex w-full flex-col justify-center">
-                  <div className="text-left text-sm font-medium">
-                    Upgrade to Pro
-                  </div>
-                  <div className="line-clamp-2 text-left text-xs font-light text-wrap text-foreground-500">
-                    All features & unlimited usage
-                  </div>
-                </div>
-              </div>
-            </div> */}
-
-            <div className="font-medium">Go on, You Deserve This</div>
-            <p className="text-xs text-zinc-400">
-              Unlock near-unlimited usage and priority support for ${price} a
-              month
-            </p>
-
-            <RaisedButton
-              className="mt-1 w-full rounded-xl! text-black!"
-              color="#00bbff"
-              size={"sm"}
-            >
-              <ZapIcon fill="black" width={17} height={17} />
-              Upgrade to Pro
-            </RaisedButton>
-          </div>
-        </Link>
-      )}
+      {!subscriptionStatus?.is_subscribed && <SidebarPromo price={price} />}
 
       <div className="flex w-full flex-col gap-0.5">
-        {buttonData.map(({ route, icon, label }, index) => (
-          <div key={index} className="relative">
+        {buttonData.map(({ route, icon, label }) => (
+          <div key={route + label} className="relative">
             <Button
               size="sm"
-              variant="light"
-              color={isRouteActive(route) ? "primary" : "default"}
+              variant={isRouteActive(route) ? "flat" : "light"}
+              // color={isRouteActive(route) ? "primary" : "default"}
+              color={"default"}
               className={`group-topbtns w-full justify-start text-sm ${
                 isRouteActive(route)
-                  ? "text-primary"
-                  : "text-zinc-400 hover:text-white"
+                  ? "text-zinc-300"
+                  : "text-zinc-500 hover:text-zinc-300"
               }`}
               as={Link}
               href={route}

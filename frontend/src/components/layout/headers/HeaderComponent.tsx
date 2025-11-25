@@ -1,4 +1,4 @@
-import React, { ReactElement } from "react";
+import React, { type ReactElement } from "react";
 
 interface IconProps {
   className?: string;
@@ -17,17 +17,15 @@ export default function HeaderComponent({
   iconColor?: string;
 }) {
   return (
-    <>
-      <div className="flex items-center">
-        <h1 className="flex items-center gap-2 text-lg font-medium">
-          {icon &&
-            React.cloneElement(icon, {
-              className: iconClassName,
-              color: iconColor,
-            })}
-          {title}
-        </h1>
-      </div>
-    </>
+    <div className="flex items-center">
+      <h1 className="flex items-center gap-2 text-lg font-medium">
+        {icon &&
+          React.cloneElement(icon, {
+            className: iconClassName,
+            color: iconColor,
+          })}
+        {title}
+      </h1>
+    </div>
   );
 }

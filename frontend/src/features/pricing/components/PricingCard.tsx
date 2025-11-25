@@ -2,7 +2,7 @@
 
 import { Chip } from "@heroui/chip";
 import { useRouter } from "next/navigation";
-import React from "react";
+import type React from "react";
 import { toast } from "sonner";
 
 import { RaisedButton } from "@/components/ui/raised-button";
@@ -45,7 +45,6 @@ export function PricingCard({
   isCurrentPlan,
   hasActiveSubscription,
 }: PricingCardProps) {
-
   // Always display in USD format - convert from smallest unit (cents)
   const formatUSDPrice = (amountInCents: number) => {
     if (amountInCents === 0) return { formatted: "$0", currency: "USD" };
@@ -202,7 +201,7 @@ export function PricingCard({
         {featurestitle}
 
         {!!features &&
-          features.map((feature, index) => {
+          features.map((feature) => {
             // Handle both string and Feature object formats
             const featureText =
               typeof feature === "string" ? feature : feature.text;
@@ -213,7 +212,7 @@ export function PricingCard({
 
             return (
               <div
-                key={index}
+                key={featureText}
                 className="flex items-center gap-3 border-none! text-sm font-light"
               >
                 <FeatureIcon

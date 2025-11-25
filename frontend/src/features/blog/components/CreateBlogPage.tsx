@@ -5,8 +5,7 @@ import { Avatar } from "@heroui/avatar";
 import { Button } from "@heroui/button";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
-import { Input } from "@heroui/input";
-import { Textarea } from "@heroui/input";
+import { Input, Textarea } from "@heroui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,7 +13,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { teamApi, type TeamMember } from "@/features/team/api/teamApi";
+import { type TeamMember, teamApi } from "@/features/team/api/teamApi";
 import { CalendarIcon, File01Icon, UserCircle02Icon } from "@/icons";
 
 import { blogApi } from "../api/blogApi";
@@ -290,11 +289,15 @@ Happy writing! 🚀`,
 
             {/* Authors */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="blog-author-autocomplete"
+              >
                 Authors <span className="text-danger">*</span>
               </label>
 
               <Autocomplete
+                id="blog-author-autocomplete"
                 placeholder="Search and select authors"
                 startContent={
                   <UserCircle02Icon className="h-4 w-4 text-foreground-400" />
@@ -359,9 +362,9 @@ Happy writing! 🚀`,
 
             {/* Featured Image Upload */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">
+              <div className="text-sm font-medium text-foreground">
                 Featured Image (Optional)
-              </label>
+              </div>
 
               {selectedFile ? (
                 <Card className="p-4">
@@ -432,13 +435,17 @@ Happy writing! 🚀`,
 
             {/* Content with Preview */}
             <div className="space-y-4">
-              <label className="text-sm font-medium text-foreground">
+              <label
+                className="text-sm font-medium text-foreground"
+                htmlFor="textarea-blogpost"
+              >
                 Content <span className="text-danger">*</span>
               </label>
 
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div>
                   <Textarea
+                    id="textarea-blogpost"
                     placeholder="Write your blog post content in Markdown..."
                     description="You can use Markdown syntax for formatting"
                     minRows={12}

@@ -4,9 +4,9 @@ import { Button } from "@heroui/button";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-import { SelectedWorkflowData } from "@/features/chat/hooks/useWorkflowSelection";
+import type { SelectedWorkflowData } from "@/features/chat/hooks/useWorkflowSelection";
 import BaseWorkflowCard from "@/features/workflows/components/shared/BaseWorkflowCard";
-import { Cancel01Icon } from '@/icons';
+import { Cancel01Icon } from "@/icons";
 
 interface SelectedWorkflowIndicatorProps {
   workflow: SelectedWorkflowData | null;

@@ -1,6 +1,6 @@
 import { Card, CardBody } from "@heroui/card";
 import * as d3 from "d3";
-import React, {
+import {
   forwardRef,
   useCallback,
   useEffect,
@@ -10,14 +10,11 @@ import React, {
 } from "react";
 
 import { useUser } from "@/features/auth/hooks/useUser";
+import type { Memory, MemoryRelation } from "@/features/memory/api/memoryApi";
 import {
-  type Memory,
-  type MemoryRelation,
-} from "@/features/memory/api/memoryApi";
-import {
-  getNodeTooltipContent,
   type GraphLink,
   type GraphNode,
+  getNodeTooltipContent,
   transformMemoryDataToGraph,
 } from "@/features/memory/utils/graphUtils";
 
@@ -307,7 +304,7 @@ const MemoryGraph = forwardRef<MemoryGraphHandle, MemoryGraphProps>(
         .attr("class", "link")
         .attr("stroke", "#6b7280")
         .attr("stroke-opacity", 0.6)
-        .attr("stroke-width", 2);
+        .attr("strokeWidth", 2);
 
       // Create link labels
       const linkLabel = g
@@ -353,7 +350,7 @@ const MemoryGraph = forwardRef<MemoryGraphHandle, MemoryGraphProps>(
         .attr("r", (d: GraphNode) => d.size)
         .attr("fill", (d: GraphNode) => colorScale(d.group))
         .attr("stroke", "#1f2937")
-        .attr("stroke-width", 2);
+        .attr("strokeWidth", 2);
 
       // Add clipPath for user image
       const defs = svg.append("defs");
@@ -392,7 +389,7 @@ const MemoryGraph = forwardRef<MemoryGraphHandle, MemoryGraphProps>(
         .attr("r", 32)
         .attr("fill", "none")
         .attr("stroke", "#00bbff")
-        .attr("stroke-width", 2);
+        .attr("strokeWidth", 2);
 
       // Create node labels (for non-user nodes only)
       nodeGroup
@@ -476,10 +473,7 @@ const MemoryGraph = forwardRef<MemoryGraphHandle, MemoryGraphProps>(
           >
             <Card className="border border-zinc-600 bg-zinc-800 shadow-lg">
               <CardBody className="p-2">
-                <div
-                  className="text-xs text-zinc-100"
-                  dangerouslySetInnerHTML={{ __html: tooltip.content }}
-                />
+                <div className="text-xs text-zinc-100">{tooltip.content}</div>
               </CardBody>
             </Card>
           </div>
@@ -490,8 +484,11 @@ const MemoryGraph = forwardRef<MemoryGraphHandle, MemoryGraphProps>(
             <Card className="border border-zinc-600 bg-zinc-800/90 backdrop-blur-sm">
               <CardBody className="p-3">
                 <div className="max-h-100 space-y-1 overflow-y-auto">
-                  {legendItems.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                  {legendItems.map((item) => (
+                    <div
+                      key={item.color + item.type}
+                      className="flex items-center gap-2"
+                    >
                       <div
                         className="h-3 w-3 rounded-full"
                         style={{ backgroundColor: item.color }}

@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface LabeledFieldProps {
   label: string;
@@ -13,7 +13,7 @@ export function LabeledField({
 }: LabeledFieldProps) {
   return (
     <div className={`space-y-1 ${className}`}>
-      <label className="text-xs font-medium text-zinc-400">{label}</label>
+      <div className="text-xs font-medium text-zinc-400">{label}</div>
       {children}
     </div>
   );

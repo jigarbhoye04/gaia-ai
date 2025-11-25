@@ -7,8 +7,7 @@ import { useMemo } from "react";
 
 import { NotificationCenter } from "@/features/notification/components/NotificationCenter";
 import TodoModal from "@/features/todo/components/TodoModal";
-import { ArrowRight01Icon } from "@/icons";
-import { CheckmarkCircle02Icon } from "@/icons";
+import { ArrowRight01Icon, CheckmarkCircle02Icon } from "@/icons";
 import { useTodoStore } from "@/stores/todoStore";
 
 export default function TodosHeader() {
@@ -44,7 +43,10 @@ export default function TodosHeader() {
     } else if (pathname.startsWith("/todos/label/")) {
       const labelValue = pathname.split("/").pop();
       if (labelValue) {
-        title = labelValue.charAt(0).toUpperCase() + labelValue.slice(1);
+        const labelValueDecoded = decodeURIComponent(labelValue);
+        title =
+          labelValueDecoded.charAt(0).toUpperCase() +
+          labelValueDecoded.slice(1);
       }
     } else if (projectId || pathname.startsWith("/todos/project/")) {
       const project = projects.find(
@@ -75,12 +77,11 @@ export default function TodosHeader() {
             <span className="text-zinc-300">{pageTitle}</span>
           </>
         )}
-        <>
-          <ArrowRight01Icon width={18} height={17} />
-          <span className="text-sm text-zinc-400">
-            {taskCount} {taskCount === 1 ? "task" : "tasks"}
-          </span>
-        </>
+
+        <ArrowRight01Icon width={18} height={17} />
+        <span className="text-sm text-zinc-400">
+          {taskCount} {taskCount === 1 ? "task" : "tasks"}
+        </span>
       </div>
 
       <div className="relative flex items-center">

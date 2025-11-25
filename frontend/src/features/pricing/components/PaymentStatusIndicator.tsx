@@ -3,9 +3,14 @@
 import { Spinner } from "@heroui/spinner";
 import React from "react";
 
-import { CreditCardIcon, SecurityCheckIcon, StarsIcon,Tick02Icon } from '@/icons';
+import {
+  CreditCardIcon,
+  SecurityCheckIcon,
+  StarsIcon,
+  Tick02Icon,
+} from "@/icons";
 
-import { type PaymentFlowStates } from "../hooks/usePaymentFlow";
+import type { PaymentFlowStates } from "../hooks/usePaymentFlow";
 
 interface PaymentStatusIndicatorProps {
   states: PaymentFlowStates;

@@ -6,11 +6,11 @@ import { toast } from "sonner";
 
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { useConfirmation } from "@/hooks/useConfirmation";
-import { CheckmarkBadge01Icon } from '@/icons';
+import { CheckmarkBadge01Icon } from "@/icons";
 
 import {
-  NotificationAction,
-  NotificationRecord,
+  type NotificationAction,
+  type NotificationRecord,
   NotificationStatus,
 } from "../../../types/features/notificationTypes";
 

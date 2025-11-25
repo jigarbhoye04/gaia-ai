@@ -1,7 +1,13 @@
 "use client";
 
-import { ArrowLeft01Icon,CalendarIcon, CheckmarkSquare03Icon, Mail01Icon, NotificationIcon } from '@/icons';
-import { NotificationSource } from "@/types/notifications";
+import {
+  ArrowLeft01Icon,
+  CalendarIcon,
+  CheckmarkSquare03Icon,
+  Mail01Icon,
+  NotificationIcon,
+} from "@/icons";
+import type { NotificationSource } from "@/types/notifications";
 
 export const getNotificationIcon = (type: NotificationSource) => {
   switch (type) {

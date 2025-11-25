@@ -14,7 +14,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { todoApi } from "@/features/todo/api/todoApi";
-import { ProjectCreate } from "@/types/features/todoTypes";
+import type { ProjectCreate } from "@/types/features/todoTypes";
 
 interface AddProjectModalProps {
   open: boolean;
@@ -115,10 +115,14 @@ export default function AddProjectModal({
 
                 {/* Color */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground-600">
+                  <label
+                    className="mb-2 block text-sm font-medium text-foreground-600"
+                    htmlFor="radiogroupcolorpicker"
+                  >
                     Project Color
                   </label>
                   <RadioGroup
+                    id="radiogroupcolorpicker"
                     value={formData.color}
                     color="default"
                     onValueChange={(value) =>

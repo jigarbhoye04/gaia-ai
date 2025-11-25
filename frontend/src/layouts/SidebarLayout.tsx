@@ -1,7 +1,7 @@
 import { Button } from "@heroui/button";
 import Image from "next/image";
 import Link from "next/link";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { SidebarHeaderButton } from "@/components";
 import ContactSupport from "@/components/layout/sidebar/ContactSupport";
@@ -33,9 +33,9 @@ export const CustomSidebarTrigger = () => {
       tooltip={open ? "Collapse Sidebar" : "Open Sidebar"}
     >
       {open ? (
-        <SidebarLeft01Icon className="max-h-5 min-h-5 max-w-5 min-w-5 text-zinc-400 transition group-hover/btn:text-primary" />
+        <SidebarLeft01Icon className="max-h-5 min-h-5 max-w-5 min-w-5 text-zinc-500 transition group-hover/btn:text-primary" />
       ) : (
-        <SidebarRight01Icon className="max-h-5 min-h-5 max-w-5 min-w-5 text-zinc-400 transition group-hover/btn:text-primary" />
+        <SidebarRight01Icon className="max-h-5 min-h-5 max-w-5 min-w-5 text-zinc-500 transition group-hover/btn:text-primary" />
       )}
     </SidebarHeaderButton>
   );
@@ -79,7 +79,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
       </SidebarContent>
 
       <SidebarFooter className="relative z-[4] p-2 px-3 pb-3">
-        <ContactSupport />
+        {/* <ContactSupport /> */}
         <UserContainer />
       </SidebarFooter>
     </Sidebar>

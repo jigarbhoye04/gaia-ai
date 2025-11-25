@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import ChatBubbleBot from "@/features/chat/components/bubbles/bot/ChatBubbleBot";
 import ChatBubbleUser from "@/features/chat/components/bubbles/user/ChatBubbleUser";
 
-import { Message } from "../types";
+import type { Message } from "../types";
 import OnboardingIntegrationButtons from "./OnboardingIntegrationButtons";
 
 interface OnboardingMessagesProps {
@@ -52,7 +52,7 @@ export const OnboardingMessages = ({
               disableActions={true}
               {...message}
             >
-              {isOnboardingComplete && index == messages.length - 1 && (
+              {isOnboardingComplete && index === messages.length - 1 && (
                 <motion.div
                   className="ml-[43px]"
                   initial={{ opacity: 0, y: 15 }}

@@ -4,7 +4,7 @@ import { Button } from "@heroui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@heroui/react";
 import { useState } from "react";
 
-import { ArrowDown01Icon } from '@/icons';
+import { ArrowDown01Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 
 interface BaseFieldChipProps {

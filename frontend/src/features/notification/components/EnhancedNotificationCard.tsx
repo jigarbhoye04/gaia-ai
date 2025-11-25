@@ -6,11 +6,17 @@ import { useState } from "react";
 
 import { ConfirmationDialog } from "@/components/shared/ConfirmationDialog";
 import { useNotificationActions } from "@/hooks/useNotificationActions";
-import { AlertCircleIcon, CheckmarkBadge01Icon, CheckmarkCircle02Icon, LinkSquare02Icon,Timer02Icon,   } from '@/icons';
 import {
-  ActionType,
-  ModalConfig,
-  NotificationRecord,
+  AlertCircleIcon,
+  CheckmarkBadge01Icon,
+  CheckmarkCircle02Icon,
+  LinkSquare02Icon,
+  Timer02Icon,
+} from "@/icons";
+import {
+  type ActionType,
+  type ModalConfig,
+  type NotificationRecord,
   NotificationStatus,
 } from "@/types/features/notificationTypes";
 import { parseDate } from "@/utils/date/dateUtils";

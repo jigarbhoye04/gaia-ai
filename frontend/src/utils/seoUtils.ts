@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import type {
   Article,
   HowTo,
@@ -9,8 +9,8 @@ import type {
   WithContext,
 } from "schema-dts";
 
-import { UseCase } from "@/features/use-cases/types";
-import { BlogPost } from "@/lib/blog";
+import type { UseCase } from "@/features/use-cases/types";
+import type { BlogPost } from "@/lib/blog";
 import { siteConfig } from "@/lib/seo";
 
 /**
@@ -37,8 +37,8 @@ export function extractDescription(
   const truncated = text.substring(0, maxLength);
   const lastSpace = truncated.lastIndexOf(" ");
   return lastSpace > 100
-    ? truncated.substring(0, lastSpace) + "..."
-    : truncated + "...";
+    ? `${truncated.substring(0, lastSpace)}...`
+    : `${truncated}...`;
 }
 
 /**

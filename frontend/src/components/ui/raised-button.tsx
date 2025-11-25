@@ -96,4 +96,4 @@ const RaisedButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 RaisedButton.displayName = "RaisedButton";
 
-export { RaisedButton,raisedButtonVariants };
+export { RaisedButton, raisedButtonVariants };

@@ -15,9 +15,13 @@ import { useUser } from "@/features/auth/hooks/useUser";
 import { useTextProcessor } from "@/features/todo/hooks/useTextProcessor";
 import { useTodoData } from "@/features/todo/hooks/useTodoData";
 import { useModalForm } from "@/hooks/ui/useModalForm";
-import { PlusSignIcon } from '@/icons';
+import { PlusSignIcon } from "@/icons";
 import { posthog } from "@/lib";
-import { Priority, Todo, TodoCreate } from "@/types/features/todoTypes";
+import {
+  Priority,
+  type Todo,
+  type TodoCreate,
+} from "@/types/features/todoTypes";
 
 import SubtaskManager from "./shared/SubtaskManager";
 import TodoFieldsRow from "./shared/TodoFieldsRow";
@@ -251,9 +255,9 @@ export default function TodoModal({
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         size="lg"
-        isDismissable={false}
-        isKeyboardDismissDisabled={true}
-        hideCloseButton
+        // isDismissable={false}
+        // isKeyboardDismissDisabled={true}
+        // hideCloseButton
       >
         <ModalContent>
           {(onClose) => (

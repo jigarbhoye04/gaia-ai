@@ -1,11 +1,12 @@
 import Image from "next/image";
-import React, { useRef, useState } from "react";
+import type React from "react";
+import { useRef, useState } from "react";
 import Tilt from "react-parallax-tilt";
 
 import { StyledHoloCard } from "@/app/styles/holo-card.styles";
 import { getHouseImage } from "@/features/onboarding/constants/houses";
 
-import { HoloCardProps } from "./types";
+import type { HoloCardProps } from "./types";
 
 export const HoloCard = ({
   data,
@@ -213,8 +214,12 @@ export const HoloCard = ({
 
                   <div className="flex w-full items-center justify-between">
                     <div className="flex flex-col items-start gap-1">
-                      <span className="text-sm text-white/80">User {account_number}</span>
-                      <span className="text-xs text-white/50">{member_since}</span>
+                      <span className="text-sm text-white/80">
+                        User {account_number}
+                      </span>
+                      <span className="text-xs text-white/50">
+                        {member_since}
+                      </span>
                     </div>
 
                     <div className="flex gap-2">
@@ -290,8 +295,12 @@ export const HoloCard = ({
 
                   <div className="flex w-full items-center justify-between">
                     <div className="flex flex-col items-start gap-1">
-                      <span className="text-sm text-white/80">User {account_number}</span>
-                      <span className="text-xs text-white/50">{member_since}</span>
+                      <span className="text-sm text-white/80">
+                        User {account_number}
+                      </span>
+                      <span className="text-xs text-white/50">
+                        {member_since}
+                      </span>
                     </div>
 
                     <div className="flex gap-2">

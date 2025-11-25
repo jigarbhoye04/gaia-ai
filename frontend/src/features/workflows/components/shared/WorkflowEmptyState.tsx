@@ -2,7 +2,7 @@ import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 
 import { WorkflowSquare03Icon } from "@/components";
-import { StarsIcon } from '@/icons';
+import { StarsIcon } from "@/icons";
 
 interface WorkflowEmptyStateProps {
   onGenerateWorkflow?: () => void;

@@ -20,10 +20,9 @@ import {
 } from "@/features/calendar/components/NaturalLanguageDateInput";
 import { formatRecurrence } from "@/features/calendar/utils/recurrenceUtils";
 import { useConfirmation } from "@/hooks/useConfirmation";
-import { Delete02Icon, RepeatIcon } from "@/icons";
-import { UserCircleIcon } from "@/icons";
-import { CalendarItem } from "@/types/api/calendarApiTypes";
-import { GoogleCalendarEvent } from "@/types/features/calendarTypes";
+import { Delete02Icon, RepeatIcon, UserCircleIcon } from "@/icons";
+import type { CalendarItem } from "@/types/api/calendarApiTypes";
+import type { GoogleCalendarEvent } from "@/types/features/calendarTypes";
 
 import CalendarEventAIActions from "./CalendarEventAIActions";
 
@@ -113,7 +112,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
     return () => {
       if (typeof window !== "undefined")
         window.removeEventListener("keydown", handleKeyDown);
-    }
+    };
   }, [selectedEvent, isCreating, confirm, summary, onDelete]);
 
   // Set default calendar when calendars are loaded and creating
@@ -260,9 +259,9 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
 
               {recurrenceType === "custom" && (
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-zinc-400">
-                    RepeatIcon on
-                  </label>
+                  <div className="text-sm font-medium text-zinc-400">
+                    Repeat on
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {[
                       { label: "S", value: "SU" },
@@ -274,21 +273,23 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
                       { label: "S", value: "SA" },
                     ].map((day) => (
                       <button
+                        type="button"
                         key={day.value}
                         onClick={() => {
                           const newDays = customRecurrenceDays.includes(
                             day.value,
                           )
                             ? customRecurrenceDays.filter(
-                              (d) => d !== day.value,
-                            )
+                                (d) => d !== day.value,
+                              )
                             : [...customRecurrenceDays, day.value];
                           onCustomRecurrenceDaysChange(newDays);
                         }}
-                        className={`flex size-9 items-center justify-center rounded-full text-sm font-medium transition-colors ${customRecurrenceDays.includes(day.value)
-                          ? "bg-blue-600 text-white"
-                          : "bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700"
-                          }`}
+                        className={`flex size-9 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                          customRecurrenceDays.includes(day.value)
+                            ? "bg-blue-600 text-white"
+                            : "bg-zinc-800/50 text-zinc-400 hover:bg-zinc-700"
+                        }`}
                       >
                         {day.label}
                       </button>
@@ -435,6 +436,7 @@ export const EventSidebar: React.FC<EventSidebarProps> = ({
                 {isSaving ? "Saving changes..." : "Changes saved"}
               </div>
               <button
+                type="button"
                 onClick={async () => {
                   const confirmed = await confirm({
                     title: "Delete Event",

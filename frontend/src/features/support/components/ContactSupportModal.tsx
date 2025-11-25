@@ -14,7 +14,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { Cancel01Icon,Upload01Icon } from '@/icons';
+import { Cancel01Icon, Upload01Icon } from "@/icons";
 
 import {
   ALLOWED_FILE_TYPES,
@@ -128,7 +128,7 @@ export default function ContactSupportModal({
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+    return parseFloat((bytes / k ** i).toFixed(2)) + " " + sizes[i];
   };
 
   const handleSubmit = async () => {
@@ -271,7 +271,7 @@ export default function ContactSupportModal({
                     <div className="grid grid-cols-5 gap-3">
                       {formData.attachments.map((file, index) => (
                         <div
-                          key={index}
+                          key={file.name + file.size}
                           className="group relative overflow-hidden rounded-xl bg-zinc-800"
                         >
                           <div className="aspect-square">

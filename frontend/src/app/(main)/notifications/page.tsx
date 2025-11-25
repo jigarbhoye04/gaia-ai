@@ -11,7 +11,7 @@ import { useNotifications } from "@/features/notification/hooks/useNotifications
 import { useHeader } from "@/hooks/layout/useHeader";
 import { NotificationsAPI } from "@/services/api/notifications";
 import {
-  ModalConfig,
+  type ModalConfig,
   NotificationStatus,
 } from "@/types/features/notificationTypes";
 
@@ -56,7 +56,7 @@ export default function NotificationsPage() {
   const handleBulkMarkAsRead = useCallback(
     async (notificationIds: string[]) => {
       try {
-        if (notificationIds.length == 0)
+        if (notificationIds.length === 0)
           return toast.error("No events to mark as read");
         await NotificationsAPI.bulkMarkAsRead(notificationIds);
         await refetchUnread();
@@ -109,7 +109,7 @@ export default function NotificationsPage() {
     return () => {
       setHeader(null);
     };
-  }, [selectedTab, unreadNotifications.length, handleMarkAllAsRead]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedTab, unreadNotifications.length, handleMarkAllAsRead]);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-[#1a1a1a]">

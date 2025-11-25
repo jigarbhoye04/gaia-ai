@@ -2,7 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-import { CheckmarkCircle02Icon } from '@/icons';
+import { CheckmarkCircle02Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 
 type LoadingState = {
@@ -24,14 +24,16 @@ const LoaderCore = ({
 
         return (
           <motion.div
-            key={index}
+            key={loadingState.text}
             animate={{ opacity: opacity, y: -(value * 40) }}
             className={cn("mb-4 flex gap-2 text-left")}
             initial={{ opacity: 0, y: -(value * 40) }}
             transition={{ duration: 0.5 }}
           >
             <div>
-              {index > value && <CheckmarkCircle02Icon className="text-gray-600" />}
+              {index > value && (
+                <CheckmarkCircle02Icon className="text-gray-600" />
+              )}
               {index <= value && (
                 <CheckmarkCircle02Icon
                   className={cn(

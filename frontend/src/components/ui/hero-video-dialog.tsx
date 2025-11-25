@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { useState } from "react";
 
-import { Cancel01Icon,PlayIcon } from "@/icons";
+import { Cancel01Icon, PlayIcon } from "@/icons";
 import { cn } from "@/lib/utils";
 
 type AnimationStyle =

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { Todo, TodoUpdate } from "@/types/features/todoTypes";
+import type { Todo, TodoUpdate } from "@/types/features/todoTypes";
 
 import TodoItem from "./TodoItem";
 
@@ -37,7 +37,7 @@ export default function TodoList({
 
   return (
     <div className="flex w-full justify-center">
-      <div className="w-full max-w-(--breakpoint-sm) space-y-2 py-4">
+      <div className="w-full space-y-1 py-4 divide-y divide-zinc-800">
         {sortedTodos.map((todo) => (
           <TodoItem
             key={todo.id}

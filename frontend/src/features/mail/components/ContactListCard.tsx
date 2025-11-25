@@ -2,8 +2,8 @@ import { ScrollShadow } from "@heroui/scroll-shadow";
 
 import { Gmail } from "@/components";
 import CollapsibleListWrapper from "@/components/shared/CollapsibleListWrapper";
-import { Call02Icon,Mail01Icon } from '@/icons';
-import { ContactData } from "@/types/features/mailTypes";
+import { Call02Icon, Mail01Icon } from "@/icons";
+import type { ContactData } from "@/types/features/mailTypes";
 
 interface ContactListCardProps {
   contacts: ContactData[];
@@ -20,9 +20,9 @@ export default function ContactListCard({ contacts }: ContactListCardProps) {
       <div className="w-full max-w-2xl rounded-3xl bg-zinc-800 p-3 text-white">
         {/* Contact List */}
         <ScrollShadow className="max-h-[400px] divide-y divide-zinc-700">
-          {contacts.map((contact, index) => (
+          {contacts.map((contact) => (
             <div
-              key={index}
+              key={contact.email}
               className="group flex cursor-default items-start gap-4 p-3 transition-colors hover:bg-zinc-700"
             >
               {/* Name Column */}

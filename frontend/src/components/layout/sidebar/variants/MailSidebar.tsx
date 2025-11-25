@@ -46,8 +46,8 @@ type MailContainerProps = {
 function MailContainer({ items }: MailContainerProps) {
   return (
     <div className="flex h-full flex-col">
-      {items.map((item, index) => (
-        <MailButton key={index} label={item.label} Icon={item.icon} />
+      {items.map((item) => (
+        <MailButton key={item.label} label={item.label} Icon={item.icon} />
       ))}
     </div>
   );
