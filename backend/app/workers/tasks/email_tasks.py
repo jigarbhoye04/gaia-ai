@@ -96,10 +96,7 @@ async def process_email_task(ctx: dict, user_id: str, email_data: dict) -> str:
     try:
         workflow_executions = []
 
-        # Step 1: Perform email analysis and store in database
-        await _perform_email_analysis(email_data, user_id)
-
-        # Step 2: Find workflow matches
+        # Find workflow matches
         matching_workflows = await find_matching_workflows(user_id)
         workflows_to_execute = []  # Initialize to ensure it's always defined
 
