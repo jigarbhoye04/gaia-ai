@@ -89,6 +89,7 @@ def build_agent_config(
             "thread_id": conversation_id,
             "user_id": user.get("user_id"),
             "email": user.get("email"),
+            "user_name": user.get("name", ""),
             "user_time": user_time.isoformat(),
             "provider": provider_name,
             "max_tokens": max_tokens,

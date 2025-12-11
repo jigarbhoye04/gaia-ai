@@ -21,7 +21,7 @@ import asyncio
 import warnings
 from typing import Literal
 
-from app.agents.core.graph_builder.build_graph import build_default_graph
+from app.agents.core.graph_builder.build_graph import build_graphs
 from app.agents.core.graph_builder.checkpointer_manager import init_checkpointer_manager
 from app.agents.llm.client import register_llm_providers
 from app.agents.tools.core.registry import init_tool_registry
@@ -86,7 +86,7 @@ async def unified_startup(context: Literal["main_app", "arq_worker"]) -> None:
     init_postgresql_engine()
     init_rabbitmq_publisher()
     register_llm_providers()
-    build_default_graph()
+    build_graphs()
     init_chroma()
     init_checkpointer_manager()
     init_tool_registry()
