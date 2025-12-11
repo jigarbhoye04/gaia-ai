@@ -11,6 +11,7 @@ from app.utils.chat_utils import get_user_id_from_config, get_user_name_from_con
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 
 @tool
@@ -59,29 +60,31 @@ async def call_executor(
             user_name=get_user_name_from_config(config),
         )
 
-        result = await executor_graph.ainvoke(
-            {
-                "messages": [
-                    system_message,
-                    HumanMessage(
-                        content=task,
-                        additional_kwargs={"visible_to": {"executor_agent"}},
-                    ),
-                ]
-            },
+        initial_state = {
+            "messages": [
+                system_message,
+                HumanMessage(
+                    content=task,
+                    additional_kwargs={"visible_to": {"executor_agent"}},
+                ),
+            ]
+        }
+
+        writer = get_stream_writer()
+        complete_message = ""
+
+        async for event in executor_graph.astream(
+            initial_state,
+            stream_mode=["messages", "custom"],
             config=executor_config,
-        )
+            subgraphs=True,
+        ):
+            ns, stream_mode, payload = event
 
-        messages = result.get("messages", [])
-        if messages:
-            last_message = messages[-1]
-            return (
-                str(last_message.content)
-                if hasattr(last_message, "content")
-                else str(last_message)
-            )
+            if stream_mode == "custom":
+                writer(payload)
 
-        return "Task completed but no response received"
+        return complete_message or "Task completed"
 
     except Exception as e:
         logger.error(f"Error calling executor: {e}")
