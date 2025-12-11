@@ -33,8 +33,9 @@ async def build_executor_graph(
         chat_llm = init_llm()
 
     """Construct and compile the state graph with integrated sub-agent graphs."""
-    tool_registry, sub_agents = await asyncio.gather(
+    tool_registry, store, sub_agents = await asyncio.gather(
         get_tool_registry(),
+        get_tools_store(),
         ProviderSubAgents.get_all_subagents(),
     )
 
@@ -46,7 +47,7 @@ async def build_executor_graph(
         retrieve_tools_coroutine=get_retrieve_tools_function(
             tool_space="general", limit=8
         ),
-        sub_agents=sub_agents,  # pyright: ignore[reportArgumentType]
+        sub_agents=sub_agents,
         pre_model_hooks=[
             create_filter_messages_node(
                 agent_name="executor_agent",
@@ -61,20 +62,16 @@ async def build_executor_graph(
 
     checkpointer_manager = await get_checkpointer_manager()
 
-    if (
-        in_memory_checkpointer or not checkpointer_manager
-    ):  # Use in-memory checkpointer for testing or simple use cases
+    if in_memory_checkpointer or not checkpointer_manager:
         in_memory_checkpointer_instance = InMemorySaver()
-        # Setup the checkpointer
         graph = builder.compile(
-            # type: ignore[call-arg]
-            checkpointer=in_memory_checkpointer_instance,
+            checkpointer=in_memory_checkpointer_instance, store=store
         )
         logger.debug("Graph compiled with in-memory checkpointer")
         yield graph
     else:
         postgres_checkpointer = checkpointer_manager.get_checkpointer()
-        graph = builder.compile(checkpointer=postgres_checkpointer)
+        graph = builder.compile(checkpointer=postgres_checkpointer, store=store)
         logger.debug("Graph compiled with PostgreSQL checkpointer")
         yield graph
 

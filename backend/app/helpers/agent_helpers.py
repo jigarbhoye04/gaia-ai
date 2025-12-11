@@ -36,6 +36,7 @@ def build_agent_config(
     user_time: datetime,
     user_model_config: Optional[ModelConfig] = None,
     usage_metadata_callback: Optional[UsageMetadataCallbackHandler] = None,
+    thread_id: Optional[str] = None,
 ) -> dict:
     """Build configuration for graph execution with optional authentication tokens.
 
@@ -47,6 +48,7 @@ def build_agent_config(
         user: User information dictionary containing user_id and email
         user_time: Current datetime for the user's timezone
         user_model_config: Optional model configuration with provider and token limits
+        thread_id: Optional override for thread_id (defaults to conversation_id)
 
     Returns:
         Tuple containing:
@@ -86,7 +88,7 @@ def build_agent_config(
 
     config = {
         "configurable": {
-            "thread_id": conversation_id,
+            "thread_id": thread_id or conversation_id,
             "user_id": user.get("user_id"),
             "email": user.get("email"),
             "user_name": user.get("name", ""),

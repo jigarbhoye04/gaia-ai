@@ -1,9 +1,11 @@
 """Executor tool for comms agent to delegate tasks to executor agent."""
 
+from datetime import datetime
 from typing import Annotated
 
 from app.agents.core.graph_manager import GraphManager
 from app.config.loggers import llm_logger as logger
+from app.helpers.agent_helpers import build_agent_config
 from app.helpers.message_helpers import create_system_message
 from app.utils.chat_utils import get_user_id_from_config, get_user_name_from_config
 from langchain_core.messages import HumanMessage
@@ -26,20 +28,30 @@ async def call_executor(
     The executor has access to all tools and integrations.
     """
     try:
-        thread_id = config.get("configurable", {}).get("thread_id", "")
+        configurable = config.get("configurable", {})
+        thread_id = configurable.get("thread_id", "")
         executor_thread_id = f"executor_{thread_id}"
 
         executor_graph = await GraphManager.get_graph("executor_agent")
         if not executor_graph:
             return "Error: Executor agent not available"
 
-        executor_config = {
-            **config,
-            "configurable": {
-                **config.get("configurable", {}),
-                "thread_id": executor_thread_id,
-            },
+        user = {
+            "user_id": configurable.get("user_id"),
+            "email": configurable.get("email"),
+            "name": configurable.get("user_name"),
         }
+        user_time_str = configurable.get("user_time", "")
+        user_time = (
+            datetime.fromisoformat(user_time_str) if user_time_str else datetime.now()
+        )
+
+        executor_config = build_agent_config(
+            conversation_id=thread_id,
+            user=user,
+            user_time=user_time,
+            thread_id=executor_thread_id,
+        )
 
         system_message = create_system_message(
             user_id=get_user_id_from_config(config),
