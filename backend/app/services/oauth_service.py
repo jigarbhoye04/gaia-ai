@@ -14,7 +14,6 @@ from app.db.redis import delete_cache
 from app.decorators.caching import Cacheable
 from app.models.user_models import BioStatus
 from app.services.composio.composio_service import get_composio_service
-from app.services.onboarding_service import _queue_gmail_processing
 from app.utils.email_utils import add_contact_to_resend, send_welcome_email
 from bson import ObjectId
 from fastapi import HTTPException
@@ -275,8 +274,6 @@ async def handle_oauth_connection(
             logger.error(
                 f"Error updating bio_status for user {user_id}: {e}", exc_info=True
             )
-
-        background_tasks.add_task(_queue_gmail_processing, user_id)
 
     # Invalidate OAuth status cache for this user
     try:
