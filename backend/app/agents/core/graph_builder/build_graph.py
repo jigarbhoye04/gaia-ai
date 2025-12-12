@@ -45,8 +45,11 @@ async def build_executor_graph(
         agent_name="executor_agent",
         tool_registry=tool_dict,
         retrieve_tools_coroutine=get_retrieve_tools_function(
-            tool_space="general", limit=8
+            tool_space="general",
+            include_subagents=True,
+            limit=8,
         ),
+        initial_tool_ids=["list_tools", "handoff"],
         pre_model_hooks=[
             create_filter_messages_node(
                 agent_name="executor_agent",

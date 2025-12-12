@@ -51,6 +51,7 @@ class SubAgentFactory:
             Compiled LangGraph agent with tool registry, retrieval, and checkpointer
         """
         from app.agents.tools.core.registry import get_tool_registry
+        from app.agents.tools.core.retrieval import get_list_tools_function
 
         logger.info(
             f"Creating {provider} sub-agent graph using tool space '{tool_space}' with "
@@ -63,6 +64,13 @@ class SubAgentFactory:
 
         store, tool_registry = await asyncio.gather(
             get_tools_store(), get_tool_registry()
+        )
+
+        # Create list_tools for subagent (without subagent search capability)
+        list_tools = get_list_tools_function(
+            tool_space=tool_space,
+            include_subagents=False,
+            limit=25,
         )
 
         common_kwargs = {
@@ -88,10 +96,10 @@ class SubAgentFactory:
                 initial_tool_ids.extend([t.name for t in category.tools])
 
             try:
-                initial_tool_ids.extend([search_memory.name])
+                initial_tool_ids.extend([search_memory.name, list_tools.name])
             except Exception as e:
                 logger.warning(
-                    f"Failed to add memory tools to subagent: {e}. Continuing without memory tools."
+                    f"Failed to add memory/list tools to subagent: {e}. Continuing without them."
                 )
 
             common_kwargs.update(
@@ -106,9 +114,10 @@ class SubAgentFactory:
                     "retrieve_tools_coroutine": get_retrieve_tools_function(
                         tool_space=tool_space,
                         include_core_tools=False,
-                        additional_tools=[search_memory],
+                        include_subagents=False,
                         limit=retrieve_tools_limit,
-                    )
+                    ),
+                    "initial_tool_ids": [list_tools.name, search_memory.name],
                 }
             )
 

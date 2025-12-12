@@ -237,7 +237,6 @@ def create_agent(
             filtered_result = [
                 tool_id for tool_id in result if not tool_id.startswith("subagent:")
             ]
-            print(f"{filtered_result=}")
             selected_tools[tool_call["id"]] = filtered_result
 
         tool_messages, tool_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
@@ -260,7 +259,6 @@ def create_agent(
             filtered_result = [
                 tool_id for tool_id in result if not tool_id.startswith("subagent:")
             ]
-            print(f"{filtered_result=}", result)
             selected_tools[tool_call["id"]] = filtered_result
 
         tool_messages, tool_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]

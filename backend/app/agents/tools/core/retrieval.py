@@ -1,65 +1,93 @@
 import asyncio
 from typing import Annotated, Awaitable, Callable
 
-from langchain_core.tools import BaseTool, tool
+from langchain_core.tools import BaseTool, StructuredTool
 from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 
-TOOLS_LIMIT = 25
 
-
-@tool
-async def list_tools(
-    query: str,
-    store: Annotated[BaseStore, InjectedStore],
-) -> list[str]:
-    """List available tool and subagent names matching your query. Returns names only (not loaded).
-
-    Use this to DISCOVER what tools exist before loading them. This is lightweight and can
-    return many results (20-30+) since it only returns names, not full tool definitions.
-
-    WORKFLOW:
-    1. Call list_tools(query="your intent") to see available options
-    2. Pick the exact tool names you need from the results
-    3. Call retrieve_tools(exact_tool_names=[...]) to load those specific tools
-
-    This two-step approach lets you see a broad range of options before committing
-    to loading specific tools, avoiding token waste on irrelevant tools.
+def get_list_tools_function(
+    tool_space: str = "general",
+    include_subagents: bool = True,
+    limit: int = 25,
+) -> StructuredTool:
+    """Get a list_tools function configured for specific context.
 
     Args:
-        query: Natural language description of what you want to accomplish.
-               Examples: "email operations", "calendar management", "social media posting"
+        tool_space: Namespace to search for tools
+        include_subagents: Whether to include subagent results (False for subagents)
+        limit: Maximum number of tool results
 
     Returns:
-        List of tool/subagent names matching the query. Subagents have "subagent:" prefix.
+        Configured list_tools tool
     """
-    from app.agents.tools.core.registry import get_tool_registry
 
-    tool_registry = await get_tool_registry()
-    available_tool_names = tool_registry.get_tool_names()
+    async def list_tools(
+        query: str,
+        store: Annotated[BaseStore, InjectedStore],
+    ) -> list[str]:
+        """List available tool and subagent names matching your query. Returns names only (not loaded).
 
-    tool_results, subagent_results = await asyncio.gather(
-        store.asearch(("general",), query=query, limit=TOOLS_LIMIT),
-        store.asearch(("subagents",), query=query, limit=TOOLS_LIMIT),
+        Use this to DISCOVER what tools exist before loading them. This is lightweight and can
+        return many results (20-30+) since it only returns names, not full tool definitions.
+
+        WORKFLOW:
+        1. Call list_tools(query="your intent") to see available options
+        2. Pick the exact tool names you need from the results
+        3. Call retrieve_tools(exact_tool_names=[...]) to load those specific tools
+
+        This two-step approach lets you see a broad range of options before committing
+        to loading specific tools, avoiding token waste on irrelevant tools.
+
+        Args:
+            query: Natural language description of what you want to accomplish.
+                   Examples: "email operations", "calendar management", "social media posting"
+
+        Returns:
+            List of tool/subagent names matching the query. Subagents have "subagent:" prefix.
+        """
+        from app.agents.tools.core.registry import get_tool_registry
+
+        tool_registry = await get_tool_registry()
+        available_tool_names = tool_registry.get_tool_names()
+
+        if include_subagents:
+            tool_results, subagent_results = await asyncio.gather(
+                store.asearch((tool_space,), query=query, limit=limit),
+                store.asearch(("subagents",), query=query, limit=5),
+            )
+        else:
+            tool_results = await store.asearch((tool_space,), query=query, limit=limit)
+            subagent_results = []
+
+        all_results = []
+
+        for result in tool_results:
+            if result.key in available_tool_names:
+                all_results.append({"id": result.key, "score": result.score})
+
+        for result in subagent_results:
+            all_results.append({"id": f"subagent:{result.key}", "score": result.score})
+
+        all_results.sort(key=lambda x: x["score"], reverse=True)
+
+        return [r["id"] for r in all_results]
+
+    return StructuredTool.from_function(
+        func=None,
+        coroutine=list_tools,
+        name="list_tools",
     )
 
-    all_results = []
 
-    for result in tool_results:
-        if result.key in available_tool_names:
-            all_results.append({"id": result.key, "score": result.score})
-
-    for result in subagent_results:
-        all_results.append({"id": f"subagent:{result.key}", "score": result.score})
-
-    all_results.sort(key=lambda x: x["score"], reverse=True)
-
-    return [r["id"] for r in all_results[:TOOLS_LIMIT]]
+# Main list_tools for executor agent (includes subagents)
+list_tools = get_list_tools_function(tool_space="general", include_subagents=True)
 
 
 def get_retrieve_tools_function(
     tool_space: str = "general",
     include_core_tools: bool = True,
+    include_subagents: bool = True,
     additional_tools: list[BaseTool] = [],
     limit: int = 5,
 ) -> Callable[..., Awaitable[list[str]]]:
@@ -68,8 +96,10 @@ def get_retrieve_tools_function(
 
     Args:
         tool_space: Namespace prefix for the tools.
-        exclude_tools: List of tool names to exclude from results.
         include_core_tools: Whether to include core tools in the results.
+        include_subagents: Whether to include subagents in search (False for subagents).
+        additional_tools: Additional tools to include.
+        limit: Maximum number of tools to retrieve.
 
     Returns:
         A function that retrieves tools based on the provided parameters.
@@ -168,11 +198,16 @@ def get_retrieve_tools_function(
         # Search for matching tools based on query (if provided)
         if query:
             # Search both tools and subagents with increased limit for better ranking
-            combined_limit = limit + 3
-            tool_results, subagent_results = await asyncio.gather(
-                store.asearch((tool_space,), query=query, limit=combined_limit),
-                store.asearch(("subagents",), query=query, limit=combined_limit),
-            )
+            if include_subagents:
+                tool_results, subagent_results = await asyncio.gather(
+                    store.asearch((tool_space,), query=query, limit=limit),
+                    store.asearch(("subagents",), query=query, limit=5),
+                )
+            else:
+                tool_results = await store.asearch(
+                    (tool_space,), query=query, limit=limit
+                )
+                subagent_results = []
 
             all_results = []
 
@@ -189,7 +224,7 @@ def get_retrieve_tools_function(
                 )
 
             all_results.sort(key=lambda x: x["score"], reverse=True)
-            top_results = all_results[: limit + 3]
+            top_results = all_results
 
             # Extract IDs from top ranked results
             tool_ids.update([r["id"] for r in top_results])

@@ -1,7 +1,7 @@
 from functools import cache
 from typing import Dict, List, Optional
 
-from app.agents.core.subagents.handoff_tools import handoff as handoff_tools
+from app.agents.core.subagents.handoff_tools import handoff as handoff_tool
 from app.agents.tools import (
     calendar_tool,
     code_exec_tool,
@@ -140,7 +140,7 @@ class ToolRegistry:
 
         self._add_category(
             "delegation",
-            core_tools=[handoff_tools, list_tools],
+            core_tools=[handoff_tool, list_tools],
         )
 
         self._add_category("notifications", tools=[*notification_tool.tools])
