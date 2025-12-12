@@ -122,7 +122,7 @@ class ToolRegistry:
 
     async def _initialize_categories(self):
         """Initialize core tool categories. Provider tools are loaded lazily."""
-        from app.agents.core.subagents.handoff_tools import get_handoff_tools
+        from app.agents.core.subagents.handoff_tools import tools as handoff_tools
 
         self._add_category(
             "search",
@@ -139,7 +139,7 @@ class ToolRegistry:
 
         self._add_category(
             "delegation",
-            tools=get_handoff_tools(),
+            core_tools=handoff_tools,
         )
 
         self._add_category("notifications", tools=[*notification_tool.tools])

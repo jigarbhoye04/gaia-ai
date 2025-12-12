@@ -233,7 +233,12 @@ def create_agent(
             if store_arg:
                 kwargs[store_arg] = store
             result = retrieve_tools.invoke(kwargs)
-            selected_tools[tool_call["id"]] = result
+
+            filtered_result = [
+                tool_id for tool_id in result if not tool_id.startswith("subagent:")
+            ]
+            print(f"{filtered_result=}")
+            selected_tools[tool_call["id"]] = filtered_result
 
         tool_messages, tool_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
         return {"messages": tool_messages, "selected_tool_ids": tool_ids}  # type: ignore[return-value]
@@ -251,7 +256,12 @@ def create_agent(
             if store_arg:
                 kwargs[store_arg] = store
             result = await retrieve_tools.ainvoke(kwargs)
-            selected_tools[tool_call["id"]] = result
+
+            filtered_result = [
+                tool_id for tool_id in result if not tool_id.startswith("subagent:")
+            ]
+            print(f"{filtered_result=}", result)
+            selected_tools[tool_call["id"]] = filtered_result
 
         tool_messages, tool_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
         return {"messages": tool_messages, "selected_tool_ids": tool_ids}  # type: ignore[return-value]

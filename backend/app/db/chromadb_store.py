@@ -12,6 +12,7 @@ from collections.abc import Iterable
 from datetime import datetime, timezone
 from typing import Any
 
+from app.agents.core.subagents.handoff_tools import index_subagents_to_store
 from app.agents.tools.core.registry import get_tool_registry
 from app.config.loggers import chroma_logger as logger
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
@@ -739,6 +740,8 @@ async def initialize_chroma_tools_store():
             )
 
         logger.info(f"Successfully updated {total_ops} tools in ChromaDB")
+
+    await index_subagents_to_store(store)
 
     return store
 

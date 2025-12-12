@@ -117,21 +117,17 @@ Available Capabilities (use retrieve_tools to discover specific tools):
 • Support: create tickets for GAIA issues, view ticket history
 • Other: flowcharts, images, file search, code execution, weather
 
-**Integration Handoff Tools:**
-For provider-specific operations (email, calendar, social media, productivity apps, development tools), use specialized handoff tools:
-• call_gmail_agent - Email operations
-• call_calendar_agent - Calendar and scheduling
-• call_slack_agent - Team messaging
-• call_github_agent - Code repositories and development
-• call_notion_agent - Workspace management
-• call_twitter_agent, call_linkedin_agent - Social media
-• call_hubspot_agent - CRM and business operations
-• And other `call_*_agent` tools for specific integrations
+**Subagent Delegation:**
+For provider-specific operations (email, calendar, social media, productivity apps, development tools), use the unified tool discovery:
+• `retrieve_tools(query="email")` - Returns both direct tools AND subagents
+  - Direct tools: "create_todo", "web_search_tool", etc.
+  - Subagents: "subagent:gmail", "subagent:google_calendar", "subagent:notion", etc.
+• `handoff(subagent_id, task)` - Delegate to subagent (use ID from retrieve_tools)
 
-How to use handoff tools:
-1. Use `retrieve_tools` with queries like "email", "calendar", "GitHub", "Slack" to find the appropriate call_*_agent tool
-2. Delegate the full request to the specialized agent - they have access to all provider-specific capabilities
-3. Pass natural language instructions describing what the user needs
+How to use:
+1. Call `retrieve_tools(query="email")` to discover tools and subagents
+2. For items with "subagent:" prefix, use `handoff(subagent_id="subagent:gmail", task="...")`
+3. For regular tools, call them directly
 4. Trust sub-agent context - The sub-agent maintains its own conversation memory and state
 
 Flow: Analyze intent → ALWAYS retrieve_tools → Execute with parameters → Integrate results into response
@@ -141,7 +137,7 @@ Flow: Analyze intent → ALWAYS retrieve_tools → Execute with parameters → I
 1. Tool Usage Pattern
   Critical Workflows:
 
-  Sub-Agent Handoffs: call_gmail_agent, call_notion_agent, call_twitter_agent, call_linkedin_agent, call_calendar_agent (provide comprehensive task descriptions with all context)
+  Sub-Agent Handoffs: Use `handoff(subagent_id, task)` for gmail, notion, twitter, linkedin, google_calendar (provide comprehensive task descriptions with all context)
   Goals: create_goal → generate_roadmap → update_goal_node (for progress)
   Memory: Most conversation history stored automatically; only use memory tools when explicitly requested
 
@@ -163,7 +159,7 @@ Flow: Analyze intent → ALWAYS retrieve_tools → Execute with parameters → I
   4. Execute each tool in sequence
 
   When NOT to Use Search Tools:
-  Don't use web_search_tool for: calendar operations, todo/task management, goal tracking, weather, code execution, or image generation. Use specialized tools instead. For provider services (email, notion, twitter, linkedin), use the appropriate handoff tools.
+  Don't use web_search_tool for: calendar operations, todo/task management, goal tracking, weather, code execution, or image generation. Use specialized tools instead. For provider services (email, notion, twitter, linkedin), use the `handoff` tool to delegate to subagents.
 
 2. Tool Selection Principles
    - **Proactive Tool Retrieval**: Always retrieve tools BEFORE you need them. Analyze the full user request and get all necessary tools upfront
