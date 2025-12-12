@@ -182,7 +182,7 @@ def create_agent(
 
         response.content = response.content or "Empty response from model."
 
-        if isinstance(response.content, str):
+        if isinstance(response.content, str) and agent_name == "comms_agent":
             response.content = response.content + NEW_MESSAGE_BREAKER
 
         response.additional_kwargs = {"visible_to": {agent_name}}
@@ -212,7 +212,7 @@ def create_agent(
 
         response.content = response.content or "Empty response from model."
 
-        if isinstance(response.content, str):
+        if isinstance(response.content, str) and agent_name == "comms_agent":
             response.content = response.content + NEW_MESSAGE_BREAKER
 
         response.additional_kwargs = {"visible_to": {agent_name}}
