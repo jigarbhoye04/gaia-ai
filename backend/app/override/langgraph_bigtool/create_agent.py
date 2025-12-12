@@ -30,14 +30,14 @@ NOTE: Type/linting errors in this file are expected since it's copied from exter
 
 import asyncio
 import inspect
+from collections.abc import Mapping
 from typing import Any, Awaitable, Callable, Union
 
 from langchain_core.language_models import LanguageModelLike
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool, StructuredTool
 from langgraph.graph import END, StateGraph
-from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode
 from langgraph.store.base import BaseStore
 from langgraph.types import Send
@@ -51,69 +51,6 @@ HookType = Union[
     Callable[[State, RunnableConfig, BaseStore], State],
     Callable[[State, RunnableConfig, BaseStore], Awaitable[State]],
 ]
-
-
-def _clean_consecutive_ai_messages(messages: list) -> list:
-    """
-    Prevent consecutive AIMessage problem by replacing subagent handoff patterns.
-
-    THE PROBLEM:
-    When a subagent completes its task and returns to the main agent, it creates:
-    1. ToolMessage(name="call_reddit_agent", content="Successfully transferred to reddit", is_handoff_toolcall=True)
-    2. AIMessage(content="Result from Reddit", visible_to={main_agent, reddit_agent})
-
-    This creates two consecutive AI responses in the message history:
-    - Previous AIMessage from main agent deciding to call subagent
-    - New AIMessage from subagent with results
-
-    Gemini (and most LLMs) expect alternating HumanMessage/AIMessage patterns and
-    reject consecutive AIMessages with empty responses or validation errors.
-
-    THE FIX:
-    When we detect the handoff pattern using the is_handoff_toolcall flag,
-    we replace the ToolMessage's placeholder content with the AIMessage's actual result,
-    then discard the AIMessage. This maintains the conversation flow while preventing
-    consecutive AI responses.
-
-    Pattern: ToolMessage("transfer", is_handoff_toolcall=True) + AIMessage(result) → ToolMessage(result)
-
-    This ensures Gemini sees: AIMessage → ToolMessage → AIMessage (valid pattern)
-    Instead of: AIMessage → ToolMessage → AIMessage → AIMessage (invalid pattern)
-
-    Args:
-        messages: List of messages from state
-
-    Returns:
-        Cleaned list of messages with subagent handoff patterns collapsed
-    """
-    cleaned_messages = []
-    i = 0
-
-    while i < len(messages):
-        msg = messages[i]
-
-        if not isinstance(msg, ToolMessage) or i + 1 >= len(messages):
-            cleaned_messages.append(msg)
-            i += 1
-            continue
-
-        is_handoff = msg.additional_kwargs.get("is_handoff_toolcall", False)
-        if not is_handoff:
-            cleaned_messages.append(msg)
-            i += 1
-            continue
-
-        next_msg = messages[i + 1]
-        if isinstance(next_msg, AIMessage):
-            cleaned_messages.append(
-                msg.model_copy(update={"content": next_msg.content})
-            )
-            i += 2
-        else:
-            cleaned_messages.append(msg)
-            i += 1
-
-    return cleaned_messages
 
 
 async def _execute_hooks(
@@ -148,7 +85,6 @@ def _sync_execute_hooks(
     async def _run_with_hooks():
         return await _execute_hooks(hooks, state, config, store)
 
-    # Run async hooks in sync context
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -161,7 +97,7 @@ def _sync_execute_hooks(
 
 def create_agent(
     llm: LanguageModelLike,
-    tool_registry: dict[str, BaseTool | Callable],
+    tool_registry: Mapping[str, BaseTool | Callable],
     *,
     limit: int = 2,
     filter: dict[str, Any] | None = None,
@@ -172,7 +108,6 @@ def create_agent(
     disable_retrieve_tools: bool = False,
     context_schema=None,
     agent_name: str = "main_agent",
-    sub_agents: dict[str, Union[CompiledStateGraph, RunnableCallable]] = {},
     pre_model_hooks: list[HookType] | None = None,
     end_graph_hooks: list[HookType] | None = None,
 ) -> StateGraph:
@@ -201,7 +136,6 @@ def create_agent(
         disable_retrieve_tools: If True, do not bind or use the retrieve_tools mechanism at all.
             This disables tool retrieval and select_tools path; only initially bound tools and
             any already-selected tools will be available.
-        is_sub_agent: Whether this agent is a sub-agent (affects hook execution).
         pre_model_hooks: Optional list of callables to process state after model calls.
             Hooks are executed in sequence as provided. Each hook has signature:
             (state: State, config: RunnableConfig, store: BaseStore) -> State.
@@ -219,25 +153,20 @@ def create_agent(
         retrieve_tools = StructuredTool.from_function(
             func=retrieve_tools_function, coroutine=retrieve_tools_coroutine
         )
-        # If needed, get argument name to inject Store
         store_arg = get_store_arg(retrieve_tools)
 
     def execute_end_graph_hooks(
         state: State, config: RunnableConfig, *, store: BaseStore
     ) -> State:
-        # For sync context, we need to run hooks in a new event loop
         return _sync_execute_hooks(end_graph_hooks, state, config, store)
 
     async def aexecute_end_graph_hooks(
         state: State, config: RunnableConfig, *, store: BaseStore
     ) -> State:
-        # For async context, run hooks directly without creating a new event loop
         return await _execute_hooks(end_graph_hooks, state, config, store)
 
     def call_model(state: State, config: RunnableConfig, *, store: BaseStore) -> State:
         _sync_execute_hooks(end_graph_hooks, state, config, store)
-
-        state = {**state, "messages": _clean_consecutive_ai_messages(state["messages"])}
 
         model_configurations = config.get("configurable", {})
         _llm = llm.with_config(configurable=model_configurations)
@@ -251,14 +180,11 @@ def create_agent(
         llm_with_tools = _llm.bind_tools(tools_to_bind)  # type: ignore[arg-type]
         response = llm_with_tools.invoke(state["messages"])
 
-        # Handle empty response content (edge case)
-        # Happens with gemini models https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175
         response.content = response.content or "Empty response from model."
 
         if isinstance(response.content, str):
             response.content = response.content + NEW_MESSAGE_BREAKER
 
-        # Set the name for the response for filtering
         response.additional_kwargs = {"visible_to": {agent_name}}
         return {"messages": [response]}  # type: ignore[return-value]
 
@@ -272,8 +198,6 @@ def create_agent(
             store,
         )
 
-        state = {**state, "messages": _clean_consecutive_ai_messages(state["messages"])}
-
         model_configurations = config.get("configurable", {})
         _llm = llm.with_config(configurable=model_configurations)
         selected_tools = [tool_registry[id] for id in state["selected_tool_ids"]]
@@ -286,14 +210,11 @@ def create_agent(
         llm_with_tools = _llm.bind_tools(tools_to_bind)  # type: ignore[arg-type]
         response: AIMessage = await llm_with_tools.ainvoke(state["messages"])
 
-        # Handle empty response content (edge case)
-        # Happens with gemini models https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175
         response.content = response.content or "Empty response from model."
 
         if isinstance(response.content, str):
             response.content = response.content + NEW_MESSAGE_BREAKER
 
-        # Set the name for the response for filtering
         response.additional_kwargs = {"visible_to": {agent_name}}
         return {"messages": [response]}  # type: ignore[return-value]
 
@@ -390,48 +311,8 @@ def create_agent(
         path_map=path_map,
     )
 
-    # TODO: Remove this conditional edge if issue #19 is resolved in langgraph_bigtool
-    # This is a temporary fix to prevent redundant LLM calls after subagent handoff
-    def should_continue_after_tool(state: State):
-        """
-        Prevent redundant LLM call after subagent handoff.
-
-        When a subagent is called, it adds a ToolMessage with is_handoff_toolcall=True.
-        Without this check, the main agent would unnecessarily invoke the LLM again
-        after the handoff. This optimization prevents redundant LLM calls.
-        """
-        messages = state["messages"]
-        messages_visible_to_agent = [
-            msg
-            for msg in messages
-            if isinstance(msg, (AIMessage, ToolMessage))
-            and agent_name in msg.additional_kwargs.get("visible_to", set())
-        ]
-
-        last_message = messages_visible_to_agent[-1]
-
-        if isinstance(last_message, ToolMessage):
-            is_handoff = last_message.additional_kwargs.get(
-                "is_handoff_toolcall", False
-            )
-            if is_handoff:
-                return END
-
-        return "agent"
-
-    builder.add_conditional_edges(
-        "tools",
-        should_continue_after_tool,
-        path_map=["agent", END],
-    )
-
-    # builder.add_edge("tools", "agent")
+    builder.add_edge("tools", "agent")
     if not disable_retrieve_tools:
         builder.add_edge("select_tools", "agent")
-
-    # Handle sub-agents
-    for name, sub_agent in sub_agents.items():
-        builder.add_node(name, sub_agent)
-        builder.add_edge(name, "agent")
 
     return builder

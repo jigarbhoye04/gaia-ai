@@ -68,6 +68,8 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             capabilities="creating events, scheduling meetings, managing availability, setting reminders, updating calendar entries, and organizing schedules",
             use_cases="scheduling meetings, managing calendar events, checking availability, or any calendar-related task",
             system_prompt=CALENDAR_AGENT_SYSTEM_PROMPT,
+            use_direct_tools=True,
+            disable_retrieve_tools=True,
         ),
     ),
     OAuthIntegration(

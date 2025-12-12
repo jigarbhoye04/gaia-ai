@@ -11,7 +11,7 @@ from app.agents.core.nodes import (
     trim_messages_node,
 )
 from app.agents.core.nodes.filter_messages import create_filter_messages_node
-from app.agents.core.subagents.provider_subagents import ProviderSubAgents
+from app.agents.core.subagents.provider_subagents import register_subagent_providers
 from app.agents.llm.client import init_llm
 from app.agents.tools.core.registry import get_tool_registry
 from app.agents.tools.core.retrieval import get_retrieve_tools_function
@@ -29,25 +29,24 @@ async def build_executor_graph(
     chat_llm: Optional[LanguageModelLike] = None,
     in_memory_checkpointer: bool = False,
 ):
+    """Construct and compile the executor agent graph with handoff tools."""
     if chat_llm is None:
         chat_llm = init_llm()
 
-    """Construct and compile the state graph with integrated sub-agent graphs."""
-    tool_registry, store, sub_agents = await asyncio.gather(
+    tool_registry, store = await asyncio.gather(
         get_tool_registry(),
         get_tools_store(),
-        ProviderSubAgents.get_all_subagents(),
     )
 
-    # Create main agent with custom tool retrieval logic
+    tool_dict = tool_registry.get_tool_dict()
+
     builder = create_agent(
         llm=chat_llm,
         agent_name="executor_agent",
-        tool_registry=tool_registry.get_tool_dict(),
+        tool_registry=tool_dict,
         retrieve_tools_coroutine=get_retrieve_tools_function(
             tool_space="general", limit=8
         ),
-        sub_agents=sub_agents,
         pre_model_hooks=[
             create_filter_messages_node(
                 agent_name="executor_agent",
@@ -88,7 +87,7 @@ async def build_executor_agent():
 
     async with build_executor_graph() as graph:
         logger.info("Executor agent built successfully")
-        return graph
+    return graph
 
 
 @asynccontextmanager
@@ -150,13 +149,14 @@ async def build_comms_agent():
 
     async with build_comms_graph() as graph:
         logger.info("Comms agent built successfully")
-        return graph
+    return graph
 
 
 def build_graphs():
-    """Build both comms and executor agents and register them."""
+    """Build comms and executor agents and register subagent providers."""
     logger.info("Building core agent graphs...")
 
+    register_subagent_providers()
     build_executor_agent()
     build_comms_agent()
 

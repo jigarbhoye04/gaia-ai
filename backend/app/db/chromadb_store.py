@@ -741,3 +741,48 @@ async def initialize_chroma_tools_store():
         logger.info(f"Successfully updated {total_ops} tools in ChromaDB")
 
     return store
+
+
+async def index_tools_to_store(tools_with_space: list[tuple[Any, str]]):
+    """
+    Index tools into ChromaDB store on-demand.
+
+    Args:
+        tools_with_space: List of (tool, space_name) tuples to index
+    """
+    store = await providers.aget("chroma_tools_store")
+    if store is None:
+        logger.warning("ChromaDB store not available, skipping tool indexing")
+        return
+
+    put_ops = []
+    for tool, space in tools_with_space:
+        try:
+            code_source = inspect.getsource(tool)
+            code_source = code_source.strip()
+            code_source = "\n".join(line.rstrip() for line in code_source.split("\n"))
+            content = f"{tool.description}::{code_source}"
+        except (OSError, TypeError, AttributeError):
+            content = f"{tool.name}::{tool.description}"
+
+        tool_hash = hashlib.sha256(content.encode()).hexdigest()
+
+        put_ops.append(
+            PutOp(
+                namespace=(space,),
+                key=tool.name,
+                value={
+                    "description": tool.description,
+                    "tool_hash": tool_hash,
+                },
+                index=["description"],
+            )
+        )
+
+    if put_ops:
+        batch_size = 50
+        for i in range(0, len(put_ops), batch_size):
+            batch = put_ops[i : i + batch_size]
+            await store.abatch(batch)
+
+        logger.info(f"Indexed {len(put_ops)} tools to ChromaDB")
