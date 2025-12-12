@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from app.config.loggers import app_logger as logger
+from app.constants.general import NEW_MESSAGE_BREAKER
 from app.db.mongodb.collections import goals_collection
 from app.models.chat_models import (
     ConversationModel,
@@ -174,9 +175,9 @@ async def seed_initial_conversation(user_id: str) -> None:
 
         # Create the welcome message with breaks for bubbles
         welcome_message = (
-            "Hey! I'm Gaia, your personal AI assistant.<NEW_MESSAGE_BREAK>"
-            "I'm here to help you organize your life, manage your tasks, and get things done.<NEW_MESSAGE_BREAK>"
-            "You can ask me to create todos, set goals, or just chat about your day.<NEW_MESSAGE_BREAK>"
+            f"Hey! I'm Gaia, your personal AI assistant.{NEW_MESSAGE_BREAKER}"
+            f"I'm here to help you organize your life, manage your tasks, and get things done.{NEW_MESSAGE_BREAKER}"
+            f"You can ask me to create todos, set goals, or just chat about your day.{NEW_MESSAGE_BREAKER}"
             "What's on your mind?"
         )
 

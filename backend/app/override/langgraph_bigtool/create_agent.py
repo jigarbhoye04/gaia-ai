@@ -45,6 +45,8 @@ from langgraph.utils.runnable import RunnableCallable
 from langgraph_bigtool.graph import State, _format_selected_tools
 from langgraph_bigtool.tools import get_default_retrieval_tool, get_store_arg
 
+from app.constants.general import NEW_MESSAGE_BREAKER
+
 HookType = Union[
     Callable[[State, RunnableConfig, BaseStore], State],
     Callable[[State, RunnableConfig, BaseStore], Awaitable[State]],
@@ -253,6 +255,9 @@ def create_agent(
         # Happens with gemini models https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175
         response.content = response.content or "Empty response from model."
 
+        if isinstance(response.content, str):
+            response.content = response.content + NEW_MESSAGE_BREAKER
+
         # Set the name for the response for filtering
         response.additional_kwargs = {"visible_to": {agent_name}}
         return {"messages": [response]}  # type: ignore[return-value]
@@ -284,6 +289,9 @@ def create_agent(
         # Handle empty response content (edge case)
         # Happens with gemini models https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175
         response.content = response.content or "Empty response from model."
+
+        if isinstance(response.content, str):
+            response.content = response.content + NEW_MESSAGE_BREAKER
 
         # Set the name for the response for filtering
         response.additional_kwargs = {"visible_to": {agent_name}}

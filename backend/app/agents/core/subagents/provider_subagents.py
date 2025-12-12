@@ -124,7 +124,7 @@ class ProviderSubAgents:
         llm = init_llm()
 
         results = await asyncio.gather(
-            ProviderSubAgents.create_gmail_agent(llm),
+            ProviderSubAgents.create_agent("gmail", llm),
             ProviderSubAgents.create_agent(
                 "google_calendar",
                 llm,
@@ -134,12 +134,12 @@ class ProviderSubAgents:
             ProviderSubAgents.create_agent("notion", llm),
             ProviderSubAgents.create_agent("twitter", llm),
             ProviderSubAgents.create_agent("linkedin", llm),
-            ProviderSubAgents.create_github_agent(llm),
+            ProviderSubAgents.create_agent("github", llm),
             ProviderSubAgents.create_agent("reddit", llm),
             ProviderSubAgents.create_agent("airtable", llm),
             ProviderSubAgents.create_agent("linear", llm),
-            ProviderSubAgents.create_agent("slack", llm),
-            ProviderSubAgents.create_hubspot_agent(llm),
+            ProviderSubAgents.create_agent("slack", llm=llm),
+            ProviderSubAgents.create_agent("hubspot", llm=llm),
             ProviderSubAgents.create_agent("googletasks", llm),
             ProviderSubAgents.create_agent("googlesheets", llm),
             ProviderSubAgents.create_agent("todoist", llm),
