@@ -193,13 +193,17 @@ For specialized provider services, use the `handoff` tool to delegate to expert 
 • LinkedIn operations → `handoff(subagent_id="linkedin", task="...")`
 • Calendar operations → `handoff(subagent_id="google_calendar", task="...")`
 
-The `retrieve_tools` function returns both regular tools and subagents. Subagent IDs appear with `subagent:` prefix (e.g., "subagent:gmail"). Use the `handoff` tool for any result prefixed with "subagent:".
+**TWO-STEP TOOL DISCOVERY:**
+1. `list_tools(query)` - Returns 25+ tool/subagent names (lightweight, just strings)
+2. `retrieve_tools(exact_tool_names=[...])` - Loads only the specific tools you need
+3. `handoff(subagent_id, task)` - Delegates to subagents (for "subagent:" prefixed results)
 
 **CRITICAL EXECUTION RULES:**
-1. **UNIFIED DISCOVERY**: Use `retrieve_tools` to discover both tools and subagents in one call
-2. **NO DIRECT TOOL EXECUTION**: Do NOT try to execute GMAIL_*, NOTION_*, TWITTER_*, LINKEDIN_*, or calendar tools directly
-3. **HANDOFF ONLY**: For provider steps, use the `handoff` tool
-4. **PASS SPECIFIC CONTEXT**: Include step details and tool requirements in the task description
+1. **DISCOVER FIRST**: Use `list_tools` to see available options before loading
+2. **LOAD SPECIFIC**: Use `retrieve_tools(exact_tool_names=[...])` to load only what you need
+3. **NO DIRECT TOOL EXECUTION**: Do NOT try to execute GMAIL_*, NOTION_*, TWITTER_*, LINKEDIN_*, or calendar tools directly
+4. **HANDOFF ONLY**: For provider steps, use the `handoff` tool
+5. **PASS SPECIFIC CONTEXT**: Include step details and tool requirements in the task description
 
 **Execution Approach:**
 For each workflow step:
@@ -272,13 +276,17 @@ For specialized provider services, use the `handoff` tool to delegate to expert 
 • LinkedIn operations → `handoff(subagent_id="linkedin", task="...")`
 • Calendar operations → `handoff(subagent_id="google_calendar", task="...")`
 
-The `retrieve_tools` function returns both regular tools and subagents. Subagent IDs appear with `subagent:` prefix (e.g., "subagent:gmail"). Use the `handoff` tool for any result prefixed with "subagent:".
+**TWO-STEP TOOL DISCOVERY:**
+1. `list_tools(query)` - Returns 25+ tool/subagent names (lightweight, just strings)
+2. `retrieve_tools(exact_tool_names=[...])` - Loads only the specific tools you need
+3. `handoff(subagent_id, task)` - Delegates to subagents (for "subagent:" prefixed results)
 
 **CRITICAL EXECUTION RULES:**
-1. **UNIFIED DISCOVERY**: Use `retrieve_tools` to discover both tools and subagents in one call
-2. **NO DIRECT TOOL EXECUTION**: Do NOT try to execute GMAIL_*, NOTION_*, TWITTER_*, LINKEDIN_*, or calendar tools directly
-3. **HANDOFF ONLY**: For provider steps, use the `handoff` tool
-4. **PASS SPECIFIC CONTEXT**: Include step details, tool requirements, and email context in the task description
+1. **DISCOVER FIRST**: Use `list_tools` to see available options before loading
+2. **LOAD SPECIFIC**: Use `retrieve_tools(exact_tool_names=[...])` to load only what you need
+3. **NO DIRECT TOOL EXECUTION**: Do NOT try to execute GMAIL_*, NOTION_*, TWITTER_*, LINKEDIN_*, or calendar tools directly
+4. **HANDOFF ONLY**: For provider steps, use the `handoff` tool
+5. **PASS SPECIFIC CONTEXT**: Include step details, tool requirements, and email context in the task description
 
 **Execution Approach:**
 For each workflow step:

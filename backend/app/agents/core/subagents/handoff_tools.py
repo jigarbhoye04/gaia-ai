@@ -18,7 +18,6 @@ from app.core.lazy_loader import providers
 from app.helpers.agent_helpers import build_agent_config
 from app.services.oauth_service import (
     check_integration_status,
-    check_multiple_integrations_status,
 )
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
@@ -132,57 +131,6 @@ async def index_subagents_to_store(store: BaseStore) -> None:
 
 
 @tool
-async def search_subagents(
-    query: Annotated[
-        str,
-        "Search query for the provider/service (e.g., 'email', 'calendar', 'notion', 'twitter').",
-    ],
-    config: RunnableConfig,
-) -> List[SubagentInfo] | str:
-    """Search for specialized subagents by provider or capability.
-
-    Use this to find which subagent can handle a task before using handoff.
-    Returns top matching subagents with id, name, and connection status.
-
-    Args:
-        query: Provider or capability to search for (e.g., "email", "calendar", "social")
-    """
-    try:
-        configurable = config.get("configurable", {})
-        user_id = configurable.get("user_id") if configurable else None
-        if not user_id:
-            return "Error: User ID not found in configuration."
-
-        store = await providers.aget("chroma_tools_store")
-        if not store:
-            return "Error: Search store not available."
-
-        search_results = await store.asearch(SUBAGENTS_NAMESPACE, query=query, limit=3)
-
-        if not search_results:
-            return []
-
-        integration_ids = [r.key for r in search_results]
-        status_map = await check_multiple_integrations_status(integration_ids, user_id)
-
-        results: List[SubagentInfo] = []
-        for result in search_results:
-            results.append(
-                {
-                    "id": result.key,
-                    "name": result.value.get("name", result.key),
-                    "connected": status_map.get(result.key, False),
-                }
-            )
-
-        return results
-
-    except Exception as e:
-        logger.error(f"Error searching subagents: {e}")
-        return f"Error searching subagents: {str(e)}"
-
-
-@tool
 async def handoff(
     subagent_id: Annotated[
         str,
@@ -214,7 +162,7 @@ async def handoff(
 
         # Strip 'subagent:' prefix if present
         clean_id = subagent_id.replace("subagent:", "").strip()
-        
+
         integration = _get_subagent_by_id(clean_id)
 
         if not integration or not integration.subagent_config:
@@ -289,28 +237,3 @@ async def handoff(
     except Exception as e:
         logger.error(f"Error in handoff to {subagent_id}: {e}")
         return f"Error executing task: {str(e)}"
-
-
-# Consolidated tools list - only handoff is exposed as a core tool
-# Subagent discovery happens via retrieve_tools
-tools = [handoff]
-
-
-# Backward compatibility - deprecated functions
-def create_subagent_tool(integration_id: str):
-    """Deprecated: Use handoff tool instead."""
-    logger.warning(
-        "create_subagent_tool is deprecated. Use the consolidated handoff tool."
-    )
-    return None
-
-
-def get_subagent_tools(enabled_providers: list[str] | None = None):
-    """Deprecated: Use tools list instead."""
-    logger.warning("get_subagent_tools is deprecated. Use handoff_tools.tools instead.")
-    return tools
-
-
-# Backward compatibility aliases
-create_handoff_tool = create_subagent_tool
-get_handoff_tools = get_subagent_tools

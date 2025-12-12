@@ -1,9 +1,60 @@
 import asyncio
 from typing import Annotated, Awaitable, Callable
 
-from langchain_core.tools import BaseTool
+from langchain_core.tools import BaseTool, tool
 from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
+
+TOOLS_LIMIT = 25
+
+
+@tool
+async def list_tools(
+    query: str,
+    store: Annotated[BaseStore, InjectedStore],
+) -> list[str]:
+    """List available tool and subagent names matching your query. Returns names only (not loaded).
+
+    Use this to DISCOVER what tools exist before loading them. This is lightweight and can
+    return many results (20-30+) since it only returns names, not full tool definitions.
+
+    WORKFLOW:
+    1. Call list_tools(query="your intent") to see available options
+    2. Pick the exact tool names you need from the results
+    3. Call retrieve_tools(exact_tool_names=[...]) to load those specific tools
+
+    This two-step approach lets you see a broad range of options before committing
+    to loading specific tools, avoiding token waste on irrelevant tools.
+
+    Args:
+        query: Natural language description of what you want to accomplish.
+               Examples: "email operations", "calendar management", "social media posting"
+
+    Returns:
+        List of tool/subagent names matching the query. Subagents have "subagent:" prefix.
+    """
+    from app.agents.tools.core.registry import get_tool_registry
+
+    tool_registry = await get_tool_registry()
+    available_tool_names = tool_registry.get_tool_names()
+
+    tool_results, subagent_results = await asyncio.gather(
+        store.asearch(("general",), query=query, limit=TOOLS_LIMIT),
+        store.asearch(("subagents",), query=query, limit=TOOLS_LIMIT),
+    )
+
+    all_results = []
+
+    for result in tool_results:
+        if result.key in available_tool_names:
+            all_results.append({"id": result.key, "score": result.score})
+
+    for result in subagent_results:
+        all_results.append({"id": f"subagent:{result.key}", "score": result.score})
+
+    all_results.sort(key=lambda x: x["score"], reverse=True)
+
+    return [r["id"] for r in all_results[:TOOLS_LIMIT]]
 
 
 def get_retrieve_tools_function(
