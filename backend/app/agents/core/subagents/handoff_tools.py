@@ -19,7 +19,7 @@ from app.helpers.agent_helpers import build_agent_config
 from app.services.oauth_service import (
     check_integration_status,
 )
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
@@ -222,18 +222,30 @@ async def handoff(
             ]
         }
 
-        result = await subagent_graph.ainvoke(
+        complete_message = ""
+        writer = get_stream_writer()
+
+        async for event in subagent_graph.astream(
             initial_state,
+            stream_mode=["messages", "custom"],
             config={**subagent_runnable_config, "silent": True},
-        )
+        ):
+            stream_mode, payload = event
 
-        messages = result.get("messages", [])
-        if messages:
-            last_message = messages[-1]
-            if hasattr(last_message, "content") and last_message.content:
-                return str(last_message.content)
+            if stream_mode == "custom":
+                # Propagate custom events to parent stream
+                writer(payload)
+            elif stream_mode == "messages":
+                chunk, metadata = payload
+                if metadata.get("silent"):
+                    continue
 
-        return "Task completed"
+                if chunk and isinstance(chunk, AIMessageChunk):
+                    content = str(chunk.content)
+                    if content:
+                        complete_message += content
+
+        return complete_message if complete_message else "Task completed"
 
     except Exception as e:
         logger.error(f"Error in handoff to {subagent_id}: {e}")

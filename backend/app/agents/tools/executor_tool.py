@@ -8,9 +8,10 @@ from app.config.loggers import llm_logger as logger
 from app.helpers.agent_helpers import build_agent_config
 from app.helpers.message_helpers import create_system_message
 from app.utils.chat_utils import get_user_id_from_config, get_user_name_from_config
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessageChunk, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
+from langgraph.config import get_stream_writer
 
 
 @tool
@@ -70,18 +71,30 @@ async def call_executor(
             ]
         }
 
-        result = await executor_graph.ainvoke(
+        complete_message = ""
+        writer = get_stream_writer()
+
+        async for event in executor_graph.astream(
             initial_state,
+            stream_mode=["messages", "custom"],
             config={**executor_config, "silent": True},
-        )
+        ):
+            stream_mode, payload = event
 
-        messages = result.get("messages", [])
-        if messages:
-            last_message = messages[-1]
-            if hasattr(last_message, "content") and last_message.content:
-                return str(last_message.content)
+            if stream_mode == "custom":
+                # Propagate custom events to parent stream
+                writer(payload)
+            elif stream_mode == "messages":
+                chunk, metadata = payload
+                if metadata.get("silent"):
+                    continue
 
-        return "Task completed"
+                if chunk and isinstance(chunk, AIMessageChunk):
+                    content = str(chunk.content)
+                    if content:
+                        complete_message += content
+
+        return complete_message if complete_message else "Task completed"
 
     except Exception as e:
         logger.error(f"Error calling executor: {e}")

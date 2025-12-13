@@ -253,18 +253,12 @@ async def execute_graph_streaming(
         initial_state,
         stream_mode=["messages", "custom"],
         config=config,
-        subgraphs=True,
     ):
-        ns, stream_mode, payload = event
-        is_main_agent = len(ns) == 0  # Main agent when namespace is empty
+        stream_mode, payload = event
 
         if stream_mode == "messages":
             chunk, metadata = payload
             if chunk and isinstance(chunk, AIMessageChunk):
-                # Skip silent chunks (e.g. follow-up actions generation)
-                if metadata.get("silent"):
-                    continue
-
                 content = str(chunk.content)
                 tool_calls = chunk.tool_calls
 
@@ -276,7 +270,7 @@ async def execute_graph_streaming(
                             yield format_sse_data(progress_data)
 
                 # Only yield content from main agent to avoid duplication
-                if content and is_main_agent:
+                if content and not metadata.get("silent"):
                     yield format_sse_response(content)
                     complete_message += content
 
