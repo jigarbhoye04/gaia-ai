@@ -26,7 +26,7 @@ ENV PYTHONUNBUFFERED=1 \
 
 # Install base dependencies + voice-agent group
 RUN --mount=type=cache,target=/root/.cache/uv \
-  uv pip install -e . --group voice_agent
+  uv pip install . --group voice_agent
 
 # Copy entire app directory
 COPY app/ ./app/
@@ -38,7 +38,6 @@ RUN adduser --disabled-password --gecos '' appuser \
   && chown -R appuser:appuser /app
 
 USER appuser
+RUN python -m app.workers.voice_agent download-files
 
-# Command to run the voice agent
-# First downloads files, then starts the server
-CMD ["sh", "-c", "python -m app.workers.voice_agent download-files && python -m app.workers.voice_agent $([ \"$ENVIRONMENT\" = \"development\" ] && echo 'dev' || echo 'start')"]
+CMD ["python", "-m", "app.workers.voice_agent", "start"]
