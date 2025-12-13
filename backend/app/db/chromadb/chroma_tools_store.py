@@ -9,7 +9,6 @@ from app.config.loggers import chroma_logger as logger
 from app.config.oauth_config import OAUTH_INTEGRATIONS
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
 from app.db.chromadb.chromadb import ChromaClient
-from chromadb import GetResult
 from langgraph.store.base import PutOp
 
 from .chroma_store import ChromaStore
@@ -111,14 +110,17 @@ async def _get_subagent_tools() -> dict[str, dict]:
     return subagent_tools
 
 
-async def _get_existing_tools_from_chroma(collection) -> dict[str, str]:
+async def _get_existing_tools_from_chroma(
+    collection, namespaces: set[str] | None = None
+) -> dict[str, dict]:
     """Fetch existing tools from ChromaDB collection.
 
     Args:
         collection: ChromaDB collection instance
+        namespaces: Optional set of namespaces to filter by. If None, returns all.
 
     Returns:
-        Dictionary mapping tool names to their hashes
+        Dictionary mapping tool names to their hash and namespace info
     """
     existing_tools = {}
 
@@ -133,8 +135,17 @@ async def _get_existing_tools_from_chroma(collection) -> dict[str, str]:
                 existing_data["ids"], existing_data["metadatas"] or []
             ):
                 if metadata and "::" in doc_id:
-                    tool_name = doc_id.split("::")[-1]
-                    existing_tools[tool_name] = metadata.get("tool_hash", "")
+                    parts = doc_id.split("::")
+                    namespace = parts[0] if len(parts) > 1 else "default"
+                    tool_name = parts[-1]
+
+                    if namespaces is not None and namespace not in namespaces:
+                        continue
+
+                    existing_tools[tool_name] = {
+                        "hash": metadata.get("tool_hash", ""),
+                        "namespace": namespace,
+                    }
     except Exception as e:
         logger.warning(f"Error fetching existing tools: {e}, will register all tools")
 
@@ -142,13 +153,13 @@ async def _get_existing_tools_from_chroma(collection) -> dict[str, str]:
 
 
 def _compute_tool_diff(
-    current_tools: dict[str, dict], existing_tools: dict[str, str]
-) -> tuple[list[tuple[str, dict]], list[str]]:
+    current_tools: dict[str, dict], existing_tools: dict[str, dict]
+) -> tuple[list[tuple[str, dict]], list[tuple[str, str]]]:
     """Compute the difference between current and existing tools.
 
     Args:
         current_tools: Dictionary of current tools with hashes
-        existing_tools: Dictionary of existing tool hashes
+        existing_tools: Dictionary of existing tool hashes and namespaces
 
     Returns:
         Tuple of (tools_to_upsert, tools_to_delete)
@@ -158,29 +169,28 @@ def _compute_tool_diff(
 
     # Find new or modified tools
     for tool_name, tool_data in current_tools.items():
-        existing_hash = existing_tools.get(tool_name)
+        existing = existing_tools.get(tool_name)
+        existing_hash = existing["hash"] if existing else None
         if existing_hash != tool_data["hash"]:
             tools_to_upsert.append((tool_name, tool_data))
 
     # Find deleted tools
-    for existing_tool_name in existing_tools:
+    for existing_tool_name, existing_data in existing_tools.items():
         if existing_tool_name not in current_tools:
-            tools_to_delete.append(existing_tool_name)
+            tools_to_delete.append((existing_tool_name, existing_data["namespace"]))
 
     return tools_to_upsert, tools_to_delete
 
 
 def _build_put_operations(
     tools_to_upsert: list[tuple[str, dict]],
-    tools_to_delete: list[str],
-    existing_data: GetResult,
+    tools_to_delete: list[tuple[str, str]],
 ) -> list[PutOp]:
     """Build PutOp operations for upserting and deleting tools.
 
     Args:
         tools_to_upsert: List of (tool_name, tool_data) tuples to upsert
-        tools_to_delete: List of tool names to delete
-        existing_data: Existing ChromaDB data for namespace lookup
+        tools_to_delete: List of (tool_name, namespace) tuples to delete
 
     Returns:
         List of PutOp operations
@@ -210,21 +220,14 @@ def _build_put_operations(
         )
 
     # Add delete operations
-    for tool_name in tools_to_delete:
-        if existing_data and existing_data.get("ids"):
-            for doc_id in existing_data["ids"]:
-                if doc_id.endswith(f"::{tool_name}"):
-                    namespace_str = (
-                        doc_id.split("::")[0] if "::" in doc_id else "default"
-                    )
-                    put_ops.append(
-                        PutOp(
-                            namespace=(namespace_str,),
-                            key=tool_name,
-                            value=None,  # Delete operation
-                        )
-                    )
-                    break
+    for tool_name, namespace in tools_to_delete:
+        put_ops.append(
+            PutOp(
+                namespace=(namespace,),
+                key=tool_name,
+                value=None,
+            )
+        )
 
     return put_ops
 
@@ -253,73 +256,54 @@ async def _execute_batch_operations(store, put_ops: list[PutOp], batch_size: int
     logger.info(f"Successfully updated {total_ops} tools in ChromaDB")
 
 
-def _create_tool_put_op(tool: Any, space: str, tool_hash: str) -> PutOp:
-    """Create a PutOp for a single tool.
-
-    Args:
-        tool: Tool object with name and description
-        space: Namespace/space for the tool
-        tool_hash: Computed hash for the tool
-
-    Returns:
-        PutOp operation
-    """
-    return PutOp(
-        namespace=(space,),
-        key=tool.name,
-        value={
-            "description": tool.description,
-            "tool_hash": tool_hash,
-        },
-        index=["description"],
-    )
-
-
-async def _create_put_ops_for_tools(
-    tools_with_space: list[tuple[Any, str]],
-) -> list[PutOp]:
-    """Create PutOp operations for a list of tools.
-
-    Args:
-        tools_with_space: List of (tool, space_name) tuples
-
-    Returns:
-        List of PutOp operations
-    """
-    put_ops = []
-
-    for tool, space in tools_with_space:
-        tool_hash = await _compute_tool_hash(tool)
-        put_op = _create_tool_put_op(tool, space, tool_hash)
-        put_ops.append(put_op)
-
-    return put_ops
-
-
 async def index_tools_to_store(tools_with_space: list[tuple[Any, str]]):
-    """Index tools into ChromaDB store on-demand.
+    """Index tools into ChromaDB store on-demand with full diff logic.
 
-    This function allows adding new tools to the store without
-    reinitializing the entire collection.
+    This function manages tools for a specific namespace:
+    1. Fetches existing tools from ChromaDB for the namespace
+    2. Compares with new tools to determine upsert/delete operations
+    3. Removes stale tools, adds/updates new tools
 
     Args:
         tools_with_space: List of (tool, space_name) tuples to index
     """
     from app.core.lazy_loader import providers
 
-    # Get store instance
+    if not tools_with_space:
+        return
+
     store = await providers.aget("chroma_tools_store")
     if store is None:
         logger.warning("ChromaDB store not available, skipping tool indexing")
         return
 
-    # Create put operations for all tools
-    put_ops = await _create_put_ops_for_tools(tools_with_space)
+    namespace = tools_with_space[0][1]
+    collection = await store._get_collection()
 
-    # Execute in batches
-    if put_ops:
-        await _execute_batch_operations(store, put_ops)
-        logger.info(f"Indexed {len(put_ops)} tools to ChromaDB")
+    current_tools = {}
+    for tool, space in tools_with_space:
+        tool_hash = await _compute_tool_hash(tool)
+        current_tools[tool.name] = {
+            "hash": tool_hash,
+            "namespace": space,
+            "tool": tool,
+        }
+
+    existing_tools = await _get_existing_tools_from_chroma(collection, {namespace})
+
+    tools_to_upsert, tools_to_delete = _compute_tool_diff(current_tools, existing_tools)
+
+    if not tools_to_upsert and not tools_to_delete:
+        logger.info(f"Namespace '{namespace}' is up-to-date, no changes needed")
+        return
+
+    logger.info(
+        f"Updating namespace '{namespace}': {len(tools_to_upsert)} to upsert, "
+        f"{len(tools_to_delete)} to delete"
+    )
+
+    put_ops = _build_put_operations(tools_to_upsert, tools_to_delete)
+    await _execute_batch_operations(store, put_ops)
 
 
 @lazy_provider(
@@ -333,15 +317,13 @@ async def initialize_chroma_tools_store():
 
     This function:
     1. Creates a ChromaStore with embeddings
-    2. Computes hashes for all current tools
-    3. Compares with existing tools in ChromaDB
-    4. Updates only changed/new/deleted tools
+    2. Gets namespaces available at init time (general, google_calendar, subagents)
+    3. Only manages tools within those namespaces (doesn't touch provider-specific namespaces)
+    4. Updates only changed/new/deleted tools within managed namespaces
 
     Returns:
         ChromaStore instance
     """
-
-    # Initialize dependencies
     tool_registry = await get_tool_registry()
     chroma_client = await ChromaClient.get_client()
     embeddings = await providers.aget("google_embeddings")
@@ -349,7 +331,6 @@ async def initialize_chroma_tools_store():
     if embeddings is None:
         raise RuntimeError("Embeddings not available")
 
-    # Create ChromaStore
     store = ChromaStore(
         client=chroma_client,
         collection_name="langgraph_tools_store",
@@ -360,20 +341,21 @@ async def initialize_chroma_tools_store():
         },
     )
 
-    # Get collection to ensure it exists
     collection = await store._get_collection()
 
-    # Get current tools with hashes
     current_tools = await _get_current_tools_with_hashes(tool_registry)
 
-    # Get existing tools from ChromaDB
-    existing_tools = await _get_existing_tools_from_chroma(collection)
-    existing_data = await collection.get(include=["metadatas"])
+    managed_namespaces = {
+        tool_data["namespace"] for tool_data in current_tools.values()
+    }
+    logger.info(f"Managing namespaces at init: {managed_namespaces}")
 
-    # Compute differences
+    existing_tools = await _get_existing_tools_from_chroma(
+        collection, managed_namespaces
+    )
+
     tools_to_upsert, tools_to_delete = _compute_tool_diff(current_tools, existing_tools)
 
-    # Early exit if no changes
     if not tools_to_upsert and not tools_to_delete:
         logger.info("ChromaDB tools store is up-to-date, no changes needed")
         return store
@@ -383,8 +365,7 @@ async def initialize_chroma_tools_store():
         f"{len(tools_to_delete)} to delete"
     )
 
-    # Build and execute operations
-    put_ops = _build_put_operations(tools_to_upsert, tools_to_delete, existing_data)
+    put_ops = _build_put_operations(tools_to_upsert, tools_to_delete)
     await _execute_batch_operations(store, put_ops)
 
     return store
