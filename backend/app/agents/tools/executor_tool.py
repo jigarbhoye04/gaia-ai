@@ -86,8 +86,6 @@ async def call_executor(
                 writer(payload)
             elif stream_mode == "messages":
                 chunk, metadata = payload
-                if metadata.get("silent"):
-                    continue
 
                 if chunk and isinstance(chunk, AIMessageChunk):
                     content = str(chunk.content)
