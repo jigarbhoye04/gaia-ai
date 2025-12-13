@@ -203,6 +203,7 @@ async def handoff(
             user=user,
             user_time=user_time,
             thread_id=subagent_thread_id,
+            base_configurable=configurable,
         )
 
         system_prompt = subagent_cfg.system_prompt or ""

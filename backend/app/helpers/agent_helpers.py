@@ -37,6 +37,7 @@ def build_agent_config(
     user_model_config: Optional[ModelConfig] = None,
     usage_metadata_callback: Optional[UsageMetadataCallbackHandler] = None,
     thread_id: Optional[str] = None,
+    base_configurable: Optional[dict] = None,
 ) -> dict:
     """Build configuration for graph execution with optional authentication tokens.
 
@@ -49,12 +50,11 @@ def build_agent_config(
         user_time: Current datetime for the user's timezone
         user_model_config: Optional model configuration with provider and token limits
         thread_id: Optional override for thread_id (defaults to conversation_id)
+        base_configurable: Optional base configurable to inherit from (for child agents)
 
     Returns:
-        Tuple containing:
-        - Configuration dictionary formatted for LangGraph execution with configurable
-            parameters, metadata, and recursion limits
-        - UsageMetadataCallbackHandler instance for tracking token usage during execution
+        Configuration dictionary formatted for LangGraph execution with configurable
+        parameters, metadata, and recursion limits
     """
 
     callbacks: list[BaseCallbackHandler] = []
@@ -86,18 +86,28 @@ def build_agent_config(
         user_model_config.max_tokens if user_model_config else DEFAULT_MAX_TOKENS
     )
 
+    # Cherry-pick specific keys from base_configurable if provided
+    # Only inherit model config and user context, not LangChain internal state
+    if base_configurable:
+        # Inherit model config from parent if not overridden
+        provider_name = base_configurable.get("provider", provider_name)
+        max_tokens = base_configurable.get("max_tokens", max_tokens)
+        model_name = base_configurable.get("model_name", model_name)
+
+    configurable = {
+        "thread_id": thread_id or conversation_id,
+        "user_id": user.get("user_id"),
+        "email": user.get("email"),
+        "user_name": user.get("name", ""),
+        "user_time": user_time.isoformat(),
+        "provider": provider_name,
+        "max_tokens": max_tokens,
+        "model_name": model_name,
+        "model": model_name,
+    }
+
     config = {
-        "configurable": {
-            "thread_id": thread_id or conversation_id,
-            "user_id": user.get("user_id"),
-            "email": user.get("email"),
-            "user_name": user.get("name", ""),
-            "user_time": user_time.isoformat(),
-            "provider": provider_name,
-            "max_tokens": max_tokens,
-            "model_name": model_name,
-            "model": model_name,
-        },
+        "configurable": configurable,
         "recursion_limit": 25,
         "metadata": {"user_id": user.get("user_id")},
         "callbacks": callbacks,

@@ -51,6 +51,7 @@ async def call_executor(
             user=user,
             user_time=user_time,
             thread_id=executor_thread_id,
+            base_configurable=configurable,
         )
 
         system_message = create_system_message(

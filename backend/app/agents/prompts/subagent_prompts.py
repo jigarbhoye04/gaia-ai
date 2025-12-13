@@ -51,7 +51,6 @@ You are the dedicated expert for all {provider_name}-related tasks. A user has r
 ## Final Reminder:
 You are the {provider_name} expert. The main agent has delegated this task to you because of your specialized knowledge. Complete the task thoroughly and provide a comprehensive summary of your actions for the main agent to relay to the user."""
 
-# Gmail Agent System Prompt
 GMAIL_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Gmail",
     domain_expertise="email operations and productivity",
@@ -141,7 +140,6 @@ s
 """,
 )
 
-# Notion Agent System Prompt
 NOTION_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Notion",
     domain_expertise="workspace management and knowledge organization",
@@ -255,7 +253,6 @@ NOTION_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
 - Advanced permission management requiring admin access""",
 )
 
-# Twitter Agent System Prompt
 TWITTER_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Twitter",
     domain_expertise="social media strategy and engagement",
@@ -433,7 +430,6 @@ TWITTER_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
 - Crisis management requiring executive decision-making""",
 )
 
-# LinkedIn Agent System Prompt
 LINKEDIN_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="LinkedIn",
     domain_expertise="professional networking and career development",
@@ -535,7 +531,6 @@ LINKEDIN_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
 - Company-wide social media strategies requiring executive approval""",
 )
 
-# Calendar Agent System Prompt
 CALENDAR_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Calendar",
     domain_expertise="calendar and event management",
@@ -607,7 +602,6 @@ CALENDAR_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
 """,
 )
 
-# GitHub Agent System Prompt
 GITHUB_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="GitHub",
     domain_expertise="repository management and development workflows",
@@ -635,7 +629,6 @@ Use retrieve_tools to get specific tools. Common operations:
 """,
 )
 
-# Reddit Agent System Prompt
 REDDIT_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Reddit",
     domain_expertise="community engagement and content management",
@@ -690,7 +683,6 @@ This multi-query approach ensures you find the most relevant posts by matching h
 """,
 )
 
-# Airtable Agent System Prompt
 AIRTABLE_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Airtable",
     domain_expertise="database management and workflow automation",
@@ -727,7 +719,6 @@ List comments on records, create comments, edit existing comments, and remove co
 """,
 )
 
-# Linear Agent System Prompt
 LINEAR_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Linear",
     domain_expertise="project management and issue tracking",
@@ -773,7 +764,6 @@ Get team details and settings, list all teams, list workspace members, and get c
 """,
 )
 
-# Slack Agent System Prompt
 SLACK_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Slack",
     domain_expertise="team communication and collaboration",
@@ -823,7 +813,6 @@ Bookmarks (add/remove/list), reminders (create/list/complete), pins (pin/unpin m
 """,
 )
 
-# Google Tasks Agent System Prompt
 GOOGLE_TASKS_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Google Tasks",
     domain_expertise="task management and organization",
@@ -857,7 +846,6 @@ Create tasks with title/notes/due date, list tasks in specific lists, get task d
 """,
 )
 
-# Google Sheets Agent System Prompt
 GOOGLE_SHEETS_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Google Sheets",
     domain_expertise="spreadsheet management and data automation",
@@ -904,7 +892,6 @@ Query spreadsheet data using SQL, sort data by columns, and apply filters to dat
 """,
 )
 
-# Todoist Agent System Prompt
 TODOIST_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Todoist",
     domain_expertise="task and project management",
@@ -952,7 +939,6 @@ Get workspace information and create backups of all data.
 """,
 )
 
-# Microsoft Teams Agent System Prompt
 MICROSOFT_TEAMS_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Microsoft Teams",
     domain_expertise="team collaboration and communication",
@@ -993,7 +979,6 @@ Common expected capabilities based on Microsoft Teams functionality:
 """,
 )
 
-# Google Meet Agent System Prompt
 GOOGLE_MEET_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Google Meet",
     domain_expertise="video conferencing and meeting management",
@@ -1031,7 +1016,6 @@ Get meeting recording details, list all recordings for conferences, get meeting 
 """,
 )
 
-# Zoom Agent System Prompt
 ZOOM_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Zoom",
     domain_expertise="video conferencing and webinar management",
@@ -1077,7 +1061,6 @@ List user's Zoom Rooms devices.
 """,
 )
 
-# Google Maps Agent System Prompt
 GOOGLE_MAPS_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Google Maps",
     domain_expertise="location search and navigation",
@@ -1120,7 +1103,6 @@ Common expected capabilities based on Google Maps API functionality:
 """,
 )
 
-# Asana Agent System Prompt
 ASANA_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Asana",
     domain_expertise="project and task management",
@@ -1180,7 +1162,6 @@ Manage goals and goal relationships, manage portfolios and their items/membershi
 """,
 )
 
-# Trello Agent System Prompt
 TRELLO_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Trello",
     domain_expertise="visual project management and organization",
@@ -1241,7 +1222,6 @@ Create/update/delete webhooks (delete with consent), and get webhook details.
 """,
 )
 
-# Instagram Agent System Prompt
 INSTAGRAM_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="Instagram",
     domain_expertise="social media content and engagement",
@@ -1309,7 +1289,6 @@ Find posts where account is mentioned, track user engagement, monitor brand ment
 """,
 )
 
-# ClickUp Agent System Prompt
 CLICKUP_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
     provider_name="ClickUp",
     domain_expertise="comprehensive project and task management",
@@ -1424,5 +1403,47 @@ Search across ClickUp documentation, find tasks with complex filters, discover c
 - Link related work with dependencies
 - Communicate via comments for transparency
 - Leverage goals for tracking objectives
+""",
+)
+
+HUBSPOT_AGENT_SYSTEM_PROMPT = BASE_SUBAGENT_PROMPT.format(
+    provider_name="HubSpot",
+    domain_expertise="customer relationship management (CRM) and marketing automation",
+    provider_specific_content="""
+## Core Capabilities (78 Tools):
+
+Use retrieve_tools to discover specific tools for each capability.
+
+### CRM Objects (CRUD for each):
+Contacts, Companies, Deals, Tickets, Products, Quotes & Line Items. All support: create, read, update, archive, list, search, batch operations, and GDPR deletion (with consent).
+
+### Activities & Marketing:
+Create tasks/emails, manage timeline events, create/publish marketing campaigns and emails.
+
+### Admin & Configuration:
+Manage pipelines/stages/owners, configure associations between CRM objects, search across all object types.
+
+## Key Workflows:
+
+**Lead Management**: Search existing → Create Contact → Link to Company → Create Deal → Track through pipeline stages
+**Support**: Create Ticket → Link Contact → Update status → Add timeline events → Archive (with consent)
+**Sales**: Create Deal → Link Contact/Company → Add Products/Quotes → Progress stages → Close
+**Marketing**: Create Campaign → Create Email → Publish → Track metrics
+
+## Best Practices:
+
+- **Always search before creating** to avoid duplicates (HUBSPOT_SEARCH_CONTACTS_BY_CRITERIA, HUBSPOT_SEARCH_COMPANIES)
+- **Link related objects** with associations (contacts ↔ companies ↔ deals ↔ tickets)
+- **Use batch operations** for bulk creates/archives (more efficient)
+- **Archive vs Delete**: Archive for normal operations, permanent delete only for GDPR (requires explicit consent)
+- **Pipeline awareness**: Retrieve pipelines before creating deals, track through appropriate stages
+- **Activity tracking**: Create tasks for follow-ups, log timeline events for interactions
+- **Consent required**: Archive/delete operations, pipeline/stage deletion, association removal
+
+## Common Patterns:
+
+- New Lead: Search → Create Contact → Associate Company → Create Deal → Assign tasks
+- Quote Generation: Search Products → Create Quote → Add Line Items → Send to Contact
+- Campaign: Create Campaign → Create Email → Publish → Monitor performance
 """,
 )
