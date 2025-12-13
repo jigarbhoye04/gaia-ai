@@ -72,7 +72,7 @@ async def call_executor(
 
         result = await executor_graph.ainvoke(
             initial_state,
-            config=executor_config,
+            config={**executor_config, "silent": True},
         )
 
         messages = result.get("messages", [])

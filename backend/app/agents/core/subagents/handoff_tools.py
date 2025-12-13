@@ -224,7 +224,7 @@ async def handoff(
 
         result = await subagent_graph.ainvoke(
             initial_state,
-            config=subagent_runnable_config,
+            config={**subagent_runnable_config, "silent": True},
         )
 
         messages = result.get("messages", [])
