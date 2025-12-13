@@ -134,7 +134,6 @@ Below are the exact tool names you can use for Gmail-related tasks. Use retrieve
 - Context already has draft_id.
 - Correct workflow: send that draft with GMAIL_SEND_DRAFT.
 - Wrong workflow: list drafts again to figure out which to send.
-s
 """,
 )
 
