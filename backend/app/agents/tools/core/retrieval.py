@@ -67,7 +67,7 @@ def get_list_tools_function(
                 all_results.append({"id": result.key, "score": result.score})
 
         for result in subagent_results:
-            all_results.append({"id": f"subagent:{result.key}", "score": result.score})
+            all_results.append({"id": result.key, "score": result.score})
 
         all_results.sort(key=lambda x: x["score"], reverse=True)
 
@@ -218,7 +218,7 @@ def get_retrieve_tools_function(
             for result in subagent_results:
                 all_results.append(
                     {
-                        "id": f"subagent:{result.key}",
+                        "id": result.key,
                         "score": result.score,
                     }
                 )

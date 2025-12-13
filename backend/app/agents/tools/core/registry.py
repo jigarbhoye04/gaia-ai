@@ -217,7 +217,7 @@ class ToolRegistry:
 
     async def _index_category_tools(self, category_name: str):
         """Index tools from a category into ChromaDB store."""
-        from app.db.chromadb_store import index_tools_to_store
+        from app.db.chromadb.chroma_tools_store import index_tools_to_store
 
         category = self._categories.get(category_name)
         if not category:

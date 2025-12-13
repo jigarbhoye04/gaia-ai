@@ -30,6 +30,7 @@ from app.agents.prompts.subagent_prompts import (
     TRELLO_AGENT_SYSTEM_PROMPT,
     TWITTER_AGENT_SYSTEM_PROMPT,
 )
+from app.langchain.core.subgraphs.github_subgraph import GITHUB_TOOLS
 from app.models.oauth_models import (
     ComposioConfig,
     OAuthIntegration,
@@ -247,6 +248,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             capabilities="managing repositories, creating issues, handling pull requests, managing branches, reviewing code, managing collaborators, and automating development workflows",
             use_cases="repository management, issue tracking, pull requests, code review, or any GitHub development task",
             system_prompt=GITHUB_ORCHESTRATOR_PROMPT,
+            specific_tools=GITHUB_TOOLS,
         ),
     ),
     OAuthIntegration(

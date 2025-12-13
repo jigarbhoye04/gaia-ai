@@ -30,8 +30,8 @@ from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
 from app.config.posthog import init_posthog
 from app.core.lazy_loader import providers
-from app.db.chromadb import init_chroma
-from app.db.chromadb_store import initialize_chroma_tools_store
+from app.db.chromadb.chroma_tools_store import initialize_chroma_tools_store
+from app.db.chromadb.chromadb import init_chroma
 from app.db.postgresql import init_postgresql_engine
 from app.db.rabbitmq import init_rabbitmq_publisher
 from app.helpers.lifespan_helpers import (

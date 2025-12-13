@@ -1,22 +1,21 @@
 """Post-onboarding personalization service."""
 
+import asyncio
 import random
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
-from bson import ObjectId
 from app.agents.llm.client import init_llm
-
 from app.config.loggers import app_logger as logger
 from app.constants.profession_bios import get_random_bio_for_profession
 from app.core.websocket_manager import websocket_manager
-from app.db.chromadb import ChromaClient
+from app.db.chromadb.chromadb import ChromaClient
 from app.db.mongodb.collections import users_collection, workflows_collection
 from app.models.memory_models import MemoryEntry, MemorySearchResult
 from app.models.user_models import BioStatus, OnboardingPhase
-from app.services.memory_service import memory_service
 from app.services.composio.composio_service import get_composio_service
-import asyncio
+from app.services.memory_service import memory_service
+from bson import ObjectId
 
 HOUSES = ["frostpeak", "greenvale", "mistgrove", "bluehaven"]
 
