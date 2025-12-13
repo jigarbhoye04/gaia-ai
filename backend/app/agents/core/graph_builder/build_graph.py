@@ -15,7 +15,7 @@ from app.agents.core.subagents.handoff_tools import handoff as handoff_tool
 from app.agents.core.subagents.provider_subagents import register_subagent_providers
 from app.agents.llm.client import init_llm
 from app.agents.tools.core.registry import get_tool_registry
-from app.agents.tools.core.retrieval import get_retrieve_tools_function, list_tools
+from app.agents.tools.core.retrieval import get_retrieve_tools_function
 from app.agents.tools.core.store import get_tools_store
 from app.agents.tools.executor_tool import call_executor
 from app.config.loggers import app_logger as logger
@@ -40,23 +40,14 @@ async def build_executor_graph(
     )
 
     tool_dict = tool_registry.get_tool_dict()
-    tool_dict.update(
-        {
-            "handoff": handoff_tool,
-            "list_tools": list_tools,
-        }
-    )
+    tool_dict.update({"handoff": handoff_tool})
 
     builder = create_agent(
         llm=chat_llm,
         agent_name="executor_agent",
         tool_registry=tool_dict,
-        retrieve_tools_coroutine=get_retrieve_tools_function(
-            tool_space="general",
-            include_subagents=True,
-            limit=8,
-        ),
-        initial_tool_ids=["list_tools", "handoff"],
+        retrieve_tools_coroutine=get_retrieve_tools_function(),
+        initial_tool_ids=["handoff"],
         pre_model_hooks=[
             create_filter_messages_node(
                 agent_name="executor_agent",

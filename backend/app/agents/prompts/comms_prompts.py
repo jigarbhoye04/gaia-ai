@@ -129,28 +129,27 @@ Your responses go back to the comms agent who will relay them to the user. Be co
 
 Before responding to ANY request that might require a tool, you MUST discover available tools first. Never assume you have or don't have a capability without checking.
 
-`**TWO-STEP TOOL DISCOVERY (ALWAYS USE THIS WORKFLOW):**
+`**TOOL DISCOVERY AND BINDING WORKFLOW:**
 
-**PRIORITIZE list_tools - IT'S FAST AND EFFICIENT:**
+**retrieve_tools** - Your single tool for discovery and loading:
 
-1. **list_tools(query)** - ALWAYS START HERE (lightweight, fast, returns 25+ names)
+1. **DISCOVERY MODE**: `retrieve_tools(query="...")` - FAST exploration
    • Use natural language: "email operations", "calendar management", "social media"
    • Returns tool names AND subagent IDs (prefixed with "subagent:")
    • Very fast, minimal tokens - just names, not full tool definitions
    • Can safely return 20-30+ results without context bloat
    • Use this FIRST to see all available options before loading anything
 
-2. **retrieve_tools(exact_tool_names=[...])** - LOAD only what you need
-   • Pass exact names from list_tools results
+2. **BINDING MODE**: `retrieve_tools(exact_tool_names=[...])` - Load specific tools
+   • Pass exact names from discovery results
    • Only loads what you actually need, avoiding context pollution
    • Example: `retrieve_tools(exact_tool_names=["GMAIL_SEND_DRAFT", "create_todo"])`
-   • Never use semantic search - always use exact_tool_names from list_tools
 
 3. **handoff(subagent_id, task)** - DELEGATE to subagents
-   • For any result prefixed with "subagent:" from list_tools
+   • For any result prefixed with "subagent:" from retrieve_tools discovery
    • Example: `handoff(subagent_id="gmail", task="send email to john about meeting")`
 
-Available Capabilities (use list_tools to discover specific tools):
+Available Capabilities (use retrieve_tools with query to discover specific tools):
 • Web & Search: fetch URLs, search information
 • Integrations: email, calendar, messaging, social media, CRM, code repos, workspace management
 • Documents: Google Docs operations, document generation
@@ -163,9 +162,9 @@ Available Capabilities (use list_tools to discover specific tools):
 • Other: flowcharts, images, file search, code execution, weather
 
 **Subagent Delegation:**
-For provider operations: list_tools → retrieve_tools (for regular tools) OR handoff (for "subagent:" prefixed)
+For provider operations: retrieve_tools(query) → retrieve_tools(exact_tool_names) (for regular tools) OR handoff (for "subagent:" prefixed)
 
-Example: list_tools("email") → ["create_todo", "subagent:gmail", ...] → handoff("gmail", task)
+Example: retrieve_tools(query="email") → ["create_todo", "subagent:gmail", ...] → handoff("gmail", task)
 
 —Tool Selection Guidelines—
 

@@ -34,7 +34,6 @@ class SubAgentFactory:
         name: str,
         llm: LanguageModelLike,
         tool_space: str = "general",
-        retrieve_tools_limit: int = 10,
         use_direct_tools: bool = False,
         disable_retrieve_tools: bool = False,
     ):
@@ -45,40 +44,21 @@ class SubAgentFactory:
             provider: Provider name (gmail, notion, twitter, linkedin, calendar)
             llm: Language model to use
             tool_space: Tool space to use for retrieval (e.g., "gmail_delegated", "general")
-            retrieve_tools_limit: Maximum number of tools to retrieve with each retrieval
 
         Returns:
             Compiled LangGraph agent with tool registry, retrieval, and checkpointer
         """
         from app.agents.tools.core.registry import get_tool_registry
-        from app.agents.tools.core.retrieval import get_list_tools_function
 
         logger.info(
             f"Creating {provider} sub-agent graph using tool space '{tool_space}' with "
-            + (
-                "direct tools binding"
-                if use_direct_tools
-                else f"retrieve tools (limit={retrieve_tools_limit})"
-            )
+            + ("direct tools binding" if use_direct_tools else "retrieve tools")
         )
 
         store, tool_registry = await asyncio.gather(
             get_tools_store(), get_tool_registry()
         )
         tool_dict = tool_registry.get_tool_dict()
-
-        # Create list_tools for subagent (without subagent search capability)
-        list_tools = get_list_tools_function(
-            tool_space=tool_space,
-            include_subagents=False,
-            limit=25,
-        )
-
-        tool_dict.update(
-            {
-                "list_tools": list_tools,
-            }
-        )
 
         common_kwargs = {
             "llm": llm,
@@ -103,7 +83,7 @@ class SubAgentFactory:
                 initial_tool_ids.extend([t.name for t in category.tools])
 
             try:
-                initial_tool_ids.extend([search_memory.name, list_tools.name])
+                initial_tool_ids.extend([search_memory.name])
             except Exception as e:
                 logger.warning(
                     f"Failed to add memory/list tools to subagent: {e}. Continuing without them."
@@ -120,11 +100,10 @@ class SubAgentFactory:
                 {
                     "retrieve_tools_coroutine": get_retrieve_tools_function(
                         tool_space=tool_space,
-                        include_core_tools=False,
                         include_subagents=False,
-                        limit=retrieve_tools_limit,
+                        limit=25,
                     ),
-                    "initial_tool_ids": [list_tools.name, search_memory.name],
+                    "initial_tool_ids": [search_memory.name],
                 }
             )
 

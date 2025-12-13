@@ -194,13 +194,13 @@ For specialized provider services, use the `handoff` tool to delegate to expert 
 • Calendar operations → `handoff(subagent_id="google_calendar", task="...")`
 
 **TOOL DISCOVERY:**
-1. `list_tools(query)` - Fast, returns 25+ names
-2. `retrieve_tools(exact_tool_names=[...])` - Load specific tools from step 1
+1. `retrieve_tools(query="...")` - Discover tools matching your intent
+2. `retrieve_tools(exact_tool_names=[...])` - Load specific tools from discovery
 3. `handoff(subagent_id, task)` - Delegate to subagents
 
 **EXECUTION RULES:**
-1. Always use `list_tools` first to discover options
-2. Load tools with `retrieve_tools(exact_tool_names=[...])` using exact names from list_tools
+1. Use `retrieve_tools(query="...")` first to discover options
+2. Load tools with `retrieve_tools(exact_tool_names=[...])` using exact names from discovery
 3. Use `handoff` for provider-specific operations (gmail, notion, calendar, etc.)
 4. Never execute GMAIL_*, NOTION_*, TWITTER_*, LINKEDIN_*, or calendar tools directly
 
@@ -276,13 +276,13 @@ For specialized provider services, use the `handoff` tool to delegate to expert 
 • Calendar operations → `handoff(subagent_id="google_calendar", task="...")`
 
 **TOOL DISCOVERY:**
-1. `list_tools(query)` - Fast, returns 25+ names
-2. `retrieve_tools(exact_tool_names=[...])` - Load specific tools from step 1
+1. `retrieve_tools(query="...")` - Discover tools matching your intent
+2. `retrieve_tools(exact_tool_names=[...])` - Load specific tools from discovery
 3. `handoff(subagent_id, task)` - Delegate to subagents
 
 **EXECUTION RULES:**
-1. Always use `list_tools` first to discover options
-2. Load tools with `retrieve_tools(exact_tool_names=[...])` using exact names from list_tools
+1. Use `retrieve_tools(query="...")` first to discover options
+2. Load tools with `retrieve_tools(exact_tool_names=[...])` using exact names from discovery
 3. Use `handoff` for provider-specific operations (gmail, notion, calendar, etc.)
 4. Never execute GMAIL_*, NOTION_*, TWITTER_*, LINKEDIN_*, or calendar tools directly
 5. Include email context in handoff task descriptions

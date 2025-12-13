@@ -31,10 +31,10 @@ NOTE: Type/linting errors in this file are expected since it's copied from exter
 import asyncio
 import inspect
 from collections.abc import Mapping
-from typing import Any, Awaitable, Callable, Union
+from typing import Any, Awaitable, Callable, TypedDict, Union
 
 from langchain_core.language_models import LanguageModelLike
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import BaseTool, StructuredTool
 from langgraph.graph import END, StateGraph
@@ -42,10 +42,54 @@ from langgraph.prebuilt import ToolNode
 from langgraph.store.base import BaseStore
 from langgraph.types import Send
 from langgraph.utils.runnable import RunnableCallable
-from langgraph_bigtool.graph import State, _format_selected_tools
+from langgraph_bigtool.graph import State
 from langgraph_bigtool.tools import get_default_retrieval_tool, get_store_arg
 
 from app.constants.general import NEW_MESSAGE_BREAKER
+
+
+class RetrieveToolsResult(TypedDict):
+    """Result from retrieve_tools function."""
+
+    tools_to_bind: list[str]
+    response: list[str]
+
+
+def _format_selected_tools(
+    selected_tools: dict, tool_registry: dict[str, BaseTool]
+) -> tuple[list[ToolMessage], list[str]]:
+    """Format selected tools, gracefully handling tools not in registry (like subagent: prefixed).
+
+    Args:
+        selected_tools: Dict mapping tool_call_id to list of tool IDs
+        tool_registry: Dict mapping tool ID to tool instance
+
+    Returns:
+        Tuple of (tool_messages, tool_ids) where tool_messages show available tools
+        and tool_ids are the IDs to bind
+    """
+    tool_messages = []
+    tool_ids = []
+    for tool_call_id, batch in selected_tools.items():
+        tool_names = []
+        for result in batch:
+            # Handle tools that exist in registry
+            if result in tool_registry:
+                if isinstance(tool_registry[result], BaseTool):
+                    tool_names.append(tool_registry[result].name)
+                else:
+                    tool_names.append(tool_registry[result].__name__)
+            else:
+                # Handle tools not in registry (e.g., subagent: prefixed)
+                tool_names.append(result)
+
+        tool_messages.append(
+            ToolMessage(f"Available tools: {tool_names}", tool_call_id=tool_call_id)
+        )
+        tool_ids.extend(batch)
+
+    return tool_messages, tool_ids
+
 
 HookType = Union[
     Callable[[State, RunnableConfig, BaseStore], State],
@@ -102,8 +146,10 @@ def create_agent(
     limit: int = 2,
     filter: dict[str, Any] | None = None,
     namespace_prefix: tuple[str, ...] = ("tools",),
-    retrieve_tools_function: Callable[..., list[str]] | None = None,
-    retrieve_tools_coroutine: Callable[..., Awaitable[list[str]]] | None = None,
+    retrieve_tools_function: Callable[..., list[str] | RetrieveToolsResult]
+    | None = None,
+    retrieve_tools_coroutine: Callable[..., Awaitable[list[str] | RetrieveToolsResult]]
+    | None = None,
     initial_tool_ids: list[str] | None = None,
     disable_retrieve_tools: bool = False,
     context_schema=None,
@@ -230,19 +276,29 @@ def create_agent(
                 "retrieve_tools is disabled and select_tools should not be called"
             )
         selected_tools = {}
+        response_tools = {}
         for tool_call in tool_calls:
             kwargs = {**tool_call["args"]}
             if store_arg:
                 kwargs[store_arg] = store
             result = retrieve_tools.invoke(kwargs)
 
-            filtered_result = [
-                tool_id for tool_id in result if not tool_id.startswith("subagent:")
-            ]
-            selected_tools[tool_call["id"]] = filtered_result
+            # Handle RetrieveToolsResult dict structure
+            tools_to_bind = result.get("tools_to_bind", [])
+            response = result.get("response", [])
 
-        tool_messages, tool_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
-        return {"messages": tool_messages, "selected_tool_ids": tool_ids}  # type: ignore[return-value]
+            # Filter out subagent: prefixed tools from binding
+            filtered_bind = [
+                tool_id
+                for tool_id in tools_to_bind
+                if not tool_id.startswith("subagent:")
+            ]
+            selected_tools[tool_call["id"]] = filtered_bind
+            response_tools[tool_call["id"]] = response  # Keep all tools in response
+
+        tool_messages, tool_ids = _format_selected_tools(response_tools, tool_registry)  # type: ignore[arg-type]
+        _, bind_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
+        return {"messages": tool_messages, "selected_tool_ids": bind_ids}  # type: ignore[return-value]
 
     async def aselect_tools(
         tool_calls: list[dict], config: RunnableConfig, *, store: BaseStore
@@ -252,19 +308,29 @@ def create_agent(
                 "retrieve_tools is disabled and aselect_tools should not be called"
             )
         selected_tools = {}
+        response_tools = {}
         for tool_call in tool_calls:
             kwargs = {**tool_call["args"]}
             if store_arg:
                 kwargs[store_arg] = store
             result = await retrieve_tools.ainvoke(kwargs)
 
-            filtered_result = [
-                tool_id for tool_id in result if not tool_id.startswith("subagent:")
-            ]
-            selected_tools[tool_call["id"]] = filtered_result
+            # Handle RetrieveToolsResult dict structure
+            tools_to_bind = result.get("tools_to_bind", [])
+            response = result.get("response", [])
 
-        tool_messages, tool_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
-        return {"messages": tool_messages, "selected_tool_ids": tool_ids}  # type: ignore[return-value]
+            # Filter out subagent: prefixed tools from binding
+            filtered_bind = [
+                tool_id
+                for tool_id in tools_to_bind
+                if not tool_id.startswith("subagent:")
+            ]
+            selected_tools[tool_call["id"]] = filtered_bind
+            response_tools[tool_call["id"]] = response  # Keep all tools in response
+
+        tool_messages, tool_ids = _format_selected_tools(response_tools, tool_registry)  # type: ignore[arg-type]
+        _, bind_ids = _format_selected_tools(selected_tools, tool_registry)  # type: ignore[arg-type]
+        return {"messages": tool_messages, "selected_tool_ids": bind_ids}  # type: ignore[return-value]
 
     def should_continue(state: State, *, store: BaseStore):
         messages = state["messages"]

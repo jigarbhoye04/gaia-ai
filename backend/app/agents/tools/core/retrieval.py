@@ -1,56 +1,118 @@
 import asyncio
-from typing import Annotated, Awaitable, Callable
+from typing import Annotated, Awaitable, Callable, Optional, TypedDict
 
-from langchain_core.tools import BaseTool, StructuredTool
 from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 
 
-def get_list_tools_function(
+class RetrieveToolsResult(TypedDict):
+    """Result from retrieve_tools function.
+
+    Attributes:
+        tools_to_bind: Tool IDs to actually bind to the model (for execution)
+        response: Tool names/info to return to the agent (for display)
+    """
+
+    tools_to_bind: list[str]
+    response: list[str]
+
+
+def get_retrieve_tools_function(
     tool_space: str = "general",
     include_subagents: bool = True,
     limit: int = 25,
-) -> StructuredTool:
-    """Get a list_tools function configured for specific context.
+) -> Callable[..., Awaitable[RetrieveToolsResult]]:
+    """Get a retrieve_tools function configured for specific context.
+
+    This unified function handles both tool discovery (semantic search) and tool binding.
+    - When `query` is provided: Returns tool names for discovery (not bound)
+    - When `exact_tool_names` is provided: Binds and returns validated tool names
 
     Args:
         tool_space: Namespace to search for tools
-        include_subagents: Whether to include subagent results (False for subagents)
-        limit: Maximum number of tool results
+        include_subagents: Whether to include subagent results in search
+        limit: Maximum number of tool results for semantic search
 
     Returns:
-        Configured list_tools tool
+        Configured retrieve_tools coroutine that returns RetrieveToolsResult
     """
 
-    async def list_tools(
-        query: str,
+    async def retrieve_tools(
         store: Annotated[BaseStore, InjectedStore],
-    ) -> list[str]:
-        """List available tool and subagent names matching your query. Returns names only (not loaded).
+        query: Optional[str] = None,
+        exact_tool_names: Optional[list[str]] = None,
+    ) -> RetrieveToolsResult:
+        """Discover available tools or load specific tools by exact name.
 
-        Use this to DISCOVER what tools exist before loading them. This is lightweight and can
-        return many results (20-30+) since it only returns names, not full tool definitions.
+        This is your primary tool for working with the tool ecosystem. It has two modes:
+
+        **DISCOVERY MODE** (use `query` parameter):
+        Search for tools using natural language. Returns matching tool names without loading them.
+        Use this to explore what tools are available before deciding which to load.
+
+        **BINDING MODE** (use `exact_tool_names` parameter):
+        Load specific tools by their exact names. The tools become available for use.
+        Use this after discovering tool names or when you know exact names from the system prompt.
 
         WORKFLOW:
-        1. Call list_tools(query="your intent") to see available options
-        2. Pick the exact tool names you need from the results
-        3. Call retrieve_tools(exact_tool_names=[...]) to load those specific tools
+        1. Call retrieve_tools(query="your intent") to discover available tools
+        2. Review the returned tool names
+        3. Call retrieve_tools(exact_tool_names=["tool1", "tool2"]) to load specific tools
+        4. Use the loaded tools to complete the task
 
-        This two-step approach lets you see a broad range of options before committing
-        to loading specific tools, avoiding token waste on irrelevant tools.
+        TOOL NAME FORMATS:
+        - Regular tools: Exact names like "web_search_tool", "create_todo", "GMAIL_SEND_DRAFT"
+        - Subagent tools: Prefixed with "subagent:" like "subagent:gmail", "subagent:notion"
+          Note: Subagents require using the `handoff` tool to delegate tasks
 
         Args:
-            query: Natural language description of what you want to accomplish.
+            query: Natural language description for tool discovery.
                    Examples: "email operations", "calendar management", "social media posting"
+                   When provided, returns semantically matching tool names (not loaded).
+
+            exact_tool_names: List of exact tool names to load and make available.
+                             Examples: ["GMAIL_SEND_DRAFT", "GMAIL_CREATE_EMAIL_DRAFT"]
+                             When provided, validates and loads these specific tools.
 
         Returns:
-            List of tool/subagent names matching the query. Subagents have "subagent:" prefix.
+            Dict with 'tools_to_bind' (tools to load) and 'response' (names to show).
+            In discovery mode: tools_to_bind=[], response=[discovered names]
+            In binding mode: tools_to_bind=[validated tools], response=[validated tools]
+
+        Examples:
+            # Discovery: Find email-related tools (tools NOT loaded, just listed)
+            result = await retrieve_tools(query="send email")
+            # result['response'] = ["GMAIL_SEND_DRAFT", "subagent:gmail", ...]
+            # result['tools_to_bind'] = []  # Nothing bound yet
+
+            # Binding: Load specific tools (tools ARE loaded)
+            result = await retrieve_tools(exact_tool_names=["GMAIL_SEND_DRAFT"])
+            # result['tools_to_bind'] = ["GMAIL_SEND_DRAFT"]  # Now bound
+            # result['response'] = ["GMAIL_SEND_DRAFT"]  # Confirmation
         """
         from app.agents.tools.core.registry import get_tool_registry
+
+        if not query and not exact_tool_names:
+            raise ValueError(
+                "Either 'query' (for discovery) or 'exact_tool_names' (for binding) is required."
+            )
 
         tool_registry = await get_tool_registry()
         available_tool_names = tool_registry.get_tool_names()
 
+        # BINDING MODE: Validate and bind exact tool names
+        if exact_tool_names:
+            validated_tool_names = [
+                tool_name
+                for tool_name in exact_tool_names
+                if tool_name in available_tool_names
+            ]
+            return RetrieveToolsResult(
+                tools_to_bind=validated_tool_names,
+                response=validated_tool_names,
+            )
+
+        # DISCOVERY MODE: Semantic search for tools
         if include_subagents:
             tool_results, subagent_results = await asyncio.gather(
                 store.asearch((tool_space,), query=query, limit=limit),
@@ -71,197 +133,10 @@ def get_list_tools_function(
 
         all_results.sort(key=lambda x: x["score"], reverse=True)
 
-        return [r["id"] for r in all_results]
-
-    return StructuredTool.from_function(
-        func=None,
-        coroutine=list_tools,
-        name="list_tools",
-    )
-
-
-# Main list_tools for executor agent (includes subagents)
-list_tools = get_list_tools_function(tool_space="general", include_subagents=True)
-
-
-def get_retrieve_tools_function(
-    tool_space: str = "general",
-    include_core_tools: bool = True,
-    include_subagents: bool = True,
-    additional_tools: list[BaseTool] = [],
-    limit: int = 5,
-) -> Callable[..., Awaitable[list[str]]]:
-    """
-    Get a function to retrieve tools based on a search query.
-
-    Args:
-        tool_space: Namespace prefix for the tools.
-        include_core_tools: Whether to include core tools in the results.
-        include_subagents: Whether to include subagents in search (False for subagents).
-        additional_tools: Additional tools to include.
-        limit: Maximum number of tools to retrieve.
-
-    Returns:
-        A function that retrieves tools based on the provided parameters.
-    """
-
-    async def retrieve_tools(
-        store: Annotated[BaseStore, InjectedStore],
-        query: str = "",
-        exclude_tools: list[str] = [],
-        exact_tool_names: list[str] = [],
-    ) -> list[str]:
-        """Retrieve tools and subagents to use based on exact tool names or semantic search queries.
-
-        This is your primary tool discovery mechanism. Use this function to find the specific tools
-        or subagents you need for any task. You must provide either exact_tool_names OR query (or both).
-
-        RETURNS:
-        - Regular tool names: Direct executable tools (e.g., "create_todo", "web_search_tool")
-        - Subagent IDs with prefix: "subagent:gmail", "subagent:notion", "subagent:google_calendar"
-          These require using the `handoff` tool to delegate tasks.
-
-        EXACT TOOL NAMES (PRIMARY METHOD):
-        Use this when you know the exact tool name from the system prompt or previous context.
-        This is the most direct and reliable method when you're certain of the tool name.
-
-        SEMANTIC SEARCH (FALLBACK METHOD):
-        Use natural language queries to describe what you want to accomplish when you don't know
-        the exact tool names. The system uses vector similarity to find the most relevant tools
-        and subagents based on your intent.
-
-        Semantic Query Guidelines:
-        • Analyze user's intent: "What is the user trying to accomplish?"
-        • Use descriptive, action-oriented queries: "send email", "create calendar event", "search contacts"
-        • Try category + action format: "gmail send", "notion create", "twitter post", "calendar view"
-        • Use synonyms and related terms if first attempt doesn't work
-        • Don't hesitate to call this function multiple times for different functionalities
-        • Be persistent - if you know a tool should exist, try different query variations
-
-        Suggested query patterns:
-        • Email: "mail send", "gmail compose", "email draft", "contact search"
-        • Calendar: "calendar create", "schedule event", "calendar view", "meeting search"
-        • Todos: "todo create", "task update", "todo delete", "task search"
-        • Notion: "notion create page", "notion database", "notion search", "workspace manage"
-        • Twitter: "twitter post", "social media", "tweet create", "twitter search"
-        • LinkedIn: "linkedin post", "professional network", "career content"
-        • Research: "web search", "deep research", "fetch webpage"
-        • Documents: "google docs", "document create", "file generate"
-        • Code: "execute code", "run script", "code sandbox"
-        • Weather: "weather check", "current weather"
-        • Images: "generate image", "create visual"
-        • Flowcharts: "create flowchart", "diagram generate"
-
-        Args:
-            query: Natural language description of what you want to accomplish.
-                   Use when you don't know exact tool names. Use descriptive terms and try
-                   different phrasings if initial search fails. Can be empty if using exact_tool_names.
-            exclude_tools: List of tool names to exclude from results.
-            exact_tool_names: List of EXACT tool names to include directly in results.
-                             Use when you know the exact tool name from system prompt STRICTLY.
-                             Examples:
-                             - "GMAIL_SEND_DRAFT", "GMAIL_CREATE_EMAIL_DRAFT"
-                             - "NOTION_CREATE_DATABASE", "NOTION_ADD_PAGE_CONTENT"
-                             - "TWITTER_CREATION_OF_A_POST", "TWITTER_USER_LOOKUP_ME"
-
-        Returns:
-            List of tool names that match the search criteria.
-
-        Usage Examples:
-        • retrieve_tools(exact_tool_names=["GMAIL_SEND_DRAFT"]) - Get specific tool when you know the name
-        • retrieve_tools(query="send email") - Find email sending tools when you don't know exact names
-        • retrieve_tools(exact_tool_names=["NOTION_SPECIFIC_TOOL"], query="notion database") - Combine both
-
-        Workflow Strategy:
-        1. Start with exact_tool_names if you know the precise tool names from system prompt
-        2. Fallback to semantic queries when you don't know exact names
-        3. Try multiple query variations if first semantic attempt doesn't find expected tools
-        4. Retrieve ALL necessary tools before starting task execution
-        5. Call this function multiple times for different tool categories as needed
-        """
-        from app.agents.tools.core.registry import get_tool_registry
-
-        # Validate that at least one search method is provided
-        if not query and not exact_tool_names:
-            raise ValueError(
-                "Must provide either 'query' for semantic search or 'exact_tool_names' for direct tool retrieval"
-            )
-
-        # Lazy import to avoid circular dependency
-
-        tool_registry = await get_tool_registry()
-        tool_ids = set()
-
-        # Get all available tool names for validation
-        available_tool_names = tool_registry.get_tool_names()
-
-        # Search for matching tools based on query (if provided)
-        if query:
-            # Search both tools and subagents with increased limit for better ranking
-            if include_subagents:
-                tool_results, subagent_results = await asyncio.gather(
-                    store.asearch((tool_space,), query=query, limit=limit),
-                    store.asearch(("subagents",), query=query, limit=5),
-                )
-            else:
-                tool_results = await store.asearch(
-                    (tool_space,), query=query, limit=limit
-                )
-                subagent_results = []
-
-            all_results = []
-
-            for result in tool_results:
-                if result.key in available_tool_names:
-                    all_results.append({"id": result.key, "score": result.score})
-
-            for result in subagent_results:
-                all_results.append(
-                    {
-                        "id": result.key,
-                        "score": result.score,
-                    }
-                )
-
-            all_results.sort(key=lambda x: x["score"], reverse=True)
-            top_results = all_results
-
-            # Extract IDs from top ranked results
-            tool_ids.update([r["id"] for r in top_results])
-
-        if include_core_tools:
-            # Filter core tools based on exclusions
-            filtered_core_tools = [
-                tool
-                for tool in tool_registry.get_core_tools()
-                if tool.name not in exclude_tools
-            ]
-
-            # Core tools are essential tools that should be accessible regardless of semantic search results
-            core_tool_ids = [tool.name for tool in filtered_core_tools]
-
-            tool_ids.update(core_tool_ids)
-
-        # Include any additional specified tools (validate they exist)
-        if additional_tools:
-            additional_tool_ids = [
-                tool.name
-                for tool in additional_tools
-                if tool.name not in exclude_tools and tool.name in available_tool_names
-            ]
-            tool_ids.update(additional_tool_ids)
-
-        # Add exact tool names if specified (validate they exist in registry)
-        if exact_tool_names:
-            exact_tool_ids = [
-                tool_name
-                for tool_name in exact_tool_names
-                if tool_name not in exclude_tools
-                and tool_name not in tool_ids
-                and tool_name in available_tool_names
-            ]
-            tool_ids.update(exact_tool_ids)
-
-        return list(tool_ids)
+        discovered_tools = [r["id"] for r in all_results]
+        return RetrieveToolsResult(
+            tools_to_bind=[],  # Discovery mode: don't bind, just show
+            response=discovered_tools,
+        )
 
     return retrieve_tools
