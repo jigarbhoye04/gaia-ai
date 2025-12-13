@@ -27,6 +27,7 @@ interface NewChatLayoutProps {
     onDroppedFilesProcessed: () => void;
     hasMessages: boolean;
   };
+  voiceModeActive: () => void;
 }
 
 export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
@@ -35,6 +36,7 @@ export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
   handleScroll,
   dragHandlers,
   composerProps,
+  voiceModeActive,
 }) => {
   const [showUseCases, setShowUseCases] = useState(false);
 
@@ -47,7 +49,10 @@ export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
     >
       <div className="flex w-full flex-col items-center gap-10 px-4 pb-10">
         <NewChatSection
+         
           composerProps={composerProps}
+          voiceModeActive={voiceModeActive}
+       
           showUseCases={showUseCases}
         />
 

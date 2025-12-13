@@ -90,5 +90,8 @@ dist/
 .pnpm-store/
 
 .vscode/settings.json
+
+uv.lock
+!backend/voice_agent/uv.lock
 .cursor
 .hypothesis

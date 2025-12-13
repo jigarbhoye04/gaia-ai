@@ -20,11 +20,13 @@ interface NewChatSectionProps {
     conversationId?: string;
   };
   showUseCases: boolean;
+  voiceModeActive: () => void;
 }
 
 export const NewChatSection: React.FC<NewChatSectionProps> = ({
   composerProps,
   showUseCases,
+  voiceModeActive
 }) => {
   return (
     <div className="relative flex w-full snap-start items-center justify-center px-4 pt-[25vh] scrollbar-default">
@@ -33,7 +35,7 @@ export const NewChatSection: React.FC<NewChatSectionProps> = ({
           <StarterText />
         </div>
         <div className="mt-12 w-full max-w-7xl">
-          <Composer {...composerProps} />
+          <Composer {...composerProps} voiceModeActive={voiceModeActive} />
         </div>
 
         {!showUseCases && <ChatSuggestions />}
