@@ -65,6 +65,7 @@ class SubAgentFactory:
         store, tool_registry = await asyncio.gather(
             get_tools_store(), get_tool_registry()
         )
+        tool_dict = tool_registry.get_tool_dict()
 
         # Create list_tools for subagent (without subagent search capability)
         list_tools = get_list_tools_function(
@@ -73,9 +74,15 @@ class SubAgentFactory:
             limit=25,
         )
 
+        tool_dict.update(
+            {
+                "list_tools": list_tools,
+            }
+        )
+
         common_kwargs = {
             "llm": llm,
-            "tool_registry": tool_registry.get_tool_dict(),
+            "tool_registry": tool_dict,
             "agent_name": name,
             "pre_model_hooks": [
                 create_filter_messages_node(

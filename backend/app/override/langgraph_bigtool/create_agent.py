@@ -180,7 +180,8 @@ def create_agent(
         llm_with_tools = _llm.bind_tools(tools_to_bind)  # type: ignore[arg-type]
         response = llm_with_tools.invoke(state["messages"])
 
-        response.content = response.content or "Empty response from model."
+        if not response.tool_calls and not response.content:
+            response.content = "Empty response from model."
 
         if isinstance(response.content, str) and agent_name == "comms_agent":
             response.content = response.content + NEW_MESSAGE_BREAKER
@@ -210,7 +211,8 @@ def create_agent(
         llm_with_tools = _llm.bind_tools(tools_to_bind)  # type: ignore[arg-type]
         response: AIMessage = await llm_with_tools.ainvoke(state["messages"])
 
-        response.content = response.content or "Empty response from model."
+        if not response.tool_calls and not response.content:
+            response.content = "Empty response from model."
 
         if isinstance(response.content, str) and agent_name == "comms_agent":
             response.content = response.content + NEW_MESSAGE_BREAKER

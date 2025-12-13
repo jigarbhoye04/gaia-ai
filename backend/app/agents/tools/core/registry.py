@@ -1,7 +1,6 @@
 from functools import cache
 from typing import Dict, List, Optional
 
-from app.agents.core.subagents.handoff_tools import handoff as handoff_tool
 from app.agents.tools import (
     calendar_tool,
     code_exec_tool,
@@ -21,7 +20,6 @@ from app.agents.tools import (
     weather_tool,
     webpage_tool,
 )
-from app.agents.tools.core.retrieval import list_tools
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
 from langchain_core.tools import BaseTool
 
@@ -136,11 +134,6 @@ class ToolRegistry:
         self._add_category(
             "documents",
             tools=[file_tools.query_file, document_tool.generate_document],
-        )
-
-        self._add_category(
-            "delegation",
-            core_tools=[handoff_tool, list_tools],
         )
 
         self._add_category("notifications", tools=[*notification_tool.tools])

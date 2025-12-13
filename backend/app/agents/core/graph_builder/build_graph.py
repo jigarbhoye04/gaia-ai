@@ -11,10 +11,11 @@ from app.agents.core.nodes import (
     trim_messages_node,
 )
 from app.agents.core.nodes.filter_messages import create_filter_messages_node
+from app.agents.core.subagents.handoff_tools import handoff as handoff_tool
 from app.agents.core.subagents.provider_subagents import register_subagent_providers
 from app.agents.llm.client import init_llm
 from app.agents.tools.core.registry import get_tool_registry
-from app.agents.tools.core.retrieval import get_retrieve_tools_function
+from app.agents.tools.core.retrieval import get_retrieve_tools_function, list_tools
 from app.agents.tools.core.store import get_tools_store
 from app.agents.tools.executor_tool import call_executor
 from app.config.loggers import app_logger as logger
@@ -39,6 +40,12 @@ async def build_executor_graph(
     )
 
     tool_dict = tool_registry.get_tool_dict()
+    tool_dict.update(
+        {
+            "handoff": handoff_tool,
+            "list_tools": list_tools,
+        }
+    )
 
     builder = create_agent(
         llm=chat_llm,
