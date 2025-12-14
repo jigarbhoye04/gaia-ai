@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 import useConnectionDetails from "@/features/chat/components/livekit/hooks/useConnectionDetails";
 import { SessionView } from "@/features/chat/components/livekit/session-view";
+
 const MotionSessionView = motion.create(SessionView);
 
 interface AppProps {
@@ -23,7 +24,7 @@ export function VoiceApp({ onEndCall }: AppProps) {
   const room = useMemo(() => new Room(), []);
   const [sessionStarted, setSessionStarted] = useState(false);
   const pathname = usePathname();
-  let conversationId: string | undefined = undefined;
+  let conversationId: string | undefined;
   const match = pathname.match(/^\/c(?:\/([^/?#]+))?/);
   if (match?.[1]) {
     conversationId = match[1];

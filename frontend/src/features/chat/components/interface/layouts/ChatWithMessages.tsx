@@ -35,7 +35,7 @@ export const ChatWithMessages: React.FC<ChatWithMessagesProps> = ({
   handleScroll,
   dragHandlers,
   composerProps,
-  voiceModeActive
+  voiceModeActive,
 }) => {
   return (
     <div className="flex h-full flex-col">

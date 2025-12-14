@@ -1,6 +1,6 @@
-import {
-  type AgentState as LivekitAgentState,
-  type TrackReference,
+import type {
+  AgentState as LivekitAgentState,
+  TrackReference,
 } from "@livekit/components-react";
 
 import {

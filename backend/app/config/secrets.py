@@ -15,9 +15,8 @@ from functools import lru_cache
 
 from app.config.loggers import app_logger as logger
 from app.utils.exceptions import InfisicalConfigError
-
-from infisical_sdk import InfisicalSDKClient
 from dotenv import load_dotenv
+from infisical_sdk import InfisicalSDKClient
 
 load_dotenv()
 
@@ -85,7 +84,7 @@ def inject_infisical_secrets():
         secrets = client.secrets.list_secrets(
             project_id=INFISICAL_PROJECT_ID,
             environment_slug=ENV,
-            secret_path="/",  # noqa: S105
+            secret_path="/",  # nosec B106
             expand_secret_references=True,
             view_secret_value=True,
             recursive=False,

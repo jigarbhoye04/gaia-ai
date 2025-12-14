@@ -1,6 +1,6 @@
 import { Button, type ButtonProps } from "@heroui/button";
 import Link from "next/link";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface LinkButtonProps extends Omit<ButtonProps, "href" | "as"> {
   href: string;

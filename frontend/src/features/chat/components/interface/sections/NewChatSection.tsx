@@ -26,7 +26,7 @@ interface NewChatSectionProps {
 export const NewChatSection: React.FC<NewChatSectionProps> = ({
   composerProps,
   showUseCases,
-  voiceModeActive
+  voiceModeActive,
 }) => {
   return (
     <div className="relative flex w-full snap-start items-center justify-center px-4 pt-[25vh] scrollbar-default">

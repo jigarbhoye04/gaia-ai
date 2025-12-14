@@ -40,9 +40,12 @@ export default function useConnectionDetails(
   const fetchConnectionDetails = useCallback(async () => {
     setConnectionDetails(null);
     try {
-      const data = await apiService.get<ConnectionDetails>(conversationId? `/token?conversationId=${conversationId}` : "/token", {
-        errorMessage: "Failed to initiate livekit room",
-      });
+      const data = await apiService.get<ConnectionDetails>(
+        conversationId ? `/token?conversationId=${conversationId}` : "/token",
+        {
+          errorMessage: "Failed to initiate livekit room",
+        },
+      );
       setConnectionDetails(data);
       return data;
     } catch (error) {

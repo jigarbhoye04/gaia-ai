@@ -49,10 +49,8 @@ export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
     >
       <div className="flex w-full flex-col items-center gap-10 px-4 pb-10">
         <NewChatSection
-         
           composerProps={composerProps}
           voiceModeActive={voiceModeActive}
-       
           showUseCases={showUseCases}
         />
 

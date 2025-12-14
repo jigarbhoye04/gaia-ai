@@ -1,4 +1,4 @@
-import { type TrackReference } from "@livekit/components-react";
+import type { TrackReference } from "@livekit/components-react";
 import { useEffect, useRef, useState } from "react";
 
 /**

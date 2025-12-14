@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, Suspense } from "react";
-
 import { useTexture } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 export type AgentState = null | "thinking" | "listening" | "talking";
@@ -47,7 +46,7 @@ export function Orb({
       const img = new Image();
       img.src =
         "https://storage.googleapis.com/eleven-public-cdn/images/perlin-noise.png";
-    } catch (e) {
+    } catch (_e) {
       // noop
     }
   }, []);
@@ -69,7 +68,7 @@ export function Orb({
               // Limit pixel ratio to reduce initial GPU work (helps on high-dpi displays)
               try {
                 gl.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-              } catch (e) {
+              } catch (_e) {
                 /* ignore */
               }
             }}
@@ -272,8 +271,7 @@ function Scene({
       baseSpeed = 0.18;
     }
 
-    const targetSpeed =
-      baseSpeed + (1 - Math.pow(curOutRef.current - 1, 2)) * 0.9;
+    const targetSpeed = baseSpeed + (1 - (curOutRef.current - 1) ** 2) * 0.9;
     animSpeedRef.current += (targetSpeed - animSpeedRef.current) * 0.12;
 
     u.uAnimation.value += delta * animSpeedRef.current;
@@ -330,14 +328,15 @@ function Scene({
 }
 
 function splitmix32(a: number) {
-  return function () {
+  return () => {
     a |= 0;
     a = (a + 0x9e3779b9) | 0;
     let t = a ^ (a >>> 16);
     t = Math.imul(t, 0x21f0aaad);
     t = t ^ (t >>> 15);
     t = Math.imul(t, 0x735a2d97);
-    return ((t = t ^ (t >>> 15)) >>> 0) / 4294967296;
+    t = t ^ (t >>> 15);
+    return (t >>> 0) / 4294967296;
   };
 }
 

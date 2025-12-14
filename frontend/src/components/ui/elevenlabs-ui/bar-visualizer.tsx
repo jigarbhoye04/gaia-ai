@@ -16,9 +16,11 @@ function createAudioAnalyser(
   mediaStream: MediaStream,
   options: AudioAnalyserOptions = {},
 ) {
-  const audioContext = new (window.AudioContext ||
+  const audioContext = new (
+    window.AudioContext ||
     (window as unknown as { webkitAudioContext: typeof AudioContext })
-      .webkitAudioContext)();
+      .webkitAudioContext
+  )();
   const source = audioContext.createMediaStreamSource(mediaStream);
   const analyser = audioContext.createAnalyser();
 
@@ -143,7 +145,7 @@ const normalizeDb = (value: number) => {
   const minDb = -80; // Less sensitive floor to reduce noise
   const maxDb = -20; // Adjusted ceiling for better range
   const db = 1 - (Math.max(minDb, Math.min(maxDb, value)) * -1) / 60; // Adjusted denominator
-  return Math.pow(db, 0.7); // Apply stronger power curve for better control
+  return db ** 0.7; // Apply stronger power curve for better control
 };
 
 /**
@@ -531,8 +533,7 @@ const BarVisualizerComponent = React.forwardRef<
       >
         {volumeBands.map((volume, index) => {
           // Improved amplification with better stability and smaller heights
-          const amplifiedVolume =
-            volume > 0.01 ? Math.pow(volume, 0.6) * 1.8 : 0;
+          const amplifiedVolume = volume > 0.01 ? volume ** 0.6 * 1.8 : 0;
           const heightPct = Math.min(
             maxHeight,
             Math.max(15, amplifiedVolume * 60 + 5),
@@ -541,7 +542,7 @@ const BarVisualizerComponent = React.forwardRef<
 
           return (
             <Bar
-              key={index}
+              key={`bar-${index}-${volume}`}
               heightPct={heightPct}
               isHighlighted={isHighlighted}
               state={state}

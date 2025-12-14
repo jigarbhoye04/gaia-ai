@@ -32,13 +32,15 @@ from livekit.agents.llm import LLM, ChatChunk, ChatContext, ChoiceDelta
 from livekit.plugins import deepgram, elevenlabs, noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
-_settings_instance: Any = None 
+_settings_instance: Any = None
+
 
 def load_settings():
     """Dynamically loads settings, triggering Infisical only on the first call."""
     global _settings_instance
     if _settings_instance is None:
         from app.config.settings import settings
+
         _settings_instance = settings
     return _settings_instance
 
@@ -127,7 +129,7 @@ class CustomLLM(LLM):
             if self.conversation_id:
                 payload["conversation_id"] = self.conversation_id
 
-            async with aiohttp.ClientSession(timeout=timeout) as session: # noqa: SIM117
+            async with aiohttp.ClientSession(timeout=timeout) as session:  # noqa: SIM117
                 async with session.post(
                     f"{self.base_url}/api/v1/chat-stream",
                     headers=headers,
@@ -152,7 +154,7 @@ class CustomLLM(LLM):
                                     yield ChatChunk(
                                         id="custom", delta=ChoiceDelta(content=chunk)
                                     )
-                                    text_buffer.clear() # Clear buffer after yielding to avoid duplicate final flush
+                                    text_buffer.clear()  # Clear buffer after yielding to avoid duplicate final flush
                             break
 
                         try:
@@ -163,7 +165,7 @@ class CustomLLM(LLM):
                         conv_id = payload.get("conversation_id")
                         if isinstance(conv_id, str) and conv_id:
                             await self.set_conversation_id(conv_id)
-                            continue 
+                            continue
 
                         piece = payload.get("response", "")
                         if not piece:
@@ -201,7 +203,7 @@ class CustomLLM(LLM):
 
                         # Natural sentence boundary
                         if any(joined.endswith(p) for p in [".", "!", "?"]):
-                            if len(joined) >= 40: # avoid ultra-short chunks
+                            if len(joined) >= 40:  # avoid ultra-short chunks
                                 should_flush = True
 
                         # Mid-sentence, buffer getting long
@@ -211,7 +213,7 @@ class CustomLLM(LLM):
                         if should_flush:
                             out = joined.strip()
                             text_buffer.clear()
-                            if len(out) >= 15: # safety: never flush tiny fragments
+                            if len(out) >= 15:  # safety: never flush tiny fragments
                                 # small debounce to coalesce nearby tokens
                                 yield ChatChunk(
                                     id="custom", delta=ChoiceDelta(content=out)
@@ -236,9 +238,9 @@ def prewarm(proc: JobProcess):
 
 async def entrypoint(ctx: JobContext):
     """Initialize and run the voice agent with STT, TTS, and LLM."""
-    
-    settings = load_settings() 
-    
+
+    settings = load_settings()
+
     ctx.log_context_fields = {"room": ctx.room.name}
 
     custom_llm = CustomLLM(
@@ -334,7 +336,7 @@ async def entrypoint(ctx: JobContext):
 
 if __name__ == "__main__":
     is_download_command = any(arg.endswith("download-files") for arg in sys.argv)
-    
+
     if not is_download_command:
         load_settings()
 

@@ -3,7 +3,7 @@ import {
   useRoomContext,
   useVoiceAssistant,
 } from "@livekit/components-react";
-import { type TextStreamReader } from "livekit-client";
+import type { TextStreamReader } from "livekit-client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -18,9 +18,9 @@ import type { MessageType } from "@/types/features/convoTypes";
 
 function isAgentAvailable(agentState: AgentState) {
   return (
-    agentState == "listening" ||
-    agentState == "thinking" ||
-    agentState == "speaking"
+    agentState === "listening" ||
+    agentState === "thinking" ||
+    agentState === "speaking"
   );
 }
 

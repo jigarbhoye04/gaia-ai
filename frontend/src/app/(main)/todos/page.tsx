@@ -76,10 +76,6 @@ export default function TodosPage() {
     }
   };
 
-  const handleTodoEdit = (todo: Todo) => {
-    selectTodo(todo.id);
-  };
-
   // Memoize the close handler
   const handleClose = useCallback(() => {
     clearSelection();
@@ -110,7 +106,6 @@ export default function TodosPage() {
     selectedTodoId,
     todos,
     projects,
-    handleClose,
     setRightSidebarContent,
     openRightSidebar,
     closeRightSidebar,

@@ -2,8 +2,7 @@ import type {
   ReceivedChatMessage,
   TextStreamData,
 } from "@livekit/components-react";
-import { Room } from "livekit-client";
-
+import type { Room } from "livekit-client";
 
 export function transcriptionToChatMessage(
   textStream: TextStreamData,

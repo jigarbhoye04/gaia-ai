@@ -1,11 +1,10 @@
 "use client";
 
-import { useTrackToggle } from "@livekit/components-react";
+import type { useTrackToggle } from "@livekit/components-react";
 import { Track } from "livekit-client";
-import { LoadingIcon, MicIcon, MicOffIcon } from "@/icons";
 import * as React from "react";
-
 import { Button } from "@/components/ui/button";
+import { LoadingIcon, MicIcon, MicOffIcon } from "@/icons";
 import { cn } from "@/lib/utils";
 
 export type TrackToggleProps = React.ComponentProps<typeof Button> & {
@@ -49,7 +48,9 @@ export function TrackToggle({
       className={cn(className)}
       {...props}
     >
-      <IconComponent className={cn("!w-6 !h-6 text-white", pending && "animate-spin")} />
+      <IconComponent
+        className={cn("!w-6 !h-6 text-white", pending && "animate-spin")}
+      />
     </Button>
   );
 }

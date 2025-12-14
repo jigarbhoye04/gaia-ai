@@ -1,16 +1,16 @@
-import React from "react";
-
 import { useVoiceAssistant } from "@livekit/components-react";
 import { AnimatePresence, motion } from "motion/react";
+import React from "react";
 
 import {
-  BarVisualizer,
   type AgentState,
+  BarVisualizer,
 } from "@/components/ui/elevenlabs-ui/bar-visualizer";
 import { cn } from "@/lib/utils";
 
 import { AgentTile } from "./agent-tile";
 import { useAgentControlBar } from "./hooks/use-agent-control-bar";
+
 const MotionAgentTile = motion.create(AgentTile);
 
 interface MediaTilesProps {
