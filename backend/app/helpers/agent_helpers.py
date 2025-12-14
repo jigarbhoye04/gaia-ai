@@ -34,8 +34,11 @@ def build_agent_config(
     conversation_id: str,
     user: dict,
     user_time: datetime,
+    agent_name: str,
     user_model_config: Optional[ModelConfig] = None,
     usage_metadata_callback: Optional[UsageMetadataCallbackHandler] = None,
+    thread_id: Optional[str] = None,
+    base_configurable: Optional[dict] = None,
 ) -> dict:
     """Build configuration for graph execution with optional authentication tokens.
 
@@ -47,12 +50,12 @@ def build_agent_config(
         user: User information dictionary containing user_id and email
         user_time: Current datetime for the user's timezone
         user_model_config: Optional model configuration with provider and token limits
+        thread_id: Optional override for thread_id (defaults to conversation_id)
+        base_configurable: Optional base configurable to inherit from (for child agents)
 
     Returns:
-        Tuple containing:
-        - Configuration dictionary formatted for LangGraph execution with configurable
-            parameters, metadata, and recursion limits
-        - UsageMetadataCallbackHandler instance for tracking token usage during execution
+        Configuration dictionary formatted for LangGraph execution with configurable
+        parameters, metadata, and recursion limits
     """
 
     callbacks: list[BaseCallbackHandler] = []
@@ -84,20 +87,32 @@ def build_agent_config(
         user_model_config.max_tokens if user_model_config else DEFAULT_MAX_TOKENS
     )
 
+    # Cherry-pick specific keys from base_configurable if provided
+    # Only inherit model config and user context, not LangChain internal state
+    if base_configurable:
+        # Inherit model config from parent if not overridden
+        provider_name = base_configurable.get("provider", provider_name)
+        max_tokens = base_configurable.get("max_tokens", max_tokens)
+        model_name = base_configurable.get("model_name", model_name)
+
+    configurable = {
+        "thread_id": thread_id or conversation_id,
+        "user_id": user.get("user_id"),
+        "email": user.get("email"),
+        "user_name": user.get("name", ""),
+        "user_time": user_time.isoformat(),
+        "provider": provider_name,
+        "max_tokens": max_tokens,
+        "model_name": model_name,
+        "model": model_name,
+    }
+
     config = {
-        "configurable": {
-            "thread_id": conversation_id,
-            "user_id": user.get("user_id"),
-            "email": user.get("email"),
-            "user_time": user_time.isoformat(),
-            "provider": provider_name,
-            "max_tokens": max_tokens,
-            "model_name": model_name,
-            "model": model_name,
-        },
+        "configurable": configurable,
         "recursion_limit": 25,
         "metadata": {"user_id": user.get("user_id")},
         "callbacks": callbacks,
+        "agent_name": agent_name,
     }
 
     return config
@@ -240,18 +255,15 @@ async def execute_graph_streaming(
         initial_state,
         stream_mode=["messages", "custom"],
         config=config,
-        subgraphs=True,
     ):
-        ns, stream_mode, payload = event
-        is_main_agent = len(ns) == 0  # Main agent when namespace is empty
+        stream_mode, payload = event
 
         if stream_mode == "messages":
             chunk, metadata = payload
-            if chunk and isinstance(chunk, AIMessageChunk):
-                # Skip silent chunks (e.g. follow-up actions generation)
-                if metadata.get("silent"):
-                    continue
+            if metadata.get("silent"):
+                continue
 
+            if chunk and isinstance(chunk, AIMessageChunk):
                 content = str(chunk.content)
                 tool_calls = chunk.tool_calls
 
@@ -263,7 +275,7 @@ async def execute_graph_streaming(
                             yield format_sse_data(progress_data)
 
                 # Only yield content from main agent to avoid duplication
-                if content and is_main_agent:
+                if content and metadata.get("agent_name") == "comms_agent":
                     yield format_sse_response(content)
                     complete_message += content
 

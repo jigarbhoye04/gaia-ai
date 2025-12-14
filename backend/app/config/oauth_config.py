@@ -8,18 +8,18 @@ Defines integrations, scopes, display properties, and subagent configurations.
 from functools import cache
 from typing import Dict, List, Optional
 
-from app.agents.prompts.github_node_prompts import GITHUB_ORCHESTRATOR_PROMPT
-from app.agents.prompts.gmail_node_prompts import GMAIL_ORCHESTRATOR_PROMPT
-from app.agents.prompts.hubspot_node_prompts import HUBSPOT_ORCHESTRATOR_PROMPT
 from app.agents.prompts.subagent_prompts import (
     AIRTABLE_AGENT_SYSTEM_PROMPT,
     ASANA_AGENT_SYSTEM_PROMPT,
     CALENDAR_AGENT_SYSTEM_PROMPT,
     CLICKUP_AGENT_SYSTEM_PROMPT,
+    GITHUB_AGENT_SYSTEM_PROMPT,
+    GMAIL_AGENT_SYSTEM_PROMPT,
     GOOGLE_MAPS_AGENT_SYSTEM_PROMPT,
     GOOGLE_MEET_AGENT_SYSTEM_PROMPT,
     GOOGLE_SHEETS_AGENT_SYSTEM_PROMPT,
     GOOGLE_TASKS_AGENT_SYSTEM_PROMPT,
+    HUBSPOT_AGENT_SYSTEM_PROMPT,
     INSTAGRAM_AGENT_SYSTEM_PROMPT,
     LINEAR_AGENT_SYSTEM_PROMPT,
     LINKEDIN_AGENT_SYSTEM_PROMPT,
@@ -30,6 +30,7 @@ from app.agents.prompts.subagent_prompts import (
     TRELLO_AGENT_SYSTEM_PROMPT,
     TWITTER_AGENT_SYSTEM_PROMPT,
 )
+from app.langchain.core.subgraphs.github_subgraph import GITHUB_TOOLS
 from app.models.oauth_models import (
     ComposioConfig,
     OAuthIntegration,
@@ -69,6 +70,8 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             capabilities="creating events, scheduling meetings, managing availability, setting reminders, updating calendar entries, and organizing schedules",
             use_cases="scheduling meetings, managing calendar events, checking availability, or any calendar-related task",
             system_prompt=CALENDAR_AGENT_SYSTEM_PROMPT,
+            use_direct_tools=True,
+            disable_retrieve_tools=True,
         ),
     ),
     OAuthIntegration(
@@ -120,7 +123,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             domain="email",
             capabilities="composing emails, sending messages, reading inbox, organizing with labels, managing drafts, handling attachments, searching emails, and automating email workflows",
             use_cases="any email-related task including sending, reading, organizing, or automating email operations",
-            system_prompt=GMAIL_ORCHESTRATOR_PROMPT,
+            system_prompt=GMAIL_AGENT_SYSTEM_PROMPT,
         ),
     ),
     # Composio integrations
@@ -248,7 +251,8 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             domain="code repository and development workflow",
             capabilities="managing repositories, creating issues, handling pull requests, managing branches, reviewing code, managing collaborators, and automating development workflows",
             use_cases="repository management, issue tracking, pull requests, code review, or any GitHub development task",
-            system_prompt=GITHUB_ORCHESTRATOR_PROMPT,
+            system_prompt=GITHUB_AGENT_SYSTEM_PROMPT,
+            specific_tools=GITHUB_TOOLS,
         ),
     ),
     OAuthIntegration(
@@ -374,7 +378,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             domain="CRM and sales automation",
             capabilities="managing contacts, tracking deals, organizing pipelines, automating marketing, managing customer relationships, and analyzing sales data",
             use_cases="CRM management, sales tracking, contact organization, or marketing automation tasks",
-            system_prompt=HUBSPOT_ORCHESTRATOR_PROMPT,
+            system_prompt=HUBSPOT_AGENT_SYSTEM_PROMPT,
         ),
     ),
     OAuthIntegration(

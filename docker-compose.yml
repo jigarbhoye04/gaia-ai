@@ -201,7 +201,6 @@ services:
       WORKER_TYPE: voice_agent_worker
       DEBUG: 1
       WATCHFILES_FORCE_POLLING: 1
-      # HF hub flags to permit model downloads (if needed)
       HF_HUB_OFFLINE: "0"
       LOCAL_FILES_ONLY: "0"
       HF_HUB_ENABLE_HF_TRANSFER: "1"
@@ -212,6 +211,14 @@ services:
     restart: on-failure
     networks:
       - gaia_network
+
+  chromadb_admin:
+    image: fengzhichao/chromadb-admin
+    container_name: chromadb_admin
+    networks:
+      - gaia_network
+    ports:
+      - "8082:3001"
 
 volumes:
   chroma_data:
