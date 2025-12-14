@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Literal, Optional
 
 from app.helpers.message_helpers import (
     create_system_message,
@@ -29,7 +29,7 @@ async def construct_langchain_messages(
     selected_workflow: Optional[SelectedWorkflowData] = None,
     selected_calendar_event: Optional[SelectedCalendarEventData] = None,
     trigger_context: Optional[dict] = None,
-    agent_type: str = "comms",
+    agent_type: Literal["comms", "executor"] = "comms",
 ) -> List[AnyMessage]:
     """
     Construct LangChain messages for agent interaction.

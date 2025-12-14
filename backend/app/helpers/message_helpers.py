@@ -6,7 +6,6 @@ from app.agents.prompts.workflow_prompts import (
     WORKFLOW_EXECUTION_PROMPT,
 )
 from app.agents.templates.agent_template import (
-    AGENT_PROMPT_TEMPLATE,
     COMMS_PROMPT_TEMPLATE,
     EXECUTOR_PROMPT_TEMPLATE,
 )
@@ -27,7 +26,7 @@ from langchain_core.messages import SystemMessage
 def create_system_message(
     user_id: Optional[str] = None,
     user_name: Optional[str] = None,
-    agent_type: Literal["comms", "executor", "main"] = "comms",
+    agent_type: Literal["comms", "executor"] = "comms",
 ) -> SystemMessage:
     """Create main system message with user name only.
 
@@ -39,13 +38,11 @@ def create_system_message(
     template = {
         "comms": COMMS_PROMPT_TEMPLATE,
         "executor": EXECUTOR_PROMPT_TEMPLATE,
-        "main": AGENT_PROMPT_TEMPLATE,
     }.get(agent_type, COMMS_PROMPT_TEMPLATE)
 
     visible_to = {
         "comms": "comms_agent",
         "executor": "executor_agent",
-        "main": "main_agent",
     }.get(agent_type, "comms_agent")
 
     return SystemMessage(

@@ -252,7 +252,7 @@ async def create_github_subgraph(
     logger.info("Creating GitHub subgraph using plan-and-execute framework")
 
     from app.config.oauth_config import get_integration_by_id
-    
+
     integration = get_integration_by_id("github")
     if not integration or not integration.subagent_config:
         raise ValueError("Github integration or subagent config not found")

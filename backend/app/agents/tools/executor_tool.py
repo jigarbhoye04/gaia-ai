@@ -53,6 +53,7 @@ async def call_executor(
             user_time=user_time,
             thread_id=executor_thread_id,
             base_configurable=configurable,
+            agent_name="executor_agent",
         )
 
         system_message = create_system_message(
@@ -77,17 +78,23 @@ async def call_executor(
         async for event in executor_graph.astream(
             initial_state,
             stream_mode=["messages", "custom"],
-            config={**executor_config, "silent": True},
+            config=executor_config,
         ):
             stream_mode, payload = event
 
             if stream_mode == "custom":
-                # Propagate custom events to parent stream
                 writer(payload)
             elif stream_mode == "messages":
                 chunk, metadata = payload
 
-                if chunk and isinstance(chunk, AIMessageChunk):
+                if metadata.get("silent"):
+                    continue
+
+                if (
+                    chunk
+                    and isinstance(chunk, AIMessageChunk)
+                    and metadata.get("agent_name") == "executor_agent"
+                ):
                     content = str(chunk.content)
                     if content:
                         complete_message += content

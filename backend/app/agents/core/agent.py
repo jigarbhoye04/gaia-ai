@@ -94,11 +94,12 @@ async def _core_agent_logic(
 
     # Build config with optional tokens
     config = build_agent_config(
-        conversation_id,
-        user,
-        user_time,
-        user_model_config,
-        usage_metadata_callback,
+        conversation_id=conversation_id,
+        user=user,
+        user_time=user_time,
+        user_model_config=user_model_config,
+        usage_metadata_callback=usage_metadata_callback,
+        agent_name="comms_agent",
     )
 
     return graph, initial_state, config

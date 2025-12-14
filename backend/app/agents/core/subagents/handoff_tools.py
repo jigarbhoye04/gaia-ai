@@ -19,7 +19,11 @@ from app.helpers.agent_helpers import build_agent_config
 from app.services.oauth_service import (
     check_integration_status,
 )
-from langchain_core.messages import AIMessageChunk, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessageChunk,
+    HumanMessage,
+    SystemMessage,
+)
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.config import get_stream_writer
@@ -104,7 +108,7 @@ async def index_subagents_to_store(store: BaseStore) -> None:
         # for better semantic matching
         provider_name = integration.name
         short_name = integration.short_name or integration.id
-        
+
         description = (
             f"{provider_name} ({short_name}). "
             f"{provider_name} specializes in {cfg.domain}. "
@@ -204,6 +208,7 @@ async def handoff(
             user_time=user_time,
             thread_id=subagent_thread_id,
             base_configurable=configurable,
+            agent_name=agent_name,
         )
 
         system_prompt = subagent_cfg.system_prompt or ""
@@ -228,15 +233,17 @@ async def handoff(
         async for event in subagent_graph.astream(
             initial_state,
             stream_mode=["messages", "custom"],
-            config={**subagent_runnable_config, "silent": True},
+            config=subagent_runnable_config,
         ):
             stream_mode, payload = event
 
             if stream_mode == "custom":
-                # Propagate custom events to parent stream
                 writer(payload)
             elif stream_mode == "messages":
                 chunk, metadata = payload
+
+                if metadata.get("silent"):
+                    continue
 
                 if chunk and isinstance(chunk, AIMessageChunk):
                     content = str(chunk.content)

@@ -123,5 +123,7 @@ class SubAgentFactory:
             store=store, name=name, checkpointer=checkpointer
         )
 
-        logger.info(f"Successfully created {provider} sub-agent graph with checkpointer")
+        logger.info(
+            f"Successfully created {provider} sub-agent graph with checkpointer"
+        )
         return subagent_graph

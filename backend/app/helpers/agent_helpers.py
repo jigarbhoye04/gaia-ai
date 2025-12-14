@@ -34,6 +34,7 @@ def build_agent_config(
     conversation_id: str,
     user: dict,
     user_time: datetime,
+    agent_name: str,
     user_model_config: Optional[ModelConfig] = None,
     usage_metadata_callback: Optional[UsageMetadataCallbackHandler] = None,
     thread_id: Optional[str] = None,
@@ -111,6 +112,7 @@ def build_agent_config(
         "recursion_limit": 25,
         "metadata": {"user_id": user.get("user_id")},
         "callbacks": callbacks,
+        "agent_name": agent_name,
     }
 
     return config
@@ -258,6 +260,9 @@ async def execute_graph_streaming(
 
         if stream_mode == "messages":
             chunk, metadata = payload
+            if metadata.get("silent"):
+                continue
+
             if chunk and isinstance(chunk, AIMessageChunk):
                 content = str(chunk.content)
                 tool_calls = chunk.tool_calls
@@ -270,7 +275,7 @@ async def execute_graph_streaming(
                             yield format_sse_data(progress_data)
 
                 # Only yield content from main agent to avoid duplication
-                if content and not metadata.get("silent"):
+                if content and metadata.get("agent_name") == "comms_agent":
                     yield format_sse_response(content)
                     complete_message += content
 

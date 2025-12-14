@@ -169,6 +169,7 @@ def get_user_id_from_config(config: RunnableConfig) -> str:
 
     return user_id
 
+
 def get_user_name_from_config(config: RunnableConfig) -> str:
     """Extract user name from the config."""
     if not config:
