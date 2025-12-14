@@ -116,7 +116,7 @@ def get_retrieve_tools_function(
         if include_subagents:
             tool_results, subagent_results = await asyncio.gather(
                 store.asearch((tool_space,), query=query, limit=limit),
-                store.asearch(("subagents",), query=query, limit=5),
+                store.asearch(("subagents",), query=query, limit=10),
             )
         else:
             tool_results = await store.asearch((tool_space,), query=query, limit=limit)
@@ -135,7 +135,7 @@ def get_retrieve_tools_function(
 
         discovered_tools = [r["id"] for r in all_results]
         return RetrieveToolsResult(
-            tools_to_bind=[],  # Discovery mode: don't bind, just show
+            tools_to_bind=[],
             response=discovered_tools,
         )
 

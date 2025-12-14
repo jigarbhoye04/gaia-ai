@@ -101,7 +101,6 @@ class SubAgentFactory:
                     "retrieve_tools_coroutine": get_retrieve_tools_function(
                         tool_space=tool_space,
                         include_subagents=False,
-                        limit=25,
                     ),
                     "initial_tool_ids": [search_memory.name],
                 }
