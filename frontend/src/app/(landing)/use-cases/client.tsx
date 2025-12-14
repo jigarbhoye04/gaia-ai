@@ -7,7 +7,7 @@ import FinalSection from "@/features/landing/components/sections/FinalSection";
 import PublishWorkflowCTA from "@/features/use-cases/components/PublishWorkflowCTA";
 import UseCaseSection from "@/features/use-cases/components/UseCaseSection";
 import type { CommunityWorkflow } from "@/features/workflows/api/workflowApi";
-import CommunityWorkflowCard from "@/features/workflows/components/CommunityWorkflowCard";
+import UnifiedWorkflowCard from "@/features/workflows/components/shared/UnifiedWorkflowCard";
 
 interface UseCasesPageClientProps {
   communityWorkflows: CommunityWorkflow[];
@@ -30,9 +30,7 @@ export default function UseCasesPageClient({
             Practical use cases showing how GAIA works for you
           </p>
         </div>
-
-        <UseCaseSection dummySectionRef={contentRef} />
-
+        <UseCaseSection dummySectionRef={contentRef} useBlurEffect={true} />
         <div id="community-section" className="mt-22 space-y-6">
           <div className="mb-14 text-center">
             <h1 className="mb-1 font-serif text-6xl font-normal">
@@ -49,12 +47,15 @@ export default function UseCasesPageClient({
               </div>
             </div>
           ) : (
-            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
               {communityWorkflows.map((workflow) => (
-                <CommunityWorkflowCard
+                <UnifiedWorkflowCard
                   key={workflow.id}
-                  workflow={workflow}
-                  onClick={() => {
+                  communityWorkflow={workflow}
+                  useBlurEffect={true}
+                  variant="community"
+                  showCreator={true}
+                  onCardClick={() => {
                     router.push(`/use-cases/${workflow.id}`);
                   }}
                 />

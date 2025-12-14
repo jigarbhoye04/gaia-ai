@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, useEffect } from "react";
+import { AnimatedLazySection } from "@/components/shared/AnimatedSection";
 
-import SuspenseLoader from "@/components/shared/SuspenseLoader";
+import HeroImage from "@/features/landing/components/hero/HeroImage";
 import HeroSection from "@/features/landing/components/hero/HeroSection";
 import CommunitySection from "@/features/landing/components/sections/CommunitySection";
 import ProductivityOS from "@/features/landing/components/sections/ProductivityOS";
@@ -56,18 +56,7 @@ export default function LandingPageClient() {
     // <ReactLenis root>
     <div className="relative overflow-hidden">
       <div className="absolute inset-0 h-screen w-full">
-        <Image
-          src={"/images/wallpapers/switzerland_night.webp"}
-          // src={
-          //   // "https://i.pinimg.com/1200x/12/91/13/129113c772cac2f5dd337c1ea306ddcb.jpg"
-          //   "https://i.pinimg.com/1200x/a7/aa/c7/a7aac749d7a7dc6edb92f3c13e80a53a.jpg"
-          // }
-          alt="GAIA Hero Section Wallpaper"
-          sizes="100vw"
-          priority
-          fill
-          className="aspect-video object-cover opacity-90"
-        />
+        <HeroImage shouldHaveInitialFade />
         <div className="pointer-events-none absolute inset-x-0 -top-20 z-10 h-[30vh] bg-gradient-to-b from-background to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[30vh] bg-gradient-to-t from-background to-transparent" />
       </div>
@@ -86,9 +75,7 @@ export default function LandingPageClient() {
       </section>
       <div>
         <div className="relative">
-          <Suspense fallback={<SuspenseLoader />}>
-            <Tired />
-          </Suspense>
+          <AnimatedLazySection component={Tired} delay={0.1} />
 
           <div
             className="absolute top-140 z-0 h-[120vh] w-screen blur-lg"
@@ -101,45 +88,29 @@ export default function LandingPageClient() {
           />
         </div>
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <ProductivityOS />
-        </Suspense>
+        <AnimatedLazySection component={ProductivityOS} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <AllYourTools />
-        </Suspense>
+        <AnimatedLazySection component={AllYourTools} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <WorkflowSection />
-        </Suspense>
+        <AnimatedLazySection component={WorkflowSection} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <AutomateDailyChaos />
-        </Suspense>
+        <AnimatedLazySection component={AutomateDailyChaos} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <Personalised />
-        </Suspense>
+        <AnimatedLazySection component={Personalised} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <TestimonialsSection />
-        </Suspense>
+        <AnimatedLazySection component={TestimonialsSection} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <OpenSource />
-        </Suspense>
+        <AnimatedLazySection component={OpenSource} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <FAQAccordion />
-        </Suspense>
+        <AnimatedLazySection component={FAQAccordion} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <CommunitySection />
-        </Suspense>
+        <AnimatedLazySection component={CommunitySection} delay={0.2} />
 
-        <Suspense fallback={<SuspenseLoader />}>
-          <FinalSection showSocials={false} />
-        </Suspense>
+        <AnimatedLazySection
+          component={FinalSection}
+          componentProps={{ showSocials: false }}
+          delay={0.2}
+        />
       </div>
     </div>
     // </ReactLenis>

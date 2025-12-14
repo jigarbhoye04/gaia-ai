@@ -101,8 +101,13 @@ export const useCalendarStore = create<CalendarStore>()(
 
         setCalendars: (calendars) => set({ calendars }, false, "setCalendars"),
 
-        setSelectedCalendars: (selectedCalendars) =>
-          set(
+        setSelectedCalendars: (selectedCalendars) => {
+          console.log(
+            "[Calendar Store] setSelectedCalendars called with:",
+            selectedCalendars.length,
+            "calendars",
+          );
+          return set(
             {
               selectedCalendars,
               // Clear loaded ranges when calendars are set
@@ -112,7 +117,8 @@ export const useCalendarStore = create<CalendarStore>()(
             },
             false,
             "setSelectedCalendars",
-          ),
+          );
+        },
 
         toggleCalendarSelection: (calendarId) =>
           set(

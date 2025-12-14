@@ -90,7 +90,7 @@ class ToolInfo:
 class ToolRegistry:
     """Modern tool registry with category-based organization."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._categories: Dict[str, ToolCategory] = {}
 
     async def setup(self):
