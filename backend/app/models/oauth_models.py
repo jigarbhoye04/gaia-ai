@@ -84,6 +84,9 @@ class SubAgentConfig(BaseModel):
     capabilities: str
     use_cases: str
     system_prompt: str
+    use_direct_tools: bool = False
+    disable_retrieve_tools: bool = False
+    specific_tools: Optional[List[str]] = None
 
 
 class OAuthIntegration(BaseModel):

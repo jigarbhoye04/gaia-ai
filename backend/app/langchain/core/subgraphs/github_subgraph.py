@@ -16,13 +16,11 @@ from app.agents.prompts.github_node_prompts import (
     REPOSITORY_MANAGEMENT_PROMPT,
 )
 from app.config.loggers import langchain_logger as logger
-from app.config.oauth_config import get_integration_by_id
 from app.langchain.core.framework.plan_and_execute import (
     OrchestratorNodeConfig,
     OrchestratorSubgraphConfig,
     build_orchestrator_subgraph,
 )
-from app.services.composio.composio_service import get_composio_service
 from langchain_core.language_models import LanguageModelLike
 from langgraph.graph.state import CompiledStateGraph
 
@@ -148,6 +146,8 @@ GITHUB_TOOLS = (
 
 async def get_node_configs() -> Sequence[OrchestratorNodeConfig]:
     """Get the list of GitHub node configurations."""
+    from app.services.composio.composio_service import get_composio_service
+
     composio_service = get_composio_service()
 
     (
@@ -250,6 +250,8 @@ async def create_github_subgraph(
         CompiledStateGraph with automatic message filtering and cleanup
     """
     logger.info("Creating GitHub subgraph using plan-and-execute framework")
+
+    from app.config.oauth_config import get_integration_by_id
 
     integration = get_integration_by_id("github")
     if not integration or not integration.subagent_config:
