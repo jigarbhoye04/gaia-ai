@@ -6,7 +6,7 @@ import { Tooltip } from "@heroui/tooltip";
 interface MenuItem {
   key: string;
   label: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   action: () => void;
 }
 

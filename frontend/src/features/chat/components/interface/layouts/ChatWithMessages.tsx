@@ -25,8 +25,8 @@ interface ChatWithMessagesProps {
     onDroppedFilesProcessed: () => void;
     hasMessages: boolean;
     conversationId?: string;
+    voiceModeActive: () => void;
   };
-  voiceModeActive: () => void;
 }
 
 export const ChatWithMessages: React.FC<ChatWithMessagesProps> = ({
@@ -35,7 +35,6 @@ export const ChatWithMessages: React.FC<ChatWithMessagesProps> = ({
   handleScroll,
   dragHandlers,
   composerProps,
-  voiceModeActive,
 }) => {
   return (
     <div className="flex h-full flex-col">
@@ -50,7 +49,7 @@ export const ChatWithMessages: React.FC<ChatWithMessagesProps> = ({
       </div>
       {/* Fixed composer at bottom */}
       <div className="flex-shrink-0 pb-2">
-        <Composer {...composerProps} voiceModeActive={voiceModeActive} />
+        <Composer {...composerProps} />
       </div>
     </div>
   );

@@ -96,7 +96,7 @@ export default function RightSide({
 
   return (
     <div className="ml-2 flex items-center gap-2">
-      {/* <Tooltip content="Voice Mode" placement="left" color="primary" showArrow>
+      <Tooltip content="Voice Mode" placement="left" color="primary" showArrow>
         <Button
           isIconOnly
           aria-label="Voice Mode"
@@ -108,7 +108,7 @@ export default function RightSide({
         >
           <AudioWaveIcon className="text-zinc-400" />
         </Button>
-      </Tooltip> */}
+      </Tooltip>
 
       <Tooltip
         content={getTooltipContent()}

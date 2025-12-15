@@ -1,11 +1,9 @@
 import { Button, type ButtonProps } from "@heroui/button";
 import Link from "next/link";
-import type { ReactNode } from "react";
 
-interface LinkButtonProps extends Omit<ButtonProps, "href" | "as"> {
+interface LinkButtonProps extends ButtonProps {
   href: string;
   external?: boolean;
-  children: ReactNode;
 }
 
 export function LinkButton({
@@ -16,33 +14,32 @@ export function LinkButton({
 }: LinkButtonProps) {
   if (external) {
     return (
-      <a
+      <Button
+        as={"a" as any}
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="no-underline"
-      >
-        <Button
-          variant="light"
-          className="text-md h-[30px] w-fit px-[9px] font-medium text-zinc-300"
-          {...props}
-        >
-          {children}
-        </Button>
-      </a>
-    );
-  }
-
-  return (
-    <Link href={href} className="no-underline">
-      <Button
         variant="light"
-        radius="sm"
-        className="text-md h-[30px] w-fit px-[9px] text-start font-medium text-zinc-300"
+        className="text-md font-medium text-zinc-300"
+        style={{ padding: "9px", height: "30px", width: "fit-content" }}
         {...props}
       >
         {children}
       </Button>
-    </Link>
+    );
+  }
+
+  return (
+    <Button
+      as={Link as any}
+      href={href}
+      variant="light"
+      radius="sm"
+      style={{ padding: "9px", height: "30px", width: "fit-content" }}
+      className="text-md text-start font-medium text-zinc-300"
+      {...props}
+    >
+      {children}
+    </Button>
   );
 }

@@ -1,7 +1,7 @@
 import { Button } from "@heroui/button";
 import type React from "react";
 import { useState } from "react";
-import { ArrowDown02Icon, ChevronUp } from "@/components";
+import { ChevronUp } from "@/components";
 import UseCaseSection from "@/features/use-cases/components/UseCaseSection";
 import { NewChatSection } from "../sections";
 
@@ -26,8 +26,8 @@ interface NewChatLayoutProps {
     droppedFiles: File[];
     onDroppedFilesProcessed: () => void;
     hasMessages: boolean;
+    voiceModeActive: () => void;
   };
-  voiceModeActive: () => void;
 }
 
 export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
@@ -36,7 +36,6 @@ export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
   handleScroll,
   dragHandlers,
   composerProps,
-  voiceModeActive,
 }) => {
   const [showUseCases, setShowUseCases] = useState(false);
 
@@ -50,7 +49,6 @@ export const NewChatLayout: React.FC<NewChatLayoutProps> = ({
       <div className="flex w-full flex-col items-center gap-10 px-4 pb-10">
         <NewChatSection
           composerProps={composerProps}
-          voiceModeActive={voiceModeActive}
           showUseCases={showUseCases}
         />
 

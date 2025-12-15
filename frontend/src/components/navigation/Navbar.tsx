@@ -136,6 +136,7 @@ export default function Navbar() {
                       ? "text-primary"
                       : "text-zinc-300 hover:text-zinc-100"
                   }`}
+                  as={Link}
                   href={href}
                   startContent={icon}
                   external={external}

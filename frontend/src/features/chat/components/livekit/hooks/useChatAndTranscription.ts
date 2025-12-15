@@ -7,7 +7,7 @@ import {
 } from "@livekit/components-react";
 import { useMemo } from "react";
 
-import { transcriptionToChatMessage } from "@/features/chat/components/livekit/lib/utils";
+import { transcriptionToChatMessage } from "@/features/chat/utils/voiceUtils";
 import type { MessageType } from "@/types/features/convoTypes";
 
 export default function useChatAndTranscription() {

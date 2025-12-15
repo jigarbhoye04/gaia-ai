@@ -26,7 +26,7 @@ import { accordionItemStyles } from "../constants";
 
 type MenuItem = {
   label: string;
-  icon: React.ElementType | (() => React.JSX.Element);
+  icon: React.ComponentType<any>;
   href: string;
   count?: number;
 };

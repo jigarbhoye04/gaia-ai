@@ -43,7 +43,7 @@ export type ModalAction = "clear_chats" | "logout";
 interface MenuItem {
   key: string;
   label: string;
-  icon?: React.ElementType;
+  icon?: React.ComponentType<any>;
   href?: string;
   action?: () => void;
   color?: "danger" | "default";
