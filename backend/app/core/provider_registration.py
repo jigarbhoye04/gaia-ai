@@ -28,6 +28,7 @@ from app.agents.tools.core.registry import init_tool_registry
 from app.agents.tools.core.store import init_embeddings
 from app.config.cloudinary import init_cloudinary
 from app.config.loggers import app_logger as logger
+from app.config.opik import init_opik
 from app.config.posthog import init_posthog
 from app.core.lazy_loader import providers
 from app.db.chromadb.chroma_tools_store import initialize_chroma_tools_store
@@ -97,6 +98,7 @@ async def unified_startup(context: Literal["main_app", "arq_worker"]) -> None:
     validate_startup_requirements()
     # setup_event_loop_policy()
     init_posthog()
+    init_opik()
     logger.info(f"All lazy providers registered successfully for {context}")
 
     # Define eager services (must be ready before processing requests/tasks)

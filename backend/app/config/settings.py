@@ -202,6 +202,8 @@ class ProductionSettings(CommonSettings):
     # ----------------------------------------------
     SENTRY_DSN: str
     POSTHOG_API_KEY: str
+    OPIK_API_KEY: str
+    OPIK_WORKSPACE: str
 
     model_config = SettingsConfigDict(
         env_file_encoding="utf-8",
@@ -295,6 +297,8 @@ class DevelopmentSettings(CommonSettings):
     # ----------------------------------------------
     SENTRY_DSN: Optional[str] = None
     POSTHOG_API_KEY: Optional[str] = None
+    OPIK_API_KEY: Optional[str] = None
+    OPIK_WORKSPACE: Optional[str] = None
 
     # ----------------------------------------------
     # Environment Configuration
