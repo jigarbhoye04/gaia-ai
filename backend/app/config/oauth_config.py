@@ -496,7 +496,7 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
         managed_by="composio",
         composio_config=ComposioConfig(
             auth_config_id="ac_vy6NqsFlzLuO",
-            toolkit="GOOGLEMAPS",
+            toolkit="GOOGLE_MAPS",
         ),
         subagent_config=SubAgentConfig(
             has_subagent=True,

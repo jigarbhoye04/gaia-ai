@@ -1,3 +1,4 @@
+import asyncio
 from functools import cache
 from typing import Dict, List, Optional
 
@@ -20,6 +21,8 @@ from app.agents.tools import (
     weather_tool,
     webpage_tool,
 )
+from app.config.loggers import langchain_logger as logger
+from app.config.settings import settings
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
 from langchain_core.tools import BaseTool
 
@@ -95,6 +98,9 @@ class ToolRegistry:
 
     async def setup(self):
         await self._initialize_categories()
+
+        if settings.ENV == "production":
+            await self.load_all_provider_tools()
 
     def _add_category(
         self,
@@ -180,7 +186,6 @@ class ToolRegistry:
         if toolkit_name in self._categories:
             return self._categories[toolkit_name]
 
-        from app.config.loggers import langchain_logger as logger
         from app.services.composio.composio_service import get_composio_service
 
         logger.info(
@@ -207,6 +212,48 @@ class ToolRegistry:
 
         logger.info(f"Registered {len(tools)} tools for {toolkit_name}")
         return self._categories[toolkit_name]
+
+    async def load_all_provider_tools(self):
+        """
+        Load all provider tools from OAuth integrations.
+        This method loads tools for all integrations managed by composio
+        that have subagent configurations and syncs them to the store.
+        Tools are loaded in parallel for better performance.
+        """
+        from app.config.oauth_config import OAUTH_INTEGRATIONS
+
+        async def load_provider(integration):
+            toolkit_name = integration.composio_config.toolkit
+            space_name = integration.subagent_config.tool_space
+            specific_tools = integration.subagent_config.specific_tools
+
+            # Skip if already loaded
+            if toolkit_name in self._categories:
+                return
+
+            try:
+                await self.register_provider_tools(
+                    toolkit_name=toolkit_name,
+                    space_name=space_name,
+                    specific_tools=specific_tools,
+                )
+            except Exception as e:
+                logger.error(f"Failed to load provider tools for {toolkit_name}: {e}")
+
+        # Collect all integrations that need loading
+        integrations_to_load = [
+            integration
+            for integration in OAUTH_INTEGRATIONS
+            if (
+                integration.managed_by == "composio"
+                and integration.composio_config
+                and integration.subagent_config
+                and integration.subagent_config.has_subagent
+            )
+        ]
+
+        # Load all providers in parallel
+        await asyncio.gather(*[load_provider(i) for i in integrations_to_load])
 
     async def _index_category_tools(self, category_name: str):
         """Index tools from a category into ChromaDB store."""
