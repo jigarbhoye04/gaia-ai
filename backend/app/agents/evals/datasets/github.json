@@ -1,0 +1,162 @@
+{
+  "name": "Github Capabilities",
+  "description": "Evaluation dataset for GitHub subagent capabilities including PRs, issues, commits, and repository operations",
+  "version": "1.0.0",
+  "subagent": "github_agent",
+  "integration_id": "github",
+  "items": [
+    {
+      "input": "Create a pull request from my latest feature branch into develop with a proper description.",
+      "expected_output": "Pull request created successfully from feature branch to develop with description.",
+      "context": "User wants to create a PR merging their feature work into the develop branch",
+      "tags": ["pull_request", "create"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Show me all open pull requests that haven't been reviewed yet.",
+      "expected_output": "List of open pull requests without reviews displayed.",
+      "context": "User wants to see PRs pending review",
+      "tags": ["pull_request", "list", "filter"],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "input": "Request reviews from aryanranderiya on the PR I just opened.",
+      "expected_output": "Review requests sent to Aryan on the pull request.",
+      "context": "User wants to request reviews from specific team members",
+      "tags": ["pull_request", "review", "collaboration"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "List all files changed in PR #4 and summarize what areas were touched.",
+      "expected_output": "List of changed files in PR #4 with summary of affected areas.",
+      "context": "User wants to understand the scope of changes in a specific PR",
+      "tags": ["pull_request", "files", "analysis"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Add a review comment asking for tests on the database changes in the PR.",
+      "expected_output": "Review comment added requesting tests for database changes.",
+      "context": "User wants to add a specific review comment about testing",
+      "tags": ["pull_request", "review", "comment"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Merge the PR using squash merge if it's mergeable.",
+      "expected_output": "Pull request merged using squash merge.",
+      "context": "User wants to merge PR with squash strategy",
+      "tags": ["pull_request", "merge"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "List all commits included in this pull request.",
+      "expected_output": "List of commits in the pull request displayed.",
+      "context": "User wants to see commit history for a PR",
+      "tags": ["pull_request", "commits"],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "input": "Create an issue for a login bug and assign it to aryanranderiya.",
+      "expected_output": "Issue created for login bug and assigned to auth owner.",
+      "context": "User wants to create and assign an issue to the right person",
+      "tags": ["issue", "create", "assign"],
+      "metadata": {
+        "difficulty": "hard"
+      }
+    },
+    {
+      "input": "Add a 'bug' and 'high priority' label to the issue.",
+      "expected_output": "Labels 'bug' and 'high priority' added to the issue.",
+      "context": "User wants to categorize and prioritize an issue",
+      "tags": ["issue", "label", "prioritize"],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "input": "Lock this issue since it's resolved and discussions are getting noisy.",
+      "expected_output": "Issue locked successfully.",
+      "context": "User wants to prevent further comments on resolved issue",
+      "tags": ["issue", "lock", "moderation"],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "input": "Show me all open issues assigned to me.",
+      "expected_output": "List of open issues assigned to the user displayed.",
+      "context": "User wants to see their assigned work",
+      "tags": ["issue", "list", "filter", "assigned"],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "input": "Create a new label called 'tech debt' with a gray color.",
+      "expected_output": "New label 'tech debt' with gray color created.",
+      "context": "User wants to create a custom label for categorization",
+      "tags": ["label", "create"],
+      "metadata": {
+        "difficulty": "easy"
+      }
+    },
+    {
+      "input": "Replace all labels on this issue with 'enhancement' and 'backend'.",
+      "expected_output": "Issue labels replaced with 'enhancement' and 'backend'.",
+      "context": "User wants to completely change the labels on an issue",
+      "tags": ["issue", "label", "replace"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Check if this user can be assigned to issues in this repo and assign them.",
+      "expected_output": "User assignment checked and assigned to issue.",
+      "context": "User wants to verify permissions before assigning",
+      "tags": ["issue", "assign", "permissions"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Compare the last two commits on the main branch and show what changed.",
+      "expected_output": "Comparison of last two commits on main branch shown.",
+      "context": "User wants to see recent changes to main branch",
+      "tags": ["commit", "compare", "diff"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Find which branches contain this specific commit.",
+      "expected_output": "Branches containing the specific commit listed.",
+      "context": "User wants to know where a commit exists",
+      "tags": ["commit", "branch", "search"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    },
+    {
+      "input": "Fork cal.com repository to my account and add aryanranderiya as a collaborator.",
+      "expected_output": "Repository forked and collaborator added.",
+      "context": "User wants to fork and set up collaboration",
+      "tags": ["repository", "fork", "collaboration"],
+      "metadata": {
+        "difficulty": "medium"
+      }
+    }
+  ]
+}
