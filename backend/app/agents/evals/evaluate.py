@@ -229,7 +229,11 @@ class SubagentEvaluator:
         """Run subagent and capture trajectory."""
         runnable_config = build_agent_config(
             conversation_id=f"eval_{self.config.id}_{datetime.now().timestamp()}",
-            user={"user_id": "eval_user", "email": "eval@test.com", "name": "Eval"},
+            user={
+                "user_id": "691f716ce014f3ad5e8dc9a6",
+                "email": "dhruvmaradiya0@gmail.com",
+                "name": "Dhruv",
+            },
             user_time=datetime.now(),
             agent_name=self.config.agent_name,
         )
