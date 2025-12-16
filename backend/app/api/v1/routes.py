@@ -32,7 +32,7 @@ from app.api.v1.endpoints import (
     webhook_composio,
     websocket,
     workflows,
-    voice_token
+    voice_token,
 )
 from fastapi import APIRouter
 

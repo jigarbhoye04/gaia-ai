@@ -9,7 +9,9 @@ from app.api.v1.dependencies.oauth_dependencies import (
 from app.api.v1.middleware.agent_auth import create_agent_token
 
 from fastapi import APIRouter, Depends
+
 router = APIRouter()
+
 
 @router.get("/token")
 def get_token(
