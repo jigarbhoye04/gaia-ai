@@ -44,51 +44,78 @@ def get_retrieve_tools_function(
     ) -> RetrieveToolsResult:
         """Discover available tools or load specific tools by exact name.
 
-        This is your primary tool for working with the tool ecosystem. It has two modes:
+        This is your primary interface to the tool ecosystem. It supports TWO modes:
 
-        **DISCOVERY MODE** (use `query` parameter):
-        Search for tools using natural language. Returns matching tool names without loading them.
-        Use this to explore what tools are available before deciding which to load.
+        --------------------------------
+        DISCOVERY MODE (query)
+        --------------------------------
+        Use natural language to semantically search for relevant tools.
 
-        **BINDING MODE** (use `exact_tool_names` parameter):
-        Load specific tools by their exact names. The tools become available for use.
-        Use this after discovering tool names or when you know exact names from the system prompt.
+        IMPORTANT BEHAVIOR:
+        - Discovery results are LIMITED and NOT exhaustive
+        - Not all relevant tools may be returned in a single query
+        - Absence of a tool in results does NOT mean it does not exist
+        - You are expected to retry with different wording if needed
 
-        WORKFLOW:
-        1. Call retrieve_tools(query="your intent") to discover available tools
-        2. Review the returned tool names
-        3. Call retrieve_tools(exact_tool_names=["tool1", "tool2"]) to load specific tools
-        4. Use the loaded tools to complete the task
+        You may:
+        - Rephrase queries
+        - Try broader or narrower intent
+        - Use multiple intents in a single query (comma-separated)
 
-        TOOL NAME FORMATS:
-        - Regular tools: Exact names like "web_search_tool", "create_todo", "GMAIL_SEND_DRAFT"
-        - Subagent tools: Prefixed with "subagent:" like "subagent:gmail", "subagent:notion"
-          Note: Subagents require using the `handoff` tool to delegate tasks
+        Examples of valid queries:
+        - "send email"
+        - "email operations"
+        - "send email, delete draft"
+        - "create pull request, list branches"
+
+        The query is semantic, not keyword-based. Comma-separated intents
+        are treated as a single semantic search and are encouraged when
+        exploring related capabilities.
+
+        Discovery mode ONLY returns tool names. Tools are NOT loaded.
+
+        --------------------------------
+        BINDING MODE (exact_tool_names)
+        --------------------------------
+        Load tools by their exact names.
+
+        - Use this ONLY after discovery or when exact names are already known
+        - Invalid or unknown tool names are ignored
+        - Successfully validated tools become available for execution
+
+        --------------------------------
+        RECOMMENDED WORKFLOW
+        --------------------------------
+        1. Call retrieve_tools(query="your intent") to discover tools
+        2. Review returned tool names
+        3. Retry discovery with alternate queries if needed
+        4. Call retrieve_tools(exact_tool_names=[...]) to bind tools
+        5. Execute bound tools
+
+        --------------------------------
+        TOOL NAME FORMATS
+        --------------------------------
+        - Regular tools: "GMAIL_SEND_DRAFT", "CREATE_TODO"
+        - Subagent tools: "subagent:gmail", "subagent:notion"
+
+        Note:
+        - Subagent tools require delegation via the `handoff` tool
+        - Discovery may return subagents alongside regular tools
 
         Args:
-            query: Natural language description for tool discovery.
-                   Examples: "email operations", "calendar management", "social media posting"
-                   When provided, returns semantically matching tool names (not loaded).
+            query:
+                Natural language description of intent for discovery.
+                Results are limited and best-effort.
+                Retry with different phrasing if needed.
 
-            exact_tool_names: List of exact tool names to load and make available.
-                             Examples: ["GMAIL_SEND_DRAFT", "GMAIL_CREATE_EMAIL_DRAFT"]
-                             When provided, validates and loads these specific tools.
+            exact_tool_names:
+                Exact tool names to load and bind for execution.
 
         Returns:
-            Dict with 'tools_to_bind' (tools to load) and 'response' (names to show).
-            In discovery mode: tools_to_bind=[], response=[discovered names]
-            In binding mode: tools_to_bind=[validated tools], response=[validated tools]
+            RetrieveToolsResult with:
+            - tools_to_bind: tools that are loaded and executable
+            - response: tool names discovered or validated
 
-        Examples:
-            # Discovery: Find email-related tools (tools NOT loaded, just listed)
-            result = await retrieve_tools(query="send email")
-            # result['response'] = ["GMAIL_SEND_DRAFT", "subagent:gmail", ...]
-            # result['tools_to_bind'] = []  # Nothing bound yet
-
-            # Binding: Load specific tools (tools ARE loaded)
-            result = await retrieve_tools(exact_tool_names=["GMAIL_SEND_DRAFT"])
-            # result['tools_to_bind'] = ["GMAIL_SEND_DRAFT"]  # Now bound
-            # result['response'] = ["GMAIL_SEND_DRAFT"]  # Confirmation
         """
         from app.agents.tools.core.registry import get_tool_registry
 

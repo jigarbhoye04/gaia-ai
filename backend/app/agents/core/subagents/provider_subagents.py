@@ -10,6 +10,8 @@ Configuration comes from oauth_config.py OAUTH_INTEGRATIONS.
 Tools are registered on-demand when subagent is first created.
 """
 
+from typing import Optional
+
 from app.agents.llm.client import init_llm
 from app.agents.tools.core.registry import get_tool_registry
 from app.config.loggers import langchain_logger as logger
@@ -67,10 +69,17 @@ async def create_subagent(integration_id: str):
     return graph
 
 
-def register_subagent_providers():
+def register_subagent_providers(integration_ids: Optional[list[str]] = None) -> int:
     """
-    Register lazy providers for all subagents from oauth_config.
+    Register lazy providers for subagents from oauth_config.
     Subagents are created on-demand when first accessed via providers.
+
+    Args:
+        integration_ids: Optional list of specific integration IDs to register.
+                        If None, registers all subagents.
+
+    Returns:
+        Number of registered subagent providers.
     """
     registered_count = 0
 
@@ -81,10 +90,14 @@ def register_subagent_providers():
         ):
             continue
 
+        # Skip if not in the requested list (when list is provided)
+        if integration_ids is not None and integration.id not in integration_ids:
+            continue
+
         agent_name = integration.subagent_config.agent_name
         integration_id = integration.id
 
-        async def create_agent_closure(int_id=integration_id):
+        async def create_agent_closure(int_id: str = integration_id):
             return await create_subagent(int_id)
 
         providers.register(
@@ -95,3 +108,4 @@ def register_subagent_providers():
         registered_count += 1
 
     logger.info(f"Registered {registered_count} subagent lazy providers")
+    return registered_count

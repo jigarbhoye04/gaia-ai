@@ -10,6 +10,13 @@ import json
 from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
 
+from langchain_core.callbacks import BaseCallbackHandler, UsageMetadataCallbackHandler
+from langchain_core.messages import AIMessageChunk
+from langsmith import traceable
+from opik.integrations.langchain import OpikTracer
+from posthog.ai.langchain import CallbackHandler as PostHogCallbackHandler
+
+from app.config.settings import settings
 from app.constants.llm import (
     DEFAULT_LLM_PROVIDER,
     DEFAULT_MAX_TOKENS,
@@ -24,10 +31,6 @@ from app.utils.agent_utils import (
     process_custom_event_for_tools,
     store_agent_progress,
 )
-from langchain_core.callbacks import BaseCallbackHandler, UsageMetadataCallbackHandler
-from langchain_core.messages import AIMessageChunk
-from langsmith import traceable
-from posthog.ai.langchain import CallbackHandler as PostHogCallbackHandler
 
 
 def build_agent_config(
@@ -58,7 +61,18 @@ def build_agent_config(
         parameters, metadata, and recursion limits
     """
 
-    callbacks: list[BaseCallbackHandler] = []
+    callbacks: list[BaseCallbackHandler] = [
+        OpikTracer(
+            tags=["langchain", settings.ENV],
+            thread_id=conversation_id,
+            metadata={
+                "user_id": user.get("user_id"),
+                "conversation_id": conversation_id,
+                "agent_name": agent_name,
+            },
+            project_name="GAIA",
+        )
+    ]
     posthog_client = providers.get("posthog")
 
     if posthog_client is not None:
@@ -66,10 +80,14 @@ def build_agent_config(
             PostHogCallbackHandler(
                 client=posthog_client,
                 distinct_id=user.get("user_id"),
-                properties={"conversation_id": conversation_id},
-                privacy_mode=True,
-            )
+                properties={
+                    "conversation_id": conversation_id,
+                    "agent_name": agent_name,
+                },
+                privacy_mode=False,
+            ),
         )
+
     if usage_metadata_callback:
         callbacks.append(usage_metadata_callback)
 
