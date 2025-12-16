@@ -35,6 +35,7 @@ from app.models.oauth_models import (
     ComposioConfig,
     OAuthIntegration,
     OAuthScope,
+    ProviderMetadataConfig,
     SubAgentConfig,
     TriggerConfig,
 )
@@ -177,6 +178,10 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             use_cases="posting tweets, engaging with content, managing followers, or analyzing Twitter activity",
             system_prompt=TWITTER_AGENT_SYSTEM_PROMPT,
         ),
+        metadata_config=ProviderMetadataConfig(
+            user_info_tool="TWITTER_USER_LOOKUP_ME",
+            username_field="data.data.username",
+        ),
     ),
     OAuthIntegration(
         id="googlesheets",
@@ -253,6 +258,10 @@ OAUTH_INTEGRATIONS: List[OAuthIntegration] = [
             use_cases="repository management, issue tracking, pull requests, code review, or any GitHub development task",
             system_prompt=GITHUB_AGENT_SYSTEM_PROMPT,
             specific_tools=GITHUB_TOOLS,
+        ),
+        metadata_config=ProviderMetadataConfig(
+            user_info_tool="GITHUB_GET_THE_AUTHENTICATED_USER",
+            username_field="data.login",
         ),
     ),
     OAuthIntegration(

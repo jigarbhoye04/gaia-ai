@@ -12,6 +12,9 @@ All metadata comes from oauth_config.py OAUTH_INTEGRATIONS.
 from datetime import datetime
 from typing import Annotated, List, Optional, TypedDict
 
+from app.agents.core.subagents.subagent_helpers import (
+    create_subagent_system_message,
+)
 from app.config.loggers import common_logger as logger
 from app.config.oauth_config import OAUTH_INTEGRATIONS, get_integration_by_id
 from app.core.lazy_loader import providers
@@ -22,7 +25,6 @@ from app.services.oauth_service import (
 from langchain_core.messages import (
     AIMessageChunk,
     HumanMessage,
-    SystemMessage,
 )
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -211,10 +213,10 @@ async def handoff(
             agent_name=agent_name,
         )
 
-        system_prompt = subagent_cfg.system_prompt or ""
-        system_message = SystemMessage(
-            content=system_prompt,
-            additional_kwargs={"visible_to": {agent_name}},
+        system_message = await create_subagent_system_message(
+            integration_id=integration.id,
+            agent_name=agent_name,
+            user_id=user_id,
         )
 
         initial_state = {

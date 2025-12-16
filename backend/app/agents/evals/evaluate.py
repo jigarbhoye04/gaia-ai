@@ -25,6 +25,9 @@ from typing import Any, Optional, TypeVar
 
 import nest_asyncio
 import opik
+from app.agents.core.subagents.subagent_helpers import (
+    build_subagent_system_prompt,
+)
 from app.agents.llm.client import init_llm
 from app.config.loggers import app_logger as logger
 from app.config.oauth_config import get_integration_by_id
@@ -262,9 +265,15 @@ class SubagentEvaluator:
             agent_name=self.config.agent_name,
         )
 
+        system_prompt_with_metadata = await build_subagent_system_prompt(
+            integration_id=self.config.integration_id,
+            user_id=runnable_config.get("configurable", {}).get("user_id"),
+            base_system_prompt=self.system_prompt,
+        )
+
         messages: list[BaseMessage] = [HumanMessage(content=query)]
-        if self.system_prompt:
-            messages.insert(0, SystemMessage(content=self.system_prompt))
+        if system_prompt_with_metadata:
+            messages.insert(0, SystemMessage(content=system_prompt_with_metadata))
 
         trajectory: list[dict[str, Any]] = []
         tool_calls: list[str] = []
@@ -367,6 +376,7 @@ class SubagentEvaluator:
             },
             project_name="GAIA",
             task_threads=1,
+            nb_samples=1,
         )
         logger.info(f"Evaluation complete: {experiment_name}")
         return eval_results
