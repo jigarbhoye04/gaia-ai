@@ -207,7 +207,7 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - livekit_models:/home/appuser/.cache/huggingface # Persist Hugging Face models between runs
+      - voice_agent_models:/home/appuser/.cache/huggingface
     restart: on-failure
     networks:
       - gaia_network
@@ -226,7 +226,7 @@ volumes:
   redis_data:
   mongo_data:
   rabbitmq_data:
-  livekit_models:
+  voice_agent_models:
 
 networks:
   gaia_network:

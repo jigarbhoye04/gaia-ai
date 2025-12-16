@@ -1,6 +1,6 @@
 import type {
-  AgentState as LivekitAgentState,
   TrackReference,
+  AgentState as VoiceAgentState,
 } from "@livekit/components-react";
 
 import {
@@ -12,12 +12,12 @@ import { cn } from "@/lib/utils";
 import { useAudioVolume } from "./hooks/useAudioVolume";
 
 interface AgentAudioTileProps {
-  state: LivekitAgentState;
+  state: VoiceAgentState;
   audioTrack: TrackReference;
   className?: string;
 }
 
-const mapAgentState = (livekitState: LivekitAgentState): OrbAgentState => {
+const mapAgentState = (livekitState: VoiceAgentState): OrbAgentState => {
   switch (livekitState) {
     case "listening":
       return "listening";

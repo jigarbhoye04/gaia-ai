@@ -237,12 +237,6 @@ backend = [
   "firecrawl>=4.6.0",
 ]
 
-# ─────────────── HEAVY ───────────────
-heavy = [
-  "langchain",
-  "langchain-community",
-]
-
 # ─────────────── VOICE AGENT ───────────────
 voice_agent = [
   "livekit>=1.0.12",

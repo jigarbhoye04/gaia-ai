@@ -168,7 +168,7 @@ class ProductionSettings(CommonSettings):
     COMPOSIO_KEY: str
     FIRECRAWL_API_KEY: str
 
-    # LIVEKIT Configuration
+    # Voice Agent Configuration
     LIVEKIT_URL: str
     LIVEKIT_API_KEY: str
     LIVEKIT_API_SECRET: str
@@ -275,7 +275,7 @@ class DevelopmentSettings(CommonSettings):
     COMPOSIO_WEBHOOK_SECRET: Optional[str] = None
     DODO_WEBHOOK_PAYMENTS_SECRET: Optional[str] = None
 
-    # LIVEKIT Configuration
+    # Voice Agent Configuration
     LIVEKIT_URL: Optional[str] = None
     LIVEKIT_API_KEY: Optional[str] = None
     LIVEKIT_API_SECRET: Optional[str] = None

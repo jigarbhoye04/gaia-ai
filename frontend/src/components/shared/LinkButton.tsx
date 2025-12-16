@@ -1,7 +1,7 @@
 import { Button, type ButtonProps } from "@heroui/button";
 import Link from "next/link";
 
-interface LinkButtonProps extends ButtonProps {
+interface LinkButtonProps extends Omit<ButtonProps, "as"> {
   href: string;
   external?: boolean;
 }
@@ -15,7 +15,7 @@ export function LinkButton({
   if (external) {
     return (
       <Button
-        as={"a" as any}
+        as={"a"}
         href={href}
         target="_blank"
         rel="noopener noreferrer"
@@ -31,7 +31,7 @@ export function LinkButton({
 
   return (
     <Button
-      as={Link as any}
+      as={Link}
       href={href}
       variant="light"
       radius="sm"

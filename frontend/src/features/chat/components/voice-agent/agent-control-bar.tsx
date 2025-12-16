@@ -7,8 +7,8 @@ import * as React from "react";
 import {
   type UseAgentControlBarProps,
   useAgentControlBar,
-} from "@/features/chat/components/livekit/hooks/use-agent-control-bar";
-import { TrackToggle } from "@/features/chat/components/livekit/track-toggle";
+} from "@/features/chat/components/voice-agent/hooks/use-agent-control-bar";
+import { TrackToggle } from "@/features/chat/components/voice-agent/track-toggle";
 import { Message01Icon, PhoneOffIcon } from "@/icons";
 import { cn } from "@/lib/utils";
 

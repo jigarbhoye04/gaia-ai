@@ -164,7 +164,7 @@ services:
     env_file:
       - ./backend/.env
     volumes:
-      - livekit_models:/root/.cache/huggingface
+      - voice_agent_models:/root/.cache/huggingface
     restart: always
     depends_on:
       gaia-backend:
@@ -176,7 +176,7 @@ volumes:
   chroma_data:
   pgdata:
   rabbitmq_data:
-  livekit_models:
+  voice_agent_models:
 
 networks:
   gaia_network:

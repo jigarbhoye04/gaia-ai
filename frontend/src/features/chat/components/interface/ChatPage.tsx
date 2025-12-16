@@ -91,7 +91,7 @@ const ChatPage = React.memo(function MainChat() {
     onDroppedFilesProcessed: () => setDroppedFiles([]),
     hasMessages,
     conversationId: convoIdParam,
-    voiceModeActive: () => setVoiceModeActive(true)
+    voiceModeActive: () => setVoiceModeActive(true),
   };
 
   return (
@@ -108,7 +108,6 @@ const ChatPage = React.memo(function MainChat() {
             handleScroll={handleScroll}
             dragHandlers={dragHandlers}
             composerProps={composerProps}
-            
           />
           <ScrollToBottomButton
             onScrollToBottom={scrollToBottom}

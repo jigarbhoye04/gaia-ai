@@ -9,9 +9,9 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import ChatRenderer from "@/features/chat/components/interface/ChatRenderer";
-import { AgentControlBar } from "@/features/chat/components/livekit/agent-control-bar";
-import useChatAndTranscription from "@/features/chat/components/livekit/hooks/useChatAndTranscription";
-import { MediaTiles } from "@/features/chat/components/livekit/media-tiles";
+import { AgentControlBar } from "@/features/chat/components/voice-agent/agent-control-bar";
+import useChatAndTranscription from "@/features/chat/components/voice-agent/hooks/useChatAndTranscription";
+import { MediaTiles } from "@/features/chat/components/voice-agent/media-tiles";
 import { db, type IMessage } from "@/lib/db/chatDb";
 import { cn } from "@/lib/utils";
 import type { MessageType } from "@/types/features/convoTypes";

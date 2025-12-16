@@ -11,8 +11,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import useConnectionDetails from "@/features/chat/components/livekit/hooks/useConnectionDetails";
-import { SessionView } from "@/features/chat/components/livekit/session-view";
+import useConnectionDetails from "@/features/chat/components/voice-agent/hooks/useConnectionDetails";
+import { SessionView } from "@/features/chat/components/voice-agent/session-view";
 
 const MotionSessionView = motion.create(SessionView);
 
