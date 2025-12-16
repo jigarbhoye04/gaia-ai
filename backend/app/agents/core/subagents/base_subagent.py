@@ -15,7 +15,6 @@ from app.agents.core.nodes import trim_messages_node
 from app.agents.core.nodes.delete_system_messages import (
     create_delete_system_messages_node,
 )
-from app.agents.core.nodes.filter_messages import create_filter_messages_node
 from app.agents.tools.core.retrieval import get_retrieve_tools_function
 from app.agents.tools.core.store import get_tools_store
 from app.agents.tools.memory_tools import search_memory
@@ -65,10 +64,6 @@ class SubAgentFactory:
             "tool_registry": tool_dict,
             "agent_name": name,
             "pre_model_hooks": [
-                create_filter_messages_node(
-                    agent_name=name,
-                    allow_memory_system_messages=True,
-                ),
                 trim_messages_node,
             ],
             "end_graph_hooks": [

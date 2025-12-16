@@ -18,16 +18,20 @@ Usage:
 import argparse
 import asyncio
 import json
+from collections.abc import Coroutine
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
+import nest_asyncio
 import opik
 from app.agents.llm.client import init_llm
 from app.config.loggers import app_logger as logger
 from app.config.oauth_config import get_integration_by_id
 from app.config.settings import settings
+from app.core.lazy_loader import providers
 from app.helpers.agent_helpers import build_agent_config
+from app.services.model_service import get_model_by_id
 from langchain_core.messages import (
     AIMessage,
     BaseMessage,
@@ -42,6 +46,28 @@ from opik.evaluation.metrics import base_metric, score_result
 from .config import SubagentEvalConfig, get_config, list_available_subagents
 from .initialization import init_eval_providers
 from .judge_prompts import SUBAGENT_EVALUATION_PROMPT
+
+T = TypeVar("T")
+
+# Apply nest_asyncio to allow nested event loops
+# This is needed because Opik's evaluate() is sync but we call it from an async context
+nest_asyncio.apply()
+
+
+def run_async(coro: Coroutine[Any, Any, T]) -> T:
+    """
+    Run an async coroutine from a sync context.
+
+    Uses nest_asyncio to allow nested event loops, which handles the case
+    where we're called from within an already-running event loop.
+    """
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
+
 
 EVALS_DIR = Path(__file__).parent
 
@@ -70,8 +96,7 @@ class LLMJudgeMetric(base_metric.BaseMetric):
         **kwargs: Any,
     ) -> score_result.ScoreResult:
         """Score using LLM judge - synchronous wrapper."""
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(
+        return run_async(
             self.async_score(
                 input=input,
                 output=output,
@@ -175,8 +200,6 @@ class SubagentEvaluator:
         # Initialize only required providers for this subagent
         await init_eval_providers(subagent_ids=[self.config.integration_id])
 
-        from app.core.lazy_loader import providers
-
         subagent = await providers.aget(self.config.agent_name)
         if not subagent:
             raise ValueError(f"Failed to load subagent: {self.config.agent_name}")
@@ -234,6 +257,7 @@ class SubagentEvaluator:
                 "email": "dhruvmaradiya0@gmail.com",
                 "name": "Dhruv",
             },
+            user_model_config=await get_model_by_id("gemini-2.0-flash"),
             user_time=datetime.now(),
             agent_name=self.config.agent_name,
         )
@@ -296,8 +320,7 @@ class SubagentEvaluator:
             expected = dataset_item["expected_output"]["answer"]
             context = dataset_item.get("metadata", {}).get("context", "")
 
-            loop = asyncio.get_event_loop()
-            output, trajectory, tool_calls, errors = loop.run_until_complete(
+            output, trajectory, tool_calls, errors = run_async(
                 evaluator._run_subagent(query)
             )
 
@@ -342,8 +365,9 @@ class SubagentEvaluator:
                 else "N/A",
                 "judge_prompt_version": self.judge_prompt.commit,
             },
+            project_name="GAIA",
+            task_threads=1,
         )
-
         logger.info(f"Evaluation complete: {experiment_name}")
         return eval_results
 
