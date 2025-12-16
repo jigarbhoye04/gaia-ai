@@ -36,9 +36,14 @@ description = "Run ONLY ARQ worker (without docker dependencies)"
 dir = "backend"
 run = "mise worker"
 
+[tasks."dev:voice"]
+description = "Run ONLY voice agent worker (without docker dependencies)"
+dir = "backend"
+run = "mise voice"
+
 [tasks."dev:full"]
-description = "Run backend + frontend + arq + docker"
-run = 'mprocs "mise dev:backend" "mise dev:frontend" "mise dev:arq" "docker compose up"'
+description = "Run backend + frontend + arq + voice + docker"
+run = 'mprocs "mise dev:backend" "mise dev:frontend" "mise dev:arq" "mise dev:voice" "docker compose up"'
 
 [tasks.dev]
 description = "Run backend + frontend + docker logs"
@@ -72,6 +77,11 @@ run = "mise deps"
 [tasks."setup:deps"]
 description = "Install all dependencies"
 depends = ["setup:backend", "setup:frontend"]
+
+[tasks."setup:voice"]
+description = "Download voice agent models (VAD, etc.)"
+dir = "backend"
+run = "mise voice:download"
 
 [tasks.setup]
 description = "Complete project setup"
