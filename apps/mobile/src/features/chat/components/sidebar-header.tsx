@@ -3,9 +3,10 @@
  * Logo and menu toggle for sidebar
  */
 
-import { Ionicons } from "@expo/vector-icons";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { ChatTheme } from '@/shared/constants/chat-theme';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 interface SidebarHeaderProps {
   onClose: () => void;
@@ -13,49 +14,20 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ onClose }: SidebarHeaderProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.logoContainer}>
+    <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-800">
+      <View className="flex-row items-center gap-2">
         <Image
-          source={require("@/assets/logo/logo.webp")}
-          style={styles.logo}
+          source={require('@/assets/logo/logo.webp')}
+          className="w-8 h-8"
           resizeMode="contain"
         />
-        <Text style={styles.logoText}>GAIA</Text>
+        <Text className="text-lg font-bold text-indigo-400 tracking-wider">
+          GAIA
+        </Text>
       </View>
-      <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+      <TouchableOpacity onPress={onClose} className="p-1">
         <Ionicons name="chevron-back" size={24} color={ChatTheme.textPrimary} />
       </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: ChatTheme.border,
-  },
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ChatTheme.spacing.sm,
-  },
-  logo: {
-    width: 32,
-    height: 32,
-  },
-  logoText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: ChatTheme.textPrimary,
-    letterSpacing: 1,
-    fontFamily: ChatTheme.fonts.bold,
-  },
-  closeButton: {
-    padding: ChatTheme.spacing.xs,
-  },
-});

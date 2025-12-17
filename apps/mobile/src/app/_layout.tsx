@@ -7,11 +7,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
-
+import { PortalHost } from '@rn-primitives/portal';
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
 import { AuthProvider } from '@/features/auth';
 import { ChatProvider } from '@/features/chat';
 import '../../global.css';
+
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -48,6 +49,7 @@ export default function RootLayout() {
             <Stack.Screen name="signup" options={{ headerShown: false }} />
             <Stack.Screen name="(chat)" options={{ headerShown: false }} />
           </Stack>
+          <PortalHost />
         </ChatProvider>
       </AuthProvider>
       <StatusBar style="auto" />
