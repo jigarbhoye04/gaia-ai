@@ -1,0 +1,14 @@
+{
+  "name": "docs",
+  "root": "apps/docs",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mintlify dev",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}
+
