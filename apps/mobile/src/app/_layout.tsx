@@ -1,28 +1,17 @@
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts,
-} from "@expo-google-fonts/inter";
-import {
-  RobotoMono_400Regular,
-  RobotoMono_500Medium,
-} from "@expo-google-fonts/roboto-mono";
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import "react-native-reanimated";
+import 'react-native-gesture-handler';
+import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold, useFonts } from '@expo-google-fonts/inter';
+import { RobotoMono_400Regular, RobotoMono_500Medium } from '@expo-google-fonts/roboto-mono';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import 'react-native-reanimated';
 
-import { AuthProvider } from "@/features/auth";
-import { ChatProvider } from "@/features/chat";
-import { useColorScheme } from "@/shared/hooks/use-color-scheme";
+import { useColorScheme } from '@/shared/hooks/use-color-scheme';
+import { AuthProvider } from '@/features/auth';
+import { ChatProvider } from '@/features/chat';
+import '../../global.css';
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
