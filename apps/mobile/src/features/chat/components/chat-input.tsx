@@ -3,16 +3,15 @@
  * Text input with send button for user messages
  */
 
-import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { HugeiconsIcon, PlusSignIcon, SentIcon } from "@/components/icons";
 import { ChatTheme } from "@/shared/constants/chat-theme";
 
 interface ChatInputProps {
@@ -53,7 +52,12 @@ export function ChatInput({
         ]}
       >
         <TouchableOpacity style={styles.plusButton}>
-          <Ionicons name="add" size={24} color={ChatTheme.iconSecondary} />
+          <HugeiconsIcon
+            icon={PlusSignIcon}
+            size={24}
+            color={ChatTheme.iconSecondary}
+            strokeWidth={1.5}
+          />
         </TouchableOpacity>
 
         <TextInput
@@ -80,7 +84,12 @@ export function ChatInput({
             disabled={!message.trim()}
             activeOpacity={0.8}
           >
-            <Text style={styles.sendIcon}>↑</Text>
+            <HugeiconsIcon
+              icon={SentIcon}
+              size={20}
+              color={ChatTheme.background}
+              strokeWidth={2}
+            />
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -147,10 +156,5 @@ const styles = StyleSheet.create({
     backgroundColor: ChatTheme.iconSecondary,
     opacity: 0.4,
     shadowOpacity: 0,
-  },
-  sendIcon: {
-    fontSize: 20,
-    color: ChatTheme.background,
-    fontWeight: "bold",
   },
 });
