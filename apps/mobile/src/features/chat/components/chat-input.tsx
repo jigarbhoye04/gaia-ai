@@ -1,160 +1,79 @@
-/**
- * Chat Input Component
- * Text input with send button for user messages
- */
-
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
-  Animated,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
   View,
+  TextInput,
+  Pressable,
+  Animated,
 } from "react-native";
 import { HugeiconsIcon, PlusSignIcon, SentIcon } from "@/components/icons";
-import { ChatTheme } from "@/shared/constants/chat-theme";
-
-interface ChatInputProps {
-  onSend: (message: string) => void;
-  placeholder?: string;
-}
 
 export function ChatInput({
-  onSend,
   placeholder = "What can I do for you today?",
-}: ChatInputProps) {
-  const [message, setMessage] = useState("");
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const [isFocused, setIsFocused] = useState(false);
+  onSubmit,
+  disabled,
+}: {
+  placeholder?: string;
+  onSubmit?: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const [value, setValue] = useState("");
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+
+  const canSubmit = value.trim().length > 0;
 
   useEffect(() => {
     Animated.spring(scaleAnim, {
-      toValue: message.trim() ? 1 : 0.9,
-      tension: 100,
-      friction: 7,
+      toValue: canSubmit ? 1 : 0.9,
       useNativeDriver: true,
     }).start();
-  }, [message]);
+  }, [canSubmit]);
 
   const handleSend = () => {
-    if (message.trim()) {
-      onSend(message.trim());
-      setMessage("");
-    }
+    if (!canSubmit) return;
+    onSubmit?.(value.trim());
+    setValue("");
   };
 
   return (
-    <View style={styles.container}>
-      <View
-        style={[
-          styles.inputContainer,
-          isFocused && styles.inputContainerFocused,
-        ]}
-      >
-        <TouchableOpacity style={styles.plusButton}>
+      <View className="flex-row items-end rounded-3xl bg-zinc-100 dark:bg-zinc-800 px-3 py-2">
+        {/* Plus Button */}
+        <Pressable className="p-2">
           <HugeiconsIcon
             icon={PlusSignIcon}
-            size={24}
-            color={ChatTheme.iconSecondary}
-            strokeWidth={1.5}
+            size={22}
+            className="text-zinc-500"
           />
-        </TouchableOpacity>
+        </Pressable>
 
+        {/* Input */}
         <TextInput
-          style={styles.input}
-          value={message}
-          onChangeText={setMessage}
+          value={value}
+          onChangeText={setValue}
           placeholder={placeholder}
-          placeholderTextColor={ChatTheme.textSecondary}
+          placeholderTextColor="#9ca3af"
           multiline
-          maxLength={1000}
-          returnKeyType="send"
-          onSubmitEditing={handleSend}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          editable={!disabled}
+          className="flex-1 text-base text-zinc-900 dark:text-white px-2 py-2 max-h-32"
         />
 
+        {/* Send */}
         <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              !message.trim() && styles.sendButtonDisabled,
-            ]}
+          <Pressable
             onPress={handleSend}
-            disabled={!message.trim()}
-            activeOpacity={0.8}
+            disabled={!canSubmit}
+            className={`h-9 w-9 rounded-full items-center justify-center ${
+              canSubmit
+                ? "bg-[#00bbff]"
+                : "bg-zinc-300 dark:bg-zinc-700"
+            }`}
           >
             <HugeiconsIcon
               icon={SentIcon}
-              size={20}
-              color={ChatTheme.background}
-              strokeWidth={2}
+              size={18}
+              className="text-white"
             />
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       </View>
-    </View>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.md,
-    backgroundColor: ChatTheme.background,
-    borderTopWidth: 1,
-    borderTopColor: ChatTheme.border,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: ChatTheme.inputBackground,
-    borderRadius: ChatTheme.borderRadius.lg,
-    borderWidth: 1,
-    borderColor: ChatTheme.border,
-    paddingHorizontal: ChatTheme.spacing.sm,
-    paddingVertical: ChatTheme.spacing.xs,
-    minHeight: 48,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  inputContainerFocused: {
-    borderColor: ChatTheme.accent,
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  plusButton: {
-    padding: ChatTheme.spacing.xs,
-    marginRight: ChatTheme.spacing.xs,
-  },
-  input: {
-    flex: 1,
-    color: ChatTheme.textPrimary,
-    fontSize: ChatTheme.fontSize.md,
-    maxHeight: 100,
-    paddingVertical: 8,
-    fontFamily: ChatTheme.fonts.regular,
-  },
-  sendButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: ChatTheme.accent,
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: ChatTheme.spacing.sm,
-    shadowColor: ChatTheme.accent,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  sendButtonDisabled: {
-    backgroundColor: ChatTheme.iconSecondary,
-    opacity: 0.4,
-    shadowOpacity: 0,
-  },
-});

@@ -88,19 +88,20 @@ export default function ChatPage() {
 
   return (
     <GestureHandlerRootView style={styles.flex}>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <DrawerLayout
-          ref={drawerRef}
-          drawerWidth={SIDEBAR_WIDTH}
-          drawerPosition={DrawerPosition.LEFT}
-          drawerType={DrawerType.FRONT}
-          overlayColor="rgba(0, 0, 0, 0.6)"
-          renderNavigationView={renderDrawerContent}
+      <DrawerLayout
+        ref={drawerRef}
+        drawerWidth={SIDEBAR_WIDTH}
+        drawerPosition={DrawerPosition.LEFT}
+        drawerType={DrawerType.FRONT}
+        overlayColor="rgba(0, 0, 0, 0.6)"
+        renderNavigationView={renderDrawerContent}
+      >
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={32}
         >
-          <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-          >
+          <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
             {/* Header */}
             <ChatHeader
               onMenuPress={toggleSidebar}
@@ -124,23 +125,22 @@ export default function ChatPage() {
               </View>
             </TouchableWithoutFeedback>
 
-            {/* Input */}
-            <ChatInput
-              onSend={sendMessage}
-              placeholder="What can I do for you today?"
-            />
-
-            {/* Typing Indicator */}
-            {isTyping && (
-              <View style={styles.typingContainer}>
-                <View style={styles.typingDot} />
-                <View style={styles.typingDot} />
-                <View style={styles.typingDot} />
-              </View>
-            )}
-          </KeyboardAvoidingView>
-        </DrawerLayout>
-      </SafeAreaView>
+            {/* Bottom Input & Typing Indicator */}
+            <View style={styles.bottomContainer}>
+              <ChatInput
+                placeholder="What can I do for you today?"
+              />
+              {isTyping && (
+                <View style={styles.typingContainer}>
+                  <View style={styles.typingDot} />
+                  <View style={styles.typingDot} />
+                  <View style={styles.typingDot} />
+                </View>
+              )}
+            </View>
+          </SafeAreaView>
+        </KeyboardAvoidingView>
+      </DrawerLayout>
     </GestureHandlerRootView>
   );
 }
@@ -163,6 +163,12 @@ const styles = StyleSheet.create({
   messagesList: {
     flexGrow: 1,
     paddingHorizontal: ChatTheme.spacing.md,
+  },
+  bottomContainer: {
+    // Ensures input and typing indicator are at the bottom
+    width: '100%',
+    backgroundColor: ChatTheme.background,
+    paddingBottom: 0, // SafeAreaView already handles safe area
   },
   typingContainer: {
     flexDirection: "row",
