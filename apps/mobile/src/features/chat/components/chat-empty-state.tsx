@@ -5,10 +5,11 @@
 
 import { ChatTheme } from '@/shared/constants/chat-theme';
 import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { Suggestion } from '../types';
 import { SuggestionCard } from './suggestion-card';
 import { Button } from '@/components/ui/button';
+import { Text } from '@/components/ui/text';
 
 interface ChatEmptyStateProps {
   suggestions: Suggestion[];
@@ -35,9 +36,9 @@ export function ChatEmptyState({
         </View>
         <Text style={styles.title}>Momentum compounds, web.</Text>
         <Text style={styles.subtitle}>Connect your tools to GAIA</Text>
-     <Button>
-      <Text>Button</Text>
-    </Button> 
+        <Button className="mt-4">
+          <Text>Connect Tools</Text>
+        </Button> 
       </View>
 
       <View style={styles.suggestionsSection}>

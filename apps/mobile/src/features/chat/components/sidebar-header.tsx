@@ -6,7 +6,8 @@
 import { ChatTheme } from '@/shared/constants/chat-theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/ui/text';
 
 interface SidebarHeaderProps {
   onClose: () => void;
@@ -14,14 +15,14 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ onClose }: SidebarHeaderProps) {
   return (
-    <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-800">
+    <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
       <View className="flex-row items-center gap-2">
         <Image
           source={require('@/assets/logo/logo.webp')}
           className="w-8 h-8"
           resizeMode="contain"
         />
-        <Text className="text-lg font-bold text-indigo-400 tracking-wider">
+        <Text className="text-lg font-bold">
           GAIA
         </Text>
       </View>

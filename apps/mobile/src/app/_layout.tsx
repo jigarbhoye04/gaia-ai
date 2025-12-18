@@ -11,6 +11,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { useColorScheme } from '@/shared/hooks/use-color-scheme';
 import { AuthProvider } from '@/features/auth';
 import { ChatProvider } from '@/features/chat';
+import { View } from 'react-native';
 import '../../global.css';
 
 
@@ -40,19 +41,21 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <AuthProvider>
-        <ChatProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="signup" options={{ headerShown: false }} />
-            <Stack.Screen name="(chat)" options={{ headerShown: false }} />
-          </Stack>
-          <PortalHost />
-        </ChatProvider>
-      </AuthProvider>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <View className={colorScheme === 'dark' ? 'dark' :'dark'} style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <AuthProvider>
+          <ChatProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+              <Stack.Screen name="signup" options={{ headerShown: false }} />
+              <Stack.Screen name="(chat)" options={{ headerShown: false }} />
+            </Stack>
+            <PortalHost />
+          </ChatProvider>
+        </AuthProvider>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </View>
   );
 }
