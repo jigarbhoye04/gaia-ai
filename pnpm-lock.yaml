@@ -36,7 +36,11 @@ importers:
         version: 22.2.3(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@nx/next':
         specifier: 22.2.3
+<<<<<<< HEAD
         version: 22.2.3(73ec56f056366736b070ab9204d05593)
+=======
+        version: 22.2.3(3ece2d1b3df057f6de49b2e2dd86a3a1)
+>>>>>>> develop
 
   apps/desktop:
     dependencies:
@@ -20499,7 +20503,11 @@ snapshots:
       - nx
       - supports-color
 
+<<<<<<< HEAD
   '@nx/module-federation@22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(next@16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.96.0))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)':
+=======
+  '@nx/module-federation@22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(next@16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.96.0))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)':
+>>>>>>> develop
     dependencies:
       '@module-federation/enhanced': 0.21.6(@rspack/core@1.6.7(@swc/helpers@0.5.15))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(webpack@5.103.0(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@module-federation/node': 2.7.25(@rspack/core@1.6.7(@swc/helpers@0.5.15))(next@16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.96.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)(webpack@5.103.0(@swc/core@1.15.5(@swc/helpers@0.5.15)))
@@ -20533,13 +20541,21 @@ snapshots:
       - vue-tsc
       - webpack-cli
 
+<<<<<<< HEAD
   '@nx/next@22.2.3(73ec56f056366736b070ab9204d05593)':
+=======
+  '@nx/next@22.2.3(3ece2d1b3df057f6de49b2e2dd86a3a1)':
+>>>>>>> develop
     dependencies:
       '@babel/plugin-proposal-decorators': 7.28.0(@babel/core@7.28.5)
       '@nx/devkit': 22.2.3(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@nx/eslint': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@zkochan/js-yaml@0.0.7)(eslint@9.39.2(jiti@2.6.1))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@nx/js': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
+<<<<<<< HEAD
       '@nx/react': 22.2.3(944aa0c0bff1e53dd698e5b94b26ef81)
+=======
+      '@nx/react': 22.2.3(ffdeaee86ef87591258641d7fc9477b6)
+>>>>>>> develop
       '@nx/web': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@nx/webpack': 22.2.3(@babel/traverse@7.28.5)(@rspack/core@1.6.7(@swc/helpers@0.5.15))(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(lightningcss@1.30.2)(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))(typescript@5.9.3)
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.9.3)
@@ -20647,12 +20663,20 @@ snapshots:
   '@nx/nx-win32-x64-msvc@22.3.1':
     optional: true
 
+<<<<<<< HEAD
   '@nx/react@22.2.3(944aa0c0bff1e53dd698e5b94b26ef81)':
+=======
+  '@nx/react@22.2.3(ffdeaee86ef87591258641d7fc9477b6)':
+>>>>>>> develop
     dependencies:
       '@nx/devkit': 22.2.3(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@nx/eslint': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@zkochan/js-yaml@0.0.7)(eslint@9.39.2(jiti@2.6.1))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@nx/js': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
+<<<<<<< HEAD
       '@nx/module-federation': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(next@16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(sass@1.96.0))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.9.3)
+=======
+      '@nx/module-federation': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/helpers@0.5.15)(next@16.0.10(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.96.0))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
+>>>>>>> develop
       '@nx/rollup': 22.2.3(@babel/core@7.28.5)(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(@types/babel__core@7.20.5)(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))(typescript@5.9.3)
       '@nx/web': 22.2.3(@babel/traverse@7.28.5)(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15))(nx@22.3.1(@swc-node/register@1.11.1(@swc/core@1.15.5(@swc/helpers@0.5.15))(@swc/types@0.1.25)(typescript@5.9.3))(@swc/core@1.15.5(@swc/helpers@0.5.15)))
       '@phenomnomnominal/tsquery': 5.0.1(typescript@5.9.3)

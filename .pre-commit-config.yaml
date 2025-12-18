@@ -21,4 +21,4 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        exclude: ^(pnpm-lock\.yaml|apps/web/pnpm-lock\.yaml|.*\.env\.example|docs/configuration/environment-variables.mdx)$
+        exclude: ^(pnpm-lock\.yaml|apps/web/pnpm-lock\.yaml|.*\.env\.example|docs/configuration/environment-variables.mdx|nx\.json)$
