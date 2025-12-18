@@ -1,17 +1,16 @@
 /**
  * Hugeicons Icon Exports
- * 
+ *
  * Easy import pattern for Hugeicons in the project
  * Usage: import { Send01Icon, PlusSignIcon, HugeiconsIcon } from '@/assets/icons'
- * 
+ *
  * Browse icons at: https://hugeicons.com/icons
  */
 
-// Export the HugeiconsIcon wrapper component
-export { HugeiconsIcon } from '@hugeicons/react-native';
-
 // Export commonly used icons from the free package
-export * from '@hugeicons/core-free-icons';
+export * from "@hugeicons/core-free-icons";
+// Export the HugeiconsIcon wrapper component
+export { HugeiconsIcon } from "@hugeicons/react-native";
 
 /**
  * To add more icons:

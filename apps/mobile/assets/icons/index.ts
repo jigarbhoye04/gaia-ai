@@ -1,57 +1,50 @@
 /**
  * Hugeicons Icon Exports
- * 
+ *
  * Easy import pattern for Hugeicons in the project
  * Usage: import { Send01Icon, PlusSignIcon, HugeiconsIcon } from '@/assets/icons'
- * 
+ *
  * Browse icons at: https://hugeicons.com/icons
  */
 
-// Export the HugeiconsIcon wrapper component
-export { HugeiconsIcon } from '@hugeicons/react-native';
-
 // Export commonly used icons from the free package
 export {
-    // Communication & Chat
-    SentIcon,
-    PlusSignIcon,
-    Notification03Icon,
-    Menu01Icon,
-    Search01Icon,
-
-    // User & Profile
-    UserIcon,
-    UserCircleIcon,
-    UserSettingsIcon,
-
-    // Navigation
-    ArrowLeft01Icon,
-    ArrowRight01Icon,
-    Home01Icon,
-    Settings01Icon,
-
-    // Actions
-    Edit01Icon,
-    Delete01Icon,
-    Copy01Icon,
-    Share01Icon,
-
-    // Status
-    CheckmarkCircle01Icon,
-    Cancel01Icon,
-    InformationCircleIcon,
-    AlertCircleIcon,
-
-    // Media
-    Image01Icon,
-    File01Icon,
-    FolderIcon,
-    AttachmentIcon,
-
-    // Theme
-    Sun01Icon,
-    Moon02Icon,
-} from '@hugeicons/core-free-icons';
+  AlertCircleIcon,
+  // Navigation
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  AttachmentIcon,
+  Cancel01Icon,
+  // Status
+  CheckmarkCircle01Icon,
+  Copy01Icon,
+  Delete01Icon,
+  // Actions
+  Edit01Icon,
+  File01Icon,
+  FolderIcon,
+  Home01Icon,
+  // Media
+  Image01Icon,
+  InformationCircleIcon,
+  Menu01Icon,
+  Moon02Icon,
+  Notification03Icon,
+  PlusSignIcon,
+  Search01Icon,
+  // Communication & Chat
+  SentIcon,
+  Settings01Icon,
+  Share01Icon,
+  // Theme
+  Sun01Icon,
+  UserCircleIcon,
+  // User & Profile
+  UserIcon,
+  UserSettingsIcon,
+} from "@hugeicons/core-free-icons";
+// Export the HugeiconsIcon wrapper component
+export { HugeiconsIcon } from "@hugeicons/react-native";
 
 /**
  * To add more icons:

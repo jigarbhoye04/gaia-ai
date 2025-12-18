@@ -3,37 +3,48 @@
  * Allows users to switch between light, dark, and system themes
  */
 
-import { useState, useEffect } from 'react';
-import { Pressable, View } from 'react-native';
-import { colorScheme, useColorScheme } from 'nativewind';
-import { Text } from './text';
-import { cn } from '@/lib/utils';
-import { HugeiconsIcon, Sun01Icon, Moon02Icon, Settings01Icon } from '@/components/icons';
+import { colorScheme } from "nativewind";
+import { useEffect, useState } from "react";
+import { Pressable, View } from "react-native";
+import {
+  HugeiconsIcon,
+  Moon02Icon,
+  Settings01Icon,
+  Sun01Icon,
+} from "@/components/icons";
+import { cn } from "@/lib/utils";
+import { Text } from "./text";
 
-type ThemeOption = 'light' | 'dark' | 'system';
+type ThemeOption = "light" | "dark" | "system";
 
 interface ThemeToggleProps {
   className?: string;
   showLabel?: boolean;
 }
 
-export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) {
-  const { colorScheme: currentColorScheme } = useColorScheme();
-  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>('system');
+export function ThemeToggle({
+  className,
+  showLabel = false,
+}: ThemeToggleProps) {
+  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>("system");
 
   const setTheme = (theme: ThemeOption) => {
     setSelectedTheme(theme);
     colorScheme.set(theme);
   };
 
-  const themes: Array<{ value: ThemeOption; icon: any; label: string }> = [
-    { value: 'light', icon: Sun01Icon, label: 'Light' },
-    { value: 'dark', icon: Moon02Icon, label: 'Dark' },
-    { value: 'system', icon: Settings01Icon, label: 'System' },
+  const themes: Array<{
+    value: ThemeOption;
+    icon: React.ComponentType;
+    label: string;
+  }> = [
+    { value: "light", icon: Sun01Icon, label: "Light" },
+    { value: "dark", icon: Moon02Icon, label: "Dark" },
+    { value: "system", icon: Settings01Icon, label: "System" },
   ];
 
   return (
-    <View className={cn('flex-row items-center gap-2', className)}>
+    <View className={cn("flex-row items-center gap-2", className)}>
       {themes.map((theme) => {
         const isActive = selectedTheme === theme.value;
         return (
@@ -41,26 +52,28 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
             key={theme.value}
             onPress={() => setTheme(theme.value)}
             className={cn(
-              'flex-row items-center gap-2 px-3 py-2 rounded-lg',
-              'active:opacity-70 transition-all',
+              "flex-row items-center gap-2 px-3 py-2 rounded-lg",
+              "active:opacity-70 transition-all",
               isActive
-                ? 'bg-primary dark:bg-primary'
-                : 'bg-secondary dark:bg-secondary'
+                ? "bg-primary dark:bg-primary"
+                : "bg-secondary dark:bg-secondary",
             )}
           >
             <HugeiconsIcon
               icon={theme.icon}
               size={18}
-              color={isActive ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))'}
+              color={
+                isActive
+                  ? "hsl(var(--primary-foreground))"
+                  : "hsl(var(--foreground))"
+              }
               strokeWidth={1.5}
             />
             {showLabel && (
               <Text
                 className={cn(
-                  'text-sm font-medium',
-                  isActive
-                    ? 'text-primary-foreground'
-                    : 'text-foreground'
+                  "text-sm font-medium",
+                  isActive ? "text-primary-foreground" : "text-foreground",
                 )}
               >
                 {theme.label}
@@ -77,8 +90,7 @@ export function ThemeToggle({ className, showLabel = false }: ThemeToggleProps) 
  * Simple icon-only theme toggle button
  */
 export function ThemeToggleButton({ className }: { className?: string }) {
-  const { colorScheme: currentColorScheme } = useColorScheme();
-  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>('system');
+  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>("system");
 
   useEffect(() => {
     const stored = colorScheme.get();
@@ -88,7 +100,7 @@ export function ThemeToggleButton({ className }: { className?: string }) {
   }, []);
 
   const toggleTheme = () => {
-    const themes: ThemeOption[] = ['light', 'dark', 'system'];
+    const themes: ThemeOption[] = ["light", "dark", "system"];
     const currentIndex = themes.indexOf(selectedTheme);
     const nextIndex = (currentIndex + 1) % themes.length;
     const newTheme = themes[nextIndex];
@@ -98,9 +110,9 @@ export function ThemeToggleButton({ className }: { className?: string }) {
 
   const getIcon = () => {
     switch (selectedTheme) {
-      case 'light':
+      case "light":
         return Sun01Icon;
-      case 'dark':
+      case "dark":
         return Moon02Icon;
       default:
         return Settings01Icon;
@@ -111,9 +123,9 @@ export function ThemeToggleButton({ className }: { className?: string }) {
     <Pressable
       onPress={toggleTheme}
       className={cn(
-        'w-10 h-10 items-center justify-center rounded-lg',
-        'bg-secondary dark:bg-secondary active:opacity-70',
-        className
+        "w-10 h-10 items-center justify-center rounded-lg",
+        "bg-secondary dark:bg-secondary active:opacity-70",
+        className,
       )}
     >
       <HugeiconsIcon

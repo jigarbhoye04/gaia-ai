@@ -3,13 +3,12 @@
  * Welcome screen with logo and suggestions
  */
 
-import { ChatTheme } from '@/shared/constants/chat-theme';
-import React from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
-import { Suggestion } from '../types';
-import { SuggestionCard } from './suggestion-card';
-import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
+import { Image, ScrollView, StyleSheet, View } from "react-native";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
+import { ChatTheme } from "@/shared/constants/chat-theme";
+import type { Suggestion } from "../types";
+import { SuggestionCard } from "./suggestion-card";
 
 interface ChatEmptyStateProps {
   suggestions: Suggestion[];
@@ -38,7 +37,7 @@ export function ChatEmptyState({
         <Text style={styles.subtitle}>Connect your tools to GAIA</Text>
         <Button className="mt-4">
           <Text>Connect Tools</Text>
-        </Button> 
+        </Button>
       </View>
 
       <View style={styles.suggestionsSection}>

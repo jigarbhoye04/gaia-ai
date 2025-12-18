@@ -3,11 +3,11 @@
  * Displays list of past chat sessions grouped by time
  */
 
-import { ChatTheme } from '@/shared/constants/chat-theme';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
-import { useChatContext } from '../hooks/use-chat-context';
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ChatTheme } from "@/shared/constants/chat-theme";
+import { useChatContext } from "../hooks/use-chat-context";
 
 interface ChatHistoryItem {
   id: string;
@@ -67,40 +67,41 @@ function CategorySection({
 }: CategorySectionProps) {
   return (
     <View className="mb-2">
-      <TouchableOpacity 
-        className="flex-row justify-between items-center px-4 py-2" 
+      <TouchableOpacity
+        className="flex-row justify-between items-center px-4 py-2"
         onPress={onToggle}
       >
         <Text className="text-gray-400 text-sm font-medium">{title}</Text>
-        <Ionicons 
-          name={isExpanded ? "chevron-up" : "chevron-down"} 
-          size={16} 
-          color={ChatTheme.textSecondary} 
+        <Ionicons
+          name={isExpanded ? "chevron-up" : "chevron-down"}
+          size={16}
+          color={ChatTheme.textSecondary}
         />
       </TouchableOpacity>
-      
-      {isExpanded && items.map((item) => {
-        const isActive = item.id === activeChatId;
-        return (
-          <TouchableOpacity
-            key={item.id}
-            className={`flex-row items-center px-4 py-2 gap-2 ${isActive ? 'bg-gray-800/50 border-l-3 border-l-purple-500' : ''}`}
-            onPress={() => onSelectChat(item.id)}
-          >
-            <Ionicons 
-              name={item.isStarred ? "star" : "chatbubble-outline"} 
-              size={16} 
-              color={isActive ? ChatTheme.accent : ChatTheme.textSecondary} 
-            />
-            <Text 
-              className={`flex-1 text-base ${isActive ? 'text-purple-500 font-semibold' : 'text-white'}`}
-              numberOfLines={1}
+
+      {isExpanded &&
+        items.map((item) => {
+          const isActive = item.id === activeChatId;
+          return (
+            <TouchableOpacity
+              key={item.id}
+              className={`flex-row items-center px-4 py-2 gap-2 ${isActive ? "bg-gray-800/50 border-l-3 border-l-purple-500" : ""}`}
+              onPress={() => onSelectChat(item.id)}
             >
-              {item.title}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+              <Ionicons
+                name={item.isStarred ? "star" : "chatbubble-outline"}
+                size={16}
+                color={isActive ? ChatTheme.accent : ChatTheme.textSecondary}
+              />
+              <Text
+                className={`flex-1 text-base ${isActive ? "text-purple-500 font-semibold" : "text-white"}`}
+                numberOfLines={1}
+              >
+                {item.title}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
     </View>
   );
 }
@@ -121,12 +122,14 @@ export function ChatHistory({ onSelectChat, onNewChat }: ChatHistoryProps) {
   return (
     <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
       {/* New Chat Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         className="flex-row items-center justify-center p-3 mx-4 mt-4 mb-4 bg-purple-500 rounded-xl shadow-lg"
         onPress={onNewChat}
       >
         <Ionicons name="add" size={18} color={ChatTheme.background} />
-        <Text className="text-white text-base ml-2 font-semibold">New Chat</Text>
+        <Text className="text-white text-base ml-2 font-semibold">
+          New Chat
+        </Text>
       </TouchableOpacity>
 
       {/* Starred Chats */}
