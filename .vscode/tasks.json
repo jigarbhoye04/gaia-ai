@@ -6,7 +6,7 @@
     {
       "label": "Run Backend",
       "type": "shell",
-      "command": "cd apps/backend && source .venv/bin/activate && python -m uvicorn app.main:app --port 8000 --reload",
+      "command": "cd apps/api && source .venv/bin/activate && python -m uvicorn app.main:app --port 8000 --reload",
       "problemMatcher": [],
       "presentation": {
         "panel": "new"

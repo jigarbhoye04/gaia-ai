@@ -8,6 +8,7 @@ from app.api.v1.dependencies.oauth_dependencies import (
 from app.api.v1.middleware.agent_auth import create_agent_token
 from app.config.settings import settings
 from fastapi import APIRouter, Depends
+from fastapi.exceptions import HTTPException
 from livekit import api
 
 router = APIRouter()
@@ -21,7 +22,8 @@ def get_token(
     user_id = user.get("user_id")
     user_email: str = user.get("email", "")
     if not user_id or not isinstance(user_id, str):
-        return "Invalid or missing user_id"
+        raise HTTPException(status_code=401, detail="Invalid or missing user_id")
+
     room_name = f"voice_session_{user_id}_{uuid.uuid4().hex}"
 
     identity = f"user_{user_id}"

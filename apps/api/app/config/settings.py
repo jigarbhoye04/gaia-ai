@@ -221,6 +221,18 @@ class ProductionSettings(CommonSettings):
     OPIK_API_KEY: str
     OPIK_WORKSPACE: str
 
+    # ----------------------------------------------
+    # Opik Evaluation Config
+    # ----------------------------------------------
+    EVAL_USER_ID: Optional[str] = None
+    EVAL_USER_EMAIL: Optional[str] = None
+    EVAL_USER_NAME: Optional[str] = None
+
+    # ----------------------------------------------
+    # Debug Config
+    # ----------------------------------------------
+    DEBUG_EMAIL_PROCESSING: bool = True
+
     model_config = SettingsConfigDict(
         env_file_encoding="utf-8",
         extra="allow",
@@ -327,9 +339,21 @@ class DevelopmentSettings(CommonSettings):
     OPIK_WORKSPACE: Optional[str] = None
 
     # ----------------------------------------------
+    # Opik Evaluation Config
+    # ----------------------------------------------
+    EVAL_USER_ID: Optional[str] = None
+    EVAL_USER_EMAIL: Optional[str] = None
+    EVAL_USER_NAME: Optional[str] = None
+
+    # ----------------------------------------------
     # Environment Configuration
     # ----------------------------------------------
     ENV: Literal["production", "development"] = "development"
+
+    # ----------------------------------------------
+    # Debug Config
+    # ----------------------------------------------
+    DEBUG_EMAIL_PROCESSING: bool = False
 
     # Default to show warnings in development environment
     SHOW_MISSING_KEY_WARNINGS: bool = True

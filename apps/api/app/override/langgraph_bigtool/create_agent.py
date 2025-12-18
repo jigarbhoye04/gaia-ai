@@ -148,9 +148,8 @@ def create_agent(
     limit: int = 2,
     filter: dict[str, Any] | None = None,
     namespace_prefix: tuple[str, ...] = ("tools",),
-    retrieve_tools_function: Callable[..., list[str] | RetrieveToolsResult]
-    | None = None,
-    retrieve_tools_coroutine: Callable[..., Awaitable[list[str] | RetrieveToolsResult]]
+    retrieve_tools_function: Callable[..., RetrieveToolsResult] | None = None,
+    retrieve_tools_coroutine: Callable[..., Awaitable[RetrieveToolsResult]]
     | None = None,
     initial_tool_ids: list[str] | None = None,
     disable_retrieve_tools: bool = False,
