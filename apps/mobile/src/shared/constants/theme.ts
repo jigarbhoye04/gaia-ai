@@ -79,3 +79,22 @@ export const NAV_THEME: Record<"light" | "dark", Theme> = {
     },
   },
 };
+
+export const Colors = {
+  light: {
+    text: THEME.light.foreground,
+    background: THEME.light.background,
+    tint: THEME.light.primary,
+    icon: THEME.light.mutedForeground,
+    tabIconDefault: THEME.light.mutedForeground,
+    tabIconSelected: THEME.light.primary,
+  },
+  dark: {
+    text: THEME.dark.foreground,
+    background: THEME.dark.background,
+    tint: THEME.dark.primary,
+    icon: THEME.dark.mutedForeground,
+    tabIconDefault: THEME.dark.mutedForeground,
+    tabIconSelected: THEME.dark.primary,
+  },
+};

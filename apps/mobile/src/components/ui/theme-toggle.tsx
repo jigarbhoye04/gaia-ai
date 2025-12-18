@@ -35,7 +35,7 @@ export function ThemeToggle({
 
   const themes: Array<{
     value: ThemeOption;
-    icon: React.ComponentType;
+    icon: typeof Sun01Icon;
     label: string;
   }> = [
     { value: "light", icon: Sun01Icon, label: "Light" },
