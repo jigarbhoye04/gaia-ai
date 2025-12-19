@@ -3,10 +3,8 @@
  * Welcome screen with logo and suggestions
  */
 
-import { Image, ScrollView, StyleSheet, View } from "react-native";
-import { Button } from "@/components/ui/button";
+import { Image, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { ChatTheme } from "@/shared/constants/chat-theme";
 import type { Suggestion } from "../types";
 import { SuggestionCard } from "./suggestion-card";
 
@@ -21,28 +19,24 @@ export function ChatEmptyState({
 }: ChatEmptyStateProps) {
   return (
     <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
+      className="flex-1"
+      contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 32 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.welcomeSection}>
-        <View style={styles.logoContainer}>
+      <View className="items-center mb-16">
+        <View className="mb-6">
           <Image
             source={require("@/assets/logo/logo.webp")}
-            style={styles.logo}
+            className="w-14 h-14"
             resizeMode="contain"
           />
         </View>
-        <Text style={styles.title}>Momentum compounds, web.</Text>
-        <Text style={styles.subtitle}>Connect your tools to GAIA</Text>
-        <Button className="mt-4">
-          <Text>Connect Tools</Text>
-        </Button>
+        <Text className="text-[28px] font-semibold text-foreground text-center mb-1">Momentum compounds, web.</Text>
       </View>
 
-      <View style={styles.suggestionsSection}>
-        <Text style={styles.suggestionsTitle}>Suggestions</Text>
-        <View style={styles.suggestionGrid}>
+      <View className="w-full">
+        <Text className="text-base font-medium text-muted-foreground mb-4">Suggestions</Text>
+        <View className="flex-row flex-wrap gap-2 justify-between">
           {suggestions.map((suggestion, index) => (
             <SuggestionCard
               key={suggestion.id}
@@ -57,52 +51,4 @@ export function ChatEmptyState({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-    paddingHorizontal: ChatTheme.spacing.lg,
-    paddingTop: ChatTheme.spacing.xl * 2,
-    paddingBottom: ChatTheme.spacing.xl,
-  },
-  welcomeSection: {
-    alignItems: "center",
-    marginBottom: ChatTheme.spacing.xl * 2,
-  },
-  logoContainer: {
-    marginBottom: ChatTheme.spacing.lg,
-  },
-  logo: {
-    width: 56,
-    height: 56,
-  },
-  title: {
-    fontSize: 28,
-    fontFamily: ChatTheme.fonts.semibold,
-    color: ChatTheme.textPrimary,
-    textAlign: "center",
-    marginBottom: ChatTheme.spacing.xs,
-  },
-  subtitle: {
-    fontSize: ChatTheme.fontSize.md,
-    color: ChatTheme.textSecondary,
-    textAlign: "center",
-  },
-  suggestionsSection: {
-    width: "100%",
-  },
-  suggestionsTitle: {
-    fontSize: ChatTheme.fontSize.md,
-    fontFamily: ChatTheme.fonts.medium,
-    color: ChatTheme.textSecondary,
-    marginBottom: ChatTheme.spacing.md,
-  },
-  suggestionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: ChatTheme.spacing.sm,
-    justifyContent: "space-between",
-  },
-});
+

@@ -4,14 +4,9 @@
  */
 
 import { useEffect, useRef } from "react";
-import {
-  Animated,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { Animated, Image, Pressable } from "react-native";
+import { Card } from "@/components/ui/card";
+import { Text } from "@/components/ui/text";
 import type { Suggestion } from "../types";
 
 interface SuggestionCardProps {
@@ -66,60 +61,28 @@ export function SuggestionCard({
 
   return (
     <Animated.View
-      style={[
-        styles.wrapper,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
+      className="w-[48%]"
+      style={{
+        opacity: fadeAnim,
+        transform: [{ scale: scaleAnim }],
+      }}
     >
-      <TouchableOpacity
-        style={styles.card}
+      <Pressable
         onPress={() => onPress(suggestion.text)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        activeOpacity={1}
       >
-        <Image
-          source={{ uri: suggestion.iconUrl }}
-          style={styles.icon}
-          resizeMode="contain"
-        />
-        <Text style={styles.text}>{suggestion.text}</Text>
-      </TouchableOpacity>
+        <Card className="p-4 min-h-[100px] justify-between gap-2 py-4">
+          <Image
+            source={{ uri: suggestion.iconUrl }}
+            className="w-7 h-7"
+            resizeMode="contain"
+          />
+          <Text className="text-sm text-foreground mt-2 leading-5">
+            {suggestion.text}
+          </Text>
+        </Card>
+      </Pressable>
     </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    width: "48%",
-  },
-  card: {
-    width: "100%",
-    backgroundColor: "#222224",
-    borderRadius: ChatTheme.borderRadius.lg,
-    padding: ChatTheme.spacing.md,
-    borderWidth: 1,
-    borderColor: ChatTheme.border,
-    minHeight: 100,
-    justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  icon: {
-    width: 28,
-    height: 28,
-  },
-  text: {
-    fontSize: ChatTheme.fontSize.sm,
-    fontFamily: ChatTheme.fonts.regular,
-    color: ChatTheme.textPrimary,
-    marginTop: ChatTheme.spacing.sm,
-    lineHeight: 18,
-  },
-});

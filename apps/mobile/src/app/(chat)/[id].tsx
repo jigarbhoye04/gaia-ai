@@ -11,7 +11,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
@@ -28,13 +27,11 @@ import {
   ChatMessage,
   DEFAULT_SUGGESTIONS,
   type Message,
-  SIDEBAR_WIDTH,
   SidebarContent,
   useChat,
   useChatContext,
   useSidebar,
 } from "@/features/chat";
-import { ChatTheme } from "@/shared/constants/chat-theme";
 
 export default function ChatPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -87,21 +84,21 @@ export default function ChatPage() {
   );
 
   return (
-    <GestureHandlerRootView style={styles.flex}>
+    <GestureHandlerRootView className="flex-1">
       <DrawerLayout
         ref={drawerRef}
-        drawerWidth={SIDEBAR_WIDTH}
+        drawerWidth={280}
         drawerPosition={DrawerPosition.LEFT}
         drawerType={DrawerType.FRONT}
         overlayColor="rgba(0, 0, 0, 0.6)"
         renderNavigationView={renderDrawerContent}
       >
         <KeyboardAvoidingView
-          style={styles.container}
+          className="flex-1 bg-background"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={32}
         >
-          <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+          <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
             {/* Header */}
             <ChatHeader
               onMenuPress={toggleSidebar}
@@ -111,13 +108,13 @@ export default function ChatPage() {
 
             {/* Messages List */}
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={styles.messagesContainer}>
+              <View className="flex-1">
                 <FlatList
                   ref={flatListRef}
                   data={messages}
                   renderItem={renderMessage}
                   keyExtractor={(item) => item.id}
-                  contentContainerStyle={styles.messagesList}
+                  contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16 }}
                   ListEmptyComponent={renderEmpty}
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
@@ -126,15 +123,15 @@ export default function ChatPage() {
             </TouchableWithoutFeedback>
 
             {/* Bottom Input & Typing Indicator */}
-            <View style={styles.bottomContainer}>
+            <View className="w-full bg-background">
               <ChatInput
                 placeholder="What can I do for you today?"
               />
               {isTyping && (
-                <View style={styles.typingContainer}>
-                  <View style={styles.typingDot} />
-                  <View style={styles.typingDot} />
-                  <View style={styles.typingDot} />
+                <View className="flex-row items-center px-4 py-2 gap-1">
+                  <View className="w-2 h-2 rounded-full bg-accent" />
+                  <View className="w-2 h-2 rounded-full bg-accent" />
+                  <View className="w-2 h-2 rounded-full bg-accent" />
                 </View>
               )}
             </View>
@@ -145,42 +142,4 @@ export default function ChatPage() {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: ChatTheme.background,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: ChatTheme.background,
-  },
-  messagesContainer: {
-    flex: 1,
-  },
-  messagesList: {
-    flexGrow: 1,
-    paddingHorizontal: ChatTheme.spacing.md,
-  },
-  bottomContainer: {
-    // Ensures input and typing indicator are at the bottom
-    width: '100%',
-    backgroundColor: ChatTheme.background,
-    paddingBottom: 0, // SafeAreaView already handles safe area
-  },
-  typingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.sm,
-    gap: ChatTheme.spacing.xs,
-  },
-  typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: ChatTheme.accent,
-  },
-});
+
