@@ -12,8 +12,8 @@ import {
   Menu01Icon,
   Search01Icon,
 } from "@/components/icons";
-import { AI_MODELS, DEFAULT_MODEL } from "../data/models";
-import type { AIModel } from "../types";
+import { AI_MODELS, DEFAULT_MODEL } from "@/features/chat/data/models";
+import type { AIModel } from "@/features/chat/types";
 import { ModelSelector } from "./model-selector";
 
 interface ChatHeaderProps {
