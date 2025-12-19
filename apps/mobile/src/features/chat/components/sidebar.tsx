@@ -9,22 +9,20 @@ import { SidebarFooter } from "./sidebar-footer";
 import { SidebarHeader } from "./sidebar-header";
 
 interface SidebarProps {
-  onClose: () => void;
   onSelectChat: (chatId: string) => void;
   onNewChat: () => void;
 }
 
-export const SIDEBAR_WIDTH = 260;
+export const SIDEBAR_WIDTH = 300;
 
 export function SidebarContent({
-  onClose,
   onSelectChat,
   onNewChat,
 }: SidebarProps) {
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
-      <SidebarHeader onClose={onClose} />
-      <ChatHistory onSelectChat={onSelectChat} onNewChat={onNewChat} />
+    <SafeAreaView className="flex-1 bg-[#141414]" edges={["top", "bottom"]}>
+      <SidebarHeader onNewChat={onNewChat} />
+      <ChatHistory onSelectChat={onSelectChat} />
       <SidebarFooter />
     </SafeAreaView>
   );

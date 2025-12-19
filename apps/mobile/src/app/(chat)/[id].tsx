@@ -67,7 +67,6 @@ export default function ChatPage() {
 
   const renderDrawerContent = () => (
     <SidebarContent
-      onClose={closeSidebar}
       onSelectChat={handleSelectChat}
       onNewChat={handleNewChat}
     />

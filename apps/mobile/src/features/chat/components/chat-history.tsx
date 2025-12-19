@@ -8,12 +8,10 @@ import { ScrollView, TouchableOpacity, View } from "react-native";
 import {
   ArrowDown01Icon,
   ArrowUp01Icon,
-  Chat01Icon,
+  BubbleChatIcon,
   HugeiconsIcon,
-  PlusSignIcon,
   FavouriteIcon,
 } from "@/components/icons";
-import { RaisedButton } from "@/components/ui/raised-button";
 import { Text } from "@/components/ui/text";
 import { useChatContext } from "../hooks/use-chat-context";
 
@@ -26,7 +24,6 @@ interface ChatHistoryItem {
 
 interface ChatHistoryProps {
   onSelectChat: (chatId: string) => void;
-  onNewChat: () => void;
 }
 
 interface CategorySectionProps {
@@ -75,31 +72,33 @@ function CategorySection({
 }: CategorySectionProps) {
   return (
     <View className="mb-2">
-      <TouchableOpacity
-        className="flex-row justify-between items-center px-4 py-2"
-        onPress={onToggle}
-        activeOpacity={0.7}
-      >
-        <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">{title}</Text>
-        <HugeiconsIcon
-          icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon}
-          size={14}
-          color="#8e8e93"
-        />
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.7}>
+        <View className="px-5 py-2 flex-row items-center justify-between">
+          <Text className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+            {title}
+          </Text>
+          <HugeiconsIcon
+            icon={isExpanded ? ArrowDown01Icon : ArrowUp01Icon}
+            size={14}
+            color="#8e8e93"
+          />
+        </View>
       </TouchableOpacity>
 
       {isExpanded &&
         items.map((item) => {
-          const isActive = item.id === activeChatId;
+          const isActive = activeChatId === item.id;
           return (
             <TouchableOpacity
               key={item.id}
-              className={`flex-row items-center px-4 py-2.5 gap-3 ${isActive ? "bg-secondary/30" : ""}`}
+              className={`flex-row items-center px-5 py-3 gap-3 ${
+                isActive ? "bg-secondary/40" : ""
+              }`}
               onPress={() => onSelectChat(item.id)}
               activeOpacity={0.7}
             >
               <HugeiconsIcon
-                icon={item.isStarred ? FavouriteIcon : Chat01Icon}
+                icon={item.isStarred ? FavouriteIcon : BubbleChatIcon}
                 size={16}
                 color={isActive ? "#00bbff" : "#8e8e93"}
               />
@@ -116,7 +115,7 @@ function CategorySection({
   );
 }
 
-export function ChatHistory({ onSelectChat, onNewChat }: ChatHistoryProps) {
+export function ChatHistory({ onSelectChat }: ChatHistoryProps) {
   const { activeChatId } = useChatContext();
   const [expandedSections, setExpandedSections] = useState({
     starred: true,
@@ -135,18 +134,6 @@ export function ChatHistory({ onSelectChat, onNewChat }: ChatHistoryProps) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 16 }}
     >
-      {/* New Chat Button */}
-      <RaisedButton
-        onPress={onNewChat}
-        className="mx-4 mt-4 mb-6"
-        color="#00bbff"
-      >
-        <HugeiconsIcon icon={PlusSignIcon} size={18} color="#000000" />
-        <Text className="text-black text-sm font-bold">
-          New Chat
-        </Text>
-      </RaisedButton>
-
       {/* Starred Chats */}
       {starredChats.length > 0 && (
         <CategorySection

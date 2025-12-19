@@ -63,9 +63,9 @@ export function SidebarFooter() {
   }
 
   return (
-    <View className="border-t border-border py-2 bg-background">
+    <View className="border-t border-border/30 py-2 bg-sidebar">
       {/* Need Support */}
-      <TouchableOpacity className="flex-row items-center px-4 py-2.5 gap-3" activeOpacity={0.7}>
+      <TouchableOpacity className="flex-row items-center px-5 py-2.5 gap-3" activeOpacity={0.7}>
         <HugeiconsIcon
           icon={InformationCircleIcon}
           size={20}

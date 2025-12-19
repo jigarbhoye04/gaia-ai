@@ -71,7 +71,6 @@ export function SuggestionCard({
         onPress={() => onPress(suggestion.text)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        activeOpacity={1}
       >
         <Card className="px-5 py-5 min-h-[110px] justify-between border-border bg-card shadow-sm">
           <Image
