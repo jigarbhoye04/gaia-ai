@@ -63,9 +63,9 @@ export function SidebarFooter() {
   }
 
   return (
-    <View className="border-t border-border/30 py-2 bg-sidebar">
+    <View className="border-t border-border/20 py-3 bg-surface-0">
       {/* Need Support */}
-      <TouchableOpacity className="flex-row items-center px-5 py-2.5 gap-3" activeOpacity={0.7}>
+      <TouchableOpacity className="flex-row items-center px-6 py-3 gap-3" activeOpacity={0.7}>
         <HugeiconsIcon
           icon={InformationCircleIcon}
           size={20}
@@ -75,7 +75,7 @@ export function SidebarFooter() {
       </TouchableOpacity>
 
       {/* User Info */}
-      <TouchableOpacity className="flex-row items-center px-4 py-2 gap-3" onPress={handleUserPress} activeOpacity={0.7}>
+      <TouchableOpacity className="flex-row items-center px-6 py-3 gap-3" onPress={handleUserPress} activeOpacity={0.7}>
         {user?.picture ? (
           <Image source={{ uri: user.picture }} className="w-8 h-8 rounded-full" />
         ) : (
@@ -90,7 +90,7 @@ export function SidebarFooter() {
           <Text className="text-foreground text-sm font-semibold" numberOfLines={1}>
             {user?.name || "User"}
           </Text>
-          <Text className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">GAIA Free</Text>
+          <Text className="text-muted-foreground text-[9px] uppercase font-bold tracking-[0.15em] opacity-60">GAIA Free</Text>
         </View>
         <HugeiconsIcon
           icon={ArrowDown01Icon}

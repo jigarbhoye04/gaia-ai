@@ -38,7 +38,7 @@ export function ChatHeader({
   };
 
   return (
-    <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-border bg-background shadow-sm elevation-3">
+    <View className="flex-row items-center justify-between px-6 py-4 border-b border-border/10 bg-surface-1">
       <TouchableOpacity
         onPress={onMenuPress}
         className="p-1"
@@ -48,15 +48,15 @@ export function ChatHeader({
       </TouchableOpacity>
 
       <TouchableOpacity
-        className="flex-row items-center gap-1 px-2.5 py-1"
+        className="flex-row items-center gap-2 px-3 py-1.5"
         activeOpacity={0.7}
         onPress={() => setIsModelSelectorVisible(true)}
       >
-        <Text className="text-base text-foreground font-mono">{selectedModel.name}</Text>
+        <Text className="text-sm text-foreground font-bold tracking-tight">{selectedModel.name}</Text>
         <HugeiconsIcon
           icon={ArrowDown01Icon}
-          size={16}
-          color="#8e8e93"
+          size={14}
+          color="#666666"
         />
       </TouchableOpacity>
 
@@ -89,8 +89,8 @@ export function ChatHeader({
         >
           <HugeiconsIcon
             icon={Edit01Icon}
-            size={20}
-            color="#ffffff"
+            size={18}
+            color="#bbbbbb"
           />
         </TouchableOpacity>
       </View>

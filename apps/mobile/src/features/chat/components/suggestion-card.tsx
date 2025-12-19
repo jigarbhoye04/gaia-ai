@@ -72,13 +72,13 @@ export function SuggestionCard({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
       >
-        <Card className="px-5 py-5 min-h-[110px] justify-between border-border bg-card shadow-sm">
+        <Card className="px-5 py-5 min-h-[120px] justify-between border-transparent bg-surface-2 shadow-md">
           <Image
             source={{ uri: suggestion.iconUrl }}
-            className="w-8 h-8 rounded-lg"
+            className="w-8 h-8 rounded-lg opacity-80"
             resizeMode="contain"
           />
-          <Text className="text-sm font-medium text-foreground mt-3 leading-5" numberOfLines={2}>
+          <Text className="text-[13px] font-semibold text-foreground/80 mt-4 leading-relaxed" numberOfLines={2}>
             {suggestion.text}
           </Text>
         </Card>

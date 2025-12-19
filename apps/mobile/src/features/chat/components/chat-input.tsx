@@ -35,13 +35,16 @@ export function ChatInput({
   };
 
   return (
-      <View className="flex-row items-end rounded-3xl bg-zinc-100 dark:bg-zinc-800 px-3 py-2">
+      <View className="flex-row items-end rounded-[28px] bg-surface-2 px-3 py-2 border border-border/10 shadow-lg">
         {/* Plus Button */}
-        <Pressable className="p-2">
+        <Pressable 
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-white/5"
+          onPress={() => console.log("Attach pressed")}
+        >
           <HugeiconsIcon
             icon={PlusSignIcon}
-            size={22}
-            className="text-zinc-500"
+            size={20}
+            color="#8e8e93"
           />
         </Pressable>
 
@@ -50,27 +53,34 @@ export function ChatInput({
           value={value}
           onChangeText={setValue}
           placeholder={placeholder}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor="#666666"
           multiline
           editable={!disabled}
-          className="flex-1 text-base text-zinc-900 dark:text-white px-2 py-2 max-h-32"
+          className="flex-1 text-[15px] leading-[22px] text-white px-2 py-2 max-h-32 text-left"
+          style={{ textAlignVertical: 'bottom' }}
         />
 
         {/* Send */}
-        <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <Animated.View 
+          style={{ 
+            transform: [{ scale: scaleAnim }],
+            opacity: canSubmit ? 1 : 0.4
+          }}
+          className="pb-0.5"
+        >
           <Pressable
             onPress={handleSend}
             disabled={!canSubmit}
             className={`h-9 w-9 rounded-full items-center justify-center ${
               canSubmit
-                ? "bg-[#00bbff]"
-                : "bg-zinc-300 dark:bg-zinc-700"
+                ? "bg-primary"
+                : "bg-surface-3"
             }`}
           >
             <HugeiconsIcon
               icon={SentIcon}
               size={18}
-              className="text-white"
+              color={canSubmit ? "#000000" : "#666666"}
             />
           </Pressable>
         </Animated.View>

@@ -94,11 +94,11 @@ export default function ChatPage() {
         renderNavigationView={renderDrawerContent}
       >
         <KeyboardAvoidingView
-          className="flex-1 bg-background"
+          className="flex-1 bg-surface-1"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
-          <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
+          <SafeAreaView className="flex-1 bg-surface-1" edges={["top", "bottom"]}>
             {/* Header */}
             <ChatHeader
               onMenuPress={toggleSidebar}
@@ -114,7 +114,7 @@ export default function ChatPage() {
                   data={messages}
                   renderItem={renderMessage}
                   keyExtractor={(item) => item.id}
-                  contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 }}
+                  contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
                   ListEmptyComponent={renderEmpty}
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
@@ -123,12 +123,12 @@ export default function ChatPage() {
             </TouchableWithoutFeedback>
 
             {/* Bottom Input & Typing Indicator */}
-            <View className="w-full bg-background px-4 pb-4">
+            <View className="w-full bg-surface-1/95 border-t border-border/10 px-6 pb-8 pt-4">
               {isTyping && (
-                <View className="flex-row items-center px-2 py-2 gap-1 mb-1">
-                  <View className="w-1.5 h-1.5 rounded-full bg-accent/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-accent/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+                <View className="flex-row items-center px-2 py-3 gap-2 mb-2">
+                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
+                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                 </View>
               )}
               <ChatInput

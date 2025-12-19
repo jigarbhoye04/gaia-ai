@@ -72,14 +72,14 @@ function CategorySection({
 }: CategorySectionProps) {
   return (
     <View className="mb-2">
-      <TouchableOpacity onPress={onToggle} activeOpacity={0.7}>
-        <View className="px-5 py-2 flex-row items-center justify-between">
-          <Text className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+      <TouchableOpacity onPress={onToggle} activeOpacity={0.6}>
+        <View className="px-6 py-3 flex-row items-center justify-between opacity-50">
+          <Text className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
             {title}
           </Text>
           <HugeiconsIcon
             icon={isExpanded ? ArrowDown01Icon : ArrowUp01Icon}
-            size={14}
+            size={12}
             color="#8e8e93"
           />
         </View>
@@ -91,19 +91,24 @@ function CategorySection({
           return (
             <TouchableOpacity
               key={item.id}
-              className={`flex-row items-center px-5 py-3 gap-3 ${
-                isActive ? "bg-secondary/40" : ""
+              className={`flex-row items-center px-6 py-3 gap-3 relative ${
+                isActive ? "bg-white/10" : "bg-transparent"
               }`}
               onPress={() => onSelectChat(item.id)}
               activeOpacity={0.7}
             >
+              {isActive && (
+                <View className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full" />
+              )}
               <HugeiconsIcon
                 icon={item.isStarred ? FavouriteIcon : BubbleChatIcon}
                 size={16}
-                color={isActive ? "#00bbff" : "#8e8e93"}
+                color={isActive ? "#ffffff" : "#666666"}
               />
               <Text
-                className={`flex-1 text-sm ${isActive ? "text-[#00bbff] font-medium" : "text-foreground"}`}
+                className={`flex-1 text-[13px] ${
+                  isActive ? "text-white font-semibold" : "text-muted-foreground font-normal"
+                }`}
                 numberOfLines={1}
               >
                 {item.title}

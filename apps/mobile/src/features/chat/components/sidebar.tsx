@@ -20,7 +20,7 @@ export function SidebarContent({
   onNewChat,
 }: SidebarProps) {
   return (
-    <SafeAreaView className="flex-1 bg-[#141414]" edges={["top", "bottom"]}>
+    <SafeAreaView className="flex-1 bg-surface-0" edges={["top", "bottom"]}>
       <SidebarHeader onNewChat={onNewChat} />
       <ChatHistory onSelectChat={onSelectChat} />
       <SidebarFooter />

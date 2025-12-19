@@ -54,15 +54,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
     setIsPinned(!isPinned);
   };
 
+  const isUser = message.isUser;
+
   return (
     <Animated.View
-      className={`flex-row my-2 px-4 ${message.isUser ? "justify-end" : "justify-start items-start"}`}
+      className={`flex-row py-6 px-6 ${isUser ? "justify-end" : "justify-start items-start"}`}
       style={{
         opacity: fadeAnim,
         transform: [{ scale: scaleAnim }],
       }}
     >
-      {!message.isUser && (
+      {!isUser && (
         <Image
           source={require("@/assets/logo/logo.webp")}
           className="w-7 h-7 mr-3 mt-1"
@@ -70,39 +72,36 @@ export function ChatMessage({ message }: ChatMessageProps) {
         />
       )}
 
-      <View className={`flex-1 ${message.isUser ? "items-end" : "items-start"}`}>
+      <View className={`max-w-[85%] ${isUser ? "items-end" : "items-start"}`}>
         <View
-          className={`px-4 py-2.5 rounded-2xl ${
-            message.isUser
-              ? "bg-[#00bbff] self-end"
-              : "bg-secondary dark:bg-zinc-800 self-start"
-          }`}
+          className={`px-5 py-4 ${
+            isUser ? "bg-primary rounded-3xl rounded-tr-sm" : "bg-surface-2 rounded-3xl rounded-tl-sm"
+          } shadow-sm`}
         >
           <Text
             className={`text-base leading-5 ${
-              message.isUser ? "text-black" : "text-foreground"
+              isUser ? "text-black" : "text-white"
             }`}
           >
             {message.text}
           </Text>
         </View>
 
-        {!message.isUser && (
-          <View className="flex-row mt-1 ml-0.5 gap-2">
-            <TouchableOpacity onPress={handlePin} className="p-1 opacity-50" activeOpacity={0.7}>
+        {/* Message Content */}
+        {!isUser && (
+          <View className="mt-4 flex-row items-center gap-4 opacity-40">
+            <TouchableOpacity className="flex-row items-center gap-1.5" onPress={handleCopy} activeOpacity={0.6}>
+              <HugeiconsIcon icon={Copy01Icon} size={14} color="#ffffff" />
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-white">Copy</Text>
+            </TouchableOpacity>
+            <TouchableOpacity className="flex-row items-center gap-1.5" onPress={handlePin} activeOpacity={0.6}>
               <HugeiconsIcon
                 icon={PinIcon}
                 size={14}
-                color={isPinned ? "#00bbff" : "#8e8e93"}
-                fill={isPinned ? "#00bbff" : "none"}
+                color="#ffffff"
+                fill={isPinned ? "#ffffff" : "none"}
               />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleCopy} className="p-1 opacity-50" activeOpacity={0.7}>
-              <HugeiconsIcon
-                icon={Copy01Icon}
-                size={14}
-                color="#8e8e93"
-              />
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-white">Pin</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -110,5 +109,3 @@ export function ChatMessage({ message }: ChatMessageProps) {
     </Animated.View>
   );
 }
-
-
