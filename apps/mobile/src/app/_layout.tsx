@@ -10,17 +10,18 @@ import {
   RobotoMono_400Regular,
   RobotoMono_500Medium,
 } from "@expo-google-fonts/roboto-mono";
+import { PortalHost } from "@rn-primitives/portal";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import "react-native-reanimated";
-import { PortalHost } from "@rn-primitives/portal";
 import { View } from "react-native";
-import { AuthProvider } from "@/features/auth";
-import { ChatProvider } from "@/features/chat";
+import "react-native-reanimated";
+
 import "../../global.css";
 import { colorScheme } from "nativewind";
+import { AuthProvider } from "@/features/auth";
+import { ChatProvider } from "@/features/chat";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -47,19 +48,21 @@ export default function RootLayout() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <AuthProvider>
-        <ChatProvider>
+    <AuthProvider>
+      <ChatProvider>
+        <View style={{ flex: 1 }}>
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="signup" options={{ headerShown: false }} />
-            <Stack.Screen name="(chat)" options={{ headerShown: false }} />
+            <Stack.Screen name="(app)" options={{ headerShown: false }} />
+            <Stack.Screen name="login/index" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="signup/index"
+              options={{ headerShown: false }}
+            />
           </Stack>
           <PortalHost />
-        </ChatProvider>
-      </AuthProvider>
-      <StatusBar style="auto" />
-    </View>
+          <StatusBar style="auto" />
+        </View>
+      </ChatProvider>
+    </AuthProvider>
   );
 }

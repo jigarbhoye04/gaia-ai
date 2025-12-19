@@ -3,7 +3,7 @@
  * Manages authentication state and provides auth utilities
  */
 
-import { useRouter, useSegments } from "expo-router";
+import { useRouter } from "expo-router";
 import {
   createContext,
   type ReactNode,
@@ -17,7 +17,7 @@ import {
   removeAuthToken,
   removeUserInfo,
   type UserInfo,
-} from "@/shared/utils/auth-storage";
+} from "@/features/auth/utils/auth-storage";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -33,26 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserInfo | null>(null);
-  const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
     checkAuthStatus();
   }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const inAuthGroup = segments[0] === "login" || segments[0] === "signup";
-
-    if (!isAuthenticated && !inAuthGroup) {
-      // Redirect to login if not authenticated
-      router.replace("/login");
-    } else if (isAuthenticated && inAuthGroup) {
-      // Redirect to main app if authenticated
-      router.replace("/(tabs)");
-    }
-  }, [isAuthenticated, segments, isLoading, router]);
 
   const checkAuthStatus = async () => {
     try {
@@ -88,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await removeUserInfo();
       setIsAuthenticated(false);
       setUser(null);
-      router.replace("/auth/login");
+      router.replace("/login");
     } catch (error) {
       console.error("Error signing out:", error);
     }

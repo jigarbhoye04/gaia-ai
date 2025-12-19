@@ -1,10 +1,6 @@
-/**
- * Auth Footer Component
- * Reusable footer with legal links for auth screens
- */
-
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { View } from "react-native";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 
 interface AuthFooterProps {
   showSignUpDisclaimer?: boolean;
@@ -22,46 +18,35 @@ export function AuthFooter({ showSignUpDisclaimer = false }: AuthFooterProps) {
   };
 
   return (
-    <View style={styles.footer}>
+    <View className="items-center justify-center mt-6">
       {showSignUpDisclaimer && (
-        <Text style={styles.footerText}>
+        <Text className="text-sm text-zinc-400 text-center">
           By creating an account, you agree to the{" "}
         </Text>
       )}
-      <View style={styles.footerLinks}>
-        <TouchableOpacity onPress={handleTermsPress}>
-          <Text style={styles.footerLink}>Terms of Service</Text>
-        </TouchableOpacity>
-        <Text style={styles.footerText}> and </Text>
-        <TouchableOpacity onPress={handlePrivacyPress}>
-          <Text style={styles.footerLink}>Privacy Policy</Text>
-        </TouchableOpacity>
+      <View className="flex-row flex-wrap justify-center">
+        <Button
+          variant="link"
+          size="sm"
+          onPress={handleTermsPress}
+          className="p-0 h-auto"
+        >
+          <Text className="text-sm text-zinc-400 underline">
+            Terms of Service
+          </Text>
+        </Button>
+        <Text className="text-sm text-zinc-400 mx-1"> and </Text>
+        <Button
+          variant="link"
+          size="sm"
+          onPress={handlePrivacyPress}
+          className="p-0 h-auto"
+        >
+          <Text className="text-sm text-zinc-400 underline">
+            Privacy Policy
+          </Text>
+        </Button>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  footer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: ChatTheme.spacing.lg,
-  },
-  footerLinks: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  footerText: {
-    fontSize: ChatTheme.fontSize.sm,
-    color: ChatTheme.textSecondary,
-    fontFamily: ChatTheme.fonts.regular,
-    textAlign: "center",
-  },
-  footerLink: {
-    fontSize: ChatTheme.fontSize.sm,
-    color: ChatTheme.textSecondary,
-    fontFamily: ChatTheme.fonts.regular,
-    textDecorationLine: "underline",
-  },
-});

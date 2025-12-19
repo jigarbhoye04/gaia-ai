@@ -1,8 +1,3 @@
-/**
- * ChatContext
- * Global context for managing active chat session
- */
-
 import { createContext, type ReactNode, useContext, useState } from "react";
 
 interface ChatContextValue {

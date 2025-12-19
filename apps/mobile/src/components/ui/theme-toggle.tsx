@@ -1,8 +1,3 @@
-/**
- * Theme Toggle Component
- * Allows users to switch between light, dark, and system themes
- */
-
 import { colorScheme } from "nativewind";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
@@ -86,9 +81,6 @@ export function ThemeToggle({
   );
 }
 
-/**
- * Simple icon-only theme toggle button
- */
 export function ThemeToggleButton({ className }: { className?: string }) {
   const [selectedTheme, setSelectedTheme] = useState<ThemeOption>("system");
 
