@@ -1,8 +1,3 @@
-/**
- * SuggestionCard Component
- * Animated card for chat suggestions with press feedback
- */
-
 import { useEffect, useRef } from "react";
 import { Animated, Image, Pressable } from "react-native";
 import { Card } from "@/components/ui/card";

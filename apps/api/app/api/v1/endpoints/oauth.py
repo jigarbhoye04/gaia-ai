@@ -45,7 +45,7 @@ async def login_workos_mobile():
     """Start WorkOS SSO flow for mobile apps (Expo)."""
     authorization_url = workos.user_management.get_authorization_url(
         provider="authkit",
-        redirect_uri="http://192.168.1.126:8000/api/v1/oauth/workos/mobile/callback", 
+        redirect_uri=settings.WORKOS_MOBILE_REDIRECT_URI, 
     )
     return {"url": authorization_url}
 
@@ -82,7 +82,7 @@ async def workos_mobile_callback(code: Optional[str] = None) -> RedirectResponse
         # Send token back via deep link for mobile to handle storage
         print("this is auth response",auth_response)
         token = auth_response.sealed_session or auth_response.access_token
-        return RedirectResponse(url=f"giamobile://auth/callback?token={token}") 
+        return RedirectResponse(url=f"gaiamobile://auth/callback?token={token}") 
 
     except HTTPException as e:
         logger.error(f"HTTP error during WorkOS mobile auth: {e.detail}")

@@ -1,8 +1,3 @@
-/**
- * Auth Storage Utility
- * Handles secure storage of authentication tokens using Expo SecureStore
- */
-
 import * as SecureStore from "expo-secure-store";
 
 const AUTH_TOKEN_KEY = "gaia_auth_token";
@@ -13,10 +8,6 @@ export interface UserInfo {
   email: string;
   picture?: string;
 }
-
-/**
- * Store authentication token securely
- */
 export async function storeAuthToken(token: string): Promise<void> {
   try {
     await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
@@ -26,9 +17,6 @@ export async function storeAuthToken(token: string): Promise<void> {
   }
 }
 
-/**
- * Retrieve authentication token
- */
 export async function getAuthToken(): Promise<string | null> {
   try {
     return await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
@@ -38,9 +26,6 @@ export async function getAuthToken(): Promise<string | null> {
   }
 }
 
-/**
- * Remove authentication token
- */
 export async function removeAuthToken(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
@@ -49,9 +34,6 @@ export async function removeAuthToken(): Promise<void> {
   }
 }
 
-/**
- * Store user information
- */
 export async function storeUserInfo(userInfo: UserInfo): Promise<void> {
   try {
     await SecureStore.setItemAsync(USER_INFO_KEY, JSON.stringify(userInfo));
@@ -61,9 +43,6 @@ export async function storeUserInfo(userInfo: UserInfo): Promise<void> {
   }
 }
 
-/**
- * Retrieve user information
- */
 export async function getUserInfo(): Promise<UserInfo | null> {
   try {
     const userInfoString = await SecureStore.getItemAsync(USER_INFO_KEY);
@@ -74,9 +53,6 @@ export async function getUserInfo(): Promise<UserInfo | null> {
   }
 }
 
-/**
- * Remove user information
- */
 export async function removeUserInfo(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(USER_INFO_KEY);
@@ -85,17 +61,10 @@ export async function removeUserInfo(): Promise<void> {
   }
 }
 
-/**
- * Check if user is authenticated
- */
 export async function isAuthenticated(): Promise<boolean> {
   const token = await getAuthToken();
   return token !== null;
 }
-
-/**
- * Clear all authentication data
- */
 export async function clearAuthData(): Promise<void> {
   await removeAuthToken();
   await removeUserInfo();

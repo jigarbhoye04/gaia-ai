@@ -1,8 +1,3 @@
-/**
- * SidebarHeader Component
- * Logo and menu toggle for sidebar
- */
-
 import { Image, TextInput, TouchableOpacity, View } from "react-native";
 import {
   HugeiconsIcon,

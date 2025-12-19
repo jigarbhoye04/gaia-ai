@@ -1,8 +1,3 @@
-/**
- * useChat Hook
- * Manages chat state and message handling per chatId
- */
-
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FlatList } from "react-native";
 import type { Message } from "../types";

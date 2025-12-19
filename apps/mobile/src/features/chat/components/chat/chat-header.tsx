@@ -1,8 +1,3 @@
-/**
- * Chat Header Component
- * Top navigation bar with menu, model selector, and actions
- */
-
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import {

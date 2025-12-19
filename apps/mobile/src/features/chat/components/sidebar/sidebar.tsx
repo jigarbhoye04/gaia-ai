@@ -1,8 +1,3 @@
-/**
- * Sidebar Component
- * Drawer sidebar with chat history using react-native-gesture-handler
- */
-
 import { PortalHost } from "@rn-primitives/portal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChatHistory } from "./chat-history";

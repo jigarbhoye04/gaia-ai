@@ -1,8 +1,3 @@
-/**
- * Auth Service
- * Handles authentication API calls and OAuth flow
- */
-
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 
@@ -12,7 +7,6 @@ const API_BASE_URL = __DEV__
     : "http://192.168.1.126:8000" // iOS simulator / physical device
   : "https://api.heygaia.io";
 
-// Enable result handling for web browser
 WebBrowser.maybeCompleteAuthSession();
 
 export interface LoginUrlResponse {
@@ -25,10 +19,6 @@ export interface UserInfoResponse {
   picture?: string;
   user_id?: string;
 }
-
-/**
- * Get the WorkOS login URL for mobile
- */
 export async function getLoginUrl(): Promise<string> {
   try {
     const response = await fetch(
@@ -47,23 +37,16 @@ export async function getLoginUrl(): Promise<string> {
   }
 }
 
-/**
- * Start the OAuth authentication flow
- * Returns the authentication token on success
- */
 export async function startOAuthFlow(): Promise<string> {
   try {
-    // Get the login URL from the backend
     const authUrl = await getLoginUrl();
 
-    // Open the browser for authentication
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
       "giamobile://auth/callback",
     );
 
     if (result.type === "success" && result.url) {
-      // Extract token from the callback URL
       const url = new URL(result.url);
       const token = url.searchParams.get("token");
       console.log("token is here", token);
@@ -84,9 +67,6 @@ export async function startOAuthFlow(): Promise<string> {
   }
 }
 
-/**
- * Fetch user information from the API
- */
 export async function fetchUserInfo(token: string): Promise<UserInfoResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/user/me`, {
@@ -115,9 +95,6 @@ export async function fetchUserInfo(token: string): Promise<UserInfoResponse> {
   }
 }
 
-/**
- * Logout user
- */
 export async function logout(token: string): Promise<void> {
   try {
     await fetch(`${API_BASE_URL}/api/v1/oauth/logout`, {
@@ -129,6 +106,5 @@ export async function logout(token: string): Promise<void> {
     });
   } catch (error) {
     console.error("Error during logout:", error);
-    // Don't throw - we want to clear local data even if API call fails
   }
 }

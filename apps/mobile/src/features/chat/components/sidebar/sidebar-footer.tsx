@@ -1,8 +1,3 @@
-/**
- * Sidebar Footer Component
- * User info and support section for sidebar
- */
-
 import {
   ActivityIndicator,
   Image,
@@ -33,7 +28,6 @@ import { useAuth } from "@/features/auth";
 export function SidebarFooter() {
   const { user, isLoading, signOut } = useAuth();
 
-  // Get user initials for avatar fallback
   const getInitials = (name?: string) => {
     if (!name) return "U";
     const parts = name.trim().split(" ");
@@ -43,7 +37,6 @@ export function SidebarFooter() {
     return name[0].toUpperCase();
   };
 
-  // Generate avatar color based on email
   const getAvatarColor = (email?: string) => {
     if (!email) return "#00aa88";
     const colors = [
@@ -72,7 +65,6 @@ export function SidebarFooter() {
 
   return (
     <View className="border-t border-border/20 py-3">
-      {/* Need Support */}
       <TouchableOpacity
         className="flex-row items-center px-6 py-3 gap-3"
         activeOpacity={0.7}
@@ -83,7 +75,6 @@ export function SidebarFooter() {
         </Text>
       </TouchableOpacity>
 
-      {/* User Info */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Pressable className="flex-row items-center px-6 py-3 gap-3 active:opacity-70">

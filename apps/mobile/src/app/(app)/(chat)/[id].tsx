@@ -1,9 +1,3 @@
-/**
- * Dynamic Chat Route - app/(app)/(chat)/[id].tsx
- * Handles individual chat sessions with dynamic routing
- * Following Expo Router conventions - logic in app folder, components in features
- */
-
 import { useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import {
@@ -38,7 +32,6 @@ export default function ChatPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { activeChatId, setActiveChatId, createNewChat } = useChatContext();
 
-  // Set the active chat from the route parameter
   useEffect(() => {
     if (id && id !== activeChatId) {
       setActiveChatId(id);
@@ -50,7 +43,6 @@ export default function ChatPage() {
 
   const { drawerRef, closeSidebar, toggleSidebar } = useSidebar();
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     scrollToBottom();
   }, [messages.length, scrollToBottom]);

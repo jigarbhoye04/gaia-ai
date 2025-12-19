@@ -1,9 +1,4 @@
-/**
- * AI Service
- * Handles communication with AI backend
- */
-
-/**
+/*
  * Mock AI response function - replace with actual AI integration
  * @param userMessage - The user's message
  * @param chatId - The chat session ID for backend context
