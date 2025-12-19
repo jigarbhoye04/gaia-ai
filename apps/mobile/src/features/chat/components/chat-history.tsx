@@ -9,8 +9,8 @@ import {
   ArrowDown01Icon,
   ArrowUp01Icon,
   BubbleChatIcon,
-  HugeiconsIcon,
   FavouriteIcon,
+  HugeiconsIcon,
 } from "@/components/icons";
 import { Text } from "@/components/ui/text";
 import { useChatContext } from "../hooks/use-chat-context";
@@ -105,10 +105,7 @@ function CategorySection({
                 size={16}
                 color={isActive ? "#ffffff" : "#666666"}
               />
-              <Text
-                className={`flex-1`}
-                numberOfLines={1}
-              >
+              <Text className={`flex-1`} numberOfLines={1}>
                 {item.title}
               </Text>
             </TouchableOpacity>
@@ -132,8 +129,8 @@ export function ChatHistory({ onSelectChat }: ChatHistoryProps) {
   };
 
   return (
-    <ScrollView 
-      className="flex-1" 
+    <ScrollView
+      className="flex-1"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 16 }}
     >

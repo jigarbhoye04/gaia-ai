@@ -52,13 +52,22 @@ export function ModelSelector({
       >
         <View className="bg-background rounded-2xl w-full max-w-sm max-h-[70%] shadow-xl elevation-8 overflow-hidden">
           <View className="flex-row items-center justify-between px-5 py-4 border-b border-border">
-            <Text className="text-lg font-bold text-foreground">Select AI Model</Text>
-            <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.7}>
+            <Text className="text-lg font-bold text-foreground">
+              Select AI Model
+            </Text>
+            <TouchableOpacity
+              onPress={onClose}
+              className="p-1"
+              activeOpacity={0.7}
+            >
               <HugeiconsIcon icon={Cancel01Icon} size={22} color="#ffffff" />
             </TouchableOpacity>
           </View>
 
-          <ScrollView className="max-h-[400px]" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            className="max-h-[400px]"
+            showsVerticalScrollIndicator={false}
+          >
             {models.map((model) => (
               <TouchableOpacity
                 key={model.id}
@@ -76,10 +85,14 @@ export function ModelSelector({
                   />
                   <View className="flex-1">
                     <View className="flex-row items-center gap-2">
-                      <Text className="text-base font-semibold text-foreground">{model.name}</Text>
+                      <Text className="text-base font-semibold text-foreground">
+                        {model.name}
+                      </Text>
                       {model.isPro && (
                         <View className="bg-accent px-1.5 py-0.5 rounded-md">
-                          <Text className="text-[9px] font-black text-black uppercase tracking-tighter">PRO</Text>
+                          <Text className="text-[9px] font-black text-black uppercase tracking-tighter">
+                            PRO
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -103,5 +116,3 @@ export function ModelSelector({
     </Modal>
   );
 }
-
-

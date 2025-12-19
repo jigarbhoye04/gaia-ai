@@ -27,8 +27,8 @@ import {
   ChatMessage,
   DEFAULT_SUGGESTIONS,
   type Message,
-  SidebarContent,
   SIDEBAR_WIDTH,
+  SidebarContent,
   useChat,
   useChatContext,
   useSidebar,
@@ -66,10 +66,7 @@ export default function ChatPage() {
   };
 
   const renderDrawerContent = () => (
-    <SidebarContent
-      onSelectChat={handleSelectChat}
-      onNewChat={handleNewChat}
-    />
+    <SidebarContent onSelectChat={handleSelectChat} onNewChat={handleNewChat} />
   );
 
   const renderMessage = ({ item }: { item: Message }) => (
@@ -98,7 +95,10 @@ export default function ChatPage() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
-          <SafeAreaView className="flex-1 bg-surface-1" edges={["top", "bottom"]}>
+          <SafeAreaView
+            className="flex-1 bg-surface-1"
+            edges={["top", "bottom"]}
+          >
             {/* Header */}
             <ChatHeader
               onMenuPress={toggleSidebar}
@@ -131,9 +131,7 @@ export default function ChatPage() {
                   <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                 </View>
               )}
-              <ChatInput
-                placeholder="What can I do for you today?"
-              />
+              <ChatInput placeholder="What can I do for you today?" />
             </View>
           </SafeAreaView>
         </KeyboardAvoidingView>
@@ -141,5 +139,3 @@ export default function ChatPage() {
     </GestureHandlerRootView>
   );
 }
-
-

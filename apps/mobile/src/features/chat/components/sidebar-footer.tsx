@@ -27,13 +27,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/features/auth";
 import { Text } from "@/components/ui/text";
+import { useAuth } from "@/features/auth";
 
 export function SidebarFooter() {
   const { user, isLoading, signOut } = useAuth();
-
-
 
   // Get user initials for avatar fallback
   const getInitials = (name?: string) => {
@@ -75,13 +73,14 @@ export function SidebarFooter() {
   return (
     <View className="border-t border-border/20 py-3">
       {/* Need Support */}
-      <TouchableOpacity className="flex-row items-center px-6 py-3 gap-3" activeOpacity={0.7}>
-        <HugeiconsIcon
-          icon={InformationCircleIcon}
-          size={20}
-          color="#8e8e93"
-        />
-        <Text className="text-foreground text-sm font-medium">Need Support?</Text>
+      <TouchableOpacity
+        className="flex-row items-center px-6 py-3 gap-3"
+        activeOpacity={0.7}
+      >
+        <HugeiconsIcon icon={InformationCircleIcon} size={20} color="#8e8e93" />
+        <Text className="text-foreground text-sm font-medium">
+          Need Support?
+        </Text>
       </TouchableOpacity>
 
       {/* User Info */}
@@ -89,29 +88,40 @@ export function SidebarFooter() {
         <DropdownMenuTrigger asChild>
           <Pressable className="flex-row items-center px-6 py-3 gap-3 active:opacity-70">
             {user?.picture ? (
-              <Image source={{ uri: user.picture }} className="w-8 h-8 rounded-full" />
+              <Image
+                source={{ uri: user.picture }}
+                className="w-8 h-8 rounded-full"
+              />
             ) : (
               <View
                 className="w-8 h-8 rounded-full justify-center items-center"
                 style={{ backgroundColor: getAvatarColor(user?.email) }}
               >
-                <Text className="text-white text-xs font-bold">{getInitials(user?.name)}</Text>
+                <Text className="text-white text-xs font-bold">
+                  {getInitials(user?.name)}
+                </Text>
               </View>
             )}
             <View className="flex-1">
-              <Text className="text-foreground text-sm font-semibold" numberOfLines={1}>
+              <Text
+                className="text-foreground text-sm font-semibold"
+                numberOfLines={1}
+              >
                 {user?.name || "User"}
               </Text>
-              <Text className="text-muted-foreground text-[9px] uppercase font-bold tracking-[0.15em] opacity-60">GAIA Free</Text>
+              <Text className="text-muted-foreground text-[9px] uppercase font-bold tracking-[0.15em] opacity-60">
+                GAIA Free
+              </Text>
             </View>
-            <HugeiconsIcon
-              icon={ArrowDown01Icon}
-              size={16}
-              color="#8e8e93"
-            />
+            <HugeiconsIcon icon={ArrowDown01Icon} size={16} color="#8e8e93" />
           </Pressable>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className='w-56' side="top" align="end" portalHost="sidebar-footer">
+        <DropdownMenuContent
+          className="w-56"
+          side="top"
+          align="end"
+          portalHost="sidebar-footer"
+        >
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
@@ -134,5 +144,3 @@ export function SidebarFooter() {
     </View>
   );
 }
-
-

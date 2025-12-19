@@ -53,11 +53,11 @@ module.exports = {
         },
       },
       spacing: {
-        '2': '8px',
-        '3': '12px',
-        '4': '16px',
-        '6': '24px',
-        '8': '32px',
+        2: "8px",
+        3: "12px",
+        4: "16px",
+        6: "24px",
+        8: "32px",
       },
       borderRadius: {
         lg: "var(--radius)",

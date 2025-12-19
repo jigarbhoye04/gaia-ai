@@ -5,10 +5,10 @@
 
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { HugeiconsIcon } from "@/components/icons";
 import {
   ArrowDown01Icon,
   Edit01Icon,
+  HugeiconsIcon,
   Menu01Icon,
   Search01Icon,
 } from "@/components/icons";
@@ -52,12 +52,10 @@ export function ChatHeader({
         activeOpacity={0.7}
         onPress={() => setIsModelSelectorVisible(true)}
       >
-        <Text className="text-sm text-foreground font-bold tracking-tight">{selectedModel.name}</Text>
-        <HugeiconsIcon
-          icon={ArrowDown01Icon}
-          size={14}
-          color="#666666"
-        />
+        <Text className="text-sm text-foreground font-bold tracking-tight">
+          {selectedModel.name}
+        </Text>
+        <HugeiconsIcon icon={ArrowDown01Icon} size={14} color="#666666" />
       </TouchableOpacity>
 
       <ModelSelector
@@ -75,11 +73,7 @@ export function ChatHeader({
             activeOpacity={0.7}
             onPress={onSearchPress}
           >
-            <HugeiconsIcon
-              icon={Search01Icon}
-              size={20}
-              color="#ffffff"
-            />
+            <HugeiconsIcon icon={Search01Icon} size={20} color="#ffffff" />
           </TouchableOpacity>
         )}
         <TouchableOpacity
@@ -87,15 +81,9 @@ export function ChatHeader({
           onPress={onNewChatPress}
           activeOpacity={0.7}
         >
-          <HugeiconsIcon
-            icon={Edit01Icon}
-            size={18}
-            color="#bbbbbb"
-          />
+          <HugeiconsIcon icon={Edit01Icon} size={18} color="#bbbbbb" />
         </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-

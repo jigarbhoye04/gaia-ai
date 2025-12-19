@@ -20,7 +20,12 @@ export function ChatEmptyState({
   return (
     <ScrollView
       className="flex-1"
-      contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 32 }}
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingTop: 64,
+        paddingBottom: 32,
+      }}
       showsVerticalScrollIndicator={false}
     >
       <View className="items-center mb-12">
@@ -40,7 +45,9 @@ export function ChatEmptyState({
       </View>
 
       <View className="w-full">
-        <Text className="text-base font-medium text-muted-foreground mb-4">Suggestions</Text>
+        <Text className="text-base font-medium text-muted-foreground mb-4">
+          Suggestions
+        </Text>
         <View className="flex-row flex-wrap gap-2 justify-between">
           {suggestions.map((suggestion, index) => (
             <SuggestionCard
@@ -55,5 +62,3 @@ export function ChatEmptyState({
     </ScrollView>
   );
 }
-
-

@@ -5,18 +5,8 @@
 
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useRef, useState } from "react";
-import {
-  Alert,
-  Animated,
-  Image,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import {
-  Copy01Icon,
-  HugeiconsIcon,
-  PinIcon,
-} from "@/components/icons";
+import { Alert, Animated, Image, TouchableOpacity, View } from "react-native";
+import { Copy01Icon, HugeiconsIcon, PinIcon } from "@/components/icons";
 import { Text } from "@/components/ui/text";
 import type { Message } from "../types";
 
@@ -75,7 +65,9 @@ export function ChatMessage({ message }: ChatMessageProps) {
       <View className={`max-w-[85%] ${isUser ? "items-end" : "items-start"}`}>
         <View
           className={`px-5 py-4 ${
-            isUser ? "bg-primary rounded-3xl rounded-tr-sm" : "bg-surface-2 rounded-3xl rounded-tl-sm"
+            isUser
+              ? "bg-primary rounded-3xl rounded-tr-sm"
+              : "bg-surface-2 rounded-3xl rounded-tl-sm"
           } shadow-sm`}
         >
           <Text
@@ -90,18 +82,30 @@ export function ChatMessage({ message }: ChatMessageProps) {
         {/* Message Content */}
         {!isUser && (
           <View className="mt-4 flex-row items-center gap-4 opacity-40">
-            <TouchableOpacity className="flex-row items-center gap-1.5" onPress={handleCopy} activeOpacity={0.6}>
+            <TouchableOpacity
+              className="flex-row items-center gap-1.5"
+              onPress={handleCopy}
+              activeOpacity={0.6}
+            >
               <HugeiconsIcon icon={Copy01Icon} size={14} color="#ffffff" />
-              <Text className="text-[10px] font-bold uppercase tracking-wider text-white">Copy</Text>
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
+                Copy
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity className="flex-row items-center gap-1.5" onPress={handlePin} activeOpacity={0.6}>
+            <TouchableOpacity
+              className="flex-row items-center gap-1.5"
+              onPress={handlePin}
+              activeOpacity={0.6}
+            >
               <HugeiconsIcon
                 icon={PinIcon}
                 size={14}
                 color="#ffffff"
                 fill={isPinned ? "#ffffff" : "none"}
               />
-              <Text className="text-[10px] font-bold uppercase tracking-wider text-white">Pin</Text>
+              <Text className="text-[10px] font-bold uppercase tracking-wider text-white">
+                Pin
+              </Text>
             </TouchableOpacity>
           </View>
         )}

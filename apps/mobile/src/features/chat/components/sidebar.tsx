@@ -3,8 +3,8 @@
  * Drawer sidebar with chat history using react-native-gesture-handler
  */
 
-import { SafeAreaView } from "react-native-safe-area-context";
 import { PortalHost } from "@rn-primitives/portal";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { ChatHistory } from "./chat-history";
 import { SidebarFooter } from "./sidebar-footer";
 import { SidebarHeader } from "./sidebar-header";
@@ -16,10 +16,7 @@ interface SidebarProps {
 
 export const SIDEBAR_WIDTH = 300;
 
-export function SidebarContent({
-  onSelectChat,
-  onNewChat,
-}: SidebarProps) {
+export function SidebarContent({ onSelectChat, onNewChat }: SidebarProps) {
   return (
     <SafeAreaView className="flex-1 bg-[#141414]" edges={["top", "bottom"]}>
       <SidebarHeader onNewChat={onNewChat} />
@@ -29,5 +26,3 @@ export function SidebarContent({
     </SafeAreaView>
   );
 }
-
-

@@ -5,8 +5,8 @@
 
 import { Image, TextInput, TouchableOpacity, View } from "react-native";
 import {
-  PencilEdit02Icon,
   HugeiconsIcon,
+  PencilEdit02Icon,
   Search01Icon,
 } from "@/components/icons";
 import { Text } from "@/components/ui/text";
@@ -25,7 +25,9 @@ export function SidebarHeader({ onNewChat }: SidebarHeaderProps) {
           className="w-7 h-7"
           resizeMode="contain"
         />
-        <Text className="text-xl font-bold tracking-tight text-foreground">GAIA</Text>
+        <Text className="text-xl font-bold tracking-tight text-foreground">
+          GAIA
+        </Text>
       </View>
 
       <View className="flex-row items-center gap-4">

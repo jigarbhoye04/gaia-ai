@@ -3,8 +3,8 @@
  * A React Native button with 3D elevation effects using NativeWind
  */
 
-import { Pressable, View } from "react-native";
 import { useMemo } from "react";
+import { Pressable, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -135,7 +135,7 @@ export function RaisedButton({
         "flex-row items-center justify-center gap-2 border overflow-hidden relative",
         sizeClasses,
         disabled && "opacity-50",
-        className
+        className,
       )}
       style={[
         {
@@ -164,7 +164,7 @@ export function RaisedButton({
         <Text
           className={cn(
             "font-semibold z-10",
-            size === "sm" ? "text-sm" : size === "lg" ? "text-base" : "text-sm"
+            size === "sm" ? "text-sm" : size === "lg" ? "text-base" : "text-sm",
           )}
           style={{ color: dynamicStyles.textColor }}
         >

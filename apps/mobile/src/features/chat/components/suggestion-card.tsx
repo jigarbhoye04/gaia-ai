@@ -78,7 +78,10 @@ export function SuggestionCard({
             className="w-8 h-8 rounded-lg opacity-80"
             resizeMode="contain"
           />
-          <Text className="text-[13px] font-semibold text-foreground/80 mt-4 leading-relaxed" numberOfLines={2}>
+          <Text
+            className="text-[13px] font-semibold text-foreground/80 mt-4 leading-relaxed"
+            numberOfLines={2}
+          >
             {suggestion.text}
           </Text>
         </Card>
