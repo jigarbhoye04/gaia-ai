@@ -3,3 +3,4 @@
  */
 
 export * from "./auth-storage";
+export * from "./color-utils";

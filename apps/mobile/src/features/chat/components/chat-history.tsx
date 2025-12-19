@@ -5,7 +5,10 @@
 
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, TouchableOpacity, View } from "react-native";
+import { HugeiconsIcon, PlusSignIcon } from "@/assets/icons";
+import { RaisedButton } from "@/components/ui/raised-button";
+import { Text } from "@/components/ui/text";
 import { ChatTheme } from "@/shared/constants/chat-theme";
 import { useChatContext } from "../hooks/use-chat-context";
 
@@ -120,17 +123,21 @@ export function ChatHistory({ onSelectChat, onNewChat }: ChatHistoryProps) {
   };
 
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      className="flex-1" 
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 16 }}
+    >
       {/* New Chat Button */}
-      <TouchableOpacity
-        className="flex-row items-center justify-center p-3 mx-4 mt-4 mb-4 bg-purple-500 rounded-xl shadow-lg"
+      <RaisedButton
         onPress={onNewChat}
+        className="mx-4 mt-4 mb-4"
       >
-        <Ionicons name="add" size={18} color={ChatTheme.background} />
-        <Text className="text-white text-base ml-2 font-semibold">
+        <HugeiconsIcon icon={PlusSignIcon} size={18} color="#000000" />
+        <Text className="text-black text-sm font-semibold">
           New Chat
         </Text>
-      </TouchableOpacity>
+      </RaisedButton>
 
       {/* Starred Chats */}
       {starredChats.length > 0 && (
