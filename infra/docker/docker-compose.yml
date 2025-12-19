@@ -1,0 +1,232 @@
+name: gaia-dev
+
+services:
+  # FastAPI Application (use profile to run in docker, otherwise run locally with mise)
+  gaia-backend:
+    container_name: gaia-backend
+    profiles: ["backend", "all"]
+    build: ./api
+    image: gaia
+    working_dir: /app
+    command:
+      [
+        "python",
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "80",
+        "--reload",
+        "--no-access-log",
+      ]
+    environment:
+      DEBUG: 1
+      PYTHONUNBUFFERED: 1
+      WATCHFILES_FORCE_POLLING: 1
+      # PYTHONPROFILEIMPORTTIME: 1
+      FORCE_COLOR: 1
+      WORKER_TYPE: main_app
+    env_file:
+      - ./api/.env
+    volumes:
+      - ./api:/app
+    ports:
+      - "8000:80"
+    restart: on-failure
+    tty: true
+    stdin_open: true
+    depends_on:
+      chromadb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    networks:
+      - gaia_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ChromaDB Service
+  chromadb:
+    image: chromadb/chroma:1.0.0
+    container_name: chromadb
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_PORT=8000
+    ports:
+      - "8080:8000"
+    restart: on-failure
+    healthcheck:
+      test:
+        ["CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # Postgres Service
+  postgres:
+    image: postgres:alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres # pragma: allowlist secret
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # Redis Service
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # MongoDB Service
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    volumes:
+      - mongo_data:/data/db
+    restart: on-failure
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # RabbitMQ Service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672" # AMQP protocol
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: always
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - gaia_network
+
+  # Arq Worker (use profile to run in docker, otherwise run locally with mise)
+  arq_worker:
+    container_name: arq_worker
+    image: gaia
+    profiles: ["worker", "all"]
+    working_dir: /app
+    env_file:
+      - ./api/.env
+    environment:
+      - WORKER_TYPE=arq_worker
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    restart: always
+    volumes:
+      - ./api:/app
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - gaia_network
+
+  # Mongo Express Service
+  mongo_express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: password # pragma: allowlist secret
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - gaia_network
+
+  # Voice Agent Worker
+  voice-agent-worker:
+    container_name: voice-agent-worker
+    profiles: ["backend", "voice"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.voice-agent
+    image: gaia-voice-agent
+    working_dir: /app
+    environment:
+      PYTHONUNBUFFERED: 1
+      FORCE_COLOR: 1
+      WORKER_TYPE: voice_agent_worker
+      DEBUG: 1
+      WATCHFILES_FORCE_POLLING: 1
+      HF_HUB_OFFLINE: "0"
+      LOCAL_FILES_ONLY: "0"
+      HF_HUB_ENABLE_HF_TRANSFER: "1"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - voice_agent_models:/home/appuser/.cache/huggingface
+    restart: on-failure
+    networks:
+      - gaia_network
+
+  chromadb_admin:
+    image: fengzhichao/chromadb-admin
+    container_name: chromadb_admin
+    networks:
+      - gaia_network
+    ports:
+      - "8082:3001"
+
+volumes:
+  chroma_data:
+  pgdata:
+  redis_data:
+  mongo_data:
+  rabbitmq_data:
+  voice_agent_models:
+
+networks:
+  gaia_network:
+    driver: bridge

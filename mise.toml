@@ -1,98 +1,284 @@
 # Root mise.toml for GAIA monorepo
 #
-# This file defines tasks and tools for the entire GAIA project.
+# mise manages tools (node, python, nx)
+# nx manages task execution and caching
 #
-# mise is a task runner and tool manager that handles both backend and frontend.
-#
-# Run 'mise tasks' to see all tasks in the current directory.
-# Run 'mise tasks --all' to see all tasks including subdirectories
+# Run 'mise tasks' to see all available tasks
 # Documentation: https://docs.heygaia.io/developers/commands
 
-
 [tools]
-mprocs = "0.7.3"
-python = "3.11"
+python = "3.12"
 node = "22"
 "npm:mintlify" = "latest"
 prek = "latest"
-uv = "latest" 
+uv = "latest"
+"npm:nx" = "latest"
 
 [env]
-_.python.venv = { path = "backend/.venv", create = true }
+_.python.venv = { path = "apps/api/.venv", create = true }
 MISE_NODE_COREPACK = "1"
 
-[tasks."dev:frontend"]
-description = "Run ONLY frontend"
-dir = "frontend"
-run = "mise dev"
+[hooks]
+postinstall = "pnpm install && nx sync api"
 
-[tasks."dev:backend"]
-description = "Run ONLY backend server (without docker dependencies)"
-dir = "backend"
-run = "mise dev"
+[settings]
+# npm.package_manager = "pnpm" # Use pnpm as the package manager
+experimental = true # Can setup hooks and advanced features
+
+# Development Tasks
+[tasks."dev:web"]
+description = "Run ONLY web (starts Docker automatically)"
+run = "nx run docker:docker:up && nx dev web"
+
+[tasks."dev:api"]
+description = "Run ONLY API server (starts Docker automatically)"
+run = "nx run docker:docker:up && nx dev api"
 
 [tasks."dev:arq"]
-description = "Run ONLY ARQ worker (without docker dependencies)"
-dir = "backend"
+description = "Run ONLY ARQ worker"
+dir = "apps/api"
 run = "mise worker"
 
+[tasks."dev:docs"]
+description = "Run ONLY docs"
+run = "nx dev docs"
+
+[tasks."dev:mobile"]
+description = "Run ONLY mobile app"
+run = "nx dev mobile"
+
 [tasks."dev:full"]
-description = "Run backend + frontend + arq + docker"
-run = 'mprocs "mise dev:backend" "mise dev:frontend" "mise dev:arq" "docker compose up"'
+description = "Run API + web + arq in parallel (starts Docker automatically)"
+run = "nx run docker:docker:up && nx run-many -t dev --projects=api,web --parallel=2 && mise dev:arq && mise dev:voice"
+
+[tasks."dev:voice"]
+description = "Run ONLY voice agent worker (without docker dependencies)"
+dir = "apps/api"
+run = "mise voice"
 
 [tasks.dev]
-description = "Run backend + frontend + docker logs"
-run = 'mprocs "mise dev:backend" "mise dev:frontend" "docker compose up"'
+description = "Run API + web in parallel (starts Docker automatically)"
+run = "nx run docker:docker:up && nx run-many -t dev --projects=api,web --parallel=2"
 
-# Setup and Installation (setup:*)
+# Build Tasks (with Nx caching)
+[tasks.build]
+description = "Build all apps"
+run = "nx run-many -t build"
+
+[tasks."build:web"]
+description = "Build web only"
+run = "nx build web"
+
+[tasks."build:docs"]
+description = "Build docs only"
+run = "nx build docs"
+
+[tasks."build:affected"]
+description = "Build only affected projects"
+run = "nx affected -t build"
+
+# Test Tasks (with Nx caching)
+[tasks.test]
+description = "Test all apps"
+run = "nx run-many -t test"
+
+[tasks."test:api"]
+description = "Test API only"
+run = "nx test api"
+
+[tasks."test:web"]
+description = "Test web only"
+run = "nx test web"
+
+[tasks."test:affected"]
+description = "Test only affected projects"
+run = "nx affected -t test"
+
+# Lint Tasks (with Nx caching and parallelism)
+[tasks.lint]
+description = "Lint all apps (parallel with caching)"
+run = "nx run-many -t lint --parallel=3"
+
+[tasks."lint:fix"]
+description = "Lint and fix all apps"
+run = "nx run-many -t lint:fix --parallel=3"
+
+[tasks."lint:api"]
+description = "Lint API only"
+run = "nx lint api"
+
+[tasks."lint:web"]
+description = "Lint web only"
+run = "nx lint web"
+
+[tasks."lint:mobile"]
+description = "Lint mobile only"
+run = "nx lint mobile"
+
+[tasks."lint:affected"]
+description = "Lint only affected projects (parallel with caching)"
+run = "nx affected -t lint --parallel=3"
+
+# Format Tasks (with Nx parallelism)
+[tasks.format]
+description = "Format and write changes to all apps (parallel)"
+run = "nx run-many -t format --parallel=3"
+
+[tasks."format:check"]
+description = "Check formatting for all apps (parallel with caching)"
+run = "nx run-many -t format:check --parallel=3"
+
+[tasks."format:api"]
+description = "Format and write changes to API only"
+run = "nx format api"
+
+[tasks."format:web"]
+description = "Format and write changes to web only"
+run = "nx format web"
+
+[tasks."format:affected"]
+description = "Format and write changes to affected projects (parallel)"
+run = "nx affected -t format --parallel=3"
+
+# Type-check Tasks (with Nx caching)
+[tasks."type-check"]
+description = "Type-check all apps (parallel with caching)"
+run = "nx run-many -t type-check --parallel=3"
+
+[tasks."type-check:affected"]
+description = "Type-check only affected projects (parallel with caching)"
+run = "nx affected -t type-check --parallel=3"
+
+# Setup and Installation
 [tasks."setup:env"]
 description = "Check if environment files exist"
 run = '''
-if [ ! -f "backend/.env" ] || [ ! -f "frontend/.env" ]; then
+if [ ! -f "apps/api/.env" ] || [ ! -f "apps/web/.env" ]; then
     echo "❌ Environment files not found!"
     echo ""
     echo "Copy example files:"
-    echo "  cp backend/.env.example backend/.env"
-    echo "  cp frontend/.env.example frontend/.env"
+    echo "  cp apps/api/.env.example apps/api/.env"
+    echo "  cp apps/web/.env.example apps/web/.env"
     exit 1
 fi
 '''
 
-[tasks."setup:backend"]
-description = "Set up backend dependencies"
-dir = "backend"
-run = "mise deps"
-depends = ["setup:env"]
-
-[tasks."setup:frontend"]
-description = "Set up frontend dependencies"
-dir = "frontend"
-run = "mise deps"
-
-[tasks."setup:deps"]
-description = "Install all dependencies"
-depends = ["setup:backend", "setup:frontend"]
+[tasks."setup:voice"]
+description = "Download voice agent models (VAD, etc.)"
+dir = "apps/api"
+run = "mise voice:download"
 
 [tasks.setup]
-description = "Complete project setup"
-depends = ["setup:*"]
-dir = "backend"
-run = "docker compose up -d && mise seed:models"
+description = "Complete project setup (run after mise install)"
+depends = ["setup:env"]
+dir = "apps/api"
+run = "nx run docker:docker:up && mise seed:models"
 
-# Code Quality (lint:*, format:*, clean:*)
-[tasks.lint]
-description = "Lint both backend and frontend"
-run = ["mise -C backend lint", "mise -C frontend lint"]
-
-[tasks.format]
-description = "Format both backend and frontend"
-run = ["mise -C backend format", "mise -C frontend format"]
-
+# Clean Tasks
 [tasks.clean]
-description = "Clean both backend and frontend"
-run = ["mise -C backend clean", "mise -C frontend clean"]
+description = "Clean all apps"
+run = "nx run-many -t clean"
 
-[tasks.docs]
-description = "Run the mintlify documentation server"
-dir = "docs"
-run = "mintlify dev"
+[tasks."clean:nx"]
+description = "Clean Nx cache"
+run = "nx reset"
+
+# Pre-commit hooks
+[tasks."pre-commit"]
+description = "Run all pre-commit checks (workspace mode)"
+run = "prek run --all-files"
+
+[tasks."pre-commit:install"]
+description = "Install pre-commit hooks using prek"
+run = "prek install"
+
+[tasks."pre-commit:run"]
+description = "Run pre-commit hooks on staged files"
+run = "prek run"
+
+[tasks."pre-commit:api"]
+description = "Run pre-commit checks for API only"
+run = "prek run apps/api/"
+
+[tasks."pre-commit:web"]
+description = "Run pre-commit checks for web only"
+run = "prek run apps/web/"
+
+[tasks."pre-commit:uninstall"]
+description = "Uninstall pre-commit hooks"
+run = "prek uninstall"
+
+# Nx-specific tasks
+[tasks.graph]
+description = "Show Nx project graph"
+run = "nx graph"
+
+[tasks."affected:graph"]
+description = "Show affected projects graph"
+run = "nx affected:graph"
+
+# Desktop App Tasks
+[tasks."dev:desktop"]
+description = "Run desktop app in development mode (requires web dev server)"
+run = "nx dev desktop"
+
+[tasks."build:desktop"]
+description = "Build desktop app (builds web first)"
+run = "nx build web && nx build desktop"
+
+[tasks."pack:desktop"]
+description = "Package desktop app without distributing"
+run = "nx pack desktop"
+
+[tasks."dist:desktop"]
+description = "Create distributable desktop packages for current platform"
+run = "nx dist desktop"
+
+[tasks."dist:desktop:mac"]
+description = "Create macOS distributable (DMG + ZIP)"
+run = "nx dist:mac desktop"
+
+[tasks."dist:desktop:win"]
+description = "Create Windows distributable (NSIS + Portable)"
+run = "nx dist:win desktop"
+
+[tasks."dist:desktop:linux"]
+description = "Create Linux distributable (AppImage + DEB + RPM)"
+run = "nx dist:linux desktop"
+
+[tasks."setup:desktop"]
+description = "Set up desktop dependencies"
+dir = "apps/desktop"
+run = "pnpm install"
+
+[tasks."ci:desktop"]
+description = "Test desktop-release workflow locally with act (dry-run)"
+run = "act release --job build -n --eventpath .github/test-events/release.json"
+
+[tasks."ci:desktop:run"]
+description = "Actually run desktop-release workflow locally with act"
+run = "act release --job build --eventpath .github/test-events/release.json"
+
+[tasks."ci:list"]
+description = "List all available GitHub Actions workflows"
+run = "act -l"
+
+[tasks."ci:release-please"]
+description = "Test release-please workflow locally with act (dry-run)"
+run = "act push -n --job release-please"
+
+[tasks."ci:quality"]
+description = "Test main.yml quality-checks workflow (dry-run)"
+run = "act pull_request -n --job quality-checks"
+
+[tasks."ci:quality:run"]
+description = "Actually run quality-checks locally with act"
+run = "act pull_request --job quality-checks"
+
+[tasks."ci:build"]
+description = "Test build.yml workflow (dry-run)"
+run = "act workflow_call -n -W .github/workflows/build.yml"
+
+[tasks."ci:all"]
+description = "List all jobs across all workflows"
+run = "act -l --workflows .github/workflows/"
