@@ -10,7 +10,7 @@ export default function SignUpScreen() {
   const handleGoogleSignUp = () => {
     console.log("Google Sign Up");
     // TODO: Implement Google sign up
-    router.replace("/(tabs)");
+    router.replace("/");
   };
 
   const handleSignIn = () => {

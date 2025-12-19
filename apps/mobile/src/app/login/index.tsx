@@ -44,7 +44,7 @@ export default function LoginScreen() {
       await refreshAuth();
 
       // Navigate to main app
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert(

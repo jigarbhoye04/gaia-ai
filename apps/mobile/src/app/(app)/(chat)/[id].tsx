@@ -1,5 +1,5 @@
 /**
- * Dynamic Chat Route - app/(chat)/[id].tsx
+ * Dynamic Chat Route - app/(app)/(chat)/[id].tsx
  * Handles individual chat sessions with dynamic routing
  * Following Expo Router conventions - logic in app folder, components in features
  */
