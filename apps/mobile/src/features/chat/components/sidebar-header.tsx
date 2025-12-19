@@ -17,7 +17,7 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ onNewChat }: SidebarHeaderProps) {
   return (
-    <View className="px-6 py-4 pt-6 bg-surface-0">
+    <View className="px-6 py-4 pt-6">
       {/* Brand Header */}
       <View className="flex-row items-center gap-3 mb-6 px-1">
         <Image

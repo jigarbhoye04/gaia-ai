@@ -91,8 +91,8 @@ function CategorySection({
           return (
             <TouchableOpacity
               key={item.id}
-              className={`flex-row items-center px-6 py-3 gap-3 relative ${
-                isActive ? "bg-white/10" : "bg-transparent"
+              className={`flex-row items-center px-6 py-2 gap-3 relative ${
+                isActive ? "bg-[#103543] rounded-xl" : "bg-transparent"
               }`}
               onPress={() => onSelectChat(item.id)}
               activeOpacity={0.7}
@@ -106,9 +106,7 @@ function CategorySection({
                 color={isActive ? "#ffffff" : "#666666"}
               />
               <Text
-                className={`flex-1 text-[13px] ${
-                  isActive ? "text-white font-semibold" : "text-muted-foreground font-normal"
-                }`}
+                className={`flex-1`}
                 numberOfLines={1}
               >
                 {item.title}
