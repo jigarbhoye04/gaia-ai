@@ -1,8 +1,3 @@
-/**
- * Chat Types & Interfaces
- * Central type definitions for the chat module
- */
-
 export interface Message {
   id: string;
   text: string;

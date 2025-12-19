@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 import { Animated, Image, Pressable } from "react-native";
 import { Card } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import type { Suggestion } from "../types";
+import type { Suggestion } from "../../types";
 
 interface SuggestionCardProps {
   suggestion: Suggestion;

@@ -5,8 +5,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FlatList } from "react-native";
-import { getAIResponse } from "../services/ai-service";
 import type { Message } from "../types";
+import { getAIResponse } from "../utils/ai-service";
 
 // Global store for all chat messages, keyed by chatId
 const chatMessagesStore: Record<string, Message[]> = {};

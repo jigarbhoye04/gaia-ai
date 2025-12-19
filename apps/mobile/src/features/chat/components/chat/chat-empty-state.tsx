@@ -5,7 +5,7 @@
 
 import { Image, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import type { Suggestion } from "../types";
+import type { Suggestion } from "../../types";
 import { SuggestionCard } from "./suggestion-card";
 
 interface ChatEmptyStateProps {

@@ -1,14 +1,9 @@
-/**
- * Chat Message Component
- * Displays individual chat messages with different styles for user and AI
- */
-
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Animated, Image, TouchableOpacity, View } from "react-native";
 import { Copy01Icon, HugeiconsIcon, PinIcon } from "@/components/icons";
 import { Text } from "@/components/ui/text";
-import type { Message } from "../types";
+import type { Message } from "../../types";
 
 interface ChatMessageProps {
   message: Message;

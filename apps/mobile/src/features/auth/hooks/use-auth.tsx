@@ -17,7 +17,7 @@ import {
   removeAuthToken,
   removeUserInfo,
   type UserInfo,
-} from "@/shared/utils/auth-storage";
+} from "@/features/auth/utils/auth-storage";
 
 interface AuthContextType {
   isAuthenticated: boolean;

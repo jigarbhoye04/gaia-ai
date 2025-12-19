@@ -1,8 +1,3 @@
-/**
- * ModelSelector Component
- * Dropdown modal for selecting AI models
- */
-
 import {
   Image,
   Modal,
@@ -16,7 +11,7 @@ import {
   CheckmarkCircle01Icon,
   HugeiconsIcon,
 } from "@/components/icons";
-import type { AIModel } from "../types";
+import type { AIModel } from "../../types";
 
 interface ModelSelectorProps {
   visible: boolean;

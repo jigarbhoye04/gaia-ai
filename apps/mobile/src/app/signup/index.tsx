@@ -1,21 +1,8 @@
-/**
- * Sign Up Screen - app/signup/index.tsx
- * Handles new user registration with Google authentication
- * Following Expo Router conventions - separate route for signup
- */
-
 import { useRouter } from "expo-router";
-import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, KeyboardAvoidingView, Platform, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { Button } from "@/components/ui/button";
+import { Text } from "@/components/ui/text";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -31,78 +18,94 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-[#0c1f3d]">
       {/* Full Background Image */}
       <Image
         source={require("@/assets/background/signup.webp")}
-        style={styles.backgroundImage}
+        className="absolute w-full h-full"
         resizeMode="cover"
         blurRadius={0.5}
         fadeDuration={300}
       />
 
       {/* Dark Overlay */}
-      <View style={styles.overlay} />
+      <View className="absolute w-full h-full bg-black/50" />
 
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView className="flex-1">
         <KeyboardAvoidingView
-          style={styles.keyboardView}
+          className="flex-1 justify-center items-center px-6"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           {/* Sign Up Card */}
-          <View style={styles.card}>
+          <View className="w-full max-w-[450px] bg-[#1a1a1a]/95 rounded-[20px] px-8 py-10 border border-white/10 shadow-2xl elevation-20">
             {/* Logo and Title */}
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
+            <View className="items-center mb-8">
+              <View className="w-[70px] h-[70px] rounded-full bg-[#16c1ff]/15 items-center justify-center mb-4">
                 <Image
                   source={require("@/assets/logo/logo.webp")}
-                  style={styles.logo}
+                  className="w-[50px] h-[50px]"
                   resizeMode="contain"
                 />
               </View>
-              <Text style={styles.title}>Time to Supercharge You.</Text>
+              <Text className="text-2xl font-bold text-white text-center">
+                Time to Supercharge You.
+              </Text>
             </View>
 
             {/* Sign Up Form */}
-            <View style={styles.form}>
+            <View className="w-full">
               {/* Google Button */}
-              <TouchableOpacity
-                style={styles.googleButton}
+              <Button
+                variant="secondary"
+                size="lg"
+                className="bg-zinc-800/80 rounded-xl mb-4 flex-row items-center justify-center gap-2 border border-white/20"
                 onPress={handleGoogleSignUp}
-                activeOpacity={0.8}
               >
                 <Image
                   source={require("@/assets/icons/google-logo.png")}
-                  style={styles.googleIcon}
+                  className="w-[18px] h-[18px]"
                   resizeMode="contain"
                 />
-                <Text style={styles.googleButtonText}>
+                <Text className="text-base font-medium text-white">
                   Continue with Google
                 </Text>
-              </TouchableOpacity>
+              </Button>
 
               {/* Sign In Link */}
-              <View style={styles.signInContainer}>
-                <Text style={styles.signInText}>Already have an account? </Text>
-                <TouchableOpacity onPress={handleSignIn}>
-                  <Text style={styles.signInLink}>Sign in</Text>
-                </TouchableOpacity>
+              <View className="flex-row items-center justify-center mt-4">
+                <Text className="text-base text-zinc-400">
+                  Already have an account?{" "}
+                </Text>
+                <Button
+                  variant="link"
+                  size="sm"
+                  onPress={handleSignIn}
+                  className="p-0 h-auto"
+                >
+                  <Text className="text-base text-[#16c1ff] font-semibold">
+                    Sign in
+                  </Text>
+                </Button>
               </View>
             </View>
 
             {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
+            <View className="items-center justify-center mt-6">
+              <Text className="text-sm text-zinc-400 text-center">
                 By creating an account, you agree to the{" "}
               </Text>
-              <View style={styles.footerLinks}>
-                <TouchableOpacity>
-                  <Text style={styles.footerLink}>Terms of Service</Text>
-                </TouchableOpacity>
-                <Text style={styles.footerText}> and </Text>
-                <TouchableOpacity>
-                  <Text style={styles.footerLink}>Privacy Policy</Text>
-                </TouchableOpacity>
+              <View className="flex-row flex-wrap justify-center">
+                <Button variant="link" size="sm" className="p-0 h-auto">
+                  <Text className="text-sm text-zinc-400 underline">
+                    Terms of Service
+                  </Text>
+                </Button>
+                <Text className="text-sm text-zinc-400 mx-1"> and </Text>
+                <Button variant="link" size="sm" className="p-0 h-auto">
+                  <Text className="text-sm text-zinc-400 underline">
+                    Privacy Policy
+                  </Text>
+                </Button>
               </View>
             </View>
           </View>
@@ -111,135 +114,3 @@ export default function SignUpScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0c1f3d",
-  },
-  backgroundImage: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-  },
-  overlay: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  safeArea: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: ChatTheme.spacing.lg,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 450,
-    backgroundColor: "rgba(26, 26, 26, 0.95)",
-    borderRadius: ChatTheme.borderRadius.lg + 4,
-    paddingHorizontal: ChatTheme.spacing.xl,
-    paddingVertical: ChatTheme.spacing.xl + 8,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
-    elevation: 20,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: ChatTheme.spacing.xl,
-  },
-  logoContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "rgba(22, 193, 255, 0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: ChatTheme.spacing.md,
-  },
-  logo: {
-    width: 50,
-    height: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: ChatTheme.textPrimary,
-    fontFamily: ChatTheme.fonts.bold,
-    textAlign: "center",
-  },
-  form: {
-    width: "100%",
-  },
-  googleButton: {
-    backgroundColor: "rgba(39, 39, 42, 0.8)",
-    borderRadius: ChatTheme.borderRadius.md,
-    paddingVertical: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: ChatTheme.spacing.sm,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
-  },
-  googleIcon: {
-    width: 18,
-    height: 18,
-  },
-  googleButtonText: {
-    fontSize: ChatTheme.fontSize.md,
-    fontWeight: "500",
-    color: ChatTheme.textPrimary,
-    fontFamily: ChatTheme.fonts.medium,
-  },
-  signInContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: ChatTheme.spacing.md,
-  },
-  signInText: {
-    fontSize: ChatTheme.fontSize.md,
-    color: ChatTheme.textSecondary,
-    fontFamily: ChatTheme.fonts.regular,
-  },
-  signInLink: {
-    fontSize: ChatTheme.fontSize.md,
-    color: ChatTheme.accent,
-    fontFamily: ChatTheme.fonts.semibold,
-    fontWeight: "600",
-  },
-  footer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: ChatTheme.spacing.lg,
-  },
-  footerLinks: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  footerText: {
-    fontSize: ChatTheme.fontSize.sm,
-    color: ChatTheme.textSecondary,
-    fontFamily: ChatTheme.fonts.regular,
-    textAlign: "center",
-  },
-  footerLink: {
-    fontSize: ChatTheme.fontSize.sm,
-    color: ChatTheme.textSecondary,
-    fontFamily: ChatTheme.fonts.regular,
-    textDecorationLine: "underline",
-  },
-});

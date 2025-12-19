@@ -17,8 +17,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import { PortalHost } from "@rn-primitives/portal";
 import { View } from "react-native";
-import { AuthProvider } from "@/features/auth";
-import { ChatProvider } from "@/features/chat";
+
 import "../../global.css";
 import { colorScheme } from "nativewind";
 
@@ -48,17 +47,13 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1 }}>
-      <AuthProvider>
-        <ChatProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="signup" options={{ headerShown: false }} />
-            <Stack.Screen name="(chat)" options={{ headerShown: false }} />
-          </Stack>
-          <PortalHost />
-        </ChatProvider>
-      </AuthProvider>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="signup" options={{ headerShown: false }} />
+        <Stack.Screen name="(chat)" options={{ headerShown: false }} />
+      </Stack>
+      <PortalHost />
       <StatusBar style="auto" />
     </View>
   );

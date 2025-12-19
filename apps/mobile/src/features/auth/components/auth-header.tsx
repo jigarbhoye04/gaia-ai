@@ -1,10 +1,5 @@
-/**
- * Auth Header Component
- * Reusable header with logo and title for auth screens
- */
-
-import { Image, StyleSheet, Text, View } from "react-native";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { Image, View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 interface AuthHeaderProps {
   title: string;
@@ -12,42 +7,15 @@ interface AuthHeaderProps {
 
 export function AuthHeader({ title }: AuthHeaderProps) {
   return (
-    <View style={styles.header}>
-      <View style={styles.logoContainer}>
+    <View className="items-center mb-8">
+      <View className="w-[70px] h-[70px] rounded-full bg-[#16c1ff]/15 items-center justify-center mb-4">
         <Image
           source={require("@/assets/logo/logo.webp")}
-          style={styles.logo}
+          className="w-[50px] h-[50px]"
           resizeMode="contain"
         />
       </View>
-      <Text style={styles.title}>{title}</Text>
+      <Text className="text-2xl font-bold text-white text-center">{title}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    alignItems: "center",
-    marginBottom: ChatTheme.spacing.xl,
-  },
-  logoContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "rgba(22, 193, 255, 0.15)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: ChatTheme.spacing.md,
-  },
-  logo: {
-    width: 50,
-    height: 50,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: ChatTheme.textPrimary,
-    fontFamily: ChatTheme.fonts.bold,
-    textAlign: "center",
-  },
-});
