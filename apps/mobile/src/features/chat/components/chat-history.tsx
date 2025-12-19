@@ -3,13 +3,18 @@
  * Displays list of past chat sessions grouped by time
  */
 
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import { ScrollView, TouchableOpacity, View } from "react-native";
-import { HugeiconsIcon, PlusSignIcon } from "@/assets/icons";
+import {
+  ArrowDown01Icon,
+  ArrowUp01Icon,
+  Chat01Icon,
+  HugeiconsIcon,
+  PlusSignIcon,
+  FavouriteIcon,
+} from "@/components/icons";
 import { RaisedButton } from "@/components/ui/raised-button";
 import { Text } from "@/components/ui/text";
-import { ChatTheme } from "@/shared/constants/chat-theme";
 import { useChatContext } from "../hooks/use-chat-context";
 
 interface ChatHistoryItem {
@@ -73,12 +78,13 @@ function CategorySection({
       <TouchableOpacity
         className="flex-row justify-between items-center px-4 py-2"
         onPress={onToggle}
+        activeOpacity={0.7}
       >
-        <Text className="text-gray-400 text-sm font-medium">{title}</Text>
-        <Ionicons
-          name={isExpanded ? "chevron-up" : "chevron-down"}
-          size={16}
-          color={ChatTheme.textSecondary}
+        <Text className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">{title}</Text>
+        <HugeiconsIcon
+          icon={isExpanded ? ArrowUp01Icon : ArrowDown01Icon}
+          size={14}
+          color="#8e8e93"
         />
       </TouchableOpacity>
 
@@ -88,16 +94,17 @@ function CategorySection({
           return (
             <TouchableOpacity
               key={item.id}
-              className={`flex-row items-center px-4 py-2 gap-2 ${isActive ? "bg-gray-800/50 border-l-3 border-l-purple-500" : ""}`}
+              className={`flex-row items-center px-4 py-2.5 gap-3 ${isActive ? "bg-secondary/30" : ""}`}
               onPress={() => onSelectChat(item.id)}
+              activeOpacity={0.7}
             >
-              <Ionicons
-                name={item.isStarred ? "star" : "chatbubble-outline"}
+              <HugeiconsIcon
+                icon={item.isStarred ? FavouriteIcon : Chat01Icon}
                 size={16}
-                color={isActive ? ChatTheme.accent : ChatTheme.textSecondary}
+                color={isActive ? "#00bbff" : "#8e8e93"}
               />
               <Text
-                className={`flex-1 text-base ${isActive ? "text-purple-500 font-semibold" : "text-white"}`}
+                className={`flex-1 text-sm ${isActive ? "text-[#00bbff] font-medium" : "text-foreground"}`}
                 numberOfLines={1}
               >
                 {item.title}
@@ -131,10 +138,11 @@ export function ChatHistory({ onSelectChat, onNewChat }: ChatHistoryProps) {
       {/* New Chat Button */}
       <RaisedButton
         onPress={onNewChat}
-        className="mx-4 mt-4 mb-4"
+        className="mx-4 mt-4 mb-6"
+        color="#00bbff"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={18} color="#000000" />
-        <Text className="text-black text-sm font-semibold">
+        <Text className="text-black text-sm font-bold">
           New Chat
         </Text>
       </RaisedButton>

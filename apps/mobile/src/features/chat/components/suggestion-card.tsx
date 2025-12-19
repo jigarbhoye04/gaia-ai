@@ -71,14 +71,15 @@ export function SuggestionCard({
         onPress={() => onPress(suggestion.text)}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        activeOpacity={1}
       >
-        <Card className="p-4 min-h-[100px] justify-between gap-2 py-4">
+        <Card className="px-5 py-5 min-h-[110px] justify-between border-border bg-card shadow-sm">
           <Image
             source={{ uri: suggestion.iconUrl }}
-            className="w-7 h-7"
+            className="w-8 h-8 rounded-lg"
             resizeMode="contain"
           />
-          <Text className="text-sm text-foreground mt-2 leading-5">
+          <Text className="text-sm font-medium text-foreground mt-3 leading-5" numberOfLines={2}>
             {suggestion.text}
           </Text>
         </Card>

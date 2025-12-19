@@ -3,10 +3,15 @@
  * Top navigation bar with menu, model selector, and actions
  */
 
-import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { Text, TouchableOpacity, View } from "react-native";
+import { HugeiconsIcon } from "@/components/icons";
+import {
+  ArrowDown01Icon,
+  Edit01Icon,
+  Menu01Icon,
+  Search01Icon,
+} from "@/components/icons";
 import { AI_MODELS, DEFAULT_MODEL } from "../data/models";
 import type { AIModel } from "../types";
 import { ModelSelector } from "./model-selector";
@@ -33,25 +38,25 @@ export function ChatHeader({
   };
 
   return (
-    <View style={styles.header}>
+    <View className="flex-row items-center justify-between px-4 py-2.5 border-b border-border bg-background shadow-sm elevation-3">
       <TouchableOpacity
         onPress={onMenuPress}
-        style={styles.menuButton}
+        className="p-1"
         activeOpacity={0.7}
       >
-        <Ionicons name="menu" size={24} color={ChatTheme.textPrimary} />
+        <HugeiconsIcon icon={Menu01Icon} size={24} color="#ffffff" />
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.modelSelector}
+        className="flex-row items-center gap-1 px-2.5 py-1"
         activeOpacity={0.7}
         onPress={() => setIsModelSelectorVisible(true)}
       >
-        <Text style={styles.modelText}>{selectedModel.name}</Text>
-        <Ionicons
-          name="chevron-down"
+        <Text className="text-base text-foreground font-mono">{selectedModel.name}</Text>
+        <HugeiconsIcon
+          icon={ArrowDown01Icon}
           size={16}
-          color={ChatTheme.textSecondary}
+          color="#8e8e93"
         />
       </TouchableOpacity>
 
@@ -63,29 +68,29 @@ export function ChatHeader({
         onClose={() => setIsModelSelectorVisible(false)}
       />
 
-      <View style={styles.actions}>
+      <View className="flex-row gap-1">
         {onSearchPress && (
           <TouchableOpacity
-            style={styles.iconButton}
+            className="p-1"
             activeOpacity={0.7}
             onPress={onSearchPress}
           >
-            <Ionicons
-              name="search-outline"
+            <HugeiconsIcon
+              icon={Search01Icon}
               size={20}
-              color={ChatTheme.textPrimary}
+              color="#ffffff"
             />
           </TouchableOpacity>
         )}
         <TouchableOpacity
-          style={styles.iconButton}
+          className="p-1"
           onPress={onNewChatPress}
           activeOpacity={0.7}
         >
-          <Ionicons
-            name="create-outline"
+          <HugeiconsIcon
+            icon={Edit01Icon}
             size={20}
-            color={ChatTheme.textPrimary}
+            color="#ffffff"
           />
         </TouchableOpacity>
       </View>
@@ -93,42 +98,4 @@ export function ChatHeader({
   );
 }
 
-const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.sm + 2,
-    borderBottomWidth: 1,
-    borderBottomColor: ChatTheme.border,
-    backgroundColor: ChatTheme.background,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  menuButton: {
-    padding: ChatTheme.spacing.xs,
-  },
-  modelSelector: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: ChatTheme.spacing.xs,
-    paddingHorizontal: ChatTheme.spacing.sm + 2,
-    paddingVertical: ChatTheme.spacing.xs,
-  },
-  modelText: {
-    fontSize: ChatTheme.fontSize.md,
-    color: ChatTheme.textPrimary,
-    fontFamily: ChatTheme.fonts.mono,
-  },
-  actions: {
-    flexDirection: "row",
-    gap: ChatTheme.spacing.xs,
-  },
-  iconButton: {
-    padding: ChatTheme.spacing.xs,
-  },
-});
+

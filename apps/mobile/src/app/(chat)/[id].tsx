@@ -28,6 +28,7 @@ import {
   DEFAULT_SUGGESTIONS,
   type Message,
   SidebarContent,
+  SIDEBAR_WIDTH,
   useChat,
   useChatContext,
   useSidebar,
@@ -87,16 +88,16 @@ export default function ChatPage() {
     <GestureHandlerRootView className="flex-1">
       <DrawerLayout
         ref={drawerRef}
-        drawerWidth={280}
+        drawerWidth={SIDEBAR_WIDTH}
         drawerPosition={DrawerPosition.LEFT}
         drawerType={DrawerType.FRONT}
-        overlayColor="rgba(0, 0, 0, 0.6)"
+        overlayColor="rgba(0, 0, 0, 0.7)"
         renderNavigationView={renderDrawerContent}
       >
         <KeyboardAvoidingView
           className="flex-1 bg-background"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={32}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
           <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom"]}>
             {/* Header */}
@@ -114,7 +115,7 @@ export default function ChatPage() {
                   data={messages}
                   renderItem={renderMessage}
                   keyExtractor={(item) => item.id}
-                  contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16 }}
+                  contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 16, paddingBottom: 24 }}
                   ListEmptyComponent={renderEmpty}
                   showsVerticalScrollIndicator={false}
                   keyboardShouldPersistTaps="handled"
@@ -123,17 +124,17 @@ export default function ChatPage() {
             </TouchableWithoutFeedback>
 
             {/* Bottom Input & Typing Indicator */}
-            <View className="w-full bg-background">
+            <View className="w-full bg-background px-4 pb-4">
+              {isTyping && (
+                <View className="flex-row items-center px-2 py-2 gap-1 mb-1">
+                  <View className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+                  <View className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+                  <View className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+                </View>
+              )}
               <ChatInput
                 placeholder="What can I do for you today?"
               />
-              {isTyping && (
-                <View className="flex-row items-center px-4 py-2 gap-1">
-                  <View className="w-2 h-2 rounded-full bg-accent" />
-                  <View className="w-2 h-2 rounded-full bg-accent" />
-                  <View className="w-2 h-2 rounded-full bg-accent" />
-                </View>
-              )}
             </View>
           </SafeAreaView>
         </KeyboardAvoidingView>

@@ -3,17 +3,19 @@
  * User info and support section for sidebar
  */
 
-import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
   Image,
-  StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {
+  ArrowDown01Icon,
+  HugeiconsIcon,
+  InformationCircleIcon,
+} from "@/components/icons";
 import { useAuth } from "@/features/auth";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import { Text } from "@/components/ui/text";
 
 export function SidebarFooter() {
   const { user, isLoading, signOut } = useAuth();
@@ -52,115 +54,52 @@ export function SidebarFooter() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color={ChatTheme.accent} />
+      <View className="border-t border-border py-2">
+        <View className="py-6 items-center justify-center">
+          <ActivityIndicator size="small" color="#00bbff" />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View className="border-t border-border py-2 bg-background">
       {/* Need Support */}
-      <TouchableOpacity style={styles.supportButton}>
-        <Ionicons
-          name="help-circle-outline"
+      <TouchableOpacity className="flex-row items-center px-4 py-2.5 gap-3" activeOpacity={0.7}>
+        <HugeiconsIcon
+          icon={InformationCircleIcon}
           size={20}
-          color={ChatTheme.textSecondary}
+          color="#8e8e93"
         />
-        <Text style={styles.supportText}>Need Support?</Text>
+        <Text className="text-foreground text-sm font-medium">Need Support?</Text>
       </TouchableOpacity>
 
       {/* User Info */}
-      <TouchableOpacity style={styles.userInfo} onPress={handleUserPress}>
+      <TouchableOpacity className="flex-row items-center px-4 py-2 gap-3" onPress={handleUserPress} activeOpacity={0.7}>
         {user?.picture ? (
-          <Image source={{ uri: user.picture }} style={styles.avatarImage} />
+          <Image source={{ uri: user.picture }} className="w-8 h-8 rounded-full" />
         ) : (
           <View
-            style={[
-              styles.avatar,
-              { backgroundColor: getAvatarColor(user?.email) },
-            ]}
+            className="w-8 h-8 rounded-full justify-center items-center"
+            style={{ backgroundColor: getAvatarColor(user?.email) }}
           >
-            <Text style={styles.avatarText}>{getInitials(user?.name)}</Text>
+            <Text className="text-white text-xs font-bold">{getInitials(user?.name)}</Text>
           </View>
         )}
-        <View style={styles.userDetails}>
-          <Text style={styles.userName} numberOfLines={1}>
+        <View className="flex-1">
+          <Text className="text-foreground text-sm font-semibold" numberOfLines={1}>
             {user?.name || "User"}
           </Text>
-          <Text style={styles.userPlan}>GAIA Free</Text>
+          <Text className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider">GAIA Free</Text>
         </View>
-        <Ionicons
-          name="chevron-down"
-          size={20}
-          color={ChatTheme.textSecondary}
+        <HugeiconsIcon
+          icon={ArrowDown01Icon}
+          size={16}
+          color="#8e8e93"
         />
       </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderTopWidth: 1,
-    borderTopColor: ChatTheme.border,
-    paddingVertical: ChatTheme.spacing.sm,
-  },
-  loadingContainer: {
-    paddingVertical: ChatTheme.spacing.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  supportButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.sm + 2,
-    gap: ChatTheme.spacing.sm,
-  },
-  supportText: {
-    color: ChatTheme.textPrimary,
-    fontSize: ChatTheme.fontSize.md,
-    fontFamily: ChatTheme.fonts.regular,
-  },
-  userInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.sm,
-    gap: ChatTheme.spacing.sm,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  avatarText: {
-    color: ChatTheme.textPrimary,
-    fontSize: ChatTheme.fontSize.md,
-    fontWeight: "bold",
-  },
-  userDetails: {
-    flex: 1,
-  },
-  userName: {
-    color: ChatTheme.textPrimary,
-    fontSize: ChatTheme.fontSize.md,
-    fontWeight: "500",
-    fontFamily: ChatTheme.fonts.medium,
-  },
-  userPlan: {
-    color: ChatTheme.textSecondary,
-    fontSize: ChatTheme.fontSize.sm,
-    fontFamily: ChatTheme.fonts.regular,
-  },
-});
+

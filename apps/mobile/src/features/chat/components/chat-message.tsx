@@ -3,19 +3,21 @@
  * Displays individual chat messages with different styles for user and AI
  */
 
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
   Image,
-  StyleSheet,
-  Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { ChatTheme } from "@/shared/constants/chat-theme";
+import {
+  Copy01Icon,
+  HugeiconsIcon,
+  PinIcon,
+} from "@/components/icons";
+import { Text } from "@/components/ui/text";
 import type { Message } from "../types";
 
 interface ChatMessageProps {
@@ -54,60 +56,52 @@ export function ChatMessage({ message }: ChatMessageProps) {
 
   return (
     <Animated.View
-      style={[
-        styles.container,
-        message.isUser ? styles.userContainer : styles.aiContainer,
-        {
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        },
-      ]}
+      className={`flex-row my-2 px-4 ${message.isUser ? "justify-end" : "justify-start items-start"}`}
+      style={{
+        opacity: fadeAnim,
+        transform: [{ scale: scaleAnim }],
+      }}
     >
       {!message.isUser && (
         <Image
           source={require("@/assets/logo/logo.webp")}
-          style={styles.aiIconContainer}
+          className="w-7 h-7 mr-3 mt-1"
           resizeMode="contain"
         />
       )}
 
-      <View
-        style={[
-          styles.messageWrapper,
-          message.isUser && styles.messageWrapperUser,
-        ]}
-      >
+      <View className={`flex-1 ${message.isUser ? "items-end" : "items-start"}`}>
         <View
-          style={[
-            styles.messageBubble,
-            message.isUser ? styles.userBubble : styles.aiBubble,
-            message.isUser && styles.messageBubbleUser,
-          ]}
+          className={`px-4 py-2.5 rounded-2xl ${
+            message.isUser
+              ? "bg-[#00bbff] self-end"
+              : "bg-secondary dark:bg-zinc-800 self-start"
+          }`}
         >
           <Text
-            style={[
-              styles.messageText,
-              message.isUser ? styles.userText : styles.aiText,
-            ]}
+            className={`text-base leading-5 ${
+              message.isUser ? "text-black" : "text-foreground"
+            }`}
           >
             {message.text}
           </Text>
         </View>
 
         {!message.isUser && (
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity onPress={handlePin} style={styles.actionButton}>
-              <MaterialCommunityIcons
-                name={isPinned ? "pin" : "pin-outline"}
+          <View className="flex-row mt-1 ml-0.5 gap-2">
+            <TouchableOpacity onPress={handlePin} className="p-1 opacity-50" activeOpacity={0.7}>
+              <HugeiconsIcon
+                icon={PinIcon}
                 size={14}
-                color={isPinned ? ChatTheme.accent : ChatTheme.iconSecondary}
+                color={isPinned ? "#00bbff" : "#8e8e93"}
+                fill={isPinned ? "#00bbff" : "none"}
               />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleCopy} style={styles.actionButton}>
-              <Ionicons
-                name="copy-outline"
+            <TouchableOpacity onPress={handleCopy} className="p-1 opacity-50" activeOpacity={0.7}>
+              <HugeiconsIcon
+                icon={Copy01Icon}
                 size={14}
-                color={ChatTheme.iconSecondary}
+                color="#8e8e93"
               />
             </TouchableOpacity>
           </View>
@@ -117,67 +111,4 @@ export function ChatMessage({ message }: ChatMessageProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    marginVertical: ChatTheme.spacing.sm,
-    paddingHorizontal: ChatTheme.spacing.md,
-  },
-  userContainer: {
-    justifyContent: "flex-end",
-  },
-  aiContainer: {
-    justifyContent: "flex-start",
-    alignItems: "flex-start",
-  },
-  aiIconContainer: {
-    width: 28,
-    height: 28,
-    marginRight: ChatTheme.spacing.sm,
-    marginTop: 4,
-  },
-  messageWrapper: {
-    flex: 1,
-    alignItems: "flex-start",
-  },
-  messageWrapperUser: {
-    alignItems: "flex-end",
-  },
-  messageBubble: {
-    alignSelf: "flex-start",
-    maxWidth: "100%",
-    paddingHorizontal: ChatTheme.spacing.md,
-    paddingVertical: ChatTheme.spacing.sm + 2,
-    borderRadius: ChatTheme.borderRadius.lg,
-  },
-  messageBubbleUser: {
-    alignSelf: "flex-end",
-  },
-  userBubble: {
-    backgroundColor: ChatTheme.userMessage,
-  },
-  aiBubble: {
-    backgroundColor: ChatTheme.aiMessage,
-  },
-  messageText: {
-    fontSize: ChatTheme.fontSize.md,
-    lineHeight: 20,
-    fontFamily: ChatTheme.fonts.regular,
-  },
-  userText: {
-    color: ChatTheme.background,
-  },
-  aiText: {
-    color: ChatTheme.textPrimary,
-  },
-  actionsContainer: {
-    flexDirection: "row",
-    marginTop: 4,
-    marginLeft: 2,
-    gap: 4,
-  },
-  actionButton: {
-    padding: 4,
-    opacity: 0.5,
-  },
-});
+

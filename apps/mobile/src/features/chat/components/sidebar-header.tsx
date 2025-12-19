@@ -3,10 +3,9 @@
  * Logo and menu toggle for sidebar
  */
 
-import { Ionicons } from "@expo/vector-icons";
 import { Image, TouchableOpacity, View } from "react-native";
+import { ArrowLeft01Icon, HugeiconsIcon } from "@/components/icons";
 import { Text } from "@/components/ui/text";
-import { ChatTheme } from "@/shared/constants/chat-theme";
 
 interface SidebarHeaderProps {
   onClose: () => void;
@@ -14,17 +13,17 @@ interface SidebarHeaderProps {
 
 export function SidebarHeader({ onClose }: SidebarHeaderProps) {
   return (
-    <View className="flex-row items-center justify-between px-4 py-4 border-b border-border">
-      <View className="flex-row items-center gap-2">
+    <View className="flex-row items-center justify-between px-4 py-3 border-b border-border bg-background">
+      <View className="flex-row items-center gap-3">
         <Image
           source={require("@/assets/logo/logo.webp")}
-          className="w-8 h-8"
+          className="w-7 h-7"
           resizeMode="contain"
         />
-        <Text className="text-lg font-bold">GAIA</Text>
+        <Text className="text-xl font-bold tracking-tight text-foreground">GAIA</Text>
       </View>
-      <TouchableOpacity onPress={onClose} className="p-1">
-        <Ionicons name="chevron-back" size={24} color={ChatTheme.textPrimary} />
+      <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.7}>
+        <HugeiconsIcon icon={ArrowLeft01Icon} size={22} color="#ffffff" />
       </TouchableOpacity>
     </View>
   );
