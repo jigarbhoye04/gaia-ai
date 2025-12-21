@@ -31,7 +31,8 @@ export default function ProvidersLayout({ children }: { children: ReactNode }) {
   return (
     <HeroUIProvider>
       <QueryProvider>
-        <Suspense fallback={<SuspenseLoader />}>
+        {/** biome-ignore lint/complexity/noUselessFragments: needs empty component */}
+        <Suspense fallback={<></>}>
           <GlobalAuth />
         </Suspense>
         <GlobalInterceptor />

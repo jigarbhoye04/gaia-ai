@@ -6,7 +6,7 @@
   "implicitDependencies": ["docker"],
   "release": {
     "docker": {
-      "repositoryName": "heygaia/gaia"
+      "repositoryName": "theexperiencecompany/gaia"
     }
   },
   "targets": {
@@ -15,6 +15,15 @@
       "cache": true,
       "inputs": ["production"],
       "outputs": []
+    },
+    "docker:build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -f Dockerfile -t ghcr.io/theexperiencecompany/gaia:latest .",
+        "cwd": "apps/api"
+      },
+      "cache": true,
+      "inputs": ["production", "^production"]
     },
     "sync": {
       "executor": "nx:run-commands",

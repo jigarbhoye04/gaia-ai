@@ -7,14 +7,14 @@
   "implicitDependencies": ["api"],
   "release": {
     "docker": {
-      "repositoryName": "heygaia/gaia-voice-agent"
+      "repositoryName": "theexperiencecompany/gaia-voice-agent"
     }
   },
   "targets": {
     "docker:build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker build -f Dockerfile.voice-agent -t ghcr.io/heygaia/gaia-voice-agent:latest .",
+        "command": "docker build -f Dockerfile.voice-agent -t ghcr.io/theexperiencecompany/gaia-voice-agent:latest .",
         "cwd": "apps/api"
       },
       "cache": true,
