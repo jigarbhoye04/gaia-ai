@@ -19,8 +19,12 @@
     "docker:build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docker build -f Dockerfile -t ghcr.io/theexperiencecompany/gaia:latest .",
-        "cwd": "apps/api"
+        "commands": [
+          "docker build -f Dockerfile -t ghcr.io/theexperiencecompany/gaia:latest .",
+          "docker build -f Dockerfile.voice-agent -t ghcr.io/theexperiencecompany/gaia-voice-agent:latest ."
+        ],
+        "cwd": "apps/api",
+        "parallel": false
       },
       "cache": true,
       "inputs": ["production", "^production"]
