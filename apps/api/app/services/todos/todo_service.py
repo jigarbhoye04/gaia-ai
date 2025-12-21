@@ -4,7 +4,11 @@ from datetime import datetime, timezone
 from typing import Any, List, Optional
 
 from app.config.loggers import todos_logger
-from app.db.mongodb.collections import projects_collection, todos_collection
+from app.db.mongodb.collections import (
+    projects_collection,
+    todos_collection,
+    workflows_collection,
+)
 from app.db.redis import (
     CACHE_TTL,
     STATS_CACHE_TTL,
@@ -32,6 +36,9 @@ from app.models.todo_models import (
     TodoUpdateRequest,
     UpdateProjectRequest,
 )
+from app.services.todos.sync_service import (
+    sync_subtask_to_goal_completion,
+)
 from app.utils.todo_vector_utils import (
     bulk_index_todos,
     delete_todo_embedding,
@@ -46,7 +53,6 @@ from app.utils.todo_vector_utils import (
 )
 from bson import ObjectId
 from pymongo import ReturnDocument
-from app.db.mongodb.collections import workflows_collection
 
 # Special constants
 INBOX_PROJECT_ID = "inbox"
@@ -80,7 +86,7 @@ async def _get_workflow_categories_for_todos(
         # Get unique categories from steps (max 3 for display)
         categories = list(
             dict.fromkeys(
-                step.get("tool_category") for step in steps if step.get("tool_category")
+                step.get("category") for step in steps if step.get("category")
             )
         )[:3]
         workflow_categories[workflow_id] = categories
@@ -541,12 +547,6 @@ class TodoService:
 
                     if not new_subtask_id:
                         continue  # Skip subtasks without IDs
-
-                    # Since we don't have the old state anymore, we sync all subtasks
-                    # The sync service will handle checking if state actually changed
-                    from app.services.todos.sync_service import (
-                        sync_subtask_to_goal_completion,
-                    )
 
                     await sync_subtask_to_goal_completion(
                         todo_id, new_subtask_id, new_completed, user_id

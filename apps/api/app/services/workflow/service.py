@@ -68,7 +68,7 @@ class WorkflowService:
                 description=request.description,
                 steps=workflow_steps,
                 trigger_config=trigger_config,
-                activated=True,  # Default to activated
+                activated=True,
                 user_id=user_id,
                 is_todo_workflow=is_todo_workflow,
                 source_todo_id=source_todo_id,
@@ -635,8 +635,7 @@ class WorkflowService:
                                 "as": "step",
                                 "in": {
                                     "title": "$$step.title",
-                                    "tool_name": "$$step.tool_name",
-                                    "tool_category": "$$step.tool_category",
+                                    "category": "$$step.category",
                                     "description": "$$step.description",
                                 },
                             }
@@ -668,11 +667,25 @@ class WorkflowService:
                     else {}
                 )
 
+                # Normalize steps to use 'category' field (handle legacy 'tool_category')
+                raw_steps = workflow.get("steps", [])
+                normalized_steps = []
+                for step in raw_steps:
+                    normalized_step = {
+                        "id": step.get("id", ""),
+                        "title": step.get("title", ""),
+                        "description": step.get("description", ""),
+                        # Use 'category' if present, fall back to 'tool_category'
+                        "category": step.get("category")
+                        or step.get("tool_category", "general"),
+                    }
+                    normalized_steps.append(normalized_step)
+
                 formatted_workflow = {
                     "id": workflow["_id"],
                     "title": workflow["title"],
                     "description": workflow["description"],
-                    "steps": workflow.get("steps", []),
+                    "steps": normalized_steps,
                     "created_at": workflow["created_at"],
                     "creator": {
                         "id": workflow.get("created_by"),
@@ -729,11 +742,25 @@ class WorkflowService:
                     else {}
                 )
 
+                # Normalize steps to use 'category' field (handle legacy 'tool_category')
+                raw_steps = workflow.get("steps", [])
+                normalized_steps = []
+                for step in raw_steps:
+                    normalized_step = {
+                        "id": step.get("id", ""),
+                        "title": step.get("title", ""),
+                        "description": step.get("description", ""),
+                        # Use 'category' if present, fall back to 'tool_category'
+                        "category": step.get("category")
+                        or step.get("tool_category", "general"),
+                    }
+                    normalized_steps.append(normalized_step)
+
                 formatted_workflow = {
                     "id": workflow["_id"],
                     "title": workflow["title"],
                     "description": workflow["description"],
-                    "steps": workflow.get("steps", []),
+                    "steps": normalized_steps,
                     "created_at": workflow["created_at"],
                     "categories": workflow.get("use_case_categories", ["featured"]),
                     "total_executions": workflow.get("total_executions", 0),

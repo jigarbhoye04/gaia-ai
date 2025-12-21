@@ -36,9 +36,9 @@ export default function WorkflowSection({
   const { selectWorkflow } = useWorkflowSelection();
 
   // WebSocket handlers
-  // WebSocket handlers
   const handleWorkflowGenerated = useCallback(
     (wf: WorkflowType) => {
+      console.log("[WorkflowSection] WebSocket received workflow:", wf);
       setWorkflow(wf);
       setIsGenerating(false);
       setError(null);
@@ -47,7 +47,7 @@ export default function WorkflowSection({
       // Sync categories to global store so todo item updates immediately
       const categories = [
         ...new Set(
-          wf.steps.map((s) => s.tool_category).filter((c): c is string => !!c),
+          wf.steps.map((s) => s.category).filter((c): c is string => !!c),
         ),
       ].slice(0, 3);
 
@@ -61,6 +61,7 @@ export default function WorkflowSection({
   );
 
   const handleWorkflowFailed = useCallback((errorMsg: string) => {
+    console.log("[WorkflowSection] WebSocket workflow failed:", errorMsg);
     setIsGenerating(false);
     setError(errorMsg);
     toast.error("Failed to generate workflow");
@@ -115,21 +116,34 @@ export default function WorkflowSection({
   // Run workflow
   const handleRun = useCallback(() => {
     if (!workflow) return;
-    selectWorkflow(
-      {
+    try {
+      const workflowData = {
         id: workflow.id,
         title: workflow.title,
         description: workflow.description,
-        steps: workflow.steps.map((step) => ({
-          id: step.id,
-          title: step.title,
-          description: step.description,
-          tool_name: step.tool_name,
-          tool_category: step.tool_category,
-        })),
-      },
-      { autoSend: true },
-    );
+        steps: workflow.steps.map(
+          (step: {
+            id: string;
+            title: string;
+            description: string;
+            category: string;
+          }) => ({
+            id: step.id,
+            title: step.title,
+            description: step.description,
+            category: step.category,
+          }),
+        ),
+      };
+
+      selectWorkflow(workflowData, { autoSend: true });
+
+      console.log(
+        "Workflow selected for manual execution in chat with auto-send",
+      );
+    } catch (error) {
+      console.error("Failed to select workflow for execution:", error);
+    }
   }, [workflow, selectWorkflow]);
 
   const hasWorkflow = !!workflow;
