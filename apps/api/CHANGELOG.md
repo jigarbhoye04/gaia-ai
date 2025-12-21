@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.11.0](https://github.com/theexperiencecompany/gaia/compare/v0.10.1...v0.11.0) (2025-12-19)
+
+
+### release
+
+* v0.11.0 - New Monorepo setup using NX, Beta Desktop & Mobile app setup, Voice Mode etc ([#378](https://github.com/theexperiencecompany/gaia/issues/378)) ([8e72443](https://github.com/theexperiencecompany/gaia/commit/8e72443a1f56edf8e864cd0258ba26f03c81ddc1))
+
+
+### Features
+
+* Implement WorkOS mobile SSO and enhance sidebar UI with a new user dropdown menu and updated icons. ([41af75d](https://github.com/theexperiencecompany/gaia/commit/41af75d73bc55099ac3502619758061f2e53b72e))
+* introduce OAuth endpoint and settings, update Gemini model, refactor constants and ChromaDB, and enhance workflow and memory management ([4de72d8](https://github.com/theexperiencecompany/gaia/commit/4de72d8608f9fe64a3478e848d35d5fb7f772c1d))
+* **mobile:** integrate WorkOS authentication and update app layout ([#382](https://github.com/theexperiencecompany/gaia/issues/382)) ([31dfb2a](https://github.com/theexperiencecompany/gaia/commit/31dfb2ad5286e5b5ed553d299bb54924373e0eb3))
+* **mobile:** Setup NativeWindCSS and reusable components ([#380](https://github.com/theexperiencecompany/gaia/issues/380)) ([80d995e](https://github.com/theexperiencecompany/gaia/commit/80d995ef423773e31530fa8fe6178a39db1fde78))
+* Setup a monorepo with apps/ directory structure using NX ([#369](https://github.com/theexperiencecompany/gaia/issues/369)) ([230ecb9](https://github.com/theexperiencecompany/gaia/commit/230ecb9611b4fbc16b676010aa831c1a38d0f71e))
+
+
+### Bug Fixes
+
+* handle extra recipients in gmail_compose_before_hook and add type ignore for plugins ([26edde0](https://github.com/theexperiencecompany/gaia/commit/26edde050b4ea324bb86cf2248bb69ae067dfe12))
+* standardize quotes in pnpm-workspace.yaml for consistency and formatting ([fd10238](https://github.com/theexperiencecompany/gaia/commit/fd102387491d1747b55968d1648a0ae1a15f3dd9))
+
+
+### Miscellaneous Chores
+
+* release 0.5.1 ([a011469](https://github.com/theexperiencecompany/gaia/commit/a011469403974c3e0dc3e19fb39a6c6e8e6e9647))
+
 ## 0.10.1 (2025-11-22)
 
 ## What's Changed
