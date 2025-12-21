@@ -150,7 +150,7 @@ services:
   # Voice Agent Worker
   voice-agent-worker:
     container_name: voice-agent-worker
-    image: ghcr.io/heygaia/gaia-voice-agent:latest
+    image: ghcr.io/theexperiencecompany/gaia-voice-agent:latest
     profiles: ["", "backend-only"]
     working_dir: /app
     environment:

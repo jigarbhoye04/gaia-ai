@@ -82,7 +82,7 @@ jobs:
 
       - name: Release Docker images
         if: steps.affected.outputs.api == 'true'
-        run: npx nx release --group=apps --dockerVersionScheme=${{ steps.version.outputs.scheme }} --yes
+        run: npx nx release --group=apps --dockerVersionScheme=${{ steps.version.outputs.scheme }} --yes --verbose
         env:
           NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
