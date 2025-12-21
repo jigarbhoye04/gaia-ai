@@ -12,7 +12,8 @@ RUN apt-get update && \
   apt-get install -y --no-install-recommends \
   build-essential \
   curl \
-  libpq-dev && \
+  libpq-dev \
+  libglib2.0-0 && \
   rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files
