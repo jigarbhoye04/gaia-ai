@@ -16,7 +16,6 @@ export interface IConversation {
   starred?: boolean;
   isSystemGenerated?: boolean;
   systemPurpose?: SystemPurpose | null;
-  isUnread?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
