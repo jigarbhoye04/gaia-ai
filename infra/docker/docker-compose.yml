@@ -160,6 +160,7 @@ services:
       - ../../apps/api/.env
     environment:
       - WORKER_TYPE=arq_worker
+      - PYTHONPATH=/app/apps/api
     command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
     restart: always
     volumes:
