@@ -45,6 +45,6 @@ RUN adduser --disabled-password --gecos '' appuser \
 USER appuser
 
 # Download model files
-RUN python -m src download-files
+RUN uv run python -m src download-files
 
-CMD ["python", "-m", "src", "start"]
+CMD ["uv", "run", "python", "-m", "src", "start"]
