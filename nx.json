@@ -73,10 +73,10 @@
     },
     "groups": {
       "apps": {
-        "projects": ["api"],
+        "projects": ["api", "voice-agent"],
         "projectsRelationship": "independent",
         "docker": {
-          "groupPreVersionCommand": "npx nx run api:docker:build",
+          "groupPreVersionCommand": "npx nx run-many -t docker:build -p api,voice-agent",
           "skipVersionActions": true,
           "registryUrl": "ghcr.io"
         },

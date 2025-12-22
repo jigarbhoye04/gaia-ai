@@ -26,8 +26,10 @@ RUN apt-get update && \
 FROM base AS dependencies
 WORKDIR /app
 
-# Copy only the pyproject.toml for dependencies
+# Copy workspace structure for uv to resolve dependencies
 COPY pyproject.toml ./
+COPY libs ./libs
+COPY apps/api/pyproject.toml ./apps/api/
 
 # Set environment variables
 ENV ENV=production \
@@ -42,7 +44,7 @@ RUN pip install crawl4ai && crawl4ai-setup && rm -rf /root/.cache/pip
 # Install torch from CPU index first, then backend dependencies only
 RUN --mount=type=cache,target=/root/.cache/uv \
   uv pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
-  uv pip install --no-cache-dir . --group backend
+  cd apps/api && uv pip install --no-cache-dir . --group backend
 
 # ---- Final Stage: Setup application for production ----
 FROM dependencies AS final
@@ -52,14 +54,15 @@ WORKDIR /app
 RUN adduser --disabled-password --gecos '' appuser \
   && mkdir -p /home/appuser/.cache \
   && chown -R appuser:appuser /home/appuser \
-  && mkdir -p /app/logs \
-  && chown -R appuser:appuser /app/logs
+  && mkdir -p /app/apps/api/logs \
+  && chown -R appuser:appuser /app
 
-# Copy application code with proper ownership
-COPY --chown=appuser:appuser . .
+# Copy API application code with proper ownership
+COPY --chown=appuser:appuser apps/api/app ./apps/api/app
+
+WORKDIR /app/apps/api
 
 USER appuser
 EXPOSE 8000
 
-
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000","--no-access-log"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
