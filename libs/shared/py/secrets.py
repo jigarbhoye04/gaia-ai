@@ -27,8 +27,8 @@ def inject_infisical_secrets():
     Required environment variables:
     - INFISICAL_TOKEN
     - INFISICAL_PROJECT_ID
-    - INFISICAL_MACHINE_INDENTITY_CLIENT_ID
-    - INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET
+    - INFISICAL_MACHINE_IDENTITY_CLIENT_ID
+    - INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET
 
     In development, missing Infisical config logs a warning and returns.
     In production, raises InfisicalConfigError.
@@ -36,16 +36,16 @@ def inject_infisical_secrets():
     INFISICAL_TOKEN = os.getenv("INFISICAL_TOKEN")
     INFISICAL_PROJECT_ID = os.getenv("INFISICAL_PROJECT_ID")
     ENV = os.getenv("ENV", "production")
-    CLIENT_ID = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_ID")
-    CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET")
+    CLIENT_ID = os.getenv("INFISICAL_MACHINE_IDENTITY_CLIENT_ID")
+    CLIENT_SECRET = os.getenv("INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET")
 
     is_production = ENV == "production"
 
     missing_configs = [
         (INFISICAL_TOKEN, "INFISICAL_TOKEN"),
         (INFISICAL_PROJECT_ID, "INFISICAL_PROJECT_ID"),
-        (CLIENT_ID, "INFISICAL_MACHINE_INDENTITY_CLIENT_ID"),
-        (CLIENT_SECRET, "INFISICAL_MACHINE_INDENTITY_CLIENT_SECRET"),
+        (CLIENT_ID, "INFISICAL_MACHINE_IDENTITY_CLIENT_ID"),
+        (CLIENT_SECRET, "INFISICAL_MACHINE_IDENTITY_CLIENT_SECRET"),
     ]
 
     for config_value, config_name in missing_configs:

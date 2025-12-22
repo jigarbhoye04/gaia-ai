@@ -27,7 +27,7 @@ FROM base AS dependencies
 WORKDIR /app
 
 # Copy workspace structure for uv to resolve dependencies
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock ./
 COPY libs ./libs
 COPY apps/api/pyproject.toml ./apps/api/
 
@@ -41,10 +41,10 @@ ENV ENV=production \
 # Install crawl4ai browser dependencies
 RUN pip install crawl4ai && crawl4ai-setup && rm -rf /root/.cache/pip
 
-# Install torch from CPU index first, then backend dependencies only
+# Install torch from CPU index first, then backend dependencies via workspace sync
 RUN --mount=type=cache,target=/root/.cache/uv \
   uv pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
-  cd apps/api && uv pip install --no-cache-dir . --group backend
+  uv sync --frozen --package gaia --group backend
 
 # ---- Final Stage: Setup application for production ----
 FROM dependencies AS final

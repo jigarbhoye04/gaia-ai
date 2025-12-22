@@ -12,16 +12,21 @@ def main():
 
     command = sys.argv[1]
 
-    if command == "download-files":
-        from src.worker import download_files
+    try:
+        if command == "download-files":
+            from src.worker import download_files
 
-        download_files()
-    elif command == "start":
-        from src.worker import start_worker
+            download_files()
+        elif command == "start":
+            from src.worker import start_worker
 
-        start_worker()
-    else:
-        print(f"Unknown command: {command}")
+            start_worker()
+        else:
+            print(f"Unknown command: {command}")
+            sys.exit(1)
+
+    except Exception as e:
+        print(f"Error executing command '{command}': {e}")
         sys.exit(1)
 
 

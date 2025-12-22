@@ -23,13 +23,13 @@ ENV PYTHONUNBUFFERED=1 \
   UV_SYSTEM_PYTHON=1
 
 # Copy workspace structure for uv to resolve dependencies
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock ./
 COPY libs ./libs
 COPY apps/voice-agent/pyproject.toml ./apps/voice-agent/
 
-# Install dependencies from pyproject.toml using workspace
+# Install dependencies from pyproject.toml using workspace sync
 RUN --mount=type=cache,target=/root/.cache/uv \
-  cd apps/voice-agent && uv pip install --system .
+  uv sync --frozen --package gaia-voice-agent
 
 # Copy app source
 COPY apps/voice-agent/src/ ./apps/voice-agent/src/
