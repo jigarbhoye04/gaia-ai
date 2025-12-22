@@ -30,6 +30,7 @@ services:
       FORCE_COLOR: 1
       WORKER_TYPE: main_app
       PYTHONDONTWRITEBYTECODE: 1
+      PYTHONPATH: /app/apps/api
       # Disable output buffering for streaming
       PYTHONIOENCODING: utf-8
     env_file:

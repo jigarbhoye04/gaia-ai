@@ -30,6 +30,7 @@ services:
       # PYTHONPROFILEIMPORTTIME: 1
       FORCE_COLOR: 1
       WORKER_TYPE: main_app
+      PYTHONPATH: /app/apps/api
     env_file:
       - ../../apps/api/.env
     volumes:
