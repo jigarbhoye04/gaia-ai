@@ -9,6 +9,8 @@ services:
     working_dir: /app/apps/api
     command:
       [
+        "uv",
+        "run",
         "python",
         "-m",
         "uvicorn",
@@ -144,7 +146,7 @@ services:
     environment:
       - WORKER_TYPE=arq_worker
       - PYTHONPATH=/app/apps/api
-    command: ["python", "-m", "arq", "app.worker.WorkerSettings"]
+    command: ["uv", "run", "python", "-m", "arq", "app.worker.WorkerSettings"]
     restart: always
     networks:
       - gaia_network
