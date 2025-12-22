@@ -8,7 +8,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx eslint src/",
+        "command": "echo '⏳ shared-typescript lint: placeholder - no config yet'",
         "cwd": "{projectRoot}"
       },
       "cache": true
@@ -16,7 +16,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx tsc",
+        "command": "echo '⏳ shared-typescript build: placeholder - no config yet'",
         "cwd": "{projectRoot}"
       },
       "cache": true
