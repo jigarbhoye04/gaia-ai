@@ -22,7 +22,6 @@ from app.agents.tools import (
     webpage_tool,
 )
 from app.config.loggers import langchain_logger as logger
-from app.config.settings import settings
 from app.core.lazy_loader import MissingKeyStrategy, lazy_provider, providers
 from langchain_core.tools import BaseTool
 
@@ -98,9 +97,6 @@ class ToolRegistry:
 
     async def setup(self):
         self._initialize_categories()
-
-        if settings.ENV == "production":
-            await self.load_all_provider_tools()
 
     def _add_category(
         self,
