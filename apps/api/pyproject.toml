@@ -28,6 +28,7 @@ dependencies = [
   "ormsgpack>=1.12.0",
   "filelock>=3.20.1",
   "livekit-api>=1.1.0",
+  "livekit>=1.0.23",
 ]
 
 
