@@ -1,45 +1,56 @@
-/**
- * Auth Hook
- * Manages authentication state and provides auth utilities
- */
-
-import { useRouter } from "expo-router";
 import {
   createContext,
   type ReactNode,
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from "react";
+import type { UserInfo } from "@/features/auth/types";
 import {
   getAuthToken,
   getUserInfo,
   removeAuthToken,
   removeUserInfo,
-  type UserInfo,
 } from "@/features/auth/utils/auth-storage";
 
+// ============================================================================
+// Types
+// ============================================================================
+
 interface AuthContextType {
+  /** Whether the user is authenticated */
   isAuthenticated: boolean;
+  /** Whether auth state is being loaded */
   isLoading: boolean;
+  /** Current user info if authenticated */
   user: UserInfo | null;
+  /** Clear auth state and storage (does NOT navigate - components should handle navigation) */
   signOut: () => Promise<void>;
+  /** Refresh auth state from storage */
   refreshAuth: () => Promise<void>;
 }
 
+// ============================================================================
+// Context
+// ============================================================================
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+// ============================================================================
+// Provider
+// ============================================================================
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserInfo | null>(null);
-  const router = useRouter();
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = useCallback(async () => {
     try {
       const token = await getAuthToken();
       const userInfo = await getUserInfo();
@@ -52,9 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const refreshAuth = async () => {
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
+
+  const refreshAuth = useCallback(async () => {
     try {
       const token = await getAuthToken();
       const userInfo = await getUserInfo();
@@ -65,19 +80,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(false);
       setUser(null);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  /**
+   * Sign out the user - clears storage and state.
+   * NOTE: Navigation should be handled by the calling component,
+   * not by this hook. This keeps the hook decoupled from routing.
+   */
+  const signOut = useCallback(async () => {
     try {
       await removeAuthToken();
       await removeUserInfo();
       setIsAuthenticated(false);
       setUser(null);
-      router.replace("/login");
     } catch (error) {
       console.error("Error signing out:", error);
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -88,10 +107,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
+// ============================================================================
+// Hook
+// ============================================================================
+
+/**
+ * Hook to access auth state and actions.
+ * Must be used within an AuthProvider.
+ */
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }
+
+// Re-export types for convenience
+export type { UserInfo } from "@/features/auth/types";

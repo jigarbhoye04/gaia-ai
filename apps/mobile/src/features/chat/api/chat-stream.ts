@@ -1,23 +1,10 @@
-/**
- * Chat Streaming API
- * SSE-based streaming for real-time chat responses
- */
-
 import { createSSEConnection, type SSEEvent } from "@/lib/sse-client";
 import type { Message } from "./chat-api";
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface StreamCallbacks {
-  /** Called for each text chunk received */
   onChunk: (text: string) => void;
-  /** Called when a complete message is received (with message_id) */
   onMessageComplete?: (data: StreamCompleteData) => void;
-  /** Called when streaming is done */
   onDone: () => void;
-  /** Called on error */
   onError?: (error: Error) => void;
 }
 
@@ -43,10 +30,6 @@ export interface ChatStreamRequest {
   toolCategory?: string | null;
 }
 
-// =============================================================================
-// Stream Data Parsing
-// =============================================================================
-
 interface StreamEventData {
   type?: string;
   content?: string;
@@ -68,34 +51,10 @@ function parseEventData(data: string): StreamEventData | null {
   try {
     return JSON.parse(data);
   } catch {
-    // If not JSON, treat as raw text content
     return { type: "content", content: data };
   }
 }
 
-// =============================================================================
-// Chat Stream Function
-// =============================================================================
-
-/**
- * Start a streaming chat request
- * 
- * @example
- * ```ts
- * const abort = await fetchChatStream({
- *   message: "Hello!",
- *   conversationId: "abc-123",
- *   callbacks: {
- *     onChunk: (text) => setResponse(prev => prev + text),
- *     onDone: () => setIsStreaming(false),
- *     onError: (err) => console.error(err),
- *   }
- * });
- * 
- * // To cancel:
- * abort.abort();
- * ```
- */
 export async function fetchChatStream(
   request: ChatStreamRequest,
   callbacks: StreamCallbacks
@@ -110,7 +69,6 @@ export async function fetchChatStream(
     toolCategory = null,
   } = request;
 
-  // Format messages for the API (last 30, non-empty)
   const formattedMessages = messages
     .slice(-30)
     .filter((msg) => msg.text.trim().length > 0)
@@ -142,33 +100,27 @@ export async function fetchChatStream(
         
         if (!parsed) return;
 
-        // Handle [DONE] signal
         if (parsed.type === "done" || event.data === "[DONE]") {
           console.log("[ChatStream] Stream done");
           callbacks.onDone();
           return;
         }
 
-        // Handle error
         if (parsed.error) {
           console.log("[ChatStream] Error:", parsed.error);
           callbacks.onError?.(new Error(parsed.error));
           return;
         }
 
-        // Handle text content (backend sends 'response' field)
         if (parsed.response) {
           console.log("[ChatStream] Chunk:", parsed.response);
           callbacks.onChunk(parsed.response);
         }
 
-        // Handle message IDs from initial event
         if (parsed.bot_message_id) {
           console.log("[ChatStream] Message IDs received:", parsed.bot_message_id);
-          // We can use this to update the message ID later
         }
 
-        // Handle message completion with metadata
         if (parsed.message_id && parsed.conversation_id) {
           console.log("[ChatStream] Message complete:", parsed.message_id);
           callbacks.onMessageComplete?.({

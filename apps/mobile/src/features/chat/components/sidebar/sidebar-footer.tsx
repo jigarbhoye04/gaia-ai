@@ -1,5 +1,6 @@
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { ActivityIndicator, View, Pressable } from "react-native";
+import { useRouter } from "expo-router";
 import { ArrowDown01Icon, HugeiconsIcon } from "@/components/icons";
 import { Avatar, Popover, type PopoverTriggerRef } from "heroui-native";
 import { useAuth } from "@/features/auth";
@@ -9,6 +10,16 @@ import { SettingsSheetContent } from "./settings-sheet";
 export function SidebarFooter() {
   const { user, isLoading, signOut } = useAuth();
   const popoverRef = useRef<PopoverTriggerRef>(null);
+  const router = useRouter();
+
+  /**
+   * Handle sign out with navigation.
+   * signOut clears auth state, then we navigate to login.
+   */
+  const handleSignOut = useCallback(async () => {
+    await signOut();
+    router.replace("/login");
+  }, [signOut, router]);
 
   const getInitials = (name?: string) => {
     if (!name) return "U";
@@ -65,7 +76,7 @@ export function SidebarFooter() {
             snapPoints={["90%"]}
             index={0}
           >
-            <SettingsSheetContent user={user} onSignOut={signOut} />
+            <SettingsSheetContent user={user} onSignOut={handleSignOut} />
           </Popover.Content>
         </Popover.Portal>
       </Popover>

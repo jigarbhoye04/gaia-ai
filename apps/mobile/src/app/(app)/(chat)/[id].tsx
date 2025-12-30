@@ -28,14 +28,12 @@ export default function ChatPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { setActiveChatId, createNewChat } = useChatContext();
 
-  // Sync the active chat ID with context (for sidebar highlighting, etc.)
   useEffect(() => {
     if (id) {
       setActiveChatId(id);
     }
   }, [id, setActiveChatId]);
 
-  // Use the URL id directly - not activeChatId from context (which may be stale)
   const { messages, isTyping, flatListRef, sendMessage, scrollToBottom } =
     useChat(id || null);
 
@@ -91,6 +89,7 @@ export default function ChatPage() {
                 data={messages}
                 renderItem={renderMessage}
                 keyExtractor={(item) => item.id}
+                extraData={messages[messages.length - 1]?.text}
                 contentContainerStyle={{
                   flexGrow: 1,
                   paddingTop: 16,

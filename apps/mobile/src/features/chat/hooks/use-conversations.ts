@@ -1,12 +1,14 @@
-/**
- * Conversations API Hook
- * Fetches conversation history from the backend
- */
-
 import { useCallback, useEffect, useState } from "react";
 import { apiService } from "@/lib/api";
+import type { Conversation } from "@/features/chat/types";
 
-// API response types
+// Re-export for backwards compatibility
+export type { Conversation, GroupedConversations } from "@/features/chat/types";
+
+// ============================================================================
+// API Types (internal to this module)
+// ============================================================================
+
 interface ApiConversation {
   _id: string;
   user_id: string;
@@ -27,15 +29,9 @@ interface ConversationsResponse {
   total_pages: number;
 }
 
-// Normalized conversation type for the app
-export interface Conversation {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  is_starred?: boolean;
-  is_unread?: boolean;
-}
+// ============================================================================
+// Helpers
+// ============================================================================
 
 interface UseConversationsReturn {
   conversations: Conversation[];
@@ -44,7 +40,6 @@ interface UseConversationsReturn {
   refetch: () => Promise<void>;
 }
 
-// Transform API response to normalized format
 function normalizeConversation(apiConv: ApiConversation): Conversation {
   return {
     id: apiConv.conversation_id,
@@ -96,9 +91,6 @@ export function useConversations(): UseConversationsReturn {
   };
 }
 
-/**
- * Group conversations by time period
- */
 export function groupConversationsByDate(conversations: Conversation[]) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

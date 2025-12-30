@@ -1,13 +1,4 @@
-/**
- * Chat API Service
- * Handles all chat-related API calls
- */
-
 import { apiService } from "@/lib/api";
-
-// =============================================================================
-// Types - API Response Types
-// =============================================================================
 
 export interface ApiFileData {
   fileId: string;
@@ -47,10 +38,6 @@ export interface ApiConversationDetail {
   updatedAt?: string;
 }
 
-// =============================================================================
-// Types - Normalized App Types
-// =============================================================================
-
 export interface Message {
   id: string;
   text: string;
@@ -71,13 +58,6 @@ export interface ConversationDetail {
   isUnread: boolean;
 }
 
-// =============================================================================
-// Transformers
-// =============================================================================
-
-/**
- * Transform API message to app message format
- */
 function normalizeMessage(apiMsg: ApiMessage): Message {
   return {
     id: apiMsg.message_id,
@@ -91,9 +71,6 @@ function normalizeMessage(apiMsg: ApiMessage): Message {
   };
 }
 
-/**
- * Transform API conversation to app conversation format
- */
 function normalizeConversationDetail(
   apiConv: ApiConversationDetail
 ): ConversationDetail {
@@ -107,18 +84,10 @@ function normalizeConversationDetail(
   };
 }
 
-// =============================================================================
-// API Functions
-// =============================================================================
-
-/**
- * Create a new conversation
- */
 export async function createConversation(
   description: string = "New Chat"
 ): Promise<{ conversation_id: string } | null> {
   try {
-    // Generate a unique conversation ID
     const conversationId = `conv-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     
     const response = await apiService.post<{ conversation_id: string }>(
@@ -137,9 +106,6 @@ export async function createConversation(
   }
 }
 
-/**
- * Fetch a single conversation with all its messages
- */
 export async function fetchConversation(
   conversationId: string
 ): Promise<ConversationDetail | null> {
@@ -154,9 +120,6 @@ export async function fetchConversation(
   }
 }
 
-/**
- * Fetch messages for a conversation
- */
 export async function fetchMessages(
   conversationId: string
 ): Promise<Message[]> {
@@ -169,9 +132,6 @@ export async function fetchMessages(
   }
 }
 
-/**
- * Mark conversation as read
- */
 export async function markConversationAsRead(
   conversationId: string
 ): Promise<boolean> {
@@ -184,9 +144,6 @@ export async function markConversationAsRead(
   }
 }
 
-/**
- * Delete a conversation
- */
 export async function deleteConversation(
   conversationId: string
 ): Promise<boolean> {
@@ -199,9 +156,6 @@ export async function deleteConversation(
   }
 }
 
-/**
- * Rename a conversation
- */
 export async function renameConversation(
   conversationId: string,
   title: string
@@ -217,9 +171,6 @@ export async function renameConversation(
   }
 }
 
-/**
- * Star/unstar a conversation
- */
 export async function toggleStarConversation(
   conversationId: string,
   starred: boolean
@@ -233,10 +184,6 @@ export async function toggleStarConversation(
   }
 }
 
-// =============================================================================
-// Export as object for consistency
-// =============================================================================
-
 export const chatApi = {
   fetchConversation,
   fetchMessages,
@@ -246,5 +193,4 @@ export const chatApi = {
   toggleStarConversation,
 };
 
-// Re-export streaming API
 export * from "./chat-stream";

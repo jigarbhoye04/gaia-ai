@@ -174,13 +174,11 @@ export function ConnectDrawer() {
       <Popover.Portal>
         <Popover.Overlay />
         <Popover.Content presentation="bottom-sheet" snapPoints={["70%"]}>
-          {/* Header */}
           <View className="flex-row items-center justify-between px-4 pb-4">
             <Popover.Title>Connect Tools</Popover.Title>
             <Popover.Close />
           </View>
 
-          {/* Search */}
           <View className="flex-row items-center px-4 py-2">
             <View className="flex-1 flex-row items-center rounded-xl px-3 py-2 bg-muted/10">
               <HugeiconsIcon icon={Search01Icon} size={18} color="#8e8e93" />
@@ -194,7 +192,6 @@ export function ConnectDrawer() {
             </View>
           </View>
 
-          {/* Filter Chips */}
           <ScrollView
             horizontal
             nestedScrollEnabled
@@ -215,7 +212,6 @@ export function ConnectDrawer() {
             ))}
           </ScrollView>
 
-          {/* Integrations Header */}
           <View className="flex-row items-center justify-between px-4 py-2">
             <Text className="text-sm font-medium">Available Integrations</Text>
             <Text className="text-sm text-muted">
@@ -224,7 +220,6 @@ export function ConnectDrawer() {
             </Text>
           </View>
 
-          {/* Integrations List */}
           <ScrollView className="flex-1" showsVerticalScrollIndicator>
             {filteredIntegrations.map((integration) => (
               <Pressable

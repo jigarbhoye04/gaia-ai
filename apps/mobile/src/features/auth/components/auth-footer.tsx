@@ -8,12 +8,10 @@ interface AuthFooterProps {
 export function AuthFooter({ showSignUpDisclaimer = false }: AuthFooterProps) {
   const handleTermsPress = () => {
     console.log("Navigate to Terms of Service");
-    // TODO: Implement navigation
   };
 
   const handlePrivacyPress = () => {
     console.log("Navigate to Privacy Policy");
-    // TODO: Implement navigation
   };
 
   return (
