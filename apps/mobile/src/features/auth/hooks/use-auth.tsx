@@ -14,10 +14,6 @@ import {
   removeUserInfo,
 } from "@/features/auth/utils/auth-storage";
 
-// ============================================================================
-// Types
-// ============================================================================
-
 interface AuthContextType {
   /** Whether the user is authenticated */
   isAuthenticated: boolean;
@@ -31,15 +27,7 @@ interface AuthContextType {
   refreshAuth: () => Promise<void>;
 }
 
-// ============================================================================
-// Context
-// ============================================================================
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// ============================================================================
-// Provider
-// ============================================================================
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -107,10 +95,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 }
 
-// ============================================================================
-// Hook
-// ============================================================================
-
 /**
  * Hook to access auth state and actions.
  * Must be used within an AuthProvider.
@@ -123,5 +107,4 @@ export function useAuth(): AuthContextType {
   return context;
 }
 
-// Re-export types for convenience
 export type { UserInfo } from "@/features/auth/types";

@@ -1,33 +1,31 @@
-import { View } from "react-native";
-import { Popover, Button } from "heroui-native";
+import { View, ScrollView } from "react-native";
 import { StyledSafeAreaView } from "@/lib/uniwind";
+import {
+  EmailAccordion,
+  SAMPLE_EMAILS,
+  EmailComposeCard,
+  SAMPLE_EMAIL_COMPOSE,
+} from "@/features/chat";
+import { Text } from "@/components/ui/text";
 
 export default function Test() {
   return (
-    <StyledSafeAreaView className="flex-1 p-4">
-      <Popover>
-        <Popover.Trigger asChild>
-          <Button>
-            <Button.Label>Open Bottom Sheet</Button.Label>
-          </Button>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Overlay />
-          <Popover.Content presentation="bottom-sheet" snapPoints={["90%"]}>
-            <Popover.Title>Test Bottom Sheet</Popover.Title>
-            <Popover.Description>
-              This is a test bottom sheet content.
-            </Popover.Description>
-            <View className="mt-4">
-              <Popover.Close asChild>
-                <Button>
-                  <Button.Label>Close</Button.Label>
-                </Button>
-              </Popover.Close>
-            </View>
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover>
+    <StyledSafeAreaView className="flex-1 bg-background">
+      <ScrollView className="flex-1">
+        <View className="py-4">
+          <Text className="text-lg font-semibold px-4 mb-4">
+            Email Accordion Test
+          </Text>
+          <EmailAccordion emails={SAMPLE_EMAILS} />
+        </View>
+
+        <View className="py-4">
+          <Text className="text-lg font-semibold px-4 mb-4">
+            Email Compose Card
+          </Text>
+          <EmailComposeCard data={SAMPLE_EMAIL_COMPOSE} />
+        </View>
+      </ScrollView>
     </StyledSafeAreaView>
   );
 }

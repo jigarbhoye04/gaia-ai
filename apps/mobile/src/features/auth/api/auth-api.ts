@@ -1,12 +1,7 @@
-/**
- * Auth API Service
- * Handles authentication-related API calls
- */
 
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 
-// OAuth requires raw fetch with different base URL (no /api/v1 suffix)
 const OAUTH_BASE_URL = __DEV__
   ? Platform.OS === "android"
     ? "http://10.0.2.2:8000"
@@ -14,10 +9,6 @@ const OAUTH_BASE_URL = __DEV__
   : "https://api.heygaia.io";
 
 WebBrowser.maybeCompleteAuthSession();
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface LoginUrlResponse {
   url: string;
@@ -30,13 +21,7 @@ export interface UserInfoResponse {
   user_id?: string;
 }
 
-// ============================================================================
-// OAuth API (requires raw fetch - no cookie auth)
-// ============================================================================
 
-/**
- * Get the OAuth login URL from the server
- */
 export async function getLoginUrl(): Promise<string> {
   try {
     const response = await fetch(
@@ -55,17 +40,13 @@ export async function getLoginUrl(): Promise<string> {
   }
 }
 
-/**
- * Start the OAuth flow using WebBrowser
- * Returns the auth token on success
- */
 export async function startOAuthFlow(): Promise<string> {
   try {
     const authUrl = await getLoginUrl();
 
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
-      "giamobile://auth/callback"
+      "gaiamobile://auth/callback"
     );
 
     if (result.type === "success" && result.url) {
@@ -87,9 +68,6 @@ export async function startOAuthFlow(): Promise<string> {
   }
 }
 
-/**
- * Fetch user info from the server
- */
 export async function fetchUserInfo(token: string): Promise<UserInfoResponse> {
   try {
     const response = await fetch(`${OAUTH_BASE_URL}/api/v1/user/me`, {
@@ -133,10 +111,6 @@ export async function logout(token: string): Promise<void> {
     console.error("Error during logout:", error);
   }
 }
-
-// ============================================================================
-// Bundled API object (for consistent pattern with chat feature)
-// ============================================================================
 
 export const authApi = {
   getLoginUrl,

@@ -43,7 +43,7 @@ export async function startOAuthFlow(): Promise<string> {
 
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
-      "giamobile://auth/callback",
+      "gaiamobile://auth/callback",
     );
 
     if (result.type === "success" && result.url) {
