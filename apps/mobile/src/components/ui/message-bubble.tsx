@@ -101,7 +101,7 @@ function MessageBubble({
           <Avatar.Fallback>G</Avatar.Fallback>
         </Avatar>
       )}
-      <View className="flex-col flex-1">
+      <View className={cn("flex-col", variant === "received" ? "flex-1" : "")}>
         <View
           className={cn(messageBubbleVariants({ variant, grouped }), className)}
           {...props}

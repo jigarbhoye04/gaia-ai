@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect } from "react";
 import {
   FlatList,
@@ -26,6 +26,7 @@ import { ChatInput } from "@/components/ui/chat-input";
 
 export default function ChatPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { setActiveChatId, createNewChat } = useChatContext();
 
   useEffect(() => {
@@ -46,11 +47,13 @@ export default function ChatPage() {
   const handleSelectChat = (chatId: string) => {
     setActiveChatId(chatId);
     closeSidebar();
+    router.push(`/(chat)/${chatId}`);
   };
 
   const handleNewChat = () => {
     createNewChat();
     closeSidebar();
+    router.replace("/");
   };
 
   const renderDrawerContent = () => (

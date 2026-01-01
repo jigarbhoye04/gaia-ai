@@ -1,36 +1,47 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FlatList } from "react-native";
-import { chatApi, createConversation, fetchChatStream, type Message } from "../api/chat-api";
+import { shallow } from "zustand/shallow";
+import { chatApi, fetchChatStream, type Message } from "../api/chat-api";
+import { useChatStore } from "@/stores/chat-store";
+
+const EMPTY_MESSAGES: Message[] = [];
+const NEW_CHAT_KEY = "__new__";
 
 export type { Message } from "../api/chat-api";
-
-const chatMessagesStore: Record<string, Message[]> = {};
-
-const fetchedConversations = new Set<string>();
 
 interface UseChatReturn {
   messages: Message[];
   isTyping: boolean;
   isLoading: boolean;
   isStreaming: boolean;
-  newConversationId: string | null;
+  pendingRedirect: string | null;
   flatListRef: React.RefObject<FlatList | null>;
   sendMessage: (text: string) => Promise<void>;
   cancelStream: () => void;
   scrollToBottom: () => void;
   refetch: () => Promise<void>;
+  clearPendingRedirect: () => void;
 }
 
 export function useChat(chatId: string | null): UseChatReturn {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [newConversationId, setNewConversationId] = useState<string | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingResponseRef = useRef<string>("");
   const currentConversationIdRef = useRef<string | null>(chatId);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // For new chats (chatId is null), use the NEW_CHAT_KEY to store messages temporarily
+  const storeKey = chatId || NEW_CHAT_KEY;
+
+  const messages = useChatStore(
+    (state) => state.messagesByConversation[storeKey] ?? EMPTY_MESSAGES,
+    shallow
+  );
+  const streamingState = useChatStore((state) => state.streamingState, shallow);
+  const pendingRedirect = useChatStore((state) => state.pendingRedirect);
+
+  const isTyping = streamingState.isTyping && (streamingState.conversationId === storeKey || streamingState.conversationId === chatId);
+  const isStreaming = streamingState.isStreaming && (streamingState.conversationId === storeKey || streamingState.conversationId === chatId);
 
   useEffect(() => {
     currentConversationIdRef.current = chatId;
@@ -38,13 +49,15 @@ export function useChat(chatId: string | null): UseChatReturn {
 
   const isServerConversation = useCallback((id: string | null): boolean => {
     if (!id) return false;
-    if (id.startsWith("chat-") || id === "new") return false;
+    if (id === NEW_CHAT_KEY || id.startsWith("chat-") || id === "new") return false;
     return true;
   }, []);
 
   const fetchMessagesFromServer = useCallback(
     async (conversationId: string) => {
-      if (fetchedConversations.has(conversationId)) {
+      const store = useChatStore.getState();
+      
+      if (store.isConversationFetched(conversationId)) {
         return;
       }
 
@@ -52,10 +65,8 @@ export function useChat(chatId: string | null): UseChatReturn {
       try {
         const serverMessages = await chatApi.fetchMessages(conversationId);
         if (serverMessages.length > 0) {
-          chatMessagesStore[conversationId] = serverMessages;
-          setMessages(serverMessages);
-          fetchedConversations.add(conversationId);
-
+          store.setMessages(conversationId, serverMessages);
+          store.markConversationFetched(conversationId);
           await chatApi.markConversationAsRead(conversationId);
         }
       } catch (error) {
@@ -69,14 +80,7 @@ export function useChat(chatId: string | null): UseChatReturn {
 
   useEffect(() => {
     if (!chatId) {
-      setMessages([]);
       return;
-    }
-
-    if (chatMessagesStore[chatId]) {
-      setMessages(chatMessagesStore[chatId]);
-    } else {
-      setMessages([]);
     }
 
     if (isServerConversation(chatId)) {
@@ -85,30 +89,31 @@ export function useChat(chatId: string | null): UseChatReturn {
   }, [chatId, isServerConversation, fetchMessagesFromServer]);
 
   const scrollToBottom = useCallback(() => {
-    if (messages.length > 0) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  }, [messages.length]);
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, []);
 
   const cancelStream = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    setIsStreaming(false);
-    setIsTyping(false);
+    useChatStore.getState().setStreamingState({ 
+      isStreaming: false, 
+      isTyping: false, 
+      conversationId: null 
+    });
   }, []);
 
   const sendMessage = useCallback(
     async (text: string) => {
-      if (!chatId) {
-        console.warn("Cannot send message without an active chatId");
-        return;
-      }
-
       cancelStream();
+
+      const store = useChatStore.getState();
+      
+      // Use storeKey for storing messages (NEW_CHAT_KEY for new chats, chatId for existing)
+      const messageStoreKey = chatId || NEW_CHAT_KEY;
 
       const userMessage: Message = {
         id: Date.now().toString(),
@@ -125,123 +130,81 @@ export function useChat(chatId: string | null): UseChatReturn {
         timestamp: new Date(),
       };
 
-      const updatedMessages = [
-        ...(chatMessagesStore[chatId] || []),
-        userMessage,
-        aiMessage,
-      ];
-      chatMessagesStore[chatId] = updatedMessages;
-      setMessages(updatedMessages);
-      setIsTyping(true);
-      setIsStreaming(true);
+      const currentMessages = store.messagesByConversation[messageStoreKey] || [];
+      const updatedMessages = [...currentMessages, userMessage, aiMessage];
+      
+      store.setMessages(messageStoreKey, updatedMessages);
+      store.setStreamingState({ isTyping: true, isStreaming: true, conversationId: messageStoreKey });
       streamingResponseRef.current = "";
 
       try {
-        let conversationIdToSend: string | null = null;
-        
-        console.log("[useChat] chatId:", chatId, "isServerConversation:", isServerConversation(chatId));
-        
-        if (isServerConversation(chatId)) {
-          conversationIdToSend = chatId;
-          console.log("[useChat] Using existing conversation:", conversationIdToSend);
-        } else {
-          console.log("[useChat] Creating new conversation...");
-          const newConversation = await createConversation("New Chat");
-          if (newConversation?.conversation_id) {
-            conversationIdToSend = newConversation.conversation_id;
-            console.log("[useChat] Created new conversation:", conversationIdToSend);
-            chatMessagesStore[conversationIdToSend] = updatedMessages;
-            delete chatMessagesStore[chatId];
-            currentConversationIdRef.current = conversationIdToSend;
-            setNewConversationId(conversationIdToSend);
-          }
-        }
+        // For new conversations, send null; for existing ones, send the actual ID
+        const conversationIdToSend = chatId && isServerConversation(chatId) ? chatId : null;
+        const isNewConversation = !conversationIdToSend;
 
-        const cacheKey = conversationIdToSend || chatId;
-        const messagesForApi = (chatMessagesStore[cacheKey] || []).slice(0, -1);
-        
         const controller = await fetchChatStream(
           {
             message: text,
             conversationId: conversationIdToSend,
-            messages: messagesForApi,
+            messages: updatedMessages.slice(0, -1), // Pass Message[] format, it will be converted in fetchChatStream
           },
           {
+            onConversationCreated: (newConvId, userMsgId, botMsgId) => {
+              // First event - we get the conversation ID and message IDs
+              const store = useChatStore.getState();
+              
+              // Update message IDs
+              const msgs = store.messagesByConversation[messageStoreKey] || [];
+              if (msgs.length >= 2) {
+                const updatedMsgs = [...msgs];
+                // Update user message ID
+                updatedMsgs[updatedMsgs.length - 2] = { ...updatedMsgs[updatedMsgs.length - 2], id: userMsgId };
+                // Update bot message ID
+                updatedMsgs[updatedMsgs.length - 1] = { ...updatedMsgs[updatedMsgs.length - 1], id: botMsgId };
+                store.setMessages(messageStoreKey, updatedMsgs);
+              }
+
+              // If this was a new conversation, migrate messages to the real conversation ID
+              if (isNewConversation && newConvId) {
+                store.migrateMessages(messageStoreKey, newConvId);
+                store.markConversationFetched(newConvId);
+                currentConversationIdRef.current = newConvId;
+                store.setStreamingState({ conversationId: newConvId });
+                store.setPendingRedirect(newConvId);
+              }
+            },
             onChunk: (chunk) => {
               streamingResponseRef.current += chunk;
-              
-              console.log("[useChat] onChunk - accumulated text:", streamingResponseRef.current);
-
-              setMessages((prev) => {
-                const newMessages = prev.map((msg, index) => {
-                  if (index === prev.length - 1 && !msg.isUser) {
-                    return { ...msg, text: streamingResponseRef.current };
-                  }
-                  return msg;
-                });
-                console.log("[useChat] Updated messages:", newMessages.length, "Last msg text:", newMessages[newMessages.length - 1]?.text?.substring(0, 50));
-                return newMessages;
-              });
+              const convId = currentConversationIdRef.current || NEW_CHAT_KEY;
+              useChatStore.getState().updateLastMessage(convId, streamingResponseRef.current);
             },
             onFollowUpActions: (actions) => {
-              console.log("[useChat] Follow up actions received:", actions);
-              setMessages((prev) => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage && !lastMessage.isUser) {
-                  lastMessage.followUpActions = actions;
-                }
-                return newMessages;
-              });
-            },
-            onMessageComplete: ({ conversationId: newConvId, messageId }) => {
-              setMessages((prev) => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage && !lastMessage.isUser) {
-                  lastMessage.id = messageId;
-                }
-                if (currentConversationIdRef.current) {
-                  chatMessagesStore[currentConversationIdRef.current] =
-                    newMessages;
-                }
-                return newMessages;
-              });
-
-              if (!conversationIdToSend && newConvId) {
-                if (chatMessagesStore[chatId]) {
-                  chatMessagesStore[newConvId] = chatMessagesStore[chatId];
-                  delete chatMessagesStore[chatId];
-                }
-                fetchedConversations.add(newConvId);
-              }
+              const convId = currentConversationIdRef.current || NEW_CHAT_KEY;
+              useChatStore.getState().updateLastMessageFollowUp(convId, actions);
             },
             onDone: () => {
-              setIsTyping(false);
-              setIsStreaming(false);
+              useChatStore.getState().setStreamingState({ 
+                isTyping: false, 
+                isStreaming: false, 
+                conversationId: null 
+              });
               abortControllerRef.current = null;
-
-              if (currentConversationIdRef.current) {
-                setMessages((prev) => {
-                  chatMessagesStore[currentConversationIdRef.current!] = prev;
-                  return prev;
-                });
-              }
             },
             onError: (error) => {
               console.error("Stream error:", error);
-              setIsTyping(false);
-              setIsStreaming(false);
-
-              setMessages((prev) => {
-                const newMessages = [...prev];
-                const lastMessage = newMessages[newMessages.length - 1];
-                if (lastMessage && !lastMessage.isUser && !lastMessage.text) {
-                  lastMessage.text =
-                    "Sorry, I encountered an error. Please try again.";
-                }
-                return newMessages;
+              const store = useChatStore.getState();
+              store.setStreamingState({ 
+                isTyping: false, 
+                isStreaming: false, 
+                conversationId: null 
               });
+
+              const convId = currentConversationIdRef.current || NEW_CHAT_KEY;
+              const currentMsgs = store.messagesByConversation[convId] || [];
+              const lastMsg = currentMsgs[currentMsgs.length - 1];
+              if (lastMsg && !lastMsg.isUser && !lastMsg.text) {
+                store.updateLastMessage(convId, "Sorry, I encountered an error. Please try again.");
+              }
             },
           }
         );
@@ -249,8 +212,11 @@ export function useChat(chatId: string | null): UseChatReturn {
         abortControllerRef.current = controller;
       } catch (error) {
         console.error("Error starting stream:", error);
-        setIsTyping(false);
-        setIsStreaming(false);
+        useChatStore.getState().setStreamingState({ 
+          isTyping: false, 
+          isStreaming: false, 
+          conversationId: null 
+        });
       }
     },
     [chatId, cancelStream, isServerConversation]
@@ -266,21 +232,26 @@ export function useChat(chatId: string | null): UseChatReturn {
 
   const refetch = useCallback(async () => {
     if (chatId && isServerConversation(chatId)) {
-      fetchedConversations.delete(chatId);
+      useChatStore.getState().clearConversationFetched(chatId);
       await fetchMessagesFromServer(chatId);
     }
   }, [chatId, isServerConversation, fetchMessagesFromServer]);
+
+  const clearPendingRedirect = useCallback(() => {
+    useChatStore.getState().clearPendingRedirect();
+  }, []);
 
   return {
     messages,
     isTyping,
     isLoading,
     isStreaming,
-    newConversationId,
+    pendingRedirect,
     flatListRef,
     sendMessage,
     cancelStream,
     scrollToBottom,
     refetch,
+    clearPendingRedirect,
   };
 }

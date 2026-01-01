@@ -218,6 +218,9 @@ importers:
       uniwind:
         specifier: ^1.2.2
         version: 1.2.2(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)(tailwindcss@4.1.18)
+      zustand:
+        specifier: ^5.0.9
+        version: 5.0.9(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.18

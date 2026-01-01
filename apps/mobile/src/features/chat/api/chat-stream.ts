@@ -3,17 +3,16 @@ import type { Message } from "./chat-api";
 
 export interface StreamCallbacks {
   onChunk: (text: string) => void;
-  onMessageComplete?: (data: StreamCompleteData) => void;
+  onConversationCreated?: (conversationId: string, userMessageId: string, botMessageId: string) => void;
   onFollowUpActions?: (actions: string[]) => void;
   onDone: () => void;
   onError?: (error: Error) => void;
 }
 
 export interface StreamCompleteData {
-  messageId: string;
   conversationId: string;
-  response?: string;
-  followUpActions?: string[];
+  userMessageId: string;
+  botMessageId: string;
 }
 
 export interface ChatStreamRequest {
@@ -89,57 +88,44 @@ export async function fetchChatStream(
     messages: formattedMessages,
   };
 
-  console.log("[ChatStream] Request body:", JSON.stringify(body, null, 2));
-
   return createSSEConnection(
     "/chat-stream",
     {
       onMessage: (event: SSEEvent) => {
-        console.log("[ChatStream] Raw SSE event:", event.data);
-        
         const parsed = parseEventData(event.data);
-        console.log("[ChatStream] Parsed event:", parsed);
         
         if (!parsed) return;
 
         if (parsed.type === "done" || event.data === "[DONE]") {
-          console.log("[ChatStream] Stream done");
           callbacks.onDone();
           return;
         }
 
         if (parsed.error) {
-          console.log("[ChatStream] Error:", parsed.error);
           callbacks.onError?.(new Error(parsed.error));
           return;
         }
 
+        // First event contains conversation_id and message IDs
+        if (parsed.conversation_id && parsed.bot_message_id && parsed.user_message_id) {
+          callbacks.onConversationCreated?.(
+            parsed.conversation_id,
+            parsed.user_message_id,
+            parsed.bot_message_id
+          );
+        }
+
+        // Stream response chunks
         if (parsed.response) {
-          console.log("[ChatStream] Chunk:", parsed.response);
           callbacks.onChunk(parsed.response);
         }
 
+        // Follow up actions
         if (parsed.follow_up_actions && parsed.follow_up_actions.length > 0) {
-          console.log("[ChatStream] Follow up actions:", parsed.follow_up_actions);
           callbacks.onFollowUpActions?.(parsed.follow_up_actions);
-        }
-
-        if (parsed.bot_message_id) {
-          console.log("[ChatStream] Message IDs received:", parsed.bot_message_id);
-        }
-
-        if (parsed.message_id && parsed.conversation_id) {
-          console.log("[ChatStream] Message complete:", parsed.message_id);
-          callbacks.onMessageComplete?.({
-            messageId: parsed.message_id,
-            conversationId: parsed.conversation_id,
-            response: parsed.response,
-            followUpActions: parsed.follow_up_actions,
-          });
         }
       },
       onError: (error) => {
-        console.log("[ChatStream] Connection error:", error);
         callbacks.onError?.(error);
       },
       onClose: () => {

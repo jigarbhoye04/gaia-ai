@@ -2,6 +2,7 @@ import { View, ScrollView, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { MessageBubble } from "@/components/ui/message-bubble";
 import { ToolDataRenderer } from "../../tool-data";
+import { splitMessageByBreaks } from "../../utils/messageBreakUtils";
 import type { Message } from "../../types";
 
 interface FollowUpActionsProps {
@@ -39,20 +40,32 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, onFollowUpAction }: ChatMessageProps) {
   const isUser = message.isUser;
+  const messageParts = splitMessageByBreaks(message.text || "");
+  console.log('this is the message parts',messageParts);
 
   return (
     <View className={`flex-col py-2 ${isUser ? "items-end" : "items-start"}`}>
-      <View className="flex-col flex-1 gap-2 px-4">
+      <View className="flex-col gap-2 px-4" style={{ maxWidth: "85%" }}>
         {!isUser && message.toolData && message.toolData.length > 0 && (
           <ToolDataRenderer toolData={message.toolData} />
         )}
 
-        {message.text && (
+        {messageParts.map((part, index) => (
           <MessageBubble
-            message={message.text}
+            key={`${message.id}-${index}`}
+            message={part}
             variant={isUser ? "sent" : "received"}
+            grouped={
+              messageParts.length === 1
+                ? "none"
+                : index === 0
+                  ? "first"
+                  : index === messageParts.length - 1
+                    ? "last"
+                    : "middle"
+            }
           />
-        )}
+        ))}
       </View>
 
       {!isUser &&
