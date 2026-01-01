@@ -46,6 +46,7 @@ export interface Message {
   fileIds?: string[];
   fileData?: ApiFileData[];
   toolData?: ApiToolData[];
+  followUpActions?: string[];
   metadata?: Record<string, unknown>;
 }
 

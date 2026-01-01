@@ -6,6 +6,9 @@ export * from "@/features/chat/components/chat/email-accordion";
 export * from "@/features/chat/components/chat/email-compose-card";
 export * from "@/features/chat/components/sidebar/sidebar";
 
+// Tool Data
+export * from "@/features/chat/tool-data";
+
 // API
 export * from "@/features/chat/api/chat-api";
 

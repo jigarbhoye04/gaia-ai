@@ -4,6 +4,7 @@ import type { Message } from "./chat-api";
 export interface StreamCallbacks {
   onChunk: (text: string) => void;
   onMessageComplete?: (data: StreamCompleteData) => void;
+  onFollowUpActions?: (actions: string[]) => void;
   onDone: () => void;
   onError?: (error: Error) => void;
 }
@@ -12,6 +13,7 @@ export interface StreamCompleteData {
   messageId: string;
   conversationId: string;
   response?: string;
+  followUpActions?: string[];
 }
 
 export interface ChatStreamRequest {
@@ -117,6 +119,11 @@ export async function fetchChatStream(
           callbacks.onChunk(parsed.response);
         }
 
+        if (parsed.follow_up_actions && parsed.follow_up_actions.length > 0) {
+          console.log("[ChatStream] Follow up actions:", parsed.follow_up_actions);
+          callbacks.onFollowUpActions?.(parsed.follow_up_actions);
+        }
+
         if (parsed.bot_message_id) {
           console.log("[ChatStream] Message IDs received:", parsed.bot_message_id);
         }
@@ -127,6 +134,7 @@ export async function fetchChatStream(
             messageId: parsed.message_id,
             conversationId: parsed.conversation_id,
             response: parsed.response,
+            followUpActions: parsed.follow_up_actions,
           });
         }
       },

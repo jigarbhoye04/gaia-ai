@@ -1,4 +1,4 @@
-import { View } from "react-native";
+import { View, ScrollView } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Card, Button } from "heroui-native";
 import { Image } from "expo-image";
@@ -93,10 +93,15 @@ export function EmailComposeCard({
         onEdit={() => onEdit?.("subject")}
       />
 
-      <View className="flex-row items-start py-3 px-4">
-        <Text className="flex-1 text-foreground text-sm leading-relaxed">
-          {data.body}
-        </Text>
+      <View
+        className="flex-row items-start py-3 px-4"
+        style={{ maxHeight: 120 }}
+      >
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          <Text className="text-foreground text-sm leading-relaxed">
+            {data.body}
+          </Text>
+        </ScrollView>
         <EditButton onPress={() => onEdit?.("body")} />
       </View>
 

@@ -183,6 +183,17 @@ export function useChat(chatId: string | null): UseChatReturn {
                 return newMessages;
               });
             },
+            onFollowUpActions: (actions) => {
+              console.log("[useChat] Follow up actions received:", actions);
+              setMessages((prev) => {
+                const newMessages = [...prev];
+                const lastMessage = newMessages[newMessages.length - 1];
+                if (lastMessage && !lastMessage.isUser) {
+                  lastMessage.followUpActions = actions;
+                }
+                return newMessages;
+              });
+            },
             onMessageComplete: ({ conversationId: newConvId, messageId }) => {
               setMessages((prev) => {
                 const newMessages = [...prev];
