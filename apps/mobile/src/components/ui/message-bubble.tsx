@@ -31,36 +31,12 @@ const messageBubbleVariants = cva("px-4 py-2.5 max-w-[100%]", {
     },
   },
   compoundVariants: [
-    {
-      variant: "sent",
-      grouped: "first",
-      className: "rounded-br-md",
-    },
-    {
-      variant: "sent",
-      grouped: "middle",
-      className: "rounded-r-md",
-    },
-    {
-      variant: "sent",
-      grouped: "last",
-      className: "rounded-tr-md",
-    },
-    {
-      variant: "received",
-      grouped: "first",
-      className: "rounded-bl-md",
-    },
-    {
-      variant: "received",
-      grouped: "middle",
-      className: "rounded-l-md",
-    },
-    {
-      variant: "received",
-      grouped: "last",
-      className: "rounded-tl-md",
-    },
+    { variant: "sent", grouped: "first", className: "rounded-br-md" },
+    { variant: "sent", grouped: "middle", className: "rounded-r-md" },
+    { variant: "sent", grouped: "last", className: "rounded-tr-md" },
+    { variant: "received", grouped: "first", className: "rounded-bl-md" },
+    { variant: "received", grouped: "middle", className: "rounded-l-md" },
+    { variant: "received", grouped: "last", className: "rounded-tl-md" },
   ],
   defaultVariants: {
     variant: "received",
@@ -76,8 +52,8 @@ function PulsingDots() {
   const dot3 = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    const animate = (dot: Animated.Value, delay: number) => {
-      return Animated.loop(
+    const animate = (dot: Animated.Value, delay: number) =>
+      Animated.loop(
         Animated.sequence([
           Animated.delay(delay),
           Animated.timing(dot, {
@@ -92,7 +68,6 @@ function PulsingDots() {
           }),
         ])
       );
-    };
 
     const a1 = animate(dot1, 0);
     const a2 = animate(dot2, 150);
@@ -103,17 +78,41 @@ function PulsingDots() {
     a3.start();
 
     return () => {
-      a1.stop();
-      a2.stop();
-      a3.stop();
+      dot1.stopAnimation();
+      dot2.stopAnimation();
+      dot3.stopAnimation();
     };
   }, [dot1, dot2, dot3]);
 
   return (
-    <View className="flex-row items-center gap-1 ml-2">
-      <Animated.View style={{ opacity: dot1 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
-      <Animated.View style={{ opacity: dot2 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
-      <Animated.View style={{ opacity: dot3 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+    <View className="flex-row items-center ml-2" style={{ gap: 4 }}>
+      <Animated.View
+        style={{
+          opacity: dot1,
+          width: 6,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: "#007AFF",
+        }}
+      />
+      <Animated.View
+        style={{
+          opacity: dot2,
+          width: 6,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: "#007AFF",
+        }}
+      />
+      <Animated.View
+        style={{
+          opacity: dot3,
+          width: 6,
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: "#007AFF",
+        }}
+      />
     </View>
   );
 }
@@ -123,27 +122,28 @@ interface MessageBubbleProps
     React.ComponentPropsWithoutRef<typeof View>,
     MessageBubbleVariantProps {
   message?: string;
+  showAvatar?: boolean;
 }
 
 function MessageBubble({
   message,
   variant = "received",
   grouped = "none",
+  showAvatar = true,
   className,
   children,
-  ...props
+  ...rest
 }: MessageBubbleProps) {
   const isLoading = variant === "loading";
-  const displayVariant = isLoading ? "received" : variant;
 
   return (
     <View
       className={cn(
         "flex-row gap-2",
-        displayVariant === "received" ? "self-start" : "self-end"
+        variant === "sent" ? "self-end" : "self-start"
       )}
     >
-      {displayVariant === "received" && (
+      {variant !== "sent" && showAvatar && (
         <Avatar
           alt="Gaia"
           size="sm"
@@ -154,18 +154,29 @@ function MessageBubble({
           <Avatar.Fallback>G</Avatar.Fallback>
         </Avatar>
       )}
-      <View className={cn("flex-col", displayVariant === "received" ? "flex-1" : "")}>
+      {variant !== "sent" && !showAvatar && (
+        <View style={{ width: 24, height: 24 }} />
+      )}
+
+      <View className={cn("flex-col", variant !== "sent" && "flex-1")}>
         <View
+          {...rest}
           className={cn(
-            isLoading ? "px-0 py-2.5" : messageBubbleVariants({ variant: displayVariant, grouped }),
+            isLoading
+              ? "px-0 py-2.5"
+              : messageBubbleVariants({ variant, grouped }),
             className
           )}
-          {...props}
         >
-          {children || (
-            isLoading ? (
-              <View className="flex-row items-center">
-                <Text className="text-base text-foreground">{message}</Text>
+          {children ??
+            (isLoading ? (
+              <View className="flex-row items-center ">
+                <Text
+                  className="text-sm text-foreground"
+                  style={{ lineHeight: 20 }}
+                >
+                  {message}
+                </Text>
                 <PulsingDots />
               </View>
             ) : (
@@ -179,10 +190,10 @@ function MessageBubble({
               >
                 {message}
               </Text>
-            )
-          )}
+            ))}
         </View>
-        {displayVariant === "received" && !isLoading && (
+
+        {variant === "received" && !isLoading && grouped === "last" && (
           <View className="flex-row items-center gap-3 mt-1.5 px-1">
             <Pressable className="p-1 active:opacity-60">
               <HugeiconsIcon icon={Copy01Icon} size={16} color="#8e8e93" />
@@ -221,12 +232,7 @@ function ChatMessage({
   className,
   showTimestamp = true,
 }: ChatMessageProps) {
-  const hasMultipleMessages = messages.length > 1;
-
-  const getGroupedType = (
-    index: number,
-    total: number
-  ): "first" | "middle" | "last" | "none" => {
+  const getGroupedType = (index: number, total: number) => {
     if (total === 1) return "none";
     if (index === 0) return "first";
     if (index === total - 1) return "last";
@@ -244,14 +250,10 @@ function ChatMessage({
       <View className="flex flex-col">
         {messages.map((message, index) => (
           <MessageBubble
-            key={`${message.slice(0, 20)}-${index}`}
+            key={index}
             message={message}
             variant={variant}
-            grouped={
-              hasMultipleMessages
-                ? getGroupedType(index, messages.length)
-                : "none"
-            }
+            grouped={getGroupedType(index, messages.length)}
           />
         ))}
       </View>

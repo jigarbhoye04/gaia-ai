@@ -25,9 +25,9 @@ export default function AppLayout() {
           contentStyle: { backgroundColor: "transparent" },
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(chat)/[id]" options={{animation:"none"}}/>
-        <Stack.Screen name="test/index" />
+        <Stack.Screen name="index" options={{ animation: "none" }} />
+        <Stack.Screen name="(chat)/[id]" options={{ animation: "none" }} />
+        <Stack.Screen name="test/index" options={{ animation: "none" }} />
       </Stack>
     </View>
   );

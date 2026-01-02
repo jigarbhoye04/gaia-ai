@@ -35,12 +35,16 @@ interface ChatMessageProps {
   loadingMessage?: string;
 }
 
-export function ChatMessage({ message, onFollowUpAction, isLoading, loadingMessage }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  onFollowUpAction,
+  isLoading,
+  loadingMessage,
+}: ChatMessageProps) {
   const isUser = message.isUser;
   const messageParts = splitMessageByBreaks(message.text || "");
   const hasContent = message.text && message.text.trim().length > 0;
 
-  // Show loading state for AI messages that are empty and still loading
   const showLoadingState = !isUser && isLoading && !hasContent;
 
   return (
@@ -61,6 +65,7 @@ export function ChatMessage({ message, onFollowUpAction, isLoading, loadingMessa
               key={`${message.id}-${index}`}
               message={part}
               variant={isUser ? "sent" : "received"}
+              showAvatar={index === 0}
               grouped={
                 messageParts.length === 1
                   ? "none"

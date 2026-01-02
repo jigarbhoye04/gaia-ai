@@ -24,7 +24,7 @@ export function ChatInput({
   onChangeText,
 }: ChatInputProps) {
   const [internalMessage, setInternalMessage] = useState("");
-  
+
   const message = value ?? internalMessage;
   const setMessage = onChangeText ?? setInternalMessage;
 
@@ -36,7 +36,7 @@ export function ChatInput({
   };
 
   return (
-    <View className="w-full bg-red-100">
+    <View className="w-full">
       <View className="bg-surface rounded-4xl">
         <TextInput
           className="px-4 py-6 text-base text-foreground min-h-14"

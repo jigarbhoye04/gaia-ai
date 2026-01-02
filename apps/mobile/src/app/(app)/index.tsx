@@ -28,7 +28,7 @@ import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinkin
 
 export default function IndexScreen() {
   const router = useRouter();
-  const { setActiveChatId } = useChatContext();
+  const { setActiveChatId, createNewChat } = useChatContext();
   const { drawerRef, closeSidebar, toggleSidebar } = useSidebar();
 
   // Use null for new chats - backend will create conversation ID in first SSE event
@@ -83,7 +83,9 @@ export default function IndexScreen() {
   };
 
   const handleNewChat = () => {
+    createNewChat();
     closeSidebar();
+    router.replace("/");
   };
 
   const handleSendMessage = async (text: string) => {
