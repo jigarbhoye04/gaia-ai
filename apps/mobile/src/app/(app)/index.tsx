@@ -17,6 +17,7 @@ import {
   ChatHeader,
   ChatMessage,
   type Message,
+  ProgressIndicator,
   SIDEBAR_WIDTH,
   SidebarContent,
   useChat,
@@ -30,24 +31,23 @@ export default function IndexScreen() {
   const { setActiveChatId } = useChatContext();
   const { drawerRef, closeSidebar, toggleSidebar } = useSidebar();
 
-  // Use null for new chats - backend will create conversation ID
+  // Use null for new chats - backend will create conversation ID in first SSE event
   const {
     messages,
     isTyping,
+    progress,
+    conversationId,
     flatListRef,
     sendMessage,
     scrollToBottom,
-    pendingRedirect,
-    clearPendingRedirect,
   } = useChat(null);
 
-  // Handle redirect when backend returns a conversation ID
+  // Update active chat ID when conversation is created by backend
   useEffect(() => {
-    if (pendingRedirect) {
-      clearPendingRedirect();
-      router.replace(`/(chat)/${pendingRedirect}`);
+    if (conversationId) {
+      setActiveChatId(conversationId);
     }
-  }, [pendingRedirect, clearPendingRedirect, router]);
+  }, [conversationId, setActiveChatId]);
 
   useEffect(() => {
     scrollToBottom();
@@ -94,7 +94,7 @@ export default function IndexScreen() {
             />
 
             <View className="flex-1">
-              {messages.length === 0 ? (
+              {messages.length === 0 && !progress ? (
                 <View className="flex-1 items-center justify-center px-6">
                   <Text className="text-2xl font-semibold text-foreground mb-2">
                     What can I help you with?
@@ -129,12 +129,15 @@ export default function IndexScreen() {
                       flatListRef.current?.scrollToEnd({ animated: false });
                     }
                   }}
+                  ListFooterComponent={
+                    progress ? <ProgressIndicator message={progress} /> : null
+                  }
                 />
               )}
             </View>
 
             <View className="px-2 pb-2 bg-surface rounded-t-4xl">
-              {isTyping && (
+              {isTyping && !progress && (
                 <View className="flex-row items-center px-2 py-3 gap-2 mb-2">
                   <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
                   <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />

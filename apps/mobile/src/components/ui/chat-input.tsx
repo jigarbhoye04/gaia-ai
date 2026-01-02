@@ -13,13 +13,20 @@ import { ConnectDrawer } from "@/features/chat/components/chat/connect-drawer";
 interface ChatInputProps {
   onSend?: (message: string) => void;
   placeholder?: string;
+  value?: string;
+  onChangeText?: (text: string) => void;
 }
 
 export function ChatInput({
   onSend,
   placeholder = "Ask anything",
+  value,
+  onChangeText,
 }: ChatInputProps) {
-  const [message, setMessage] = useState("");
+  const [internalMessage, setInternalMessage] = useState("");
+  
+  const message = value ?? internalMessage;
+  const setMessage = onChangeText ?? setInternalMessage;
 
   const handleSend = () => {
     if (message.trim()) {

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -16,6 +16,8 @@ import {
   ChatHeader,
   ChatMessage,
   type Message,
+  ProgressIndicator,
+  ThinkingIndicator,
   SIDEBAR_WIDTH,
   SidebarContent,
   useChat,
@@ -35,10 +37,12 @@ export default function ChatPage() {
     }
   }, [id, setActiveChatId]);
 
-  const { messages, isTyping, flatListRef, sendMessage, scrollToBottom } =
+  const { messages, isTyping, progress, flatListRef, sendMessage, scrollToBottom } =
     useChat(id || null);
 
   const { drawerRef, closeSidebar, toggleSidebar } = useSidebar();
+  const [inputValue, setInputValue] = useState("");
+  const [lastUserMessage, setLastUserMessage] = useState("");
 
   useEffect(() => {
     scrollToBottom();
@@ -56,12 +60,19 @@ export default function ChatPage() {
     router.replace("/");
   };
 
+  const handleFollowUpAction = useCallback((action: string) => {
+    setInputValue(action);
+  }, []);
+
   const renderDrawerContent = () => (
     <SidebarContent onSelectChat={handleSelectChat} onNewChat={handleNewChat} />
   );
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <ChatMessage message={item} />
+  const renderMessage = useCallback(
+    ({ item }: { item: Message }) => (
+      <ChatMessage message={item} onFollowUpAction={handleFollowUpAction} />
+    ),
+    [handleFollowUpAction]
   );
 
   return (
@@ -110,18 +121,26 @@ export default function ChatPage() {
                     flatListRef.current?.scrollToEnd({ animated: false });
                   }
                 }}
+                ListFooterComponent={
+                  progress ? (
+                    <ProgressIndicator message={progress} />
+                  ) : isTyping ? (
+                    <ThinkingIndicator userMessage={lastUserMessage} />
+                  ) : null
+                }
               />
             </View>
 
             <View className="px-2 pb-2 bg-surface rounded-t-4xl">
-              {isTyping && (
-                <View className="flex-row items-center px-2 py-3 gap-2 mb-2">
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                </View>
-              )}
-              <ChatInput onSend={sendMessage} />
+              <ChatInput
+                onSend={(msg) => {
+                  setLastUserMessage(msg);
+                  sendMessage(msg);
+                  setInputValue("");
+                }}
+                value={inputValue}
+                onChangeText={setInputValue}
+              />
             </View>
           </SafeAreaView>
         </KeyboardAvoidingView>

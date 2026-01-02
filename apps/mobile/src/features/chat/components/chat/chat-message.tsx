@@ -1,4 +1,4 @@
-import { View, ScrollView, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
 import { Text } from "@/components/ui/text";
 import { MessageBubble } from "@/components/ui/message-bubble";
 import { ToolDataRenderer } from "../../tool-data";
@@ -14,22 +14,17 @@ function FollowUpActions({ actions, onActionPress }: FollowUpActionsProps) {
   if (!actions || actions.length === 0) return null;
 
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      className="mt-2"
-      contentContainerStyle={{ gap: 8, paddingLeft: 32 }}
-    >
+    <View className="mt-2 flex-row flex-wrap gap-2 pl-8">
       {actions.map((action) => (
         <Pressable
           key={action}
           onPress={() => onActionPress?.(action)}
-          className="px-3 py-2 rounded-full bg-surface border border-muted/20 active:opacity-70"
+          className="px-3 py-2 rounded-lg border-2 border-dotted border-muted/20 active:opacity-70"
         >
-          <Text className="text-foreground text-sm">{action}</Text>
+          <Text className="text-foreground text-xs">{action}</Text>
         </Pressable>
       ))}
-    </ScrollView>
+    </View>
   );
 }
 
@@ -41,7 +36,6 @@ interface ChatMessageProps {
 export function ChatMessage({ message, onFollowUpAction }: ChatMessageProps) {
   const isUser = message.isUser;
   const messageParts = splitMessageByBreaks(message.text || "");
-  console.log('this is the message parts',messageParts);
 
   return (
     <View className={`flex-col py-2 ${isUser ? "items-end" : "items-start"}`}>

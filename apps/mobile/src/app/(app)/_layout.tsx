@@ -26,7 +26,7 @@ export default function AppLayout() {
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="(chat)/[id]" />
+        <Stack.Screen name="(chat)/[id]" options={{animation:"none"}}/>
         <Stack.Screen name="test/index" />
       </Stack>
     </View>

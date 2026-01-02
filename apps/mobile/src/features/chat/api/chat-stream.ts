@@ -1,18 +1,13 @@
 import { createSSEConnection, type SSEEvent } from "@/lib/sse-client";
-import type { Message } from "./chat-api";
+import type { Message, ApiFileData } from "./chat-api";
 
 export interface StreamCallbacks {
   onChunk: (text: string) => void;
   onConversationCreated?: (conversationId: string, userMessageId: string, botMessageId: string) => void;
+  onProgress?: (message: string, toolName?: string) => void;
   onFollowUpActions?: (actions: string[]) => void;
   onDone: () => void;
   onError?: (error: Error) => void;
-}
-
-export interface StreamCompleteData {
-  conversationId: string;
-  userMessageId: string;
-  botMessageId: string;
 }
 
 export interface ChatStreamRequest {
@@ -20,13 +15,7 @@ export interface ChatStreamRequest {
   conversationId?: string | null;
   messages?: Message[];
   fileIds?: string[];
-  fileData?: Array<{
-    fileId: string;
-    fileName?: string;
-    fileSize?: number;
-    contentType?: string;
-    url?: string;
-  }>;
+  fileData?: ApiFileData[];
   selectedTool?: string | null;
   toolCategory?: string | null;
 }
@@ -42,6 +31,11 @@ interface StreamEventData {
   user_message_id?: string;
   main_response_complete?: boolean;
   follow_up_actions?: string[];
+  progress?: {
+    message: string;
+    tool_name?: string;
+    tool_category?: string;
+  };
 }
 
 function parseEventData(data: string): StreamEventData | null {
@@ -113,6 +107,11 @@ export async function fetchChatStream(
             parsed.user_message_id,
             parsed.bot_message_id
           );
+        }
+
+        // Progress updates (tool execution status)
+        if (parsed.progress) {
+          callbacks.onProgress?.(parsed.progress.message, parsed.progress.tool_name);
         }
 
         // Stream response chunks
