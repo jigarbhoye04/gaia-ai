@@ -81,7 +81,8 @@ export default function ChatPage() {
   const handleSelectChat = (chatId: string) => {
     setActiveChatId(chatId);
     closeSidebar();
-    router.push(`/(chat)/${chatId}`);
+    // Use replace instead of push to avoid stacking pages
+    router.replace(`/(chat)/${chatId}`);
   };
 
   const handleNewChat = () => {
