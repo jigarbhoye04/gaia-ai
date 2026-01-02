@@ -3,8 +3,8 @@ import { Platform } from "react-native";
 
 const API_BASE_URL = __DEV__
   ? Platform.OS === "android"
-    ? "http://10.0.2.2:8000" // Android emulator
-    : "http://192.168.1.126:8000" // iOS simulator / physical device
+    ? "http://10.0.2.2:8000"
+    : "http://192.168.1.126:8000"
   : "https://api.heygaia.io";
 
 WebBrowser.maybeCompleteAuthSession();
@@ -43,7 +43,7 @@ export async function startOAuthFlow(): Promise<string> {
 
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
-      "giamobile://auth/callback",
+      "gaiamobile://auth/callback",
     );
 
     if (result.type === "success" && result.url) {

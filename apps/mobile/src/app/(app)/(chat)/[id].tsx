@@ -1,25 +1,21 @@
-import { useLocalSearchParams } from "expo-router";
-import { useEffect } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DrawerLayout, {
   DrawerPosition,
   DrawerType,
 } from "react-native-gesture-handler/ReanimatedDrawerLayout";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ChatInput } from "@/components/ui/chat-input";
 import {
-  ChatEmptyState,
   ChatHeader,
-  ChatInput,
   ChatMessage,
-  DEFAULT_SUGGESTIONS,
   type Message,
   SIDEBAR_WIDTH,
   SidebarContent,
@@ -27,21 +23,56 @@ import {
   useChatContext,
   useSidebar,
 } from "@/features/chat";
+import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 
 export default function ChatPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { activeChatId, setActiveChatId, createNewChat } = useChatContext();
+  const router = useRouter();
+  const { setActiveChatId, createNewChat } = useChatContext();
 
   useEffect(() => {
-    if (id && id !== activeChatId) {
+    if (id) {
       setActiveChatId(id);
     }
-  }, [id, activeChatId, setActiveChatId]);
+  }, [id, setActiveChatId]);
 
-  const { messages, isTyping, flatListRef, sendMessage, scrollToBottom } =
-    useChat(activeChatId);
+  const {
+    messages,
+    isTyping,
+    progress,
+    flatListRef,
+    sendMessage,
+    scrollToBottom,
+  } = useChat(id || null);
+
+  useEffect(() => {
+    console.log("[ChatPage] isTyping:", isTyping, "progress:", progress);
+  }, [isTyping, progress]);
 
   const { drawerRef, closeSidebar, toggleSidebar } = useSidebar();
+  const [inputValue, setInputValue] = useState("");
+  const [lastUserMessage, setLastUserMessage] = useState("");
+  const [thinkingMessage, setThinkingMessage] = useState(() =>
+    getRelevantThinkingMessage(""),
+  );
+
+  // Rotate playful thinking messages when typing but no tool progress
+  useEffect(() => {
+    if (isTyping && !progress) {
+      // Set initial message immediately
+      setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
+      const interval = setInterval(
+        () => {
+          setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
+        },
+        2000 + Math.random() * 1000,
+      );
+      return () => clearInterval(interval);
+    }
+  }, [isTyping, progress, lastUserMessage]);
+
+  // Get the display message for loading state - use progress when available, otherwise use thinking message
+  const displayMessage = progress || thinkingMessage;
 
   useEffect(() => {
     scrollToBottom();
@@ -50,30 +81,45 @@ export default function ChatPage() {
   const handleSelectChat = (chatId: string) => {
     setActiveChatId(chatId);
     closeSidebar();
+    // Use replace instead of push to avoid stacking pages
+    router.replace(`/(chat)/${chatId}`);
   };
 
   const handleNewChat = () => {
     createNewChat();
     closeSidebar();
+    router.replace("/");
   };
+
+  const handleFollowUpAction = useCallback((action: string) => {
+    setInputValue(action);
+  }, []);
 
   const renderDrawerContent = () => (
     <SidebarContent onSelectChat={handleSelectChat} onNewChat={handleNewChat} />
   );
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <ChatMessage message={item} />
-  );
+  const renderMessage = useCallback(
+    ({ item, index }: { item: Message; index: number }) => {
+      const isLastMessage = index === messages.length - 1;
+      const isEmptyAiMessage =
+        !item.isUser && (!item.text || item.text.trim() === "");
+      const showLoading = isLastMessage && isEmptyAiMessage && isTyping;
 
-  const renderEmpty = () => (
-    <ChatEmptyState
-      suggestions={DEFAULT_SUGGESTIONS}
-      onSuggestionPress={sendMessage}
-    />
+      return (
+        <ChatMessage
+          message={item}
+          onFollowUpAction={handleFollowUpAction}
+          isLoading={showLoading}
+          loadingMessage={showLoading ? displayMessage : undefined}
+        />
+      );
+    },
+    [handleFollowUpAction, messages.length, isTyping, displayMessage],
   );
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <View className="flex-1">
       <DrawerLayout
         ref={drawerRef}
         drawerWidth={SIDEBAR_WIDTH}
@@ -83,51 +129,62 @@ export default function ChatPage() {
         renderNavigationView={renderDrawerContent}
       >
         <KeyboardAvoidingView
-          className="flex-1 bg-surface-1"
+          className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
-          <SafeAreaView
-            className="flex-1 bg-surface-1"
-            edges={["top", "bottom"]}
-          >
-            {/* Header */}
+          <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
             <ChatHeader
               onMenuPress={toggleSidebar}
               onNewChatPress={handleNewChat}
               onSearchPress={() => console.log("Search pressed")}
             />
 
-            {/* Messages List */}
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View className="flex-1">
-                <FlatList
-                  ref={flatListRef}
-                  data={messages}
-                  renderItem={renderMessage}
-                  keyExtractor={(item) => item.id}
-                  contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
-                  ListEmptyComponent={renderEmpty}
-                  showsVerticalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                />
-              </View>
-            </TouchableWithoutFeedback>
+            <View className="flex-1">
+              <FlatList
+                ref={flatListRef}
+                data={messages}
+                renderItem={renderMessage}
+                keyExtractor={(item) => item.id}
+                extraData={[
+                  messages[messages.length - 1]?.text,
+                  isTyping,
+                  displayMessage,
+                ]}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  paddingTop: 16,
+                  paddingBottom: 32,
+                }}
+                showsVerticalScrollIndicator={true}
+                keyboardShouldPersistTaps="handled"
+                initialNumToRender={20}
+                maxToRenderPerBatch={10}
+                windowSize={10}
+                keyboardDismissMode="on-drag"
+                onScrollBeginDrag={Keyboard.dismiss}
+                onContentSizeChange={() => {
+                  if (messages.length > 0) {
+                    flatListRef.current?.scrollToEnd({ animated: false });
+                  }
+                }}
+              />
+            </View>
 
-            {/* Bottom Input & Typing Indicator */}
-            <View className="w-full bg-surface-1/95 border-t border-border/10 px-6 pb-8 pt-4">
-              {isTyping && (
-                <View className="flex-row items-center px-2 py-3 gap-2 mb-2">
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                </View>
-              )}
-              <ChatInput placeholder="What can I do for you today?" />
+            <View className="px-2 pb-2 bg-surface rounded-t-4xl">
+              <ChatInput
+                onSend={(msg) => {
+                  setLastUserMessage(msg);
+                  sendMessage(msg);
+                  setInputValue("");
+                }}
+                value={inputValue}
+                onChangeText={setInputValue}
+              />
             </View>
           </SafeAreaView>
         </KeyboardAvoidingView>
       </DrawerLayout>
-    </GestureHandlerRootView>
+    </View>
   );
 }

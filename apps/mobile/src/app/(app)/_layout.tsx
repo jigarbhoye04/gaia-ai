@@ -5,7 +5,6 @@ import { useAuth } from "@/features/auth";
 export default function AppLayout() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show a loading screen while checking auth status
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#0a1929]">
@@ -14,16 +13,22 @@ export default function AppLayout() {
     );
   }
 
-  // If not authenticated, redirect to the login screen
   if (!isAuthenticated) {
     return <Redirect href="/login" />;
   }
 
-  // If authenticated, render the children routes
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(chat)/[id]" />
-    </Stack>
+    <View className="flex-1 bg-background">
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      >
+        <Stack.Screen name="index" options={{ animation: "none" }} />
+        <Stack.Screen name="(chat)/[id]" options={{ animation: "none" }} />
+        <Stack.Screen name="test/index" options={{ animation: "none" }} />
+      </Stack>
+    </View>
   );
 }
