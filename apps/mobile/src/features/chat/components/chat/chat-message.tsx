@@ -11,7 +11,7 @@ interface FollowUpActionsProps {
 }
 
 function FollowUpActions({ actions, onActionPress }: FollowUpActionsProps) {
-  if (!actions || actions.length === 0) return null;
+  if (!actions.length) return null;
 
   return (
     <View className="mt-2 flex-row flex-wrap gap-2 pl-8">
@@ -19,9 +19,9 @@ function FollowUpActions({ actions, onActionPress }: FollowUpActionsProps) {
         <Pressable
           key={action}
           onPress={() => onActionPress?.(action)}
-          className="px-3 py-2 rounded-lg border-2 border-dotted border-muted/20 active:opacity-70"
+          className="rounded-lg border-2 border-dotted border-muted/20 px-3 py-2 active:opacity-70"
         >
-          <Text className="text-foreground text-xs">{action}</Text>
+          <Text className="text-xs text-foreground">{action}</Text>
         </Pressable>
       ))}
     </View>
@@ -38,56 +38,53 @@ interface ChatMessageProps {
 export function ChatMessage({
   message,
   onFollowUpAction,
-  isLoading,
-  loadingMessage,
+  isLoading = false,
+  loadingMessage = "Thinking...",
 }: ChatMessageProps) {
   const isUser = message.isUser;
-  const messageParts = splitMessageByBreaks(message.text || "");
-  const hasContent = message.text && message.text.trim().length > 0;
 
+  const rawText = message.text ?? "";
+  const messageParts = splitMessageByBreaks(rawText).filter(Boolean);
+
+  const hasContent = messageParts.length > 0;
   const showLoadingState = !isUser && isLoading && !hasContent;
 
   return (
     <View className={`flex-col py-2 ${isUser ? "items-end" : "items-start"}`}>
       <View className="flex-col gap-2 px-4" style={{ maxWidth: "85%" }}>
-        {!isUser && message.toolData && message.toolData.length > 0 && (
+        {!isUser && message.toolData?.length ? (
           <ToolDataRenderer toolData={message.toolData} />
-        )}
+        ) : null}
 
         {showLoadingState ? (
-          <MessageBubble
-            message={loadingMessage || "Thinking..."}
-            variant="loading"
-          />
+          <MessageBubble message={loadingMessage} variant="loading" />
         ) : (
           messageParts.map((part, index) => (
             <MessageBubble
               key={`${message.id}-${index}`}
               message={part}
               variant={isUser ? "sent" : "received"}
-              showAvatar={index === 0}
+              showAvatar={!isUser && index === 0}
               grouped={
                 messageParts.length === 1
                   ? "none"
                   : index === 0
-                    ? "first"
-                    : index === messageParts.length - 1
-                      ? "last"
-                      : "middle"
+                  ? "first"
+                  : index === messageParts.length - 1
+                  ? "last"
+                  : "middle"
               }
             />
           ))
         )}
       </View>
 
-      {!isUser &&
-        message.followUpActions &&
-        message.followUpActions.length > 0 && (
-          <FollowUpActions
-            actions={message.followUpActions}
-            onActionPress={onFollowUpAction}
-          />
-        )}
+      {!isUser && message.followUpActions?.length ? (
+        <FollowUpActions
+          actions={message.followUpActions}
+          onActionPress={onFollowUpAction}
+        />
+      ) : null}
     </View>
   );
 }

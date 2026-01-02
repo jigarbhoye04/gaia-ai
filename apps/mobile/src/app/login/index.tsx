@@ -6,11 +6,11 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, PressableFeedback } from "heroui-native";
+import { Text } from "@/components/ui/text";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
   fetchUserInfo,
@@ -83,7 +83,7 @@ export default function LoginScreen() {
                   resizeMode="contain"
                 />
               </View>
-              <Text className="text-2xl font-bold text-foreground text-center">
+              <Text className="text-2xl font-bold text-center">
                 Let's Get You Back In
               </Text>
             </View>
@@ -106,7 +106,7 @@ export default function LoginScreen() {
 
               {/* Sign Up Link */}
               <View className="flex-row items-center justify-center mt-4">
-                <Text className="text-base text-muted-foreground">
+                <Text className="text-base text-muted">
                   Don't have an account?{" "}
                 </Text>
                 <PressableFeedback
@@ -123,13 +123,13 @@ export default function LoginScreen() {
             {/* Footer */}
             <View className="flex-row items-center justify-center mt-6 flex-wrap">
               <PressableFeedback>
-                <Text className="text-sm text-muted-foreground underline">
+                <Text className="text-sm text-muted underline">
                   Terms of Service
                 </Text>
               </PressableFeedback>
-              <Text className="text-sm text-muted-foreground mx-1"> and </Text>
+              <Text className="text-sm text-muted mx-1"> and </Text>
               <PressableFeedback>
-                <Text className="text-sm text-muted-foreground underline">
+                <Text className="text-sm text-muted underline">
                   Privacy Policy
                 </Text>
               </PressableFeedback>
