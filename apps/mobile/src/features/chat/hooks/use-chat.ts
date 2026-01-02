@@ -150,11 +150,10 @@ export function useChat(chatId: string | null): UseChatReturn {
           },
           onChunk: (chunk) => {
             streamingResponseRef.current += chunk;
-            // Clear progress when actual content starts coming
-            useChatStore.getState().setStreamingState({ progress: null });
             useChatStore.getState().updateLastMessage(activeConvIdRef.current!, streamingResponseRef.current);
           },
           onProgress: (message) => {
+            console.log("[useChat] onProgress received:", message);
             useChatStore.getState().setStreamingState({ progress: message });
           },
           onFollowUpActions: (actions) => {

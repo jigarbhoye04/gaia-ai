@@ -31,11 +31,17 @@ function FollowUpActions({ actions, onActionPress }: FollowUpActionsProps) {
 interface ChatMessageProps {
   message: Message;
   onFollowUpAction?: (action: string) => void;
+  isLoading?: boolean;
+  loadingMessage?: string;
 }
 
-export function ChatMessage({ message, onFollowUpAction }: ChatMessageProps) {
+export function ChatMessage({ message, onFollowUpAction, isLoading, loadingMessage }: ChatMessageProps) {
   const isUser = message.isUser;
   const messageParts = splitMessageByBreaks(message.text || "");
+  const hasContent = message.text && message.text.trim().length > 0;
+
+  // Show loading state for AI messages that are empty and still loading
+  const showLoadingState = !isUser && isLoading && !hasContent;
 
   return (
     <View className={`flex-col py-2 ${isUser ? "items-end" : "items-start"}`}>
@@ -44,22 +50,29 @@ export function ChatMessage({ message, onFollowUpAction }: ChatMessageProps) {
           <ToolDataRenderer toolData={message.toolData} />
         )}
 
-        {messageParts.map((part, index) => (
+        {showLoadingState ? (
           <MessageBubble
-            key={`${message.id}-${index}`}
-            message={part}
-            variant={isUser ? "sent" : "received"}
-            grouped={
-              messageParts.length === 1
-                ? "none"
-                : index === 0
-                  ? "first"
-                  : index === messageParts.length - 1
-                    ? "last"
-                    : "middle"
-            }
+            message={loadingMessage || "Thinking..."}
+            variant="loading"
           />
-        ))}
+        ) : (
+          messageParts.map((part, index) => (
+            <MessageBubble
+              key={`${message.id}-${index}`}
+              message={part}
+              variant={isUser ? "sent" : "received"}
+              grouped={
+                messageParts.length === 1
+                  ? "none"
+                  : index === 0
+                    ? "first"
+                    : index === messageParts.length - 1
+                      ? "last"
+                      : "middle"
+              }
+            />
+          ))
+        )}
       </View>
 
       {!isUser &&

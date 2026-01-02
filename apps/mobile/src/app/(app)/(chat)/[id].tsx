@@ -16,8 +16,6 @@ import {
   ChatHeader,
   ChatMessage,
   type Message,
-  ProgressIndicator,
-  ThinkingIndicator,
   SIDEBAR_WIDTH,
   SidebarContent,
   useChat,
@@ -25,6 +23,7 @@ import {
   useSidebar,
 } from "@/features/chat";
 import { ChatInput } from "@/components/ui/chat-input";
+import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 
 export default function ChatPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,12 +36,43 @@ export default function ChatPage() {
     }
   }, [id, setActiveChatId]);
 
-  const { messages, isTyping, progress, flatListRef, sendMessage, scrollToBottom } =
-    useChat(id || null);
+  const {
+    messages,
+    isTyping,
+    progress,
+    flatListRef,
+    sendMessage,
+    scrollToBottom,
+  } = useChat(id || null);
+
+  useEffect(() => {
+    console.log("[ChatPage] isTyping:", isTyping, "progress:", progress);
+  }, [isTyping, progress]);
 
   const { drawerRef, closeSidebar, toggleSidebar } = useSidebar();
   const [inputValue, setInputValue] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
+  const [thinkingMessage, setThinkingMessage] = useState(() =>
+    getRelevantThinkingMessage("")
+  );
+
+  // Rotate playful thinking messages when typing but no tool progress
+  useEffect(() => {
+    if (isTyping && !progress) {
+      // Set initial message immediately
+      setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
+      const interval = setInterval(
+        () => {
+          setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
+        },
+        2000 + Math.random() * 1000
+      );
+      return () => clearInterval(interval);
+    }
+  }, [isTyping, progress, lastUserMessage]);
+
+  // Get the display message for loading state - use progress when available, otherwise use thinking message
+  const displayMessage = progress || thinkingMessage;
 
   useEffect(() => {
     scrollToBottom();
@@ -69,10 +99,22 @@ export default function ChatPage() {
   );
 
   const renderMessage = useCallback(
-    ({ item }: { item: Message }) => (
-      <ChatMessage message={item} onFollowUpAction={handleFollowUpAction} />
-    ),
-    [handleFollowUpAction]
+    ({ item, index }: { item: Message; index: number }) => {
+      const isLastMessage = index === messages.length - 1;
+      const isEmptyAiMessage =
+        !item.isUser && (!item.text || item.text.trim() === "");
+      const showLoading = isLastMessage && isEmptyAiMessage && isTyping;
+
+      return (
+        <ChatMessage
+          message={item}
+          onFollowUpAction={handleFollowUpAction}
+          isLoading={showLoading}
+          loadingMessage={showLoading ? displayMessage : undefined}
+        />
+      );
+    },
+    [handleFollowUpAction, messages.length, isTyping, displayMessage]
   );
 
   return (
@@ -103,7 +145,11 @@ export default function ChatPage() {
                 data={messages}
                 renderItem={renderMessage}
                 keyExtractor={(item) => item.id}
-                extraData={messages[messages.length - 1]?.text}
+                extraData={[
+                  messages[messages.length - 1]?.text,
+                  isTyping,
+                  displayMessage,
+                ]}
                 contentContainerStyle={{
                   flexGrow: 1,
                   paddingTop: 16,
@@ -121,13 +167,6 @@ export default function ChatPage() {
                     flatListRef.current?.scrollToEnd({ animated: false });
                   }
                 }}
-                ListFooterComponent={
-                  progress ? (
-                    <ProgressIndicator message={progress} />
-                  ) : isTyping ? (
-                    <ThinkingIndicator userMessage={lastUserMessage} />
-                  ) : null
-                }
               />
             </View>
 

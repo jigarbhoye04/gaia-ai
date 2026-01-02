@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -17,7 +17,6 @@ import {
   ChatHeader,
   ChatMessage,
   type Message,
-  ProgressIndicator,
   SIDEBAR_WIDTH,
   SidebarContent,
   useChat,
@@ -25,6 +24,7 @@ import {
   useSidebar,
 } from "@/features/chat";
 import { ChatInput } from "@/components/ui/chat-input";
+import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -42,12 +42,35 @@ export default function IndexScreen() {
     scrollToBottom,
   } = useChat(null);
 
+  const [lastUserMessage, setLastUserMessage] = useState("");
+  const [thinkingMessage, setThinkingMessage] = useState(() =>
+    getRelevantThinkingMessage("")
+  );
+
   // Update active chat ID when conversation is created by backend
   useEffect(() => {
     if (conversationId) {
       setActiveChatId(conversationId);
     }
   }, [conversationId, setActiveChatId]);
+
+  // Rotate playful thinking messages when typing but no tool progress
+  useEffect(() => {
+    if (isTyping && !progress) {
+      // Set initial message immediately
+      setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
+      const interval = setInterval(
+        () => {
+          setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
+        },
+        2000 + Math.random() * 1000
+      );
+      return () => clearInterval(interval);
+    }
+  }, [isTyping, progress, lastUserMessage]);
+
+  // Get the display message for loading state - use progress when available, otherwise use thinking message
+  const displayMessage = progress || thinkingMessage;
 
   useEffect(() => {
     scrollToBottom();
@@ -64,11 +87,30 @@ export default function IndexScreen() {
   };
 
   const handleSendMessage = async (text: string) => {
+    setLastUserMessage(text);
     await sendMessage(text);
   };
 
   const renderDrawerContent = () => (
     <SidebarContent onSelectChat={handleSelectChat} onNewChat={handleNewChat} />
+  );
+
+  const renderMessage = useCallback(
+    ({ item, index }: { item: Message; index: number }) => {
+      const isLastMessage = index === messages.length - 1;
+      const isEmptyAiMessage =
+        !item.isUser && (!item.text || item.text.trim() === "");
+      const showLoading = isLastMessage && isEmptyAiMessage && isTyping;
+
+      return (
+        <ChatMessage
+          message={item}
+          isLoading={showLoading}
+          loadingMessage={showLoading ? displayMessage : undefined}
+        />
+      );
+    },
+    [messages.length, isTyping, displayMessage]
   );
 
   return (
@@ -94,7 +136,7 @@ export default function IndexScreen() {
             />
 
             <View className="flex-1">
-              {messages.length === 0 && !progress ? (
+              {messages.length === 0 && !isTyping ? (
                 <View className="flex-1 items-center justify-center px-6">
                   <Text className="text-2xl font-semibold text-foreground mb-2">
                     What can I help you with?
@@ -107,11 +149,13 @@ export default function IndexScreen() {
                 <FlatList
                   ref={flatListRef}
                   data={messages}
-                  renderItem={({ item }: { item: Message }) => (
-                    <ChatMessage message={item} />
-                  )}
+                  renderItem={renderMessage}
                   keyExtractor={(item) => item.id}
-                  extraData={messages[messages.length - 1]?.text}
+                  extraData={[
+                    messages[messages.length - 1]?.text,
+                    isTyping,
+                    displayMessage,
+                  ]}
                   contentContainerStyle={{
                     flexGrow: 1,
                     paddingTop: 16,
@@ -129,21 +173,11 @@ export default function IndexScreen() {
                       flatListRef.current?.scrollToEnd({ animated: false });
                     }
                   }}
-                  ListFooterComponent={
-                    progress ? <ProgressIndicator message={progress} /> : null
-                  }
                 />
               )}
             </View>
 
             <View className="px-2 pb-2 bg-surface rounded-t-4xl">
-              {isTyping && !progress && (
-                <View className="flex-row items-center px-2 py-3 gap-2 mb-2">
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                  <View className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                </View>
-              )}
               <ChatInput onSend={handleSendMessage} />
             </View>
           </SafeAreaView>

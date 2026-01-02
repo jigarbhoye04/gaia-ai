@@ -1,7 +1,8 @@
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { useEffect, useRef } from "react";
 import type * as React from "react";
-import { View, Pressable } from "react-native";
+import { View, Pressable, Animated } from "react-native";
 import { Text } from "@/components/ui/text";
 import { Avatar } from "heroui-native";
 import {
@@ -20,6 +21,7 @@ const messageBubbleVariants = cva("px-4 py-2.5 max-w-[100%]", {
     variant: {
       sent: "bg-accent self-end rounded-2xl rounded-br-md",
       received: "bg-surface self-start rounded-2xl rounded-bl-md",
+      loading: "bg-transparent self-start",
     },
     grouped: {
       none: "",
@@ -68,6 +70,54 @@ const messageBubbleVariants = cva("px-4 py-2.5 max-w-[100%]", {
 
 type MessageBubbleVariantProps = VariantProps<typeof messageBubbleVariants>;
 
+function PulsingDots() {
+  const dot1 = useRef(new Animated.Value(0.3)).current;
+  const dot2 = useRef(new Animated.Value(0.3)).current;
+  const dot3 = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    const animate = (dot: Animated.Value, delay: number) => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(dot, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot, {
+            toValue: 0.3,
+            duration: 400,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+    };
+
+    const a1 = animate(dot1, 0);
+    const a2 = animate(dot2, 150);
+    const a3 = animate(dot3, 300);
+
+    a1.start();
+    a2.start();
+    a3.start();
+
+    return () => {
+      a1.stop();
+      a2.stop();
+      a3.stop();
+    };
+  }, [dot1, dot2, dot3]);
+
+  return (
+    <View className="flex-row items-center gap-1 ml-2">
+      <Animated.View style={{ opacity: dot1 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+      <Animated.View style={{ opacity: dot2 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+      <Animated.View style={{ opacity: dot3 }} className="w-1.5 h-1.5 rounded-full bg-primary" />
+    </View>
+  );
+}
+
 interface MessageBubbleProps
   extends
     React.ComponentPropsWithoutRef<typeof View>,
@@ -83,14 +133,17 @@ function MessageBubble({
   children,
   ...props
 }: MessageBubbleProps) {
+  const isLoading = variant === "loading";
+  const displayVariant = isLoading ? "received" : variant;
+
   return (
     <View
       className={cn(
         "flex-row gap-2",
-        variant === "received" ? "self-start" : "self-end"
+        displayVariant === "received" ? "self-start" : "self-end"
       )}
     >
-      {variant === "received" && (
+      {displayVariant === "received" && (
         <Avatar
           alt="Gaia"
           size="sm"
@@ -101,25 +154,35 @@ function MessageBubble({
           <Avatar.Fallback>G</Avatar.Fallback>
         </Avatar>
       )}
-      <View className={cn("flex-col", variant === "received" ? "flex-1" : "")}>
+      <View className={cn("flex-col", displayVariant === "received" ? "flex-1" : "")}>
         <View
-          className={cn(messageBubbleVariants({ variant, grouped }), className)}
+          className={cn(
+            isLoading ? "px-0 py-2.5" : messageBubbleVariants({ variant: displayVariant, grouped }),
+            className
+          )}
           {...props}
         >
           {children || (
-            <Text
-              className={cn(
-                "text-base",
-                variant === "sent"
-                  ? "text-accent-foreground"
-                  : "text-foreground"
-              )}
-            >
-              {message}
-            </Text>
+            isLoading ? (
+              <View className="flex-row items-center">
+                <Text className="text-base text-foreground">{message}</Text>
+                <PulsingDots />
+              </View>
+            ) : (
+              <Text
+                className={cn(
+                  "text-base",
+                  variant === "sent"
+                    ? "text-accent-foreground"
+                    : "text-foreground"
+                )}
+              >
+                {message}
+              </Text>
+            )
           )}
         </View>
-        {variant === "received" && (
+        {displayVariant === "received" && !isLoading && (
           <View className="flex-row items-center gap-3 mt-1.5 px-1">
             <Pressable className="p-1 active:opacity-60">
               <HugeiconsIcon icon={Copy01Icon} size={16} color="#8e8e93" />
