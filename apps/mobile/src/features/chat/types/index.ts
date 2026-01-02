@@ -1,4 +1,8 @@
-export type { Message, ApiFileData, ApiToolData } from "@/features/chat/api/chat-api";
+export type {
+  ApiFileData,
+  ApiToolData,
+  Message,
+} from "@/features/chat/api/chat-api";
 
 import type { Message } from "@/features/chat/api/chat-api";
 

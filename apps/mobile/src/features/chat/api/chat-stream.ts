@@ -1,9 +1,13 @@
 import { createSSEConnection, type SSEEvent } from "@/lib/sse-client";
-import type { Message, ApiFileData } from "./chat-api";
+import type { ApiFileData, Message } from "./chat-api";
 
 export interface StreamCallbacks {
   onChunk: (text: string) => void;
-  onConversationCreated?: (conversationId: string, userMessageId: string, botMessageId: string) => void;
+  onConversationCreated?: (
+    conversationId: string,
+    userMessageId: string,
+    botMessageId: string,
+  ) => void;
   onProgress?: (message: string, toolName?: string) => void;
   onFollowUpActions?: (actions: string[]) => void;
   onDone: () => void;
@@ -42,7 +46,7 @@ function parseEventData(data: string): StreamEventData | null {
   if (data === "[DONE]") {
     return { type: "done" };
   }
-  
+
   try {
     return JSON.parse(data);
   } catch {
@@ -52,7 +56,7 @@ function parseEventData(data: string): StreamEventData | null {
 
 export async function fetchChatStream(
   request: ChatStreamRequest,
-  callbacks: StreamCallbacks
+  callbacks: StreamCallbacks,
 ): Promise<AbortController> {
   const {
     message,
@@ -87,7 +91,7 @@ export async function fetchChatStream(
     {
       onMessage: (event: SSEEvent) => {
         const parsed = parseEventData(event.data);
-        
+
         if (!parsed) return;
 
         if (parsed.type === "done" || event.data === "[DONE]") {
@@ -101,22 +105,35 @@ export async function fetchChatStream(
         }
 
         // Log all parsed events for debugging
-        console.log("[chat-stream] Parsed event:", JSON.stringify(parsed, null, 2));
+        console.log(
+          "[chat-stream] Parsed event:",
+          JSON.stringify(parsed, null, 2),
+        );
 
         // First event contains conversation_id and message IDs
-        if (parsed.conversation_id && parsed.bot_message_id && parsed.user_message_id) {
-          console.log("[chat-stream] Conversation created:", parsed.conversation_id);
+        if (
+          parsed.conversation_id &&
+          parsed.bot_message_id &&
+          parsed.user_message_id
+        ) {
+          console.log(
+            "[chat-stream] Conversation created:",
+            parsed.conversation_id,
+          );
           callbacks.onConversationCreated?.(
             parsed.conversation_id,
             parsed.user_message_id,
-            parsed.bot_message_id
+            parsed.bot_message_id,
           );
         }
 
         // Progress updates (tool execution status)
         if (parsed.progress) {
           console.log("[chat-stream] Progress:", parsed.progress);
-          callbacks.onProgress?.(parsed.progress.message, parsed.progress.tool_name);
+          callbacks.onProgress?.(
+            parsed.progress.message,
+            parsed.progress.tool_name,
+          );
         }
 
         // Stream response chunks
@@ -138,6 +155,6 @@ export async function fetchChatStream(
         callbacks.onDone();
       },
     },
-    { body }
+    { body },
   );
 }

@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { Button, PressableFeedback } from "heroui-native";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -9,7 +10,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, PressableFeedback } from "heroui-native";
 import { Text } from "@/components/ui/text";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
@@ -43,7 +43,7 @@ export default function LoginScreen() {
         error instanceof Error
           ? error.message
           : "An unexpected error occurred. Please try again.",
-        [{ text: "OK" }]
+        [{ text: "OK" }],
       );
     } finally {
       setIsLoading(false);

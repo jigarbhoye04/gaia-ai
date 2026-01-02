@@ -1,8 +1,8 @@
-import { View, ScrollView } from "react-native";
-import { Text } from "@/components/ui/text";
-import { Card, Button } from "heroui-native";
 import { Image } from "expo-image";
+import { Button, Card } from "heroui-native";
+import { ScrollView, View } from "react-native";
 import { HugeiconsIcon, PencilEdit01Icon } from "@/components/icons";
+import { Text } from "@/components/ui/text";
 
 interface EmailComposeData {
   to: string[];

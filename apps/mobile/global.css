@@ -1,8 +1,8 @@
-@import 'tailwindcss';
-@import 'uniwind';
-@import 'heroui-native/styles';
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
 
-@source './../../node_modules/heroui-native/lib';
+@source "./../../node_modules/heroui-native/lib";
 
 @theme {
   --radius: 0.5rem;
@@ -15,8 +15,8 @@
       --accent: #00bbff;
       --accent-foreground: #000000;
     }
-
     @variant dark {
+      /* biome-ignore lint/suspicious/noDuplicateCustomProperties: < we need this for the buttons> */
       --accent: #00bbff;
       --accent-foreground: #000000;
     }

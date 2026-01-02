@@ -1,11 +1,10 @@
-import { Image, View, TextInput } from "react-native";
 import { Button } from "heroui-native";
+import { Image, Text, TextInput, View } from "react-native";
 import {
   HugeiconsIcon,
   PencilEdit02Icon,
   Search01Icon,
 } from "@/components/icons";
-import { Text } from "react-native";
 
 interface SidebarHeaderProps {
   onNewChat: () => void;

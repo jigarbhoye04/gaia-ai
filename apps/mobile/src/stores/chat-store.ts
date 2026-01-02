@@ -18,7 +18,10 @@ interface ChatState {
   setMessages: (conversationId: string, messages: Message[]) => void;
   clearMessages: (conversationId: string) => void;
   updateLastMessage: (conversationId: string, text: string) => void;
-  updateLastMessageFollowUp: (conversationId: string, actions: string[]) => void;
+  updateLastMessageFollowUp: (
+    conversationId: string,
+    actions: string[],
+  ) => void;
   setStreamingState: (state: Partial<StreamingState>) => void;
   markConversationFetched: (conversationId: string) => void;
   isConversationFetched: (conversationId: string) => boolean;

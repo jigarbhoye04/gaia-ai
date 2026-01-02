@@ -1,9 +1,8 @@
-import React from "react";
-import { View, Linking, Pressable } from "react-native";
+import { Button, Card } from "heroui-native";
+import { Linking, Pressable, View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { Card, Button } from "heroui-native";
 
-interface EmailSentData {
+export interface EmailSentData {
   to: string[];
   subject: string;
   message_id?: string;
@@ -24,7 +23,7 @@ export function EmailSentCard({ data }: { data: EmailSentData }) {
   );
 }
 
-interface EmailThreadData {
+export interface EmailThreadData {
   thread_id?: string;
   subject?: string;
   messages?: Array<{
@@ -52,7 +51,7 @@ export function EmailThreadCard({ data }: { data: EmailThreadData }) {
   );
 }
 
-interface EmailFetchItem {
+export interface EmailFetchItem {
   from?: string;
   subject?: string;
   snippet?: string;
@@ -87,7 +86,7 @@ export function EmailFetchCard({ data }: { data: EmailFetchItem[] }) {
   );
 }
 
-interface CalendarOption {
+export interface CalendarOption {
   title?: string;
   start?: string;
   end?: string;
@@ -127,7 +126,7 @@ export function CalendarOptionsCard({ data }: { data: CalendarOption[] }) {
   );
 }
 
-interface CalendarFetchItem {
+export interface CalendarFetchItem {
   summary?: string;
   start?: { dateTime?: string; date?: string };
   end?: { dateTime?: string; date?: string };
@@ -158,7 +157,7 @@ export function CalendarFetchCard({ data }: { data: CalendarFetchItem[] }) {
   );
 }
 
-interface CalendarDeleteOption {
+export interface CalendarDeleteOption {
   event_id?: string;
   title?: string;
 }
@@ -176,7 +175,7 @@ export function CalendarDeleteCard({ data }: { data: CalendarDeleteOption[] }) {
   );
 }
 
-interface CalendarEditOption {
+export interface CalendarEditOption {
   event_id?: string;
   title?: string;
   changes?: Record<string, unknown>;
@@ -195,7 +194,7 @@ export function CalendarEditCard({ data }: { data: CalendarEditOption[] }) {
   );
 }
 
-interface WeatherData {
+export interface WeatherData {
   location?: string;
   temperature?: number;
   condition?: string;
@@ -228,13 +227,13 @@ export function WeatherCard({ data }: { data: WeatherData }) {
   );
 }
 
-interface WebResult {
+export interface WebResult {
   title?: string;
   url?: string;
   snippet?: string;
 }
 
-interface SearchResults {
+export interface SearchResults {
   web?: WebResult[];
   images?: Array<{ url?: string }>;
   news?: Array<{ title?: string }>;
@@ -286,7 +285,7 @@ export function SearchResultsCard({ data }: { data: SearchResults }) {
   );
 }
 
-interface DeepResearchResults {
+export interface DeepResearchResults {
   topic?: string;
   summary?: string;
   sources?: Array<{ title?: string; url?: string }>;
@@ -315,7 +314,7 @@ export function DeepResearchCard({ data }: { data: DeepResearchResults }) {
   );
 }
 
-interface ContactData {
+export interface ContactData {
   name?: string;
   email?: string;
   phone?: string;
@@ -346,7 +345,7 @@ export function ContactListCard({ data }: { data: ContactData[] }) {
   );
 }
 
-interface PeopleSearchData {
+export interface PeopleSearchData {
   name?: string;
   email?: string;
   organization?: string;
@@ -374,7 +373,7 @@ export function PeopleSearchCard({ data }: { data: PeopleSearchData[] }) {
   );
 }
 
-interface SupportTicketData {
+export interface SupportTicketData {
   type?: string;
   title?: string;
   description?: string;
@@ -400,7 +399,7 @@ export function SupportTicketCard({ data }: { data: SupportTicketData }) {
   );
 }
 
-interface NotificationData {
+export interface NotificationData {
   notifications?: Array<{
     title?: string;
     body?: string;
@@ -432,7 +431,7 @@ export function NotificationCard({ data }: { data: NotificationData }) {
   );
 }
 
-interface TodoData {
+export interface TodoData {
   todos?: Array<{
     title?: string;
     completed?: boolean;
@@ -473,7 +472,7 @@ export function TodoCard({ data }: { data: TodoData }) {
   );
 }
 
-interface GoalData {
+export interface GoalData {
   goals?: Array<{
     title?: string;
     status?: string;
@@ -504,7 +503,7 @@ export function GoalCard({ data }: { data: GoalData }) {
   );
 }
 
-interface DocumentData {
+export interface DocumentData {
   title?: string;
   content?: string;
   type?: string;
@@ -530,7 +529,7 @@ export function DocumentCard({ data }: { data: DocumentData }) {
   );
 }
 
-interface GoogleDocsData {
+export interface GoogleDocsData {
   documentId?: string;
   title?: string;
   url?: string;
@@ -554,7 +553,7 @@ export function GoogleDocsCard({ data }: { data: GoogleDocsData }) {
   );
 }
 
-interface CodeData {
+export interface CodeData {
   language?: string;
   code?: string;
   output?: string;
@@ -583,7 +582,7 @@ export function CodeExecutionCard({ data }: { data: CodeData }) {
   );
 }
 
-interface IntegrationConnectionData {
+export interface IntegrationConnectionData {
   integration_name?: string;
   message?: string;
   connect_url?: string;
@@ -619,7 +618,7 @@ export function IntegrationConnectionCard({
   );
 }
 
-interface RedditData {
+export interface RedditData {
   type?: "search" | "post" | "comments" | "post_created" | "comment_created";
   posts?: Array<{ title?: string; subreddit?: string }>;
   post?: { title?: string; subreddit?: string };

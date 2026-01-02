@@ -1,5 +1,5 @@
-import { Text, View } from "react-native";
 import { PressableFeedback } from "heroui-native";
+import { Text, View } from "react-native";
 
 interface AuthFooterProps {
   showSignUpDisclaimer?: boolean;

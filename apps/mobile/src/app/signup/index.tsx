@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { Button, PressableFeedback } from "heroui-native";
 import {
   Image,
   KeyboardAvoidingView,
@@ -7,7 +8,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button, PressableFeedback } from "heroui-native";
 
 export default function SignUpScreen() {
   const router = useRouter();

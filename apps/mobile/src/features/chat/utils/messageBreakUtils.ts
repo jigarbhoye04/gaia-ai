@@ -1,4 +1,3 @@
-
 export function splitMessageByBreaks(content: string): string[] {
   if (!content || !content.includes("<NEW_MESSAGE_BREAK>")) {
     return [content];

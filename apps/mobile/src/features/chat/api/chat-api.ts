@@ -73,7 +73,7 @@ function normalizeMessage(apiMsg: ApiMessage): Message {
 }
 
 function normalizeConversationDetail(
-  apiConv: ApiConversationDetail
+  apiConv: ApiConversationDetail,
 ): ConversationDetail {
   return {
     id: apiConv.conversation_id,
@@ -86,11 +86,11 @@ function normalizeConversationDetail(
 }
 
 export async function fetchConversation(
-  conversationId: string
+  conversationId: string,
 ): Promise<ConversationDetail | null> {
   try {
     const response = await apiService.get<ApiConversationDetail>(
-      `/conversations/${conversationId}`
+      `/conversations/${conversationId}`,
     );
     return normalizeConversationDetail(response);
   } catch (error) {
@@ -100,7 +100,7 @@ export async function fetchConversation(
 }
 
 export async function fetchMessages(
-  conversationId: string
+  conversationId: string,
 ): Promise<Message[]> {
   try {
     const conversation = await fetchConversation(conversationId);
@@ -112,7 +112,7 @@ export async function fetchMessages(
 }
 
 export async function markConversationAsRead(
-  conversationId: string
+  conversationId: string,
 ): Promise<boolean> {
   try {
     await apiService.patch(`/conversations/${conversationId}/read`, {});
@@ -124,7 +124,7 @@ export async function markConversationAsRead(
 }
 
 export async function deleteConversation(
-  conversationId: string
+  conversationId: string,
 ): Promise<boolean> {
   try {
     await apiService.delete(`/conversations/${conversationId}`);
@@ -137,7 +137,7 @@ export async function deleteConversation(
 
 export async function renameConversation(
   conversationId: string,
-  title: string
+  title: string,
 ): Promise<boolean> {
   try {
     await apiService.put(`/conversations/${conversationId}/description`, {
@@ -152,7 +152,7 @@ export async function renameConversation(
 
 export async function toggleStarConversation(
   conversationId: string,
-  starred: boolean
+  starred: boolean,
 ): Promise<boolean> {
   try {
     await apiService.put(`/conversations/${conversationId}/star`, { starred });

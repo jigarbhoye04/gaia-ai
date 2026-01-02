@@ -1,12 +1,12 @@
-import { View, ScrollView } from "react-native";
-import { StyledSafeAreaView } from "@/lib/uniwind";
+import { ScrollView, View } from "react-native";
+import { Text } from "@/components/ui/text";
 import {
   EmailAccordion,
-  SAMPLE_EMAILS,
   EmailComposeCard,
   SAMPLE_EMAIL_COMPOSE,
+  SAMPLE_EMAILS,
 } from "@/features/chat";
-import { Text } from "@/components/ui/text";
+import { StyledSafeAreaView } from "@/lib/uniwind";
 
 export default function Test() {
   return (

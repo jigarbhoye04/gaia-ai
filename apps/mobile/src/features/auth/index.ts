@@ -2,14 +2,13 @@
 // Auth Feature - Public API
 // ============================================================================
 
+// API
+export * from "@/features/auth/api";
 // Components
 export * from "@/features/auth/components/auth-background";
 export * from "@/features/auth/components/auth-card";
 export * from "@/features/auth/components/auth-footer";
 export * from "@/features/auth/components/auth-header";
-
-// API
-export * from "@/features/auth/api";
 
 // Hooks
 export * from "@/features/auth/hooks/use-auth";
@@ -19,12 +18,12 @@ export * from "@/features/auth/types";
 
 // Utils (storage functions)
 export {
-  storeAuthToken,
-  getAuthToken,
-  removeAuthToken,
-  storeUserInfo,
-  getUserInfo,
-  removeUserInfo,
-  isAuthenticated,
   clearAuthData,
+  getAuthToken,
+  getUserInfo,
+  isAuthenticated,
+  removeAuthToken,
+  removeUserInfo,
+  storeAuthToken,
+  storeUserInfo,
 } from "@/features/auth/utils/auth-storage";

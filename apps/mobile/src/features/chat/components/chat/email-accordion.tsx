@@ -1,7 +1,7 @@
+import { Image } from "expo-image";
+import { Accordion, Card } from "heroui-native";
 import { View } from "react-native";
 import { Text } from "@/components/ui/text";
-import { Card, Accordion } from "heroui-native";
-import { Image } from "expo-image";
 
 interface Email {
   id: string;

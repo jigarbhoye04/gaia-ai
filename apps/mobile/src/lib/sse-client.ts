@@ -1,15 +1,6 @@
-/**
- * SSE (Server-Sent Events) Client for React Native
- * Uses react-native-sse for reliable streaming
- */
-
-import EventSource from "react-native-sse";
 import { Platform } from "react-native";
+import EventSource from "react-native-sse";
 import { getAuthToken } from "@/features/auth/utils/auth-storage";
-
-// =============================================================================
-// Types
-// =============================================================================
 
 export interface SSEEvent {
   id?: string;
@@ -28,10 +19,6 @@ export interface SSEOptions {
   body?: unknown;
 }
 
-// =============================================================================
-// Configuration
-// =============================================================================
-
 const API_BASE_URL = __DEV__
   ? Platform.OS === "android"
     ? "http://10.0.2.2:8000/api/v1"
@@ -46,18 +33,10 @@ function getTimezone(): string {
   }
 }
 
-// =============================================================================
-// SSE Client using react-native-sse
-// =============================================================================
-
-/**
- * Create an SSE connection to a streaming endpoint
- * Returns an abort controller to cancel the stream
- */
 export async function createSSEConnection(
   endpoint: string,
   callbacks: SSECallbacks,
-  options: SSEOptions = {}
+  options: SSEOptions = {},
 ): Promise<AbortController> {
   const controller = new AbortController();
   const token = await getAuthToken();
@@ -98,7 +77,8 @@ export async function createSSEConnection(
 
   es.addEventListener("error", (event) => {
     console.error("[SSE] Error:", event);
-    const errorMessage = "message" in event ? event.message : "SSE connection error";
+    const errorMessage =
+      "message" in event ? event.message : "SSE connection error";
     callbacks.onError?.(new Error(errorMessage || "SSE connection error"));
   });
 

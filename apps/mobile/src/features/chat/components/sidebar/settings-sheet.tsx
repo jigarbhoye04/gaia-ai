@@ -1,14 +1,14 @@
-import { View, ScrollView } from "react-native";
-import { Button, Popover, Avatar, Divider } from "heroui-native";
+import { Avatar, Button, Divider, Popover } from "heroui-native";
+import { ScrollView, View } from "react-native";
 import {
+  ArrowRight01Icon,
   HugeiconsIcon,
   Logout01Icon,
-  Settings01Icon,
-  UserIcon,
   Moon02Icon,
   Notification01Icon,
+  Settings01Icon,
   ShieldKeyIcon,
-  ArrowRight01Icon,
+  UserIcon,
 } from "@/components/icons";
 import { Text } from "@/components/ui/text";
 

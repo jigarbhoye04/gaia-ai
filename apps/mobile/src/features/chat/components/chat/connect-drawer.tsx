@@ -1,9 +1,9 @@
-import { useState, useRef } from "react";
-import { View, TextInput, ScrollView, Pressable } from "react-native";
-import { Text } from "@/components/ui/text";
-import { Button, Chip, Popover, type PopoverTriggerRef } from "heroui-native";
 import { Image } from "expo-image";
+import { Button, Chip, Popover, type PopoverTriggerRef } from "heroui-native";
+import { useRef, useState } from "react";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { HugeiconsIcon, Search01Icon, Wrench01Icon } from "@/components/icons";
+import { Text } from "@/components/ui/text";
 
 interface Integration {
   id: string;
@@ -153,8 +153,8 @@ export function ConnectDrawer() {
       prev.map((integration) =>
         integration.id === id
           ? { ...integration, connected: !integration.connected }
-          : integration
-      )
+          : integration,
+      ),
     );
   };
 

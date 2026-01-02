@@ -13,6 +13,7 @@ import DrawerLayout, {
   DrawerType,
 } from "react-native-gesture-handler/ReanimatedDrawerLayout";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ChatInput } from "@/components/ui/chat-input";
 import {
   ChatHeader,
   ChatMessage,
@@ -23,7 +24,6 @@ import {
   useChatContext,
   useSidebar,
 } from "@/features/chat";
-import { ChatInput } from "@/components/ui/chat-input";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 
 export default function IndexScreen() {
@@ -44,7 +44,7 @@ export default function IndexScreen() {
 
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [thinkingMessage, setThinkingMessage] = useState(() =>
-    getRelevantThinkingMessage("")
+    getRelevantThinkingMessage(""),
   );
 
   // Update active chat ID when conversation is created by backend
@@ -63,7 +63,7 @@ export default function IndexScreen() {
         () => {
           setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
         },
-        2000 + Math.random() * 1000
+        2000 + Math.random() * 1000,
       );
       return () => clearInterval(interval);
     }
@@ -112,7 +112,7 @@ export default function IndexScreen() {
         />
       );
     },
-    [messages.length, isTyping, displayMessage]
+    [messages.length, isTyping, displayMessage],
   );
 
   return (

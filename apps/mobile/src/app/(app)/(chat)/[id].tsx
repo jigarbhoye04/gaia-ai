@@ -12,6 +12,7 @@ import DrawerLayout, {
   DrawerType,
 } from "react-native-gesture-handler/ReanimatedDrawerLayout";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ChatInput } from "@/components/ui/chat-input";
 import {
   ChatHeader,
   ChatMessage,
@@ -22,7 +23,6 @@ import {
   useChatContext,
   useSidebar,
 } from "@/features/chat";
-import { ChatInput } from "@/components/ui/chat-input";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 
 export default function ChatPage() {
@@ -53,7 +53,7 @@ export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [thinkingMessage, setThinkingMessage] = useState(() =>
-    getRelevantThinkingMessage("")
+    getRelevantThinkingMessage(""),
   );
 
   // Rotate playful thinking messages when typing but no tool progress
@@ -65,7 +65,7 @@ export default function ChatPage() {
         () => {
           setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
         },
-        2000 + Math.random() * 1000
+        2000 + Math.random() * 1000,
       );
       return () => clearInterval(interval);
     }
@@ -115,7 +115,7 @@ export default function ChatPage() {
         />
       );
     },
-    [handleFollowUpAction, messages.length, isTyping, displayMessage]
+    [handleFollowUpAction, messages.length, isTyping, displayMessage],
   );
 
   return (

@@ -1,10 +1,10 @@
-import { useRef, useCallback } from "react";
-import { ActivityIndicator, View, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import { ArrowDown01Icon, HugeiconsIcon } from "@/components/icons";
 import { Avatar, Popover, type PopoverTriggerRef } from "heroui-native";
-import { useAuth } from "@/features/auth";
+import { useCallback, useRef } from "react";
+import { ActivityIndicator, Pressable, View } from "react-native";
+import { ArrowDown01Icon, HugeiconsIcon } from "@/components/icons";
 import { Text } from "@/components/ui/text";
+import { useAuth } from "@/features/auth";
 import { SettingsSheetContent } from "./settings-sheet";
 
 export function SidebarFooter() {

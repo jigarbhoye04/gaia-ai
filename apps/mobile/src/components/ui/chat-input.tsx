@@ -1,14 +1,14 @@
-import { View, TextInput } from "react-native";
+import { Button } from "heroui-native";
+import { useState } from "react";
+import { TextInput, View } from "react-native";
 import {
+  ArrowUp02Icon,
   HugeiconsIcon,
   PlusSignIcon,
-  ArrowUp02Icon,
   UserIcon,
 } from "@/components/icons";
-import { useState } from "react";
-import { Button } from "heroui-native";
-import { cn } from "@/lib/utils";
 import { ConnectDrawer } from "@/features/chat/components/chat/connect-drawer";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSend?: (message: string) => void;

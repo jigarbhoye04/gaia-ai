@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { Text as RNText } from "react-native";
+import { cn } from "@/lib/utils";
 
 const textVariants = cva("text-foreground text-base", {
   variants: {
@@ -30,7 +30,8 @@ type TextVariantProps = VariantProps<typeof textVariants>;
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
 interface TextProps
-  extends React.ComponentPropsWithoutRef<typeof RNText>, TextVariantProps {}
+  extends React.ComponentPropsWithoutRef<typeof RNText>,
+    TextVariantProps {}
 
 /**
  * Themed Text component with variants.

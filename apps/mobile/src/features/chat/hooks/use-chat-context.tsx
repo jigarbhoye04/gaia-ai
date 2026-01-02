@@ -34,7 +34,7 @@ export function ChatProvider({ children }: ChatProviderProps) {
 
   const value = useMemo(
     () => ({ activeChatId, setActiveChatId, createNewChat }),
-    [activeChatId, setActiveChatId, createNewChat]
+    [activeChatId, setActiveChatId, createNewChat],
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

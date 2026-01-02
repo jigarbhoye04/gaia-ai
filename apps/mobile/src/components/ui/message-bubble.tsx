@@ -1,18 +1,18 @@
-import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { useEffect, useRef } from "react";
-import type * as React from "react";
-import { View, Pressable, Animated } from "react-native";
-import { Text } from "@/components/ui/text";
 import { Avatar } from "heroui-native";
+import type * as React from "react";
+import { useEffect, useRef } from "react";
+import { Animated, Pressable, View } from "react-native";
 import {
-  HugeiconsIcon,
-  ThumbsUpIcon,
-  ThumbsDownIcon,
-  Pin02Icon,
-  Message01Icon,
   Copy01Icon,
+  HugeiconsIcon,
+  Message01Icon,
+  Pin02Icon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
 } from "@/components/icons";
+import { Text } from "@/components/ui/text";
+import { cn } from "@/lib/utils";
 
 const GaiaLogo = require("@/../assets/logo/gaia.png");
 
@@ -66,7 +66,7 @@ function PulsingDots() {
             duration: 400,
             useNativeDriver: true,
           }),
-        ])
+        ]),
       );
 
     const a1 = animate(dot1, 0);
@@ -118,8 +118,7 @@ function PulsingDots() {
 }
 
 interface MessageBubbleProps
-  extends
-    React.ComponentPropsWithoutRef<typeof View>,
+  extends React.ComponentPropsWithoutRef<typeof View>,
     MessageBubbleVariantProps {
   message?: string;
   showAvatar?: boolean;
@@ -140,7 +139,7 @@ function MessageBubble({
     <View
       className={cn(
         "flex-row gap-2",
-        variant === "sent" ? "self-end" : "self-start"
+        variant === "sent" ? "self-end" : "self-start",
       )}
     >
       {variant !== "sent" && showAvatar && (
@@ -165,7 +164,7 @@ function MessageBubble({
             isLoading
               ? "px-0 py-2.5"
               : messageBubbleVariants({ variant, grouped }),
-            className
+            className,
           )}
         >
           {children ??
@@ -185,7 +184,7 @@ function MessageBubble({
                   "text-base",
                   variant === "sent"
                     ? "text-accent-foreground"
-                    : "text-foreground"
+                    : "text-foreground",
                 )}
               >
                 {message}
@@ -244,13 +243,13 @@ function ChatMessage({
       className={cn(
         "flex w-full flex-col",
         variant === "sent" ? "items-end" : "items-start",
-        className
+        className,
       )}
     >
       <View className="flex flex-col">
         {messages.map((message, index) => (
           <MessageBubble
-            key={index}
+            key={`${message.slice(0, 20)}-${index}`}
             message={message}
             variant={variant}
             grouped={getGroupedType(index, messages.length)}
@@ -262,7 +261,7 @@ function ChatMessage({
         <Text
           className={cn(
             "mt-1 px-2 text-xs text-muted",
-            variant === "sent" && "text-right"
+            variant === "sent" && "text-right",
           )}
         >
           {timestamp}

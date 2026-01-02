@@ -1,4 +1,3 @@
-
 import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 
@@ -21,11 +20,10 @@ export interface UserInfoResponse {
   user_id?: string;
 }
 
-
 export async function getLoginUrl(): Promise<string> {
   try {
     const response = await fetch(
-      `${OAUTH_BASE_URL}/api/v1/oauth/login/workos/mobile`
+      `${OAUTH_BASE_URL}/api/v1/oauth/login/workos/mobile`,
     );
 
     if (!response.ok) {
@@ -46,7 +44,7 @@ export async function startOAuthFlow(): Promise<string> {
 
     const result = await WebBrowser.openAuthSessionAsync(
       authUrl,
-      "gaiamobile://auth/callback"
+      "gaiamobile://auth/callback",
     );
 
     if (result.type === "success" && result.url) {

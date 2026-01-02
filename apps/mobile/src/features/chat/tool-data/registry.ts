@@ -89,7 +89,7 @@ export function isKnownTool(name: string): name is ToolName {
 
 export function getToolData<K extends ToolName>(
   entry: ToolDataEntry,
-  toolName: K
+  toolName: K,
 ): ToolDataMap[K] | undefined {
   if (entry.tool_name === toolName) {
     return entry.data as ToolDataMap[K];

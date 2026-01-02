@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { apiService } from "@/lib/api";
 import type { Conversation } from "@/features/chat/types";
+import { apiService } from "@/lib/api";
 
 // Re-export for backwards compatibility
 export type { Conversation, GroupedConversations } from "@/features/chat/types";
@@ -61,17 +61,17 @@ export function useConversations(): UseConversationsReturn {
       setError(null);
 
       const data = await apiService.get<ConversationsResponse>(
-        "/conversations?page=1&limit=100"
+        "/conversations?page=1&limit=100",
       );
 
       const normalizedConversations = (data.conversations || []).map(
-        normalizeConversation
+        normalizeConversation,
       );
       setConversations(normalizedConversations);
     } catch (err) {
       console.error("Error fetching conversations:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch conversations"
+        err instanceof Error ? err.message : "Failed to fetch conversations",
       );
       setConversations([]);
     } finally {

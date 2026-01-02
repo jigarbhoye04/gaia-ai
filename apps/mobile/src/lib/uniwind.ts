@@ -1,16 +1,12 @@
-/**
- * Uniwind-wrapped third-party components
- * Use these instead of the original components to get className support
- */
-import { withUniwind } from "uniwind";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  BottomSheetFlatList,
+  BottomSheetScrollView,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import {
-  BottomSheetView,
-  BottomSheetScrollView,
-  BottomSheetFlatList,
-} from "@gorhom/bottom-sheet";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { withUniwind } from "uniwind";
 
 // SafeAreaView with className support
 export const StyledSafeAreaView = withUniwind(SafeAreaView);
@@ -25,4 +21,3 @@ export const StyledGestureHandlerRootView = withUniwind(GestureHandlerRootView);
 export const StyledBottomSheetView = withUniwind(BottomSheetView);
 export const StyledBottomSheetScrollView = withUniwind(BottomSheetScrollView);
 export const StyledBottomSheetFlatList = withUniwind(BottomSheetFlatList);
-

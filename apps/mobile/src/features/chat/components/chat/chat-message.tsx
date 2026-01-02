@@ -1,9 +1,9 @@
-import { View, Pressable } from "react-native";
-import { Text } from "@/components/ui/text";
+import { Pressable, View } from "react-native";
 import { MessageBubble } from "@/components/ui/message-bubble";
+import { Text } from "@/components/ui/text";
 import { ToolDataRenderer } from "../../tool-data";
-import { splitMessageByBreaks } from "../../utils/messageBreakUtils";
 import type { Message } from "../../types";
+import { splitMessageByBreaks } from "../../utils/messageBreakUtils";
 
 interface FollowUpActionsProps {
   actions: string[];
@@ -69,10 +69,10 @@ export function ChatMessage({
                 messageParts.length === 1
                   ? "none"
                   : index === 0
-                  ? "first"
-                  : index === messageParts.length - 1
-                  ? "last"
-                  : "middle"
+                    ? "first"
+                    : index === messageParts.length - 1
+                      ? "last"
+                      : "middle"
               }
             />
           ))
