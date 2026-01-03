@@ -8,7 +8,7 @@ while preserving all other message types in their original order.
 from typing import TypeVar
 
 from app.config.loggers import chat_logger as logger
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, AnyMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import MessagesState
 from langgraph.store.base import BaseStore
@@ -42,7 +42,7 @@ def filter_messages_node(state: T, config: RunnableConfig, store: BaseStore) -> 
                 answered_tool_call_ids.add(msg.tool_call_id)
 
         # Second pass: filter messages
-        filtered_messages = []
+        filtered_messages: list[AnyMessage] = []
 
         for msg in state["messages"]:
             # For AI messages with tool calls, filter out unanswered tool calls
