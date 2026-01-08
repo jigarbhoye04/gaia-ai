@@ -116,6 +116,12 @@ importers:
       '@react-navigation/native':
         specifier: ^7.1.8
         version: 7.1.25(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@shopify/flash-list':
+        specifier: ^2.2.0
+        version: 2.2.0(@babel/runtime@7.28.4)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      '@tanstack/react-query':
+        specifier: ^5.90.16
+        version: 5.90.16(react@19.1.0)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -125,6 +131,9 @@ importers:
       expo-auth-session:
         specifier: ~7.0.10
         version: 7.0.10(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      expo-blur:
+        specifier: ~15.0.8
+        version: 15.0.8(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       expo-clipboard:
         specifier: ^8.0.8
         version: 8.0.8(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
@@ -6559,6 +6568,13 @@ packages:
     peerDependencies:
       webpack: '>=4.40.0'
 
+  '@shopify/flash-list@2.2.0':
+    resolution: {integrity: sha512-mL61IofcfBNRZ/qazIf+pghGULkcZUQ7EZNldH1JBbIjtDb25ADSiQrt62ZTnRz0H5+bPFEZUmN9+WChHzX8pw==}
+    peerDependencies:
+      '@babel/runtime': '*'
+      react: 19.1.0
+      react-native: '*'
+
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
@@ -6933,6 +6949,9 @@ packages:
   '@tanstack/query-core@5.90.12':
     resolution: {integrity: sha512-T1/8t5DhV/SisWjDnaiU2drl6ySvsHj1bHBCWNXd+/T+Hh1cf6JodyEYMd5sgwm+b/mETT4EV3H+zCVczCU5hg==}
 
+  '@tanstack/query-core@5.90.16':
+    resolution: {integrity: sha512-MvtWckSVufs/ja463/K4PyJeqT+HMlJWtw6PrCpywznd2NSgO3m4KwO9RqbFqGg6iDE8vVMFWMeQI4Io3eEYww==}
+
   '@tanstack/query-persist-client-core@5.91.11':
     resolution: {integrity: sha512-NNpRGxQY/nVOdzfs5QbevPjGsUVoEiFwqxxaopLyu6todwtDOCfIOfhXSmpMVXBiCxUn7kqaUB1iwaBKqoAVRQ==}
 
@@ -6944,6 +6963,11 @@ packages:
 
   '@tanstack/react-query@5.90.12':
     resolution: {integrity: sha512-graRZspg7EoEaw0a8faiUASCyJrqjKPdqJ9EwuDRUF9mEYJ1YPczI9H+/agJ0mOJkPCJDk0lsz5QTrLZ/jQ2rg==}
+    peerDependencies:
+      react: 19.1.0
+
+  '@tanstack/react-query@5.90.16':
+    resolution: {integrity: sha512-bpMGOmV4OPmif7TNMteU/Ehf/hoC0Kf98PDc0F4BZkFrEapRMEqI/V6YS0lyzwSV6PQpY1y4xxArUIfBW5LVxQ==}
     peerDependencies:
       react: 19.1.0
 
@@ -9933,6 +9957,13 @@ packages:
   expo-auth-session@7.0.10:
     resolution: {integrity: sha512-XDnKkudvhHSKkZfJ+KkodM+anQcrxB71i+h0kKabdLa5YDXTQ81aC38KRc3TMqmnBDHAu0NpfbzEVd9WDFY3Qg==}
     peerDependencies:
+      react: 19.1.0
+      react-native: '*'
+
+  expo-blur@15.0.8:
+    resolution: {integrity: sha512-rWyE1NBRZEu9WD+X+5l7gyPRszw7n12cW3IRNAb5i6KFzaBp8cxqT5oeaphJapqURvcqhkOZn2k5EtBSbsuU7w==}
+    peerDependencies:
+      expo: '*'
       react: 19.1.0
       react-native: '*'
 
@@ -24109,6 +24140,12 @@ snapshots:
       - encoding
       - supports-color
 
+  '@shopify/flash-list@2.2.0(@babel/runtime@7.28.4)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@babel/runtime': 7.28.4
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
+
   '@sinclair/typebox@0.27.8': {}
 
   '@sinclair/typebox@0.34.41': {}
@@ -24438,6 +24475,8 @@ snapshots:
 
   '@tanstack/query-core@5.90.12': {}
 
+  '@tanstack/query-core@5.90.16': {}
+
   '@tanstack/query-persist-client-core@5.91.11':
     dependencies:
       '@tanstack/query-core': 5.90.12
@@ -24451,6 +24490,11 @@ snapshots:
   '@tanstack/react-query@5.90.12(react@19.1.0)':
     dependencies:
       '@tanstack/query-core': 5.90.12
+      react: 19.1.0
+
+  '@tanstack/react-query@5.90.16(react@19.1.0)':
+    dependencies:
+      '@tanstack/query-core': 5.90.16
       react: 19.1.0
 
   '@tanstack/react-virtual@3.11.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
@@ -28082,6 +28126,12 @@ snapshots:
     transitivePeerDependencies:
       - expo
       - supports-color
+
+  expo-blur@15.0.8(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
+    dependencies:
+      expo: 54.0.29(@babel/core@7.28.5)(@expo/metro-runtime@6.1.2)(expo-router@6.0.20)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-native: 0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0)
 
   expo-clipboard@8.0.8(expo@54.0.29)(react-native@0.81.5(@babel/core@7.28.5)(@types/react@19.1.17)(react@19.1.0))(react@19.1.0):
     dependencies:

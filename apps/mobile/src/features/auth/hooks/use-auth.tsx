@@ -15,15 +15,10 @@ import {
 } from "@/features/auth/utils/auth-storage";
 
 interface AuthContextType {
-  /** Whether the user is authenticated */
   isAuthenticated: boolean;
-  /** Whether auth state is being loaded */
   isLoading: boolean;
-  /** Current user info if authenticated */
   user: UserInfo | null;
-  /** Clear auth state and storage (does NOT navigate - components should handle navigation) */
   signOut: () => Promise<void>;
-  /** Refresh auth state from storage */
   refreshAuth: () => Promise<void>;
 }
 
