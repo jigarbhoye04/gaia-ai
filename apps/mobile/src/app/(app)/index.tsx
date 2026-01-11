@@ -1,7 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Keyboard, Pressable, View } from "react-native";
+import { Image, Keyboard, Pressable, View, Platform } from "react-native";
 import Animated, {
   Easing,
   runOnJS,
@@ -13,14 +13,68 @@ import Animated, {
 } from "react-native-reanimated";
 import { ChatInput } from "@/components/ui/chat-input";
 import { Text } from "@/components/ui/text";
-import {
-  ChatLayout,
-  ChatMessage,
-  type Message,
-  useChat,
-  useChatContext,
-} from "@/features/chat";
+import { ChatLayout, ChatMessage, type Message, useChat, useChatContext } from "@/features/chat";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
+import { getAuthToken } from "@/features/auth";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
+import Constants from "expo-constants";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+function handleRegistrationError(errorMessage: string) {
+  alert(errorMessage);
+  throw new Error(errorMessage);
+}
+
+async function registerForPushNotificationsAsync() {
+  if (Platform.OS === "android") {
+    await Notifications.setNotificationChannelAsync("default", {
+      name: "default",
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: "#FF231F7C",
+    });
+  }
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      handleRegistrationError("Permission not granted to get push token for push notification!");
+      return;
+    }
+    const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    console.log("projectId:", projectId);
+    if (!projectId) {
+      handleRegistrationError("Project ID not found");
+    }
+    try {
+      const pushTokenString = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId,
+        })
+      ).data;
+      console.log(pushTokenString);
+      return pushTokenString;
+    } catch (e: unknown) {
+      handleRegistrationError(`${e}`);
+    }
+  } else {
+    handleRegistrationError("Must use physical device for push notifications");
+  }
+}
 
 function EmptyState() {
   return (
@@ -33,27 +87,12 @@ function EmptyState() {
   );
 }
 
-function ChatContent({
-  activeChatId,
-  onFollowUpAction,
-}: {
-  activeChatId: string | null;
-  onFollowUpAction?: (action: string) => void;
-}) {
-  const {
-    messages,
-    isTyping,
-    progress,
-    flatListRef,
-    sendMessage,
-    scrollToBottom,
-  } = useChat(activeChatId);
+function ChatContent({ activeChatId, onFollowUpAction }: { activeChatId: string | null; onFollowUpAction?: (action: string) => void }) {
+  const { messages, isTyping, progress, flatListRef, sendMessage, scrollToBottom } = useChat(activeChatId);
 
   const [inputValue, setInputValue] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
-  const [thinkingMessage, setThinkingMessage] = useState(() =>
-    getRelevantThinkingMessage(""),
-  );
+  const [thinkingMessage, setThinkingMessage] = useState(() => getRelevantThinkingMessage(""));
 
   const keyboard = useAnimatedKeyboard();
 
@@ -68,7 +107,7 @@ function ChatContent({
         () => {
           setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
         },
-        2000 + Math.random() * 1000,
+        2000 + Math.random() * 1000
       );
       return () => clearInterval(interval);
     }
@@ -83,13 +122,10 @@ function ChatContent({
   useAnimatedReaction(
     () => keyboard.height.value,
     (currentHeight, previousHeight) => {
-      if (
-        currentHeight > 0 &&
-        (previousHeight === null || currentHeight > previousHeight)
-      ) {
+      if (currentHeight > 0 && (previousHeight === null || currentHeight > previousHeight)) {
         runOnJS(scrollToBottom)();
       }
-    },
+    }
   );
 
   const handleFollowUpAction = useCallback(
@@ -97,7 +133,7 @@ function ChatContent({
       setInputValue(action);
       onFollowUpAction?.(action);
     },
-    [onFollowUpAction],
+    [onFollowUpAction]
   );
 
   const handleSend = useCallback(
@@ -106,14 +142,13 @@ function ChatContent({
       sendMessage(text);
       setInputValue("");
     },
-    [sendMessage],
+    [sendMessage]
   );
 
   const renderMessage = useCallback(
     ({ item, index }: { item: Message; index: number }) => {
       const isLastMessage = index === messages.length - 1;
-      const isEmptyAiMessage =
-        !item.isUser && (!item.text || item.text.trim() === "");
+      const isEmptyAiMessage = !item.isUser && (!item.text || item.text.trim() === "");
       const showLoading = isLastMessage && isEmptyAiMessage && isTyping;
 
       return (
@@ -125,7 +160,7 @@ function ChatContent({
         />
       );
     },
-    [handleFollowUpAction, messages.length, isTyping, displayMessage],
+    [handleFollowUpAction, messages.length, isTyping, displayMessage]
   );
 
   const showEmptyState = messages.length === 0 && !isTyping && !activeChatId;
@@ -142,11 +177,7 @@ function ChatContent({
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          extraData={[
-            messages[messages.length - 1]?.text,
-            isTyping,
-            displayMessage,
-          ]}
+          extraData={[messages[messages.length - 1]?.text, isTyping, displayMessage]}
           contentContainerStyle={{
             paddingTop: 16,
             paddingBottom: 90,
@@ -162,15 +193,8 @@ function ChatContent({
         />
       )}
 
-      <Animated.View
-        className="absolute left-0 right-0 px-2 pb-5 bg-surface rounded-t-4xl"
-        style={animatedInputStyle}
-      >
-        <ChatInput
-          onSend={handleSend}
-          value={inputValue}
-          onChangeText={setInputValue}
-        />
+      <Animated.View className="absolute left-0 right-0 px-2 pb-5 bg-surface rounded-t-4xl" style={animatedInputStyle}>
+        <ChatInput onSend={handleSend} value={inputValue} onChangeText={setInputValue} />
       </Animated.View>
     </View>
   );
@@ -181,6 +205,22 @@ export default function ChatScreen() {
 
   const [_isReady, setIsReady] = useState(false);
   const screenOpacity = useSharedValue(0);
+
+  useEffect(() => {
+
+    const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
+      console.log("[Push] Notification received:", notification);
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log("[Push] Notification response:", response);
+    });
+
+    return () => {
+      notificationListener.remove();
+      responseListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -202,25 +242,15 @@ export default function ChatScreen() {
       background={
         !activeChatId ? (
           <>
-            <Image
-              source={require("@/assets/background/chat.jpg")}
-              style={{ width: "100%", height: "100%", opacity: 0.65 }}
-              resizeMode="cover"
-            />
+            <Image source={require("@/assets/background/chat.jpg")} style={{ width: "100%", height: "100%", opacity: 0.65 }} resizeMode="cover" />
             <LinearGradient
-              colors={[
-                "rgba(0,0,0,0.3)",
-                "rgba(255,255,255,0.1)",
-                "rgba(0,0,0,0.0)",
-                "rgba(0,0,0,0.75)",
-              ]}
+              colors={["rgba(0,0,0,0.3)", "rgba(255,255,255,0.1)", "rgba(0,0,0,0.0)", "rgba(0,0,0,0.75)"]}
               locations={[0, 0.2, 0.45, 1]}
               style={{ position: "absolute", width: "100%", height: "100%" }}
             />
           </>
         ) : undefined
-      }
-    >
+      }>
       <Animated.View className="flex-1" style={animatedScreenStyle}>
         <ChatContent activeChatId={activeChatId} />
       </Animated.View>
