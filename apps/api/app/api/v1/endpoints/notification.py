@@ -21,7 +21,12 @@ from app.models.notification.request_models import (
     NotificationResponse,
     PaginatedNotificationsResponse,
 )
+from app.models.device_token_models import (
+    DeviceTokenRequest,
+    DeviceTokenResponse,
+)
 from app.services.notification_service import notification_service
+from app.services.device_token_service import get_device_token_service
 
 router = APIRouter()
 
@@ -198,4 +203,79 @@ async def bulk_actions(
 
     except Exception as e:
         logger.error(f"Failed to perform bulk actions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/register-device", response_model=DeviceTokenResponse)
+async def register_device_token(
+    request: DeviceTokenRequest = Body(...),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Register a device token for push notifications
+    """
+    user_id = current_user.get("user_id")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=401, detail="User not authenticated or user_id not found"
+        )
+
+    try:
+        device_token_service = get_device_token_service()
+
+        success = await device_token_service.register_device_token(
+            user_id=user_id,
+            token=request.token,
+            platform=request.platform,
+            device_id=request.device_id,
+        )
+
+        if success:
+            logger.info(f"Device token registered for user {user_id}")
+            return DeviceTokenResponse(
+                success=True, message="Device registered successfully"
+            )
+        else:
+            raise HTTPException(
+                status_code=500, detail="Failed to register device token"
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to register device token: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/unregister-device", response_model=DeviceTokenResponse)
+async def unregister_device_token(
+    token: str = Body(..., embed=True),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Unregister a device token
+    """
+    user_id = current_user.get("user_id")
+
+    if not user_id:
+        raise HTTPException(
+            status_code=401, detail="User not authenticated or user_id not found"
+        )
+
+    try:
+        device_token_service = get_device_token_service()
+
+        success = await device_token_service.unregister_device_token(token)
+
+        if success:
+            logger.info(f"Device token unregistered for user {user_id}")
+            return DeviceTokenResponse(
+                success=True, message="Device unregistered successfully"
+            )
+        else:
+            return DeviceTokenResponse(success=False, message="Device token not found")
+
+    except Exception as e:
+        logger.error(f"Failed to unregister device token: {e}")
         raise HTTPException(status_code=500, detail=str(e))
