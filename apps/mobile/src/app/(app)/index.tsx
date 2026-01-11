@@ -1,7 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Keyboard, Pressable, View, Platform } from "react-native";
+import { Image, Keyboard, Pressable, View } from "react-native";
 import Animated, {
   Easing,
   runOnJS,
@@ -15,74 +15,13 @@ import { ChatInput } from "@/components/ui/chat-input";
 import { Text } from "@/components/ui/text";
 import { ChatLayout, ChatMessage, type Message, useChat, useChatContext } from "@/features/chat";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
-import { getAuthToken } from "@/features/auth";
-import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-function handleRegistrationError(errorMessage: string) {
-  alert(errorMessage);
-  throw new Error(errorMessage);
-}
-
-async function registerForPushNotificationsAsync() {
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FF231F7C",
-    });
-  }
-
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      handleRegistrationError("Permission not granted to get push token for push notification!");
-      return;
-    }
-    const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-    console.log("projectId:", projectId);
-    if (!projectId) {
-      handleRegistrationError("Project ID not found");
-    }
-    try {
-      const pushTokenString = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
-      ).data;
-      console.log(pushTokenString);
-      return pushTokenString;
-    } catch (e: unknown) {
-      handleRegistrationError(`${e}`);
-    }
-  } else {
-    handleRegistrationError("Must use physical device for push notifications");
-  }
-}
+import { useNotifications } from "@/features/notifications";
 
 function EmptyState() {
   return (
     <View className="flex-1 items-center justify-center px-6">
       <Text variant={"h2"}>What can I help you with?</Text>
-      <Text className="text-xs">
-        Start a conversation by typing a message below
-      </Text>
+      <Text className="text-xs">Start a conversation by typing a message below</Text>
     </View>
   );
 }
@@ -203,24 +142,36 @@ function ChatContent({ activeChatId, onFollowUpAction }: { activeChatId: string 
 export default function ChatScreen() {
   const { activeChatId } = useChatContext();
 
+  // Setup push notifications
+  const { expoPushToken, notification, error, isRegistered } = useNotifications();
+
   const [_isReady, setIsReady] = useState(false);
   const screenOpacity = useSharedValue(0);
 
+  // Log notification events
   useEffect(() => {
+    if (expoPushToken) {
+      console.log("[Chat] Push token ready:", expoPushToken);
+    }
+  }, [expoPushToken]);
 
-    const notificationListener = Notifications.addNotificationReceivedListener((notification) => {
-      console.log("[Push] Notification received:", notification);
-    });
+  useEffect(() => {
+    if (notification) {
+      console.log("[Chat] Notification received:", notification);
+    }
+  }, [notification]);
 
-    const responseListener = Notifications.addNotificationResponseReceivedListener((response) => {
-      console.log("[Push] Notification response:", response);
-    });
+  useEffect(() => {
+    if (error) {
+      console.warn("[Chat] Notification error:", error);
+    }
+  }, [error]);
 
-    return () => {
-      notificationListener.remove();
-      responseListener.remove();
-    };
-  }, []);
+  useEffect(() => {
+    if (isRegistered) {
+      console.log("[Chat] Device registered for push notifications");
+    }
+  }, [isRegistered]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
