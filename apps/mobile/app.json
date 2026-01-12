@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.heygaia.giamobile"
+      "bundleIdentifier": "io.heygaia.giamobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "io.heygaia.giamobile",
@@ -67,7 +70,9 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/sound/uwu.mp3"],
+          "sounds": [
+            "./assets/sound/uwu.mp3"
+          ],
           "defaultChannel": "gaia_channel",
           "mode": "production"
         }
