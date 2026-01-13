@@ -32,8 +32,6 @@ export function ChatHeader({
         justifyContent: "space-between",
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: "rgba(255,255,255,0.05)",
         backgroundColor: "transparent",
       }}
     >
