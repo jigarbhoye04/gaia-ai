@@ -186,7 +186,8 @@ class DeviceTokenService:
                     }
                 },
             )
-            logger.info(f"Deactivated invalid token: {token}")
+            masked_token = f"{token[:20]}...{token[-4:]}" if len(token) > 24 else "***"
+            logger.info(f"Deactivated invalid token: {masked_token}")
             return True
 
         except Exception as e:

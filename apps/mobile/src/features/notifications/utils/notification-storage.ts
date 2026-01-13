@@ -20,11 +20,12 @@ export async function getStoredPushToken(): Promise<string | null> {
 }
 
 /**
- * Clear the stored push token
+ * Clear the stored push token and registration flag
  */
 export async function clearStoredPushToken(): Promise<void> {
   try {
     await SecureStore.deleteItemAsync(PUSH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync("expo_push_token_registered");
   } catch (error) {
     console.error("[Notifications] Failed to clear stored push token:", error);
   }
@@ -55,7 +56,7 @@ export async function unregisterDeviceOnLogout(): Promise<void> {
           lastError = error;
           console.warn(
             `[Notifications] Unregister attempt ${attempt}/${MAX_RETRIES} failed:`,
-            error
+            error,
           );
           if (attempt < MAX_RETRIES) {
             await new Promise((r) => setTimeout(r, 500 * attempt)); // Backoff
@@ -65,9 +66,13 @@ export async function unregisterDeviceOnLogout(): Promise<void> {
 
       if (lastError) {
         // CRITICAL: Token remains in DB - user may still receive notifications
+        const maskedToken =
+          token.length > 24
+            ? `${token.slice(0, 20)}...${token.slice(-4)}`
+            : "***";
         console.error(
           "[Notifications] CRITICAL: Failed to unregister device after retries. Token may persist:",
-          token
+          maskedToken,
         );
         // Continue with logout - don't block user
       }

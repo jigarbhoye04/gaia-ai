@@ -101,22 +101,36 @@ export function useNotifications(): UseNotificationsReturn {
 
         setExpoPushToken(token);
 
-        // Store token in SecureStore for logout cleanup
-        await SecureStore.setItemAsync("expo_push_token", token);
+        const storedToken = await SecureStore.getItemAsync("expo_push_token");
+        const isAlreadyRegistered =
+          storedToken === token &&
+          (await SecureStore.getItemAsync("expo_push_token_registered")) ===
+            "true";
 
-        // Register with backend
-        try {
-          await notificationsApi.registerDeviceToken({
-            token,
-            platform: Platform.OS as "ios" | "android",
-            device_id: Device.deviceName || undefined,
-          });
+        if (isAlreadyRegistered) {
           setIsRegistered(true);
-          setError(null); // Clear any previous errors
-        } catch (backendError) {
-          setIsRegistered(false); // Explicitly mark as not registered
-          setError("Failed to register device for push notifications");
-          // Local notifications still work, but remote push won't
+          setError(null);
+        } else {
+          // Store token and register with backend
+          await SecureStore.setItemAsync("expo_push_token", token);
+
+          try {
+            await notificationsApi.registerDeviceToken({
+              token,
+              platform: Platform.OS as "ios" | "android",
+              device_id: Device.deviceName || undefined,
+            });
+            await SecureStore.setItemAsync(
+              "expo_push_token_registered",
+              "true",
+            );
+            setIsRegistered(true);
+            setError(null);
+          } catch (_backendError) {
+            await SecureStore.deleteItemAsync("expo_push_token_registered");
+            setIsRegistered(false);
+            setError("Failed to register device for push notifications");
+          }
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err);
@@ -140,10 +154,8 @@ export function useNotifications(): UseNotificationsReturn {
 
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
-        // Handle notification tap - navigate to relevant screen, etc.
         const data = response.notification.request.content.data;
         if (data) {
-          // TODO: Add navigation logic based on notification data
         }
       });
 

@@ -18,7 +18,6 @@
     "android": {
       "package": "io.heygaia.giamobile",
       "googleServicesFile": "./google-services.json",
-      "fcmV1ServiceAccountJsonPath": "./gaia-c95f3-firebase-adminsdk-notification.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -67,9 +66,7 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#ffffff",
-          "sounds": [
-            "./assets/sound/uwu.mp3"
-          ],
+          "sounds": ["./assets/sound/uwu.mp3"],
           "defaultChannel": "gaia_channel",
           "mode": "production"
         }
