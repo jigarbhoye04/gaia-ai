@@ -12,6 +12,7 @@ import {
   ThumbsUpIcon,
 } from "@/components/icons";
 import { Text } from "@/components/ui/text";
+import { useResponsive } from "@/lib/responsive";
 import { cn } from "@/lib/utils";
 
 const GaiaLogo = require("@shared/assets/logo/gaia.png");
@@ -47,6 +48,9 @@ const messageBubbleVariants = cva("px-4 py-2.5 max-w-[100%]", {
 type MessageBubbleVariantProps = VariantProps<typeof messageBubbleVariants>;
 
 function PulsingDots() {
+  const { moderateScale, spacing } = useResponsive();
+  const dotSize = moderateScale(6, 0.5);
+
   const dot1 = useRef(new Animated.Value(0.3)).current;
   const dot2 = useRef(new Animated.Value(0.3)).current;
   const dot3 = useRef(new Animated.Value(0.3)).current;
@@ -85,31 +89,38 @@ function PulsingDots() {
   }, [dot1, dot2, dot3]);
 
   return (
-    <View className="flex-row items-center ml-2" style={{ gap: 4 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        marginLeft: spacing.sm,
+        gap: moderateScale(4, 0.5),
+      }}
+    >
       <Animated.View
         style={{
           opacity: dot1,
-          width: 6,
-          height: 6,
-          borderRadius: 3,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
           backgroundColor: "#00bbff",
         }}
       />
       <Animated.View
         style={{
           opacity: dot2,
-          width: 6,
-          height: 6,
-          borderRadius: 3,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
           backgroundColor: "#00bbff",
         }}
       />
       <Animated.View
         style={{
           opacity: dot3,
-          width: 6,
-          height: 6,
-          borderRadius: 3,
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
           backgroundColor: "#00bbff",
         }}
       />
@@ -134,27 +145,31 @@ function MessageBubble({
   ...rest
 }: MessageBubbleProps) {
   const isLoading = variant === "loading";
+  const { spacing, iconSize, fontSize, moderateScale } = useResponsive();
+  const avatarSize = moderateScale(24, 0.5);
 
   return (
     <View
-      className={cn(
-        "flex-row items-start gap-2",
-        variant === "sent" ? "self-end" : "self-start",
-      )}
+      style={{
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: spacing.sm,
+        alignSelf: variant === "sent" ? "flex-end" : "flex-start",
+      }}
     >
       {variant !== "sent" && showAvatar && (
         <Avatar
           alt="Gaia"
           size="sm"
           color="default"
-          style={{ width: 24, height: 24 }}
+          style={{ width: avatarSize, height: avatarSize }}
         >
           <Avatar.Image source={GaiaLogo} />
           <Avatar.Fallback>G</Avatar.Fallback>
         </Avatar>
       )}
       {variant !== "sent" && !showAvatar && (
-        <View style={{ width: 24, height: 24 }} />
+        <View style={{ width: avatarSize, height: avatarSize }} />
       )}
 
       <View className={cn("flex-col", variant !== "sent" && "flex-1")}>
@@ -169,11 +184,8 @@ function MessageBubble({
         >
           {children ??
             (isLoading ? (
-              <View className="flex-row items-center ">
-                <Text
-                  className="text-sm text-foreground"
-                  style={{ lineHeight: 20 }}
-                >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={{ fontSize: fontSize.sm, lineHeight: 20 }}>
                   {message}
                 </Text>
                 <PulsingDots />
@@ -195,25 +207,49 @@ function MessageBubble({
         {variant === "received" &&
           !isLoading &&
           (grouped === "last" || grouped === "none") && (
-            <View className="flex-row items-center gap-3 mt-1.5 px-1">
-              <Pressable className="p-1 active:opacity-60">
-                <HugeiconsIcon icon={Copy01Icon} size={16} color="#8e8e93" />
-              </Pressable>
-              <Pressable className="p-1 active:opacity-60">
-                <HugeiconsIcon icon={ThumbsUpIcon} size={16} color="#8e8e93" />
-              </Pressable>
-              <Pressable className="p-1 active:opacity-60">
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: spacing.md,
+                marginTop: spacing.xs,
+                paddingHorizontal: spacing.xs,
+              }}
+            >
+              <Pressable style={{ padding: spacing.xs }}>
                 <HugeiconsIcon
-                  icon={ThumbsDownIcon}
-                  size={16}
+                  icon={Copy01Icon}
+                  size={iconSize.sm}
                   color="#8e8e93"
                 />
               </Pressable>
-              <Pressable className="p-1 active:opacity-60">
-                <HugeiconsIcon icon={Pin02Icon} size={16} color="#8e8e93" />
+              <Pressable style={{ padding: spacing.xs }}>
+                <HugeiconsIcon
+                  icon={ThumbsUpIcon}
+                  size={iconSize.sm}
+                  color="#8e8e93"
+                />
               </Pressable>
-              <Pressable className="p-1 active:opacity-60">
-                <HugeiconsIcon icon={Message01Icon} size={16} color="#8e8e93" />
+              <Pressable style={{ padding: spacing.xs }}>
+                <HugeiconsIcon
+                  icon={ThumbsDownIcon}
+                  size={iconSize.sm}
+                  color="#8e8e93"
+                />
+              </Pressable>
+              <Pressable style={{ padding: spacing.xs }}>
+                <HugeiconsIcon
+                  icon={Pin02Icon}
+                  size={iconSize.sm}
+                  color="#8e8e93"
+                />
+              </Pressable>
+              <Pressable style={{ padding: spacing.xs }}>
+                <HugeiconsIcon
+                  icon={Message01Icon}
+                  size={iconSize.sm}
+                  color="#8e8e93"
+                />
               </Pressable>
             </View>
           )}

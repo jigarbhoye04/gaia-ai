@@ -1,4 +1,5 @@
 import { FlashList } from "@shopify/flash-list";
+import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
 import { Image, Keyboard, Pressable, View } from "react-native";
@@ -21,14 +22,58 @@ import {
   useChatContext,
 } from "@/features/chat";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
+import { useResponsive } from "@/lib/responsive";
 
 function EmptyState() {
+  const { fontSize, spacing } = useResponsive();
+
   return (
-    <View className="flex-1 items-center justify-center px-6">
-      <Text variant={"h2"}>What can I help you with?</Text>
-      <Text className="text-xs">
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: spacing.lg,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: fontSize["3xl"],
+          fontWeight: "600",
+          letterSpacing: -0.5,
+          textAlign: "center",
+        }}
+      >
+        What can I help you with?
+      </Text>
+      <Text
+        style={{
+          fontSize: fontSize.xs,
+          color: "#8e8e93",
+          marginTop: spacing.sm,
+          textAlign: "center",
+        }}
+      >
         Start a conversation by typing a message below
       </Text>
+
+      <Link href="/test" asChild>
+        <Pressable
+          style={{
+            marginTop: spacing.xl,
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.md,
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: spacing.sm,
+            borderWidth: 1,
+            borderColor: "rgba(255,255,255,0.1)",
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "500" }}>
+            Test Notifications Page
+          </Text>
+        </Pressable>
+      </Link>
     </View>
   );
 }
@@ -49,10 +94,12 @@ function ChatContent({
     scrollToBottom,
   } = useChat(activeChatId);
 
+  const { spacing, moderateScale } = useResponsive();
+
   const [inputValue, setInputValue] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [thinkingMessage, setThinkingMessage] = useState(() =>
-    getRelevantThinkingMessage(""),
+    getRelevantThinkingMessage("")
   );
 
   const keyboard = useAnimatedKeyboard();
@@ -68,7 +115,7 @@ function ChatContent({
         () => {
           setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
         },
-        2000 + Math.random() * 1000,
+        2000 + Math.random() * 1000
       );
       return () => clearInterval(interval);
     }
@@ -89,7 +136,7 @@ function ChatContent({
       ) {
         runOnJS(scrollToBottom)();
       }
-    },
+    }
   );
 
   const handleFollowUpAction = useCallback(
@@ -97,7 +144,7 @@ function ChatContent({
       setInputValue(action);
       onFollowUpAction?.(action);
     },
-    [onFollowUpAction],
+    [onFollowUpAction]
   );
 
   const handleSend = useCallback(
@@ -106,7 +153,7 @@ function ChatContent({
       sendMessage(text);
       setInputValue("");
     },
-    [sendMessage],
+    [sendMessage]
   );
 
   const renderMessage = useCallback(
@@ -125,7 +172,7 @@ function ChatContent({
         />
       );
     },
-    [handleFollowUpAction, messages.length, isTyping, displayMessage],
+    [handleFollowUpAction, messages.length, isTyping, displayMessage]
   );
 
   const showEmptyState = messages.length === 0 && !isTyping && !activeChatId;
@@ -148,8 +195,8 @@ function ChatContent({
             displayMessage,
           ]}
           contentContainerStyle={{
-            paddingTop: 16,
-            paddingBottom: 90,
+            paddingTop: spacing.md,
+            paddingBottom: moderateScale(90, 0.5),
           }}
           showsVerticalScrollIndicator={true}
           keyboardShouldPersistTaps="handled"
@@ -163,8 +210,19 @@ function ChatContent({
       )}
 
       <Animated.View
-        className="absolute left-0 right-0 px-2 pb-5 bg-surface rounded-t-4xl"
-        style={animatedInputStyle}
+        style={[
+          {
+            position: "absolute",
+            left: 0,
+            right: 0,
+            paddingHorizontal: spacing.sm,
+            paddingBottom: moderateScale(20, 0.5),
+            backgroundColor: "#1c1c1e",
+            borderTopLeftRadius: moderateScale(24, 0.5),
+            borderTopRightRadius: moderateScale(24, 0.5),
+          },
+          animatedInputStyle,
+        ]}
       >
         <ChatInput
           onSend={handleSend}
@@ -221,7 +279,7 @@ export default function ChatScreen() {
         ) : undefined
       }
     >
-      <Animated.View className="flex-1" style={animatedScreenStyle}>
+      <Animated.View style={[{ flex: 1 }, animatedScreenStyle]}>
         <ChatContent activeChatId={activeChatId} />
       </Animated.View>
     </ChatLayout>

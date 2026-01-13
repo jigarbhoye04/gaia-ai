@@ -6,9 +6,11 @@ import DrawerLayout, {
   DrawerType,
 } from "react-native-gesture-handler/ReanimatedDrawerLayout";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ChatHeader, SIDEBAR_WIDTH, SidebarContent } from "@/features/chat";
-import { useSidebar } from "@/features/chat/hooks/sidebar-context";
-import { useChatContext } from "@/features/chat/hooks/use-chat-context";
+import { useResponsive } from "@/lib/responsive";
+import { useSidebar } from "../hooks/sidebar-context";
+import { useChatContext } from "../hooks/use-chat-context";
+import { ChatHeader } from "./chat/chat-header";
+import { SidebarContent } from "./sidebar/sidebar";
 
 interface ChatLayoutProps {
   children: ReactNode;
@@ -18,6 +20,7 @@ interface ChatLayoutProps {
 export function ChatLayout({ children, background }: ChatLayoutProps) {
   const { setActiveChatId, clearActiveMessages } = useChatContext();
   const { drawerRef, toggleSidebar, closeSidebar } = useSidebar();
+  const { sidebarWidth } = useResponsive();
 
   const handleSelectChat = useCallback(
     (chatId: string) => {
@@ -46,7 +49,7 @@ export function ChatLayout({ children, background }: ChatLayoutProps) {
     <View className="flex-1">
       <DrawerLayout
         ref={drawerRef}
-        drawerWidth={SIDEBAR_WIDTH}
+        drawerWidth={sidebarWidth}
         drawerPosition={DrawerPosition.LEFT}
         drawerType={DrawerType.FRONT}
         overlayColor="rgba(0, 0, 0, 0.7)"
