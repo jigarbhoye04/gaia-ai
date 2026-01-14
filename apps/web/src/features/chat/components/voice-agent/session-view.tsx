@@ -56,7 +56,6 @@ export const SessionView = ({
           try {
             const text = await reader.readAll();
             setConversationId(text);
-            console.log(`Received conversation ID via text stream: ${text}`);
           } catch (err) {
             console.error("Failed to read text stream:", err);
           }
@@ -71,9 +70,6 @@ export const SessionView = ({
           try {
             const text = await reader.readAll();
             setConversationDescription(text);
-            console.log(
-              `Received conversation description via text stream: ${text}`,
-            );
           } catch (err) {
             console.error("Failed to read conversation description:", err);
           }
@@ -95,7 +91,6 @@ export const SessionView = ({
         "conversation-description",
         conversationDescriptionHandler,
       );
-      console.log("Registered conversation text stream handlers.");
     };
 
     room.on("connected", registerHandler);
@@ -151,11 +146,6 @@ export const SessionView = ({
             updatedAt: new Date(),
           };
           await db.putConversation(newConversation);
-          console.log(
-            "Created conversation in sidebar:",
-            conversationId,
-            conversationDescription,
-          );
         }
       } catch (error) {
         console.error("Failed to create conversation in sidebar:", error);
@@ -171,7 +161,7 @@ export const SessionView = ({
     if (conversationId) {
       router.push(`/c/${conversationId}?sync=true`);
     } else {
-      console.log("No conversationId found, staying on current page.");
+      // No conversationId found, staying on current page
     }
     onEndCall();
   }, [onEndCall, conversationId, router]);
