@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import { chatApi } from "@/features/chat/api/chatApi";
 import { VoiceApp } from "@/features/chat/components/composer/VoiceModeOverlay";
 import { FileDropModal } from "@/features/chat/components/files/FileDropModal";
@@ -10,7 +10,10 @@ import { useFetchIntegrationStatus } from "@/features/integrations";
 import { useDragAndDrop } from "@/hooks/ui/useDragAndDrop";
 import { db } from "@/lib/db/chatDb";
 import { useChatStore } from "@/stores/chatStore";
-import { useComposerTextActions, usePendingPrompt } from "@/stores/composerStore";
+import {
+  useComposerTextActions,
+  usePendingPrompt,
+} from "@/stores/composerStore";
 
 import { useChatLayout, useScrollBehavior } from "./hooks";
 import { ChatWithMessages, NewChatLayout } from "./layouts";
@@ -21,7 +24,9 @@ const ChatPage = React.memo(function MainChat() {
   const { convoMessages } = useConversation();
   const pendingPrompt = usePendingPrompt();
   const { clearPendingPrompt } = useComposerTextActions();
-  const setActiveConversationId = useChatStore((state) => state.setActiveConversationId);
+  const setActiveConversationId = useChatStore(
+    (state) => state.setActiveConversationId,
+  );
   const searchParams = useSearchParams();
   const shouldSync = searchParams.get("sync") === "true";
 
@@ -30,8 +35,17 @@ const ChatPage = React.memo(function MainChat() {
     refetchOnMount: "always",
   });
 
-  const { hasMessages, chatRef, dummySectionRef, inputRef, droppedFiles, setDroppedFiles, fileUploadRef, appendToInputRef, convoIdParam } =
-    useChatLayout();
+  const {
+    hasMessages,
+    chatRef,
+    dummySectionRef,
+    inputRef,
+    droppedFiles,
+    setDroppedFiles,
+    fileUploadRef,
+    appendToInputRef,
+    convoIdParam,
+  } = useChatLayout();
 
   // Set active conversation ID and mark as read when opening
   useEffect(() => {
@@ -44,7 +58,9 @@ const ChatPage = React.memo(function MainChat() {
       const conversation = conversations.find((c) => c.id === convoIdParam);
       if (conversation?.isUnread) {
         // Optimistically update local state
-        useChatStore.getState().upsertConversation({ ...conversation, isUnread: false });
+        useChatStore
+          .getState()
+          .upsertConversation({ ...conversation, isUnread: false });
         db.updateConversationFields(convoIdParam, { isUnread: false });
         // Fire API call (don't await to avoid blocking)
         chatApi.markAsRead(convoIdParam).catch(console.error);
@@ -60,7 +76,9 @@ const ChatPage = React.memo(function MainChat() {
               const mappedMessages = remoteMessages.map((msg, index) => {
                 const createdAt = msg.date ? new Date(msg.date) : new Date();
                 const role = msg.type === "user" ? "user" : "assistant";
-                const messageId = msg.message_id || `${convoIdParam}-${index}-${createdAt.getTime()}`;
+                const messageId =
+                  msg.message_id ||
+                  `${convoIdParam}-${index}-${createdAt.getTime()}`;
 
                 return {
                   id: messageId,
@@ -103,7 +121,12 @@ const ChatPage = React.memo(function MainChat() {
     // to avoid re-triggering when manually toggling read/unread status
   ]);
 
-  const { scrollContainerRef, scrollToBottom, handleScroll, shouldShowScrollButton } = useScrollBehavior(hasMessages, convoMessages?.length);
+  const {
+    scrollContainerRef,
+    scrollToBottom,
+    handleScroll,
+    shouldShowScrollButton,
+  } = useScrollBehavior(hasMessages, convoMessages?.length);
 
   // Drag and drop functionality
   const { isDragging, dragHandlers } = useDragAndDrop({
@@ -153,7 +176,11 @@ const ChatPage = React.memo(function MainChat() {
             dragHandlers={dragHandlers}
             composerProps={composerProps}
           />
-          <ScrollToBottomButton onScrollToBottom={scrollToBottom} shouldShow={shouldShowScrollButton} hasMessages={hasMessages} />
+          <ScrollToBottomButton
+            onScrollToBottom={scrollToBottom}
+            shouldShow={shouldShowScrollButton}
+            hasMessages={hasMessages}
+          />
         </>
       ) : (
         <>
@@ -164,7 +191,11 @@ const ChatPage = React.memo(function MainChat() {
             dragHandlers={dragHandlers}
             composerProps={composerProps}
           />
-          <ScrollToBottomButton onScrollToBottom={scrollToBottom} shouldShow={shouldShowScrollButton} hasMessages={hasMessages} />
+          <ScrollToBottomButton
+            onScrollToBottom={scrollToBottom}
+            shouldShow={shouldShowScrollButton}
+            hasMessages={hasMessages}
+          />
         </>
       )}
     </div>
