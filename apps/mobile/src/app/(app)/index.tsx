@@ -33,7 +33,7 @@ import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinkin
 import { useResponsive } from "@/lib/responsive";
 
 function EmptyState() {
-  const { fontSize, spacing } = useResponsive();
+  const { spacing } = useResponsive();
 
   return (
     <ScrollView
@@ -41,28 +41,13 @@ function EmptyState() {
         flexGrow: 1,
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: spacing.lg,
       }}
       keyboardShouldPersistTaps="handled"
     >
-      <Text
-        style={{
-          fontSize: fontSize["3xl"],
-          fontWeight: "600",
-          letterSpacing: -0.5,
-          textAlign: "center",
-        }}
-      >
+      <Text className="text-3xl font-semibold text-center">
         What can I help you with?
       </Text>
-      <Text
-        style={{
-          fontSize: fontSize.xs,
-          color: "#8e8e93",
-          marginTop: spacing.sm,
-          textAlign: "center",
-        }}
-      >
+      <Text className="text-xs text-gray-200 mt-2 text-center">
         Start a conversation by typing a message below
       </Text>
     </ScrollView>
@@ -179,18 +164,10 @@ function ChatContent({
   );
 
   const showEmptyState = messages.length === 0 && !isTyping && !activeChatId;
-
-  // Calculate header height offset (approximate or precise if known)
-  // Header is usually around 56-60 (padding + icon size) + top inset (handled by safe area)
-  // Since KeyboardAvoidingView is inside the flex container, we might need a small offset
-  // or just rely on proper behavior.
-  // With behavior="padding", it will push up by keyboard height.
-  // We need to ensure spacing is correct.
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "height" : undefined}
       keyboardVerticalOffset={
         Platform.OS === "ios" ? insets.top + spacing.xl : 0
       }
@@ -230,11 +207,7 @@ function ChatContent({
           style={{
             paddingHorizontal: spacing.sm,
             paddingTop: spacing.sm,
-            // When keyboard is closed, we need bottom inset + spacing
-            // When open, the KeyboardAvoidingView pushes this whole view up.
-            // The padding sticks. This might be desired if we want space above keyboard.
-            // If we want it flush, we'd need to condition it implementation.
-            // For now, consistent padding is safer.
+
             paddingBottom: insets.bottom + spacing.md,
             backgroundColor: "#1c1c1e",
             borderTopLeftRadius: moderateScale(24, 0.5),
