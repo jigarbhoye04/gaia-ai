@@ -1,8 +1,4 @@
-import {
-  type AgentState,
-  useRoomContext,
-  useVoiceAssistant,
-} from "@livekit/components-react";
+import { type AgentState, useRoomContext, useVoiceAssistant } from "@livekit/components-react";
 import type { TextStreamReader } from "livekit-client";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -17,11 +13,7 @@ import { cn } from "@/lib/utils";
 import type { MessageType } from "@/types/features/convoTypes";
 
 function isAgentAvailable(agentState: AgentState) {
-  return (
-    agentState === "listening" ||
-    agentState === "thinking" ||
-    agentState === "speaking"
-  );
+  return agentState === "listening" || agentState === "thinking" || agentState === "speaking";
 }
 
 interface SessionViewProps {
@@ -30,12 +22,7 @@ interface SessionViewProps {
   onEndCall: () => void;
 }
 
-export const SessionView = ({
-  disabled,
-  sessionStarted,
-  onEndCall,
-  ref,
-}: React.ComponentProps<"div"> & SessionViewProps) => {
+export const SessionView = ({ disabled, sessionStarted, onEndCall, ref }: React.ComponentProps<"div"> & SessionViewProps) => {
   const { state: agentState } = useVoiceAssistant();
   const [chatOpen, setChatOpen] = useState(false);
   const { messages } = useChatAndTranscription();
@@ -91,45 +78,21 @@ export const SessionView = ({
   }, [room]);
 
   const handleEndCall = React.useCallback(async () => {
-    // Persist voice mode messages to IndexedDB
-    if (conversationId && messages.length > 0) {
-      const messagesToPersist: IMessage[] = messages
-        .filter((msg: MessageType) => msg.message_id) // Only persist messages with valid IDs
-        .map((msg: MessageType) => ({
-          id: msg.message_id!,
-          conversationId: conversationId,
-          content: msg.response ?? "",
-          role:
-            msg.type === "user" ? ("user" as const) : ("assistant" as const),
-          status: "sent" as const,
-          createdAt: msg.date ? new Date(msg.date) : new Date(),
-          updatedAt: new Date(),
-          messageId: msg.message_id!,
-        }));
-
-      try {
-        await db.putMessagesBulk(messagesToPersist);
-      } catch (error) {
-        console.error("Failed to persist voice messages to IndexedDB:", error);
-      }
-    }
-
+    // Navigate to the conversation page and trigger sync to fetch messages from backend
+    // This avoids duplicate saves to IndexedDB
     if (conversationId) {
-      router.push(`/c/${conversationId}`);
+      router.push(`/c/${conversationId}?sync=true`);
     } else {
       console.log("No conversationId found, staying on current page.");
     }
     onEndCall();
-  }, [onEndCall, conversationId, router, messages]);
+  }, [onEndCall, conversationId, router]);
 
   useEffect(() => {
     if (sessionStarted) {
       const timeout = setTimeout(() => {
         if (!isAgentAvailable(agentState)) {
-          const reason =
-            agentState === "connecting"
-              ? "Agent did not join the room. "
-              : "Agent connected but did not complete initializing. ";
+          const reason = agentState === "connecting" ? "Agent did not join the room. " : "Agent connected but did not complete initializing. ";
 
           toast.error(`Session ended: ${reason}`);
           if (room) {
@@ -143,30 +106,16 @@ export const SessionView = ({
   }, [agentState, sessionStarted, room]);
 
   return (
-    <main
-      ref={ref}
-      inert={disabled}
-      className={cn("relative flex h-full w-full flex-col overflow-hidden")}
-    >
+    <main ref={ref} inert={disabled} className={cn("relative flex h-full w-full flex-col overflow-hidden")}>
       <div className="flex min-h-0 flex-1 flex-col pb-20">
-        <div
-          className={cn(
-            "flex flex-shrink-0 items-center justify-center overflow-hidden px-4",
-            chatOpen ? "h-16" : "flex-1",
-          )}
-        >
+        <div className={cn("flex flex-shrink-0 items-center justify-center overflow-hidden px-4", chatOpen ? "h-16" : "flex-1")}>
           <MediaTiles chatOpen={chatOpen} />
         </div>
 
         {chatOpen && (
           <div className="mt-4 flex max-h-[65vh] min-h-0 flex-1 flex-col">
             <div
-              className={cn(
-                "scrollbar-hide flex-1 overflow-y-auto px-4",
-                "scroll-smooth",
-                "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-              )}
-            >
+              className={cn("scrollbar-hide flex-1 overflow-y-auto px-4", "scroll-smooth", "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden")}>
               <div className="mx-auto max-w-[62rem]">
                 <ChatRenderer convoMessages={messages} />
               </div>
@@ -177,10 +126,7 @@ export const SessionView = ({
 
       <div className="absolute right-0 bottom-0 left-0 z-10">
         <div className="flex justify-center pb-6">
-          <AgentControlBar
-            onChatOpenChange={setChatOpen}
-            onDisconnect={handleEndCall}
-          />
+          <AgentControlBar onChatOpenChange={setChatOpen} onDisconnect={handleEndCall} />
         </div>
       </div>
     </main>
