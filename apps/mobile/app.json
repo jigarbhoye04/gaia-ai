@@ -36,7 +36,10 @@
               "pathPrefix": "/callback"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -66,7 +69,9 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#ffffff",
-          "sounds": ["./assets/sound/uwu.mp3"],
+          "sounds": [
+            "./assets/sound/uwu.mp3"
+          ],
           "defaultChannel": "gaia_channel",
           "mode": "production"
         }
@@ -81,9 +86,9 @@
         "root": "./src/app"
       },
       "eas": {
-        "projectId": "6a09b5f3-9ec3-4e47-9fbb-45b999b75558"
+        "projectId": "dfc106f0-990f-4593-97ed-7999efde6e8c"
       }
     },
-    "owner": "vinitthakkar45"
+    "owner": "sanku02"
   }
 }

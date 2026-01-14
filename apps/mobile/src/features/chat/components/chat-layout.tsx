@@ -46,7 +46,7 @@ export function ChatLayout({ children, background }: ChatLayoutProps) {
   );
 
   return (
-    <View className="flex-1">
+    <View style={{ flex: 1 }}>
       <DrawerLayout
         ref={drawerRef}
         drawerWidth={sidebarWidth}
@@ -54,8 +54,8 @@ export function ChatLayout({ children, background }: ChatLayoutProps) {
         drawerType={DrawerType.FRONT}
         overlayColor="rgba(0, 0, 0, 0.7)"
         renderNavigationView={renderDrawerContent}
-        onDrawerStateChanged={(newState) => {
-          if (newState !== DrawerState.IDLE) Keyboard.dismiss();
+        onDrawerStateChanged={(state) => {
+          if (state !== DrawerState.IDLE) Keyboard.dismiss();
         }}
       >
         <View style={{ flex: 1 }}>
@@ -72,12 +72,15 @@ export function ChatLayout({ children, background }: ChatLayoutProps) {
               {background}
             </View>
           )}
+
           <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
             <ChatHeader
               onMenuPress={toggleSidebar}
               onNewChatPress={handleNewChat}
               onSearchPress={() => {}}
             />
+
+            {/* This must be flex:1 so KeyboardAvoidingView can resize */}
             <View style={{ flex: 1 }}>{children}</View>
           </SafeAreaView>
         </View>

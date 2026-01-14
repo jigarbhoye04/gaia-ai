@@ -1,13 +1,15 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import * as Clipboard from "expo-clipboard";
 import { Avatar } from "heroui-native";
 import type * as React from "react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Animated, Pressable, View } from "react-native";
 import {
   Copy01Icon,
   HugeiconsIcon,
   Message01Icon,
   Pin02Icon,
+  Tick02Icon,
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "@/components/icons";
@@ -70,7 +72,7 @@ function PulsingDots() {
             duration: 400,
             useNativeDriver: true,
           }),
-        ]),
+        ])
       );
 
     const a1 = animate(dot1, 0);
@@ -128,8 +130,58 @@ function PulsingDots() {
   );
 }
 
+interface CopyButtonProps {
+  text: string;
+  iconSize: number;
+  padding: number;
+}
+
+function CopyButton({ text, iconSize, padding }: CopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const handleCopy = useCallback(async () => {
+    if (copied) return;
+
+    await Clipboard.setStringAsync(text);
+    setCopied(true);
+
+    // Simple fade out and in
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0.3,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Reset after 2 seconds
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  }, [copied, text, fadeAnim]);
+
+  return (
+    <Pressable onPress={handleCopy} style={{ padding }}>
+      <Animated.View style={{ opacity: fadeAnim }}>
+        <HugeiconsIcon
+          icon={copied ? Tick02Icon : Copy01Icon}
+          size={iconSize}
+          color={copied ? "#34c759" : "#8e8e93"}
+        />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 interface MessageBubbleProps
-  extends React.ComponentPropsWithoutRef<typeof View>,
+  extends
+    React.ComponentPropsWithoutRef<typeof View>,
     MessageBubbleVariantProps {
   message?: string;
   showAvatar?: boolean;
@@ -179,7 +231,7 @@ function MessageBubble({
             isLoading
               ? "px-0 py-2.5"
               : messageBubbleVariants({ variant, grouped }),
-            className,
+            className
           )}
         >
           {children ??
@@ -196,7 +248,7 @@ function MessageBubble({
                   "text-base",
                   variant === "sent"
                     ? "text-accent-foreground"
-                    : "text-foreground",
+                    : "text-foreground"
                 )}
               >
                 {message}
@@ -216,13 +268,11 @@ function MessageBubble({
                 paddingHorizontal: spacing.xs,
               }}
             >
-              <Pressable style={{ padding: spacing.xs }}>
-                <HugeiconsIcon
-                  icon={Copy01Icon}
-                  size={iconSize.sm}
-                  color="#8e8e93"
-                />
-              </Pressable>
+              <CopyButton
+                text={message || ""}
+                iconSize={iconSize.sm}
+                padding={spacing.xs}
+              />
               <Pressable style={{ padding: spacing.xs }}>
                 <HugeiconsIcon
                   icon={ThumbsUpIcon}
@@ -285,7 +335,7 @@ function ChatMessage({
       className={cn(
         "flex w-full flex-col",
         variant === "sent" ? "items-end" : "items-start",
-        className,
+        className
       )}
     >
       <View className="flex flex-col">
@@ -303,7 +353,7 @@ function ChatMessage({
         <Text
           className={cn(
             "mt-1 px-2 text-xs text-muted",
-            variant === "sent" && "text-right",
+            variant === "sent" && "text-right"
           )}
         >
           {timestamp}

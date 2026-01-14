@@ -1,17 +1,24 @@
 import { FlashList } from "@shopify/flash-list";
-import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useCallback, useEffect, useState } from "react";
-import { Image, Keyboard, Pressable, View } from "react-native";
+import {
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  LayoutAnimation,
+  Platform,
+  Pressable,
+  ScrollView,
+  UIManager,
+  View,
+} from "react-native";
 import Animated, {
   Easing,
-  runOnJS,
-  useAnimatedKeyboard,
-  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ChatInput } from "@/components/ui/chat-input";
 import { Text } from "@/components/ui/text";
 import {
@@ -21,6 +28,7 @@ import {
   useChat,
   useChatContext,
 } from "@/features/chat";
+import { useChatStore } from "@/stores/chat-store";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 import { useResponsive } from "@/lib/responsive";
 
@@ -28,13 +36,14 @@ function EmptyState() {
   const { fontSize, spacing } = useResponsive();
 
   return (
-    <View
-      style={{
-        flex: 1,
+    <ScrollView
+      contentContainerStyle={{
+        flexGrow: 1,
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: spacing.lg,
       }}
+      keyboardShouldPersistTaps="handled"
     >
       <Text
         style={{
@@ -56,25 +65,7 @@ function EmptyState() {
       >
         Start a conversation by typing a message below
       </Text>
-
-      <Link href="/test" asChild>
-        <Pressable
-          style={{
-            marginTop: spacing.xl,
-            paddingVertical: spacing.sm,
-            paddingHorizontal: spacing.md,
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: spacing.sm,
-            borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.1)",
-          }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "500" }}>
-            Test Notifications Page
-          </Text>
-        </Pressable>
-      </Link>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -95,18 +86,13 @@ function ChatContent({
   } = useChat(activeChatId);
 
   const { spacing, moderateScale } = useResponsive();
+  const insets = useSafeAreaInsets();
 
   const [inputValue, setInputValue] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [thinkingMessage, setThinkingMessage] = useState(() =>
     getRelevantThinkingMessage("")
   );
-
-  const keyboard = useAnimatedKeyboard();
-
-  const animatedInputStyle = useAnimatedStyle(() => ({
-    bottom: keyboard.height.value,
-  }));
 
   useEffect(() => {
     if (isTyping && !progress) {
@@ -127,17 +113,34 @@ function ChatContent({
     scrollToBottom();
   }, [messages.length, scrollToBottom]);
 
-  useAnimatedReaction(
-    () => keyboard.height.value,
-    (currentHeight, previousHeight) => {
-      if (
-        currentHeight > 0 &&
-        (previousHeight === null || currentHeight > previousHeight)
-      ) {
-        runOnJS(scrollToBottom)();
-      }
+  useEffect(() => {
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
     }
-  );
+
+    const keyboardWillShow = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setTimeout(() => scrollToBottom(), 50);
+      }
+    );
+
+    const keyboardWillHide = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      }
+    );
+
+    return () => {
+      keyboardWillShow.remove();
+      keyboardWillHide.remove();
+    };
+  }, [scrollToBottom]);
 
   const handleFollowUpAction = useCallback(
     (action: string) => {
@@ -177,65 +180,81 @@ function ChatContent({
 
   const showEmptyState = messages.length === 0 && !isTyping && !activeChatId;
 
-  return (
-    <View style={{ flex: 1 }}>
-      {showEmptyState ? (
-        <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
-          <EmptyState />
-        </Pressable>
-      ) : (
-        <FlashList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          extraData={[
-            messages[messages.length - 1]?.text,
-            isTyping,
-            displayMessage,
-          ]}
-          contentContainerStyle={{
-            paddingTop: spacing.md,
-            paddingBottom: moderateScale(90, 0.5),
-          }}
-          showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          onLoad={() => {
-            if (messages.length > 0) {
-              flatListRef.current?.scrollToEnd({ animated: false });
-            }
-          }}
-        />
-      )}
+  // Calculate header height offset (approximate or precise if known)
+  // Header is usually around 56-60 (padding + icon size) + top inset (handled by safe area)
+  // Since KeyboardAvoidingView is inside the flex container, we might need a small offset
+  // or just rely on proper behavior.
+  // With behavior="padding", it will push up by keyboard height.
+  // We need to ensure spacing is correct.
 
-      <Animated.View
-        style={[
-          {
-            position: "absolute",
-            left: 0,
-            right: 0,
+  return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={
+        Platform.OS === "ios" ? insets.top + spacing.xl : 0
+      }
+    >
+      <View style={{ flex: 1 }}>
+        {showEmptyState ? (
+          <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+            <EmptyState />
+          </Pressable>
+        ) : (
+          <FlashList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            extraData={[
+              messages[messages.length - 1]?.text,
+              isTyping,
+              displayMessage,
+            ]}
+            contentContainerStyle={{
+              paddingTop: spacing.md,
+              paddingBottom: spacing.md,
+            }}
+            showsVerticalScrollIndicator
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            onLoad={() => {
+              if (messages.length > 0) {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }
+            }}
+          />
+        )}
+
+        <View
+          style={{
             paddingHorizontal: spacing.sm,
-            paddingBottom: moderateScale(20, 0.5),
+            paddingTop: spacing.sm,
+            // When keyboard is closed, we need bottom inset + spacing
+            // When open, the KeyboardAvoidingView pushes this whole view up.
+            // The padding sticks. This might be desired if we want space above keyboard.
+            // If we want it flush, we'd need to condition it implementation.
+            // For now, consistent padding is safer.
+            paddingBottom: insets.bottom + spacing.md,
             backgroundColor: "#1c1c1e",
             borderTopLeftRadius: moderateScale(24, 0.5),
             borderTopRightRadius: moderateScale(24, 0.5),
-          },
-          animatedInputStyle,
-        ]}
-      >
-        <ChatInput
-          onSend={handleSend}
-          value={inputValue}
-          onChangeText={setInputValue}
-        />
-      </Animated.View>
-    </View>
+          }}
+        >
+          <ChatInput
+            onSend={handleSend}
+            value={inputValue}
+            onChangeText={setInputValue}
+          />
+        </View>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 export default function ChatScreen() {
   const { activeChatId } = useChatContext();
+  const isTyping = useChatStore((state) => state.streamingState.isTyping);
 
   const [_isReady, setIsReady] = useState(false);
   const screenOpacity = useSharedValue(0);
@@ -258,7 +277,7 @@ export default function ChatScreen() {
   return (
     <ChatLayout
       background={
-        !activeChatId ? (
+        !activeChatId && !isTyping ? (
           <>
             <Image
               source={require("@/assets/background/chat.jpg")}

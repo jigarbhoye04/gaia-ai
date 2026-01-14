@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { PressableFeedback } from "heroui-native";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, View } from "react-native";
@@ -5,6 +6,7 @@ import {
   BubbleChatIcon,
   FavouriteIcon,
   HugeiconsIcon,
+  TestTube01Icon,
 } from "@/components/icons";
 import { Text } from "@/components/ui/text";
 import { useResponsive } from "@/lib/responsive";
@@ -110,9 +112,10 @@ function Section({
 }
 
 export function ChatHistory({ onSelectChat }: ChatHistoryProps) {
+  const router = useRouter();
   const { activeChatId } = useChatContext();
   const { conversations, isLoading, error } = useConversations();
-  const { spacing, fontSize } = useResponsive();
+  const { spacing, fontSize, iconSize } = useResponsive();
 
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
@@ -212,6 +215,32 @@ export function ChatHistory({ onSelectChat }: ChatHistoryProps) {
 
   return (
     <ScrollView style={{ flex: 1, paddingHorizontal: spacing.md }}>
+      <PressableFeedback onPress={() => router.push("/test")}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: spacing.lg,
+            paddingVertical: spacing.sm,
+            gap: spacing.md,
+            marginBottom: spacing.sm,
+          }}
+        >
+          <HugeiconsIcon
+            icon={TestTube01Icon}
+            size={iconSize.sm}
+            color="#8e8e93"
+          />
+          <Text
+            style={{
+              fontSize: fontSize.sm,
+              color: "#8e8e93",
+            }}
+          >
+            Test
+          </Text>
+        </View>
+      </PressableFeedback>
       <Section
         title="Starred"
         items={groupedChats.starred}

@@ -6,15 +6,12 @@ import {
   Menu01Icon,
   Search01Icon,
 } from "@/components/icons";
-import type { AIModel } from "@/features/chat/types";
 import { useResponsive } from "@/lib/responsive";
 
 interface ChatHeaderProps {
   onMenuPress: () => void;
   onNewChatPress: () => void;
   onSearchPress?: () => void;
-  selectedModel?: AIModel;
-  onModelChange?: (model: AIModel) => void;
 }
 
 export function ChatHeader({
