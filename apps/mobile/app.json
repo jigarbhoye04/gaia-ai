@@ -4,7 +4,7 @@
     "slug": "gaia-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icons/gaia_logo.png",
+    "icon": "./assets/icons/gaialogo.png",
     "scheme": "gaiamobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -20,9 +20,9 @@
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#141414",
-        "foregroundImage": "./assets/icons/gaia_logo.png",
-        "backgroundImage": "./assets/icons/gaia_logo.png",
-        "monochromeImage": "./assets/icons/gaia_logo.png"
+        "foregroundImage": "./assets/icons/gaialogo.png",
+        "backgroundImage": "./assets/icons/gaialogo.png",
+        "monochromeImage": "./assets/icons/gaialogo.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -45,7 +45,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/icons/gaia_logo.png"
+      "favicon": "./assets/icons/gaialogo.png"
     },
     "plugins": [
       "expo-router",
@@ -67,7 +67,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icons/gaia_logo.png",
+          "icon": "./assets/icons/gaialogo.png",
           "color": "#ffffff",
           "sounds": [
             "./assets/sound/uwu.mp3"

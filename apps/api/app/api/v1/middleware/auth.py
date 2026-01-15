@@ -75,6 +75,12 @@ class WorkOSAuthMiddleware(BaseHTTPMiddleware):
         # Extract authentication cookies
         wos_session = request.cookies.get("wos_session")
 
+        # Fallback to Authorization header (for mobile/API clients)
+        if not wos_session:
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                wos_session = auth_header.split(" ", 1)[1]
+
         # Initialize state
         request.state.user = None
         request.state.authenticated = False
