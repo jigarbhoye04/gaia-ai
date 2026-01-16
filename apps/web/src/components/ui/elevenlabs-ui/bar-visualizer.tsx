@@ -11,7 +11,8 @@ export type AgentState =
   | "speaking"
   | "thinking";
 
-export interface BarVisualizerProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface BarVisualizerProps
+  extends React.HTMLAttributes<HTMLDivElement> {
   state?: AgentState;
   barCount?: number;
   mediaStream?: MediaStream | null;
@@ -51,7 +52,7 @@ export const BarVisualizer = ({
   // Generate stable IDs for bars to avoid array index key lint
   const barIds = useMemo(
     () => Array.from({ length: barCount }, (_, i) => `bar-${i}`),
-    [barCount]
+    [barCount],
   );
 
   useEffect(() => {
@@ -166,7 +167,7 @@ export const BarVisualizer = ({
         currentHeights.current[i] = lerp(
           currentHeights.current[i],
           targetHeight,
-          0.18
+          0.18,
         );
 
         if (barsRef.current[i]) {
@@ -203,7 +204,7 @@ export const BarVisualizer = ({
     <div
       className={cn(
         "flex items-center justify-center gap-1.5 h-full w-full select-none pointer-events-none",
-        className
+        className,
       )}
       {...props}
     >
@@ -215,7 +216,7 @@ export const BarVisualizer = ({
           }}
           className={cn(
             "w-2 rounded-full transition-colors duration-300 min-h-[8px]",
-            getBarColor()
+            getBarColor(),
           )}
           style={{
             height: `${minHeight}%`,
