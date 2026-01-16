@@ -12,7 +12,6 @@ interface RegisterDeviceTokenResponse {
 }
 
 export const notificationsApi = {
-
   registerDeviceToken: async (
     payload: RegisterDeviceTokenPayload,
   ): Promise<RegisterDeviceTokenResponse> => {
@@ -21,7 +20,6 @@ export const notificationsApi = {
       payload,
     );
   },
-
 
   unregisterDeviceToken: async (token: string): Promise<void> => {
     return apiService.post("/notifications/unregister-device", {

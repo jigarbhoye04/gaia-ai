@@ -16,7 +16,6 @@ export default function LoginModal() {
   const { setLoginModalOpen } = useLoginModalActions();
   const pathname = usePathname();
 
-  // Prevent rendering on /login or /signup pages
   if (pathname === "/login" || pathname === "/signup") return null;
 
   return (

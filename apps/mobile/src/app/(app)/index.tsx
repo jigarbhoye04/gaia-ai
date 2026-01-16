@@ -28,13 +28,11 @@ import {
   useChat,
   useChatContext,
 } from "@/features/chat";
-import { useChatStore } from "@/stores/chat-store";
 import { getRelevantThinkingMessage } from "@/features/chat/utils/playfulThinking";
 import { useResponsive } from "@/lib/responsive";
+import { useChatStore } from "@/stores/chat-store";
 
 function EmptyState() {
-  const { spacing } = useResponsive();
-
   return (
     <ScrollView
       contentContainerStyle={{
@@ -76,7 +74,7 @@ function ChatContent({
   const [inputValue, setInputValue] = useState("");
   const [lastUserMessage, setLastUserMessage] = useState("");
   const [thinkingMessage, setThinkingMessage] = useState(() =>
-    getRelevantThinkingMessage("")
+    getRelevantThinkingMessage(""),
   );
 
   useEffect(() => {
@@ -86,7 +84,7 @@ function ChatContent({
         () => {
           setThinkingMessage(getRelevantThinkingMessage(lastUserMessage));
         },
-        2000 + Math.random() * 1000
+        2000 + Math.random() * 1000,
       );
       return () => clearInterval(interval);
     }
@@ -111,14 +109,14 @@ function ChatContent({
       () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setTimeout(() => scrollToBottom(), 50);
-      }
+      },
     );
 
     const keyboardWillHide = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
       () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      }
+      },
     );
 
     return () => {
@@ -132,7 +130,7 @@ function ChatContent({
       setInputValue(action);
       onFollowUpAction?.(action);
     },
-    [onFollowUpAction]
+    [onFollowUpAction],
   );
 
   const handleSend = useCallback(
@@ -141,7 +139,7 @@ function ChatContent({
       sendMessage(text);
       setInputValue("");
     },
-    [sendMessage]
+    [sendMessage],
   );
 
   const renderMessage = useCallback(
@@ -160,7 +158,7 @@ function ChatContent({
         />
       );
     },
-    [handleFollowUpAction, messages.length, isTyping, displayMessage]
+    [handleFollowUpAction, messages.length, isTyping, displayMessage],
   );
 
   const showEmptyState = messages.length === 0 && !isTyping && !activeChatId;

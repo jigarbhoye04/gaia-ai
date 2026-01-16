@@ -26,7 +26,7 @@ export function ChatLayout({ children, background }: ChatLayoutProps) {
     (chatId: string) => {
       setActiveChatId(chatId);
     },
-    [setActiveChatId]
+    [setActiveChatId],
   );
 
   const handleNewChat = useCallback(() => {
@@ -42,7 +42,7 @@ export function ChatLayout({ children, background }: ChatLayoutProps) {
         onNewChat={handleNewChat}
       />
     ),
-    [handleSelectChat, handleNewChat]
+    [handleSelectChat, handleNewChat],
   );
 
   return (

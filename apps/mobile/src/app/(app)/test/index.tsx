@@ -1,15 +1,15 @@
-import { ScrollView, View, Button, Platform } from "react-native";
+import * as Notifications from "expo-notifications";
+import { Button, ScrollView, View } from "react-native";
 import { Text } from "@/components/ui/text";
 import {
   EmailAccordion,
   EmailComposeCard,
+  NotificationCard,
   SAMPLE_EMAIL_COMPOSE,
   SAMPLE_EMAILS,
 } from "@/features/chat";
-import { StyledSafeAreaView } from "@/lib/uniwind";
 import { useNotificationContext } from "@/features/notifications/components/notification-provider";
-import * as Notifications from "expo-notifications";
-import { NotificationCard } from "@/features/chat";
+import { StyledSafeAreaView } from "@/lib/uniwind";
 
 export default function Test() {
   const { expoPushToken, notification, error, isRegistered, isLoading } =

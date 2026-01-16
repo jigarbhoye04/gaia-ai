@@ -53,7 +53,9 @@ export function useNotifications(): UseNotificationsReturn {
 
         // Skip push notification setup in Expo Go on Android (not supported since SDK 53)
         if (isExpoGo && Platform.OS === "android") {
-          setError("Push notifications are not supported in Expo Go. Use a development build.");
+          setError(
+            "Push notifications are not supported in Expo Go. Use a development build.",
+          );
           setIsLoading(false);
           return;
         }
@@ -166,9 +168,11 @@ export function useNotifications(): UseNotificationsReturn {
     // Setup listeners (skip in Expo Go on Android)
     if (!(isExpoGo && Platform.OS === "android")) {
       notificationListener.current =
-        Notifications.addNotificationReceivedListener((receivedNotification) => {
-          setNotification(receivedNotification);
-        });
+        Notifications.addNotificationReceivedListener(
+          (receivedNotification) => {
+            setNotification(receivedNotification);
+          },
+        );
 
       responseListener.current =
         Notifications.addNotificationResponseReceivedListener((response) => {
