@@ -139,6 +139,17 @@ interface CopyButtonProps {
 function CopyButton({ text, iconSize, padding }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timeout on unmount to prevent setState after unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const handleCopy = useCallback(async () => {
     if (copied) return;
@@ -161,7 +172,7 @@ function CopyButton({ text, iconSize, padding }: CopyButtonProps) {
     ]).start();
 
     // Reset after 2 seconds
-    setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setCopied(false);
     }, 2000);
   }, [copied, text, fadeAnim]);

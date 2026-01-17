@@ -52,7 +52,7 @@ export function getSidebarWidth(width: number): number {
   return Math.min(Math.round(width * 0.75), 340);
 }
 
-interface ResponsiveValues {
+export interface ResponsiveValues {
   // Screen dimensions
   width: number;
   height: number;

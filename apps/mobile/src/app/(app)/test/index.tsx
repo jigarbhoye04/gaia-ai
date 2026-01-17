@@ -12,8 +12,14 @@ import { useNotificationContext } from "@/features/notifications/components/noti
 import { StyledSafeAreaView } from "@/lib/uniwind";
 
 export default function Test() {
-  const { expoPushToken, notification, error, isRegistered, isLoading } =
-    useNotificationContext();
+  const {
+    expoPushToken,
+    notification,
+    error,
+    isRegistered,
+    isLoading,
+    setError,
+  } = useNotificationContext();
 
   const sendTestNotification = async () => {
     try {
@@ -30,7 +36,8 @@ export default function Test() {
         },
       });
     } catch (err) {
-      console.error("Failed to schedule notification:", err);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Failed to schedule notification: ${errorMessage}`);
     }
   };
 

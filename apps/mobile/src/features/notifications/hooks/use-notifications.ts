@@ -175,10 +175,8 @@ export function useNotifications(): UseNotificationsReturn {
         );
 
       responseListener.current =
-        Notifications.addNotificationResponseReceivedListener((response) => {
-          const data = response.notification.request.content.data;
-          if (data) {
-          }
+        Notifications.addNotificationResponseReceivedListener((_response) => {
+          // TODO: Handle notification response when navigation is implemented
         });
     }
 

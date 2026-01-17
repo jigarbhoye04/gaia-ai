@@ -90,11 +90,8 @@ const DEFAULT_CONFIG: Required<WebSocketConfig> = {
 /**
  * Creates and manages a WebSocket connection to the backend.
  *
- * The WebSocket sends the auth token via query parameter since React Native
- * WebSocket doesn't reliably support Cookie headers in all environments.
- *
- * Note: This requires the backend to support token-based auth for WebSocket.
- * If the backend only supports cookie auth, the connection may fail on some devices.
+ * The WebSocket sends the auth token via the Sec-WebSocket-Protocol header
+ * (subprotocol) for security, preventing token exposure in logs and referrers.
  *
  * @example
  * ```ts
@@ -168,13 +165,13 @@ export class WebSocketController {
       // Build WebSocket URL
       // Convert http(s):// to ws(s)://
       const wsOrigin = API_ORIGIN?.replace(/^http/, "ws") || "";
-      // Pass token as query parameter for React Native compatibility
-      // The backend should accept this via websocket.query_params.get("token")
-      const wsUrl = `${wsOrigin}/api/v1/ws/connect?token=${encodeURIComponent(token)}`;
+      const wsUrl = `${wsOrigin}/api/v1/ws/connect`;
 
       // Create WebSocket connection
-      // React Native's WebSocket constructor takes (url, protocols)
-      this.ws = new WebSocket(wsUrl);
+      // Pass token via subprotocol header instead of query string for security
+      // This prevents token exposure in server logs and referrers
+      // Format: ['Bearer', token] - server will extract token from Sec-WebSocket-Protocol
+      this.ws = new WebSocket(wsUrl, ["Bearer", token]);
 
       this.setupEventHandlers();
     } catch (error) {

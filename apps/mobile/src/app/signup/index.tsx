@@ -1,6 +1,12 @@
 import { useRouter } from "expo-router";
 import { Button, PressableFeedback } from "heroui-native";
-import { Image, KeyboardAvoidingView, Platform, View } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Text } from "@/components/ui/text";
 import { useResponsive } from "@/lib/responsive";
@@ -155,7 +161,9 @@ export default function SignUpScreen() {
                   justifyContent: "center",
                 }}
               >
-                <PressableFeedback>
+                <PressableFeedback
+                  onPress={() => Linking.openURL("https://heygaia.io/terms")}
+                >
                   <Text
                     style={{
                       fontSize: fontSize.sm,
@@ -175,7 +183,9 @@ export default function SignUpScreen() {
                 >
                   and
                 </Text>
-                <PressableFeedback>
+                <PressableFeedback
+                  onPress={() => Linking.openURL("https://heygaia.io/privacy")}
+                >
                   <Text
                     style={{
                       fontSize: fontSize.sm,

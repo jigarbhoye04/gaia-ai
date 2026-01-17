@@ -37,8 +37,11 @@ async def get_current_user_ws(websocket: WebSocket):
     Authenticate a user from a WebSocket connection using cookies.
     This is a special version of get_current_user for WebSocket connections.
 
-    For mobile clients that cannot send cookies, the token can be passed
-    as a query parameter: ws://host/ws/connect?token=xxx
+    For mobile clients that cannot send cookies, the token is passed via the
+    Sec-WebSocket-Protocol header (subprotocol) for security. This prevents
+    token exposure in server logs and referrers.
+
+    Protocol format: "Bearer, <token>" (client sends ['Bearer', token])
 
     Args:
         websocket: The WebSocket connection with cookies
@@ -54,12 +57,16 @@ async def get_current_user_ws(websocket: WebSocket):
     # Extract the session cookie from WebSocket
     wos_session = websocket.cookies.get("wos_session")
 
-    # Fallback: check query params for mobile clients
+    # Fallback: check Sec-WebSocket-Protocol header for mobile clients
+    # Client sends: new WebSocket(url, ['Bearer', token])
+    # Server receives: "Bearer, <token>" in sec-websocket-protocol header
     if not wos_session:
-        wos_session = websocket.query_params.get("token")
+        protocol_header = websocket.headers.get("sec-websocket-protocol", "")
+        if protocol_header.startswith("Bearer, "):
+            wos_session = protocol_header[8:]  # Extract token after "Bearer, "
 
     if not wos_session:
-        logger.info("No session cookie in WebSocket request")
+        logger.info("No session cookie or protocol token in WebSocket request")
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return {}
 
