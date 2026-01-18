@@ -162,10 +162,16 @@ export class WebSocketController {
     this.setState("connecting");
 
     // Validate API_ORIGIN before attempting connection
-    if (!API_ORIGIN || typeof API_ORIGIN !== "string" || !API_ORIGIN.startsWith("http")) {
+    if (
+      !API_ORIGIN ||
+      typeof API_ORIGIN !== "string" ||
+      !API_ORIGIN.startsWith("http")
+    ) {
       this.setState("error");
       this.callbacks.onError?.(
-        new Error("Missing or invalid API_ORIGIN: cannot establish WebSocket connection"),
+        new Error(
+          "Missing or invalid API_ORIGIN: cannot establish WebSocket connection",
+        ),
       );
       return;
     }
