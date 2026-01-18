@@ -161,10 +161,19 @@ export class WebSocketController {
     this.isManualDisconnect = false;
     this.setState("connecting");
 
+    // Validate API_ORIGIN before attempting connection
+    if (!API_ORIGIN || typeof API_ORIGIN !== "string" || !API_ORIGIN.startsWith("http")) {
+      this.setState("error");
+      this.callbacks.onError?.(
+        new Error("Missing or invalid API_ORIGIN: cannot establish WebSocket connection"),
+      );
+      return;
+    }
+
     try {
       // Build WebSocket URL
       // Convert http(s):// to ws(s)://
-      const wsOrigin = API_ORIGIN?.replace(/^http/, "ws") || "";
+      const wsOrigin = API_ORIGIN.replace(/^http/, "ws");
       const wsUrl = `${wsOrigin}/api/v1/ws/connect`;
 
       // Create WebSocket connection

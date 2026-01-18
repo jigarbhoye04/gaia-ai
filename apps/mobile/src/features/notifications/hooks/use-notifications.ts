@@ -20,8 +20,12 @@ if (!(isExpoGo && Platform.OS === "android")) {
         shouldShowList: true,
       }),
     });
-  } catch (_e) {
-    // Silently fail in Expo Go
+  } catch (e) {
+    // Silently fail in Expo Go but log for debugging
+    console.warn(
+      "[Notifications] Handler setup failed (expected in Expo Go):",
+      e,
+    );
   }
 }
 

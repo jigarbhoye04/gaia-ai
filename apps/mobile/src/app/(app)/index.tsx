@@ -97,12 +97,16 @@ function ChatContent({
   }, [messages.length, scrollToBottom]);
 
   useEffect(() => {
-    if (
-      Platform.OS === "android" &&
-      UIManager.setLayoutAnimationEnabledExperimental
-    ) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
+    const setupLayoutAnimations = () => {
+      if (
+        Platform.OS === "android" &&
+        UIManager.setLayoutAnimationEnabledExperimental
+      ) {
+        UIManager.setLayoutAnimationEnabledExperimental(true);
+      }
+    };
+
+    setupLayoutAnimations();
 
     const keyboardWillShow = Keyboard.addListener(
       Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",

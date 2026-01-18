@@ -23,6 +23,8 @@ export default function Test() {
 
   const sendTestNotification = async () => {
     try {
+      // Clear any stale error before attempting to schedule
+      setError(null);
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Test Notification",
@@ -35,6 +37,8 @@ export default function Test() {
           repeats: false,
         },
       });
+      // Clear error again after success to ensure clean state
+      setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(`Failed to schedule notification: ${errorMessage}`);
