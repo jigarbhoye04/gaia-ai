@@ -1,9 +1,9 @@
 {
-  "name": "shared-typescript",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "root": "libs/shared/ts",
-  "sourceRoot": "libs/shared/ts/src",
-  "projectType": "library",
+  "name": "bot-slack",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "root": "apps/bots/slack",
+  "sourceRoot": "apps/bots/slack/src",
+  "projectType": "application",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
@@ -13,10 +13,10 @@
       },
       "cache": true
     },
-    "lint": {
+    "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "echo 'Linting shared-typescript'",
+        "command": "pnpm tsx watch src/index.ts",
         "cwd": "{projectRoot}"
       }
     }
