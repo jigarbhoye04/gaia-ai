@@ -194,8 +194,9 @@ export function LogoWithContextMenu({
       opacity: 1,
       x: 0,
       transition: {
+        type: "tween" as const,
         duration: 0.1,
-        ease: [0.23, 1, 0.32, 1],
+        ease: "easeOut" as const,
       },
     },
   };
