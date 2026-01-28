@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useWorkflowSelection } from "@/features/chat/hooks/useWorkflowSelection";
 import { getToolCategoryIcon } from "@/features/chat/utils/toolIcons";
 import { useIntegrations } from "@/features/integrations/hooks/useIntegrations";
 import { PlayIcon, ZapIcon } from "@/icons";
 import { posthog } from "@/lib";
 import { useAppendToInput } from "@/stores/composerStore";
+
 import type {
   CommunityWorkflow,
   PublicWorkflowStep,
@@ -20,7 +22,7 @@ import type {
 import { formatRunCount } from "@/utils/formatters";
 
 import { useWorkflowCreation } from "../../hooks/useWorkflowCreation";
-import { getTriggerDisplay } from "../../utils/triggerDisplay";
+import { getTriggerDisplayInfo } from "../../triggers";
 import {
   ActivationStatus,
   CreatorAvatar,
@@ -87,6 +89,9 @@ export default function UnifiedWorkflowCard({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // Auth check
+  const { isAuthenticated, openLoginModal } = useAuth();
+
   const { selectWorkflow } = useWorkflowSelection();
   const { createWorkflow } = useWorkflowCreation();
   const { integrations } = useIntegrations();
@@ -119,7 +124,7 @@ export default function UnifiedWorkflowCard({
 
   // Get trigger info for user workflows
   const triggerDisplay = workflow
-    ? getTriggerDisplay(workflow, integrations)
+    ? getTriggerDisplayInfo(workflow, integrations)
     : null;
   const nextRunText = workflow ? getNextRunDisplay(workflow) : null;
 
@@ -139,6 +144,13 @@ export default function UnifiedWorkflowCard({
 
   const handleCreateWorkflow = async () => {
     if (isLoading) return;
+
+    // Check authentication first - open login modal if not authenticated
+    if (!isAuthenticated) {
+      openLoginModal();
+      return;
+    }
+
     setIsLoading(true);
     const toastId = toast.loading("Creating workflow...");
 
@@ -272,7 +284,7 @@ export default function UnifiedWorkflowCard({
           ) : null;
         })}
         {categories.length > 3 && (
-          <div className="z-0 flex size-[34px] min-h-[34px] min-w-[34px] items-center justify-center rounded-lg bg-zinc-700/60 text-sm text-foreground-500">
+          <div className="z-0 flex size-8.5 min-h-8.5 min-w-8.5 items-center justify-center rounded-lg bg-zinc-700/60 text-sm text-foreground-500">
             +{categories.length - 3}
           </div>
         )}
@@ -370,7 +382,7 @@ export default function UnifiedWorkflowCard({
       classNames={{
         content: "bg-zinc-800 p-4 rounded-3xl",
       }}
-      delay={0}
+      delay={200}
       closeDelay={0}
     >
       {cardContent}

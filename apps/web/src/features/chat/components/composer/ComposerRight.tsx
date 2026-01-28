@@ -12,14 +12,14 @@ interface RightSideProps {
   handleFormSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
   searchbarText: string | null | undefined;
   selectedTool?: string | null;
-  // setvoiceModeActive: () => void;
+  setvoiceModeActive: () => void;
 }
 
 export default function RightSide({
   handleFormSubmit,
   searchbarText,
   selectedTool,
-  // setvoiceModeActive,
+  setvoiceModeActive: _setvoiceModeActive,
 }: RightSideProps) {
   const { isLoading, stopStream } = useLoading();
   const { selectedWorkflow } = useWorkflowSelection();
@@ -81,7 +81,7 @@ export default function RightSide({
     return (
       <div className="flex items-center gap-2">
         Send Message
-        <Kbd className="text-zinc-400" keys={["enter"]}></Kbd>
+        <Kbd className="text-zinc-400" keys={["enter"]} />
       </div>
     );
   };
@@ -106,7 +106,7 @@ export default function RightSide({
           type="button"
           onPress={() => setvoiceModeActive()}
         >
-          <AudioWaveIcon className="text-zinc-400" />
+          <AiVoiceIcon className="text-zinc-400" />
         </Button>
       </Tooltip> */}
 
