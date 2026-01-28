@@ -7,10 +7,29 @@
 @custom-variant dark (&:is(.dark *));
 @plugin "./hero.ts";
 
+[data-sonner-toaster][data-sonner-theme="dark"] {
+  /* --normal-bg: #000;
+  --normal-bg-hover: hsl(0, 0%, 12%);
+  --normal-border: hsl(0, 0%, 20%);
+  --normal-border-hover: hsl(0, 0%, 25%);
+  --normal-text: var(--gray1);
+  --success-bg: hsl(150, 100%, 6%);
+  --success-border: hsl(147, 100%, 12%);
+  --success-text: hsl(150, 86%, 65%);
+
+  --warning-bg: hsl(64, 100%, 6%);
+  --error-bg: hsl(358, 76%, 10%);
+  --error-border: hsl(357, 89%, 16%);
+  --error-text: hsl(358, 100%, 81%);  */
+  --info-bg: #00161e !important;
+  --info-border: #173945 !important;
+  --info-text: var(--color-primary) !important;
+}
+
 @theme {
   /* Font Family */
   --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), serif;
+  --font-serif: var(--font-pp-editorial-new), serif;
   --font-mono:
     var(--font-anonymous-pro), ui-monospace, "Cascadia Code", "Source Code Pro",
     Menlo, Consolas, "DejaVu Sans Mono", monospace;
@@ -18,7 +37,10 @@
   --color-secondary-bg: #1a1a1a; /* sidebar */
   --color-primary-bg: #111111; /*  main */
 
+  /* For toasts */
+
   /* Colors */
+  --normal-bg: var(--color-primary-bg);
   --color-primary: #00bbff;
   --color-primary-foreground: #000000;
   --color-white: #ffffff;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { WaveSpinnerSquare } from "@/components/shared/WaveSpinnerSquare";
 import CreatedByGAIABanner from "@/features/chat/components/banners/CreatedByGAIABanner";
@@ -14,6 +14,7 @@ import { useConversation } from "@/features/chat/hooks/useConversation";
 import { useConversationList } from "@/features/chat/hooks/useConversationList";
 import { useLoading } from "@/features/chat/hooks/useLoading";
 import { useLoadingText } from "@/features/chat/hooks/useLoadingText";
+import { useRetryMessage } from "@/features/chat/hooks/useRetryMessage";
 import {
   filterEmptyMessagePairs,
   isBotMessageEmpty,
@@ -50,24 +51,41 @@ export default function ChatRenderer({
     improvedPrompt: "",
   });
 
+  // Retry message hook
+  const { retryMessage, isRetrying } = useRetryMessage();
+
   const conversation = useMemo(() => {
     return conversations.find(
       (convo) => convo.conversation_id === convoIdParam,
     );
   }, [conversations, convoIdParam]);
 
+  // Handle retry callback
+  const handleRetry = useCallback(
+    (msgId: string) => {
+      if (!convoIdParam) return;
+      retryMessage(convoIdParam, msgId);
+    },
+    [convoIdParam, retryMessage],
+  );
+
   // Create options object for getMessageProps
-  const messagePropsOptions = {
-    conversation: conversation
-      ? {
-          is_system_generated: conversation.is_system_generated,
-          system_purpose: conversation.system_purpose ?? undefined,
-        }
-      : undefined,
-    setImageData,
-    setOpenGeneratedImage,
-    setOpenMemoryModal,
-  };
+  const messagePropsOptions = useMemo(
+    () => ({
+      conversation: conversation
+        ? {
+            is_system_generated: conversation.is_system_generated,
+            system_purpose: conversation.system_purpose ?? undefined,
+          }
+        : undefined,
+      setImageData,
+      setOpenGeneratedImage,
+      setOpenMemoryModal,
+      onRetry: handleRetry,
+      isRetrying,
+    }),
+    [conversation, handleRetry, isRetrying],
+  );
 
   // Filter out empty message pairs
   const filteredMessages = useMemo(() => {
