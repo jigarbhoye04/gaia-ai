@@ -1,4 +1,4 @@
-"""Application settings: load from env, validate, and expose typed access
+"""Application settings: load from env, validate, and expose typed access.
 
 Flow
 - `.env` loaded first, then external secrets via `inject_infisical_secrets()`.
