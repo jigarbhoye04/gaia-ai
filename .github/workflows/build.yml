@@ -55,7 +55,7 @@ jobs:
       - name: Check if api is affected
         id: affected
         run: |
-          AFFECTED=$(npx nx show projects --affected --type=app 2>/dev/null || echo "")
+          AFFECTED=$(npx nx show projects --affected 2>/dev/null || echo "")
           if echo "$AFFECTED" | grep -qE "(api|voice-agent)"; then
             echo "api=true" >> $GITHUB_OUTPUT
           else
