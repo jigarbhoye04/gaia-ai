@@ -7,6 +7,7 @@ Skills are isolated per agent_id (e.g., twitter_agent, github_agent).
 Uses ChromaDB for vector storage and semantic similarity search.
 """
 
+import asyncio
 from datetime import datetime
 from typing import Any, List, Optional
 from uuid import uuid4
@@ -273,8 +274,9 @@ async def get_skills_by_agent(
             }
 
         # Use deterministic get() with where filter instead of similarity search
-        # Access underlying ChromaDB collection via _collection
-        results = collection._collection.get(
+        # Access underlying ChromaDB collection via public get method in a thread
+        results = await asyncio.to_thread(
+            collection.get,
             where=where_filter,
             limit=limit,
             include=["documents", "metadatas"],
